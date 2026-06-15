@@ -1,0 +1,11 @@
+{
+  "name": "@siksa/tsconfig",
+  "private": true,
+  "version": "0.1.0",
+  "exports": {
+    "./react-library.json": "./react-library.json"
+  },
+  "files": [
+    "react-library.json"
+  ]
+}

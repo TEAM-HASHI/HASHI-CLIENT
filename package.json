@@ -1,0 +1,21 @@
+{
+  "name": "siksa-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "dev": "pnpm --filter @siksa/client dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "preview": "pnpm --filter @siksa/client preview"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "eslint": "catalog:",
+    "globals": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
+  }
+}
