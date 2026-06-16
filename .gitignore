@@ -33,3 +33,6 @@ dist-ssr
 
 # pnpm
 .pnpm-store
+
+# Turborepo
+.turbo

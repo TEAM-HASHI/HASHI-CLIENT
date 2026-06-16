@@ -6,11 +6,11 @@
   "packageManager": "pnpm@10.18.3",
   "scripts": {
     "dev": "pnpm --filter @siksa/client dev",
-    "build": "pnpm -r build",
-    "lint": "pnpm -r lint",
+    "build": "turbo build",
+    "lint": "turbo lint",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "turbo typecheck",
     "preview": "pnpm --filter @siksa/client preview"
   },
   "devDependencies": {
@@ -21,6 +21,7 @@
     "eslint-plugin-react-refresh": "catalog:",
     "globals": "catalog:",
     "prettier": "catalog:",
+    "turbo": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:"
   }
