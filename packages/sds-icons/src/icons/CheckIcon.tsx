@@ -1,4 +1,4 @@
-import type { IconProps } from "../types";
+import type { IconProps } from '../types'
 
 export const CheckIcon = (props: IconProps) => {
   return (
@@ -19,5 +19,5 @@ export const CheckIcon = (props: IconProps) => {
         strokeWidth="2"
       />
     </svg>
-  );
+  )
 }

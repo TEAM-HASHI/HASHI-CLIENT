@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
-    "lint": "eslint .",
+    "lint": "eslint . --config ../../eslint.config.js",
     "preview": "vite preview"
   },
   "dependencies": {

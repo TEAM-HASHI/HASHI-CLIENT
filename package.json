@@ -8,13 +8,19 @@
     "dev": "pnpm --filter @siksa/client dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
     "typecheck": "pnpm -r typecheck",
     "preview": "pnpm --filter @siksa/client preview"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
     "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
     "globals": "catalog:",
+    "prettier": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:"
   }
