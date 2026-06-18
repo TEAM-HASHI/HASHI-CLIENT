@@ -1,0 +1,34 @@
+{
+  "name": "siksa-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "dev": "pnpm --filter @siksa/client dev",
+    "build": "turbo build",
+    "gen": "turbo gen",
+    "gen:component": "turbo gen component",
+    "gen:ds-component": "turbo gen ds-component",
+    "gen:hook": "turbo gen hook",
+    "gen:page": "turbo gen page",
+    "lint": "turbo lint",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "typecheck": "turbo typecheck",
+    "preview": "pnpm --filter @siksa/client preview"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@turbo/gen": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "globals": "catalog:",
+    "prettier": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
+  }
+}
