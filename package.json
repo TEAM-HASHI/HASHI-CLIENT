@@ -7,6 +7,11 @@
   "scripts": {
     "dev": "pnpm --filter @siksa/client dev",
     "build": "turbo build",
+    "gen": "turbo gen",
+    "gen:component": "turbo gen component",
+    "gen:ds-component": "turbo gen ds-component",
+    "gen:hook": "turbo gen hook",
+    "gen:page": "turbo gen page",
     "lint": "turbo lint",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
@@ -15,6 +20,7 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@turbo/gen": "catalog:",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
