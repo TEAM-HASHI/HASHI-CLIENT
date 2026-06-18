@@ -27,6 +27,7 @@
     "eslint-plugin-react-refresh": "catalog:",
     "globals": "catalog:",
     "prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:"
