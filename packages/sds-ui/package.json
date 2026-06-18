@@ -1,5 +1,5 @@
 {
-  "name": "sds-ui",
+  "name": "@siksa/sds-ui",
   "private": true,
   "version": "0.1.0",
   "type": "module",

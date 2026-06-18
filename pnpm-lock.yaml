@@ -95,15 +95,15 @@ importers:
 
   apps/client:
     dependencies:
+      '@siksa/sds-ui':
+        specifier: workspace:*
+        version: link:../../packages/sds-ui
       react:
         specifier: 'catalog:'
         version: 19.2.7
       react-dom:
         specifier: 'catalog:'
         version: 19.2.7(react@19.2.7)
-      sds-ui:
-        specifier: workspace:*
-        version: link:../../packages/sds-ui
     devDependencies:
       '@eslint/js':
         specifier: 'catalog:'

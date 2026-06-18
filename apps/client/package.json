@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "sds-ui": "workspace:*",
+    "@siksa/sds-ui": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
