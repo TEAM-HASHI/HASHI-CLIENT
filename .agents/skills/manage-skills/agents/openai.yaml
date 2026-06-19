@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manage Skills"
+  short_description: "Maintain verify skill coverage and drift checks"
+  default_prompt: "Use $manage-skills to audit changed files and maintain verify skill coverage."
