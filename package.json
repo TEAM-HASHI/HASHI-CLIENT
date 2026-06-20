@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@tanstack/eslint-plugin-query": "catalog:",
     "@turbo/gen": "catalog:",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
