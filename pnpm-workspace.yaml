@@ -5,6 +5,8 @@ packages:
 
 catalog:
   '@eslint/js': ^10.0.1
+  '@storybook/addon-docs': ^10.4.6
+  '@storybook/react-vite': ^10.4.6
   '@tailwindcss/vite': ^4.3.1
   '@turbo/gen': ^2.7.2
   '@types/node': ^24.12.3
@@ -21,6 +23,7 @@ catalog:
   prettier-plugin-tailwindcss: ^0.8.0
   react: ^19.2.6
   react-dom: ^19.2.6
+  storybook: ^10.4.6
   tailwind-merge: ^3.6.0
   tailwindcss: ^4.3.1
   turbo: ^2.7.2

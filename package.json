@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "pnpm --filter @siksa/client dev",
     "build": "turbo build",
+    "build-storybook": "turbo build-storybook",
     "gen": "turbo gen",
     "gen:component": "turbo gen component",
     "gen:ds-component": "turbo gen ds-component",
@@ -16,7 +17,8 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "turbo typecheck",
-    "preview": "pnpm --filter @siksa/client preview"
+    "preview": "pnpm --filter @siksa/client preview",
+    "storybook": "pnpm --filter @siksa/sds-ui storybook"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",

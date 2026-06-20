@@ -11,8 +11,10 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "build-storybook": "storybook build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint . --config ../../eslint.config.js"
+    "lint": "eslint . --config ../../eslint.config.js",
+    "storybook": "storybook dev -p 6006"
   },
   "peerDependencies": {
     "react": ">=19.0.0 <20.0.0",
@@ -20,8 +22,11 @@
   },
   "devDependencies": {
     "@siksa/tsconfig": "workspace:*",
+    "@storybook/addon-docs": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "storybook": "catalog:",
     "typescript": "catalog:"
   }
 }
