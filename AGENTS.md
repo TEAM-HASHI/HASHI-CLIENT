@@ -21,6 +21,7 @@
 - Codex, MCP, hook, agent 운영 문서는 `docs/agent/`에 둡니다.
 - 반드시 지켜야 하는 개발 규칙은 `docs/rules/`에 둡니다.
 - Jira, PR, generator, 검증 절차 같은 반복 작업 문서는 `docs/workflows/`에 둡니다.
+- spec template은 `docs/workflows/spec-templates/`에서 확인하고, 실제 구현 기준 spec은 구현 대상과 같은 폴더의 `*.spec.md`를 우선 확인합니다.
 - 앱, 패키지, 레이어, 모듈 경계 같은 구조 판단은 `docs/architecture/`를 확인합니다.
 - repo-scoped Codex skill은 `.agents/skills/`에 둡니다.
 - repo-scoped Codex skill 목록과 운영 기준은 `docs/agent/skills.md`를 확인합니다.

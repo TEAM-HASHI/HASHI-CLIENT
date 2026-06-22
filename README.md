@@ -6,10 +6,19 @@
 - [Git Convention](./docs/conventions/git.md)
 - [Package Management](./docs/conventions/package-management.md)
 - [Agent Skills](./docs/agent/skills.md)
+- [Serena MCP](./docs/agent/serena-mcp.md)
 
 ## Rules
 
 - [Design System Instructions](./docs/rules/design-system-instructions.md)
+
+## Workflows
+
+- [Local Development](./docs/workflows/local-development.md)
+- [PR Checklist](./docs/workflows/pr-checklist.md)
+- [Spec Writing](./docs/workflows/spec-writing.md)
+- [Spec Templates](./docs/workflows/spec-templates/README.md)
+- [Turbo Generators](./docs/workflows/turbo-generators.md)
 
 ## Architecture
 

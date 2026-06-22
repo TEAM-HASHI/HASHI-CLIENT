@@ -30,6 +30,7 @@ app/
 ```text
 pages/{pageName}/
   {PageName}Page.tsx
+  {PageName}.spec.md
   index.ts
 ```
 
@@ -38,6 +39,7 @@ pages/{pageName}/
 ```text
 pages/{pageName}/
   {PageName}Page.tsx
+  {PageName}.spec.md
   components/
   sections/
   hooks/
@@ -50,6 +52,7 @@ pages/{pageName}/
 - 화면 구획은 `sections/`에 둡니다.
 - 페이지 전용 hook이나 pure helper는 page-local `hooks/`, `utils/`에 둡니다.
 - 여러 페이지에서 실제로 재사용될 때만 `features/` 또는 `shared/`로 승격합니다.
+- 구현 기준 spec이 필요하면 page 폴더 안에 `{PageName}.spec.md`로 둡니다.
 
 ## Feature Structure
 
@@ -87,6 +90,32 @@ shared/
 - UI primitive: `packages/sds-ui`
 - Icon component: `packages/sds-icons`
 - TypeScript config: `configs/tsconfig`
+
+## Spec Co-Location
+
+spec template은 [Spec Templates](../workflows/spec-templates/README.md)를 사용합니다.
+작성 완료된 실제 spec은 구현 대상과 같은 폴더에 `*.spec.md`로 둡니다.
+
+```text
+apps/client/src/pages/login/
+  LoginPage.tsx
+  LoginPage.spec.md
+
+apps/client/src/shared/components/userCard/
+  UserCard.tsx
+  UserCard.spec.md
+
+apps/client/src/shared/hooks/
+  useAuth.ts
+  useAuth.spec.md
+
+packages/sds-ui/src/components/button/
+  Button.tsx
+  Button.spec.md
+```
+
+모든 파일에 spec을 강제하지 않습니다.
+page 단위 구현, form/data fetching/mutation 흐름, SDS component, 여러 화면에서 재사용되는 shared component와 hook처럼 구현 기준이 오래 유지되어야 하는 경우에 작성합니다.
 
 ## Placement Rules
 
