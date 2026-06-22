@@ -7,6 +7,10 @@
 - [Package Management](./docs/conventions/package-management.md)
 - [Agent Skills](./docs/agent/skills.md)
 
+## Rules
+
+- [Design System Instructions](./docs/rules/design-system-instructions.md)
+
 ## Architecture
 
 - [Tech Stack](./docs/architecture/tech-stack.md)
