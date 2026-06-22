@@ -180,9 +180,6 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.0.16(@types/node@24.13.2)(jiti@2.7.0)
-      vite-plugin-svgr:
-        specifier: 'catalog:'
-        version: 4.5.0(typescript@6.0.3)(vite@8.0.16(@types/node@24.13.2)(jiti@2.7.0))
 
   configs/tsconfig: {}
 
@@ -201,6 +198,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
+      vite-plugin-svgr:
+        specifier: 'catalog:'
+        version: 4.5.0(typescript@6.0.3)(vite@8.0.16(@types/node@24.13.2)(jiti@2.7.0))
 
   packages/sds-ui:
     dependencies:

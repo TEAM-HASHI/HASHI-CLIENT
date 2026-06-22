@@ -20,6 +20,7 @@
   "devDependencies": {
     "@siksa/tsconfig": "workspace:*",
     "@types/react": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite-plugin-svgr": "catalog:"
   }
 }

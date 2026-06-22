@@ -31,7 +31,6 @@
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
-    "vite": "catalog:",
-    "vite-plugin-svgr": "catalog:"
+    "vite": "catalog:"
   }
 }
