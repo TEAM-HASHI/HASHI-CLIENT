@@ -13,10 +13,12 @@
     "gen:hook": "turbo gen hook",
     "gen:page": "turbo gen page",
     "lint": "turbo lint",
+    "lint-staged": "lint-staged",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "turbo typecheck",
-    "preview": "pnpm --filter @siksa/client preview"
+    "preview": "pnpm --filter @siksa/client preview",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
@@ -26,6 +28,8 @@
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",
     "globals": "catalog:",
+    "husky": "catalog:",
+    "lint-staged": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "catalog:",
     "turbo": "catalog:",
