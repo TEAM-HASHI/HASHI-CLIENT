@@ -14,7 +14,8 @@
     "build-storybook": "storybook build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint . --config ../../eslint.config.js",
-    "storybook": "storybook dev -p 6006"
+    "storybook": "storybook dev -p 6006",
+    "chromatic": "npx chromatic --build-script-name build-storybook"
   },
   "peerDependencies": {
     "react": ">=19.0.0 <20.0.0",
