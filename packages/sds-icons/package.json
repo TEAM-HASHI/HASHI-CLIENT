@@ -12,13 +12,16 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint . --config ../../eslint.config.js"
+    "lint": "eslint . --config ../../eslint.config.js",
+    "gen:icons": "node scripts/generateIcons.mjs"
   },
   "peerDependencies": {
     "react": ">=19.0.0 <20.0.0"
   },
   "devDependencies": {
     "@siksa/tsconfig": "workspace:*",
+    "@svgr/core": "^8.1.0",
+    "@svgr/plugin-jsx": "^8.1.0",
     "@types/react": "catalog:",
     "typescript": "catalog:",
     "vite-plugin-svgr": "catalog:"

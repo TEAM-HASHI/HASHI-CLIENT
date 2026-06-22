@@ -192,6 +192,12 @@ importers:
       '@siksa/tsconfig':
         specifier: workspace:*
         version: link:../../configs/tsconfig
+      '@svgr/core':
+        specifier: ^8.1.0
+        version: 8.1.0(typescript@6.0.3)
+      '@svgr/plugin-jsx':
+        specifier: ^8.1.0
+        version: 8.1.0(@svgr/core@8.1.0(typescript@6.0.3))
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.17
