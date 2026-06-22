@@ -37,6 +37,9 @@ dist-ssr
 # Turborepo
 .turbo
 
+# Vercel
+.vercel
+
 # Playwright
 playwright-report/
 test-results/
