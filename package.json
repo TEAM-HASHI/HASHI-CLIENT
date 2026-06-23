@@ -14,11 +14,15 @@
     "gen:hook": "turbo gen hook",
     "gen:page": "turbo gen page",
     "lint": "turbo lint",
+    "lint-staged": "lint-staged",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "turbo typecheck",
+    "storybook": "pnpm --filter @siksa/sds-ui storybook",
+    "test": "turbo test --filter=@siksa/client --filter=@siksa/sds-ui",
+    "test:e2e": "pnpm --filter @siksa/client test:e2e",
     "preview": "pnpm --filter @siksa/client preview",
-    "storybook": "pnpm --filter @siksa/sds-ui storybook"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
@@ -28,10 +32,13 @@
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",
     "globals": "catalog:",
+    "husky": "catalog:",
+    "lint-staged": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
-    "typescript-eslint": "catalog:"
+    "typescript-eslint": "catalog:",
+    "vercel": "catalog:"
   }
 }

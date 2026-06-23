@@ -38,3 +38,12 @@ storybook-static
 # Turborepo
 .turbo
 storybook-static
+
+# Vercel
+.vercel
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
