@@ -27,4 +27,5 @@ catalog:
   turbo: ^2.7.2
   typescript: ~6.0.2
   typescript-eslint: ^8.59.2
+  vercel: ^54.14.0
   vite: ^8.0.12
