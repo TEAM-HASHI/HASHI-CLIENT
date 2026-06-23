@@ -1,0 +1,101 @@
+name: Auto Label
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add label from PR title
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const typeLabels = {
+              docs: '📝 DOCS',
+              feat: '✨ FEAT',
+              init: '🌱 INIT',
+              fix: '🩹 FIX',
+              test: '🧪 TEST',
+              deploy: '🚀 DEPLOY',
+              refactor: '♻️ REFACTOR',
+              style: '🎨 STYLE',
+              chore: '🧹 CHORE',
+            }
+
+            const authorLabels = {
+              gyeongbibin: '🫪 경빈',
+              chungyo: '🥸 충영',
+              MinseoSONG: '😋 민서',
+              yurimidaH: '😜 유림',
+              jyeon03: '🙄 지연',
+            }
+
+            const pullRequest = context.payload.pull_request
+            const title = pullRequest.title
+            const match = title.match(/^([a-zA-Z]+)(?:\([^)]+\))?:/)
+            const author = pullRequest.user.login
+            const authorLabel = authorLabels[author]
+
+            if (!match) {
+              core.info(`No PR type found in title: ${title}`)
+            }
+
+            const type = match?.[1].toLowerCase()
+            const typeLabel = type ? typeLabels[type] : undefined
+
+            if (type && !typeLabel) {
+              core.info(`No label mapping found for PR type: ${type}`)
+            }
+
+            if (!authorLabel) {
+              core.info(`No author label mapping found for PR author: ${author}`)
+            }
+
+            const owner = context.repo.owner
+            const repo = context.repo.repo
+            const issue_number = pullRequest.number
+            const typeLabelNames = Object.values(typeLabels)
+
+            const { data: currentLabels } = await github.rest.issues.listLabelsOnIssue({
+              owner,
+              repo,
+              issue_number,
+            })
+
+            const currentLabelNames = currentLabels.map((label) => label.name)
+            const labelsToRemove = typeLabel
+              ? currentLabelNames.filter(
+                  (label) => typeLabelNames.includes(label) && label !== typeLabel,
+                )
+              : []
+
+            await Promise.all(
+              labelsToRemove.map((label) =>
+                github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number,
+                  name: label,
+                }),
+              ),
+            )
+
+            const labelsToAdd = [typeLabel, authorLabel].filter(
+              (label) => label && !currentLabelNames.includes(label),
+            )
+
+            if (labelsToAdd.length > 0) {
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number,
+                labels: labelsToAdd,
+              })
+            }
