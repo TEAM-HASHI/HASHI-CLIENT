@@ -16,6 +16,8 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "turbo typecheck",
+    "test": "turbo test --filter=@siksa/client --filter=@siksa/sds-ui",
+    "test:e2e": "pnpm --filter @siksa/client test:e2e",
     "preview": "pnpm --filter @siksa/client preview"
   },
   "devDependencies": {
