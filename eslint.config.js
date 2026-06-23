@@ -7,7 +7,13 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/node_modules/**'],
+    ignores: [
+      '**/.turbo/**',
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/playwright-report/**',
+      '**/test-results/**',
+    ],
   },
   js.configs.recommended,
   {
@@ -26,6 +32,12 @@ export default tseslint.config(
   {
     files: ['apps/client/**/*.{ts,tsx}'],
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
+  },
+  {
+    files: ['**/*.{test,spec}.{ts,tsx}', '**/e2e/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
   },
   prettier,
 )

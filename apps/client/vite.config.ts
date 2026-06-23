@@ -1,8 +1,6 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin'
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
-import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
+import { alias, plugins as basePlugins } from './vite.shared'
 
 const release =
   process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'local'
@@ -18,13 +16,10 @@ export default defineConfig({
     sourcemap: process.env.SENTRY_AUTH_TOKEN ? 'hidden' : false,
   },
   resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
+    alias,
   },
   plugins: [
-    react(),
-    tailwindcss(),
+    ...basePlugins,
     ...(process.env.SENTRY_AUTH_TOKEN
       ? [
           sentryVitePlugin({
