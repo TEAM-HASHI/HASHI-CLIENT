@@ -1,0 +1,16 @@
+{
+  "name": "@siksa/vitest-config",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./react-library": "./react-library.config.ts"
+  },
+  "files": [
+    "react-library.config.ts"
+  ],
+  "devDependencies": {
+    "@vitejs/plugin-react": "catalog:",
+    "vitest": "catalog:"
+  }
+}
