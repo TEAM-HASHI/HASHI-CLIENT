@@ -36,6 +36,12 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Format Check
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
       - name: Pull Vercel Environment
         run: pnpm exec vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
