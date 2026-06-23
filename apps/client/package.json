@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@sentry/react": "catalog:",
     "@siksa/sds-ui": "workspace:*",
     "clsx": "catalog:",
     "react": "catalog:",
