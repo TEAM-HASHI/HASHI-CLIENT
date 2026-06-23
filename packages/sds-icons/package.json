@@ -23,7 +23,7 @@
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
     "@types/react": "catalog:",
-    "typescript": "catalog:",
-    "vite-plugin-svgr": "catalog:"
+    "prettier": "catalog:",
+    "typescript": "catalog:"
   }
 }

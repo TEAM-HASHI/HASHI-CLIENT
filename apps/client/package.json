@@ -15,7 +15,8 @@
     "clsx": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tailwind-merge": "catalog:"
+    "tailwind-merge": "catalog:",
+    "@siksa/sds-icons": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
