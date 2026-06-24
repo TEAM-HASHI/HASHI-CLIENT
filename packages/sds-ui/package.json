@@ -11,8 +11,11 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "build-storybook": "storybook build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint . --config ../../eslint.config.js",
+    "storybook": "storybook dev -p 6006",
+    "chromatic": "chromatic --build-script-name build-storybook",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -23,6 +26,8 @@
   "devDependencies": {
     "@siksa/tsconfig": "workspace:*",
     "@siksa/vitest-config": "workspace:*",
+    "@storybook/addon-docs": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
@@ -31,6 +36,8 @@
     "jsdom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "storybook": "catalog:",
+    "chromatic": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

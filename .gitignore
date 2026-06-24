@@ -13,6 +13,7 @@ lerna-debug.log*
 # Build outputs
 dist
 dist-ssr
+storybook-static
 
 # Local files
 .DS_Store
@@ -36,6 +37,7 @@ dist-ssr
 
 # Turborepo
 .turbo
+storybook-static
 
 # Vercel
 .vercel
