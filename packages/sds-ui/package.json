@@ -15,7 +15,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint . --config ../../eslint.config.js",
     "storybook": "storybook dev -p 6006",
-    "chromatic": "npx chromatic --build-script-name build-storybook",
+    "chromatic": "chromatic --build-script-name build-storybook",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -37,6 +37,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "storybook": "catalog:",
+    "chromatic": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

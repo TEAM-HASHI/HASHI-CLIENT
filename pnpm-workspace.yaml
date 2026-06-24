@@ -31,6 +31,7 @@ catalog:
   react: ^19.2.6
   react-dom: ^19.2.6
   storybook: ^10.4.6
+  chromatic: ^17.5.0
   tailwind-merge: ^3.6.0
   tailwindcss: ^4.3.1
   turbo: ^2.7.2
