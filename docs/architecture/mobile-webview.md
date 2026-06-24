@@ -1,6 +1,6 @@
 # Mobile WebView
 
-현재 SIKSA Client에는 React Native 또는 WebView 앱 workspace가 없습니다.
+현재 HASHI Client에는 React Native 또는 WebView 앱 workspace가 없습니다.
 
 ## Current Scope
 
@@ -22,5 +22,5 @@ Mobile WebView가 실제로 필요해지면 별도 티켓에서 다음 항목을
 
 ## Agent Rule
 
-agent는 SIKSA Client 작업 중 mobile 앱이 있다고 가정하지 않습니다.
+agent는 HASHI Client 작업 중 mobile 앱이 있다고 가정하지 않습니다.
 사용자가 mobile 작업을 명시하거나 `apps/mobile`이 실제로 추가된 뒤에만 mobile 경로를 다룹니다.

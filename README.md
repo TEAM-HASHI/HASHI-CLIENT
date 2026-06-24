@@ -1,4 +1,4 @@
-## SIKSA Client
+## HASHI Client
 
 ## Docs
 

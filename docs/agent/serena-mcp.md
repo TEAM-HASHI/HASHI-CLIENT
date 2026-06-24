@@ -1,6 +1,6 @@
 # Serena MCP
 
-이 문서는 SIKSA Client에서 Serena MCP를 Codex/agent 보조 도구로 사용할 때의 범위와 운영 기준을 정리합니다.
+이 문서는 HASHI Client에서 Serena MCP를 Codex/agent 보조 도구로 사용할 때의 범위와 운영 기준을 정리합니다.
 
 ## What Is Serena?
 
@@ -13,7 +13,7 @@ Serena는 language server 또는 JetBrains backend를 사용해 symbol, referenc
 
 - LLM model이 아닙니다.
 - Codex를 대체하는 도구가 아닙니다.
-- SIKSA의 npm/pnpm dependency가 아닙니다.
+- HASHI의 npm/pnpm dependency가 아닙니다.
 - Jira, Figma, spec, repo 문서를 대체하는 source of truth가 아닙니다.
 
 Serena는 Codex가 코드를 더 적은 context로 정확하게 읽고 이동할 수 있게 해주는 보조 MCP server입니다.
@@ -92,12 +92,12 @@ Activate the current dir as project using serena.
 
 ## Project Config Policy
 
-현재 SIKSA repo에는 `.serena/project.yml`을 커밋하지 않습니다.
+현재 HASHI repo에는 `.serena/project.yml`을 커밋하지 않습니다.
 
 팀에서 Serena를 지속적으로 쓰기로 확정하면 별도 티켓에서 `.serena/project.yml`을 추가합니다.
 그때의 기본 원칙은 다음과 같습니다.
 
-- `project_name: "SIKSA-CLIENT"`
+- `project_name: "HASHI-CLIENT"`
 - `languages: ["typescript"]`
 - `language_backend: LSP`
 - `ignore_all_files_in_gitignore: true`
@@ -106,7 +106,7 @@ Activate the current dir as project using serena.
 
 `.serena/project.yml`을 추가하더라도 Serena memory, cache, log, dashboard runtime data는 repo에 포함하지 않습니다.
 
-## SIKSA Usage Rules
+## HASHI Usage Rules
 
 - Serena는 코드 이해와 영향 범위 파악에 우선 사용합니다.
 - Serena로 얻은 판단은 관련 코드, spec, 문서와 다시 대조합니다.

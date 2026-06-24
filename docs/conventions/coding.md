@@ -1,6 +1,6 @@
 # Coding Convention
 
-SIKSA Client 코드 작성 기준입니다. 현재 저장소의 generator와 기존 코드 패턴을 우선 기준으로 삼습니다.
+HASHI Client 코드 작성 기준입니다. 현재 저장소의 generator와 기존 코드 패턴을 우선 기준으로 삼습니다.
 
 ## 폴더, 파일, 컴포넌트 네이밍
 

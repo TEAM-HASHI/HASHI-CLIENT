@@ -30,8 +30,8 @@ packages:
 | Workspace          | 역할                              |
 | ------------------ | --------------------------------- |
 | `@siksa/client`    | Vite 기반 클라이언트 앱           |
-| `@siksa/sds-ui`    | SIKSA Design System UI 컴포넌트   |
-| `@siksa/sds-icons` | SIKSA Design System Icon 컴포넌트 |
+| `@siksa/sds-ui`    | HASHI Design System UI 컴포넌트   |
+| `@siksa/sds-icons` | HASHI Design System Icon 컴포넌트 |
 | `@siksa/tsconfig`  | 공통 TypeScript 설정              |
 
 ## Catalog

@@ -1,6 +1,6 @@
 # Styling And Design Tokens
 
-이 문서는 SIKSA Client의 styling과 design token 경계를 정의합니다.
+이 문서는 HASHI Client의 styling과 design token 경계를 정의합니다.
 
 ## Current State
 

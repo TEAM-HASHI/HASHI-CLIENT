@@ -23,4 +23,4 @@ When a verify skill is added, update:
 
 - Skills must use lowercase kebab-case names.
 - Skill frontmatter should only include `name` and `description`.
-- SIKSA repo skills should use `.agents/skills`.
+- HASHI repo skills should use `.agents/skills`.

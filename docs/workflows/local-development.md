@@ -1,6 +1,6 @@
 # Local Development
 
-이 문서는 SIKSA Client를 로컬에서 실행하고 변경 범위에 맞게 검증하는 기준을 정리합니다.
+이 문서는 HASHI Client를 로컬에서 실행하고 변경 범위에 맞게 검증하는 기준을 정리합니다.
 
 ## Install
 

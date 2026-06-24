@@ -1,6 +1,6 @@
 # Tech Stack
 
-이 문서는 SIKSA Client의 목표 기술 스택과 현재 저장소 반영 상태를 구분해 기록합니다.
+이 문서는 HASHI Client의 목표 기술 스택과 현재 저장소 반영 상태를 구분해 기록합니다.
 
 ## Status
 

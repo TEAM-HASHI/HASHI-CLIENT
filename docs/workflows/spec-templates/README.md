@@ -1,6 +1,6 @@
 # Spec Templates
 
-이 폴더는 SIKSA Client에서 page, component, hook 작업을 시작하기 전에 범위와 책임을 정리할 때 사용하는 문서 템플릿입니다.
+이 폴더는 HASHI Client에서 page, component, hook 작업을 시작하기 전에 범위와 책임을 정리할 때 사용하는 문서 템플릿입니다.
 
 ## Location
 
@@ -55,7 +55,7 @@ spec은 다음 경우에 작성합니다.
 
 단순 presentational component나 변경 범위가 매우 작은 UI에는 spec 작성을 강제하지 않습니다.
 
-## SIKSA Defaults
+## HASHI Defaults
 
 - package manager는 `pnpm`을 사용합니다.
 - 앱 코드는 `apps/client`를 기준으로 작성합니다.

@@ -1,6 +1,6 @@
 # App Structure
 
-SIKSA Client의 실행 앱은 `apps/client`입니다. 새 화면과 앱 내부 공유 코드는 현재 폴더 구조와 generator 기준을 우선합니다.
+HASHI Client의 실행 앱은 `apps/client`입니다. 새 화면과 앱 내부 공유 코드는 현재 폴더 구조와 generator 기준을 우선합니다.
 
 ## Base Structure
 

@@ -1,6 +1,6 @@
 # Design System Instructions
 
-이 문서는 SIKSA 디자인시스템 구현 시 반드시 따르는 instruction입니다.
+이 문서는 HASHI 디자인시스템 구현 시 반드시 따르는 instruction입니다.
 아키텍처 설명은 [Design System](../architecture/design-system.md)을 기준으로 보고, 실제 구현 판단은 이 문서의 규칙을 우선합니다.
 
 관련 문서:
@@ -14,7 +14,7 @@
 
 ## Current Tooling Boundary
 
-Tailwind CSS, Storybook, SVGR은 SIKSA 디자인시스템 구현 표준으로 사용할 예정입니다.
+Tailwind CSS, Storybook, SVGR은 HASHI 디자인시스템 구현 표준으로 사용할 예정입니다.
 
 다만 현재 저장소에 아직 설치되지 않은 도구는 코드나 문서에서 `Current`로 취급하지 않습니다.
 도구를 실제로 도입하는 PR에서는 dependency, script, 설정 파일, 관련 문서를 함께 갱신합니다.

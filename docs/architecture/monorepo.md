@@ -1,17 +1,17 @@
 # Monorepo
 
-SIKSA Client는 pnpm workspace와 Turborepo를 사용하는 프론트엔드 모노레포입니다.
+HASHI Client는 pnpm workspace와 Turborepo를 사용하는 프론트엔드 모노레포입니다.
 목표 기술 스택과 현재 도입 상태는 [Tech Stack](./tech-stack.md)을 기준으로 확인합니다.
 
 ## Workspace Layout
 
 ```text
 apps/
-  client/      SIKSA 웹 클라이언트 앱
+  client/      HASHI 웹 클라이언트 앱
 
 packages/
-  sds-ui/      SIKSA Design System UI 컴포넌트
-  sds-icons/   SIKSA Design System Icon 컴포넌트
+  sds-ui/      HASHI Design System UI 컴포넌트
+  sds-icons/   HASHI Design System Icon 컴포넌트
 
 configs/
   tsconfig/    공통 TypeScript 설정
