@@ -15,19 +15,21 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@sentry/react": "catalog:",
+    "@siksa/sds-icons": "workspace:*",
     "@siksa/sds-ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "clsx": "catalog:",
+    "ky": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tailwind-merge": "catalog:",
-    "@siksa/sds-icons": "workspace:*",
     "react-error-boundary": "catalog:",
-    "ky": "catalog:"
+    "tailwind-merge": "catalog:"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
     "@playwright/test": "catalog:",
+    "@sentry/vite-plugin": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",
     "@testing-library/jest-dom": "catalog:",
