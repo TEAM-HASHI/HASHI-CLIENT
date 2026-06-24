@@ -20,6 +20,8 @@
     "clsx": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "tailwind-merge": "catalog:",
+    "@siksa/sds-icons": "workspace:*",
     "react-error-boundary": "catalog:",
     "tailwind-merge": "catalog:",
     "ky": "catalog:"
