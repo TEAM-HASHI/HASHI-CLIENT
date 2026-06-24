@@ -8,12 +8,7 @@ export function initSentry() {
     dsn,
     environment: import.meta.env.VITE_VERCEL_ENV,
     release: import.meta.env.VITE_APP_VERSION,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration(),
-    ],
+    integrations: [Sentry.browserTracingIntegration()],
     tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-    replaysSessionSampleRate: import.meta.env.PROD ? 0.1 : 0,
-    replaysOnErrorSampleRate: 1.0,
   })
 }
