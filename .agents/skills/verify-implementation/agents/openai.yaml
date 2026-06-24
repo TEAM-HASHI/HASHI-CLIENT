@@ -1,4 +1,4 @@
 interface:
-  display_name: "Verify Implementation"
-  short_description: "Run registered verify skills and summarize issues"
-  default_prompt: "Use $verify-implementation to run all registered verify skills and report implementation issues."
+  display_name: 'Verify Implementation'
+  short_description: 'Run registered verify skills and summarize issues'
+  default_prompt: 'Use $verify-implementation to run all registered verify skills and report implementation issues.'
