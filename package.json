@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "pnpm --filter @siksa/client dev",
     "build": "turbo build",
@@ -26,6 +29,7 @@
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
+    "@tanstack/eslint-plugin-query": "catalog:",
     "@turbo/gen": "catalog:",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
