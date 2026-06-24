@@ -23,7 +23,6 @@
     "tailwind-merge": "catalog:",
     "@siksa/sds-icons": "workspace:*",
     "react-error-boundary": "catalog:",
-    "tailwind-merge": "catalog:",
     "ky": "catalog:"
   },
   "devDependencies": {
