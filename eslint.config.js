@@ -4,6 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import pluginQuery from '@tanstack/eslint-plugin-query'
 
 export default tseslint.config(
   {
@@ -39,5 +40,6 @@ export default tseslint.config(
       'react-refresh/only-export-components': 'off',
     },
   },
+  ...pluginQuery.configs['flat/recommended'],
   prettier,
 )
