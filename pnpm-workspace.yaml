@@ -40,3 +40,4 @@ catalog:
   vite: ^8.0.12
   vitest: ^3.2.4
   ky: ^2.0.2
+  react-error-boundary: ^6.0.0

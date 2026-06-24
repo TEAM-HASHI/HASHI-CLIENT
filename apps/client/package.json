@@ -20,6 +20,7 @@
     "clsx": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-error-boundary": "catalog:",
     "tailwind-merge": "catalog:",
     "ky": "catalog:"
   },
