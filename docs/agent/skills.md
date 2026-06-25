@@ -25,8 +25,8 @@ No `verify-*` skills are registered yet.
 | Candidate                        | Purpose                                                                                         | Trigger                               |
 | -------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------- |
 | `verify-docs-sync`               | Checks whether code, config, dependency, script, or folder changes require `docs` updates.      | Broad repo changes before PR          |
-| `verify-design-system-storybook` | Checks SDS component stories, public exports, interaction states, and Storybook build coverage. | `packages/sds-ui` changes             |
-| `verify-workspace-boundaries`    | Checks app/package/config boundaries and prevents product logic from leaking into SDS packages. | `apps`, `packages`, `configs` changes |
+| `verify-design-system-storybook` | Checks HDS component stories, public exports, interaction states, and Storybook build coverage. | `packages/hds-ui` changes             |
+| `verify-workspace-boundaries`    | Checks app/package/config boundaries and prevents product logic from leaking into HDS packages. | `apps`, `packages`, `configs` changes |
 | `verify-agent-harness`           | Checks `.agents`, `AGENTS.md`, and `docs/agent` links and required harness files.               | Agent harness changes                 |
 
 When a verify skill is added, update:

@@ -70,6 +70,6 @@ apps/client/src/shared/hooks/
 데이터 레이어 코드를 `packages/*`로 옮기는 것은 마지막 선택입니다.
 
 - `apps/client`에서만 쓰면 앱 내부에 둡니다.
-- UI 패키지인 `packages/sds-ui`는 API, query, mutation을 알면 안 됩니다.
-- icon 패키지인 `packages/sds-icons`는 데이터 레이어와 무관해야 합니다.
+- UI 패키지인 `packages/hds-ui`는 API, query, mutation을 알면 안 됩니다.
+- icon 패키지인 `packages/hds-icons`는 데이터 레이어와 무관해야 합니다.
 - 여러 앱이나 패키지가 실제로 같은 API helper를 요구하게 되면 별도 shared package 도입을 검토합니다.

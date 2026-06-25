@@ -37,5 +37,5 @@ jobs:
         uses: chromaui/action@latest
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-          workingDir: packages/sds-ui
+          workingDir: packages/hds-ui
           buildScriptName: build-storybook

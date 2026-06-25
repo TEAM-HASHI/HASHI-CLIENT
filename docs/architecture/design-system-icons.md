@@ -1,12 +1,12 @@
 # Design System Icons
 
-공통 아이콘은 `packages/sds-icons`에서 React 컴포넌트로 관리합니다.
+공통 아이콘은 `packages/hds-icons`에서 React 컴포넌트로 관리합니다.
 패키지 전체 역할은 [Design System](./design-system.md)을 따릅니다.
 
 ## Current Structure
 
 ```text
-packages/sds-icons/src/
+packages/hds-icons/src/
   index.ts
   types.ts
   icons/
@@ -18,11 +18,11 @@ packages/sds-icons/src/
 
 ## Public API
 
-아이콘은 `@siksa/sds-icons`에서 import합니다.
+아이콘은 `@hashi/hds-icons`에서 import합니다.
 
 ```ts
-import { CheckIcon } from '@siksa/sds-icons'
-import type { IconProps } from '@siksa/sds-icons'
+import { CheckIcon } from '@hashi/hds-icons'
+import type { IconProps } from '@hashi/hds-icons'
 ```
 
 Root entry는 public icon component와 `IconProps`만 노출합니다.
@@ -42,7 +42,7 @@ src/icons/ChevronDownIcon.tsx
 
 ## Placement Criteria
 
-`packages/sds-icons`에 둘 수 있는 경우:
+`packages/hds-icons`에 둘 수 있는 경우:
 
 - 여러 화면에서 같은 의미와 형태로 재사용합니다.
 - 제품 copy, route, API, logging, analytics에 의존하지 않습니다.
@@ -80,17 +80,17 @@ src/icons/ChevronDownIcon.tsx
 
 ## Review Checklist
 
-- [ ] 이 아이콘이 `packages/sds-icons`에 속하는지 확인했습니다.
+- [ ] 이 아이콘이 `packages/hds-icons`에 속하는지 확인했습니다.
 - [ ] app-specific icon placement를 검토했습니다.
 - [ ] component 이름이 `Icon` suffix를 사용합니다.
-- [ ] public import가 `@siksa/sds-icons`에서 동작합니다.
+- [ ] public import가 `@hashi/hds-icons`에서 동작합니다.
 - [ ] SVG 안전 기준을 확인했습니다.
 
 ## Verification
 
 ```bash
-pnpm --filter @siksa/sds-icons lint
-pnpm --filter @siksa/sds-icons typecheck
-pnpm --filter @siksa/sds-icons build
+pnpm --filter @hashi/hds-icons lint
+pnpm --filter @hashi/hds-icons typecheck
+pnpm --filter @hashi/hds-icons build
 pnpm format:check
 ```

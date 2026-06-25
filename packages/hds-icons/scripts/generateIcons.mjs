@@ -57,7 +57,7 @@ const checkComponentNameDuplicated = (svgFiles) => {
 
     if (duplicatedFileName) {
       throw new Error(
-        `[sds-icons] 중복된 컴포넌트명이 생성됩니다: ${duplicatedFileName}, ${svgFile} → ${componentName}`,
+        `[hds-icons] 중복된 컴포넌트명이 생성됩니다: ${duplicatedFileName}, ${svgFile} → ${componentName}`,
       )
     }
 
@@ -69,7 +69,7 @@ const validateSvgFiles = (svgFiles) => {
   svgFiles.forEach((svgFile) => {
     if (!checkIsSvgFileNameValid(svgFile)) {
       throw new Error(
-        `[sds-icons] SVG 파일명은 kebab-case만 허용합니다: ${svgFile}`,
+        `[hds-icons] SVG 파일명은 kebab-case만 허용합니다: ${svgFile}`,
       )
     }
   })

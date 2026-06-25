@@ -22,7 +22,7 @@ apps/client/src/shared/hooks/
   useAuth.ts
   useAuth.spec.md
 
-packages/sds-ui/src/components/button/
+packages/hds-ui/src/components/button/
   Button.tsx
   Button.spec.md
 ```

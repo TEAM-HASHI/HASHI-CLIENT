@@ -10,8 +10,8 @@ apps/
   client/      HASHI 웹 클라이언트 앱
 
 packages/
-  sds-ui/      HASHI Design System UI 컴포넌트
-  sds-icons/   HASHI Design System Icon 컴포넌트
+  hds-ui/      HASHI Design System UI 컴포넌트
+  hds-icons/   HASHI Design System Icon 컴포넌트
 
 configs/
   tsconfig/    공통 TypeScript 설정
@@ -38,17 +38,17 @@ turbo/
 Examples:
 
 ```bash
-pnpm --filter @siksa/client dev
-pnpm --filter @siksa/client lint
-pnpm --filter @siksa/sds-ui typecheck
-pnpm --filter @siksa/sds-icons build
+pnpm --filter @hashi/client dev
+pnpm --filter @hashi/client lint
+pnpm --filter @hashi/hds-ui typecheck
+pnpm --filter @hashi/hds-icons build
 ```
 
 ## App And Package Boundary
 
 - `apps/client`는 제품 실행 단위입니다.
-- `packages/sds-ui`는 제품 의미가 없는 UI primitive만 담습니다.
-- `packages/sds-icons`는 제품 의미가 없는 icon component만 담습니다.
+- `packages/hds-ui`는 제품 의미가 없는 UI primitive만 담습니다.
+- `packages/hds-icons`는 제품 의미가 없는 icon component만 담습니다.
 - `configs/tsconfig`는 공유 TypeScript 설정만 담습니다.
 - 한 앱에서만 쓰는 코드는 먼저 `apps/client` 내부에 둡니다.
 - 실제 재사용 근거가 생긴 뒤 `packages/*`로 승격합니다.

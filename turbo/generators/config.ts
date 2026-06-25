@@ -69,7 +69,7 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
 
   plop.setGenerator('ds-component', {
     description:
-      'Create an SDS UI component under packages/sds-ui/src/components',
+      'Create an HDS UI component under packages/hds-ui/src/components',
     prompts: [
       {
         type: 'input',
@@ -80,17 +80,17 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
     actions: [
       {
         type: 'add',
-        path: 'packages/sds-ui/src/components/{{camelCase name}}/{{pascalCase name}}.tsx',
+        path: 'packages/hds-ui/src/components/{{camelCase name}}/{{pascalCase name}}.tsx',
         templateFile: 'templates/ds-component/component.tsx.hbs',
       },
       {
         type: 'add',
-        path: 'packages/sds-ui/src/components/{{camelCase name}}/index.ts',
+        path: 'packages/hds-ui/src/components/{{camelCase name}}/index.ts',
         templateFile: 'templates/ds-component/index.ts.hbs',
       },
       {
         type: 'append',
-        path: 'packages/sds-ui/src/components/index.ts',
+        path: 'packages/hds-ui/src/components/index.ts',
         template:
           "export { {{pascalCase name}} } from './{{camelCase name}}'\n",
       },

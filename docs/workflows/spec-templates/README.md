@@ -40,8 +40,8 @@ Spec 작성 기준은 [Spec Writing](../spec-writing.md)을 따릅니다.
 | Feature component    | 구현 컴포넌트와 같은 폴더의 `{ComponentName}.spec.md`     |
 | App shared component | `apps/client/src/shared/components/{name}/{Name}.spec.md` |
 | App shared hook      | `apps/client/src/shared/hooks/use{Name}.spec.md`          |
-| SDS component        | `packages/sds-ui/src/components/{name}/{Name}.spec.md`    |
-| SDS icon             | `packages/sds-icons/src/icons/{Name}Icon.spec.md`         |
+| HDS component        | `packages/hds-ui/src/components/{name}/{Name}.spec.md`    |
+| HDS icon             | `packages/hds-icons/src/icons/{Name}Icon.spec.md`         |
 
 ## When To Write A Spec
 
@@ -49,7 +49,7 @@ spec은 다음 경우에 작성합니다.
 
 - page 단위 구현
 - form, data fetching, mutation, navigation이 있는 기능
-- SDS component
+- HDS component
 - 여러 화면에서 재사용되는 shared component 또는 hook
 - 상태, 에러 처리, 접근성 요구사항이 중요한 UI
 
@@ -59,6 +59,6 @@ spec은 다음 경우에 작성합니다.
 
 - package manager는 `pnpm`을 사용합니다.
 - 앱 코드는 `apps/client`를 기준으로 작성합니다.
-- 디자인시스템 UI는 `packages/sds-ui`, 아이콘은 `packages/sds-icons`를 기준으로 작성합니다.
+- 디자인시스템 UI는 `packages/hds-ui`, 아이콘은 `packages/hds-icons`를 기준으로 작성합니다.
 - generator가 필요한 경우 `pnpm gen:page`, `pnpm gen:component`, `pnpm gen:hook`, `pnpm gen:ds-component`를 우선 확인합니다.
 - Tailwind CSS, Storybook, SVGR은 도입 예정 표준입니다. 실제 dependency와 script가 추가되기 전까지는 `Current` 도구처럼 취급하지 않습니다.

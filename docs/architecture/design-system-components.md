@@ -1,6 +1,6 @@
 # Design System Components
 
-이 문서는 `packages/sds-ui`의 public component를 추가하거나 변경할 때 따르는 기준입니다.
+이 문서는 `packages/hds-ui`의 public component를 추가하거나 변경할 때 따르는 기준입니다.
 패키지 전체 역할은 [Design System](./design-system.md)을 따릅니다.
 
 ## Structure
@@ -8,7 +8,7 @@
 현재 generator는 다음 구조로 component를 생성합니다.
 
 ```text
-packages/sds-ui/src/components/{componentFolder}/
+packages/hds-ui/src/components/{componentFolder}/
   {ComponentName}.tsx
   index.ts
 ```
@@ -16,7 +16,7 @@ packages/sds-ui/src/components/{componentFolder}/
 예시:
 
 ```text
-packages/sds-ui/src/components/button/
+packages/hds-ui/src/components/button/
   Button.tsx
 ```
 
@@ -111,7 +111,7 @@ Examples:
 
 ## Promotion Criteria
 
-앱 로컬 컴포넌트를 `packages/sds-ui`로 승격할 수 있는 경우:
+앱 로컬 컴포넌트를 `packages/hds-ui`로 승격할 수 있는 경우:
 
 - 두 곳 이상의 화면에서 동일한 API와 동작으로 재사용합니다.
 - Figma design-system component와 직접 대응됩니다.
@@ -178,9 +178,9 @@ spec에는 다음을 포함합니다.
 디자인 시스템 component 변경 후 기본 검증:
 
 ```bash
-pnpm --filter @siksa/sds-ui lint
-pnpm --filter @siksa/sds-ui typecheck
-pnpm --filter @siksa/sds-ui build
+pnpm --filter @hashi/hds-ui lint
+pnpm --filter @hashi/hds-ui typecheck
+pnpm --filter @hashi/hds-ui build
 pnpm format:check
 ```
 
