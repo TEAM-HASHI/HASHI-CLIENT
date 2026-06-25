@@ -14,6 +14,12 @@
 
 `User Request -> AGENTS.md -> 작업 유형 판단 -> 필요한 docs 확인 -> implementation -> verification -> final summary`
 
+## 문서 역할
+
+- `docs/`는 사람이 읽는 source of truth입니다.
+- `.agents/`는 agent가 `docs/` 규칙을 실행하기 위한 checklist, recipe, skill, script를 둡니다.
+- `.agents/`와 `docs/` 내용이 충돌하면 `docs/`를 먼저 갱신하고 `.agents/`는 실행 지침만 맞춥니다.
+
 ## 문서 라우팅
 
 - 프로젝트 개요, 기술 스택, 주요 문서 링크는 `README.md`를 확인합니다.
@@ -25,11 +31,24 @@
 - 앱, 패키지, 레이어, 모듈 경계 같은 구조 판단은 `docs/architecture/`를 확인합니다.
 - repo-scoped Codex skill은 `.agents/skills/`에 둡니다.
 - repo-scoped Codex skill 목록과 운영 기준은 `docs/agent/skills.md`를 확인합니다.
+- agent 실행 하네스 구조는 `.agents/README.md`를 확인합니다.
+- 작업 전후 agent checklist는 `.agents/checklists/`를 확인합니다.
+- 반복 구현 절차는 `.agents/recipes/`를 확인합니다.
+- agent 보조 검증 스크립트는 `.agents/scripts/`에 둡니다.
 - project-scoped custom subagent 설정은 `.codex/agents/`에 둡니다.
 
 ## 작업 유형별 라우팅
 
-작업 유형별 라우팅표는 관련 문서, recipe, skill이 실제로 추가된 뒤 확장합니다.
+| 작업 유형                | 먼저 볼 문서                                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------------------------- |
+| Jira, branch, commit, PR | `docs/conventions/jira-ticket.md`, `docs/conventions/git.md`, `.agents/recipes/jira-branch-pr.md`         |
+| page 또는 route          | `docs/architecture/app-structure.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/page-feature.md` |
+| API query 또는 mutation  | `docs/architecture/data-layer.md`, `.agents/recipes/api-integration.md`                                   |
+| form 또는 state flow     | `docs/conventions/coding.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/form-flow.md`            |
+| SDS component            | `docs/rules/design-system-instructions.md`, `.agents/recipes/sds-component.md`                            |
+| generator                | `docs/workflows/turbo-generators.md`                                                                      |
+| agent harness            | `docs/agent/skills.md`, `.agents/README.md`                                                               |
+
 아직 라우팅 대상 파일이 없는 작업은 현재 코드와 저장소 설정을 먼저 확인하고, 가장 가까운 `docs/` 하위 문서를 참고합니다.
 
 ## 작업 기준
