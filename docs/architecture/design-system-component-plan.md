@@ -1,6 +1,6 @@
 # Design System Component Plan
 
-이 문서는 `packages/sds-ui`와 `packages/sds-icons`에 어떤 컴포넌트를 둘지 판단하는 계획 문서입니다.
+이 문서는 `packages/hds-ui`와 `packages/hds-icons`에 어떤 컴포넌트를 둘지 판단하는 계획 문서입니다.
 세부 구현 기준은 [Design System Components](./design-system-components.md), 아이콘 기준은 [Design System Icons](./design-system-icons.md)를 따릅니다.
 
 ## Current Package State
@@ -9,10 +9,10 @@
 
 | Package            | Role                                |
 | ------------------ | ----------------------------------- |
-| `@siksa/sds-ui`    | 제품 의미가 없는 React UI component |
-| `@siksa/sds-icons` | 제품 의미가 없는 SVG icon component |
+| `@hashi/hds-ui`    | 제품 의미가 없는 React UI component |
+| `@hashi/hds-icons` | 제품 의미가 없는 SVG icon component |
 
-현재 `@siksa/sds-ui`에는 `Button`만 있습니다. 앞으로 컴포넌트가 늘어나도 앱 도메인 의미가 들어간 코드는 바로 디자인 시스템으로 올리지 않습니다.
+현재 `@hashi/hds-ui`에는 `Button`만 있습니다. 앞으로 컴포넌트가 늘어나도 앱 도메인 의미가 들어간 코드는 바로 디자인 시스템으로 올리지 않습니다.
 
 ## Design Decision
 
@@ -39,11 +39,11 @@
 
 | Classification            | Location                                            | Criteria                                                                  |
 | ------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------- |
-| SDS UI primitive          | `packages/sds-ui/src/components`                    | 제품 의미 없이 하나의 UI 동작이나 상태를 표현합니다.                      |
-| SDS compound primitive    | `packages/sds-ui/src/components`                    | 여러 subcomponent로 조합하지만 route, API, 도메인 데이터를 알지 않습니다. |
+| HDS UI primitive          | `packages/hds-ui/src/components`                    | 제품 의미 없이 하나의 UI 동작이나 상태를 표현합니다.                      |
+| HDS compound primitive    | `packages/hds-ui/src/components`                    | 여러 subcomponent로 조합하지만 route, API, 도메인 데이터를 알지 않습니다. |
 | App shared component      | `apps/client/src/shared/components`                 | client 앱 안에서 여러 페이지가 공유합니다.                                |
 | Page or feature component | `apps/client/src/pages`, `apps/client/src/features` | 특정 화면, 기능 흐름, API 정책에 묶입니다.                                |
-| SDS icon                  | `packages/sds-icons/src/icons`                      | 제품 의미 없이 여러 화면에서 재사용되는 아이콘입니다.                     |
+| HDS icon                  | `packages/hds-icons/src/icons`                      | 제품 의미 없이 여러 화면에서 재사용되는 아이콘입니다.                     |
 
 겉모양이 같아도 다음 중 하나에 해당하면 앱 내부에 둡니다.
 
@@ -73,14 +73,14 @@
 
 ## Component Introduction Rule
 
-새 SDS component를 추가할 때는 다음 순서를 따릅니다.
+새 HDS component를 추가할 때는 다음 순서를 따릅니다.
 
 1. 앱 내부 구현으로 충분한지 먼저 판단합니다.
 2. Figma 또는 반복 사용 근거를 확인합니다.
 3. public props와 상태를 최소 API로 정의합니다.
 4. `pnpm gen:ds-component`로 scaffold를 생성합니다.
 5. 접근성 요구사항을 컴포넌트 책임에 포함합니다.
-6. `pnpm --filter @siksa/sds-ui lint`, `typecheck`, `build`로 검증합니다.
+6. `pnpm --filter @hashi/hds-ui lint`, `typecheck`, `build`로 검증합니다.
 
 ## Future Work
 

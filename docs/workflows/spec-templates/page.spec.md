@@ -95,7 +95,7 @@ PageNamePage
 
 ## Component Mapping
 
-- SDS component:
+- HDS component:
 - app shared component:
 - page-local component:
 - icon:

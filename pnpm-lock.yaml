@@ -191,15 +191,15 @@ importers:
 
   apps/client:
     dependencies:
+      '@hashi/hds-icons':
+        specifier: workspace:*
+        version: link:../../packages/hds-icons
+      '@hashi/hds-ui':
+        specifier: workspace:*
+        version: link:../../packages/hds-ui
       '@sentry/react':
         specifier: 'catalog:'
         version: 10.60.0(react@19.2.7)
-      '@siksa/sds-icons':
-        specifier: workspace:*
-        version: link:../../packages/sds-icons
-      '@siksa/sds-ui':
-        specifier: workspace:*
-        version: link:../../packages/sds-ui
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.101.1(react@19.2.7)
@@ -300,13 +300,13 @@ importers:
         specifier: 'catalog:'
         version: 3.2.6(@edge-runtime/vm@3.2.0)(@types/node@24.13.2)(jiti@2.7.0)(jsdom@26.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.9.0)
 
-  packages/sds-icons:
+  packages/hds-icons:
     dependencies:
       react:
         specifier: '>=19.0.0 <20.0.0'
         version: 19.2.7
     devDependencies:
-      '@siksa/tsconfig':
+      '@hashi/tsconfig':
         specifier: workspace:*
         version: link:../../configs/tsconfig
       '@svgr/core':
@@ -325,12 +325,12 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
-  packages/sds-ui:
+  packages/hds-ui:
     devDependencies:
-      '@siksa/tsconfig':
+      '@hashi/tsconfig':
         specifier: workspace:*
         version: link:../../configs/tsconfig
-      '@siksa/vitest-config':
+      '@hashi/vitest-config':
         specifier: workspace:*
         version: link:../../configs/vitest
       '@storybook/addon-docs':

@@ -21,10 +21,10 @@
 ## Preferred Commands
 
 ```bash
-pnpm --filter @siksa/client lint
-pnpm --filter @siksa/client typecheck
-pnpm --filter @siksa/client test
-pnpm --filter @siksa/client build
+pnpm --filter @hashi/client lint
+pnpm --filter @hashi/client typecheck
+pnpm --filter @hashi/client test
+pnpm --filter @hashi/client build
 ```
 
 ## Done Criteria

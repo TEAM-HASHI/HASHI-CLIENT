@@ -112,8 +112,8 @@ type(scope): HASHI-번호 작업 내용
 | -------------------- | ------------------------------------------------------------ |
 | `root`               | 루트 설정, package manager, Turborepo, repo-wide config 변경 |
 | `apps/client`        | 클라이언트 앱 변경                                           |
-| `packages/sds-ui`    | SDS UI 컴포넌트 패키지 변경                                  |
-| `packages/sds-icons` | SDS Icon 패키지 변경                                         |
+| `packages/hds-ui`    | HDS UI 컴포넌트 패키지 변경                                  |
+| `packages/hds-icons` | HDS Icon 패키지 변경                                         |
 | `configs/tsconfig`   | 공통 TypeScript 설정 변경                                    |
 | `turbo`              | Turbo generator, Turborepo 설정 변경                         |
 | `docs`               | `docs/*` 문서 변경                                           |
@@ -124,7 +124,7 @@ type(scope): HASHI-번호 작업 내용
 ```text
 docs(docs): HASHI-30 컨벤션 문서 추가
 feat(apps/client): HASHI-12 로그인 페이지 구현
-fix(packages/sds-ui): HASHI-18 Button disabled 스타일 수정
+fix(packages/hds-ui): HASHI-18 Button disabled 스타일 수정
 chore(root): HASHI-31 pnpm workspace 설정 수정
 ```
 

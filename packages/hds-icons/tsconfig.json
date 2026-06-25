@@ -1,5 +1,5 @@
 {
-  "extends": "@siksa/tsconfig/react-library.json",
+  "extends": "@hashi/tsconfig/react-library.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist"

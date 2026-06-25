@@ -13,8 +13,8 @@
 ## Styling Boundary
 
 - 앱 화면 스타일은 먼저 `apps/client`에서 해결합니다.
-- 제품 의미가 없는 UI primitive 스타일만 `packages/sds-ui`로 승격합니다.
-- icon visual은 `packages/sds-icons`에서 관리합니다.
+- 제품 의미가 없는 UI primitive 스타일만 `packages/hds-ui`로 승격합니다.
+- icon visual은 `packages/hds-icons`에서 관리합니다.
 - 디자인 토큰 패키지는 실제 반복과 요구가 생긴 뒤 별도 티켓으로 도입합니다.
 
 ## Tailwind Rules
@@ -52,7 +52,7 @@ Tailwind CSS를 도입하거나 사용하는 경우:
 
 ## Design System
 
-- SDS component는 호출부에서 받은 `className`을 안전하게 병합할 수 있어야 합니다.
-- SDS component 내부에 제품별 색상 의미를 넣지 않습니다.
+- HDS component는 호출부에서 받은 `className`을 안전하게 병합할 수 있어야 합니다.
+- HDS component 내부에 제품별 색상 의미를 넣지 않습니다.
 - 앱 도메인 상태를 색상 token으로 바로 고정하지 않고 variant/tone API로 추상화합니다.
 - 디자인 시스템 책임 경계는 [Design System](./design-system.md)을 따릅니다.

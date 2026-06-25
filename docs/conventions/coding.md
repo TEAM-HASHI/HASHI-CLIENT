@@ -19,7 +19,7 @@ HASHI Client 코드 작성 기준입니다. 현재 저장소의 generator와 기
 | `pnpm gen:page`         | `apps/client/src/pages/{{camelCase name}}/{{PascalCase name}}Page.tsx`         |
 | `pnpm gen:component`    | `apps/client/src/shared/components/{{camelCase name}}/{{PascalCase name}}.tsx` |
 | `pnpm gen:hook`         | `apps/client/src/shared/hooks/use{{PascalCase name}}.ts`                       |
-| `pnpm gen:ds-component` | `packages/sds-ui/src/components/{{camelCase name}}/{{PascalCase name}}.tsx`    |
+| `pnpm gen:ds-component` | `packages/hds-ui/src/components/{{camelCase name}}/{{PascalCase name}}.tsx`    |
 
 ## 컴포넌트
 

@@ -1,5 +1,5 @@
 {
-  "name": "@siksa/sds-icons",
+  "name": "@hashi/hds-icons",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -19,7 +19,7 @@
     "react": ">=19.0.0 <20.0.0"
   },
   "devDependencies": {
-    "@siksa/tsconfig": "workspace:*",
+    "@hashi/tsconfig": "workspace:*",
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
     "@types/react": "catalog:",

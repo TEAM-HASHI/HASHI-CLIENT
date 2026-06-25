@@ -1,5 +1,5 @@
 {
-  "name": "@siksa/client",
+  "name": "@hashi/client",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,8 +16,8 @@
   },
   "dependencies": {
     "@sentry/react": "catalog:",
-    "@siksa/sds-icons": "workspace:*",
-    "@siksa/sds-ui": "workspace:*",
+    "@hashi/hds-icons": "workspace:*",
+    "@hashi/hds-ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "clsx": "catalog:",
     "ky": "catalog:",

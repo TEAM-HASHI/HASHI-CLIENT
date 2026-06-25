@@ -22,20 +22,20 @@ pnpm test
 ## Design System
 
 ```bash
-pnpm --filter @siksa/sds-ui lint
-pnpm --filter @siksa/sds-ui typecheck
-pnpm --filter @siksa/sds-ui build
-pnpm --filter @siksa/sds-ui test
+pnpm --filter @hashi/hds-ui lint
+pnpm --filter @hashi/hds-ui typecheck
+pnpm --filter @hashi/hds-ui build
+pnpm --filter @hashi/hds-ui test
 pnpm build-storybook
 ```
 
 ## Client UI Flow
 
 ```bash
-pnpm --filter @siksa/client lint
-pnpm --filter @siksa/client typecheck
-pnpm --filter @siksa/client build
-pnpm --filter @siksa/client test
+pnpm --filter @hashi/client lint
+pnpm --filter @hashi/client typecheck
+pnpm --filter @hashi/client build
+pnpm --filter @hashi/client test
 ```
 
 E2E가 필요한 변경이면 다음 명령을 추가합니다.

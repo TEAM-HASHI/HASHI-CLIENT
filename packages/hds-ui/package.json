@@ -1,5 +1,5 @@
 {
-  "name": "@siksa/sds-ui",
+  "name": "@hashi/hds-ui",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -24,8 +24,8 @@
     "react-dom": ">=19.0.0 <20.0.0"
   },
   "devDependencies": {
-    "@siksa/tsconfig": "workspace:*",
-    "@siksa/vitest-config": "workspace:*",
+    "@hashi/tsconfig": "workspace:*",
+    "@hashi/vitest-config": "workspace:*",
     "@storybook/addon-docs": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@testing-library/jest-dom": "catalog:",

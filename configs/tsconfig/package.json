@@ -1,5 +1,5 @@
 {
-  "name": "@siksa/tsconfig",
+  "name": "@hashi/tsconfig",
   "private": true,
   "version": "0.1.0",
   "exports": {

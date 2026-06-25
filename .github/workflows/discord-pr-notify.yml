@@ -83,7 +83,7 @@ jobs:
                       author,
                       fields,
                       footer: {
-                        text: 'TEAM-SIKSA GitHub Automation',
+                        text: 'TEAM-HASHI GitHub Automation',
                       },
                       timestamp: new Date().toISOString(),
                     },

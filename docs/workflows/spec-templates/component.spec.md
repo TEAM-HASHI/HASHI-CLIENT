@@ -6,13 +6,13 @@
 
 ## Component Type
 
-- [ ] SDS UI primitive
+- [ ] HDS UI primitive
 - [ ] App shared component
 - [ ] Page or feature component
 
 선택 기준:
 
-- 제품 의미가 없는 재사용 UI라면 `packages/sds-ui`를 검토합니다.
+- 제품 의미가 없는 재사용 UI라면 `packages/hds-ui`를 검토합니다.
 - 앱 전용이지만 여러 화면에서 반복된다면 `apps/client/src/shared/components`를 검토합니다.
 - 한 화면이나 한 feature에만 묶인 UI라면 page 또는 feature 내부에 둡니다.
 
@@ -23,7 +23,7 @@
 
 권장 위치:
 
-- SDS UI primitive: `packages/sds-ui/src/components/{componentFolder}/{ComponentName}.spec.md`
+- HDS UI primitive: `packages/hds-ui/src/components/{componentFolder}/{ComponentName}.spec.md`
 - App shared component: `apps/client/src/shared/components/{componentFolder}/{ComponentName}.spec.md`
 - Page or feature component: 구현 컴포넌트와 같은 폴더의 `{ComponentName}.spec.md`
 
@@ -35,7 +35,7 @@
 - expected path:
   - `apps/client/src/shared/components/{componentFolder}/{ComponentName}.tsx`
   - `apps/client/src/pages/{page}/...`
-  - `packages/sds-ui/src/components/{componentFolder}/{ComponentName}.tsx`
+  - `packages/hds-ui/src/components/{componentFolder}/{ComponentName}.tsx`
 
 ## Scaffold
 
@@ -140,7 +140,7 @@ ComponentName
 
 ## Storybook
 
-Storybook 도입 후 SDS component는 story를 함께 작성합니다.
+Storybook 도입 후 HDS component는 story를 함께 작성합니다.
 
 - [ ] Default
 - [ ] variant / size / tone

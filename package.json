@@ -1,5 +1,5 @@
 {
-  "name": "siksa-client",
+  "name": "hashi-client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "pnpm --filter @siksa/client dev",
+    "dev": "pnpm --filter @hashi/client dev",
     "build": "turbo build",
     "build-storybook": "turbo build-storybook",
     "gen": "turbo gen",
@@ -21,10 +21,10 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "turbo typecheck",
-    "storybook": "pnpm --filter @siksa/sds-ui storybook",
-    "test": "turbo test --filter=@siksa/client --filter=@siksa/sds-ui",
-    "test:e2e": "pnpm --filter @siksa/client test:e2e",
-    "preview": "pnpm --filter @siksa/client preview",
+    "storybook": "pnpm --filter @hashi/hds-ui storybook",
+    "test": "turbo test --filter=@hashi/client --filter=@hashi/hds-ui",
+    "test:e2e": "pnpm --filter @hashi/client test:e2e",
+    "preview": "pnpm --filter @hashi/client preview",
     "prepare": "husky"
   },
   "devDependencies": {

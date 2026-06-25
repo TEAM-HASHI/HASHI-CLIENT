@@ -25,14 +25,14 @@ pnpm dev
 직접 app workspace를 지정할 수도 있습니다.
 
 ```bash
-pnpm --filter @siksa/client dev
+pnpm --filter @hashi/client dev
 ```
 
 preview:
 
 ```bash
 pnpm preview
-pnpm --filter @siksa/client preview
+pnpm --filter @hashi/client preview
 ```
 
 ## Quality Checks
@@ -64,17 +64,17 @@ bash .agents/scripts/check-harness.sh
 workspace 단위 검증:
 
 ```bash
-pnpm --filter @siksa/client lint
-pnpm --filter @siksa/client typecheck
-pnpm --filter @siksa/client build
+pnpm --filter @hashi/client lint
+pnpm --filter @hashi/client typecheck
+pnpm --filter @hashi/client build
 
-pnpm --filter @siksa/sds-ui lint
-pnpm --filter @siksa/sds-ui typecheck
-pnpm --filter @siksa/sds-ui build
+pnpm --filter @hashi/hds-ui lint
+pnpm --filter @hashi/hds-ui typecheck
+pnpm --filter @hashi/hds-ui build
 
-pnpm --filter @siksa/sds-icons lint
-pnpm --filter @siksa/sds-icons typecheck
-pnpm --filter @siksa/sds-icons build
+pnpm --filter @hashi/hds-icons lint
+pnpm --filter @hashi/hds-icons typecheck
+pnpm --filter @hashi/hds-icons build
 ```
 
 ## Generator
@@ -92,7 +92,7 @@ pnpm gen:ds-component
 
 ## Storybook
 
-SDS UI 문서화와 시각 확인은 Storybook을 사용합니다.
+HDS UI 문서화와 시각 확인은 Storybook을 사용합니다.
 
 ```bash
 pnpm storybook
@@ -101,10 +101,10 @@ pnpm build-storybook
 
 ## Icon Generation
 
-SDS icon은 SVGR 기반 generator를 사용합니다.
+HDS icon은 SVGR 기반 generator를 사용합니다.
 
 ```bash
-pnpm --filter @siksa/sds-icons gen:icons
+pnpm --filter @hashi/hds-icons gen:icons
 ```
 
 ## Practical Rule

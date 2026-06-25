@@ -21,13 +21,13 @@
 
 ```bash
 pnpm gen:hook
-pnpm --filter @siksa/client lint
-pnpm --filter @siksa/client typecheck
-pnpm --filter @siksa/client test
+pnpm --filter @hashi/client lint
+pnpm --filter @hashi/client typecheck
+pnpm --filter @hashi/client test
 ```
 
 ## Done Criteria
 
 - submit 조건과 UI disabled 상태가 일치합니다.
 - error 메시지와 reset 흐름이 설명 가능합니다.
-- form state가 SDS primitive 내부로 들어가지 않습니다.
+- form state가 HDS primitive 내부로 들어가지 않습니다.

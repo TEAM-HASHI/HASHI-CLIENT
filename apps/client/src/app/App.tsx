@@ -1,4 +1,4 @@
-import { Button } from '@siksa/sds-ui'
+import { Button } from '@hashi/hds-ui'
 
 export const App = () => {
   return (
