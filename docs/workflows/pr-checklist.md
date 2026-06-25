@@ -119,6 +119,13 @@ UI 변경:
 - [x] screenshot 첨부
 ```
 
+## GitHub Actions Roles
+
+- `ci.yml`: format, lint, typecheck, test, build를 병렬 실행하는 코드 품질 gate입니다.
+- `vercel-preview.yml`: preview 배포만 담당합니다.
+- `chromatic.yml`: HDS Storybook/Chromatic 검증만 담당하며, HDS 관련 경로가 바뀐 PR에서 실행됩니다.
+- auto-label, auto-assign, Discord workflow는 PR 운영 자동화를 담당합니다.
+
 ## Before Merge
 
 - 최소 2명 이상의 approve를 받습니다.
