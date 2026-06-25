@@ -2,6 +2,13 @@ name: Chromatic Deployment
 
 on:
   pull_request:
+    paths:
+      - 'packages/hds-ui/**'
+      - 'packages/hds-icons/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/chromatic.yml'
 
 concurrency:
   group: chromatic-${{ github.event.pull_request.number || github.ref }}
@@ -39,3 +46,4 @@ jobs:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           workingDir: packages/hds-ui
           buildScriptName: build-storybook
+          onlyChanged: true
