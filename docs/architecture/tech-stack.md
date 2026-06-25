@@ -20,23 +20,24 @@
 
 ## Stack
 
-| Area                   | Stack                                         | Version                              | Status   | Notes                                        |
-| ---------------------- | --------------------------------------------- | ------------------------------------ | -------- | -------------------------------------------- |
-| Package manager        | `pnpm`                                        | `10.18.3`                            | Current  | 루트 `packageManager` 기준                   |
-| Monorepo               | `pnpm workspace`, `pnpm catalog`, `Turborepo` | `pnpm@10.18.3`, `turbo@^2.7.2`       | Current  | workspace와 task graph 기준                  |
-| Language               | `React`, `TypeScript`                         | `react@^19.2.6`, `typescript@~6.0.2` | Current  | `apps/client`, `packages/*` 공통 기준        |
-| Bundler                | `Vite`                                        | `vite@^8.0.12`                       | Current  | `@siksa/client` 실행/빌드 기준               |
-| Lint and format        | `ESLint`, `Prettier`                          | `eslint@^10.3.0`, `prettier@^3.6.2`  | Current  | 루트 script와 공통 ESLint config 기준        |
-| CSS                    | `Tailwind CSS`                                | 도입 시 결정                         | Planned  | 도입 시 styling/token 문서 함께 갱신         |
-| API client             | `ky`                                          | 도입 시 결정                         | Planned  | 도입 시 data layer 문서 기준으로 배치        |
-| Server state           | `TanStack Query`                              | 도입 시 결정                         | Planned  | Provider는 앱 실행 조립 영역에서 시작        |
-| Unit/Component test    | `vitest`                                      | 도입 시 결정                         | Planned  | 테스트 script와 위치는 도입 티켓에서 정의    |
-| E2E test               | `Playwright`                                  | 도입 시 결정                         | Deferred | 이번 AI 설정 골격 범위에는 포함하지 않음     |
-| Icon pipeline          | `SVGR`                                        | 도입 시 결정                         | Planned  | 현재는 직접 작성한 React icon component 사용 |
-| Error monitoring       | `Sentry`                                      | 도입 시 결정                         | Planned  | 환경변수와 배포 정책 확정 후 도입            |
-| Git hook               | `Husky`, `lint-staged`                        | 도입 시 결정                         | Planned  | hook 정책 확정 후 도입                       |
-| UI docs/component test | `Storybook`                                   | 도입 시 결정                         | Planned  | SDS 컴포넌트 규모가 커질 때 도입             |
-| Infra                  | `Vercel`, `AWS`                               | 도입 시 결정                         | Planned  | 배포/인프라 문서가 생기면 이 문서와 연결     |
+| Area                   | Stack                                         | Version                                  | Status  | Notes                                      |
+| ---------------------- | --------------------------------------------- | ---------------------------------------- | ------- | ------------------------------------------ |
+| Package manager        | `pnpm`                                        | `10.18.3`                                | Current | 루트 `packageManager` 기준                 |
+| Monorepo               | `pnpm workspace`, `pnpm catalog`, `Turborepo` | `pnpm@10.18.3`, `turbo@^2.7.2`           | Current | workspace와 task graph 기준                |
+| Language               | `React`, `TypeScript`                         | `react@^19.2.6`, `typescript@~6.0.2`     | Current | `apps/client`, `packages/*` 공통 기준      |
+| Bundler                | `Vite`                                        | `vite@^8.0.12`                           | Current | `@siksa/client` 실행/빌드 기준             |
+| Lint and format        | `ESLint`, `Prettier`                          | `eslint@^10.3.0`, `prettier@^3.6.2`      | Current | 루트 script와 공통 ESLint config 기준      |
+| CSS                    | `Tailwind CSS`                                | `tailwindcss@^4.3.1`                     | Current | `@tailwindcss/vite`, `tailwind-merge` 사용 |
+| API client             | `ky`                                          | `ky@^2.0.2`                              | Current | `apps/client/src/shared/api` 기준          |
+| Server state           | `TanStack Query`                              | `@tanstack/react-query@^5.101.0`         | Current | app provider와 shared query client 기준    |
+| Unit/Component test    | `Vitest`                                      | `vitest@^3.2.4`                          | Current | client, SDS UI, shared config 기준         |
+| E2E test               | `Playwright`                                  | `@playwright/test@^1.55.0`               | Current | client e2e scaffold 기준                   |
+| Icon pipeline          | `SVGR`                                        | `@svgr/core@^8.1.0`                      | Current | `packages/sds-icons` generator 기준        |
+| Error monitoring       | `Sentry`                                      | `@sentry/react@^10.60.0`                 | Current | React SDK와 Vite plugin 기준               |
+| Git hook               | `Husky`, `lint-staged`                        | `husky@^9.1.7`, `lint-staged@^17.0.8`    | Current | prepare script와 lint-staged config 기준   |
+| UI docs/component test | `Storybook`, `Chromatic`                      | `storybook@^10.4.6`, `chromatic@^17.5.0` | Current | SDS UI Storybook 기준                      |
+| Deployment             | `Vercel`                                      | `vercel@^54.14.0`                        | Current | Vercel workflow 기준                       |
+| Infra                  | `AWS`                                         | 도입 시 결정                             | Planned | AWS 리소스가 필요해질 때 별도 문서화       |
 
 ## Official Docs
 

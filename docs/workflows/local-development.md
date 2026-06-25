@@ -46,11 +46,19 @@ pnpm typecheck
 pnpm build
 ```
 
+테스트:
+
+```bash
+pnpm test
+pnpm test:e2e
+```
+
 문서만 변경한 경우:
 
 ```bash
-pnpm exec prettier README.md AGENTS.md docs/**/*.md .agents/skills/*/SKILL.md --check
+pnpm format:check
 git diff --check
+bash .agents/scripts/check-harness.sh
 ```
 
 workspace 단위 검증:
@@ -82,17 +90,22 @@ pnpm gen:ds-component
 
 자세한 기준은 [Turbo Generators](./turbo-generators.md)를 따릅니다.
 
-## Planned Tooling
+## Storybook
 
-다음 도구는 도입 예정이지만, 현재 저장소에 설정되기 전까지 local development 명령으로 취급하지 않습니다.
+SDS UI 문서화와 시각 확인은 Storybook을 사용합니다.
 
-- Tailwind CSS
-- Storybook
-- SVGR
-- Vitest
-- Playwright
+```bash
+pnpm storybook
+pnpm build-storybook
+```
 
-도구를 실제로 도입하는 PR에서는 dependency, script, 설정 파일, 관련 문서를 함께 갱신합니다.
+## Icon Generation
+
+SDS icon은 SVGR 기반 generator를 사용합니다.
+
+```bash
+pnpm --filter @siksa/sds-icons gen:icons
+```
 
 ## Practical Rule
 
