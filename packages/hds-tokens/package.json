@@ -1,0 +1,20 @@
+{
+  "name": "@hashi/hds-tokens",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./styles.css": "./src/styles.css"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "echo \"@hashi/hds-tokens has no build step\"",
+    "lint": "echo \"@hashi/hds-tokens has no lint step\"",
+    "typecheck": "echo \"@hashi/hds-tokens has no typecheck step\""
+  }
+}

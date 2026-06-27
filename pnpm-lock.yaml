@@ -194,6 +194,9 @@ importers:
       '@hashi/hds-icons':
         specifier: workspace:*
         version: link:../../packages/hds-icons
+      '@hashi/hds-tokens':
+        specifier: workspace:*
+        version: link:../../packages/hds-tokens
       '@hashi/hds-ui':
         specifier: workspace:*
         version: link:../../packages/hds-ui
@@ -324,6 +327,8 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
+
+  packages/hds-tokens: {}
 
   packages/hds-ui:
     devDependencies:

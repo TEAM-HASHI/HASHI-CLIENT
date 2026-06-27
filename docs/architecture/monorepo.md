@@ -10,6 +10,7 @@ apps/
   client/      HASHI 웹 클라이언트 앱
 
 packages/
+  hds-tokens/  HASHI Design System CSS 토큰
   hds-ui/      HASHI Design System UI 컴포넌트
   hds-icons/   HASHI Design System Icon 컴포넌트
 
@@ -47,6 +48,7 @@ pnpm --filter @hashi/hds-icons build
 ## App And Package Boundary
 
 - `apps/client`는 제품 실행 단위입니다.
+- `packages/hds-tokens`는 여러 app/package가 공유하는 CSS design token을 담습니다.
 - `packages/hds-ui`는 제품 의미가 없는 UI primitive만 담습니다.
 - `packages/hds-icons`는 제품 의미가 없는 icon component만 담습니다.
 - `configs/tsconfig`는 공유 TypeScript 설정만 담습니다.
