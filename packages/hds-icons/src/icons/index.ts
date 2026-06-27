@@ -1,1 +1,5 @@
-export { default as CheckIcon } from './CheckIcon'
+export { default as HomeIcon } from './HomeIcon'
+export { default as MapIcon } from './MapIcon'
+export { default as MyReservationIcon } from './MyReservationIcon'
+export { default as MyIcon } from './MyIcon'
+export { default as SaveIcon } from './SaveIcon'

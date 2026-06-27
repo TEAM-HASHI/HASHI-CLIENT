@@ -1,0 +1,17 @@
+import type { SVGProps } from 'react'
+const SaveIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M5 6.12426C5 5.52576 5.52113 5.05985 6.11653 5.12057C7.5674 5.26852 10.1353 5.5 12 5.5C13.8647 5.5 16.4326 5.26852 17.8835 5.12057C18.4789 5.05985 19 5.52576 19 6.12425V20L12 16.25L5 20V6.12426Z"
+      fill="currentColor"
+    />
+  </svg>
+)
+export default SaveIcon
