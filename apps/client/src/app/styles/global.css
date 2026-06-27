@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@hashi/hds-tokens/styles.css';
+@source '../../../../../packages/hds-ui/src';
 
 @layer base {
   *,
