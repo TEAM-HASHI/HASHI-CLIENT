@@ -1,0 +1,8 @@
+@theme {
+  --gradient-01: linear-gradient(
+    180deg,
+    var(--color-primary-500) 0%,
+    var(--color-cool-gray-900) 100%
+  );
+  --background-image-gradient-01: var(--gradient-01);
+}

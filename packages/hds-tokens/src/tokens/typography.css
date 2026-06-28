@@ -1,0 +1,241 @@
+@theme {
+  --typo-header-1: 1.5rem;
+  --typo-header-1--line-height: normal;
+  --typo-header-1--font-weight: 600;
+  --typo-header-1--letter-spacing: 0;
+
+  --typo-header-2: 1.375rem;
+  --typo-header-2--line-height: normal;
+  --typo-header-2--font-weight: 600;
+  --typo-header-2--letter-spacing: 0;
+
+  --typo-header-3: 1.25rem;
+  --typo-header-3--line-height: normal;
+  --typo-header-3--font-weight: 600;
+  --typo-header-3--letter-spacing: 0;
+
+  --typo-sub-header-1: 1.125rem;
+  --typo-sub-header-1--line-height: normal;
+  --typo-sub-header-1--font-weight: 600;
+  --typo-sub-header-1--letter-spacing: 0;
+
+  --typo-sub-header-2: 1rem;
+  --typo-sub-header-2--line-height: normal;
+  --typo-sub-header-2--font-weight: 600;
+  --typo-sub-header-2--letter-spacing: 0;
+
+  --typo-sub-header-3: 0.9375rem;
+  --typo-sub-header-3--line-height: normal;
+  --typo-sub-header-3--font-weight: 600;
+  --typo-sub-header-3--letter-spacing: 0;
+
+  --typo-body-1: 1.25rem;
+  --typo-body-1--line-height: normal;
+  --typo-body-1--font-weight: 400;
+  --typo-body-1--letter-spacing: 0;
+
+  --typo-body-2: 1.125rem;
+  --typo-body-2--line-height: normal;
+  --typo-body-2--font-weight: 400;
+  --typo-body-2--letter-spacing: 0;
+
+  --typo-body-3: 1rem;
+  --typo-body-3--line-height: normal;
+  --typo-body-3--font-weight: 500;
+  --typo-body-3--letter-spacing: 0;
+
+  --typo-body-4: 1rem;
+  --typo-body-4--line-height: normal;
+  --typo-body-4--font-weight: 400;
+  --typo-body-4--letter-spacing: 0;
+
+  --typo-body-5: 0.9375rem;
+  --typo-body-5--line-height: normal;
+  --typo-body-5--font-weight: 400;
+  --typo-body-5--letter-spacing: 0;
+
+  --typo-body-6: 0.875rem;
+  --typo-body-6--line-height: normal;
+  --typo-body-6--font-weight: 500;
+  --typo-body-6--letter-spacing: 0;
+
+  --typo-body-7: 0.875rem;
+  --typo-body-7--line-height: normal;
+  --typo-body-7--font-weight: 400;
+  --typo-body-7--letter-spacing: 0;
+
+  --typo-body-8: 0.8125rem;
+  --typo-body-8--line-height: normal;
+  --typo-body-8--font-weight: 400;
+  --typo-body-8--letter-spacing: 0;
+
+  --typo-caption-1: 0.75rem;
+  --typo-caption-1--line-height: normal;
+  --typo-caption-1--font-weight: 400;
+  --typo-caption-1--letter-spacing: 0;
+
+  --typo-caption-2: 0.75rem;
+  --typo-caption-2--line-height: normal;
+  --typo-caption-2--font-weight: 400;
+  --typo-caption-2--letter-spacing: 0;
+
+  --typo-caption-3: 0.6875rem;
+  --typo-caption-3--line-height: normal;
+  --typo-caption-3--font-weight: 400;
+  --typo-caption-3--letter-spacing: 0;
+
+  --typo-caption-4: 0.625rem;
+  --typo-caption-4--line-height: normal;
+  --typo-caption-4--font-weight: 400;
+  --typo-caption-4--letter-spacing: 0;
+
+  --typo-caption-5: 0.625rem;
+  --typo-caption-5--line-height: normal;
+  --typo-caption-5--font-weight: 400;
+  --typo-caption-5--letter-spacing: 0;
+
+  --typo-long-body-1: 0.9375rem;
+  --typo-long-body-1--line-height: 1.5;
+  --typo-long-body-1--font-weight: 400;
+  --typo-long-body-1--letter-spacing: 0;
+}
+
+@utility typo-header-1 {
+  font-size: var(--typo-header-1);
+  line-height: var(--typo-header-1--line-height);
+  letter-spacing: var(--typo-header-1--letter-spacing);
+  font-weight: var(--typo-header-1--font-weight);
+}
+
+@utility typo-header-2 {
+  font-size: var(--typo-header-2);
+  line-height: var(--typo-header-2--line-height);
+  letter-spacing: var(--typo-header-2--letter-spacing);
+  font-weight: var(--typo-header-2--font-weight);
+}
+
+@utility typo-header-3 {
+  font-size: var(--typo-header-3);
+  line-height: var(--typo-header-3--line-height);
+  letter-spacing: var(--typo-header-3--letter-spacing);
+  font-weight: var(--typo-header-3--font-weight);
+}
+
+@utility typo-sub-header-1 {
+  font-size: var(--typo-sub-header-1);
+  line-height: var(--typo-sub-header-1--line-height);
+  letter-spacing: var(--typo-sub-header-1--letter-spacing);
+  font-weight: var(--typo-sub-header-1--font-weight);
+}
+
+@utility typo-sub-header-2 {
+  font-size: var(--typo-sub-header-2);
+  line-height: var(--typo-sub-header-2--line-height);
+  letter-spacing: var(--typo-sub-header-2--letter-spacing);
+  font-weight: var(--typo-sub-header-2--font-weight);
+}
+
+@utility typo-sub-header-3 {
+  font-size: var(--typo-sub-header-3);
+  line-height: var(--typo-sub-header-3--line-height);
+  letter-spacing: var(--typo-sub-header-3--letter-spacing);
+  font-weight: var(--typo-sub-header-3--font-weight);
+}
+
+@utility typo-body-1 {
+  font-size: var(--typo-body-1);
+  line-height: var(--typo-body-1--line-height);
+  letter-spacing: var(--typo-body-1--letter-spacing);
+  font-weight: var(--typo-body-1--font-weight);
+}
+
+@utility typo-body-2 {
+  font-size: var(--typo-body-2);
+  line-height: var(--typo-body-2--line-height);
+  letter-spacing: var(--typo-body-2--letter-spacing);
+  font-weight: var(--typo-body-2--font-weight);
+}
+
+@utility typo-body-3 {
+  font-size: var(--typo-body-3);
+  line-height: var(--typo-body-3--line-height);
+  letter-spacing: var(--typo-body-3--letter-spacing);
+  font-weight: var(--typo-body-3--font-weight);
+}
+
+@utility typo-body-4 {
+  font-size: var(--typo-body-4);
+  line-height: var(--typo-body-4--line-height);
+  letter-spacing: var(--typo-body-4--letter-spacing);
+  font-weight: var(--typo-body-4--font-weight);
+}
+
+@utility typo-body-5 {
+  font-size: var(--typo-body-5);
+  line-height: var(--typo-body-5--line-height);
+  letter-spacing: var(--typo-body-5--letter-spacing);
+  font-weight: var(--typo-body-5--font-weight);
+}
+
+@utility typo-body-6 {
+  font-size: var(--typo-body-6);
+  line-height: var(--typo-body-6--line-height);
+  letter-spacing: var(--typo-body-6--letter-spacing);
+  font-weight: var(--typo-body-6--font-weight);
+}
+
+@utility typo-body-7 {
+  font-size: var(--typo-body-7);
+  line-height: var(--typo-body-7--line-height);
+  letter-spacing: var(--typo-body-7--letter-spacing);
+  font-weight: var(--typo-body-7--font-weight);
+}
+
+@utility typo-body-8 {
+  font-size: var(--typo-body-8);
+  line-height: var(--typo-body-8--line-height);
+  letter-spacing: var(--typo-body-8--letter-spacing);
+  font-weight: var(--typo-body-8--font-weight);
+}
+
+@utility typo-caption-1 {
+  font-size: var(--typo-caption-1);
+  line-height: var(--typo-caption-1--line-height);
+  letter-spacing: var(--typo-caption-1--letter-spacing);
+  font-weight: var(--typo-caption-1--font-weight);
+}
+
+@utility typo-caption-2 {
+  font-size: var(--typo-caption-2);
+  line-height: var(--typo-caption-2--line-height);
+  letter-spacing: var(--typo-caption-2--letter-spacing);
+  font-weight: var(--typo-caption-2--font-weight);
+}
+
+@utility typo-caption-3 {
+  font-size: var(--typo-caption-3);
+  line-height: var(--typo-caption-3--line-height);
+  letter-spacing: var(--typo-caption-3--letter-spacing);
+  font-weight: var(--typo-caption-3--font-weight);
+}
+
+@utility typo-caption-4 {
+  font-size: var(--typo-caption-4);
+  line-height: var(--typo-caption-4--line-height);
+  letter-spacing: var(--typo-caption-4--letter-spacing);
+  font-weight: var(--typo-caption-4--font-weight);
+}
+
+@utility typo-caption-5 {
+  font-size: var(--typo-caption-5);
+  line-height: var(--typo-caption-5--line-height);
+  letter-spacing: var(--typo-caption-5--letter-spacing);
+  font-weight: var(--typo-caption-5--font-weight);
+}
+
+@utility typo-long-body-1 {
+  font-size: var(--typo-long-body-1);
+  line-height: var(--typo-long-body-1--line-height);
+  letter-spacing: var(--typo-long-body-1--letter-spacing);
+  font-weight: var(--typo-long-body-1--font-weight);
+}
