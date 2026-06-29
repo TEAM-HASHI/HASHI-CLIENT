@@ -1,0 +1,23 @@
+import type { SVGProps } from 'react'
+const PencilIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg
+    width="1em"
+    height="1em"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M11.4387 4.34641C11.5491 4.15509 11.7938 4.08954 11.9851 4.2L15.3014 6.11469C15.4927 6.22514 15.5583 6.46978 15.4478 6.6611L9.91847 16.2382C9.88099 16.3031 9.82602 16.3562 9.75982 16.3914L6.5699 18.0871C6.30889 18.2259 5.99274 18.0434 5.98239 17.7479L5.85598 14.1375C5.85335 14.0626 5.87184 13.9885 5.90932 13.9235L11.4387 4.34641Z"
+      fill="#273033"
+    />
+    <path
+      d="M5 19.5H19.5"
+      stroke="#FF5D5D"
+      strokeWidth={1.4}
+      strokeLinecap="round"
+    />
+  </svg>
+)
+export default PencilIcon
