@@ -27,7 +27,7 @@
 | Language               | `React`, `TypeScript`                         | `react@^19.2.6`, `typescript@~6.0.2`     | Current | `apps/client`, `packages/*` 공통 기준      |
 | Bundler                | `Vite`                                        | `vite@^8.0.12`                           | Current | `@hashi/client` 실행/빌드 기준             |
 | Lint and format        | `ESLint`, `Prettier`                          | `eslint@^10.3.0`, `prettier@^3.6.2`      | Current | 루트 script와 공통 ESLint config 기준      |
-| CSS                    | `Tailwind CSS`                                | `tailwindcss@^4.3.1`                     | Current | `@tailwindcss/vite`, `tailwind-merge` 사용 |
+| CSS                    | `Tailwind CSS`, `class-variance-authority`    | `tailwindcss@^4.3.1`, `cva@^0.7.1`       | Current | `@tailwindcss/vite`, `tailwind-merge` 사용 |
 | API client             | `ky`                                          | `ky@^2.0.2`                              | Current | `apps/client/src/shared/api` 기준          |
 | Server state           | `TanStack Query`                              | `@tanstack/react-query@^5.101.0`         | Current | app provider와 shared query client 기준    |
 | Unit/Component test    | `Vitest`                                      | `vitest@^3.2.4`                          | Current | client, HDS UI, shared config 기준         |
@@ -46,7 +46,7 @@
 - Language: [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/docs/)
 - Bundler: [Vite](https://vite.dev/guide/)
 - Lint and format: [ESLint](https://eslint.org/docs/latest/), [Prettier](https://prettier.io/docs/)
-- CSS: [Tailwind CSS](https://tailwindcss.com/docs/installation)
+- CSS: [Tailwind CSS](https://tailwindcss.com/docs/installation), [Class Variance Authority](https://cva.style/docs)
 - API client: [ky](https://github.com/sindresorhus/ky)
 - Server state: [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview)
 - Unit/Component test: [Vitest](https://vitest.dev/guide/)

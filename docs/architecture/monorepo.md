@@ -60,7 +60,7 @@ pnpm --filter @hashi/hds-icons build
 - `dev`는 persistent task라 cache하지 않습니다.
 - `build`는 dependency package의 `build`를 먼저 실행합니다.
 - `lint`와 `typecheck`는 workspace 전체 기준으로 실행합니다.
-- `test:e2e`는 client app의 Playwright 검증을 실행합니다.
+- `test:e2e`는 client app의 Playwright 검증을 실행하고, Storybook task는 HDS UI 문서화와 컴포넌트 상태 확인에 사용합니다.
 - mobile task는 아직 없습니다. 도입 시 `turbo.json`, [Tech Stack](./tech-stack.md), 관련 문서를 함께 갱신합니다.
 
 ## Generator Ownership
