@@ -8,7 +8,6 @@ const PlusIcon = (props: SVGProps<SVGSVGElement>) => (
     xmlns="http://www.w3.org/2000/svg"
     {...props}
   >
-    <circle cx={12} cy={12} r={8.5} stroke="currentColor" />
     <path
       d="M12 7.73682V16.2631"
       stroke="currentColor"
