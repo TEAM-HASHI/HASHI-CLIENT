@@ -11,4 +11,5 @@ export const apiClient = ky.create({
   baseUrl: API_BASE_URL,
   timeout: API_TIMEOUT,
   retry: 0,
+  throwHttpErrors: false,
 })
