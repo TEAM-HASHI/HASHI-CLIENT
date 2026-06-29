@@ -1,0 +1,4 @@
+interface:
+  display_name: 'HDS Component Creator'
+  short_description: 'Create HDS components with repo rules'
+  default_prompt: 'Use $hds-component-creator to add or update a HASHI Design System component.'
