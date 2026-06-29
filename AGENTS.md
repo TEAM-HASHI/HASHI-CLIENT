@@ -45,7 +45,7 @@
 | page 또는 route          | `docs/architecture/app-structure.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/page-feature.md` |
 | API query 또는 mutation  | `docs/architecture/data-layer.md`, `.agents/recipes/api-integration.md`                                   |
 | form 또는 state flow     | `docs/conventions/coding.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/form-flow.md`            |
-| HDS component            | `docs/rules/design-system-instructions.md`, `.agents/recipes/hds-component.md`                            |
+| HDS component            | `packages/AGENTS.md`, `docs/rules/design-system-instructions.md`, `.agents/recipes/hds-component.md`      |
 | generator                | `docs/workflows/turbo-generators.md`                                                                      |
 | agent harness            | `docs/agent/skills.md`, `.agents/README.md`                                                               |
 
