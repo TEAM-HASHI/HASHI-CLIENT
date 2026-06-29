@@ -8,9 +8,8 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
     const componentPath = `packages/hds-ui/src/components/${componentFolder}`
 
     execFileSync(
-      'corepack',
+      'pnpm',
       [
-        'pnpm',
         'exec',
         'prettier',
         '--write',
