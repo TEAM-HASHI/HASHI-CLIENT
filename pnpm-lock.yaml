@@ -335,6 +335,9 @@ importers:
 
   packages/hds-ui:
     dependencies:
+      '@hashi/hds-icons':
+        specifier: workspace:*
+        version: link:../hds-icons
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
