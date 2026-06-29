@@ -1,15 +1,24 @@
 import type { Options } from 'ky'
+import { ApiError } from './apiError'
 import { apiClient } from './apiClient'
-import type { ApiResponse } from './types'
+import { isErrorResponse, type ApiResponse } from './types'
+
+const normalizePath = (path: string) => path.replace(/^\/+/, '')
 
 export const request = async <TData>(
   path: string,
   options?: Options,
-): Promise<TData | undefined> => {
-  const response = await apiClient(path, options).json<ApiResponse<TData>>()
+): Promise<TData | null> => {
+  const normalizedPath = normalizePath(path)
+  const httpResponse = await apiClient(normalizedPath, options)
+  const response = await httpResponse.json<ApiResponse<TData>>()
 
-  if (!response.success) {
-    throw new Error(response.message)
+  if (isErrorResponse(response)) {
+    throw new ApiError(response)
+  }
+
+  if (!httpResponse.ok) {
+    throw new Error(`HTTP ${httpResponse.status}`)
   }
 
   return response.data

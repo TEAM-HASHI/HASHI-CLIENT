@@ -2,7 +2,7 @@ export type SuccessResponse<TData = unknown> = {
   success: true
   code: string
   message: string
-  data?: TData
+  data: TData | null
 }
 
 export type FieldError = {
@@ -15,6 +15,7 @@ export type ErrorResponse = {
   success: false
   code: string
   message: string
+  data: null
   timestamp: string
   path: string
   errors?: FieldError[]
@@ -23,3 +24,7 @@ export type ErrorResponse = {
 export type ApiResponse<TData = unknown> =
   | SuccessResponse<TData>
   | ErrorResponse
+
+export const isErrorResponse = (
+  response: ApiResponse<unknown>,
+): response is ErrorResponse => !response.success
