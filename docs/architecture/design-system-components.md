@@ -184,4 +184,5 @@ pnpm --filter @hashi/hds-ui build
 pnpm format:check
 ```
 
-Storybook은 목표 UI 문서화/컴포넌트 테스트 스택이지만 아직 설정되어 있지 않습니다. Storybook을 도입하는 티켓에서는 이 문서와 package scripts를 함께 갱신합니다.
+Storybook은 HDS UI 문서화와 컴포넌트 상태 확인에 사용합니다.
+컴포넌트를 추가하거나 Storybook story를 바꾸면 필요한 story 상태를 확인하고 `pnpm build-storybook` 영향 범위를 검토합니다.

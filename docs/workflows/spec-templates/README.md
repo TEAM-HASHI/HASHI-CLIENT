@@ -61,4 +61,4 @@ spec은 다음 경우에 작성합니다.
 - 앱 코드는 `apps/client`를 기준으로 작성합니다.
 - 디자인시스템 UI는 `packages/hds-ui`, 아이콘은 `packages/hds-icons`를 기준으로 작성합니다.
 - generator가 필요한 경우 `pnpm gen:page`, `pnpm gen:component`, `pnpm gen:hook`, `pnpm gen:ds-component`를 우선 확인합니다.
-- Tailwind CSS, Storybook, SVGR은 도입 예정 표준입니다. 실제 dependency와 script가 추가되기 전까지는 `Current` 도구처럼 취급하지 않습니다.
+- Tailwind CSS, Storybook, SVGR의 현재 상태는 [Tech Stack](../../architecture/tech-stack.md)을 기준으로 확인합니다.

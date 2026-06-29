@@ -1,0 +1,4 @@
+interface:
+  display_name: 'HDS Storybook Creator'
+  short_description: 'Create HDS Storybook stories'
+  default_prompt: 'Use $hds-storybook-creator to add or update Storybook stories for a HASHI Design System component.'

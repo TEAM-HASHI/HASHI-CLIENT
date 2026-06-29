@@ -86,7 +86,7 @@
 
 아래 항목은 실제 필요가 생길 때 별도 티켓으로 다룹니다.
 
-- Storybook 도입
+- Storybook interaction/test coverage 확대
 - design token package 분리
 - icon generation pipeline
 - compound component API 표준화
