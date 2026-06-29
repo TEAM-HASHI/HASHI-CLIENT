@@ -39,8 +39,11 @@ packages/
       index.ts
       components/
         index.ts
-        button/
-          Button.tsx
+        {componentFolder}/
+          {ComponentName}.tsx
+          {ComponentName}.spec.md
+          {ComponentName}.stories.tsx
+          index.ts
   hds-icons/
     src/
       index.ts

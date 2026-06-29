@@ -1,7 +1,10 @@
-type
-{{pascalCase name}}Props = { className?: string } export const
-{{pascalCase name}}
-= ({ className }:
-{{pascalCase name}}Props) => { return
-<div className='{className}'></div>
+import type { ComponentPropsWithoutRef } from 'react'
+
+export type {{pascalCase name}}Props = ComponentPropsWithoutRef<'div'>
+
+export const {{pascalCase name}} = ({
+  children,
+  ...props
+}: {{pascalCase name}}Props) => {
+  return <div {...props}>{children}</div>
 }

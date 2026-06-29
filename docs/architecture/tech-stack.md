@@ -62,8 +62,8 @@
 - 새 도구는 필요한 티켓에서 설치하고 `package.json`, `pnpm-lock.yaml`, 관련 문서를 함께 갱신합니다.
 - 여러 workspace에서 공유하는 외부 dependency는 `pnpm-workspace.yaml`의 `catalog`에 등록합니다.
 - 앱에만 필요한 dependency는 먼저 `@hashi/client`에 추가합니다.
-- 테스트, Storybook, Sentry, Git hook은 script와 검증 절차가 정해질 때 도입합니다.
-- Playwright E2E 구조는 별도 티켓에서 추가합니다.
+- 새 도구를 추가하거나 기존 도구의 CI/검증 절차를 바꾸면 관련 script와 문서를 함께 갱신합니다.
+- Playwright E2E task는 현재 client app에 있으며, 테스트 시나리오 확장은 별도 티켓에서 다룹니다.
 
 ## Related Docs
 

@@ -140,7 +140,7 @@ ComponentName
 
 ## Storybook
 
-Storybook 도입 후 HDS component는 story를 함께 작성합니다.
+HDS component는 Storybook story를 함께 작성합니다.
 
 - [ ] Default
 - [ ] variant / size / tone

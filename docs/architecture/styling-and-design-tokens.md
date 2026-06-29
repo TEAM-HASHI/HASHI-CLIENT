@@ -4,11 +4,11 @@
 
 ## Current State
 
-현재 저장소에는 Tailwind CSS와 별도 token package가 아직 기본 dependency로 들어와 있지 않습니다.
+현재 저장소에는 Tailwind CSS가 client app 기준으로 설정되어 있습니다.
+별도 design token package는 아직 없습니다.
 
-다만 화면과 컴포넌트에서 Tailwind CSS를 사용할 경우 `docs/conventions/coding.md`의 Tailwind CSS 컨벤션을 따릅니다.
-
-목표 styling stack은 Tailwind CSS입니다. 도입 시 dependency, theme, formatter 설정을 함께 추가하고 이 문서를 갱신합니다.
+화면과 컴포넌트에서 Tailwind CSS를 사용할 경우 `docs/conventions/coding.md`의 Tailwind CSS 컨벤션을 따릅니다.
+token package를 도입할 때는 dependency, theme, formatter 설정을 함께 추가하고 이 문서를 갱신합니다.
 
 ## Styling Boundary
 
@@ -19,7 +19,7 @@
 
 ## Tailwind Rules
 
-Tailwind CSS를 도입하거나 사용하는 경우:
+Tailwind CSS를 사용하는 경우:
 
 - 공통 color, spacing, font size는 Tailwind theme에서 관리합니다.
 - 조건부 class는 문자열 결합보다 `cn` 같은 유틸 사용을 우선합니다.

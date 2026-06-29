@@ -54,16 +54,19 @@ apps/client/src/shared/hooks/
 ```text
 packages/hds-ui/src/components/{componentName}/
   {ComponentName}.tsx
+  {ComponentName}.spec.md
+  {ComponentName}.stories.tsx
   index.ts
 ```
 
-`ds-component` generator는 `packages/hds-ui/src/components/index.ts`에 public export를 append합니다.
+`ds-component` generator는 `packages/hds-ui/src/components/index.ts`에 component와 props type public export를 append합니다.
+생성 직후 component, spec, story, local index, public components index를 Prettier로 정리합니다.
 
 ## Spec Files
 
-현재 generator는 `*.spec.md`를 자동 생성하지 않습니다.
+`ds-component` generator는 HDS component의 `*.spec.md`를 자동 생성합니다.
 
-구현 기준 spec이 필요한 작업이면 [Spec Writing](./spec-writing.md)에 따라 [Spec Templates](./spec-templates/README.md)를 복사해서 구현 대상과 같은 폴더에 둡니다.
+page, shared component, hook처럼 generator가 spec을 만들지 않는 작업은 [Spec Writing](./spec-writing.md)에 따라 [Spec Templates](./spec-templates/README.md)를 복사해서 구현 대상과 같은 폴더에 둡니다.
 
 예시:
 
@@ -75,9 +78,10 @@ apps/client/src/pages/login/
 packages/hds-ui/src/components/button/
   Button.tsx
   Button.spec.md
+  Button.stories.tsx
 ```
 
-나중에 generator가 spec 파일을 자동 생성하도록 바뀌면 이 문서와 `docs/workflows/spec-templates/`를 함께 갱신합니다.
+HDS Storybook story는 component scaffold와 함께 생성하고, 실제 component 상태에 맞게 variant와 interaction case를 채웁니다.
 
 ## Boundary
 
@@ -104,9 +108,9 @@ generator를 추가하거나 바꿀 때 함께 갱신합니다.
 generator 변경 후 최소 검증:
 
 ```bash
-pnpm format:check
-pnpm lint
-pnpm typecheck
+corepack pnpm format:check
+corepack pnpm lint
+corepack pnpm typecheck
 git diff --check
 ```
 
