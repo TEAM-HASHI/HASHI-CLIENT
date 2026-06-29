@@ -4,6 +4,7 @@
 
 ## Read First
 
+- `packages/AGENTS.md`
 - `docs/rules/design-system-instructions.md`
 - `docs/architecture/design-system.md`
 - `docs/architecture/design-system-components.md`
@@ -14,11 +15,12 @@
 
 1. 기존 HDS component와 icon으로 해결 가능한지 먼저 확인합니다.
 2. 제품 의미가 강한 UI는 `packages/hds-ui`로 바로 승격하지 않습니다.
-3. 새 public component라면 component 근처에 `*.spec.md` 작성 여부를 판단합니다.
+3. 새 public component라면 `pnpm gen:ds-component`가 생성한 `*.spec.md`와 story를 실제 API와 상태에 맞게 채웁니다.
 4. props는 Figma variant, size, tone, state를 표현하되 app domain 로직을 포함하지 않습니다.
 5. Tailwind utility와 token 기준을 우선하고 반복 arbitrary value는 기록합니다.
 6. public export를 확인합니다.
 7. Storybook story에 Default, variant, size, disabled, loading, invalid/error, overflow 케이스를 반영합니다.
+8. Storybook 생성 전용 skill이 추가되면 세부 story 작성은 해당 skill에 위임하고, 이 recipe는 HDS 경계와 검증 기준을 유지합니다.
 
 ## Preferred Commands
 

@@ -14,6 +14,7 @@ Repo-scoped Codex skills live in `.agents/skills`.
 | Skill                   | Purpose                                                                                           | Status |
 | ----------------------- | ------------------------------------------------------------------------------------------------- | ------ |
 | `hds-storybook-creator` | Guides HDS Storybook story authoring, story states, args, controls, and Storybook verification.   | Active |
+| `hds-component-creator` | Guides HDS component and icon creation through package boundaries, docs, exports, and checks.     | Active |
 | `manage-skills`         | Audits changed files for verify-skill coverage gaps and keeps verify skill metadata synchronized. | Active |
 | `verify-implementation` | Runs registered `verify-*` skills and produces an integrated verification report.                 | Active |
 
@@ -33,7 +34,8 @@ No `verify-*` skills are registered yet.
 ## Skill Boundaries
 
 - `hds-storybook-creator`는 HDS Storybook story 작성, story 상태, controls, interaction 예시, Storybook 검증 기준을 담당합니다.
-- HDS component의 package boundary, public API, export, spec 기준은 디자인시스템 문서와 HDS component 작업 흐름을 따릅니다.
+- `hds-component-creator`는 HDS package boundary, generator scaffold flow, public exports, HDS 검증 선택 기준을 담당합니다.
+- HDS component의 source of truth는 디자인시스템 문서와 구현 대상 옆의 component spec입니다.
 
 When a verify skill is added, update:
 
@@ -43,15 +45,16 @@ When a verify skill is added, update:
 
 ## Harness Files
 
-| Path                                            | Purpose                              |
-| ----------------------------------------------- | ------------------------------------ |
-| `.agents/README.md`                             | Agent harness entry map              |
-| `.agents/checklists/pre-work.md`                | Pre-work routing and scope checklist |
-| `.agents/checklists/verification.md`            | Verification command selection       |
-| `.agents/checklists/final-report.md`            | Final summary checklist              |
-| `.agents/recipes/*`                             | Repeatable frontend workflow recipes |
-| `.agents/skills/hds-storybook-creator/SKILL.md` | HDS Storybook story workflow         |
-| `.agents/scripts/check-harness.sh`              | Lightweight harness path check       |
+| Path                                            | Purpose                                  |
+| ----------------------------------------------- | ---------------------------------------- |
+| `.agents/README.md`                             | Agent harness entry map                  |
+| `.agents/checklists/pre-work.md`                | Pre-work routing and scope checklist     |
+| `.agents/checklists/verification.md`            | Verification command selection           |
+| `.agents/checklists/final-report.md`            | Final summary checklist                  |
+| `.agents/recipes/*`                             | Repeatable frontend workflow recipes     |
+| `.agents/skills/hds-storybook-creator/SKILL.md` | HDS Storybook story workflow             |
+| `.agents/skills/hds-component-creator/SKILL.md` | HDS component and icon creation workflow |
+| `.agents/scripts/check-harness.sh`              | Lightweight harness path check           |
 
 ## Notes
 

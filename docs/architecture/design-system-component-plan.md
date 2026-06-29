@@ -80,7 +80,8 @@
 3. public props와 상태를 최소 API로 정의합니다.
 4. `pnpm gen:ds-component`로 scaffold를 생성합니다.
 5. 접근성 요구사항을 컴포넌트 책임에 포함합니다.
-6. `pnpm --filter @hashi/hds-ui lint`, `typecheck`, `build`로 검증합니다.
+6. 생성된 spec과 Storybook story를 실제 public API와 상태에 맞게 채웁니다.
+7. `pnpm --filter @hashi/hds-ui lint`, `typecheck`, `build`로 검증합니다.
 
 ## Future Work
 

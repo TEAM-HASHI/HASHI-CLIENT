@@ -14,7 +14,7 @@
 
 ## Current Tooling Boundary
 
-Tailwind CSS, Storybook, SVGR은 HASHI 디자인시스템 구현 표준입니다.
+Tailwind CSS, Storybook, SVGR은 현재 HASHI 디자인시스템 구현 표준입니다.
 
 현재 저장소에 아직 설치되지 않은 도구는 코드나 문서에서 `Current`로 취급하지 않습니다.
 도구를 실제로 도입하는 PR에서는 dependency, script, 설정 파일, 관련 문서를 함께 갱신합니다.

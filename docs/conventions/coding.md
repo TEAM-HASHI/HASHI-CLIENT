@@ -21,6 +21,8 @@ HASHI Client 코드 작성 기준입니다. 현재 저장소의 generator와 기
 | `pnpm gen:hook`         | `apps/client/src/shared/hooks/use{{PascalCase name}}.ts`                       |
 | `pnpm gen:ds-component` | `packages/hds-ui/src/components/{{camelCase name}}/{{PascalCase name}}.tsx`    |
 
+`gen:ds-component`는 component 파일과 함께 `*.spec.md`, `*.stories.tsx`, local `index.ts`, public export를 생성합니다.
+
 ## 컴포넌트
 
 - 컴포넌트는 arrow function으로 선언합니다.

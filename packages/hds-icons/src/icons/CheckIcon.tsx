@@ -1,19 +1,18 @@
 import type { SVGProps } from 'react'
 const CheckIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
     width="1em"
     height="1em"
+    viewBox="0 0 26 26"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
     {...props}
   >
     <path
-      d="M20 6 9 17l-5-5"
+      d="M8 11.5L12.3185 17.258C12.4045 17.3727 12.5797 17.3623 12.6516 17.2382L18 8"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={1.8}
       strokeLinecap="round"
-      strokeLinejoin="round"
     />
   </svg>
 )

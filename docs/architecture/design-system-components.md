@@ -10,6 +10,8 @@
 ```text
 packages/hds-ui/src/components/{componentFolder}/
   {ComponentName}.tsx
+  {ComponentName}.spec.md
+  {ComponentName}.stories.tsx
   index.ts
 ```
 
@@ -178,11 +180,11 @@ spec에는 다음을 포함합니다.
 디자인 시스템 component 변경 후 기본 검증:
 
 ```bash
-pnpm --filter @hashi/hds-ui lint
-pnpm --filter @hashi/hds-ui typecheck
-pnpm --filter @hashi/hds-ui build
-pnpm format:check
+corepack pnpm --filter @hashi/hds-ui lint
+corepack pnpm --filter @hashi/hds-ui typecheck
+corepack pnpm --filter @hashi/hds-ui build
+corepack pnpm format:check
 ```
 
 Storybook은 HDS UI 문서화와 컴포넌트 상태 확인에 사용합니다.
-컴포넌트를 추가하거나 Storybook story를 바꾸면 필요한 story 상태를 확인하고 `pnpm build-storybook` 영향 범위를 검토합니다.
+컴포넌트를 추가하거나 Storybook story를 바꾸면 필요한 story 상태를 확인하고 `corepack pnpm build-storybook` 영향 범위를 검토합니다.

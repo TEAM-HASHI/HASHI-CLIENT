@@ -1,6 +1,30 @@
+import { execFileSync } from 'node:child_process'
 import type { PlopTypes } from '@turbo/gen'
 
 export default function generator(plop: PlopTypes.NodePlopAPI): void {
+  plop.setActionType('formatGeneratedFiles', (answers) => {
+    const componentFolder = plop.renderString('{{camelCase name}}', answers)
+    const componentName = plop.renderString('{{pascalCase name}}', answers)
+    const componentPath = `packages/hds-ui/src/components/${componentFolder}`
+
+    execFileSync(
+      'pnpm',
+      [
+        'exec',
+        'prettier',
+        '--write',
+        `${componentPath}/${componentName}.tsx`,
+        `${componentPath}/${componentName}.spec.md`,
+        `${componentPath}/${componentName}.stories.tsx`,
+        `${componentPath}/index.ts`,
+        'packages/hds-ui/src/components/index.ts',
+      ],
+      { stdio: 'inherit' },
+    )
+
+    return 'Formatted generated HDS component files'
+  })
+
   plop.setGenerator('page', {
     description: 'Create a client page under apps/client/src/pages',
     prompts: [
@@ -85,14 +109,30 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
       },
       {
         type: 'add',
+        path: 'packages/hds-ui/src/components/{{camelCase name}}/{{pascalCase name}}.spec.md',
+        templateFile: 'templates/ds-component/component.spec.md.hbs',
+      },
+      {
+        type: 'add',
+        path: 'packages/hds-ui/src/components/{{camelCase name}}/{{pascalCase name}}.stories.tsx',
+        templateFile: 'templates/ds-component/component.stories.tsx.hbs',
+      },
+      {
+        type: 'add',
         path: 'packages/hds-ui/src/components/{{camelCase name}}/index.ts',
         templateFile: 'templates/ds-component/index.ts.hbs',
       },
       {
         type: 'append',
         path: 'packages/hds-ui/src/components/index.ts',
-        template:
-          "export { {{pascalCase name}} } from './{{camelCase name}}'\n",
+        template: [
+          "export { {{pascalCase name}} } from './{{camelCase name}}'",
+          "export type { {{pascalCase name}}Props } from './{{camelCase name}}'",
+          '',
+        ].join('\n'),
+      },
+      {
+        type: 'formatGeneratedFiles',
       },
     ],
   })
