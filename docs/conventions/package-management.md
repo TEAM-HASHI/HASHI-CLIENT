@@ -27,12 +27,13 @@ packages:
 
 현재 주요 workspace는 다음과 같습니다.
 
-| Workspace          | 역할                              |
-| ------------------ | --------------------------------- |
-| `@hashi/client`    | Vite 기반 클라이언트 앱           |
-| `@hashi/hds-ui`    | HASHI Design System UI 컴포넌트   |
-| `@hashi/hds-icons` | HASHI Design System Icon 컴포넌트 |
-| `@hashi/tsconfig`  | 공통 TypeScript 설정              |
+| Workspace           | 역할                              |
+| ------------------- | --------------------------------- |
+| `@hashi/client`     | Vite 기반 클라이언트 앱           |
+| `@hashi/hds-tokens` | HASHI Design System CSS 토큰      |
+| `@hashi/hds-ui`     | HASHI Design System UI 컴포넌트   |
+| `@hashi/hds-icons`  | HASHI Design System Icon 컴포넌트 |
+| `@hashi/tsconfig`   | 공통 TypeScript 설정              |
 
 ## Catalog
 

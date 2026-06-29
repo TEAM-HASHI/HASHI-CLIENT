@@ -17,6 +17,7 @@
   "dependencies": {
     "@sentry/react": "catalog:",
     "@hashi/hds-icons": "workspace:*",
+    "@hashi/hds-tokens": "workspace:*",
     "@hashi/hds-ui": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "clsx": "catalog:",
