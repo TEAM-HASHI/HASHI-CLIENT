@@ -11,8 +11,8 @@ const iconButtonVariants = cva(
   {
     variants: {
       size: {
-        xs: 'size-[1.5rem]',
-        md: 'size-[2.5rem]',
+        xs: 'size-6',
+        md: 'size-10',
       },
     },
     defaultVariants: {

@@ -92,7 +92,7 @@ export const TopbarAction: Story = {
   },
   decorators: [
     (Story) => (
-      <div className="text-cool-gray-900 flex w-[24.5625rem] items-center justify-between px-5 py-6">
+      <div className="text-cool-gray-900 flex w-[393px] max-w-full items-center justify-between px-5 py-6">
         <Story />
         <span className="typo-sub-header-2">리뷰 상세</span>
         <span className="size-6" />
@@ -157,7 +157,7 @@ export const Loading: Story = {
 
 export const WiderTopbarHitArea: Story = {
   render: () => (
-    <div className="text-cool-gray-900 flex w-[24.5625rem] items-center justify-between px-2 py-4">
+    <div className="text-cool-gray-900 flex w-[393px] max-w-full items-center justify-between px-2 py-4">
       <IconButton
         aria-label="뒤로가기"
         className="-m-2.5 box-content p-2.5"
