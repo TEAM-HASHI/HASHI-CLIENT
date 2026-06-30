@@ -33,6 +33,7 @@
     "tailwind-merge": "catalog:"
   },
   "devDependencies": {
+    "@hashi/hds-icons": "workspace:*",
     "@hashi/hds-tokens": "workspace:*",
     "@hashi/tsconfig": "workspace:*",
     "@hashi/vitest-config": "workspace:*",
