@@ -2,7 +2,7 @@ import { Button } from '@hashi/hds-ui'
 
 export const App = () => {
   return (
-    <main>
+    <main className="mx-auto min-h-dvh w-full max-w-[430px] bg-white">
       <Button type="button">Start</Button>
     </main>
   )

@@ -7,23 +7,26 @@
   *::before,
   *::after {
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
   }
 
   html {
     -webkit-text-size-adjust: 100%;
-    background: #ffffff;
+    background: var(--color-cool-gray-50);
+    overflow-x: hidden;
   }
 
   body {
     min-width: 320px;
     min-height: 100dvh;
     margin: 0;
-    background: #ffffff;
+    background: var(--color-cool-gray-50);
     color: var(--color-cool-gray-900);
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
   #root {
