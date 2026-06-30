@@ -21,7 +21,7 @@ const meta: Meta<typeof CollapsibleText> = {
   },
   decorators: [
     (Story) => (
-      <div className="w-[393px] p-4">
+      <div className="w-[353px] p-4">
         <Story />
       </div>
     ),

@@ -6,4 +6,3 @@ export type {
   BottomNavigationProps,
 } from './bottomNavigation'
 export { CollapsibleText } from './collapsibleText'
-export type { CollapsibleTextProps } from './collapsibleText'

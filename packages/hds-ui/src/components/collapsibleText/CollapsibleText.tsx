@@ -1,13 +1,13 @@
 import {
   type ComponentPropsWithoutRef,
-  useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react'
 import { TapDownIcon, TapUpIcon } from '@hashi/hds-icons'
 import { cn } from '../../utils'
 
-export type CollapsibleTextProps = Omit<
+type CollapsibleTextProps = Omit<
   ComponentPropsWithoutRef<'div'>,
   'children'
 > & {
@@ -25,7 +25,9 @@ export const CollapsibleText = ({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [isOverflowing, setIsOverflowing] = useState(false)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (isExpanded) return
+
     const textElement = textRef.current
     if (!textElement) return
 
