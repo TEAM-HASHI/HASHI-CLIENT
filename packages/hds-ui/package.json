@@ -30,6 +30,7 @@
   "dependencies": {
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
+    "react-aria-components": "catalog:",
     "tailwind-merge": "catalog:"
   },
   "devDependencies": {

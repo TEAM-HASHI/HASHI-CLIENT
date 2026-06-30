@@ -20,24 +20,25 @@
 
 ## Stack
 
-| Area                   | Stack                                         | Version                                  | Status  | Notes                                      |
-| ---------------------- | --------------------------------------------- | ---------------------------------------- | ------- | ------------------------------------------ |
-| Package manager        | `pnpm`                                        | `10.18.3`                                | Current | 루트 `packageManager` 기준                 |
-| Monorepo               | `pnpm workspace`, `pnpm catalog`, `Turborepo` | `pnpm@10.18.3`, `turbo@^2.7.2`           | Current | workspace와 task graph 기준                |
-| Language               | `React`, `TypeScript`                         | `react@^19.2.6`, `typescript@~6.0.2`     | Current | `apps/client`, `packages/*` 공통 기준      |
-| Bundler                | `Vite`                                        | `vite@^8.0.12`                           | Current | `@hashi/client` 실행/빌드 기준             |
-| Lint and format        | `ESLint`, `Prettier`                          | `eslint@^10.3.0`, `prettier@^3.6.2`      | Current | 루트 script와 공통 ESLint config 기준      |
-| CSS                    | `Tailwind CSS`, `class-variance-authority`    | `tailwindcss@^4.3.1`, `cva@^0.7.1`       | Current | `@tailwindcss/vite`, `tailwind-merge` 사용 |
-| API client             | `ky`                                          | `ky@^2.0.2`                              | Current | `apps/client/src/shared/api` 기준          |
-| Server state           | `TanStack Query`                              | `@tanstack/react-query@^5.101.0`         | Current | app provider와 shared query client 기준    |
-| Unit/Component test    | `Vitest`                                      | `vitest@^3.2.4`                          | Current | client, HDS UI, shared config 기준         |
-| E2E test               | `Playwright`                                  | `@playwright/test@^1.55.0`               | Current | client e2e scaffold 기준                   |
-| Icon pipeline          | `SVGR`                                        | `@svgr/core@^8.1.0`                      | Current | `packages/hds-icons` generator 기준        |
-| Error monitoring       | `Sentry`                                      | `@sentry/react@^10.60.0`                 | Current | React SDK와 Vite plugin 기준               |
-| Git hook               | `Husky`, `lint-staged`                        | `husky@^9.1.7`, `lint-staged@^17.0.8`    | Current | prepare script와 lint-staged config 기준   |
-| UI docs/component test | `Storybook`, `Chromatic`                      | `storybook@^10.4.6`, `chromatic@^17.5.0` | Current | HDS UI Storybook 기준                      |
-| Deployment             | `Vercel`                                      | `vercel@^54.14.0`                        | Current | Vercel workflow 기준                       |
-| Infra                  | `AWS`                                         | 도입 시 결정                             | Planned | AWS 리소스가 필요해질 때 별도 문서화       |
+| Area                        | Stack                                         | Version                                  | Status  | Notes                                      |
+| --------------------------- | --------------------------------------------- | ---------------------------------------- | ------- | ------------------------------------------ |
+| Package manager             | `pnpm`                                        | `10.18.3`                                | Current | 루트 `packageManager` 기준                 |
+| Monorepo                    | `pnpm workspace`, `pnpm catalog`, `Turborepo` | `pnpm@10.18.3`, `turbo@^2.7.2`           | Current | workspace와 task graph 기준                |
+| Language                    | `React`, `TypeScript`                         | `react@^19.2.6`, `typescript@~6.0.2`     | Current | `apps/client`, `packages/*` 공통 기준      |
+| Bundler                     | `Vite`                                        | `vite@^8.0.12`                           | Current | `@hashi/client` 실행/빌드 기준             |
+| Lint and format             | `ESLint`, `Prettier`                          | `eslint@^10.3.0`, `prettier@^3.6.2`      | Current | 루트 script와 공통 ESLint config 기준      |
+| CSS                         | `Tailwind CSS`, `class-variance-authority`    | `tailwindcss@^4.3.1`, `cva@^0.7.1`       | Current | `@tailwindcss/vite`, `tailwind-merge` 사용 |
+| Accessibility UI primitives | `React Aria Components`                       | `react-aria-components@^1.19.0`          | Current | HDS overlay/date 계열 primitive 기준       |
+| API client                  | `ky`                                          | `ky@^2.0.2`                              | Current | `apps/client/src/shared/api` 기준          |
+| Server state                | `TanStack Query`                              | `@tanstack/react-query@^5.101.0`         | Current | app provider와 shared query client 기준    |
+| Unit/Component test         | `Vitest`                                      | `vitest@^3.2.4`                          | Current | client, HDS UI, shared config 기준         |
+| E2E test                    | `Playwright`                                  | `@playwright/test@^1.55.0`               | Current | client e2e scaffold 기준                   |
+| Icon pipeline               | `SVGR`                                        | `@svgr/core@^8.1.0`                      | Current | `packages/hds-icons` generator 기준        |
+| Error monitoring            | `Sentry`                                      | `@sentry/react@^10.60.0`                 | Current | React SDK와 Vite plugin 기준               |
+| Git hook                    | `Husky`, `lint-staged`                        | `husky@^9.1.7`, `lint-staged@^17.0.8`    | Current | prepare script와 lint-staged config 기준   |
+| UI docs/component test      | `Storybook`, `Chromatic`                      | `storybook@^10.4.6`, `chromatic@^17.5.0` | Current | HDS UI Storybook 기준                      |
+| Deployment                  | `Vercel`                                      | `vercel@^54.14.0`                        | Current | Vercel workflow 기준                       |
+| Infra                       | `AWS`                                         | 도입 시 결정                             | Planned | AWS 리소스가 필요해질 때 별도 문서화       |
 
 ## Official Docs
 
@@ -47,6 +48,7 @@
 - Bundler: [Vite](https://vite.dev/guide/)
 - Lint and format: [ESLint](https://eslint.org/docs/latest/), [Prettier](https://prettier.io/docs/)
 - CSS: [Tailwind CSS](https://tailwindcss.com/docs/installation), [Class Variance Authority](https://cva.style/docs)
+- Accessibility UI primitives: [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html)
 - API client: [ky](https://github.com/sindresorhus/ky)
 - Server state: [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview)
 - Unit/Component test: [Vitest](https://vitest.dev/guide/)
