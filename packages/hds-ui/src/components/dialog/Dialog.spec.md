@@ -23,6 +23,8 @@ HDS는 dialog의 overlay, centered panel, dismiss interaction, accessibility con
 - [x] `dialog` / `alertdialog` role을 지원합니다.
 - [x] `aria-modal`, `aria-labelledby`, `aria-describedby` 접근성 연결을 제공합니다.
 - [x] token 또는 Tailwind theme 기준을 우선 사용합니다.
+- [x] icon slot은 24px visual box만 제공하고, SVG 자체의 크기와 색상은 icon component 또는 호출부 composition이 소유합니다.
+- [x] Storybook composition도 HDS token class를 우선 사용하고, raw hex color는 대응 token이 없을 때만 사용합니다.
 
 ## Figma References
 
@@ -127,7 +129,7 @@ Dialog.Root
 ### Slots
 
 - `Dialog.Header`: header layout slot
-- `Dialog.Icon`: icon slot, 24px visual box
+- `Dialog.Icon`: icon slot, 24px visual box. It does not resize SVG children through font-size.
 - `Dialog.Title`: title slot and `aria-labelledby` source
 - `Dialog.Description`: description slot and `aria-describedby` source
 - `Dialog.Body`: optional free-content slot
@@ -163,11 +165,13 @@ Dialog.Root
 - small dialog horizontal padding: `27px`
 - small dialog vertical padding: `26px`
 - header layout: vertical, centered, `12px` gap
-- icon size: `24px`
+- icon slot: `24px` visual box through `size-6`
+- icon sizing: SVG children own their `width` / `height`; `Dialog.Icon` must not use text-size utilities to imply icon resizing
 - title: `typo-header-3`, `cool-gray-900`
 - description: 14px / 20px, `cool-gray-500`
 - footer: full-width horizontal action row, `8px` gap, direct children flex equally
 - information-rich examples may adjust panel width, padding, body sections, and footer gap through `className`
+- Storybook composition examples should prefer token classes such as `text-cool-gray-900` over hard-coded color values.
 
 ## Accessibility
 
