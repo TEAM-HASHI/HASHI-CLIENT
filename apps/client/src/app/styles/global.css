@@ -3,6 +3,12 @@
 @source '../../../../../packages/hds-ui/src';
 
 @layer base {
+  :root {
+    --app-mobile-max-width: 430px;
+    --safe-area-top: env(safe-area-inset-top);
+    --safe-area-bottom: env(safe-area-inset-bottom);
+  }
+
   *,
   *::before,
   *::after {
