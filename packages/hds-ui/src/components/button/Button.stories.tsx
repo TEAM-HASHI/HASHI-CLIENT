@@ -6,7 +6,7 @@ const DotIcon = () => (
 )
 
 const ArrowIcon = () => (
-  <span className="text-[0.875rem] leading-none" aria-hidden="true">
+  <span className="text-sm leading-none" aria-hidden="true">
     {'>'}
   </span>
 )
@@ -156,7 +156,7 @@ export const LongLabel: Story = {
   },
   decorators: [
     (Story) => (
-      <div className="w-[15rem] max-w-full">
+      <div className="w-60 max-w-full">
         <Story />
       </div>
     ),
