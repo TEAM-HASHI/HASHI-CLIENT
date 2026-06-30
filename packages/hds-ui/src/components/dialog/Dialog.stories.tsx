@@ -218,7 +218,7 @@ export const ReservationInfo: Story = {
                 <span className="text-cool-gray-900 shrink-0 text-[15px] font-semibold">
                   {label}
                 </span>
-                <span className="max-w-[150px] text-right font-medium text-[#272a31]">
+                <span className="text-cool-gray-900 max-w-[150px] text-right font-medium">
                   {value}
                 </span>
               </div>
@@ -233,7 +233,9 @@ export const ReservationInfo: Story = {
             <span className="text-cool-gray-500 font-medium">
               최종 결제 금액
             </span>
-            <strong className="font-semibold text-[#272a31]">4,000원</strong>
+            <strong className="text-cool-gray-900 font-semibold">
+              4,000원
+            </strong>
           </div>
         </Dialog.Body>
 

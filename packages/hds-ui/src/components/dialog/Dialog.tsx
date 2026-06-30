@@ -252,10 +252,7 @@ const Icon = ({ className, children, ...props }: DialogIconProps) => {
   return (
     <span
       aria-hidden="true"
-      className={cn(
-        'flex size-6 items-center justify-center text-[24px]',
-        className,
-      )}
+      className={cn('flex size-6 items-center justify-center', className)}
       {...props}
     >
       {children}
