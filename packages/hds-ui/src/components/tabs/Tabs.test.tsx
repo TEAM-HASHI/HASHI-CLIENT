@@ -29,7 +29,7 @@ describe('Tabs', () => {
 
     render(<Tabs items={items} value="write" onChange={handleChange} />)
 
-    fireEvent.click(screen.getByRole('button', { name: '작성한 리뷰 4' }))
+    fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
 
     expect(handleChange).toHaveBeenCalledTimes(1)
     expect(handleChange).toHaveBeenCalledWith('written')
@@ -40,7 +40,7 @@ describe('Tabs', () => {
 
     render(<Tabs items={items} value="write" onChange={handleChange} />)
 
-    fireEvent.click(screen.getByRole('button', { name: '리뷰 쓰기 1' }))
+    fireEvent.click(screen.getByRole('tab', { name: '리뷰 쓰기 1' }))
 
     expect(handleChange).not.toHaveBeenCalled()
   })
@@ -55,6 +55,20 @@ describe('Tabs', () => {
     expect(screen.getByText('리뷰 쓰기')).toHaveClass(
       'typo-body-4',
       'text-warm-gray-300',
+    )
+  })
+
+  it('exposes the selected tab state for assistive technologies', () => {
+    render(<Tabs items={items} value="written" onChange={() => undefined} />)
+
+    expect(screen.getByRole('tablist')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '작성한 리뷰 4' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByRole('tab', { name: '리뷰 쓰기 1' })).toHaveAttribute(
+      'aria-selected',
+      'false',
     )
   })
 })

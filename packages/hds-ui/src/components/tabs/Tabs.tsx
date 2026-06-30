@@ -68,6 +68,7 @@ export const Tabs = ({
         className,
       )}
       {...props}
+      role="tablist"
     >
       {items.map((item) => {
         const isSelected = item.value === value
@@ -76,8 +77,10 @@ export const Tabs = ({
           <button
             key={item.value}
             type="button"
+            aria-selected={isSelected}
             className={cn(tabButtonVariants({ selected: isSelected }))}
             onClick={() => handleTabSelect(item)}
+            role="tab"
           >
             <span className={cn(tabLabelVariants({ selected: isSelected }))}>
               {item.label}
