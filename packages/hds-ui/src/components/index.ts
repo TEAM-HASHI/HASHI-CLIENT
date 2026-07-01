@@ -1,5 +1,8 @@
 export { Button } from './button/Button'
 
+export { Avatar } from './avatar'
+export type { AvatarProps, AvatarSize } from './avatar'
+
 export { BottomNavigation } from './bottomNavigation'
 export type {
   BottomNavigationItem,
