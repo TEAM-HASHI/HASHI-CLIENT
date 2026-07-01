@@ -28,8 +28,10 @@
     "react-dom": ">=19.0.0 <20.0.0"
   },
   "dependencies": {
+    "@hashi/hds-icons": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
+    "react-aria-components": "catalog:",
     "tailwind-merge": "catalog:"
   },
   "devDependencies": {

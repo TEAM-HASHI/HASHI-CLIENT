@@ -8,9 +8,9 @@ const MenuIcon = (props: SVGProps<SVGSVGElement>) => (
     xmlns="http://www.w3.org/2000/svg"
     {...props}
   >
-    <circle cx={9.5} cy={3} r={1.5} fill="#B3B3B3" />
-    <circle cx={9.5} cy={9} r={1.5} fill="#B3B3B3" />
-    <circle cx={9.5} cy={15} r={1.5} fill="#B3B3B3" />
+    <circle cx={9.5} cy={3} r={1.5} fill="currentColor" />
+    <circle cx={9.5} cy={9} r={1.5} fill="currentColor" />
+    <circle cx={9.5} cy={15} r={1.5} fill="currentColor" />
   </svg>
 )
 export default MenuIcon
