@@ -15,6 +15,9 @@ export type {
 export { IconButton } from './iconButton'
 export type { IconButtonProps, IconButtonSize } from './iconButton'
 
+export { Header } from './header'
+export type { HeaderProps, HeaderVariant } from './header'
+
 export { Tabs } from './tabs'
 export type { TabsItem, TabsProps } from './tabs'
 
