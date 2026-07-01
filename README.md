@@ -6,6 +6,7 @@
 - [Git Convention](./docs/conventions/git.md)
 - [Package Management](./docs/conventions/package-management.md)
 - [Agent Skills](./docs/agent/skills.md)
+- [Codex Hooks](./docs/agent/hooks.md)
 - [Serena MCP](./docs/agent/serena-mcp.md)
 
 ## Rules
