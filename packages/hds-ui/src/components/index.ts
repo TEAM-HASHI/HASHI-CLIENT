@@ -15,6 +15,9 @@ export type {
 export { IconButton } from './iconButton'
 export type { IconButtonProps, IconButtonSize } from './iconButton'
 
+export { StarRating } from './starRating'
+export type { StarRatingProps, StarRatingSize } from './starRating'
+
 export { Tabs } from './tabs'
 export type { TabsItem, TabsProps } from './tabs'
 
