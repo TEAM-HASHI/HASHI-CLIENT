@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { createRef } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SearchField } from './SearchField'
@@ -65,5 +66,15 @@ describe('SearchField', () => {
     render(<SearchField aria-label="식당 검색" disabled />)
 
     expect(screen.getByRole('searchbox', { name: '식당 검색' })).toBeDisabled()
+  })
+
+  it('forwards refs to the native input', () => {
+    const inputRef = createRef<HTMLInputElement>()
+
+    render(<SearchField ref={inputRef} aria-label="식당 검색" />)
+
+    expect(inputRef.current).toBe(
+      screen.getByRole('searchbox', { name: '식당 검색' }),
+    )
   })
 })
