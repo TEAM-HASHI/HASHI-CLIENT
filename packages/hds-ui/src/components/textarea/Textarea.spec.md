@@ -94,6 +94,12 @@ Exported type:
 - Counter uses `aria-live="polite"` when rendered.
 - Disabled state uses native `disabled`.
 
+## Storybook
+
+- [x] Default
+- [x] Review example
+- [x] Disabled
+
 ## Verification
 
 - `corepack pnpm --filter @hashi/hds-ui lint`
