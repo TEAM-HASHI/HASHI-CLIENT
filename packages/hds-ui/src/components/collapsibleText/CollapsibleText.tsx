@@ -7,12 +7,35 @@ import {
 import { TapDownIcon, TapUpIcon } from '@hashi/hds-icons'
 import { cn } from '../../utils'
 
+const COLLAPSED_LINE_COUNT = 3
+const DEFAULT_LINE_HEIGHT = 24
+
 type CollapsibleTextProps = Omit<
   ComponentPropsWithoutRef<'div'>,
   'children'
 > & {
   text: string
   defaultExpanded?: boolean
+}
+
+const getCollapsedHeight = (element: HTMLElement) => {
+  const { fontSize, lineHeight } = window.getComputedStyle(element)
+  const parsedFontSize = Number.parseFloat(fontSize)
+  const parsedLineHeight = Number.parseFloat(lineHeight)
+
+  if (!Number.isNaN(parsedLineHeight) && lineHeight.endsWith('px')) {
+    return Math.ceil(parsedLineHeight * COLLAPSED_LINE_COUNT)
+  }
+
+  if (!Number.isNaN(parsedLineHeight) && !Number.isNaN(parsedFontSize)) {
+    return Math.ceil(parsedFontSize * parsedLineHeight * COLLAPSED_LINE_COUNT)
+  }
+
+  const fallbackLineHeight = Number.isNaN(parsedFontSize)
+    ? DEFAULT_LINE_HEIGHT
+    : parsedFontSize * 1.5
+
+  return Math.ceil(fallbackLineHeight * COLLAPSED_LINE_COUNT)
 }
 
 export const CollapsibleText = ({
@@ -26,13 +49,30 @@ export const CollapsibleText = ({
   const [isOverflowing, setIsOverflowing] = useState(false)
 
   useLayoutEffect(() => {
-    if (isExpanded) return
-
     const textElement = textRef.current
     if (!textElement) return
 
-    setIsOverflowing(textElement.scrollHeight > textElement.clientHeight)
-  }, [text, isExpanded])
+    const updateOverflow = () => {
+      const nextIsOverflowing =
+        textElement.scrollHeight > getCollapsedHeight(textElement)
+
+      setIsOverflowing(nextIsOverflowing)
+      setIsExpanded((current) => (nextIsOverflowing ? current : false))
+    }
+
+    updateOverflow()
+
+    if (typeof ResizeObserver === 'undefined') {
+      return
+    }
+
+    const resizeObserver = new ResizeObserver(updateOverflow)
+    resizeObserver.observe(textElement)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [text])
 
   const canToggle = isOverflowing || isExpanded
   const toggleLabel = isExpanded ? '접기' : '더보기'
