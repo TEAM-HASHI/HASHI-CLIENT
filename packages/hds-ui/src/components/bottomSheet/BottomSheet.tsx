@@ -98,7 +98,7 @@ export const BottomSheet = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end bg-black/50"
+      className="fixed inset-y-0 right-0 left-0 z-50 mx-auto flex w-full max-w-[var(--app-mobile-max-width,100%)] items-end bg-black/50"
       onClick={handlePressClose}
     >
       <div

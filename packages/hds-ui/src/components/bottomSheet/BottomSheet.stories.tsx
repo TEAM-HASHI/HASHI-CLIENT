@@ -1,4 +1,4 @@
-import { CheckIcon, PopularIcon, TalkIcon } from '@hashi/hds-icons'
+import { CheckIcon, KakaoIcon, PopularIcon } from '@hashi/hds-icons'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
@@ -109,8 +109,13 @@ const LoginPromptContent = () => (
     <div className="flex justify-center pt-[73px] pb-[42px]">
       <PopularIcon aria-hidden="true" className="size-[172px]" />
     </div>
-    <Button className="typo-sub-header-1 flex h-[58px] w-full items-center justify-center gap-5 rounded-full border-0 bg-[#ffea48] px-[19px] text-black">
-      <TalkIcon aria-hidden="true" className="size-6 shrink-0" />
+    <Button
+      className="typo-sub-header-1 bg-point-200 relative h-[58px] gap-0 rounded-full px-[19px] text-black"
+      leftIcon={
+        <KakaoIcon className="absolute top-1/2 left-[19px] size-6 -translate-y-1/2" />
+      }
+      width="full"
+    >
       카카오로 1초 만에 시작하기
     </Button>
   </div>
