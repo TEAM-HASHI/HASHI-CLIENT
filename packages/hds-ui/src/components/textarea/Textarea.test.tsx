@@ -37,6 +37,19 @@ describe('Textarea', () => {
     expect(screen.getByText('3')).toBeTruthy()
   })
 
+  it('limits user input to maxLength', () => {
+    render(<Textarea aria-label="memo" maxLength={5} />)
+
+    const textarea = screen.getByRole('textbox', {
+      name: 'memo',
+    }) as HTMLTextAreaElement
+
+    fireEvent.change(textarea, { target: { value: 'abcdef' } })
+
+    expect(textarea.value).toBe('abcde')
+    expect(screen.getByText('5')).toBeTruthy()
+  })
+
   it('uses controlled value for the counter', () => {
     const { rerender } = render(
       <Textarea aria-label="review" value="처음" maxLength={1000} readOnly />,
@@ -53,6 +66,17 @@ describe('Textarea', () => {
       />,
     )
 
+    expect(screen.getByText('5')).toBeTruthy()
+  })
+
+  it('limits controlled value to maxLength', () => {
+    render(<Textarea aria-label="memo" value="abcdef" maxLength={5} readOnly />)
+
+    const textarea = screen.getByRole('textbox', {
+      name: 'memo',
+    }) as HTMLTextAreaElement
+
+    expect(textarea.value).toBe('abcde')
     expect(screen.getByText('5')).toBeTruthy()
   })
 

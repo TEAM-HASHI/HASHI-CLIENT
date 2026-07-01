@@ -1,6 +1,7 @@
 import {
   type ChangeEvent,
   type ComponentPropsWithRef,
+  type InputEvent as ReactInputEvent,
   useEffect,
   useState,
 } from 'react'
@@ -12,6 +13,17 @@ const getTextLength = (value: ComponentPropsWithRef<'textarea'>['value']) => {
   }
 
   return String(value).length
+}
+
+const limitText = (
+  value: ComponentPropsWithRef<'textarea'>['value'],
+  maxLength: ComponentPropsWithRef<'textarea'>['maxLength'],
+) => {
+  if (value === undefined || value === null || maxLength === undefined) {
+    return value
+  }
+
+  return String(value).slice(0, maxLength)
 }
 
 export interface TextareaProps extends Omit<
@@ -31,21 +43,55 @@ export const Textarea = ({
   defaultValue,
   maxLength,
   disabled = false,
+  onBeforeInput,
   onChange,
   ...props
 }: TextareaProps) => {
-  const [count, setCount] = useState(() => getTextLength(value ?? defaultValue))
+  const limitedValue = limitText(value, maxLength)
+  const limitedDefaultValue = limitText(defaultValue, maxLength)
+  const [count, setCount] = useState(() =>
+    getTextLength(limitedValue ?? limitedDefaultValue),
+  )
   const shouldShowCounter = showCounter ?? maxLength !== undefined
   const hasSupportRow = helperText || shouldShowCounter
 
   useEffect(() => {
-    if (value !== undefined) {
-      setCount(getTextLength(value))
+    if (limitedValue !== undefined) {
+      setCount(getTextLength(limitedValue))
     }
-  }, [value])
+  }, [limitedValue])
+
+  const handleBeforeInput = (event: ReactInputEvent<HTMLTextAreaElement>) => {
+    onBeforeInput?.(event)
+
+    if (event.defaultPrevented || maxLength === undefined) {
+      return
+    }
+
+    const textarea = event.currentTarget
+    const inputEvent = event.nativeEvent as globalThis.InputEvent
+    const selectedLength = textarea.selectionEnd - textarea.selectionStart
+
+    if (
+      selectedLength === 0 &&
+      textarea.value.length >= maxLength &&
+      inputEvent.data
+    ) {
+      event.preventDefault()
+    }
+  }
 
   const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    setCount(event.currentTarget.value.length)
+    const nextValue =
+      maxLength === undefined
+        ? event.currentTarget.value
+        : event.currentTarget.value.slice(0, maxLength)
+
+    if (event.currentTarget.value !== nextValue) {
+      event.currentTarget.value = nextValue
+    }
+
+    setCount(nextValue.length)
     onChange?.(event)
   }
 
@@ -55,10 +101,11 @@ export const Textarea = ({
     >
       <textarea
         {...props}
-        value={value}
-        defaultValue={defaultValue}
+        value={limitedValue}
+        defaultValue={limitedDefaultValue}
         maxLength={maxLength}
         disabled={disabled}
+        onBeforeInput={handleBeforeInput}
         onChange={handleChange}
         className={cn(
           'border-warm-gray-100 min-h-[230px] w-full resize-none rounded-[10px] border bg-white p-5',

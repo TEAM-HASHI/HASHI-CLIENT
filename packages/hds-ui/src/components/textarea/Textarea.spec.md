@@ -21,6 +21,7 @@ HDS는 textarea box, helper text, character counter, disabled state, className m
 - [x] counter는 `value`, `defaultValue`, 사용자 입력 이벤트를 기준으로 내부 계산합니다.
 - [x] `showCounter={false}`로 counter를 숨길 수 있습니다.
 - [x] HTML `maxLength` attribute로 입력 길이 제한을 위임합니다.
+- [x] 입력 이벤트나 controlled value가 `maxLength`를 초과해도 컴포넌트가 `maxLength`까지만 표시합니다.
 - [x] resize를 막습니다.
 - [x] error / invalid 상태와 minLength 검증은 1차 구현에서 제외합니다.
 
@@ -70,8 +71,9 @@ Exported type:
 1. The root renders a fixed design-system width with `max-width: 100%`.
 2. The textarea renders native attributes and event handlers.
 3. `onChange` updates the internal counter and then calls the provided handler.
-4. When `value` changes in controlled usage, the counter syncs to that value.
+4. When `value` changes in controlled usage, the rendered value and counter are limited to `maxLength`.
 5. `maxLength` is passed to the native textarea.
+6. If an input event produces a value longer than `maxLength`, the DOM value is trimmed to `maxLength` before the counter is updated.
 
 ## Styling
 
