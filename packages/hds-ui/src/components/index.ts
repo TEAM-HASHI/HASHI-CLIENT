@@ -1,5 +1,8 @@
 export { Button } from './button/Button'
 
+export { Badge } from './badge'
+export type { BadgeProps } from './badge'
+
 export { BottomNavigation } from './bottomNavigation'
 export type {
   BottomNavigationItem,
