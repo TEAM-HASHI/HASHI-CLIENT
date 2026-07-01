@@ -31,18 +31,10 @@ export const FilterBottomSheet = ({
 }: FilterBottomSheetProps) => {
   const sheetFooter = (
     <div className="grid grid-cols-2 gap-[7px]">
-      <Button
-        className="typo-body-6 bg-secondary-200 h-[42px] w-full rounded-[5px] border-0 text-black"
-        onClick={onReset}
-        type="button"
-      >
+      <Button onClick={onReset} size="md" variant="neutral" width="full">
         초기화
       </Button>
-      <Button
-        className="typo-body-6 bg-cool-gray-800 h-[42px] w-full rounded-[5px] border-0 text-white"
-        onClick={onApply}
-        type="button"
-      >
+      <Button onClick={onApply} size="md" variant="primary" width="full">
         적용
       </Button>
     </div>

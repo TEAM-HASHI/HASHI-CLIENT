@@ -1,5 +1,7 @@
-import { PopularIcon, TalkIcon } from '@hashi/hds-icons'
-import { BottomSheet, Button } from '@hashi/hds-ui'
+import { PopularIcon } from '@hashi/hds-icons'
+import { BottomSheet } from '@hashi/hds-ui'
+
+import { KakaoStartButton } from './KakaoStartButton'
 
 type AuthGateBottomSheetProps = {
   open: boolean
@@ -32,14 +34,9 @@ export const AuthGateBottomSheet = ({
         <div className="flex justify-center pt-[73px] pb-[42px]">
           <PopularIcon aria-hidden="true" className="size-[172px]" />
         </div>
-        <Button
-          className="typo-sub-header-1 flex h-[58px] w-full items-center justify-center gap-5 rounded-full border-0 bg-[#ffea48] px-[19px] text-black"
-          onClick={onKakaoPress}
-          type="button"
-        >
-          <TalkIcon aria-hidden="true" className="size-6 shrink-0" />
+        <KakaoStartButton onPress={onKakaoPress}>
           카카오로 1초 만에 시작하기
-        </Button>
+        </KakaoStartButton>
       </div>
     </BottomSheet>
   )
