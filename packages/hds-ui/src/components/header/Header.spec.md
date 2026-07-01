@@ -252,7 +252,6 @@ v1에서는 `largeTitle`과 `subtitle` 조합, disabled, loading, selected, inva
 - [x] TitleOnly: title만 있는 topbar
 - [x] Subtitle: terms detail처럼 subtitle이 있는 topbar
 - [x] LargeTitle: 긴 식당명 2줄 title
-- [x] MobileViewport393: `393px` wrapper 안에서 `w-full` 동작 확인
 
 v1에서 search header, sticky header, transparent header, `largeTitle` + `subtitle` 조합, loading/disabled/error 상태는 지원하지 않습니다.
 

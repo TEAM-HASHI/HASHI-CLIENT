@@ -93,11 +93,3 @@ export const LargeTitle: Story = {
     variant: 'largeTitle',
   },
 }
-
-export const MobileViewport393: Story = {
-  args: {
-    rightAction: shareAction,
-    title: '식당 상세 정보',
-  },
-  decorators: [mobileFrameDecorator],
-}
