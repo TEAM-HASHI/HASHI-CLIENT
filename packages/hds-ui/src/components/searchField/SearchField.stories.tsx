@@ -87,10 +87,10 @@ export const LongPlaceholderOverflow: Story = {
   ],
 }
 
-export const MobileViewport393: Story = {
+export const MobileViewport430: Story = {
   decorators: [
     (Story) => (
-      <div className="w-[393px] bg-white p-5">
+      <div className="w-[430px] bg-white p-5">
         <Story />
       </div>
     ),

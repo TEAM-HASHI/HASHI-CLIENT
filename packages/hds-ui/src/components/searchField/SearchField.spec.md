@@ -186,7 +186,7 @@ v1에서는 loading, invalid/error, clearable, autocomplete 상태를 `SearchFie
 - [x] Disabled
 - [x] Focus state
 - [x] Long placeholder overflow
-- [x] Full width in 393px mobile viewport wrapper
+- [x] Full width in 430px mobile viewport wrapper
 - [x] Controlled example
 - [x] Uncontrolled example
 
