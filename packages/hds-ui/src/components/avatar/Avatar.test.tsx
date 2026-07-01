@@ -37,6 +37,15 @@ describe('Avatar', () => {
     render(<Avatar />)
 
     expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
+    expect(screen.getByTestId('avatar-placeholder')).toHaveClass('block')
+  })
+
+  it('applies placeholder background class', () => {
+    render(<Avatar />)
+
+    expect(screen.getByTestId('avatar-placeholder')).toHaveClass(
+      'bg-cool-gray-100',
+    )
   })
 
   it('hides placeholder from assistive technologies', () => {

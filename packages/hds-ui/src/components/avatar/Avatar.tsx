@@ -22,7 +22,7 @@ export const Avatar = ({
   className,
 }: AvatarProps) => {
   const avatarClassName = cn(
-    'bg-cool-gray-100 shrink-0 overflow-hidden rounded-full',
+    'block shrink-0 overflow-hidden rounded-full',
     avatarSizeClassName[size],
     className,
   )
@@ -31,7 +31,7 @@ export const Avatar = ({
     return (
       <span
         aria-hidden="true"
-        className={avatarClassName}
+        className={cn('bg-cool-gray-100', avatarClassName)}
         data-testid="avatar-placeholder"
       />
     )
