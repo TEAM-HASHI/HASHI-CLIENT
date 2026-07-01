@@ -10,7 +10,7 @@ const TapDownIcon = (props: SVGProps<SVGSVGElement>) => (
   >
     <path
       d="M5.5 7.75L9.29289 11.5429C9.68342 11.9334 10.3166 11.9334 10.7071 11.5429L14.5 7.75"
-      stroke="#273033"
+      stroke="currentColor"
       strokeLinecap="round"
     />
   </svg>

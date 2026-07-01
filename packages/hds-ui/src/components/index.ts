@@ -1,4 +1,11 @@
 export { Button } from './button/Button'
+export type {
+  ButtonProps,
+  ButtonSize,
+  ButtonVariant,
+  ButtonWidth,
+} from './button/Button'
+
 export { BottomNavigation } from './bottomNavigation'
 export type {
   BottomNavigationItem,
@@ -25,3 +32,5 @@ export type {
   DialogTriggerProps,
   DialogType,
 } from './dialog'
+
+export { CollapsibleText } from './collapsibleText'
