@@ -10,7 +10,7 @@ const DotIcon = (props: SVGProps<SVGSVGElement>) => (
   >
     <path
       d="M4 5C4.55228 5 5 4.55228 5 4C5 3.44772 4.55228 3 4 3C3.44772 3 3 3.44772 3 4C3 4.55228 3.44772 5 4 5Z"
-      fill="#4A4A4A"
+      fill="currentColor"
     />
   </svg>
 )
