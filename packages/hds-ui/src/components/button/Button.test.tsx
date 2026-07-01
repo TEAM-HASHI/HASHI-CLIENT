@@ -1,6 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Button } from './Button'
+
+afterEach(() => {
+  cleanup()
+})
 
 describe('Button', () => {
   it('uses type="button" by default', () => {
@@ -51,5 +55,21 @@ describe('Button', () => {
     expect(screen.getByTestId('left-icon')).toBeTruthy()
     expect(screen.getByTestId('right-icon')).toBeTruthy()
     expect(screen.getByRole('button', { name: '더보기' })).toBeTruthy()
+  })
+
+  it('hides slot icons while loading', () => {
+    render(
+      <Button
+        loading
+        leftIcon={<span data-testid="left-icon" />}
+        rightIcon={<span data-testid="right-icon" />}
+      >
+        처리 중
+      </Button>,
+    )
+
+    expect(screen.queryByTestId('left-icon')).toBeNull()
+    expect(screen.queryByTestId('right-icon')).toBeNull()
+    expect(screen.getByRole('button', { name: '처리 중' })).toBeTruthy()
   })
 })
