@@ -47,7 +47,7 @@ export const FilterBottomSheet = ({
       onOpenChange={onOpenChange}
       title={title}
     >
-      <ul className="flex flex-col gap-[20px] pt-[39px]">
+      <ul className="flex flex-col gap-[20px] pt-[40px]">
         {options.map((option) => {
           const isSelected = option.value === selectedValue
 
