@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { createRef } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Checkbox } from './Checkbox'
 
@@ -21,6 +22,14 @@ describe('Checkbox', () => {
       'type',
       'checkbox',
     )
+  })
+
+  it('passes ref to the native checkbox input', () => {
+    const ref = createRef<HTMLInputElement>()
+
+    render(<Checkbox ref={ref}>Checkbox</Checkbox>)
+
+    expect(ref.current).toBe(screen.getByRole('checkbox', { name: 'Checkbox' }))
   })
 
   it('toggles checked state when clicked', () => {
@@ -56,5 +65,13 @@ describe('Checkbox', () => {
 
     expect(checkbox).toBeChecked()
     expect(handleChange).not.toHaveBeenCalled()
+  })
+
+  it('hides CheckIcon from assistive technologies', () => {
+    const { container } = render(<Checkbox>Checkbox</Checkbox>)
+    const icon = container.querySelector('svg')
+
+    expect(icon).toHaveAttribute('aria-hidden', 'true')
+    expect(icon).toHaveAttribute('focusable', 'false')
   })
 })

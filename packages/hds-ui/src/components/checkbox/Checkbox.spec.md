@@ -13,6 +13,7 @@ Jira: HASHI-53
 HDS가 담당하는 것:
 
 - native checkbox input 렌더링
+- native input ref 전달
 - checkbox icon의 시각 구조
 - checked 상태에 따른 CheckIcon 색상 표현
 - disabled 상태의 기본 interaction 차단
@@ -44,15 +45,15 @@ Exported value:
 
 Exported types:
 
-- none
+- `CheckboxProps`
 
 ## Props
 
 ### native checkbox input props
 
-- type: `Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>`
+- type: `Omit<ComponentPropsWithRef<'input'>, 'type'>`
 - required: `false`
-- description: React native checkbox input props를 전달합니다. `type`은 내부에서 `checkbox`로 고정합니다.
+- description: React native checkbox input props를 전달합니다. `type`은 내부에서 `checkbox`로 고정합니다. React 19 ref prop 방식으로 native input ref도 전달할 수 있습니다.
 
 ### `children`
 
@@ -93,12 +94,15 @@ Figma Dev Mode의 `2.6rem` 값은 사용하지 않고 px 기준 `h-[26px] w-[26p
 - root를 `label`로 감싸 label과 children 클릭 시 토글됩니다.
 - input은 `sr-only`로 숨겨 keyboard 접근성을 유지합니다.
 - keyboard interaction은 native checkbox 동작을 따릅니다.
+- CheckIcon은 장식 요소이므로 `aria-hidden="true"`와 `focusable="false"`를 적용합니다.
 - `role="checkbox"`, `aria-checked`, `tabIndex`를 중복 추가하지 않습니다.
 
 ## Storybook
 
 - [x] Default
+- [x] Checked
 - [x] Disabled
+- [x] DisabledChecked
 
 Controls:
 
@@ -112,8 +116,10 @@ Controls:
 
 - [x] label children 렌더링
 - [x] native checkbox input 렌더링
+- [x] native checkbox input ref 전달
 - [x] click 시 checked 상태 토글
 - [x] disabled 상태에서 click 시 checked 상태 유지
+- [x] CheckIcon `aria-hidden` 처리
 
 ## Verification
 
