@@ -1,10 +1,20 @@
-export { Button } from './button/Button'
+export { Button } from './button'
+export type {
+  ButtonProps,
+  ButtonSize,
+  ButtonVariant,
+  ButtonWidth,
+} from './button'
 
 export { BottomNavigation } from './bottomNavigation'
 export type {
   BottomNavigationItem,
   BottomNavigationProps,
 } from './bottomNavigation'
+
+export { IconButton } from './iconButton'
+export type { IconButtonProps, IconButtonSize } from './iconButton'
+
 export { Tabs } from './tabs'
 export type { TabsItem, TabsProps } from './tabs'
 
@@ -22,4 +32,7 @@ export type {
   DialogTriggerProps,
   DialogType,
 } from './dialog'
+
 export { Checkbox } from './checkbox/Checkbox'
+
+export { CollapsibleText } from './collapsibleText'
