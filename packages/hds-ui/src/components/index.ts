@@ -22,3 +22,4 @@ export type {
   DialogTriggerProps,
   DialogType,
 } from './dialog'
+export { CollapsibleText } from './collapsibleText'
