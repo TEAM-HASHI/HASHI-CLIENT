@@ -1,10 +1,10 @@
-export { Button } from './button/Button'
+export { Button } from './button'
 export type {
   ButtonProps,
   ButtonSize,
   ButtonVariant,
   ButtonWidth,
-} from './button/Button'
+} from './button'
 
 export { BottomNavigation } from './bottomNavigation'
 export type {
