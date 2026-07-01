@@ -70,3 +70,29 @@
     text-decoration: none;
   }
 }
+
+@utility app-mobile-frame {
+  width: 100%;
+  max-width: var(--app-mobile-max-width);
+  margin-inline: auto;
+}
+
+@utility app-mobile-fixed-top {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  width: 100%;
+  max-width: var(--app-mobile-max-width);
+  margin-inline: auto;
+}
+
+@utility app-mobile-fixed-bottom {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-width: var(--app-mobile-max-width);
+  margin-inline: auto;
+}
