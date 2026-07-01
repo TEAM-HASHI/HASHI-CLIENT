@@ -34,6 +34,7 @@ catalog:
   prettier: ^3.6.2
   prettier-plugin-tailwindcss: ^0.8.0
   react: ^19.2.6
+  react-aria-components: ^1.19.0
   react-dom: ^19.2.6
   storybook: ^10.4.6
   chromatic: ^17.5.0
