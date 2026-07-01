@@ -18,6 +18,9 @@ export type { IconButtonProps, IconButtonSize } from './iconButton'
 export { Tabs } from './tabs'
 export type { TabsItem, TabsProps } from './tabs'
 
+export { Textarea } from './textarea'
+export type { TextareaProps } from './textarea'
+
 export { Dialog } from './dialog'
 export type {
   DialogBodyProps,
