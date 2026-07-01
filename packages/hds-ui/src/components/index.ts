@@ -22,3 +22,4 @@ export type {
   DialogTriggerProps,
   DialogType,
 } from './dialog'
+export { Checkbox } from './checkbox/Checkbox'
