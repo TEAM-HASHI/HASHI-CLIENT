@@ -70,6 +70,7 @@ export const Button = ({
   ...props
 }: ButtonProps) => {
   const isDisabled = disabled || loading
+  const shouldRenderIcons = !loading
 
   return (
     <button
@@ -91,7 +92,7 @@ export const Button = ({
         </span>
       ) : null}
       <span className="min-w-0 truncate">{children}</span>
-      {rightIcon ? (
+      {shouldRenderIcons && rightIcon ? (
         <span aria-hidden="true" className="shrink-0 leading-none">
           {rightIcon}
         </span>
