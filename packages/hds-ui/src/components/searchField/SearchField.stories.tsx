@@ -56,7 +56,7 @@ export const Default: Story = {}
 
 export const WithValue: Story = {
   args: {
-    value: '연어 덮밥',
+    defaultValue: '연어 덮밥',
   },
 }
 
