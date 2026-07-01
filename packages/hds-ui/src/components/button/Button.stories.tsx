@@ -1,15 +1,6 @@
+import { CheckIcon, NextIcon } from '@hashi/hds-icons'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Button } from './Button'
-
-const DotIcon = () => (
-  <span className="block size-4 rounded-full bg-current" aria-hidden="true" />
-)
-
-const ArrowIcon = () => (
-  <span className="text-sm leading-none" aria-hidden="true">
-    {'>'}
-  </span>
-)
 
 const meta = {
   title: 'Components/Button',
@@ -127,7 +118,7 @@ export const Loading: Story = {
 export const WithLeftIcon: Story = {
   args: {
     children: '리뷰 작성하기',
-    leftIcon: <DotIcon />,
+    leftIcon: <CheckIcon className="size-4" />,
     size: 'sm',
   },
 }
@@ -135,7 +126,7 @@ export const WithLeftIcon: Story = {
 export const WithRightIcon: Story = {
   args: {
     children: '더보기',
-    rightIcon: <ArrowIcon />,
+    rightIcon: <NextIcon className="size-4" />,
     variant: 'neutral',
     size: 'sm',
   },
@@ -144,8 +135,26 @@ export const WithRightIcon: Story = {
 export const WithBothIcons: Story = {
   args: {
     children: '다음 단계로 이동',
-    leftIcon: <DotIcon />,
-    rightIcon: <ArrowIcon />,
+    leftIcon: <CheckIcon className="size-4" />,
+    rightIcon: <NextIcon className="size-4" />,
+  },
+}
+
+export const DisabledWithIcons: Story = {
+  args: {
+    children: '비활성 상태',
+    disabled: true,
+    leftIcon: <CheckIcon className="size-4" />,
+    rightIcon: <NextIcon className="size-4" />,
+  },
+}
+
+export const LoadingWithIcons: Story = {
+  args: {
+    children: '처리 중',
+    loading: true,
+    leftIcon: <CheckIcon className="size-4" />,
+    rightIcon: <NextIcon className="size-4" />,
   },
 }
 

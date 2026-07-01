@@ -23,6 +23,7 @@ Figma 기준과 HDS v1 범위를 비교한 결과, `Button` v1은 `primary`, `ne
 - [x] `variant`, `size` 값을 기준으로 HDS 내부 시각 스타일을 결정합니다.
 - [x] `width="fit" | "full"` layout을 지원합니다.
 - [x] leftIcon / rightIcon slot을 지원합니다.
+- [x] Button에 들어가는 icon은 `currentColor` 기반일 때 variant/disabled/loading text color를 상속합니다.
 - [x] disabled 상태의 시각 표현과 interaction 차단을 제공합니다.
 - [x] loading 상태의 시각 표현과 중복 클릭 방지를 제공합니다.
 - [x] native focus-visible outline을 보존합니다.
@@ -38,9 +39,9 @@ Figma 기준과 HDS v1 범위를 비교한 결과, `Button` v1은 `primary`, `ne
 
 ```text
 Button
-  leftIcon?
+  leftIcon? (loading 중 숨김)
   label
-  rightIcon?
+  rightIcon? (loading 중 숨김)
 ```
 
 지원 케이스:
@@ -126,6 +127,7 @@ HDS가 담당하는 것:
 - 중복 클릭 방지
 - `aria-busy="true"` 연결
 - 필요 시 disabled와 동일한 interaction 차단
+- loading 중 leftIcon / rightIcon slot을 숨기고 spinner를 표시
 
 HDS가 담당하지 않는 것:
 
@@ -146,13 +148,13 @@ HDS가 담당하지 않는 것:
 
 - type: `React.ReactNode`
 - required: `false`
-- description: label 왼쪽에 렌더링할 아이콘입니다.
+- description: label 왼쪽에 렌더링할 아이콘입니다. Button의 variant/disabled/loading text color를 따라야 하는 아이콘은 `currentColor` 기반이어야 합니다.
 
 ### `rightIcon`
 
 - type: `React.ReactNode`
 - required: `false`
-- description: label 오른쪽에 렌더링할 아이콘입니다.
+- description: label 오른쪽에 렌더링할 아이콘입니다. Button의 variant/disabled/loading text color를 따라야 하는 아이콘은 `currentColor` 기반이어야 합니다.
 
 ### `className`
 
@@ -180,8 +182,8 @@ HDS가 담당하지 않는 것:
 1. `button` element로 렌더링합니다.
 2. `type`이 전달되지 않으면 `type="button"`을 사용합니다.
 3. `variant`, `size`, `width` 값에 맞는 HDS 내부 class를 적용합니다.
-4. `leftIcon`이 있으면 label 왼쪽에 렌더링합니다.
-5. `rightIcon`이 있으면 label 오른쪽에 렌더링합니다.
+4. `leftIcon`이 있고 loading 상태가 아니면 label 왼쪽에 렌더링합니다.
+5. `rightIcon`이 있고 loading 상태가 아니면 label 오른쪽에 렌더링합니다.
 6. `disabled || loading`이면 click interaction이 실행되지 않아야 합니다.
 7. `loading`이면 `aria-busy="true"`를 제공합니다.
 8. `disabled`이면 native `disabled`를 우선 사용합니다.
@@ -201,6 +203,8 @@ HDS가 담당하지 않는 것:
 - typography: v1 Button 기본 label typography는 `typo-body-6`으로 통일합니다. size별 typography 분기는 도입하지 않습니다.
 - responsive: Button 자체는 fixed/sticky layout을 결정하지 않고 부모 container의 width를 따릅니다.
 - icon: leftIcon/rightIcon은 label과 시각적으로 중앙 정렬되어야 합니다.
+- icon color: Button은 icon slot에 전달된 node의 SVG fill/stroke를 강제로 덮어쓰지 않습니다. variant/disabled/loading 색상 상속이 필요한 Button icon은 `currentColor` 기반 아이콘을 사용합니다. 고정 fill/stroke를 가진 HDS icon은 의도한 상태 색상을 따라가지 않을 수 있으므로 Button slot 사용 전 확인합니다.
+- loading icon policy: loading 중에는 leftIcon/rightIcon을 모두 숨기고 spinner만 표시합니다. rightIcon이 유지되면 화살표/다음 아이콘이 이동 가능 상태처럼 보일 수 있기 때문입니다.
 - overflow: 긴 label이 icon과 겹치거나 button box를 깨지 않아야 합니다.
 - focus-visible: v1에서는 별도 token ring을 정의하지 않고 native outline을 보존합니다.
 - disabled: Figma에서 확인된 token 조합으로 HDS 내부 상태 스타일을 매핑합니다.
@@ -346,7 +350,7 @@ type ButtonProps = {
 <Button
   variant="primary"
   size="sm"
-  leftIcon={<EditIcon />}
+  leftIcon={<CheckIcon />}
 >
   리뷰 작성하기
 </Button>
@@ -354,7 +358,7 @@ type ButtonProps = {
 <Button
   variant="neutral"
   size="sm"
-  rightIcon={<ChevronRightIcon />}
+  rightIcon={<NextIcon />}
 >
   더보기
 </Button>
@@ -376,6 +380,8 @@ type ButtonProps = {
 - [x] leftIcon
 - [x] rightIcon
 - [x] leftIcon + rightIcon
+- [x] disabled + currentColor icon
+- [x] loading + leftIcon + rightIcon
 - [x] long label overflow
 
 v1에서 icon-only, disabled reason, invalid/error, link/href, `asChild`는 지원하지 않습니다.
