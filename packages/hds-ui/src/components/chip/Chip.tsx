@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, PropsWithChildren } from 'react'
+import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { cva } from 'class-variance-authority'
 
 import { cn } from '../../utils'
@@ -6,11 +6,11 @@ import { cn } from '../../utils'
 export type ChipProps = Omit<
   ComponentPropsWithoutRef<'button'>,
   'aria-pressed' | 'children' | 'onClick' | 'type'
-> &
-  PropsWithChildren<{
-    onSelectedChange?: (selected: boolean) => void
-    selected?: boolean
-  }>
+> & {
+  children: ReactNode
+  onSelectedChange?: (selected: boolean) => void
+  selected?: boolean
+}
 
 const chipVariants = cva(
   'inline-flex max-w-full cursor-pointer appearance-none items-center justify-center rounded-[10rem] border-0 px-3 py-2 text-center font-sans transition-colors focus-visible:outline-cool-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2',

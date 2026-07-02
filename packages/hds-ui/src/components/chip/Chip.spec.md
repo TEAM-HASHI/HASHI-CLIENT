@@ -107,13 +107,6 @@ Chip
 - required: `false`
 - description: 칩이 눌렸을 때 다음 선택 상태를 호출부에 전달합니다.
 
-### `size`
-
-- type: `'md'`
-- required: `false`
-- default: `'md'`
-- description: 현재 디자인 기준 크기입니다. 후속 Figma variant가 생기면 `'sm'`, `'lg'`를 추가할 수 있습니다.
-
 ### `className`
 
 - type: `string`
