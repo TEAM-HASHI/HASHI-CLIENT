@@ -29,6 +29,8 @@ export type { HeaderProps, HeaderVariant } from './header'
 export { SearchField } from './searchField'
 export type { SearchFieldProps } from './searchField'
 
+export { BottomSheet } from './bottomSheet'
+export type { BottomSheetProps } from './bottomSheet'
 export { Tabs } from './tabs'
 export type { TabsItem, TabsProps } from './tabs'
 
