@@ -112,9 +112,7 @@ export const Textarea = ({
   }
 
   return (
-    <div
-      className={cn('flex w-[22.0625rem] max-w-full flex-col gap-2', className)}
-    >
+    <div className={cn('flex w-full flex-col gap-2', className)}>
       <textarea
         {...props}
         id={textareaId}
