@@ -69,6 +69,31 @@ describe('Textarea', () => {
     expect(screen.getByText('5')).toBeTruthy()
   })
 
+  it('keeps counter in sync with controlled value when parent does not update value', () => {
+    const handleChange = vi.fn()
+
+    render(
+      <Textarea
+        aria-label="review"
+        value=""
+        maxLength={1000}
+        onChange={handleChange}
+      />,
+    )
+
+    const textarea = screen.getByRole('textbox', {
+      name: 'review',
+    }) as HTMLTextAreaElement
+
+    fireEvent.change(textarea, {
+      target: { value: '좋아요' },
+    })
+
+    expect(handleChange).toHaveBeenCalledOnce()
+    expect(textarea.value).toBe('')
+    expect(screen.getByText('0')).toBeTruthy()
+  })
+
   it('limits controlled value to maxLength', () => {
     render(<Textarea aria-label="memo" value="abcdef" maxLength={5} readOnly />)
 
@@ -85,6 +110,46 @@ describe('Textarea', () => {
 
     expect(screen.queryByText('0')).toBeNull()
     expect(screen.queryByText('/1000')).toBeNull()
+  })
+
+  it('connects helper text and counter with aria-describedby', () => {
+    render(
+      <Textarea aria-label="review" helperText="10자 이상" maxLength={1000} />,
+    )
+
+    const textarea = screen.getByRole('textbox', { name: 'review' })
+    const helperText = screen.getByText('10자 이상')
+    const counter = screen.getByText('0').closest('p')
+
+    expect(helperText).toHaveAttribute('id')
+    expect(counter).toHaveAttribute('id')
+    expect(textarea).toHaveAttribute(
+      'aria-describedby',
+      expect.stringContaining(helperText.id),
+    )
+    expect(textarea).toHaveAttribute(
+      'aria-describedby',
+      expect.stringContaining(counter?.id ?? ''),
+    )
+  })
+
+  it('preserves external aria-describedby', () => {
+    render(
+      <>
+        <p id="external-description">외부 설명</p>
+        <Textarea
+          aria-label="review"
+          aria-describedby="external-description"
+          helperText="10자 이상"
+          maxLength={1000}
+        />
+      </>,
+    )
+
+    expect(screen.getByRole('textbox', { name: 'review' })).toHaveAttribute(
+      'aria-describedby',
+      expect.stringContaining('external-description'),
+    )
   })
 
   it('passes native textarea props', () => {
