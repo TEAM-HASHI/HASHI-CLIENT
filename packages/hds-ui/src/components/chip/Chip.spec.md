@@ -120,7 +120,7 @@ Chip
 - uncontrolled state: 제공하지 않음
 - loading state: 제공하지 않음
 - error state: 제공하지 않음
-- disabled state: 제공하지 않음
+- disabled state: 제공하지 않으며, `ChipProps`에서도 `disabled`와 `aria-disabled`를 제외합니다.
 
 ## Behavior
 
@@ -186,7 +186,8 @@ Chip
 - icons: 없음
 - hooks: 없음
 - APIs: 없음
-- external libraries: `cn` utility
+- utils: `cn`
+- external libraries: `class-variance-authority`
 
 ## Storybook
 

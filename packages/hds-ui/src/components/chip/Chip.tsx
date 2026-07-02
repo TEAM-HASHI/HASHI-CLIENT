@@ -5,7 +5,12 @@ import { cn } from '../../utils'
 
 export type ChipProps = Omit<
   ComponentPropsWithoutRef<'button'>,
-  'aria-pressed' | 'children' | 'onClick' | 'type'
+  | 'aria-disabled'
+  | 'aria-pressed'
+  | 'children'
+  | 'disabled'
+  | 'onClick'
+  | 'type'
 > & {
   children: ReactNode
   onSelectedChange?: (selected: boolean) => void
