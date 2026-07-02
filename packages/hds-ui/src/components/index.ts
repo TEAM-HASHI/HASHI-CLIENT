@@ -23,6 +23,9 @@ export type { ChipProps } from './chip'
 export { IconButton } from './iconButton'
 export type { IconButtonProps, IconButtonSize } from './iconButton'
 
+export { StarRating } from './starRating'
+export type { StarRatingProps, StarRatingSize } from './starRating'
+
 export { Header } from './header'
 export type { HeaderProps, HeaderVariant } from './header'
 
