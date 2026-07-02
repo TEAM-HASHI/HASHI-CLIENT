@@ -22,7 +22,15 @@ export const appRoutes: RouteObject[] = [
             index: true,
             element: createElement(HomePage),
           },
+          {
+            path: ROUTES.map,
+            element: lazyPages.comingSoon(),
+          },
         ],
+      },
+      {
+        path: ROUTES.comingSoon,
+        element: lazyPages.comingSoon(),
       },
       {
         path: ROUTES.search,
@@ -70,6 +78,16 @@ export const appRoutes: RouteObject[] = [
           {
             path: ROUTES.reviewEdit,
             element: lazyPages.reviewEdit(),
+          },
+          {
+            path: ROUTES.saved,
+            element: createElement(BottomNavigationLayout),
+            children: [
+              {
+                index: true,
+                element: lazyPages.comingSoon(),
+              },
+            ],
           },
           {
             path: ROUTES.mypage,
@@ -122,13 +140,7 @@ export const appRoutes: RouteObject[] = [
         children: [
           {
             path: ROUTES.loginRequired,
-            element: createElement(BottomNavigationLayout),
-            children: [
-              {
-                index: true,
-                element: lazyPages.loginRequired(),
-              },
-            ],
+            element: lazyPages.loginRequired(),
           },
         ],
       },

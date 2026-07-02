@@ -1,5 +1,8 @@
 export const ROUTES = {
   home: '/',
+  saved: '/saved',
+  map: '/map',
+  comingSoon: '/coming-soon',
   search: '/search',
   todayRestaurant: '/restaurants/today',
   restaurantDetail: '/restaurants/:restaurantId',

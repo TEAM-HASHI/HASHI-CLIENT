@@ -1,6 +1,7 @@
 import { createElement, lazy, Suspense } from 'react'
 
 const SearchPage = lazy(() => import('@/pages/search'))
+const ComingSoonPage = lazy(() => import('@/pages/comingSoon'))
 const TodayRestaurantPage = lazy(() => import('@/pages/todayRestaurant'))
 const RestaurantDetailPage = lazy(() => import('@/pages/restaurantDetail'))
 const HashiPickPage = lazy(() => import('@/pages/hashiPick'))
@@ -31,6 +32,7 @@ const lazyPage = (Page: ReturnType<typeof lazy>) => {
 }
 
 export const lazyPages = {
+  comingSoon: () => lazyPage(ComingSoonPage),
   search: () => lazyPage(SearchPage),
   todayRestaurant: () => lazyPage(TodayRestaurantPage),
   restaurantDetail: () => lazyPage(RestaurantDetailPage),
