@@ -6,7 +6,7 @@ Jira: HASHI-45
 
 `Badge`는 짧은 라벨과 선택적 아이콘으로 상태, 속성, 키워드를 표시하는 HDS UI primitive입니다.
 
-HDS는 badge의 시각 구조, 선택 상태, 기본 접근성 계약만 담당합니다. 리뷰 키워드 목록, 선택 개수 제한, validation message, 저장 가능 여부, route, API, analytics는 App 또는 page/feature가 처리합니다.
+HDS는 badge의 시각 구조, interactive 상태의 선택 표현, 기본 접근성 계약만 담당합니다. 리뷰 키워드 목록, 선택 개수 제한, validation message, 저장 가능 여부, route, API, analytics는 App 또는 page/feature가 처리합니다.
 
 첨부 디자인 기준으로 같은 badge가 두 방식으로 쓰입니다.
 
@@ -70,7 +70,7 @@ Exported types:
 
 호출부가 소유하는 책임:
 
-- `label`, `icon`, `selected` 값 주입
+- `label`, `icon`, interactive Badge의 `selected` 값 주입
 - 리뷰 키워드 value와 label 매핑
 - 선택 개수 1-3개 제한
 - 필수 선택 validation message
@@ -90,6 +90,7 @@ Exported types:
 - [x] 제품 도메인 데이터, route, API, logging, analytics에 의존하지 않습니다.
 - [x] static mode와 selectable mode를 같은 시각 구조로 제공합니다.
 - [x] selectable mode는 controlled `selected` 상태를 받습니다.
+- [x] static mode에서는 `selected` 상태를 허용하지 않습니다.
 - [x] selectable mode에서 inactive badge를 누르면 `onSelectedChange(true)`를 호출합니다.
 - [x] selectable mode에서 selected badge를 누르면 `onSelectedChange(false)`를 호출합니다.
 - [x] 긴 라벨이 들어와도 badge 바깥 layout을 깨지 않습니다.
@@ -130,7 +131,7 @@ Badge
 - type: `boolean`
 - required: `false`
 - default: `false`
-- description: 선택 상태입니다. static mode에서도 selected visual을 표시할 수 있지만, 주 사용처는 selectable mode입니다.
+- description: interactive Badge의 선택 상태입니다. static Badge에서는 타입상 허용하지 않으며 런타임에서도 selected visual을 적용하지 않습니다.
 
 ### `onSelectedChange`
 
@@ -149,14 +150,15 @@ Badge
 - static: `interactive=false`, `span`으로 렌더링하고 클릭 동작이 없습니다.
 - interactive: `interactive=true`, `button type="button"`으로 렌더링합니다.
 - default: 흰 배경, 회색 border, 기본 텍스트 색상을 표시합니다.
-- selected: primary border로 선택 상태를 표시합니다.
+- selected: interactive Badge에서만 primary border와 primary background로 선택 상태를 표시합니다.
 
 ## Behavior
 
 1. `interactive=false`이면 root를 `span`으로 렌더링하고 click handler를 연결하지 않습니다.
-2. `interactive=true`이면 root를 `button type="button"`으로 렌더링합니다.
-3. selectable badge를 누르면 현재 `selected`의 반대 값을 `onSelectedChange`에 전달합니다.
-4. selected 상태여도 같은 badge를 다시 눌러 해제할 수 있습니다.
+2. `interactive=false`이면 `selected`가 전달되어도 선택 스타일을 적용하지 않습니다.
+3. `interactive=true`이면 root를 `button type="button"`으로 렌더링합니다.
+4. selectable badge를 누르면 현재 `selected`의 반대 값을 `onSelectedChange`에 전달합니다.
+5. selected 상태여도 같은 badge를 다시 눌러 해제할 수 있습니다.
 
 ## Validation
 
@@ -173,7 +175,7 @@ HDS는 validation을 수행하지 않습니다.
 - icon size: `24px * 24px`, `shrink-0`
 - icon / text gap: `4px`
 - radius: `0.5rem`
-- border: weight `1px`, color `warm-gray-100`
+- border: weight `1.4px`, default color `warm-gray-100`
 - background: `white`
 - text: typography `typo-body-8`, color `black`
 - selected stroke: weight `1.4px`, color `primary-400`

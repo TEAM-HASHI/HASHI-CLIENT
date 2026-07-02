@@ -80,6 +80,28 @@ describe('Badge', () => {
     )
   })
 
+  it('미선택 상태에도 border 두께를 1.4px로 유지합니다', () => {
+    render(<Badge interactive label="선택 라벨" />)
+
+    expect(screen.getByRole('button', { name: '선택 라벨' })).toHaveClass(
+      'border-[1.4px]',
+      'border-warm-gray-100',
+    )
+  })
+
+  it('정적 Badge에는 기본 스타일을 적용합니다', () => {
+    render(<Badge label="정적 라벨" />)
+
+    expect(screen.getByText('정적 라벨').parentElement).toHaveClass(
+      'border-warm-gray-100',
+      'bg-white',
+    )
+    expect(screen.getByText('정적 라벨').parentElement).not.toHaveClass(
+      'border-primary-400',
+      'bg-primary-400/20',
+    )
+  })
+
   it('아이콘은 accessible name에 포함하지 않고 visible label을 이름으로 사용합니다', () => {
     render(
       <Badge

@@ -63,6 +63,7 @@ export default meta
 
 type Story = StoryObj<typeof meta>
 type BadgePropsForStory = ComponentProps<typeof Badge>
+type ReviewKeywordItem = (typeof reviewKeywordItems)[number]
 
 const StatefulBadge = (args: BadgePropsForStory) => {
   const [selected, setSelected] = useState(Boolean(args.selected))
@@ -92,27 +93,43 @@ const KeywordWrap = ({
       {reviewKeywordItems.map((item) => {
         const isSelected = selectedKeywordValues.includes(item.value)
 
-        return (
-          <Badge
-            icon={item.icon}
-            interactive={interactive}
-            key={item.value}
-            label={item.label}
-            onSelectedChange={(nextSelected) => {
-              setSelectedKeywordValues((currentValues) => {
-                if (nextSelected) {
-                  return [...currentValues, item.value]
-                }
+        if (interactive) {
+          return (
+            <Badge
+              icon={item.icon}
+              interactive
+              key={item.value}
+              label={item.label}
+              onSelectedChange={(nextSelected) => {
+                setSelectedKeywordValues((currentValues) =>
+                  getNextSelectedKeywordValues(
+                    currentValues,
+                    item,
+                    nextSelected,
+                  ),
+                )
+              }}
+              selected={isSelected}
+            />
+          )
+        }
 
-                return currentValues.filter((value) => value !== item.value)
-              })
-            }}
-            selected={isSelected}
-          />
-        )
+        return <Badge icon={item.icon} key={item.value} label={item.label} />
       })}
     </div>
   )
+}
+
+const getNextSelectedKeywordValues = (
+  currentValues: string[],
+  item: ReviewKeywordItem,
+  nextSelected: boolean,
+) => {
+  if (nextSelected) {
+    return [...currentValues, item.value]
+  }
+
+  return currentValues.filter((value) => value !== item.value)
 }
 
 export const Default: Story = {}
@@ -145,12 +162,6 @@ export const Selected: Story = {
 
 export const StaticReviewKeywords: Story = {
   render: () => <KeywordWrap />,
-}
-
-export const SelectedReviewKeywords: Story = {
-  render: () => (
-    <KeywordWrap selectedValues={['delicious', 'mildSpice', 'value']} />
-  ),
 }
 
 export const SelectableReviewKeywords: Story = {
