@@ -36,4 +36,6 @@ export type {
   DialogType,
 } from './dialog'
 
+export { Checkbox } from './checkbox/Checkbox'
+
 export { CollapsibleText } from './collapsibleText'
