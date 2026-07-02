@@ -268,20 +268,20 @@ export type CalendarProps = Omit<
   - bottom spacing to date grid: `22px`
   - `bg-primary-100`
   - `rounded-[5px]`
-  - text: `typo-sub-header-3`, `text-black`
+  - weekday text: `typo-body-5`, `text-black`
+  - Sunday label text: `typo-sub-header-3`, `text-primary-400`
+  - Saturday label text: `typo-sub-header-3`, `text-point-300`
   - label padding: `py-[5px] px-3`
-  - Sunday label: `text-primary-400`
-  - Saturday label: `text-point-300`
 - date grid:
   - `grid`
   - `grid-template-columns: repeat(7, minmax(0, 1fr))`
   - `row-gap: 10px`
   - column spacing is produced by equal-width columns and centered date boxes, not fixed `column-gap: 18px`
   - date cell: center alignment
-  - date button: `py-[5px] px-3`, `rounded-[5px]`
+  - date button: `h-8`, `py-[5px] px-3`, `rounded-[5px]`
   - available date: `typo-body-4`, `text-black`
   - disabled date: `typo-body-4`, `text-cool-gray-400`
-  - selected date: `typo-sub-header-2`, `bg-black`, `text-white`
+  - selected date: `size-8`, `typo-sub-header-2`, `bg-black`, `text-white`
 - focus-visible:
   - `focus-visible:outline-2`
   - `focus-visible:outline-offset-2`
@@ -289,10 +289,11 @@ export type CalendarProps = Omit<
 
 ### Token Notes
 
-- `Black`은 현재 Tailwind 기본 `black` 또는 token 승격 전 임시 `text-black`/`bg-black`으로 사용합니다.
+- `Black`은 Tailwind 기본 `text-black`/`bg-black` utility를 사용합니다.
 - `radius 5`는 현재 radius token이 없으므로 `rounded-[5px]`를 사용합니다.
 - `5px` vertical padding은 Tailwind 기본 spacing에 없으므로 `py-[5px]`를 사용합니다.
 - `12px` horizontal padding은 Tailwind `px-3`와 일치합니다.
+- date button은 선택 상태에서 row 높이가 흔들리지 않도록 기본 높이를 `h-8`로 고정합니다.
 
 ## Accessibility
 

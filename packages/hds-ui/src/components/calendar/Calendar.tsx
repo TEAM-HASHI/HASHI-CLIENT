@@ -118,7 +118,8 @@ export const Calendar = ({
         {weekdayLabels.map((label, index) => (
           <span
             className={cn(
-              'typo-sub-header-3 flex items-center justify-center px-3 py-[5px] text-black',
+              'flex items-center justify-center px-3 py-[5px] text-black',
+              index === 0 || index === 6 ? 'typo-sub-header-3' : 'typo-body-5',
               index === 0 && 'text-primary-400',
               index === 6 && 'text-point-300',
             )}
@@ -144,8 +145,9 @@ export const Calendar = ({
               <button
                 aria-pressed={isSelected}
                 className={cn(
-                  'typo-body-4 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 appearance-none rounded-[5px] border-0 bg-transparent px-3 py-[5px] text-black focus-visible:outline-2 focus-visible:outline-offset-2',
-                  isSelected && 'typo-sub-header-2 bg-black text-white',
+                  'typo-body-4 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 flex h-8 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent px-3 py-[5px] text-black focus-visible:outline-2 focus-visible:outline-offset-2',
+                  isSelected &&
+                    'typo-sub-header-2 size-8 bg-black p-0 text-white',
                 )}
                 disabled={isDisabled}
                 onClick={() => onDateSelect?.(date)}

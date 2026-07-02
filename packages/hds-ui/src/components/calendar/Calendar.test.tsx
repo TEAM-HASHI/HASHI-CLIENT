@@ -12,6 +12,13 @@ describe('Calendar', () => {
 
     expect(screen.getByRole('heading', { name: '6월' })).toBeTruthy()
     expect(screen.getAllByText('S')).toHaveLength(2)
+    expect(screen.getAllByText('S')[0]?.className).toContain(
+      'typo-sub-header-3',
+    )
+    expect(screen.getAllByText('S')[1]?.className).toContain(
+      'typo-sub-header-3',
+    )
+    expect(screen.getAllByText('M')[0]?.className).toContain('typo-body-5')
     expect(screen.getByRole('button', { name: '1' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '30' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: '31' })).toBeNull()
@@ -34,6 +41,8 @@ describe('Calendar', () => {
 
     expect(selectedDate.getAttribute('aria-pressed')).toBe('true')
     expect(selectedDate.hasAttribute('aria-selected')).toBe(false)
+    expect(selectedDate.className).toContain('size-8')
+    expect(screen.getByRole('button', { name: '7' }).className).toContain('h-8')
     expect((disabledDate as HTMLButtonElement).disabled).toBe(true)
 
     fireEvent.click(disabledDate)
