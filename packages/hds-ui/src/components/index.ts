@@ -11,6 +11,8 @@ export type {
   BottomNavigationItem,
   BottomNavigationProps,
 } from './bottomNavigation'
+export { Chip } from './chip'
+export type { ChipProps } from './chip'
 
 export { IconButton } from './iconButton'
 export type { IconButtonProps, IconButtonSize } from './iconButton'
