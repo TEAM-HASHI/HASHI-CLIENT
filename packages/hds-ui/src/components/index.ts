@@ -6,6 +6,9 @@ export type {
   ButtonWidth,
 } from './button'
 
+export { Badge } from './badge'
+export type { BadgeProps } from './badge'
+
 export { BottomNavigation } from './bottomNavigation'
 export type {
   BottomNavigationItem,
