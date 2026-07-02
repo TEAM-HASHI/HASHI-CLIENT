@@ -26,31 +26,25 @@ export const BottomNavigation = ({
   'aria-label': ariaLabel = '하단 내비게이션',
   ...props
 }: BottomNavigationProps) => {
-  const gridTemplateColumns =
-    items.length > 0 ? `repeat(${items.length}, minmax(0, 1fr))` : undefined
-
   return (
     <nav
       aria-label={ariaLabel}
       className={cn(
-        'h-[84px] w-full bg-white px-[35px] pt-[5px] pb-[10px]',
+        'h-[84px] w-full bg-white px-[26.5px] pt-[5px] pb-[10px]',
         className,
       )}
       style={style}
       {...props}
     >
-      <ul
-        className="m-0 grid h-12 w-full list-none items-center p-0"
-        style={{ gridTemplateColumns }}
-      >
+      <ul className="m-0 flex h-12 w-full list-none items-center justify-between p-0">
         {items.map((item) => {
           const isActive = item.value === value
 
           return (
-            <li className="flex min-w-0 justify-center" key={item.value}>
+            <li className="flex w-12 shrink-0" key={item.value}>
               <button
                 aria-current={isActive ? 'page' : undefined}
-                className="focus-visible:outline-cool-gray-900 flex h-12 w-full max-w-12 appearance-none flex-col items-center justify-center gap-[3px] rounded-[4px] border-0 bg-transparent p-0 font-sans focus-visible:outline-2 focus-visible:outline-offset-2"
+                className="focus-visible:outline-cool-gray-900 flex h-12 w-full appearance-none flex-col items-center justify-center gap-[3px] rounded-[4px] border-0 bg-transparent p-0 font-sans focus-visible:outline-2 focus-visible:outline-offset-2"
                 onClick={() => {
                   if (!isActive) {
                     onValueChange?.(item.value)

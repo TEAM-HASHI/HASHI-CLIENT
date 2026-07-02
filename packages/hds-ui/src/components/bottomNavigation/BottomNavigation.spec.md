@@ -83,7 +83,7 @@ type BottomNavigationItem = {
 ## Styling
 
 - layout: root 높이 84px, item visual box 48px, icon 24px
-- spacing: root `pt: 5px`, `pb: 10px`, horizontal padding 35px, icon/label gap 3px
+- spacing: root `pt: 5px`, `pb: 10px`, horizontal padding 26.5px, icon/label gap 3px
 - responsive: `w-full`과 equal-column grid로 배치합니다.
 - token usage: active icon `cool-gray-900`, inactive icon `warm-gray-300`, label `cool-gray-900`, label typography `typo-caption-5`
 - safe area: HDS에서 적용하지 않고 App Shell에서 한 번만 처리합니다.

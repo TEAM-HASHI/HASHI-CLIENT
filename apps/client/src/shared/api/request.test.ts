@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError } from './apiError'
-import { apiClient } from './apiClient'
-import { request } from './request'
-import type { ErrorResponse } from './types'
+import { ApiError } from '@/shared/api/apiError'
+import { apiClient } from '@/shared/api/apiClient'
+import { request } from '@/shared/api/request'
+import type { ErrorResponse } from '@/shared/api/types'
 
-vi.mock('./apiClient', () => ({
+vi.mock('@/shared/api/apiClient', () => ({
   apiClient: vi.fn(),
 }))
 
