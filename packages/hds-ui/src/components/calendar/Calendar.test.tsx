@@ -32,7 +32,8 @@ describe('Calendar', () => {
     const selectedDate = screen.getByRole('button', { name: '1' })
     const disabledDate = screen.getByRole('button', { name: '6' })
 
-    expect(selectedDate.getAttribute('aria-selected')).toBe('true')
+    expect(selectedDate.getAttribute('aria-pressed')).toBe('true')
+    expect(selectedDate.hasAttribute('aria-selected')).toBe(false)
     expect((disabledDate as HTMLButtonElement).disabled).toBe(true)
 
     fireEvent.click(disabledDate)

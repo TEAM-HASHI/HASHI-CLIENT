@@ -235,7 +235,7 @@ export type CalendarProps = Omit<
 4. 각 날짜는 native `button`으로 렌더링합니다.
 5. 활성 날짜를 클릭하면 해당 날짜의 `Date` 객체로 `onDateSelect`를 호출합니다.
 6. disabled 날짜를 클릭해도 `onDateSelect`를 호출하지 않습니다.
-7. selected date는 `aria-selected="true"`와 selected visual state를 가집니다.
+7. selected date는 `aria-pressed="true"`와 selected visual state를 가집니다.
 8. disabled date는 native `disabled`를 우선 사용합니다.
 9. 이전 월 버튼을 클릭하면 `onMonthChange(previousMonth)`를 호출합니다.
 10. 다음 월 버튼을 클릭하면 `onMonthChange(nextMonth)`를 호출합니다.
@@ -308,7 +308,7 @@ export type CalendarProps = Omit<
 - date grid:
   - v1은 native button grid로 구현합니다.
   - `role="grid"`/roving tabindex는 v1에서 도입하지 않습니다. 완전한 date picker keyboard contract가 필요해지면 `react-aria-components` 기반 Calendar로 확장합니다.
-  - selected date에는 `aria-selected="true"`를 제공합니다.
+  - selected date에는 button 역할에 맞는 `aria-pressed="true"`를 제공합니다.
   - disabled date에는 native `disabled`를 사용합니다.
 - visible text:
   - date button의 visible number가 accessible name이 됩니다.

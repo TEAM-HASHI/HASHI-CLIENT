@@ -142,7 +142,7 @@ export const Calendar = ({
           return (
             <div className="flex min-w-0 justify-center" key={date.getTime()}>
               <button
-                aria-selected={isSelected ? 'true' : undefined}
+                aria-pressed={isSelected}
                 className={cn(
                   'typo-body-4 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 appearance-none rounded-[5px] border-0 bg-transparent px-3 py-[5px] text-black focus-visible:outline-2 focus-visible:outline-offset-2',
                   isSelected && 'typo-sub-header-2 bg-black text-white',
