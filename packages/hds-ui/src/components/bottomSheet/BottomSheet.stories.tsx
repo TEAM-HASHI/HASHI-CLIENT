@@ -1,4 +1,3 @@
-import { CheckIcon, KakaoIcon, PopularIcon } from '@hashi/hds-icons'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
@@ -57,67 +56,25 @@ const ControlledBottomSheet = (args: BottomSheetProps) => {
   )
 }
 
-const sheetFooter = (
-  <div className="grid grid-cols-2 gap-[7px]">
-    <Button className="typo-body-6 bg-secondary-200 h-[42px] w-full rounded-[5px] border-0 text-black">
-      초기화
+const basicFooter = (
+  <div className="grid grid-cols-2 gap-2">
+    <Button variant="neutral" width="full">
+      취소
     </Button>
-    <Button className="typo-body-6 bg-cool-gray-800 h-[42px] w-full rounded-[5px] border-0 text-white">
-      적용
-    </Button>
+    <Button width="full">확인</Button>
   </div>
 )
 
-type OptionListProps = {
-  options: string[]
-  selectedValue: string
-}
-
-const OptionList = ({ options, selectedValue }: OptionListProps) => (
-  <ul className="m-0 flex list-none flex-col gap-5 p-0 pt-2">
-    {options.map((option) => {
-      const isSelected = option === selectedValue
-
-      return (
-        <li key={option}>
-          <button
-            aria-pressed={isSelected}
-            className="typo-body-7 flex min-h-5 w-full items-center justify-between border-0 bg-transparent p-0 text-left text-black"
-            type="button"
-          >
-            <span>{option}</span>
-            {isSelected && (
-              <CheckIcon aria-hidden="true" className="size-4 shrink-0" />
-            )}
-          </button>
-        </li>
-      )
-    })}
-  </ul>
-)
-
-const LoginPromptContent = () => (
-  <div className="pt-1 pb-[33px]">
-    <p className="typo-header-3 mt-[23px] text-black">
-      <span className="block leading-[1.45] font-normal">
-        간편하게 로그인하고
-      </span>
-      <span className="block leading-[1.45]">
-        Hashi와 일본 미식 여행을 완성해보세요!
-      </span>
+const longContent = (
+  <div className="typo-body-6 text-cool-gray-800 flex flex-col gap-3">
+    <p>
+      BottomSheet는 화면 하단에서 올라오는 overlay primitive입니다. 본문
+      영역에는 호출부가 필요한 콘텐츠를 slot으로 전달합니다.
     </p>
-    <div className="flex justify-center pt-[73px] pb-[42px]">
-      <PopularIcon aria-hidden="true" className="size-[172px]" />
-    </div>
-    <Button
-      className="typo-sub-header-1 bg-point-200 relative h-[58px] gap-0 rounded-full px-[19px] text-black"
-      leftIcon={
-        <KakaoIcon className="absolute top-1/2 left-[19px] size-6 -translate-y-1/2" />
-      }
-      width="full"
-    >
-      카카오로 1초 만에 시작하기
-    </Button>
+    <p>
+      HDS는 panel, overlay, header, footer, focus interaction과 같은 공통 동작만
+      담당합니다.
+    </p>
   </div>
 )
 
@@ -125,52 +82,46 @@ export const Default: Story = {
   render: ControlledBottomSheet,
 }
 
-export const FoodCategory: Story = {
+export const WithFooter: Story = {
   args: {
     open: true,
-    title: '음식 장르 선택',
-    children: (
-      <OptionList
-        options={[
-          '스시/사시미류',
-          '면류',
-          '덮밥류',
-          '나베/냄비류',
-          '튀김류',
-          '철판/구이류',
-          '기타',
-        ]}
-        selectedValue="스시/사시미류"
-      />
-    ),
-    footer: sheetFooter,
+    title: '액션 바텀시트',
+    children: '하단 액션 영역을 footer slot으로 전달할 수 있습니다.',
+    footer: basicFooter,
   },
   render: ControlledBottomSheet,
 }
 
-export const SortOrder: Story = {
+export const WithoutCloseButton: Story = {
   args: {
     open: true,
-    title: '정렬 순서',
-    children: (
-      <OptionList
-        options={['기본순', '거리순', '별점순']}
-        selectedValue="기본순"
-      />
-    ),
-    footer: sheetFooter,
+    title: '닫기 버튼 없는 바텀시트',
+    showCloseButton: false,
+    children: 'showCloseButton을 false로 설정하면 닫기 버튼을 숨깁니다.',
+    footer: basicFooter,
   },
   render: ControlledBottomSheet,
 }
 
-export const SignupPrompt: Story = {
+export const WithoutHeader: Story = {
   args: {
     open: true,
     title: undefined,
     showCloseButton: false,
     showHandle: false,
-    children: <LoginPromptContent />,
+    'aria-label': '안내 바텀시트',
+    children: 'title 없이 사용할 때는 aria-label로 접근성 이름을 전달합니다.',
     className: 'rounded-t-[16px]',
+  },
+  render: ControlledBottomSheet,
+}
+
+export const LongContent: Story = {
+  args: {
+    open: true,
+    title: '긴 콘텐츠',
+    children: longContent,
+    footer: basicFooter,
   },
   render: ControlledBottomSheet,
 }
