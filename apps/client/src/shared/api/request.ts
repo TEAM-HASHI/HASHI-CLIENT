@@ -1,7 +1,7 @@
 import type { Options } from 'ky'
-import { ApiError } from './apiError'
-import { apiClient } from './apiClient'
-import { isErrorResponse, type ApiResponse } from './types'
+import { ApiError } from '@/shared/api/apiError'
+import { apiClient } from '@/shared/api/apiClient'
+import { isErrorResponse, type ApiResponse } from '@/shared/api/types'
 
 const normalizePath = (path: string) => path.replace(/^\/+/, '')
 
