@@ -31,6 +31,7 @@ pnpm gen:ds-component
 ```text
 apps/client/src/pages/{pageName}/
   {PageName}Page.tsx
+  {PageName}.spec.md
   index.ts
 ```
 
@@ -64,9 +65,12 @@ packages/hds-ui/src/components/{componentName}/
 
 ## Spec Files
 
+`page` generator는 page의 `*.spec.md`를 자동 생성합니다.
+생성된 page spec은 route, 상태, 데이터 의존성, HDS/component mapping, 검증 기준을 구현 전에 채우는 scaffold입니다.
+
 `ds-component` generator는 HDS component의 `*.spec.md`를 자동 생성합니다.
 
-page, shared component, hook처럼 generator가 spec을 만들지 않는 작업은 [Spec Writing](./spec-writing.md)에 따라 [Spec Templates](./spec-templates/README.md)를 복사해서 구현 대상과 같은 폴더에 둡니다.
+shared component, hook처럼 generator가 spec을 만들지 않는 작업은 [Spec Writing](./spec-writing.md)에 따라 [Spec Templates](./spec-templates/README.md)를 복사해서 구현 대상과 같은 폴더에 둡니다.
 
 예시:
 

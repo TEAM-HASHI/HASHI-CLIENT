@@ -12,7 +12,7 @@
 ## Workflow
 
 1. Jira description, Figma, 기존 page 구조를 확인합니다.
-2. spec이 필요한 작업이면 구현 위치 근처에 `*.spec.md`를 작성하거나 갱신합니다.
+2. `pnpm gen:page`로 생성된 `*.spec.md`를 구현 기준에 맞게 채우거나, 기존 page라면 구현 위치 근처의 `*.spec.md`를 갱신합니다.
 3. page-local 책임과 app shared로 승격할 책임을 분리합니다.
 4. route, query, mutation, form 상태는 HDS component 내부로 넣지 않습니다.
 5. loading, error, empty, disabled 상태를 구현 범위에 맞게 정리합니다.

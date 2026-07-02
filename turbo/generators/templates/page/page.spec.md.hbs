@@ -1,0 +1,110 @@
+# Page Spec: `{{pascalCase name}}`
+
+## Purpose
+
+- 이 페이지가 지원하는 사용자 목표를 작성합니다.
+
+## Route
+
+- path:
+- route owner:
+- layout:
+- access:
+  - public / auth required
+  - redirect rule:
+
+## Location
+
+- page path:
+  - `apps/client/src/pages/{{camelCase name}}/{{pascalCase name}}Page.tsx`
+- spec path:
+  - `apps/client/src/pages/{{camelCase name}}/{{pascalCase name}}.spec.md`
+- route registration:
+  - `apps/client/src/app/router`
+
+## Requirements
+
+- [ ] 필수 UI 요소
+- [ ] 필수 사용자 액션
+- [ ] 성공 시 동작
+- [ ] 실패 시 동작
+- [ ] 비활성화 조건
+- [ ] 반응형 요구사항
+- [ ] 접근성 요구사항
+
+## Data Dependencies
+
+### Query
+
+- query:
+- enabled condition:
+- request params:
+- loading state:
+- error state:
+- empty state:
+- refetch condition:
+
+### Mutation
+
+- mutation:
+- request data:
+- submit enabled condition:
+- success handling:
+- failure handling:
+
+## State
+
+- local state:
+- form state:
+- URL state:
+- server state:
+- derived state:
+
+## UI Structure
+
+```text
+{{pascalCase name}}Page
+  Heading
+  Section
+  Actions
+```
+
+## Component Mapping
+
+- HDS component:
+- app shared component:
+- page-local component:
+- icon:
+
+## Error Handling
+
+- API error:
+- validation error:
+- exceptional case:
+- user-facing message:
+- retry or fallback:
+
+## Navigation
+
+- entry:
+- links:
+- success redirect:
+- failure redirect:
+- back behavior:
+
+## Styling
+
+- Tailwind layout:
+- responsive:
+- fixed area:
+- scroll area:
+- empty/loading/error layout:
+
+## Verification
+
+- [ ] `pnpm --filter @hashi/client lint`
+- [ ] `pnpm --filter @hashi/client typecheck`
+- [ ] `pnpm --filter @hashi/client build`
+- [ ] `pnpm --filter @hashi/client test`
+- [ ] 주요 사용자 흐름 수동 확인
+- [ ] loading / empty / error / success 상태 확인
