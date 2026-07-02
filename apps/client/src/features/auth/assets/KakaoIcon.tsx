@@ -1,5 +1,6 @@
 import type { SVGProps } from 'react'
-const KakaoIcon = (props: SVGProps<SVGSVGElement>) => (
+
+export const KakaoIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="1em"
     height="1em"
@@ -14,4 +15,3 @@ const KakaoIcon = (props: SVGProps<SVGSVGElement>) => (
     />
   </svg>
 )
-export default KakaoIcon

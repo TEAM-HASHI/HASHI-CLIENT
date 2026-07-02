@@ -1,5 +1,6 @@
-import { KakaoIcon } from '@hashi/hds-icons'
 import { Button } from '@hashi/hds-ui'
+
+import { KakaoIcon } from '@/features/auth/assets/KakaoIcon'
 
 type KakaoStartButtonProps = {
   children: string
