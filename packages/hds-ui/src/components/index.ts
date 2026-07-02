@@ -44,3 +44,13 @@ export type {
 export { Checkbox } from './checkbox/Checkbox'
 
 export { CollapsibleText } from './collapsibleText'
+
+export { Carousel } from './carousel'
+export type {
+  CarouselIndicatorAlign,
+  CarouselIndicatorProps,
+  CarouselItemProps,
+  CarouselRootProps,
+  CarouselTrackProps,
+  CarouselViewportProps,
+} from './carousel'
