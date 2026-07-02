@@ -38,6 +38,13 @@ export const WithImage: Story = {
   },
 }
 
+export const BrokenImage: Story = {
+  args: {
+    src: '/broken-avatar-image.png',
+    alt: '깨진 프로필 이미지',
+  },
+}
+
 export const Placeholder: Story = {}
 
 export const Small: Story = {

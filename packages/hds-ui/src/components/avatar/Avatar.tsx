@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { cn } from '../../utils'
 
 export type AvatarSize = 'sm' | 'md' | 'lg'
@@ -21,13 +22,21 @@ export const Avatar = ({
   size = 'sm',
   className,
 }: AvatarProps) => {
+  const [hasImageError, setHasImageError] = useState(false)
+
+  useEffect(() => {
+    setHasImageError(false)
+  }, [src])
+
   const avatarClassName = cn(
     'block shrink-0 overflow-hidden rounded-full',
     avatarSizeClassName[size],
     className,
   )
 
-  if (!src) {
+  const shouldShowPlaceholder = !src || hasImageError
+
+  if (shouldShowPlaceholder) {
     return (
       <span
         aria-hidden="true"
@@ -38,6 +47,13 @@ export const Avatar = ({
   }
 
   return (
-    <img src={src} alt={alt} className={cn(avatarClassName, 'object-cover')} />
+    <img
+      src={src}
+      alt={alt}
+      className={cn(avatarClassName, 'object-cover')}
+      onError={() => {
+        setHasImageError(true)
+      }}
+    />
   )
 }

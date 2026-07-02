@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Avatar } from './Avatar'
 
@@ -38,6 +38,36 @@ describe('Avatar', () => {
 
     expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
     expect(screen.getByTestId('avatar-placeholder')).toHaveClass('block')
+  })
+
+  it('renders a placeholder when image loading fails', () => {
+    render(<Avatar src="/broken-avatar.png" alt="프로필 이미지" />)
+
+    const image = screen.getByRole('img', { name: '프로필 이미지' })
+
+    fireEvent.error(image)
+
+    expect(
+      screen.queryByRole('img', { name: '프로필 이미지' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
+  })
+
+  it('resets image error state when src changes', () => {
+    const { rerender } = render(
+      <Avatar src="/broken-avatar.png" alt="프로필 이미지" />,
+    )
+
+    fireEvent.error(screen.getByRole('img', { name: '프로필 이미지' }))
+
+    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
+
+    rerender(<Avatar src="/avatar.png" alt="프로필 이미지" />)
+
+    expect(screen.getByRole('img', { name: '프로필 이미지' })).toHaveAttribute(
+      'src',
+      '/avatar.png',
+    )
   })
 
   it('applies placeholder background class', () => {
