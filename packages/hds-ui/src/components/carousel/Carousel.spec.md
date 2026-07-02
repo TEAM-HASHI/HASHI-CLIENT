@@ -247,8 +247,9 @@ Carousel.Root
 6. When scroll settles, Carousel calculates the nearest item and updates the current index.
 7. If the calculated index changes, `onIndexChange` is called.
 8. If controlled `index` changes from outside, Carousel scrolls the matching item into view.
-9. `Carousel.Indicator` reflects the current index.
-10. If there is 0 or 1 item, `Carousel.Indicator` renders nothing.
+9. If viewport width changes, Carousel keeps the current index aligned to the new viewport width.
+10. `Carousel.Indicator` reflects the current index.
+11. If there is 0 or 1 item, `Carousel.Indicator` renders nothing.
 
 ## Styling
 
@@ -366,7 +367,8 @@ Figma example mapping:
 - controlled `index` 변경 같은 programmatic 이동은 native smooth scroll 기준으로 처리하되, native swipe는 브라우저의 스크롤 동작을 따릅니다.
 - reduced motion 환경에서는 programmatic 이동을 즉시 처리합니다.
 - scroll settle 계산은 item width와 viewport scroll position을 기준으로 합니다.
-- resize 후에도 현재 index가 유지되도록 viewport 기준 위치를 다시 맞춥니다.
+- resize 후에도 현재 index가 유지되도록 `ResizeObserver`로 viewport width 변경을 감지해 viewport 기준 위치를 다시 맞춥니다.
+- resize 보정은 화면 흔들림을 줄이기 위해 smooth scroll이 아닌 `auto` scroll로 처리합니다.
 - `defaultIndex`와 controlled `index`가 item 범위를 벗어나면 사용 가능한 범위로 보정합니다.
 - slide 개수가 동적으로 바뀌면 현재 index도 새 item 개수 안으로 보정합니다.
 

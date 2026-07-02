@@ -118,6 +118,7 @@ const scrollViewportToIndex = (
   viewport: HTMLDivElement,
   index: number,
   itemCount: number,
+  behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth',
 ) => {
   if (itemCount <= 0 || viewport.clientWidth <= 0) {
     return
@@ -131,7 +132,7 @@ const scrollViewportToIndex = (
 
   if (typeof viewport.scrollTo === 'function') {
     viewport.scrollTo({
-      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      behavior,
       left: nextLeft,
     })
     return
@@ -267,6 +268,46 @@ const Viewport = ({
     }
 
     scrollViewportToIndex(viewport, currentIndex, itemCount)
+  }, [currentIndex, itemCount, viewportRef])
+
+  useEffect(() => {
+    const viewport = viewportRef.current
+
+    if (!viewport || itemCount <= 0 || typeof ResizeObserver === 'undefined') {
+      return
+    }
+
+    let previousWidth = viewport.clientWidth
+    let animationFrameId: number | null = null
+
+    const observer = new ResizeObserver(() => {
+      const nextWidth = viewport.clientWidth
+
+      if (nextWidth === previousWidth) {
+        return
+      }
+
+      previousWidth = nextWidth
+
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(animationFrameId)
+      }
+
+      animationFrameId = window.requestAnimationFrame(() => {
+        animationFrameId = null
+        scrollViewportToIndex(viewport, currentIndex, itemCount, 'auto')
+      })
+    })
+
+    observer.observe(viewport)
+
+    return () => {
+      observer.disconnect()
+
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(animationFrameId)
+      }
+    }
   }, [currentIndex, itemCount, viewportRef])
 
   useEffect(() => {

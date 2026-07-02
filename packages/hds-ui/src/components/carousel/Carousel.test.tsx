@@ -92,6 +92,8 @@ const setViewportMetrics = ({
 
 afterEach(() => {
   cleanup()
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
   vi.useRealTimers()
 })
 
@@ -269,5 +271,52 @@ describe('Carousel', () => {
     )
 
     expect(getViewport()).toHaveClass('overflow-x-auto')
+  })
+
+  it('realigns the current slide when the viewport width changes', () => {
+    let resizeCallback: ResizeObserverCallback | undefined
+    const observe = vi.fn()
+    const disconnect = vi.fn()
+
+    vi.stubGlobal(
+      'ResizeObserver',
+      vi.fn(function (callback: ResizeObserverCallback) {
+        resizeCallback = callback
+
+        return {
+          disconnect,
+          observe,
+          unobserve: vi.fn(),
+        }
+      }),
+    )
+    vi.stubGlobal(
+      'requestAnimationFrame',
+      vi.fn((callback: FrameRequestCallback) => {
+        callback(0)
+
+        return 1
+      }),
+    )
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
+
+    renderCarousel({ defaultIndex: 1 })
+    const viewport = setViewportMetrics({ scrollLeft: 393, width: 353 })
+    const scrollTo = vi.fn()
+
+    Object.defineProperty(viewport, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    })
+
+    act(() => {
+      resizeCallback?.([], {} as ResizeObserver)
+    })
+
+    expect(observe).toHaveBeenCalledWith(viewport)
+    expect(scrollTo).toHaveBeenCalledWith({
+      behavior: 'auto',
+      left: 353,
+    })
   })
 })
