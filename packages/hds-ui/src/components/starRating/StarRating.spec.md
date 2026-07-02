@@ -105,6 +105,7 @@ StarRating
 - type: `number`
 - required: `true`
 - description: 호출부가 전달하는 원본 평점 숫자입니다. HDS는 이 값을 표시용 정수 또는 `.5` 단위로 변환합니다.
+- 호출부는 `0` 이상 `5` 이하의 값을 전달하지만, HDS는 표시 단계에서 `value`를 `0`~`5`로 clamp하고 `NaN` 등 non-finite 값은 `0`으로 처리합니다. 별 표시와 `aria-label`은 항상 이 정규화된 값을 함께 사용해 서로 어긋나지 않도록 보장합니다.
 
 ### `size`
 
@@ -143,8 +144,8 @@ StarRating
 
 ## Behavior
 
-1. `value`는 호출부에서 `0` 이상 `5` 이하의 숫자로 전달합니다.
-2. 표시값은 정수 평점이면 그대로 사용하고, 소수점이 있는 평점이면 `Math.floor(value) + 0.5`로 계산합니다.
+1. `value`는 호출부에서 `0` 이상 `5` 이하의 숫자로 전달합니다. HDS는 방어적으로 `value`를 `0`~`5`로 clamp하고 non-finite 값은 `0`으로 정규화한 뒤 별 표시와 `aria-label`에 동일하게 사용합니다.
+2. 표시값은 정규화된 값 기준으로 정수 평점이면 그대로 사용하고, 소수점이 있는 평점이면 `Math.floor(value) + 0.5`로 계산합니다.
 3. 각 별은 1-based index 기준으로 다음 상태를 결정합니다.
    - `displayValue >= index`: `filled`
    - `displayValue >= index - 0.5`: `half`
@@ -165,13 +166,16 @@ StarRating
 | `4.1~4.9`   |         `4.5` | filled 4 + half 1           |
 | `4.99`      |         `4.5` | filled 4 + half 1           |
 | `5`         |           `5` | filled 5                    |
+| `6`         |           `5` | filled 5 (clamp)            |
+| `-1`        |           `0` | empty 5 (clamp)             |
+| `NaN`       |           `0` | empty 5 (fallback)          |
 
 ## Validation
 
 - 필드별 검증 규칙: 없음
 - 버튼 활성/비활성 조건: 없음
 - invalid 상태 표시 방식: 제공하지 않음
-- `value` 범위 검증과 fallback 여부는 호출부에서 처리합니다.
+- `value` 범위 검증과 fallback 여부는 호출부에서 처리합니다. 다만 HDS는 표시 단계에서 `value`를 `0`~`5`로 clamp하고 non-finite 값은 `0`으로 처리해 별 표시와 접근성 이름이 어긋나지 않도록 최소 방어만 수행합니다.
 
 ## Error Handling
 

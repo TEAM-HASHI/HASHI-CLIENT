@@ -74,4 +74,43 @@ describe('StarRating', () => {
       'empty',
     ])
   })
+
+  it('clamps values above five for both stars and accessible name', () => {
+    render(<StarRating value={6} />)
+
+    expect(screen.getByRole('img', { name: '평점 5점' })).toBeInTheDocument()
+    expect(getStarStates()).toEqual([
+      'filled',
+      'filled',
+      'filled',
+      'filled',
+      'filled',
+    ])
+  })
+
+  it('clamps negative values to zero for both stars and accessible name', () => {
+    render(<StarRating value={-1} />)
+
+    expect(screen.getByRole('img', { name: '평점 0점' })).toBeInTheDocument()
+    expect(getStarStates()).toEqual([
+      'empty',
+      'empty',
+      'empty',
+      'empty',
+      'empty',
+    ])
+  })
+
+  it('falls back to zero for non-finite values', () => {
+    render(<StarRating value={NaN} />)
+
+    expect(screen.getByRole('img', { name: '평점 0점' })).toBeInTheDocument()
+    expect(getStarStates()).toEqual([
+      'empty',
+      'empty',
+      'empty',
+      'empty',
+      'empty',
+    ])
+  })
 })

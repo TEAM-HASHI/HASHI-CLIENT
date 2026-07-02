@@ -53,6 +53,14 @@ export type StarRatingProps = Omit<
 
 const STAR_COUNT = 5
 
+const normalizeValue = (value: number) => {
+  if (!Number.isFinite(value)) {
+    return 0
+  }
+
+  return Math.min(Math.max(value, 0), STAR_COUNT)
+}
+
 const getDisplayValue = (value: number) => {
   if (Number.isInteger(value)) {
     return value
@@ -118,12 +126,13 @@ export const StarRating = ({
   value,
   ...props
 }: StarRatingProps) => {
-  const displayValue = getDisplayValue(value)
+  const normalizedValue = normalizeValue(value)
+  const displayValue = getDisplayValue(normalizedValue)
 
   return (
     <span
       {...props}
-      aria-label={ariaLabel ?? `평점 ${value}점`}
+      aria-label={ariaLabel ?? `평점 ${normalizedValue}점`}
       className={cn(starRatingVariants({ size }), className)}
       role="img"
     >
