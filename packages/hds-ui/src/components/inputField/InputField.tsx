@@ -1,14 +1,52 @@
-import { type ComponentPropsWithRef, type ReactNode, useId } from 'react'
+import {
+  type ComponentPropsWithRef,
+  type MouseEvent,
+  type ReactNode,
+  type Ref,
+  useId,
+  useRef,
+} from 'react'
 import { cn } from '../../utils'
 
-export interface InputFieldProps extends Omit<
+type InputFieldBaseProps = Omit<
   ComponentPropsWithRef<'input'>,
-  'className' | 'size'
-> {
-  label?: string
+  'aria-label' | 'aria-labelledby' | 'className' | 'size'
+> & {
   rightIcon?: ReactNode
   rightElement?: ReactNode
   className?: string
+}
+
+type InputFieldA11yProps =
+  | {
+      label: string
+      'aria-label'?: string
+      'aria-labelledby'?: string
+    }
+  | {
+      label?: undefined
+      'aria-label': string
+      'aria-labelledby'?: string
+    }
+  | {
+      label?: undefined
+      'aria-label'?: string
+      'aria-labelledby': string
+    }
+
+export type InputFieldProps = InputFieldBaseProps & InputFieldA11yProps
+
+const setRef = <T,>(ref: Ref<T> | undefined, value: T | null) => {
+  if (!ref) {
+    return
+  }
+
+  if (typeof ref === 'function') {
+    ref(value)
+    return
+  }
+
+  ref.current = value
 }
 
 export const InputField = ({
@@ -18,11 +56,32 @@ export const InputField = ({
   className,
   id,
   disabled = false,
+  ref,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   ...props
 }: InputFieldProps) => {
   const generatedId = useId()
-  const inputId = id ?? (label ? generatedId : undefined)
-  const hasRightContent = rightIcon || rightElement
+  const inputId = id ?? generatedId
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const hasRightContent = rightIcon != null || rightElement != null
+
+  const handleWrapperMouseDown = (event: MouseEvent<HTMLDivElement>) => {
+    if (disabled) {
+      return
+    }
+
+    const target = event.target as HTMLElement
+
+    if (target.closest('[data-input-field-right-content]')) {
+      return
+    }
+
+    if (event.target !== inputRef.current) {
+      event.preventDefault()
+      inputRef.current?.focus()
+    }
+  }
 
   return (
     <div className="flex w-full flex-col gap-2">
@@ -44,26 +103,43 @@ export const InputField = ({
           'data-[disabled=true]:cursor-not-allowed',
           className,
         )}
+        onMouseDown={handleWrapperMouseDown}
       >
         <input
           {...props}
           id={inputId}
+          ref={(node) => {
+            inputRef.current = node
+            setRef(ref, node)
+          }}
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabelledBy}
           disabled={disabled}
           className="typo-body-4 text-primary-200 placeholder:text-warm-gray-300 disabled:text-warm-gray-300 min-w-0 flex-1 bg-transparent font-sans outline-none disabled:cursor-not-allowed"
         />
 
         {hasRightContent ? (
-          <div className="ml-2.5 flex shrink-0 items-center gap-2.5">
+          <div
+            data-input-field-right-content
+            className="ml-2.5 flex shrink-0 items-center gap-2.5"
+          >
             {rightIcon ? (
               <span
                 aria-hidden="true"
-                className="text-success inline-flex size-[22px] shrink-0 items-center justify-center"
+                className="inline-flex size-[22px] shrink-0 items-center justify-center"
               >
                 {rightIcon}
               </span>
             ) : null}
             {rightElement ? (
-              <span className="inline-flex shrink-0 items-center">
+              <span
+                aria-disabled={disabled || undefined}
+                inert={disabled || undefined}
+                className={cn(
+                  'inline-flex shrink-0 items-center',
+                  disabled && 'pointer-events-none',
+                )}
+              >
                 {rightElement}
               </span>
             ) : null}

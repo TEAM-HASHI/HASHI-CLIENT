@@ -1,7 +1,7 @@
 import { CheckIcon } from '@hashi/hds-icons'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Button } from '../button'
-import { InputField } from './InputField'
+import { InputField, type InputFieldProps } from './InputField'
 
 const inputFrameClassName = 'w-[345px] max-w-full'
 const actionButtonClassName =
@@ -24,16 +24,19 @@ const renderSuccessIcon = () => (
   </span>
 )
 
-const meta: Meta<typeof InputField> = {
+const meta: Meta<InputFieldProps> = {
   title: 'Components/InputField',
   component: InputField,
   tags: ['autodocs'],
   args: {
+    'aria-label': '입력 필드',
     placeholder: '내용을 입력해 주세요.',
-    disabled: false,
   },
   argTypes: {
     label: {
+      control: 'text',
+    },
+    'aria-label': {
       control: 'text',
     },
     placeholder: {
@@ -69,15 +72,19 @@ const meta: Meta<typeof InputField> = {
 
 export default meta
 
-type Story = StoryObj<typeof meta>
+type Story = StoryObj<InputFieldProps>
 
-export const Default: Story = {}
+export const Default: Story = {
+  args: {
+    'aria-label': '입력 필드',
+  },
+}
 
 export const WithLabel: Story = {
   args: {
     label: '라벨',
     placeholder: '내용을 입력해 주세요.',
-  },
+  } satisfies InputFieldProps,
 }
 
 export const WithRightElement: Story = {
@@ -119,7 +126,7 @@ export const PhoneVerificationExample: Story = {
     value: '010-7875-7856',
     readOnly: true,
     rightElement: renderActionButton('인증하기'),
-  },
+  } satisfies InputFieldProps,
 }
 
 export const CodeVerificationExample: Story = {
@@ -129,5 +136,5 @@ export const CodeVerificationExample: Story = {
     'aria-label': '인증번호',
     rightIcon: renderSuccessIcon(),
     rightElement: renderActionButton('확인'),
-  },
+  } satisfies InputFieldProps,
 }

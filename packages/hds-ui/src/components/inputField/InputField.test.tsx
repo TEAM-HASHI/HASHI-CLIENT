@@ -61,6 +61,32 @@ describe('InputField', () => {
     expect(handleChange).toHaveBeenCalledOnce()
   })
 
+  it('focuses the input when the input box is clicked', () => {
+    render(<InputField aria-label="name" />)
+
+    const input = screen.getByRole('textbox', { name: 'name' })
+    const inputBox = input.parentElement
+
+    expect(inputBox).not.toBeNull()
+
+    fireEvent.mouseDown(inputBox!)
+
+    expect(input).toHaveFocus()
+  })
+
+  it('does not focus the input when the disabled input box is clicked', () => {
+    render(<InputField aria-label="name" disabled />)
+
+    const input = screen.getByRole('textbox', { name: 'name' })
+    const inputBox = input.parentElement
+
+    expect(inputBox).not.toBeNull()
+
+    fireEvent.mouseDown(inputBox!)
+
+    expect(input).not.toHaveFocus()
+  })
+
   it('renders rightElement', () => {
     render(
       <InputField
@@ -68,8 +94,25 @@ describe('InputField', () => {
         rightElement={<button type="button">인증하기</button>}
       />,
     )
-
     expect(screen.getByRole('button', { name: '인증하기' })).toBeTruthy()
+  })
+
+  it('disables rightElement interaction when disabled', () => {
+    render(
+      <InputField
+        aria-label="contact"
+        disabled
+        rightElement={<button type="button">인증하기</button>}
+      />,
+    )
+
+    const rightElementWrapper = screen.getByRole('button', {
+      name: '인증하기',
+    }).parentElement
+
+    expect(rightElementWrapper).toHaveAttribute('aria-disabled', 'true')
+    expect(rightElementWrapper).toHaveAttribute('inert')
+    expect(rightElementWrapper).toHaveClass('pointer-events-none')
   })
 
   it('renders rightIcon as decorative content', () => {
@@ -81,6 +124,19 @@ describe('InputField', () => {
     )
 
     expect(screen.getByTestId('success-icon')).toBeTruthy()
+  })
+
+  it('does not force success color on rightIcon wrapper', () => {
+    render(
+      <InputField
+        aria-label="code"
+        rightIcon={<span data-testid="status-icon" />}
+      />,
+    )
+
+    const rightIconWrapper = screen.getByTestId('status-icon').parentElement
+
+    expect(rightIconWrapper).not.toHaveClass('text-success')
   })
 
   it('renders rightIcon and rightElement together', () => {
