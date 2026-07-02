@@ -1,8 +1,10 @@
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useEffect, useId, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { CancelIcon } from '@hashi/hds-icons'
 
+import { useBodyScrollLock } from '../../shared/useBodyScrollLock'
+import { useFocusTrap } from '../../shared/useFocusTrap'
 import { cn } from '../../utils'
 
 export type BottomSheetProps = {
@@ -14,6 +16,7 @@ export type BottomSheetProps = {
   className?: string
   showHandle?: boolean
   showCloseButton?: boolean
+  'aria-label'?: string
 }
 
 const useBottomSheetPresence = (open: boolean) => {
@@ -49,19 +52,6 @@ const useBottomSheetPresence = (open: boolean) => {
   }
 }
 
-const useBodyScrollLock = (open: boolean) => {
-  useEffect(() => {
-    if (!open) return
-
-    const { overflow } = document.body.style
-    document.body.style.overflow = 'hidden'
-
-    return () => {
-      document.body.style.overflow = overflow
-    }
-  }, [open])
-}
-
 export const BottomSheet = ({
   open,
   onOpenChange,
@@ -71,10 +61,20 @@ export const BottomSheet = ({
   showHandle = true,
   showCloseButton = true,
   className,
+  'aria-label': ariaLabel = '바텀시트',
 }: BottomSheetProps) => {
   const titleId = useId()
+  const panelRef = useRef<HTMLDivElement>(null)
   const { isMounted, isVisible, unmountAfterClose } =
     useBottomSheetPresence(open)
+  const handlePressClose = useCallback(() => {
+    onOpenChange(false)
+  }, [onOpenChange])
+  const handleKeyDown = useFocusTrap({
+    enabled: open,
+    containerRef: panelRef,
+    onEscape: handlePressClose,
+  })
 
   useBodyScrollLock(open)
 
@@ -83,10 +83,6 @@ export const BottomSheet = ({
   }
 
   const hasHeader = showHandle || title || showCloseButton
-
-  const handlePressClose = () => {
-    onOpenChange(false)
-  }
 
   const handleTransitionEnd = () => {
     if (open) {
@@ -102,6 +98,7 @@ export const BottomSheet = ({
       onClick={handlePressClose}
     >
       <div
+        aria-label={title ? undefined : ariaLabel}
         aria-labelledby={title ? titleId : undefined}
         aria-modal="true"
         className={cn(
@@ -112,8 +109,15 @@ export const BottomSheet = ({
         onClick={(event) => {
           event.stopPropagation()
         }}
-        onTransitionEnd={handleTransitionEnd}
+        onKeyDown={handleKeyDown}
+        onTransitionEnd={(event) => {
+          if (event.target === event.currentTarget) {
+            handleTransitionEnd()
+          }
+        }}
+        ref={panelRef}
         role="dialog"
+        tabIndex={-1}
       >
         {hasHeader && (
           <div className="relative flex min-h-[51px] items-center justify-center px-5 pt-4">

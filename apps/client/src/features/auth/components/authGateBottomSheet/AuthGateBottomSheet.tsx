@@ -16,6 +16,7 @@ export const AuthGateBottomSheet = ({
 }: AuthGateBottomSheetProps) => {
   return (
     <BottomSheet
+      aria-label="로그인 안내"
       className="rounded-t-[20px]"
       open={open}
       onOpenChange={onOpenChange}

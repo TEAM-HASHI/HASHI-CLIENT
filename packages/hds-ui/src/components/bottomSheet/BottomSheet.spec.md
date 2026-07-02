@@ -20,7 +20,12 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 - [x] close button press로 닫을 수 있습니다.
 - [x] `title`, `children`, `footer` slot을 지원합니다.
 - [x] drag handle과 close button 표시 여부를 제어할 수 있습니다.
-- [x] `role="dialog"`, `aria-modal`, `aria-labelledby`를 연결합니다.
+- [x] `role="dialog"`, `aria-modal`, `aria-labelledby`, `aria-label`을 연결합니다.
+- [x] title이 없는 바텀시트도 접근성 이름을 제공할 수 있습니다.
+- [x] sheet가 열리면 focus를 sheet 내부로 이동합니다.
+- [x] Tab focus를 sheet 내부에 가둡니다.
+- [x] Escape key로 닫을 수 있습니다.
+- [x] 닫힌 뒤 이전 focus 위치로 복귀합니다.
 - [x] sheet가 열려 있을 때 body scroll을 잠급니다.
 - [x] safe-area bottom padding을 반영합니다.
 - [x] 열림/닫힘 시 translate transition을 적용합니다.
@@ -72,6 +77,13 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 - default: `true`
 - description: close button 표시 여부입니다.
 
+### `aria-label`
+
+- type: `string`
+- required: `false`
+- default: `'바텀시트'`
+- description: `title` 없이 사용하는 바텀시트의 접근성 이름입니다. `title`이 있으면 `aria-labelledby`를 우선 사용합니다.
+
 ### `className`
 
 - type: `string`
@@ -86,7 +98,12 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 4. sheet 내부 press는 overlay press로 전파되지 않아야 합니다.
 5. sheet가 열려 있는 동안 body scroll을 잠급니다.
 6. `title`이 있으면 dialog accessible name으로 연결합니다.
-7. 닫힘 요청 후에는 sheet를 아래로 내리는 transition이 끝난 뒤 DOM에서 제거합니다.
+7. `title`이 없으면 `aria-label`을 dialog accessible name으로 연결합니다.
+8. sheet가 열리면 sheet panel로 focus를 이동합니다.
+9. `Tab`과 `Shift + Tab` focus는 sheet 내부에서 순환합니다.
+10. `Escape` key를 누르면 `onOpenChange(false)`를 호출합니다.
+11. sheet가 닫히면 이전 focus 위치로 복귀합니다.
+12. 닫힘 요청 후에는 sheet를 아래로 내리는 transition이 끝난 뒤 DOM에서 제거합니다.
 
 ## Styling
 
@@ -114,9 +131,12 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 ## Storybook
 
 - [x] Default
-- [x] 음식 장르 선택 예시
-- [x] 정렬 순서 예시
-- [x] 로그인 유도 예시
+- [x] Footer slot
+- [x] Close button hidden
+- [x] Header hidden
+- [x] Long content
+
+Storybook은 BottomSheet primitive의 slot과 옵션만 보여줍니다. 음식 장르, 정렬, 로그인 유도처럼 앱 도메인 조합이 들어간 예시는 app layer story 또는 app 테스트에서 다룹니다.
 
 ## Verification
 
