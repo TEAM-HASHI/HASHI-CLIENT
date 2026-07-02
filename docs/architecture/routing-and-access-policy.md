@@ -1,0 +1,80 @@
+# Routing And Access Policy
+
+이 문서는 `apps/client`의 페이지 URL, 접근 권한, 라우터 배치 기준을 정리합니다.
+
+## Router Structure
+
+- 라우터 설정은 `apps/client/src/app/router`에서 관리합니다.
+- route path는 `apps/client/src/app/router/path.ts`의 `ROUTES` 상수로 관리합니다.
+- route config는 `apps/client/src/app/router/routes.ts`에서 관리합니다.
+- browser router instance는 `apps/client/src/app/router/router.tsx`에서 생성합니다.
+- layout component는 `apps/client/src/app/layout`에서 관리합니다.
+
+## Access Types
+
+| Access      | Description                            | Guard            |
+| ----------- | -------------------------------------- | ---------------- |
+| `public`    | 회원과 비회원 모두 접근할 수 있습니다. | 없음             |
+| `authOnly`  | 로그인한 회원만 접근할 수 있습니다.    | `AuthOnlyRoute`  |
+| `guestOnly` | 비회원만 접근할 수 있습니다.           | `GuestOnlyRoute` |
+
+## Redirect Policy
+
+- 비회원이 `authOnly` 페이지에 접근하면 `/login-required`로 이동합니다.
+- 회원이 `guestOnly` 페이지인 `/login-required`에 접근하면 `/`로 이동합니다.
+- 존재하지 않는 URL은 `*` route에서 404 페이지를 렌더링합니다.
+- 로그인 유도 바텀시트는 route page가 아니며, 앱 진입 또는 인증 flow에서 별도로 렌더링합니다.
+
+## Auth Status
+
+- 현재 `useAuthStatus`는 실제 인증 연동 전 임시 hook입니다.
+- 페이지 개발 중 회원 전용 화면을 바로 확인할 수 있도록 기본값은 `authenticated`입니다.
+- 추후 OAuth/API 인증 흐름이 연결되면 `useAuthStatus` 내부 구현을 실제 로그인 상태 기준으로 교체합니다.
+
+## Public Routes
+
+| Page                 | Path                         | Notes                                |
+| -------------------- | ---------------------------- | ------------------------------------ |
+| 홈 페이지            | `/`                          | 첫 진입 페이지입니다.                |
+| 검색 페이지          | `/search`                    |                                      |
+| 오늘의 식당 페이지   | `/restaurants/today`         | 매장 정보, 메뉴, 리뷰 탭을 가집니다. |
+| 식당 상세 페이지     | `/restaurants/:restaurantId` | 매장 정보, 메뉴, 리뷰 탭을 가집니다. |
+| hashi 픽 페이지      | `/restaurants/hashi-pick`    |                                      |
+| 인기 맛집 페이지     | `/restaurants/popular`       |                                      |
+| 매거진 리스트 페이지 | `/magazines`                 | 유지 여부 논의 중입니다.             |
+| 매거진 상세 페이지   | `/magazines/:magazineId`     | 유지 여부 논의 중입니다.             |
+
+## Auth Only Routes
+
+| Page               | Path                                          | Notes                                                                                                        |
+| ------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 리뷰 작성 페이지   | `/restaurants/:restaurantId/reviews/new`      |                                                                                                              |
+| 마이 리뷰 페이지   | `/my-reviews`                                 | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                    |
+| 리뷰 상세 페이지   | `/reviews/:reviewId`                          |                                                                                                              |
+| 리뷰 수정 페이지   | `/reviews/:reviewId/edit`                     |                                                                                                              |
+| 마이 페이지        | `/mypage`                                     |                                                                                                              |
+| 프로필 생성 페이지 | `/profile/new`                                |                                                                                                              |
+| 탈퇴 페이지        | `/withdrawal`                                 | 유지 여부 논의 중입니다.                                                                                     |
+| 예약 페이지        | `/restaurants/:restaurantId/reservations/new` |                                                                                                              |
+| 어디든 예약 페이지 | `/reservations/anywhere`                      |                                                                                                              |
+| 예약 요청 페이지   | `/reservations/request`                       |                                                                                                              |
+| 예약 정보 페이지   | `/my-reservations`                            | 진행 중, 방문 예정, 방문 완료, 예약 취소 chip 상태에 따라 카드 디자인과 데이터가 달라지는 단일 페이지입니다. |
+| 예약 상세 페이지   | `/reservations/:reservationId`                |                                                                                                              |
+
+## Guest Only Routes
+
+| Page       | Path              | Notes                                               |
+| ---------- | ----------------- | --------------------------------------------------- |
+| 401 페이지 | `/login-required` | 비회원이 회원 전용 페이지에 접근했을 때 보여줍니다. |
+
+## Not Found Route
+
+| Page       | Path | Notes                                            |
+| ---------- | ---- | ------------------------------------------------ |
+| 404 페이지 | `*`  | 서비스에 없는 URL을 직접 입력했을 때 보여줍니다. |
+
+## Lazy Loading Policy
+
+- 가장 먼저 접근하는 홈 페이지(`/`)는 eager loading합니다.
+- 홈을 제외한 페이지 route는 lazy loading합니다.
+- 각 route는 `apps/client/src/pages/{pageName}`의 페이지 컴포넌트를 렌더링합니다.
