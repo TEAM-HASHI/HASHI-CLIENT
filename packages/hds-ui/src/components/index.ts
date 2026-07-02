@@ -15,6 +15,9 @@ export type {
 export { IconButton } from './iconButton'
 export type { IconButtonProps, IconButtonSize } from './iconButton'
 
+export { InputField } from './inputField'
+export type { InputFieldProps } from './inputField'
+
 export { Tabs } from './tabs'
 export type { TabsItem, TabsProps } from './tabs'
 
