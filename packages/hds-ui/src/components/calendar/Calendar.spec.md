@@ -271,7 +271,7 @@ export type CalendarProps = Omit<
   - text: `typo-sub-header-3`, `text-black`
   - label padding: `py-[5px] px-3`
   - Sunday label: `text-primary-400`
-  - Saturday label: `text-[#407BFF]` until a `point-300` token exists
+  - Saturday label: `text-point-300`
 - date grid:
   - `grid`
   - `grid-template-columns: repeat(7, minmax(0, 1fr))`
@@ -290,7 +290,6 @@ export type CalendarProps = Omit<
 ### Token Notes
 
 - `Black`은 현재 Tailwind 기본 `black` 또는 token 승격 전 임시 `text-black`/`bg-black`으로 사용합니다.
-- `Point-300`은 현재 `@hashi/hds-tokens`에 없습니다. 구현 시 token 추가가 이 작업 범위인지 확인해야 합니다.
 - `radius 5`는 현재 radius token이 없으므로 `rounded-[5px]`를 사용합니다.
 - `5px` vertical padding은 Tailwind 기본 spacing에 없으므로 `py-[5px]`를 사용합니다.
 - `12px` horizontal padding은 Tailwind `px-3`와 일치합니다.
@@ -363,11 +362,6 @@ v1에서 loading, error, invalid, range selection, time selection, popover posit
 - analytics event 전송
 - 서버 응답 shape 하드코딩
 - product-specific timezone policy
-
-## Open Decisions
-
-- `Point-300` token이 현재 hds-tokens에 없으므로 토요일 색상은 token 추가 범위가 확정되기 전까지 임시 색상값 또는 가장 가까운 기존 token을 사용해야 합니다.
-- Figma의 calendar가 full date picker 접근성까지 요구하는지, 단순 month date selection primitive인지 확인이 필요합니다. 현재 v1 spec은 단순 month date selection primitive로 제한합니다.
 
 ## Verification
 

@@ -120,7 +120,7 @@ export const Calendar = ({
             className={cn(
               'typo-sub-header-3 flex items-center justify-center px-3 py-[5px] text-black',
               index === 0 && 'text-primary-400',
-              index === 6 && 'text-[#407BFF]',
+              index === 6 && 'text-point-300',
             )}
             key={`${label}-${index}`}
           >
