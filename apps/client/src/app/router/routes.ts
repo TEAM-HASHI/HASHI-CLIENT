@@ -1,6 +1,7 @@
 import { createElement } from 'react'
 import type { RouteObject } from 'react-router-dom'
 
+import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import { RootLayout } from '@/app/layout/RootLayout'
 import { lazyPages } from '@/app/router/lazy'
 import { ROUTES } from '@/app/router/path'
@@ -15,8 +16,13 @@ export const appRoutes: RouteObject[] = [
     element: createElement(RootLayout),
     children: [
       {
-        index: true,
-        element: createElement(HomePage),
+        element: createElement(BottomNavigationLayout),
+        children: [
+          {
+            index: true,
+            element: createElement(HomePage),
+          },
+        ],
       },
       {
         path: ROUTES.search,
@@ -67,7 +73,23 @@ export const appRoutes: RouteObject[] = [
           },
           {
             path: ROUTES.mypage,
-            element: lazyPages.mypage(),
+            element: createElement(BottomNavigationLayout),
+            children: [
+              {
+                index: true,
+                element: lazyPages.mypage(),
+              },
+            ],
+          },
+          {
+            path: ROUTES.myReservations,
+            element: createElement(BottomNavigationLayout),
+            children: [
+              {
+                index: true,
+                element: lazyPages.myReservations(),
+              },
+            ],
           },
           {
             path: ROUTES.profileNew,
@@ -90,10 +112,6 @@ export const appRoutes: RouteObject[] = [
             element: lazyPages.reservationRequest(),
           },
           {
-            path: ROUTES.myReservations,
-            element: lazyPages.myReservations(),
-          },
-          {
             path: ROUTES.reservationDetail,
             element: lazyPages.reservationDetail(),
           },
@@ -104,7 +122,13 @@ export const appRoutes: RouteObject[] = [
         children: [
           {
             path: ROUTES.loginRequired,
-            element: lazyPages.loginRequired(),
+            element: createElement(BottomNavigationLayout),
+            children: [
+              {
+                index: true,
+                element: lazyPages.loginRequired(),
+              },
+            ],
           },
         ],
       },

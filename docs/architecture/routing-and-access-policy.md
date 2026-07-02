@@ -9,6 +9,7 @@
 - route config는 `apps/client/src/app/router/routes.ts`에서 관리합니다.
 - browser router instance는 `apps/client/src/app/router/router.tsx`에서 생성합니다.
 - layout component는 `apps/client/src/app/layout`에서 관리합니다.
+- 하단 네비게이션이 필요한 페이지는 `BottomNavigationLayout` 아래에 배치합니다.
 
 ## Access Types
 
@@ -78,3 +79,18 @@
 - 가장 먼저 접근하는 홈 페이지(`/`)는 eager loading합니다.
 - 홈을 제외한 페이지 route는 lazy loading합니다.
 - 각 route는 `apps/client/src/pages/{pageName}`의 페이지 컴포넌트를 렌더링합니다.
+
+## Bottom Navigation Policy
+
+하단 네비게이션바는 모든 페이지에 고정으로 들어가지 않습니다.
+
+현재 하단 네비게이션바가 고정적으로 들어가는 페이지는 아래와 같습니다.
+
+| Page             | Path               |
+| ---------------- | ------------------ |
+| 홈 페이지        | `/`                |
+| 401 페이지       | `/login-required`  |
+| 예약 정보 페이지 | `/my-reservations` |
+| 마이 페이지      | `/mypage`          |
+
+하단 네비게이션바가 필요한 page는 `BottomNavigationLayout`에서 렌더링합니다.
