@@ -1,0 +1,25 @@
+export const ROUTES = {
+  home: '/',
+  search: '/search',
+  todayRestaurant: '/restaurants/today',
+  restaurantDetail: '/restaurants/:restaurantId',
+  hashiPickRestaurants: '/restaurants/hashi-pick',
+  popularRestaurants: '/restaurants/popular',
+  magazines: '/magazines',
+  magazineDetail: '/magazines/:magazineId',
+  reviewNew: '/restaurants/:restaurantId/reviews/new',
+  myReviews: '/my-reviews',
+  reviewDetail: '/reviews/:reviewId',
+  reviewEdit: '/reviews/:reviewId/edit',
+  mypage: '/mypage',
+  profileNew: '/profile/new',
+  withdrawal: '/withdrawal',
+  restaurantReservationNew: '/restaurants/:restaurantId/reservations/new',
+  anywhereReservation: '/reservations/anywhere',
+  reservationRequest: '/reservations/request',
+  myReservations: '/my-reservations',
+  reservationDetail: '/reservations/:reservationId',
+  loginRequired: '/login-required',
+} as const
+
+export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES]
