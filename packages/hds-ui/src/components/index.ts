@@ -60,3 +60,6 @@ export type {
   CarouselTrackProps,
   CarouselViewportProps,
 } from './carousel'
+
+export { Calendar } from './calendar'
+export type { CalendarProps } from './calendar'
