@@ -1,8 +1,8 @@
 @theme {
   --color-primary-100: #f6f6f6;
   --color-primary-200: #4a4a4a;
-  --color-primary-400: #a64a47;
-  --color-primary-500: #ff5d5d;
+  --color-primary-400: #ff5d5d;
+  --color-primary-500: #a64a47;
 
   --color-secondary-200: #f2f3f5;
   --color-secondary-300: #faf99c;
@@ -29,4 +29,9 @@
   --color-error: #ff4242;
   --color-danger: #e62d2d;
   --color-info: #47e3ff;
+  --color-selected: rgb(255 93 93 / 20%);
+  --color-overlay: rgb(255 255 255 / 40%);
+
+  --color-point-200: #ffea48;
+  --color-point-300: #3d7afe;
 }
