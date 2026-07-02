@@ -7,11 +7,23 @@
 ## Route
 
 - path:
+- path constant:
+  - `ROUTES.`
 - route owner:
 - layout:
-- access:
-  - public / auth required
-  - redirect rule:
+- access type:
+  - public / authOnly / guestOnly
+- guard:
+  - none / AuthOnlyRoute / GuestOnlyRoute
+- lazy loading:
+  - eager / lazyPages
+- bottom navigation:
+  - yes / no
+- redirect:
+  - unauthenticated:
+  - authenticated guest:
+- auth status:
+  - uses `useAuthStatus`: yes / no
 
 ## Location
 
@@ -20,7 +32,9 @@
 - spec path:
   - `apps/client/src/pages/{{camelCase name}}/{{pascalCase name}}.spec.md`
 - route registration:
-  - `apps/client/src/app/router`
+  - `apps/client/src/app/router/path.ts`
+  - `apps/client/src/app/router/lazy.ts` (lazy route only)
+  - `apps/client/src/app/router/routes.ts`
 
 ## Requirements
 
@@ -88,9 +102,12 @@
 
 - entry:
 - links:
+- route params:
+- search params:
 - success redirect:
 - failure redirect:
 - back behavior:
+- auth redirect:
 
 ## Styling
 
@@ -107,4 +124,7 @@
 - [ ] `pnpm --filter @hashi/client build`
 - [ ] `pnpm --filter @hashi/client test`
 - [ ] 주요 사용자 흐름 수동 확인
+- [ ] route path / params / search params 확인
+- [ ] access guard / redirect 확인
+- [ ] bottom navigation layout 포함 여부 확인
 - [ ] loading / empty / error / success 상태 확인

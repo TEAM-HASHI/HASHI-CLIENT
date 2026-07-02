@@ -66,7 +66,7 @@ packages/hds-ui/src/components/{componentName}/
 ## Spec Files
 
 `page` generator는 page의 `*.spec.md`를 자동 생성합니다.
-생성된 page spec은 route, 상태, 데이터 의존성, HDS/component mapping, 검증 기준을 구현 전에 채우는 scaffold입니다.
+생성된 page spec은 route path, access guard, layout, 상태, 데이터 의존성, HDS/component mapping, 검증 기준을 구현 전에 채우는 scaffold입니다.
 
 `ds-component` generator는 HDS component의 `*.spec.md`를 자동 생성합니다.
 
@@ -91,6 +91,7 @@ HDS Storybook story는 component scaffold와 함께 생성하고, 실제 compone
 
 - generator는 파일 구조만 만듭니다.
 - API endpoint, route path, copy, business logic은 generator가 추측하지 않습니다.
+- page generator는 `apps/client/src/app/router/path.ts`, `lazy.ts`, `routes.ts`를 자동 수정하지 않습니다.
 - 기존 파일은 overwrite하지 않습니다.
 - generator가 add 실패를 내면 같은 파일이 이미 있다는 뜻이므로 기존 파일을 확인하고 직접 병합합니다.
 - page가 커지면 [App Structure](../architecture/app-structure.md)의 page-local 분리 기준을 따릅니다.

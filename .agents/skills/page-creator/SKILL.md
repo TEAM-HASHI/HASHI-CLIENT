@@ -17,6 +17,7 @@ Read only the documents needed for the current page.
 Always read:
 
 - `docs/architecture/app-structure.md`
+- `docs/architecture/routing-and-access-policy.md`
 - `docs/workflows/spec-writing.md`
 - `docs/conventions/coding.md`
 - `.agents/recipes/page-feature.md`
@@ -38,19 +39,23 @@ When mapping Figma or shared UI:
 
 ## Workflow
 
-1. Confirm the Jira key, page goal, route path, entry point, and source design/spec if available.
+1. Confirm the Jira key, page goal, route path, access type, layout, entry point, and source design/spec if available.
 2. Check existing pages and HDS components before creating new files.
 3. For a new page, prefer `corepack pnpm gen:page`; it creates `Page.tsx`, `Page.spec.md`, and `index.ts`.
-4. Fill the generated `*.spec.md` before implementation. Keep it concrete enough to guide code, not more complex than the page.
-5. Classify responsibilities:
+4. Fill the generated `*.spec.md` before implementation. Include route path constant, route config, access guard, redirect policy, lazy loading, and bottom navigation requirements.
+5. Register routing only in `apps/client/src/app/router`:
+   - path constants in `path.ts`
+   - lazy page loader in `lazy.ts`
+   - route object, guard, and layout in `routes.ts`
+6. Classify responsibilities:
    - page: route composition, layout, page copy, navigation, data orchestration
    - page-local component: one-page UI detail with no stable external API
    - `features`: repeated feature flow across pages or sections
    - `apps/client/src/shared`: app-specific component or hook reused by multiple screens
    - `packages/hds-ui`: product-agnostic primitive with stable public API and accessibility contract
-6. Implement the smallest page structure that satisfies the spec.
-7. Update the spec if implementation decisions change.
-8. Run verification that matches the touched surfaces.
+7. Implement the smallest page structure that satisfies the spec.
+8. Update the spec if implementation decisions change.
+9. Run verification that matches the touched surfaces.
 
 ## Spec Rules
 
@@ -58,6 +63,7 @@ Write or update a page spec for:
 
 - new page or route
 - route params or search params
+- access type, guard, redirect, or bottom navigation layout
 - loading, empty, error, disabled, or success states
 - query, mutation, form, validation, or navigation behavior
 - component mapping that affects HDS/shared/page-local placement
@@ -65,7 +71,7 @@ Write or update a page spec for:
 In the page spec, make these sections useful before coding:
 
 - `Purpose`: the user goal, not implementation detail
-- `Route`: path, owner, access, redirect
+- `Route`: path, `ROUTES` key, owner, layout, access type, guard, lazy loading, redirect
 - `Requirements`: visible UI, actions, success/failure, responsive, accessibility
 - `Data Dependencies`: query/mutation names, params, enabled condition, states
 - `State`: local, form, URL, server, derived
@@ -84,6 +90,18 @@ Use this decision order when a page needs UI pieces:
 4. Promote to HDS only when it is product-agnostic, design-system aligned, and has a reusable public API.
 
 Do not put route, query, mutation, tracking, product copy, domain data, or submit behavior inside HDS components.
+
+## Routing And Access
+
+Use the current router structure from `docs/architecture/routing-and-access-policy.md`.
+
+- Add new URL strings to `ROUTES` in `apps/client/src/app/router/path.ts`; do not scatter path strings in pages.
+- Add new lazy page imports to `apps/client/src/app/router/lazy.ts`, except the home page which is intentionally eager.
+- Add route objects to `apps/client/src/app/router/routes.ts`.
+- Wrap member-only pages with `AuthOnlyRoute`; unauthenticated users redirect to `ROUTES.loginRequired`.
+- Wrap guest-only pages with `GuestOnlyRoute`; authenticated users redirect to `ROUTES.home`.
+- Put bottom navigation pages under `BottomNavigationLayout`.
+- Treat `useAuthStatus` as a temporary auth hook until real auth integration replaces it.
 
 ## Frontend Fundamentals Pass
 
@@ -117,12 +135,15 @@ corepack pnpm --filter @hashi/client test
 
 If route-level behavior or browser interaction changed, add the relevant manual checks or E2E command from `.agents/checklists/verification.md`.
 
+Manual route checks should cover direct URL entry, route params/search params, auth redirect behavior, and bottom navigation layout when they apply.
+
 ## Report
 
 In the final summary, include:
 
 - Jira key and route/page name.
 - Page spec path and whether it was created or updated.
+- Route registration impact: `ROUTES`, `lazyPages`, `appRoutes`, guard, layout.
 - Component boundary decisions: HDS, app shared, page-local.
 - Docs and `.agents` impact.
 - Verification commands and results.
