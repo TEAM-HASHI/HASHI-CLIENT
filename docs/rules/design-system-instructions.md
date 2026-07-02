@@ -65,6 +65,7 @@ Overlay, calendar, date/time input처럼 접근성 상호작용이 복잡한 HDS
 - color, typography, spacing, radius, shadow는 Tailwind theme 또는 design token 기준을 우선합니다.
 - arbitrary value는 Figma와 맞추기 위해 꼭 필요한 경우에만 사용합니다.
 - 같은 arbitrary value가 반복되면 Tailwind theme 또는 token 승격을 검토합니다.
+- border-radius, border-width, outline/ring width처럼 Figma 고정 수치와 직접 대응되는 border 계열 값은 root font-size에 영향받지 않도록 `rem` 대신 `px` 또는 design token을 사용합니다.
 - `!important` 사용은 지양합니다.
 
 ## Design Token

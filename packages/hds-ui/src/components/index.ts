@@ -1,10 +1,19 @@
-export { Button } from './button/Button'
+export { Button } from './button'
+export type {
+  ButtonProps,
+  ButtonSize,
+  ButtonVariant,
+  ButtonWidth,
+} from './button'
 
 export { BottomNavigation } from './bottomNavigation'
 export type {
   BottomNavigationItem,
   BottomNavigationProps,
 } from './bottomNavigation'
+
+export { IconButton } from './iconButton'
+export type { IconButtonProps, IconButtonSize } from './iconButton'
 
 export { SearchField } from './searchField'
 export type { SearchFieldProps } from './searchField'
@@ -26,3 +35,5 @@ export type {
   DialogTriggerProps,
   DialogType,
 } from './dialog'
+
+export { CollapsibleText } from './collapsibleText'
