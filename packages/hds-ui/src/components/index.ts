@@ -23,6 +23,9 @@ export type { ChipProps } from './chip'
 export { IconButton } from './iconButton'
 export type { IconButtonProps, IconButtonSize } from './iconButton'
 
+export { Header } from './header'
+export type { HeaderProps, HeaderVariant } from './header'
+
 export { SearchField } from './searchField'
 export type { SearchFieldProps } from './searchField'
 
