@@ -9,7 +9,7 @@ export const ComingSoonPage = () => {
   return (
     <main className="app-mobile-bottom-nav-content flex flex-col items-center justify-center text-center">
       <img
-        alt="서비스 준비 중"
+        alt=""
         aria-hidden="true"
         className="mb-[22.5px] h-auto w-33.75"
         src={emptyImage}
