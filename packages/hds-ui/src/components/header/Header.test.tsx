@@ -52,6 +52,20 @@ describe('Header', () => {
     expect(screen.getByText('0')).toBeInTheDocument()
   })
 
+  it('does not reserve subtitle height for false subtitle content', () => {
+    render(<Header title="알림" subtitle={false} />)
+
+    expect(screen.getByRole('banner')).toHaveClass('h-[75px]')
+    expect(screen.getByRole('banner')).not.toHaveClass('h-[80px]')
+  })
+
+  it('does not reserve subtitle height for an empty string subtitle', () => {
+    render(<Header title="알림" subtitle="" />)
+
+    expect(screen.getByRole('banner')).toHaveClass('h-[75px]')
+    expect(screen.getByRole('banner')).not.toHaveClass('h-[80px]')
+  })
+
   it('uses the large title layout for long titles', () => {
     render(
       <Header

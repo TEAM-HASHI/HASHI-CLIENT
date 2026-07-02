@@ -112,6 +112,7 @@ Header
 - type: `React.ReactNode`
 - required: `false`
 - description: `center` variant에서 약관 상세의 `최종 업데이트`처럼 title 아래에 표시할 보조 텍스트입니다. 날짜 포맷과 문구 조합은 호출부가 소유합니다.
+- `false`, `true`, 빈 문자열, 공백 문자열, `null`, `undefined`는 subtitle 없음으로 처리합니다. `0`은 실제 표시 가능한 값이므로 subtitle로 렌더링합니다.
 
 ### `leftAction`
 
@@ -207,7 +208,7 @@ v1에서는 `largeTitle`과 `subtitle` 조합, disabled, loading, selected, inva
 1. `title`을 Header의 주요 텍스트로 렌더링합니다.
 2. `leftAction`이 있으면 왼쪽 action slot에 렌더링합니다.
 3. `rightAction`이 있으면 오른쪽 action slot에 렌더링합니다.
-4. `variant="center"`에서 `subtitle`이 있으면 Header 높이를 `80px`로 확장하고 title 아래 보조 텍스트로 렌더링합니다.
+4. `variant="center"`에서 표시 가능한 `subtitle`이 있으면 Header 높이를 `80px`로 확장하고 title 아래 보조 텍스트로 렌더링합니다.
 5. `variant="center"`에서는 title이 가운데 정렬됩니다.
 6. `variant="largeTitle"`에서는 title이 action 사이 content 영역에서 왼쪽 정렬되고 2줄까지 허용됩니다.
 7. `Header`는 action click handler를 직접 만들지 않습니다. 모든 interaction은 slot에 전달된 요소가 소유합니다.

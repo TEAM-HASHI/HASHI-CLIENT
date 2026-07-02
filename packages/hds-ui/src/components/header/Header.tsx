@@ -61,6 +61,22 @@ type HeaderLargeTitleProps = HeaderBaseProps & {
 
 export type HeaderProps = HeaderCenterProps | HeaderLargeTitleProps
 
+const hasRenderableContent = (node: ReactNode): boolean => {
+  if (node == null || typeof node === 'boolean') {
+    return false
+  }
+
+  if (typeof node === 'string') {
+    return node.trim().length > 0
+  }
+
+  if (Array.isArray(node)) {
+    return node.some(hasRenderableContent)
+  }
+
+  return true
+}
+
 export const Header = ({
   title,
   subtitle,
@@ -72,7 +88,7 @@ export const Header = ({
   ...props
 }: HeaderProps) => {
   const isLargeTitle = variant === 'largeTitle'
-  const hasSubtitle = !isLargeTitle && subtitle != null
+  const hasSubtitle = !isLargeTitle && hasRenderableContent(subtitle)
 
   return (
     <header
