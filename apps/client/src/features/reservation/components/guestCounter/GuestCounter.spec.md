@@ -176,8 +176,8 @@ GuestCounter
   - value: `typo-body-4 text-primary-200`
 - icon:
   - button과 icon visual size는 `size-6`입니다.
-  - button은 native user-agent style이 24px 원형 크기에 영향을 주지 않도록 `appearance-none bg-transparent p-0`을 사용합니다.
-  - button은 `rounded-full border border-black`으로 원형 테두리를 만듭니다.
+  - button은 native user-agent appearance가 24px 원형 크기에 영향을 주지 않도록 `appearance-none`을 사용합니다.
+  - button은 `rounded-full border-[1.4px] border-black`으로 원형 테두리를 만듭니다.
   - `PlusIcon`, `MinusIcon`은 SVG viewBox 내부 path 여백 때문에 기본 렌더링이 작게 보이므로 `scale-[1.4]`로 확대해 Figma와 맞춥니다.
   - 기본 색상은 `text-black`과 `border-black`입니다.
   - pressed 상태는 `active:text-primary-400 active:border-primary-400`입니다.

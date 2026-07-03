@@ -35,10 +35,8 @@ describe('GuestCounter', () => {
       'size-6',
       'appearance-none',
       'rounded-full',
-      'border',
+      'border-[1.4px]',
       'border-black',
-      'bg-transparent',
-      'p-0',
     )
     expect(
       screen.getByRole('button', { name: '어른 인원 늘리기' }),
@@ -46,10 +44,8 @@ describe('GuestCounter', () => {
       'size-6',
       'appearance-none',
       'rounded-full',
-      'border',
+      'border-[1.4px]',
       'border-black',
-      'bg-transparent',
-      'p-0',
     )
     expect(
       screen

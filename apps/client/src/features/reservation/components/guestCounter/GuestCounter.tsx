@@ -31,7 +31,7 @@ export const GuestCounter = ({
           <button
             aria-label={`${label} 인원 줄이기`}
             className={cn(
-              'active:border-primary-400 active:text-primary-400 flex size-6 appearance-none items-center justify-center rounded-full border border-black bg-transparent p-0 text-black disabled:cursor-not-allowed',
+              'active:border-primary-400 active:text-primary-400 flex size-6 appearance-none items-center justify-center rounded-full border-[1.4px] border-black text-black disabled:cursor-not-allowed',
               isDecreaseDisabled && 'active:border-black active:text-black',
             )}
             disabled={isDecreaseDisabled}
@@ -46,7 +46,7 @@ export const GuestCounter = ({
           <button
             aria-label={`${label} 인원 늘리기`}
             className={cn(
-              'active:border-primary-400 active:text-primary-400 flex size-6 appearance-none items-center justify-center rounded-full border border-black bg-transparent p-0 text-black disabled:cursor-not-allowed',
+              'active:border-primary-400 active:text-primary-400 flex size-6 appearance-none items-center justify-center rounded-full border-[1.4px] border-black text-black disabled:cursor-not-allowed',
               disabled && 'active:border-black active:text-black',
             )}
             disabled={disabled}
