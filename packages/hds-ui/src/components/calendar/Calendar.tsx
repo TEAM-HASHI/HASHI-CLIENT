@@ -4,6 +4,15 @@ import type { ComponentPropsWithoutRef } from 'react'
 import { cn } from '../../utils'
 
 const DEFAULT_WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const
+const DEFAULT_WEEKDAY_ARIA_LABELS = [
+  '일요일',
+  '월요일',
+  '화요일',
+  '수요일',
+  '목요일',
+  '금요일',
+  '토요일',
+] as const
 
 type WeekdayLabels = readonly [
   string,
@@ -26,7 +35,9 @@ export type CalendarProps = Omit<
   onDateSelect?: (date: Date) => void
   onMonthChange?: (nextMonth: Date) => void
   formatMonthLabel?: (month: Date) => string
+  getDateAriaLabel?: (date: Date) => string
   weekdayLabels?: WeekdayLabels
+  weekdayAriaLabels?: WeekdayLabels
 }
 
 const createMonthDate = (date: Date, day = 1) => {
@@ -62,6 +73,10 @@ const defaultFormatMonthLabel = (month: Date) => {
   return `${month.getMonth() + 1}월`
 }
 
+const defaultGetDateAriaLabel = (date: Date) => {
+  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`
+}
+
 export const Calendar = ({
   month,
   selectedDate,
@@ -70,7 +85,9 @@ export const Calendar = ({
   onDateSelect,
   onMonthChange,
   formatMonthLabel = defaultFormatMonthLabel,
+  getDateAriaLabel = defaultGetDateAriaLabel,
   weekdayLabels = DEFAULT_WEEKDAY_LABELS,
+  weekdayAriaLabels = DEFAULT_WEEKDAY_ARIA_LABELS,
   className,
   'aria-label': ariaLabel = '달력',
   ...props
@@ -90,13 +107,14 @@ export const Calendar = ({
   return (
     <section
       aria-label={ariaLabel}
-      className={cn('w-full bg-white font-sans', className)}
+      className={cn('w-full font-sans', className)}
       {...props}
     >
       <div className="mb-[22px] flex items-center justify-between">
         <button
           aria-label="이전 달"
-          className="text-cool-gray-900 focus-visible:outline-cool-gray-900 flex size-6 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent p-0 text-[24px] focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="text-cool-gray-900 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 flex size-6 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent p-0 text-[24px] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed"
+          disabled={onMonthChange === undefined}
           onClick={() => onMonthChange?.(createAdjacentMonth(visibleMonth, -1))}
           type="button"
         >
@@ -107,7 +125,8 @@ export const Calendar = ({
         </h2>
         <button
           aria-label="다음 달"
-          className="text-cool-gray-900 focus-visible:outline-cool-gray-900 flex size-6 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent p-0 text-[24px] focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="text-cool-gray-900 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 flex size-6 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent p-0 text-[24px] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed"
+          disabled={onMonthChange === undefined}
           onClick={() => onMonthChange?.(createAdjacentMonth(visibleMonth, 1))}
           type="button"
         >
@@ -117,6 +136,7 @@ export const Calendar = ({
       <div className="bg-primary-100 mb-[22px] grid grid-cols-7 rounded-[5px]">
         {weekdayLabels.map((label, index) => (
           <span
+            aria-label={weekdayAriaLabels[index]}
             className={cn(
               'flex items-center justify-center px-3 py-[5px] text-black',
               index === 0 || index === 6 ? 'typo-sub-header-3' : 'typo-body-5',
@@ -143,6 +163,7 @@ export const Calendar = ({
           return (
             <div className="flex min-w-0 justify-center" key={date.getTime()}>
               <button
+                aria-label={getDateAriaLabel(date)}
                 aria-pressed={isSelected}
                 className={cn(
                   'typo-body-4 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 flex h-8 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent px-3 py-[5px] text-black focus-visible:outline-2 focus-visible:outline-offset-2',

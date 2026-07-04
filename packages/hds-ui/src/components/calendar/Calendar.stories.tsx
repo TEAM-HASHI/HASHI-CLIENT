@@ -22,6 +22,9 @@ const meta = {
     formatMonthLabel: {
       control: false,
     },
+    getDateAriaLabel: {
+      control: false,
+    },
     isDateDisabled: {
       control: false,
     },
@@ -38,6 +41,9 @@ const meta = {
       control: false,
     },
     weekdayLabels: {
+      control: false,
+    },
+    weekdayAriaLabels: {
       control: false,
     },
   },
