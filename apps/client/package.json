@@ -15,16 +15,17 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@sentry/react": "catalog:",
     "@hashi/hds-icons": "workspace:*",
     "@hashi/hds-tokens": "workspace:*",
     "@hashi/hds-ui": "workspace:*",
+    "@sentry/react": "catalog:",
     "@tanstack/react-query": "catalog:",
     "clsx": "catalog:",
     "ky": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-error-boundary": "catalog:",
+    "react-router-dom": "catalog:",
     "tailwind-merge": "catalog:"
   },
   "devDependencies": {

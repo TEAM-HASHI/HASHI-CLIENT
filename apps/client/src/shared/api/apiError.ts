@@ -1,4 +1,4 @@
-import type { ErrorResponse } from './types'
+import type { ErrorResponse } from '@/shared/api/types'
 
 export class ApiError extends Error {
   readonly response: ErrorResponse

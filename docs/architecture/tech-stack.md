@@ -26,6 +26,7 @@
 | Monorepo                    | `pnpm workspace`, `pnpm catalog`, `Turborepo` | `pnpm@10.18.3`, `turbo@^2.7.2`           | Current | workspace와 task graph 기준                |
 | Language                    | `React`, `TypeScript`                         | `react@^19.2.6`, `typescript@~6.0.2`     | Current | `apps/client`, `packages/*` 공통 기준      |
 | Bundler                     | `Vite`                                        | `vite@^8.0.12`                           | Current | `@hashi/client` 실행/빌드 기준             |
+| Routing                     | `React Router`                                | `react-router-dom@^7.18.1`               | Current | `apps/client` 라우팅과 route guard 기준    |
 | Lint and format             | `ESLint`, `Prettier`                          | `eslint@^10.3.0`, `prettier@^3.6.2`      | Current | 루트 script와 공통 ESLint config 기준      |
 | CSS                         | `Tailwind CSS`, `class-variance-authority`    | `tailwindcss@^4.3.1`, `cva@^0.7.1`       | Current | `@tailwindcss/vite`, `tailwind-merge` 사용 |
 | Accessibility UI primitives | `React Aria Components`                       | `react-aria-components@^1.19.0`          | Current | HDS overlay/date 계열 primitive 기준       |
@@ -46,6 +47,7 @@
 - Monorepo: [Turborepo](https://turborepo.dev/docs)
 - Language: [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/docs/)
 - Bundler: [Vite](https://vite.dev/guide/)
+- Routing: [React Router](https://reactrouter.com/)
 - Lint and format: [ESLint](https://eslint.org/docs/latest/), [Prettier](https://prettier.io/docs/)
 - CSS: [Tailwind CSS](https://tailwindcss.com/docs/installation), [Class Variance Authority](https://cva.style/docs)
 - Accessibility UI primitives: [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html)
@@ -71,6 +73,7 @@
 
 - [Package Management](../conventions/package-management.md)
 - [Monorepo](./monorepo.md)
+- [Routing And Access Policy](./routing-and-access-policy.md)
 - [Data Layer](./data-layer.md)
 - [Styling And Design Tokens](./styling-and-design-tokens.md)
 - [Design System Icons](./design-system-icons.md)
