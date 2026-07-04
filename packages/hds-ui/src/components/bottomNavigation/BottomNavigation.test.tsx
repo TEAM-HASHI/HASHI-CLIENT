@@ -36,6 +36,20 @@ describe('BottomNavigation', () => {
     )
   })
 
+  it('renders without a current page when value is not provided', () => {
+    render(<BottomNavigation items={items} />)
+
+    expect(screen.getByRole('button', { name: '홈' })).not.toHaveAttribute(
+      'aria-current',
+    )
+    expect(screen.getByRole('button', { name: '저장' })).not.toHaveAttribute(
+      'aria-current',
+    )
+    expect(screen.getByRole('button', { name: '지도' })).not.toHaveAttribute(
+      'aria-current',
+    )
+  })
+
   it('calls onValueChange when an inactive item is clicked', () => {
     const handleValueChange = vi.fn()
 
