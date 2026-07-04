@@ -9,6 +9,7 @@ export const NotFoundPage = () => {
 
   return (
     <main className="flex min-h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] flex-col items-center justify-center text-center">
+      <h1 className="sr-only">404 페이지</h1>
       <img
         alt=""
         aria-hidden="true"
