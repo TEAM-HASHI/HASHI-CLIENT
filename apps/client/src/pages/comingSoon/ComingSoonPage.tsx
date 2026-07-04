@@ -1,7 +1,7 @@
 import { Button } from '@hashi/hds-ui'
 import { useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
-import emptyImage from './assets/empty.webp'
+import emptyImage from '@/shared/assets/images/empty.webp'
 
 export const ComingSoonPage = () => {
   const navigate = useNavigate()
