@@ -32,7 +32,9 @@ const bottomNavigationPath = {
 
 type BottomNavigationValue = (typeof bottomNavigationItems)[number]['value']
 
-const getBottomNavigationValue = (pathname: string): BottomNavigationValue => {
+const getBottomNavigationValue = (
+  pathname: string,
+): BottomNavigationValue | undefined => {
   if (pathname === ROUTES.myReservations) {
     return 'myReservations'
   }
@@ -49,7 +51,11 @@ const getBottomNavigationValue = (pathname: string): BottomNavigationValue => {
     return 'mypage'
   }
 
-  return 'home'
+  if (pathname === ROUTES.home) {
+    return 'home'
+  }
+
+  return undefined
 }
 
 export const BottomNavigationLayout = () => {
