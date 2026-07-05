@@ -3,7 +3,7 @@ import loginRequiredImage from '@/shared/assets/images/login-required.webp'
 
 export const LoginRequiredPage = () => {
   return (
-    <main className="app-mobile-bottom-nav-content flex flex-col items-center justify-center px-5 text-center">
+    <section className="app-mobile-bottom-nav-content flex flex-col items-center justify-center px-5 text-center">
       <img
         alt=""
         aria-hidden="true"
@@ -27,6 +27,6 @@ export const LoginRequiredPage = () => {
       >
         카카오로 1초 만에 시작하기
       </KakaoStartButton>
-    </main>
+    </section>
   )
 }
