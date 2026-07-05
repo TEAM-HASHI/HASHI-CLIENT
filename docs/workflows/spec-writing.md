@@ -35,11 +35,12 @@ packages/hds-ui/src/components/button/
 Spec을 작성하거나 갱신해야 하는 경우:
 
 - 새 page 또는 route를 추가할 때
+- route path, route config, access guard, redirect, layout 정책이 바뀔 때
 - 새 form 또는 단계형 state flow를 추가할 때
 - 새 API query 또는 mutation을 추가할 때
 - shared component 또는 design-system component를 추가할 때
 - UI state가 loading, empty, error, disabled 등 여러 상태로 나뉘는 component를 추가할 때
-- public props, hook return shape, route params, API contract가 바뀔 때
+- public props, hook return shape, route params/search params, API contract가 바뀔 때
 - 구현 중 요구사항이 바뀌어 기존 spec과 달라졌을 때
 
 ## Optional
