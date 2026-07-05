@@ -7,7 +7,7 @@ export const ComingSoonPage = () => {
   const navigate = useNavigate()
 
   return (
-    <main className="app-mobile-bottom-nav-content flex flex-col items-center justify-center text-center">
+    <section className="app-mobile-bottom-nav-content flex flex-col items-center justify-center text-center">
       <img
         alt=""
         aria-hidden="true"
@@ -32,6 +32,6 @@ export const ComingSoonPage = () => {
           홈으로 돌아가기
         </Button>
       </div>
-    </main>
+    </section>
   )
 }
