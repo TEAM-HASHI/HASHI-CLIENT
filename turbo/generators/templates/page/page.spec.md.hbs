@@ -1,4 +1,4 @@
-# Page Spec: `PageName`
+# Page Spec: `{{pascalCase name}}`
 
 ## Purpose
 
@@ -28,21 +28,13 @@
 ## Location
 
 - page path:
-  - `apps/client/src/pages/{page}/{PageName}Page.tsx`
+  - `apps/client/src/pages/{{camelCase name}}/{{pascalCase name}}Page.tsx`
 - spec path:
-  - `apps/client/src/pages/{page}/{PageName}.spec.md`
+  - `apps/client/src/pages/{{camelCase name}}/{{pascalCase name}}.spec.md`
 - route registration:
   - `apps/client/src/app/router/path.ts`
   - `apps/client/src/app/router/lazy.ts` (lazy route only)
   - `apps/client/src/app/router/routes.ts`
-
-## Scaffold
-
-필요한 경우 다음 generator를 우선 확인합니다.
-
-```bash
-pnpm gen:page
-```
 
 ## Requirements
 
@@ -74,14 +66,6 @@ pnpm gen:page
 - success handling:
 - failure handling:
 
-## User Flow
-
-1. 사용자가 페이지에 진입합니다.
-2. 필요한 데이터가 로드됩니다.
-3. 사용자가 입력, 선택, 또는 클릭합니다.
-4. 페이지가 성공 또는 실패 결과를 보여줍니다.
-5. 필요한 경우 페이지를 이동합니다.
-
 ## State
 
 - local state:
@@ -90,20 +74,12 @@ pnpm gen:page
 - server state:
 - derived state:
 
-## Validation
-
-- field:
-  - rule:
-  - error message:
-- submit enabled condition:
-
 ## UI Structure
 
 ```text
-PageNamePage
+{{pascalCase name}}Page
   Heading
   Section
-    Form / List / Detail
   Actions
 ```
 
@@ -143,10 +119,10 @@ PageNamePage
 
 ## Verification
 
-- [ ] `pnpm format:check`
-- [ ] `pnpm lint`
-- [ ] `pnpm typecheck`
-- [ ] `pnpm build`
+- [ ] `pnpm --filter @hashi/client lint`
+- [ ] `pnpm --filter @hashi/client typecheck`
+- [ ] `pnpm --filter @hashi/client build`
+- [ ] `pnpm --filter @hashi/client test`
 - [ ] 주요 사용자 흐름 수동 확인
 - [ ] route path / params / search params 확인
 - [ ] access guard / redirect 확인

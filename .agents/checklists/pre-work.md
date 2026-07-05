@@ -13,15 +13,15 @@
 
 ## Routing
 
-| Work type                | Read first                                                                                                |
-| ------------------------ | --------------------------------------------------------------------------------------------------------- |
-| Jira, branch, commit, PR | `docs/conventions/jira-ticket.md`, `docs/conventions/git.md`, `.agents/recipes/jira-branch-pr.md`         |
-| Page or route            | `docs/architecture/app-structure.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/page-feature.md` |
-| API query or mutation    | `docs/architecture/data-layer.md`, `.agents/recipes/api-integration.md`                                   |
-| Form or state flow       | `docs/conventions/coding.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/form-flow.md`            |
-| HDS component            | `packages/AGENTS.md`, `docs/rules/design-system-instructions.md`, `.agents/recipes/hds-component.md`      |
-| Generator                | `docs/workflows/turbo-generators.md`                                                                      |
-| Agent harness            | `AGENTS.md`, `docs/agent/skills.md`, `.agents/README.md`                                                  |
+| Work type                | Read first                                                                                                                                                  |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Jira, branch, commit, PR | `docs/conventions/jira-ticket.md`, `docs/conventions/git.md`, `.agents/recipes/jira-branch-pr.md`                                                           |
+| Page or route            | `docs/architecture/app-structure.md`, `docs/architecture/routing-and-access-policy.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/page-feature.md` |
+| API query or mutation    | `docs/architecture/data-layer.md`, `.agents/recipes/api-integration.md`                                                                                     |
+| Form or state flow       | `docs/conventions/coding.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/form-flow.md`                                                              |
+| HDS component            | `packages/AGENTS.md`, `docs/rules/design-system-instructions.md`, `.agents/recipes/hds-component.md`                                                        |
+| Generator                | `docs/workflows/turbo-generators.md`                                                                                                                        |
+| Agent harness            | `AGENTS.md`, `docs/agent/skills.md`, `.agents/README.md`                                                                                                    |
 
 ## Stop And Clarify
 

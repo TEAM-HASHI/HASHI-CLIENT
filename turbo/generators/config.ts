@@ -25,6 +25,27 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
     return 'Formatted generated HDS component files'
   })
 
+  plop.setActionType('formatGeneratedPageFiles', (answers) => {
+    const pageFolder = plop.renderString('{{camelCase name}}', answers)
+    const pageName = plop.renderString('{{pascalCase name}}', answers)
+    const pagePath = `apps/client/src/pages/${pageFolder}`
+
+    execFileSync(
+      'pnpm',
+      [
+        'exec',
+        'prettier',
+        '--write',
+        `${pagePath}/${pageName}Page.tsx`,
+        `${pagePath}/${pageName}.spec.md`,
+        `${pagePath}/index.ts`,
+      ],
+      { stdio: 'inherit' },
+    )
+
+    return 'Formatted generated page files'
+  })
+
   plop.setGenerator('page', {
     description: 'Create a client page under apps/client/src/pages',
     prompts: [
@@ -42,8 +63,16 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
       },
       {
         type: 'add',
+        path: 'apps/client/src/pages/{{camelCase name}}/{{pascalCase name}}.spec.md',
+        templateFile: 'templates/page/page.spec.md.hbs',
+      },
+      {
+        type: 'add',
         path: 'apps/client/src/pages/{{camelCase name}}/index.ts',
         templateFile: 'templates/page/index.ts.hbs',
+      },
+      {
+        type: 'formatGeneratedPageFiles',
       },
     ],
   })
