@@ -96,3 +96,7 @@
   max-width: var(--app-mobile-max-width);
   margin-inline: auto;
 }
+
+@utility app-mobile-bottom-nav-content {
+  min-height: calc(100dvh - 84px - var(--safe-area-bottom, 0px));
+}
