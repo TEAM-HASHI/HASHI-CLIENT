@@ -21,6 +21,7 @@ export const LoginRequiredPage = () => {
         한눈에 확인할 수 있어요.
       </p>
       <KakaoStartButton
+        className="w-85"
         onPress={() => {
           // TODO: 카카오 OAuth 플로우 연결
         }}
