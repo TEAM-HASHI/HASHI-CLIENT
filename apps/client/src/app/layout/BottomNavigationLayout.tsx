@@ -58,7 +58,7 @@ export const BottomNavigationLayout = () => {
 
   return (
     <>
-      <div className="min-h-dvh pb-[calc(84px+var(--safe-area-bottom,0px))]">
+      <div className="app-mobile-bottom-nav-layout">
         <Outlet />
       </div>
       <BottomNavigation
