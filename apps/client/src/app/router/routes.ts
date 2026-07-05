@@ -8,8 +8,6 @@ import { ROUTES } from '@/app/router/path'
 import { AuthOnlyRoute, GuestOnlyRoute } from '@/app/router/RouteGuards'
 import { HomePage } from '@/pages/home'
 
-const notFound = () => lazyPages.notFound()
-
 export const appRoutes: RouteObject[] = [
   {
     path: ROUTES.home,
@@ -145,8 +143,13 @@ export const appRoutes: RouteObject[] = [
         ],
       },
       {
-        path: '*',
-        element: notFound(),
+        element: createElement(BottomNavigationLayout),
+        children: [
+          {
+            path: '*',
+            element: lazyPages.notFound(),
+          },
+        ],
       },
     ],
   },

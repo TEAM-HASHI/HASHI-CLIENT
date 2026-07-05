@@ -12,7 +12,7 @@ export type BottomNavigationProps = Omit<
   ComponentPropsWithoutRef<'nav'>,
   'children'
 > & {
-  value: string
+  value?: string
   items: BottomNavigationItem[]
   onValueChange?: (value: string) => void
 }
