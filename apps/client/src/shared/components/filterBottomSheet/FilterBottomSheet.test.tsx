@@ -48,12 +48,13 @@ describe('FilterBottomSheet', () => {
     const handleSelect = vi.fn()
     const handleReset = vi.fn()
     const handleApply = vi.fn()
+    const handleOpenChange = vi.fn()
 
     render(
       <FilterBottomSheet
         open
         onApply={handleApply}
-        onOpenChange={vi.fn()}
+        onOpenChange={handleOpenChange}
         onReset={handleReset}
         onSelect={handleSelect}
         options={options}
@@ -68,6 +69,7 @@ describe('FilterBottomSheet', () => {
 
     expect(handleSelect).toHaveBeenCalledWith('noodle')
     expect(handleReset).toHaveBeenCalled()
+    expect(handleOpenChange).toHaveBeenCalledWith(false)
     expect(handleApply).toHaveBeenCalled()
   })
 })
