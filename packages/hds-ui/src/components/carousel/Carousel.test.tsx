@@ -158,13 +158,17 @@ describe('Carousel', () => {
     ).toHaveLength(1)
   })
 
-  it('updates uncontrolled index as soon as the nearest slide changes while scrolling', () => {
+  it('updates uncontrolled index shortly after scroll settles', () => {
+    vi.useFakeTimers()
     const handleIndexChange = vi.fn()
 
     renderCarousel({ onIndexChange: handleIndexChange })
     const viewport = setViewportMetrics({ scrollLeft: 200, width: 100 })
 
     fireEvent.scroll(viewport)
+    act(() => {
+      vi.advanceTimersByTime(40)
+    })
 
     expect(handleIndexChange).toHaveBeenCalledWith(2)
     expect(screen.getByRole('group', { name: '3 / 3' })).toHaveAttribute(
@@ -174,12 +178,16 @@ describe('Carousel', () => {
   })
 
   it('does not change DOM state directly when controlled', () => {
+    vi.useFakeTimers()
     const handleIndexChange = vi.fn()
 
     renderCarousel({ index: 0, onIndexChange: handleIndexChange })
     const viewport = setViewportMetrics({ scrollLeft: 200, width: 100 })
 
     fireEvent.scroll(viewport)
+    act(() => {
+      vi.advanceTimersByTime(40)
+    })
 
     expect(handleIndexChange).toHaveBeenCalledWith(2)
     expect(screen.getByRole('group', { name: '1 / 3' })).toHaveAttribute(

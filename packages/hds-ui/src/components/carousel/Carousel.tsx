@@ -7,6 +7,7 @@ import {
   type ReactElement,
   type ReactNode,
   type RefObject,
+  type UIEvent,
   useCallback,
   useContext,
   useEffect,
@@ -70,6 +71,8 @@ type CarouselComponent = {
   Item: (props: CarouselItemProps) => ReactElement
   Indicator: (props: CarouselIndicatorProps) => ReactElement | null
 }
+
+const SCROLL_SETTLE_DELAY_MS = 40
 
 const CarouselContext = createContext<CarouselContextValue | null>(null)
 
@@ -232,6 +235,7 @@ const Viewport = ({
 }: CarouselViewportProps) => {
   const { currentIndex, itemCount, setCurrentIndex, viewportRef } =
     useCarouselContext('Carousel.Viewport')
+  const scrollSettleTimerRef = useRef<number | null>(null)
 
   const updateIndexFromScroll = useCallback(() => {
     const viewport = viewportRef.current
@@ -243,9 +247,17 @@ const Viewport = ({
     setCurrentIndex(getNearestIndex(viewport, itemCount))
   }, [itemCount, setCurrentIndex, viewportRef])
 
-  const handleScroll: CarouselViewportProps['onScroll'] = (event) => {
+  const handleScroll = (event: UIEvent<HTMLDivElement>) => {
     onScroll?.(event)
-    updateIndexFromScroll()
+
+    if (scrollSettleTimerRef.current !== null) {
+      window.clearTimeout(scrollSettleTimerRef.current)
+    }
+
+    scrollSettleTimerRef.current = window.setTimeout(
+      updateIndexFromScroll,
+      SCROLL_SETTLE_DELAY_MS,
+    )
   }
 
   useEffect(() => {
@@ -297,6 +309,14 @@ const Viewport = ({
       }
     }
   }, [currentIndex, itemCount, viewportRef])
+
+  useEffect(() => {
+    return () => {
+      if (scrollSettleTimerRef.current !== null) {
+        window.clearTimeout(scrollSettleTimerRef.current)
+      }
+    }
+  }, [])
 
   return (
     <div

@@ -46,27 +46,27 @@ HDS에서는 **Carousel의 compound slot 구조, viewport / track / item layout,
 
 ## 별도 결정 필요
 
-| 항목                        | 권장 방향                                                                                                           |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| 컴포넌트 위치               | `packages/hds-ui` 공통 컴포넌트                                                                                     |
-| API 형태                    | compound API                                                                                                        |
-| slide 이동 방식             | CSS scroll-snap + native horizontal scroll                                                                          |
-| 전환 속도                   | controlled index 이동은 native smooth scroll 기준, native swipe 중 indicator는 가장 가까운 slide 기준으로 즉시 갱신 |
-| 자동 재생                   | v1 제외                                                                                                             |
-| 무한 루프                   | v1 제외                                                                                                             |
-| 좌우 화살표                 | v1 제외                                                                                                             |
-| dot pagination              | v1은 클릭 불가 현재 위치 표시만 지원                                                                                |
-| indicator 정렬              | `center` 기본, `end` 지원                                                                                           |
-| desktop swipe               | 트랙패드 / 터치 스크린 native horizontal scroll 지원                                                                |
-| mouse drag-to-scroll        | v1 제외                                                                                                             |
-| 한 화면 노출 개수           | v1은 1개씩 노출                                                                                                     |
-| 크기 / 비율                 | 호출부 `className`으로 지정                                                                                         |
-| full-bleed 여부             | App Shell / Page에서 처리                                                                                           |
-| slide click                 | HDS가 소유하지 않고 children composition으로 처리                                                                   |
-| text overlay                | HDS가 별도 slot을 제공하지 않고 `Carousel.Item` children으로 처리                                                   |
-| `href` / `Link` / `asChild` | v1 제외                                                                                                             |
-| 이미지 fallback             | HDS가 소유하지 않음                                                                                                 |
-| 접근성 라벨                 | `Carousel.Root`에 `aria-label` 또는 `aria-labelledby` 제공                                                          |
+| 항목                        | 권장 방향                                                                                                |
+| --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 컴포넌트 위치               | `packages/hds-ui` 공통 컴포넌트                                                                          |
+| API 형태                    | compound API                                                                                             |
+| slide 이동 방식             | CSS scroll-snap + native horizontal scroll                                                               |
+| 전환 속도                   | controlled index 이동은 native smooth scroll 기준, native swipe 후 indicator는 짧은 settle delay 뒤 갱신 |
+| 자동 재생                   | v1 제외                                                                                                  |
+| 무한 루프                   | v1 제외                                                                                                  |
+| 좌우 화살표                 | v1 제외                                                                                                  |
+| dot pagination              | v1은 클릭 불가 현재 위치 표시만 지원                                                                     |
+| indicator 정렬              | `center` 기본, `end` 지원                                                                                |
+| desktop swipe               | 트랙패드 / 터치 스크린 native horizontal scroll 지원                                                     |
+| mouse drag-to-scroll        | v1 제외                                                                                                  |
+| 한 화면 노출 개수           | v1은 1개씩 노출                                                                                          |
+| 크기 / 비율                 | 호출부 `className`으로 지정                                                                              |
+| full-bleed 여부             | App Shell / Page에서 처리                                                                                |
+| slide click                 | HDS가 소유하지 않고 children composition으로 처리                                                        |
+| text overlay                | HDS가 별도 slot을 제공하지 않고 `Carousel.Item` children으로 처리                                        |
+| `href` / `Link` / `asChild` | v1 제외                                                                                                  |
+| 이미지 fallback             | HDS가 소유하지 않음                                                                                      |
+| 접근성 라벨                 | `Carousel.Root`에 `aria-label` 또는 `aria-labelledby` 제공                                               |
 
 ## Figma References
 
@@ -233,7 +233,7 @@ Carousel.Root
 - controlled: `index` controls current slide.
 - idle: user is not scrolling.
 - scrolling: viewport scroll position is changing.
-- scrolling: nearest slide index is calculated immediately and `onIndexChange` is called when changed.
+- settled: nearest slide index is calculated shortly after scroll settles and `onIndexChange` is called when changed.
 - single item: indicator is not rendered.
 - reduced motion: programmatic movement avoids smooth animation when the user prefers reduced motion.
 
@@ -244,7 +244,7 @@ Carousel.Root
 3. `Carousel.Track` lays out items in a row.
 4. `Carousel.Item` occupies `100%` of the viewport width and snaps to the viewport start.
 5. The user moves slides through native touch, touch screen, or trackpad horizontal scroll.
-6. While scrolling, Carousel calculates the nearest item and updates the current index immediately.
+6. Shortly after scroll settles, Carousel calculates the nearest item and updates the current index.
 7. If the calculated index changes, `onIndexChange` is called.
 8. If controlled `index` changes from outside, Carousel scrolls the matching item into view.
 9. If viewport width changes, Carousel keeps the current index aligned to the new viewport width.
@@ -367,7 +367,8 @@ Figma example mapping:
 - active dot은 Figma 예시처럼 inactive dot보다 긴 pill 형태를 기본으로 합니다.
 - controlled `index` 변경 같은 programmatic 이동은 native smooth scroll 기준으로 처리하되, native swipe는 브라우저의 스크롤 동작을 따릅니다.
 - reduced motion 환경에서는 programmatic 이동을 즉시 처리합니다.
-- scroll index 계산은 item width와 viewport scroll position을 기준으로 하며, 가장 가까운 slide가 바뀌면 indicator도 즉시 갱신합니다.
+- scroll settle 계산은 item width와 viewport scroll position을 기준으로 합니다.
+- scroll settle delay는 indicator 반응성을 위해 짧게 유지합니다.
 - resize 후에도 현재 index가 유지되도록 `ResizeObserver`로 viewport width 변경을 감지해 viewport 기준 위치를 다시 맞춥니다.
 - resize 보정은 화면 흔들림을 줄이기 위해 smooth scroll이 아닌 `auto` scroll로 처리합니다.
 - `defaultIndex`와 controlled `index`가 item 범위를 벗어나면 사용 가능한 범위로 보정합니다.
