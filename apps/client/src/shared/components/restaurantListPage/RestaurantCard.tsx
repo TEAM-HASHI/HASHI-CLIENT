@@ -17,7 +17,7 @@ export const RestaurantCard = ({
   }
 
   return (
-    <li className="h-[300px]">
+    <li className="border-warm-gray-50 h-[300px] border-b">
       <button
         className="flex h-full w-full flex-col pt-[19px] text-left"
         onClick={handleClickRestaurant}
@@ -29,7 +29,7 @@ export const RestaurantCard = ({
         <span className="mt-1 flex h-5 items-center text-[#4a4a4a]">
           <StarFillIcon
             aria-hidden="true"
-            className="size-[18px] shrink-0 text-[#fbda2a]"
+            className="text-primary-400 size-[18px] shrink-0"
           />
           <span className="ml-px text-[16px] leading-normal font-medium">
             {restaurant.rating}
