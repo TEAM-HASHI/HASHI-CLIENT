@@ -144,6 +144,21 @@ describe('RestaurantListPage', () => {
       '/restaurants/restaurant-1',
     )
   })
+
+  it('renders fallback image slots when restaurant images are missing', () => {
+    renderWithRouter(
+      <RestaurantListPage
+        restaurants={[{ ...restaurants[0], images: [] }]}
+        sortOptions={sortOptions}
+        title="하시 Pick"
+      />,
+    )
+
+    expect(screen.queryAllByRole('img')).toHaveLength(0)
+    expect(screen.getAllByTestId('restaurant-image-placeholder')).toHaveLength(
+      3,
+    )
+  })
 })
 
 describe('Restaurant list route pages', () => {
