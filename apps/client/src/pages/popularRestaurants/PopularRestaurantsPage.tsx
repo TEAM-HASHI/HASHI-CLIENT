@@ -2,7 +2,7 @@ import {
   MOCK_RESTAURANTS,
   POPULAR_RESTAURANT_SORT_OPTIONS,
   RestaurantListPage,
-} from '@/shared/components/restaurantListPage'
+} from '@/features/restaurantList'
 
 export const PopularRestaurantsPage = () => {
   return (
