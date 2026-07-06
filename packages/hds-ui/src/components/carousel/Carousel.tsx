@@ -7,7 +7,6 @@ import {
   type ReactElement,
   type ReactNode,
   type RefObject,
-  type UIEvent,
   useCallback,
   useContext,
   useEffect,
@@ -71,8 +70,6 @@ type CarouselComponent = {
   Item: (props: CarouselItemProps) => ReactElement
   Indicator: (props: CarouselIndicatorProps) => ReactElement | null
 }
-
-const SCROLL_SETTLE_DELAY_MS = 120
 
 const CarouselContext = createContext<CarouselContextValue | null>(null)
 
@@ -235,7 +232,6 @@ const Viewport = ({
 }: CarouselViewportProps) => {
   const { currentIndex, itemCount, setCurrentIndex, viewportRef } =
     useCarouselContext('Carousel.Viewport')
-  const scrollSettleTimerRef = useRef<number | null>(null)
 
   const updateIndexFromScroll = useCallback(() => {
     const viewport = viewportRef.current
@@ -247,17 +243,9 @@ const Viewport = ({
     setCurrentIndex(getNearestIndex(viewport, itemCount))
   }, [itemCount, setCurrentIndex, viewportRef])
 
-  const handleScroll = (event: UIEvent<HTMLDivElement>) => {
+  const handleScroll: CarouselViewportProps['onScroll'] = (event) => {
     onScroll?.(event)
-
-    if (scrollSettleTimerRef.current !== null) {
-      window.clearTimeout(scrollSettleTimerRef.current)
-    }
-
-    scrollSettleTimerRef.current = window.setTimeout(
-      updateIndexFromScroll,
-      SCROLL_SETTLE_DELAY_MS,
-    )
+    updateIndexFromScroll()
   }
 
   useEffect(() => {
@@ -309,14 +297,6 @@ const Viewport = ({
       }
     }
   }, [currentIndex, itemCount, viewportRef])
-
-  useEffect(() => {
-    return () => {
-      if (scrollSettleTimerRef.current !== null) {
-        window.clearTimeout(scrollSettleTimerRef.current)
-      }
-    }
-  }, [])
 
   return (
     <div
@@ -426,7 +406,7 @@ const Indicator = ({
         return (
           <span
             className={cn(
-              'block rounded-full transition-[width,background-color] duration-300',
+              'block rounded-full transition-[width,background-color] duration-150',
               isActive
                 ? 'bg-warm-gray-300 h-1 w-[22px]'
                 : 'bg-warm-gray-100 size-1.5',

@@ -31,6 +31,18 @@ export const mockHomeBanners: HomeBanner[] = [
     imageAlt: '긴자 저녁 추천 큐레이션 배너',
     instagramUrl: 'https://www.instagram.com/hashi_ginza_dinner/',
   },
+  {
+    id: 'shinjuku-lunch',
+    imageUrl: createMockBannerImage('신주쿠 점심 산책', '#f1edf5'),
+    imageAlt: '신주쿠 점심 산책 큐레이션 배너',
+    instagramUrl: 'https://www.instagram.com/hashi_shinjuku_lunch/',
+  },
+  {
+    id: 'omakase-night',
+    imageUrl: createMockBannerImage('오마카세 나이트', '#edf2f5'),
+    imageAlt: '오마카세 나이트 큐레이션 배너',
+    instagramUrl: 'https://www.instagram.com/hashi_omakase_night/',
+  },
 ]
 
 export const mockQuickLinks: HomeQuickLink[] = [
