@@ -1,3 +1,6 @@
+export { InputReviewRate } from './inputReviewRate/InputReviewRate'
+export type { InputReviewRateProps } from './inputReviewRate/InputReviewRate'
+
 export { ReviewHeader } from './reviewHeader/ReviewHeader'
 export type { ReviewHeaderProps } from './reviewHeader/ReviewHeader'
 
