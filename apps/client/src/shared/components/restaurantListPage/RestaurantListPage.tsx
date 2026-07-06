@@ -124,7 +124,7 @@ export const RestaurantListPage = ({
         />
       </div>
 
-      <ul className="flex flex-col gap-1 px-5">
+      <ul className="mx-auto flex w-full max-w-[393px] flex-col gap-1 px-5">
         {restaurants.map((restaurant) => (
           <RestaurantCard
             key={restaurant.id}

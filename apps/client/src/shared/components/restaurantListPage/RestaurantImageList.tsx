@@ -12,8 +12,11 @@ export const RestaurantImageList = ({
   const imageSlots = Array.from({ length: RESTAURANT_IMAGE_SLOT_COUNT })
 
   return (
-    <div className="w-[353px] overflow-hidden">
-      <div className="flex gap-2">
+    <span
+      className="block w-full max-w-[353px] [scrollbar-width:none] overflow-x-auto overflow-y-hidden [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      data-testid="restaurant-image-list"
+    >
+      <span className="flex w-max gap-2">
         {imageSlots.map((_, index) => {
           const image = images[index]
 
@@ -33,7 +36,7 @@ export const RestaurantImageList = ({
             />
           )
         })}
-      </div>
-    </div>
+      </span>
+    </span>
   )
 }

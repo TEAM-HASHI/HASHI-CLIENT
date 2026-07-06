@@ -145,6 +145,24 @@ describe('RestaurantListPage', () => {
     )
   })
 
+  it('navigates to restaurant detail when an image is pressed', () => {
+    renderWithRouter(
+      <RestaurantListPage
+        restaurants={restaurants}
+        sortOptions={sortOptions}
+        title="하시 Pick"
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('img', { name: '히마와리 스시 신도심점 사진 1' }),
+    )
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent(
+      '/restaurants/restaurant-1',
+    )
+  })
+
   it('renders fallback image slots when restaurant images are missing', () => {
     renderWithRouter(
       <RestaurantListPage
@@ -155,6 +173,10 @@ describe('RestaurantListPage', () => {
     )
 
     expect(screen.queryAllByRole('img')).toHaveLength(0)
+    expect(screen.getByTestId('restaurant-image-list')).toHaveClass(
+      'overflow-x-auto',
+      'max-w-[353px]',
+    )
     expect(screen.getAllByTestId('restaurant-image-placeholder')).toHaveLength(
       3,
     )
