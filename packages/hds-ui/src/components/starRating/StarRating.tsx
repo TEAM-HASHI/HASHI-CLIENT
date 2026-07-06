@@ -30,7 +30,7 @@ const starItemVariants = cva('relative inline-flex shrink-0', {
 const starIconVariants = cva('absolute inset-0 size-full', {
   variants: {
     state: {
-      filled: 'text-primary-500',
+      filled: 'text-primary-400',
       empty: 'text-warm-gray-300',
     },
   },
