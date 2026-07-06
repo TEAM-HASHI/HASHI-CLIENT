@@ -1,32 +1,27 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
-import { useNavigate } from 'react-router-dom'
 
-import {
-  ReservationDetailActionBar,
-  ReservationNoticeSection,
-  ReservationProgressSection,
-  ReservationReceiptInfoCard,
-} from '@/features/reservation/components'
-import { reservationNotices } from '@/features/reservation/constants'
-import {
-  reservationProgressSteps,
-  reservationReceiptInfoItems,
-  reservationRestaurant,
-} from '@/features/reservation/mocks/reservationDetail.mock'
 import { cn } from '@/shared/utils'
+
+import { ReservationDetailActionBar } from './components/ReservationDetailActionBar'
+import { ReservationNoticeSection } from './components/ReservationNoticeSection'
+import { ReservationProgressSection } from './components/ReservationProgressSection'
+import { ReservationReceiptInfoCard } from './components/ReservationReceiptInfoCard'
+import { useReservationDetailPage } from './hooks/useReservationDetailPage'
 
 const actionBarSafeSpaceClassName =
   'pb-[calc(80px+var(--safe-area-bottom,0px))]'
 
 export const ReservationDetailPage = () => {
-  const navigate = useNavigate()
-  const handleCancelReservation = () => {
-    // TODO: 예약 취소 플로우 연결
-  }
-  const handleContact = () => {
-    // TODO: 문의하기 플로우 연결
-  }
+  const {
+    reservationNotices,
+    reservationProgressSteps,
+    reservationReceiptInfoItems,
+    reservationRestaurant,
+    handleBack,
+    handleCancelReservation,
+    handleContact,
+  } = useReservationDetailPage()
 
   return (
     <section
@@ -36,9 +31,7 @@ export const ReservationDetailPage = () => {
         leftAction={
           <IconButton
             aria-label="이전 페이지로 이동"
-            onClick={() => {
-              navigate(-1)
-            }}
+            onClick={handleBack}
             size="xs"
           >
             <BackIcon className="size-6" />
