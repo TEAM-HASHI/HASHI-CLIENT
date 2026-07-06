@@ -2,7 +2,7 @@ import {
   HASHI_PICK_SORT_OPTIONS,
   MOCK_RESTAURANTS,
   RestaurantListPage,
-} from '@/shared/components/restaurantListPage'
+} from '@/features/restaurantList'
 
 export const HashiPickPage = () => {
   return (
