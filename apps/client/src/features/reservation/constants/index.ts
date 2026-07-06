@@ -1,1 +1,0 @@
-export { reservationNotices } from './reservationNotice'

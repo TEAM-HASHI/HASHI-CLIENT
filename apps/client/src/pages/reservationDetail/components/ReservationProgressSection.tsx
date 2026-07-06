@@ -8,7 +8,7 @@ export type ReservationProgressStep = {
   id: string
   title: string
   description: string
-  requestedAt: string
+  requestedAt?: string
   status: ReservationProgressStatus
 }
 
@@ -109,11 +109,13 @@ export const ReservationProgressSection = ({
                   >
                     {step.title}
                   </p>
-                  <time
-                    className={cn('typo-caption-2 shrink-0', stepStyle.time)}
-                  >
-                    {step.requestedAt}
-                  </time>
+                  {step.requestedAt ? (
+                    <time
+                      className={cn('typo-caption-2 shrink-0', stepStyle.time)}
+                    >
+                      {step.requestedAt}
+                    </time>
+                  ) : null}
                 </div>
                 <p className={cn('typo-body-8 mt-px', stepStyle.description)}>
                   {step.description}
