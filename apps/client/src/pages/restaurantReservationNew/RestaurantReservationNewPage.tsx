@@ -100,7 +100,6 @@ export const RestaurantReservationNewPage = () => {
               날짜
             </h2>
             <Calendar
-              aria-labelledby="reservation-date-heading"
               isDateDisabled={calendar.isDateDisabled}
               month={calendar.visibleMonth}
               onDateSelect={calendar.onDateSelect}

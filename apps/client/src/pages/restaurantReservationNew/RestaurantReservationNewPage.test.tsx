@@ -36,6 +36,7 @@ describe('RestaurantReservationNewPage', () => {
   it('keeps the reservation CTA disabled before required values are selected', () => {
     render(<RestaurantReservationNewPage />)
 
+    expect(screen.getByRole('heading', { name: '2026 6월' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '예약하기' })).toBeDisabled()
   })
 
