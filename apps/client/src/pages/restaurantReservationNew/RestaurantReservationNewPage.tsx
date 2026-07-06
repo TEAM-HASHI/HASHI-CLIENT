@@ -52,14 +52,14 @@ export const RestaurantReservationNewPage = () => {
         title="예약하기"
       />
 
-      <div className="px-6 pt-[27px]">
+      <div className="px-6 pt-6.5">
         <ReservationRestaurantSummary
           imageUrl={restaurant.imageUrl}
           name={restaurant.name}
         />
 
         <form
-          className="mt-9 flex flex-col gap-[52px]"
+          className="mt-8.75 flex flex-col gap-13.75"
           id={RESERVATION_FORM_ID}
           onSubmit={handleSubmit}
         >
@@ -94,7 +94,7 @@ export const RestaurantReservationNewPage = () => {
 
           <section aria-labelledby="reservation-date-heading">
             <h2
-              className="typo-sub-header-1 mb-[25px] text-black"
+              className="typo-sub-header-1 mb-5 text-black"
               id="reservation-date-heading"
             >
               날짜
