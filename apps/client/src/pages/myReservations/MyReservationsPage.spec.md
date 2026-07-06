@@ -43,6 +43,9 @@ apps/client/src/pages/myReservations/
 │   ├── MyReservationsHeader.tsx
 │   ├── ReservationStatusFilter.tsx
 │   ├── ReservationListSummary.tsx
+│   ├── ReservationListSection.tsx
+│   ├── ReservationCardsByStatus.tsx
+│   ├── ReservationCardImage.tsx
 │   ├── InProgressReservationCard.tsx
 │   ├── UpcomingReservationCard.tsx
 │   ├── VisitedReservationCard.tsx
@@ -50,8 +53,11 @@ apps/client/src/pages/myReservations/
 │   └── ReservationCancelDialog.tsx
 ├── hooks/
 │   └── useMyReservationsPage.ts
+├── constants/
+│   └── reservationStatus.ts
 ├── mocks/
 │   └── myReservations.mock.ts
+├── types.ts
 └── index.ts
 ```
 
@@ -75,7 +81,9 @@ apps/client/src/pages/myReservations/
 - [ ] 무한스크롤 페이지 사이즈는 10개입니다.
 - [ ] 조회된 리스트가 비어 있으면 shared `Empty` 컴포넌트를 사용합니다.
 - [ ] 하단 네비게이션은 고정으로 유지됩니다.
-- [ ] 카드 이미지는 식당/음식 이미지가 없을 경우 `DefaultImage`를 사용합니다.
+- [ ] 카드 이미지는 식당/음식 이미지가 없을 경우 fallback 이미지를 보여줍니다.
+  - 현재 구현은 page-local `ReservationCardImage`의 임시 fallback을 사용합니다.
+  - `DefaultImage`가 머지되면 `ReservationCardImage` 내부 fallback을 `DefaultImage`로 교체합니다.
 - [ ] 각 상태별 카드 UI를 분리합니다.
 
 ## Status Filter
@@ -172,12 +180,13 @@ const reservationStatusLabels = {
 - 별점 선택 UI
 - `이 맛집 어떠셨나요?` 문구
 - 별점 클릭 시 바로 리뷰 작성 페이지로 이동합니다.
-- 리뷰 작성 페이지 진입 시 해당 예약의 `reservationId`를 전달합니다.
+- 리뷰 작성 페이지 진입 시 해당 예약의 `restaurantId`를 사용해 `/restaurants/:restaurantId/reviews/new`로 이동합니다.
 
 리뷰 작성 후:
 
 - 작성한 별점
 - `리뷰 작성 완료! +500P` 버튼 또는 안내 영역
+- `리뷰 작성 완료! +500P` 버튼 클릭 시 해당 리뷰 상세 페이지로 이동합니다.
 
 리뷰 작성 여부는 예약 목록 API에서 함께 내려주는 리뷰 상태 데이터로 판단합니다.
 
@@ -263,6 +272,8 @@ type VisitedReservation = MyReservation & {
 - `hasReview: false`: 리뷰 작성 전 UI를 보여줍니다.
 - `hasReview: true`: 리뷰 작성 완료 UI를 보여줍니다.
 - 작성된 리뷰가 있으면 `reviewId`, `rating`, `earnedPoint`를 함께 내려줍니다.
+- 리뷰 작성 전에는 `restaurantId`로 리뷰 작성 페이지에 이동합니다.
+- 리뷰 작성 후에는 `reviewId`로 리뷰 상세 페이지에 이동합니다.
 
 pagination:
 
@@ -313,9 +324,7 @@ POST /api/v1/reservations/{reservationId}/cancel
 local state:
 
 - `selectedStatus`
-- `sort`
-- `isCancelConfirmOpen`
-- `selectedReservationId`
+- `cancelReservationId`
 
 server state:
 
@@ -328,8 +337,9 @@ server state:
 
 derived state:
 
-- 현재 선택된 status label
 - 현재 리스트 items
+- 현재 선택된 status의 total count
+- 취소 확인 모달 open 여부: `cancelReservationId !== null`
 - 다음 페이지 조회 가능 여부
 - 카드 타입 분기
 
@@ -343,6 +353,7 @@ MyReservationsPage
     ReservationStatusFilter
   ReservationList
     ReservationListSummary
+    ReservationCardsByStatus
     InProgressReservationCard[]
     UpcomingReservationCard[]
     VisitedReservationCard[]
@@ -358,12 +369,18 @@ HDS component:
 - `Chip`
 - `Button`
 - `Dialog`
-- `StarRating`
 - `BottomNavigation`
+
+HDS icon:
+
+- `ReservationIcon`
+- `CheckIcon`
+- `StarFillIcon`
+- `StarBlankIcon`
+- `OrderCancelIcon`
 
 shared component:
 
-- `DefaultImage`
 - `Empty`
 
 page-local components:
@@ -371,6 +388,9 @@ page-local components:
 - `MyReservationsHeader`
 - `ReservationStatusFilter`
 - `ReservationListSummary`
+- `ReservationListSection`
+- `ReservationCardsByStatus`
+- `ReservationCardImage`
 - `InProgressReservationCard`
 - `UpcomingReservationCard`
 - `VisitedReservationCard`
@@ -380,6 +400,22 @@ page-local components:
 hooks:
 
 - `useMyReservationsPage`
+
+constants:
+
+- `reservationStatus`
+
+mocks:
+
+- `myReservations.mock`
+
+types:
+
+- `MyReservation`
+- `InProgressReservation`
+- `UpcomingReservation`
+- `VisitedReservation`
+- `CanceledReservation`
 
 ## Fixed Layout Policy
 
@@ -399,6 +435,7 @@ hooks:
 
 - `app-mobile-fixed-top` 유틸을 사용합니다.
 - fixed 영역의 높이만큼 본문 상단 padding을 확보합니다.
+- fixed 영역은 배경색을 지정해 리스트가 아래로 스크롤될 때 겹쳐 보이지 않도록 합니다.
 - fixed 영역은 모바일 프레임 너비를 벗어나지 않아야 합니다.
 - z-index는 하드코딩하지 않고 `z-fixed` 토큰을 사용합니다.
 - status chip 변경 시 리스트 컨테이너 또는 window 스크롤을 맨 위로 이동합니다.
@@ -470,8 +507,7 @@ hooks:
 방문 완료:
 
 - 리뷰 작성 전 별점 클릭: 리뷰 작성 페이지 이동
-- 리뷰 작성 후 영역 클릭: 리뷰 상세 페이지 이동 또는 작성 완료 상태 유지
-- 리뷰 상세 경로는 추후 정책에 맞춰 연결
+- 리뷰 작성 후 `리뷰 작성 완료! +500P` 클릭: 해당 리뷰 상세 페이지 이동
 
 예약 취소:
 
@@ -484,6 +520,8 @@ hooks:
 - 서버에서 정의되지 않은 status 값이 내려오면 해당 item은 렌더링하지 않거나 error reporting 대상에 포함합니다.
 - 무한스크롤 요청 중복을 막습니다.
 - `reservationId`가 없는 카드 액션은 실행하지 않습니다.
+- 리뷰 작성 전 이동에는 `restaurantId`가 필요합니다.
+- 리뷰 작성 후 리뷰 상세 이동에는 `reviewId`가 필요합니다.
 
 ## Accessibility
 
@@ -499,7 +537,7 @@ hooks:
 ## Test Plan
 
 - `pnpm --filter @hashi/client typecheck`
-- `pnpm --filter @hashi/client test -- MyReservationsPage.test.tsx`
+- `pnpm --filter @hashi/client lint`
 - chip 변경 시 status별 리스트가 바뀌는지 확인
 - chip 변경 시 리스트 스크롤 위치가 맨 위로 이동하는지 확인
 - 무한스크롤 sentinel 노출 시 다음 페이지 요청이 발생하는지 확인
@@ -509,9 +547,11 @@ hooks:
 - 취소 실패 후 toast가 호출되는지 확인
 - 방문 완료 카드에서 리뷰 작성 전/후 UI가 다르게 보이는지 확인
 - 방문 완료 카드에서 리뷰 작성 전 별점 클릭 시 리뷰 작성 페이지로 이동하는지 확인
+- 방문 완료 카드에서 리뷰 작성 완료 버튼 클릭 시 리뷰 상세 페이지로 이동하는지 확인
 - 예약 취소 상태 카드가 disabled style로 보이는지 확인
 - fixed header/filter 영역과 bottom navigation이 모바일 프레임 안에 유지되는지 확인
 
 ## Open Questions
 
 - toast 컴포넌트 디자인과 공통 사용 API가 확정되면 취소 성공/실패 안내에 적용해야 합니다.
+- `DefaultImage`가 머지되면 `ReservationCardImage`의 임시 fallback을 교체해야 합니다.
