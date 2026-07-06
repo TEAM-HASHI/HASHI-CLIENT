@@ -41,8 +41,8 @@
 
 ## State And Structure
 
-- `ReviewNewPage`는 route page로서 레이아웃 조립, 뒤로가기 navigation, feature component 연결만 담당한다.
-- 리뷰 작성 form 상태와 submit 가능 여부는 page-local `hooks/useReviewNewForm.ts`에서 관리한다.
+- `ReviewNewPage`는 route page로서 레이아웃 조립, 뒤로가기 navigation, feature component/hook 연결만 담당한다.
+- 리뷰 작성/수정에서 재사용 가능한 form 상태와 submit 가능 여부는 `features/review/hooks/useReviewForm.ts`에서 관리한다.
 - 리뷰 본문 길이, 사진 개수, 사진 용량 같은 순수 검증 기준은 리뷰 작성/수정 플로우에서 함께 쓰는 규칙이므로 `features/review/utils/reviewValidation.ts`에 둔다.
 - 리뷰 입력 제한값과 에러 문구는 리뷰 작성/수정 플로우에서 함께 쓰는 규칙이므로 `features/review/constants`에 둔다.
 - 리뷰 입력 UI 컴포넌트는 리뷰 작성/수정에서 재사용 가능하므로 `features/review/components`에서 가져온다.

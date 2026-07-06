@@ -8,9 +8,9 @@ import {
   ReviewReservationSummary,
   ReviewSubmitBar,
 } from '@/features/review/components'
+import { useReviewForm } from '@/features/review/hooks'
 
 import { REVIEW_RESERVATION_SUMMARY } from './constants/reviewNewMockData'
-import { useReviewNewForm } from './hooks/useReviewNewForm'
 
 export const ReviewNewPage = () => {
   const navigate = useNavigate()
@@ -26,7 +26,7 @@ export const ReviewNewPage = () => {
     rating,
     reviewText,
     selectedKeywordIds,
-  } = useReviewNewForm()
+  } = useReviewForm()
 
   return (
     <main

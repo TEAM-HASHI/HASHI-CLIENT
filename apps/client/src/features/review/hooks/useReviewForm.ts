@@ -12,7 +12,7 @@ import {
   checkIsValidReviewText,
 } from '@/features/review/utils'
 
-export const useReviewNewForm = () => {
+export const useReviewForm = () => {
   const [rating, setRating] = useState(0)
   const [selectedKeywordIds, setSelectedKeywordIds] = useState<
     ReviewKeywordId[]
