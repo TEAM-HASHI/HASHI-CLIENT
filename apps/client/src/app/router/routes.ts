@@ -39,16 +39,16 @@ export const appRoutes: RouteObject[] = [
         element: lazyPages.todayRestaurant(),
       },
       {
-        path: ROUTES.restaurantDetail,
-        element: lazyPages.restaurantDetail(),
-      },
-      {
         path: ROUTES.hashiPickRestaurants,
         element: lazyPages.hashiPick(),
       },
       {
         path: ROUTES.popularRestaurants,
         element: lazyPages.popularRestaurants(),
+      },
+      {
+        path: ROUTES.restaurantDetail,
+        element: lazyPages.restaurantDetail(),
       },
       {
         path: ROUTES.magazines,
