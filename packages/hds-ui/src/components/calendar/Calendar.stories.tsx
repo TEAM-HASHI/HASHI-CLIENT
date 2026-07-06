@@ -19,6 +19,9 @@ const meta = {
     month: JUNE_2026,
   },
   argTypes: {
+    formatYearLabel: {
+      control: false,
+    },
     formatMonthLabel: {
       control: false,
     },
@@ -106,8 +109,8 @@ export const MonthNavigation: Story = {
 
 export const CustomLabels: Story = {
   args: {
-    formatMonthLabel: (month) =>
-      `${month.getFullYear()}.${String(month.getMonth() + 1).padStart(2, '0')}`,
+    formatYearLabel: (month) => `${month.getFullYear()}년`,
+    formatMonthLabel: (month) => String(month.getMonth() + 1).padStart(2, '0'),
     weekdayLabels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
   },
 }
