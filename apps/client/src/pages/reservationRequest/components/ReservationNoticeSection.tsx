@@ -18,8 +18,8 @@ export const ReservationNoticeSection = () => {
       <p className="mt-1.5">
         결제는 예약이 확정된 경우에만 계좌이체 방식으로 진행됩니다.
         <br />
-        예약 결과는 카카오톡으로 안내드리며, 예약이 확정된 경우 입금 계좌를
-        함께 보내드립니다.
+        예약 결과는 카카오톡으로 안내드리며, 예약이 확정된 경우 입금 계좌를 함께
+        보내드립니다.
       </p>
       <ul className="mt-[22px] list-disc space-y-1 pl-[18px]">
         {RESERVATION_NOTICE_ITEMS.map((noticeItem) => (

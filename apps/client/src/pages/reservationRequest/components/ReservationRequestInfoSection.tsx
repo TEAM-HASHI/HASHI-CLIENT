@@ -18,9 +18,7 @@ const ReservationInfoRow = ({
 }) => {
   return (
     <div className="flex items-start justify-between gap-5">
-      <dt className="typo-sub-header-3 text-cool-gray-900 shrink-0">
-        {label}
-      </dt>
+      <dt className="typo-sub-header-3 text-cool-gray-900 shrink-0">{label}</dt>
       <dd
         className={
           multiline
