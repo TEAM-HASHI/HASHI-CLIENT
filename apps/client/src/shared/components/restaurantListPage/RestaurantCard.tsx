@@ -17,7 +17,7 @@ export const RestaurantCard = ({
   }
 
   return (
-    <li className="border-warm-gray-50 h-[300px] border-b">
+    <li className="border-warm-gray-50 h-[300px] w-full border-b">
       <button
         className="flex h-full w-full flex-col pt-[19px] text-left"
         onClick={handleClickRestaurant}
@@ -44,14 +44,14 @@ export const RestaurantCard = ({
             restaurantName={restaurant.name}
           />
         </span>
-        <span className="mt-3 line-clamp-2 w-[340px] text-[14px] leading-5 font-normal text-[#4a4a4a]">
+        <span className="mt-3 line-clamp-2 w-full max-w-[340px] text-[14px] leading-5 font-normal tracking-[0px] text-[#4a4a4a]">
           {restaurant.description}
         </span>
         <span className="mt-0.5 flex flex-wrap gap-x-2 gap-y-1">
-          {restaurant.hashtags.map((hashtag) => (
+          {restaurant.hashtags.map((hashtag, index) => (
             <span
               className="text-[14px] leading-5 font-normal text-[#90a9b4]"
-              key={hashtag}
+              key={`${hashtag}-${index}`}
             >
               {hashtag}
             </span>
