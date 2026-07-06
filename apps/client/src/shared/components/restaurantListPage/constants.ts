@@ -10,6 +10,11 @@ export const HASHI_PICK_SORT_OPTIONS: FilterOption[] = [
   { label: '별점순', value: 'rating' },
 ]
 
+export const POPULAR_RESTAURANT_SORT_OPTIONS: FilterOption[] = [
+  { label: '기본순', value: 'default' },
+  { label: '별점순', value: 'rating' },
+]
+
 export const CATEGORY_OPTIONS: FilterOption[] = [
   { label: '전체', value: 'all' },
   { label: '스시/사시미류', value: 'sushi' },

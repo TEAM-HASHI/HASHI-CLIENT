@@ -1,10 +1,17 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { HashiPickPage } from '@/pages/hashiPick'
+import { PopularRestaurantsPage } from '@/pages/popularRestaurants'
 
 import { RestaurantListPage } from './RestaurantListPage'
 import type { FilterOption, Restaurant } from './types'
@@ -165,5 +172,25 @@ describe('Restaurant list route pages', () => {
       screen.getByRole('heading', { name: '하시 Pick' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '인기순' })).toBeInTheDocument()
+  })
+
+  it('renders PopularRestaurantsPage without popular sort option', () => {
+    render(
+      <MemoryRouter>
+        <PopularRestaurantsPage />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 기본순' }))
+
+    expect(
+      screen.getByRole('heading', { name: '인기 맛집' }),
+    ).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog', { name: '정렬 순서' })
+
+    expect(within(dialog).queryByRole('button', { name: '인기순' })).toBeNull()
+    expect(
+      within(dialog).getByRole('button', { name: '별점순' }),
+    ).toBeInTheDocument()
   })
 })
