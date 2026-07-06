@@ -33,12 +33,14 @@ export interface TextareaProps extends Omit<
   helperText?: string
   showCounter?: boolean
   className?: string
+  textareaClassName?: string
 }
 
 export const Textarea = ({
   helperText,
   showCounter,
   className,
+  textareaClassName,
   value,
   defaultValue,
   maxLength,
@@ -127,6 +129,7 @@ export const Textarea = ({
           'typo-body-4 text-primary-200 placeholder:text-warm-gray-300 font-sans',
           'focus-visible:border-cool-gray-500 focus-visible:outline-cool-gray-500 focus-visible:outline-2 focus-visible:outline-offset-0',
           'disabled:bg-secondary-200 disabled:text-warm-gray-300 disabled:cursor-not-allowed',
+          textareaClassName,
         )}
       />
       {hasSupportRow ? (
