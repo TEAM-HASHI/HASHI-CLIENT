@@ -70,6 +70,36 @@ describe('Badge', () => {
     )
   })
 
+  it('aria-disabled가 true이면 선택 변경을 호출하지 않습니다', () => {
+    const handleSelectedChange = vi.fn()
+
+    render(
+      <Badge
+        aria-disabled="true"
+        interactive
+        label="선택 라벨"
+        onSelectedChange={handleSelectedChange}
+      />,
+    )
+
+    const badge = screen.getByRole('button', { name: '선택 라벨' })
+
+    expect(badge).toHaveAttribute('aria-disabled', 'true')
+
+    fireEvent.click(badge)
+
+    expect(handleSelectedChange).not.toHaveBeenCalled()
+  })
+
+  it('aria-disabled가 true이면 비활성 스타일을 적용합니다', () => {
+    render(<Badge aria-disabled="true" interactive label="선택 라벨" />)
+
+    expect(screen.getByRole('button', { name: '선택 라벨' })).toHaveClass(
+      'cursor-not-allowed',
+      'opacity-40',
+    )
+  })
+
   it('선택 상태 스타일을 적용합니다', () => {
     render(<Badge interactive label="선택 라벨" selected />)
 

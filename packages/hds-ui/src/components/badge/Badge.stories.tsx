@@ -80,9 +80,11 @@ const StatefulBadge = (args: BadgePropsForStory) => {
 
 const KeywordWrap = ({
   interactive = false,
+  maxSelectableCount,
   selectedValues = [],
 }: {
   interactive?: boolean
+  maxSelectableCount?: number
   selectedValues?: string[]
 }) => {
   const [selectedKeywordValues, setSelectedKeywordValues] =
@@ -92,15 +94,24 @@ const KeywordWrap = ({
     <div className="flex max-w-[353px] flex-wrap gap-2">
       {reviewKeywordItems.map((item) => {
         const isSelected = selectedKeywordValues.includes(item.value)
+        const isAdditionDisabled =
+          maxSelectableCount !== undefined &&
+          selectedKeywordValues.length >= maxSelectableCount &&
+          !isSelected
 
         if (interactive) {
           return (
             <Badge
+              aria-disabled={isAdditionDisabled ? 'true' : undefined}
               icon={item.icon}
               interactive
               key={item.value}
               label={item.label}
               onSelectedChange={(nextSelected) => {
+                if (isAdditionDisabled) {
+                  return
+                }
+
                 setSelectedKeywordValues((currentValues) =>
                   getNextSelectedKeywordValues(
                     currentValues,
@@ -160,6 +171,15 @@ export const Selected: Story = {
   render: StatefulBadge,
 }
 
+export const Disabled: Story = {
+  args: {
+    'aria-disabled': 'true',
+    icon: <TalkIcon />,
+    interactive: true,
+    label: '대화하기 좋아요',
+  },
+}
+
 export const StaticReviewKeywords: Story = {
   render: () => <KeywordWrap />,
 }
@@ -168,6 +188,7 @@ export const SelectableReviewKeywords: Story = {
   render: () => (
     <KeywordWrap
       interactive
+      maxSelectableCount={3}
       selectedValues={['delicious', 'mildSpice', 'value']}
     />
   ),
