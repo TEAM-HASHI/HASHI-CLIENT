@@ -16,7 +16,7 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 
 - [x] `open` 값이 `true`일 때만 렌더링합니다.
 - [x] `onOpenChange(false)`로 닫기 요청을 전달합니다.
-- [x] overlay press로 닫을 수 있습니다.
+- [x] overlay press로 닫을 수 있고, 호출부가 비활성화할 수 있습니다.
 - [x] close button press로 닫을 수 있습니다.
 - [x] `title`, `children`, `footer` slot을 지원합니다.
 - [x] drag handle과 close button 표시 여부를 제어할 수 있습니다.
@@ -24,7 +24,7 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 - [x] title이 없는 바텀시트도 접근성 이름을 제공할 수 있습니다.
 - [x] sheet가 열리면 focus를 sheet 내부로 이동합니다.
 - [x] Tab focus를 sheet 내부에 가둡니다.
-- [x] Escape key로 닫을 수 있습니다.
+- [x] Escape key로 닫을 수 있고, 호출부가 비활성화할 수 있습니다.
 - [x] 닫힌 뒤 이전 focus 위치로 복귀합니다.
 - [x] sheet가 열려 있을 때 body scroll을 잠급니다.
 - [x] safe-area bottom padding을 반영합니다.
@@ -77,6 +77,20 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 - default: `true`
 - description: close button 표시 여부입니다.
 
+### `closeOnOverlayClick`
+
+- type: `boolean`
+- required: `false`
+- default: `true`
+- description: overlay press 시 `onOpenChange(false)` 호출 여부입니다.
+
+### `closeOnEscape`
+
+- type: `boolean`
+- required: `false`
+- default: `true`
+- description: Escape key 입력 시 `onOpenChange(false)` 호출 여부입니다.
+
 ### `aria-label`
 
 - type: `string`
@@ -90,20 +104,35 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 - required: `false`
 - description: sheet panel에 병합할 class입니다.
 
+### `overlayClassName`
+
+- type: `string`
+- required: `false`
+- description: overlay wrapper에 병합할 class입니다.
+
+### `contentClassName`
+
+- type: `string`
+- required: `false`
+- description: content wrapper에 병합할 class입니다.
+
 ## Behavior
 
 1. `open`이 `false`이면 DOM에 렌더링하지 않습니다.
 2. `open`이 `true`이면 `document.body`에 portal로 렌더링합니다.
-3. close button press, overlay press 시 `onOpenChange(false)`를 호출합니다.
-4. sheet 내부 press는 overlay press로 전파되지 않아야 합니다.
-5. sheet가 열려 있는 동안 body scroll을 잠급니다.
-6. `title`이 있으면 dialog accessible name으로 연결합니다.
-7. `title`이 없으면 `aria-label`을 dialog accessible name으로 연결합니다.
-8. sheet가 열리면 sheet panel로 focus를 이동합니다.
-9. `Tab`과 `Shift + Tab` focus는 sheet 내부에서 순환합니다.
-10. `Escape` key를 누르면 `onOpenChange(false)`를 호출합니다.
-11. sheet가 닫히면 이전 focus 위치로 복귀합니다.
-12. 닫힘 요청 후에는 sheet를 아래로 내리는 transition이 끝난 뒤 DOM에서 제거합니다.
+3. close button press 시 `onOpenChange(false)`를 호출합니다.
+4. `closeOnOverlayClick`이 `true`이면 overlay press 시 `onOpenChange(false)`를 호출합니다.
+5. `closeOnOverlayClick`이 `false`이면 overlay press 시 닫힘 요청을 전달하지 않습니다.
+6. sheet 내부 press는 overlay press로 전파되지 않아야 합니다.
+7. sheet가 열려 있는 동안 body scroll을 잠급니다.
+8. `title`이 있으면 dialog accessible name으로 연결합니다.
+9. `title`이 없으면 `aria-label`을 dialog accessible name으로 연결합니다.
+10. sheet가 열리면 sheet panel로 focus를 이동합니다.
+11. `Tab`과 `Shift + Tab` focus는 sheet 내부에서 순환합니다.
+12. `closeOnEscape`가 `true`이면 `Escape` key 입력 시 `onOpenChange(false)`를 호출합니다.
+13. `closeOnEscape`가 `false`이면 `Escape` key 입력 시 닫힘 요청을 전달하지 않습니다.
+14. sheet가 닫히면 이전 focus 위치로 복귀합니다.
+15. 닫힘 요청 후에는 sheet를 아래로 내리는 transition이 끝난 뒤 DOM에서 제거합니다.
 
 ## Styling
 
@@ -140,7 +169,7 @@ Storybook은 BottomSheet primitive의 slot과 옵션만 보여줍니다. 음식 
 
 ## Verification
 
-- [ ] `corepack pnpm --filter @hashi/hds-ui lint`
-- [ ] `corepack pnpm --filter @hashi/hds-ui typecheck`
-- [ ] `corepack pnpm --filter @hashi/hds-ui build`
-- [ ] `corepack pnpm --filter @hashi/hds-ui test`
+- [x] `corepack pnpm --filter @hashi/hds-ui lint`
+- [x] `corepack pnpm --filter @hashi/hds-ui typecheck`
+- [x] `corepack pnpm --filter @hashi/hds-ui build`
+- [x] `corepack pnpm --filter @hashi/hds-ui test`
