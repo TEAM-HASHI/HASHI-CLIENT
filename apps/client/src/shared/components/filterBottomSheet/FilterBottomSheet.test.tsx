@@ -1,5 +1,11 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { FilterBottomSheet } from './FilterBottomSheet'
@@ -37,11 +43,51 @@ describe('FilterBottomSheet', () => {
       screen.getByRole('button', { name: '스시/사시미류' }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: '스시/사시미류' })).toHaveClass(
-      'typo-body-3',
+      'font-medium',
     )
     expect(screen.getByRole('button', { name: '면류' })).toHaveClass(
-      'typo-body-4',
+      'font-normal',
     )
+  })
+
+  it('uses the Figma mobile sheet heights for category and sort sheets', () => {
+    const { rerender } = render(
+      <FilterBottomSheet
+        open
+        onApply={vi.fn()}
+        onOpenChange={vi.fn()}
+        onReset={vi.fn()}
+        onSelect={vi.fn()}
+        options={options}
+        selectedValue="sushi"
+        title="음식 장르 선택"
+      />,
+    )
+
+    expect(
+      screen
+        .getByRole('dialog', { name: '음식 장르 선택' })
+        .querySelector('div[style]'),
+    ).toHaveStyle({ height: '577px' })
+
+    rerender(
+      <FilterBottomSheet
+        open
+        onApply={vi.fn()}
+        onOpenChange={vi.fn()}
+        onReset={vi.fn()}
+        onSelect={vi.fn()}
+        options={options.slice(0, 2)}
+        selectedValue="sushi"
+        title="정렬 순서"
+      />,
+    )
+
+    expect(
+      screen
+        .getByRole('dialog', { name: '정렬 순서' })
+        .querySelector('div[style]'),
+    ).toHaveStyle({ height: '307px' })
   })
 
   it('calls handlers when option and footer buttons are pressed', () => {
@@ -69,5 +115,34 @@ describe('FilterBottomSheet', () => {
     expect(handleSelect).toHaveBeenCalledWith('noodle')
     expect(handleReset).toHaveBeenCalled()
     expect(handleApply).toHaveBeenCalled()
+  })
+
+  it('does not request close from overlay click or escape key', async () => {
+    const handleOpenChange = vi.fn()
+
+    render(
+      <FilterBottomSheet
+        open
+        onApply={vi.fn()}
+        onOpenChange={handleOpenChange}
+        onReset={vi.fn()}
+        onSelect={vi.fn()}
+        options={options}
+        selectedValue="sushi"
+        title="음식 장르 선택"
+      />,
+    )
+
+    const dialog = screen.getByRole('dialog', { name: '음식 장르 선택' })
+
+    fireEvent.click(dialog.parentElement!)
+
+    await waitFor(() => {
+      expect(dialog).toHaveFocus()
+    })
+
+    fireEvent.keyDown(dialog, { key: 'Escape' })
+
+    expect(handleOpenChange).not.toHaveBeenCalled()
   })
 })
