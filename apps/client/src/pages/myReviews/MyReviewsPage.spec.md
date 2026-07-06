@@ -96,7 +96,8 @@ MyReviewsPage
   ReviewWritableCard
   WrittenReviewCard
     ReviewMoreMenu
-    Dialog
+    ReviewDeleteConfirmDialog
+      Dialog
 ```
 
 ## Component Mapping
@@ -107,6 +108,8 @@ MyReviewsPage
   - `Button`
   - `Dialog`
   - `StarRating`
+- feature component:
+  - `ReviewDeleteConfirmDialog`
 - app shared component:
   - none
 - page-local component:
@@ -119,7 +122,6 @@ MyReviewsPage
 - icon:
   - `BackIcon`
   - `MenuIcon`
-  - `OrderCancelIcon`
 
 ## Navigation
 
