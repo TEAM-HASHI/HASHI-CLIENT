@@ -16,3 +16,11 @@ export const RESERVATION_STATUS_FILTER_OPTIONS = [
   label: string
   value: ReservationStatusFilterValue
 }[]
+
+export const checkIsReservationStatusFilterValue = (
+  value: string | null,
+): value is ReservationStatusFilterValue => {
+  return RESERVATION_STATUS_FILTER_OPTIONS.some(
+    (option) => option.value === value,
+  )
+}

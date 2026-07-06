@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import {
+  checkIsReservationStatusFilterValue,
   DEFAULT_RESERVATION_STATUS,
   type ReservationStatusFilterValue,
 } from '@/pages/myReservations/constants/reservationStatus'
@@ -14,8 +15,11 @@ const MOCK_USER_NAME = '권혁준'
 
 export const useMyReservationsPage = () => {
   const navigate = useNavigate()
-  const [selectedStatus, setSelectedStatus] =
-    useState<ReservationStatusFilterValue>(DEFAULT_RESERVATION_STATUS)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const statusParam = searchParams.get('status')
+  const selectedStatus = checkIsReservationStatusFilterValue(statusParam)
+    ? statusParam
+    : DEFAULT_RESERVATION_STATUS
   const [cancelReservationId, setCancelReservationId] = useState<string | null>(
     null,
   )
@@ -25,7 +29,7 @@ export const useMyReservationsPage = () => {
   )
 
   const handleStatusChange = (status: ReservationStatusFilterValue) => {
-    setSelectedStatus(status)
+    setSearchParams({ status })
     window.scrollTo({ top: 0 })
   }
 

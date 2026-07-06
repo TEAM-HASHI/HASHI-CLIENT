@@ -10,10 +10,14 @@ Jira: HASHI-73
 - 예약 리스트는 무한스크롤로 조회합니다.
 - 상단 사용자명/제목과 상태 chip filter는 스크롤해도 고정되어야 합니다.
 - status chip을 선택하면 해당 상태의 목록으로 바뀌고 리스트 스크롤 위치는 맨 위로 이동해야 합니다.
+- 선택된 status는 URL query param으로 관리해 뒤로가기/앞으로가기 시 이전 필터 상태가 복원되어야 합니다.
 
 ## Route
 
 - path: `/my-reservations`
+- query:
+  - `status?: IN_PROGRESS | UPCOMING | VISITED | CANCELED`
+  - 없거나 잘못된 값이면 `IN_PROGRESS`로 처리합니다.
 - path constant:
   - `ROUTES.myReservations`
 - route owner:
@@ -73,6 +77,8 @@ apps/client/src/pages/myReservations/
 - [ ] 선택된 chip은 active 스타일로 표시합니다.
 - [ ] chip 변경 시 해당 상태의 예약 목록을 조회합니다.
 - [ ] chip 변경 시 리스트 스크롤 위치를 맨 위로 이동합니다.
+- [ ] chip 변경 시 URL query의 `status` 값을 갱신합니다.
+- [ ] 브라우저 뒤로가기/앞으로가기 시 이전 `status` 필터 상태를 복원합니다.
 - [ ] 상단 고정 영역은 스크롤해도 고정됩니다.
   - 제목
   - 상태 chip filter
@@ -323,8 +329,12 @@ POST /api/v1/reservations/{reservationId}/cancel
 
 local state:
 
-- `selectedStatus`
 - `cancelReservationId`
+
+URL state:
+
+- `status` query param
+- query 값이 없거나 유효하지 않으면 `DEFAULT_RESERVATION_STATUS`를 사용합니다.
 
 server state:
 
@@ -516,6 +526,7 @@ types:
 ## Validation
 
 - 필터 chip은 항상 하나만 선택됩니다.
+- URL query의 `status`는 `ReservationStatusFilterValue`에 포함된 값만 유효합니다.
 - 서버에서 내려준 `status` 값으로 카드 타입을 분기합니다.
 - 서버에서 정의되지 않은 status 값이 내려오면 해당 item은 렌더링하지 않거나 error reporting 대상에 포함합니다.
 - 무한스크롤 요청 중복을 막습니다.
@@ -540,6 +551,8 @@ types:
 - `pnpm --filter @hashi/client lint`
 - chip 변경 시 status별 리스트가 바뀌는지 확인
 - chip 변경 시 리스트 스크롤 위치가 맨 위로 이동하는지 확인
+- chip 변경 시 URL query가 갱신되는지 확인
+- 브라우저 뒤로가기/앞으로가기 시 이전 필터 상태가 복원되는지 확인
 - 무한스크롤 sentinel 노출 시 다음 페이지 요청이 발생하는지 확인
 - nextCursor가 없을 때 추가 요청이 발생하지 않는지 확인
 - 방문 예정 카드에서 취소 확인 모달이 열리는지 확인
