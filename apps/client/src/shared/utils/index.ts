@@ -1,2 +1,7 @@
 export { cn } from './cn'
-export { formatDotDateTime, formatMonthDayTime } from './formatDateTime'
+export {
+  addDays,
+  formatDotDateTime,
+  formatMonthDay,
+  formatMonthDayTime,
+} from './formatDateTime'
