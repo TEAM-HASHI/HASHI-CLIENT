@@ -35,8 +35,8 @@ describe('HomePage', () => {
     expect(logo).toHaveAttribute('width', '73')
     expect(logo.getAttribute('src')).toBeTruthy()
     expect(
-      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색하기' }),
-    ).toHaveAttribute('readonly')
+      screen.getByRole('link', { name: '식당 또는 메뉴 검색하기' }),
+    ).toHaveAttribute('href', ROUTES.search)
     expect(
       screen.getByRole('region', { name: '맛집 큐레이션 배너' }),
     ).toBeInTheDocument()
@@ -74,17 +74,14 @@ describe('HomePage', () => {
     )
   })
 
-  it('moves to search page when the SearchField is clicked', () => {
+  it('moves to search page when the search entry is clicked', () => {
     renderHomePage()
 
-    const searchbox = screen.getByRole('searchbox', {
+    const searchEntry = screen.getByRole('link', {
       name: '식당 또는 메뉴 검색하기',
     })
-    const searchFieldContainer = searchbox.parentElement
 
-    expect(searchFieldContainer).not.toBeNull()
-
-    fireEvent.click(searchFieldContainer as HTMLElement)
+    fireEvent.click(searchEntry)
 
     expect(screen.getByTestId('location-pathname')).toHaveTextContent(
       ROUTES.search,

@@ -41,6 +41,18 @@
   - `apps/client/src/pages/home/HomePage.tsx`
 - spec path:
   - `apps/client/src/pages/home/HomePage.spec.md`
+- page-local components:
+  - `apps/client/src/pages/home/components/HomeLogo.tsx`
+  - `apps/client/src/pages/home/components/HomeSearchEntry.tsx`
+  - `apps/client/src/pages/home/components/HomeCurationSection.tsx`
+  - `apps/client/src/pages/home/components/HomeQuickMenuSection.tsx`
+  - `apps/client/src/pages/home/components/AnywhereReservationCta.tsx`
+  - `apps/client/src/pages/home/components/HotSnsRestaurantSection.tsx`
+  - `apps/client/src/pages/home/components/QuickMenuItem.tsx`
+- page-local hook:
+  - `apps/client/src/pages/home/hooks/useHomePage.ts`
+- page-local mock:
+  - `apps/client/src/pages/home/mocks/homeContent.mock.ts`
 - route registration:
   - `apps/client/src/app/router/path.ts`
   - `apps/client/src/app/router/routes.ts`
@@ -117,7 +129,7 @@ export const HomeLogo = () => {
 
 - query:
   - MVP에서는 서버 query 없이 page-local 정적 mock 데이터로 구현합니다.
-  - API가 확정되면 `homeBanners`, `hotSnsRestaurants` 같은 홈 전용 query로 교체합니다.
+  - API가 확정되면 `useHomePage` 내부의 `homeBanners`, `hotSnsRestaurants` 같은 홈 전용 query로 교체합니다.
   - query/mutation 코드는 HDS나 아이콘 패키지에 넣지 않습니다.
 - enabled condition:
   - MVP 정적 데이터: 해당 없음
@@ -200,18 +212,17 @@ export const HomeLogo = () => {
 
 ```text
 HomePage
-  HomeContent
-    HomeLogo
-    SearchEntry
-    MainCurationsSection
-      SectionHeading
-      HomeMainBanner
-    QuickLinkSection
-      QuickMenuItem x 4
-    AnywhereReservationCta
-    HotSnsRestaurantsSection
-      SectionHeading
-      HotSnsRestaurantItem x N
+  HomeLogo
+  HomeSearchEntry
+  HomeCurationSection
+    SectionHeading
+    Carousel
+  HomeQuickMenuSection
+    QuickMenuItem x 4
+  AnywhereReservationCta
+  HotSnsRestaurantSection
+    SectionHeading
+    Restaurant link x N
   AuthGateBottomSheet
 
 BottomNavigationLayout
@@ -231,7 +242,8 @@ BottomNavigationLayout
   - 홈 전용 하단 네비게이션
   - 홈 전용 로그인 유도 바텀시트
 - Page-local:
-  - `HomeContent` 또는 단순 content composition
+  - `useHomePage`
+  - 단순 content composition
 - Notes:
   - `RootLayout`이 `main`과 `app-mobile-frame`을 제공하므로 홈 페이지 내부에서 다시 `main` 또는 `app-mobile-frame`을 만들지 않습니다.
   - 홈 본문은 `BottomNavigationLayout`의 하단 네비게이션 padding을 고려합니다.
@@ -246,16 +258,15 @@ BottomNavigationLayout
   - 새 검색 input primitive
   - 새 검색 아이콘
 - Page-local:
-  - `SearchEntry`
+  - `HomeSearchEntry`
 - Behavior:
   - 사용자가 홈에서 검색어를 입력하는 플로우가 아니라면 `SearchField`를 실제 form input으로 운영하지 않습니다.
-  - `SearchField`를 `readOnly`로 렌더링하고, 클릭 또는 Enter 입력 시 검색 페이지로 이동합니다.
-  - 아이콘/패딩을 포함한 검색 박스 전체가 클릭 진입점이 되도록 page-local wrapper에서 click navigation을 처리합니다.
-  - 접근성 이름은 `식당 또는 메뉴 검색하기`로 제공합니다.
+  - `SearchField`를 `readOnly` 시각 요소로 렌더링하고, 실제 이동 컨트롤은 `ROUTES.search`로 이동하는 page-local `Link`가 담당합니다.
+  - 아이콘/패딩을 포함한 검색 박스 전체가 클릭 진입점이 되도록 `HomeSearchEntry`에서 링크 클릭 영역을 제공합니다.
+  - 접근 가능한 컨트롤 이름은 `식당 또는 메뉴 검색하기`로 제공합니다.
 - Risk:
-  - `SearchField` 내부는 `input type="search"`입니다. `onClick` navigation만 붙이면 입력 가능한 필드처럼 보이면서 실제 입력과 이동 동작이 충돌할 수 있습니다.
-  - 이 충돌을 줄이기 위해 홈에서는 `readOnly`를 반드시 지정하고, 실제 검색어 입력은 검색 페이지가 소유합니다.
-  - HDS `SearchField`의 `onClick`은 input에 전달되므로, 검색 영역 전체 클릭을 보장하려면 page-local wrapper에서 click을 받아야 합니다.
+  - `SearchField` 내부는 `input type="search"`입니다. `div onClick` navigation만 붙이면 의미상 클릭 가능한 컨트롤이 불명확합니다.
+  - 이 충돌을 줄이기 위해 홈에서는 `SearchField`를 `readOnly`와 `tabIndex={-1}`로 렌더링하고, 실제 검색어 입력은 검색 페이지가 소유합니다.
 
 ### 2. Main banner
 
@@ -265,8 +276,7 @@ BottomNavigationLayout
   - 새 HDS banner/carousel component
   - `packages/hds-ui`에 Hashi 큐레이션 copy가 박힌 banner component
 - Page-local:
-  - `MainCurationsSection`
-  - `HomeMainBanner`
+  - `HomeCurationSection`
 - Assets:
   - 최종 배너 이미지는 서버 응답의 `imageUrl`을 사용합니다.
   - API 전까지는 page-local mock 데이터와 임시 이미지 asset을 사용할 수 있습니다.
@@ -298,7 +308,7 @@ BottomNavigationLayout
   - 새 HDS quick-button component
   - 새 아이콘
 - Page-local:
-  - `QuickLinkSection`
+  - `HomeQuickMenuSection`
   - `QuickMenuItem`
 - Behavior:
   - 각 버튼은 `button`보다 `Link`를 우선합니다.
@@ -335,8 +345,7 @@ BottomNavigationLayout
   - HDS 식당 카드
   - SNS 데이터 shape에 묶인 HDS component
 - Page-local:
-  - `HotSnsRestaurantsSection`
-  - `HotSnsRestaurantItem`
+  - `HotSnsRestaurantSection`
 - Data:
   - 최소 필드:
     - `restaurantId`
@@ -386,14 +395,14 @@ BottomNavigationLayout
   - `useAuthStatus`
 - Page-local로 구현:
   - `HomeLogo`
-  - `SearchEntry`
-  - `MainCurationsSection`
-  - `HomeMainBanner`
-  - `QuickLinkSection`
+  - `HomeSearchEntry`
+  - `HomeCurationSection`
+  - `HomeQuickMenuSection`
   - `QuickMenuItem`
   - `AnywhereReservationCta`
-  - `HotSnsRestaurantsSection`
-  - `HotSnsRestaurantItem`
+  - `HotSnsRestaurantSection`
+  - `useHomePage`
+  - `mocks/homeContent.mock.ts`
 - 새로 만들지 않을 것:
   - HDS `HomeBanner`
   - HDS `RestaurantCard`
@@ -476,9 +485,10 @@ BottomNavigationLayout
 
 ## Implementation Notes
 
-- `HomePage.tsx`가 길어지면 `apps/client/src/pages/home/components/` 또는 `sections/` 아래로 page-local 컴포넌트를 분리합니다.
-- 정적 mock 데이터는 `apps/client/src/pages/home/constants.ts` 또는 `homeContent.ts` 같은 page-local 파일에 둡니다.
-- API 확정 후 query는 우선 `apps/client/src/pages/home/hooks/`에 둡니다.
+- `HomePage.tsx`는 page-local section 컴포넌트 조합과 auth gate 렌더링에 집중합니다.
+- 정적 mock 데이터는 `apps/client/src/pages/home/mocks/homeContent.mock.ts`에 둡니다.
+- 홈 데이터 반환, 검색 path, 어디든 예약 이동, 식당 상세 path 생성, 로그인 유도 바텀시트 상태는 `apps/client/src/pages/home/hooks/useHomePage.ts`가 담당합니다.
+- API 확정 후 query는 우선 `useHomePage` 내부에서 mock 데이터를 교체합니다.
 - 여러 페이지에서 같은 홈 콘텐츠 API를 재사용하게 될 때만 feature/shared 승격을 검토합니다.
 - route path 조합이 필요하면 문자열 직접 조합을 흩뿌리지 말고 page-local helper를 둡니다.
 - API 전 임시 식당 이미지 asset이 필요하면 page-local assets에 두고, API 전환 시 제거합니다.
