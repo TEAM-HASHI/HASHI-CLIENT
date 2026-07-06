@@ -24,6 +24,14 @@ HASHI Client 코드 작성 기준입니다. 현재 저장소의 generator와 기
 `gen:page`는 page 파일과 함께 page spec scaffold와 local `index.ts`를 생성합니다.
 `gen:ds-component`는 component 파일과 함께 `*.spec.md`, `*.stories.tsx`, local `index.ts`, public export를 생성합니다.
 
+## Import 경로
+
+- `apps/client/src` 내부 모듈을 import할 때는 상대 경로보다 `@/` alias를 우선 사용합니다.
+- 같은 폴더나 가까운 폴더라도 `@/pages/...`, `@/features/...`, `@/shared/...`, `@/app/...` 형태로 경로를 명확히 씁니다.
+- `apps/client/src/**/index.ts`처럼 같은 폴더의 public barrel을 구성하는 파일은 상대 export를 허용합니다.
+- `packages/*` 내부처럼 `@/` alias가 적용되지 않는 영역은 해당 패키지의 기존 import 기준을 따릅니다.
+- `apps/client/src`의 일반 `.ts`, `.tsx` 파일에서 상대 import를 쓰면 ESLint `no-restricted-imports` rule로 차단합니다.
+
 ## 컴포넌트
 
 - 컴포넌트는 arrow function으로 선언합니다.
@@ -56,9 +64,13 @@ export const InfoText = () => {
 - 유니온, 리터럴, 조합 타입은 `type`을 사용합니다.
 - Props 타입은 `Props` 접미사를 사용합니다.
 - 일반 `type` 이름에는 `Types` 접미사를 사용합니다.
+- TypeScript, IDE, 라이브러리 문서에서 `deprecated` 또는 사용 불가로 표시되는 심볼은 새 코드에서 사용하지 않습니다.
+- deprecated 심볼 경고가 보이면 경고 메시지나 공식 타입 선언이 제안하는 대체 심볼을 사용합니다.
+- `@deprecated`로 표시된 심볼 사용은 ESLint `@typescript-eslint/no-deprecated` rule로 차단합니다.
+- React form submit event는 deprecated 경고가 나는 `FormEvent`를 직접 import하지 않고, 필요한 경우 `SyntheticEvent<HTMLFormElement>` 또는 JSX prop의 문맥 타입 추론을 사용합니다.
 
 ```tsx
-import type { ReactNode } from 'react'
+import type { ReactNode, SyntheticEvent } from 'react'
 
 interface ButtonProps {
   size: ButtonSizeTypes
@@ -67,6 +79,10 @@ interface ButtonProps {
 
 type ButtonSizeTypes = 'sm' | 'md' | 'lg'
 type ThemeModeTypes = 'light' | 'dark'
+
+const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
+  event.preventDefault()
+}
 ```
 
 ## 함수 컨벤션

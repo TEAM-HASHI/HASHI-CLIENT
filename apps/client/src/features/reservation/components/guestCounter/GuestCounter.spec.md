@@ -73,13 +73,13 @@ apps/client/src/features/reservation/components/guestCounter/
 - [x] label은 왼쪽에 배치하고, minus/value/plus 영역은 오른쪽에 배치합니다.
 - [x] row content는 vertical padding `10px`을 가집니다.
 - [x] label과 value는 `typo-body-4 text-primary-200`를 사용합니다.
-- [x] minus/value/plus 영역은 horizontal gap `10px`을 사용합니다. 디자인 스펙의 `2.5` spacing은 Tailwind 기준 `gap-2.5`로 구현합니다.
+- [x] minus/value/plus 영역은 horizontal gap `6px`을 사용합니다.
 - [x] `MinusIcon`, `PlusIcon`은 `@hashi/hds-icons`를 사용하고 visual size는 `24px`로 고정합니다.
 - [x] `@hashi/hds-icons`에는 원형 테두리 포함 plus/minus 아이콘이 없으므로, 원형 테두리는 button style로 구현합니다.
 - [x] 아이콘 기본 색상은 black입니다.
 - [x] 아이콘과 원형 테두리는 누르고 있는 동안만 `primary-400` 색상으로 표시합니다.
 - [x] row 하단에는 `warm-gray-100`, weight `1px` underline을 표시합니다.
-- [x] value는 숫자로 표시하고 layout shift가 크지 않도록 최소 너비를 둡니다.
+- [x] value는 숫자로 표시하고 자릿수 변경 시 button 위치가 흔들리지 않도록 `25px` 고정 너비를 둡니다.
 
 ## UI Structure
 
@@ -170,10 +170,10 @@ GuestCounter
 - layout:
   - root는 full width row입니다.
   - content 영역은 `flex items-center justify-between py-2.5`를 사용합니다.
-  - controls 영역은 `flex items-center gap-2.5`를 사용합니다.
+  - controls 영역은 `flex shrink-0 items-center gap-[6px]`를 사용합니다.
 - typography:
   - label: `typo-body-4 text-primary-200`
-  - value: `typo-body-4 text-primary-200`
+  - value: `typo-body-4 text-primary-200 w-[25px] shrink-0 text-center tabular-nums`
 - icon:
   - button과 icon visual size는 `size-6`입니다.
   - button은 native user-agent appearance가 24px 원형 크기에 영향을 주지 않도록 `appearance-none`을 사용합니다.
@@ -188,8 +188,8 @@ GuestCounter
   - row는 부모 width에 맞춰 늘어납니다.
   - label이 길어지면 controls를 밀어내지 않도록 label 영역에 `min-w-0 truncate`를 적용합니다.
 - layout shift 방지 조건:
-  - value 영역은 최소 너비를 가져 한 자리와 두 자리 숫자 전환 시 controls 위치가 과하게 흔들리지 않게 합니다.
-  - icon button은 고정 `24px` box를 유지합니다.
+  - value 영역은 고정 `25px` 너비를 가져 한 자리와 두 자리 숫자 전환 시 controls 위치가 흔들리지 않게 합니다.
+  - controls와 icon button은 `shrink-0`으로 고정 크기를 유지합니다.
 
 ## Accessibility
 

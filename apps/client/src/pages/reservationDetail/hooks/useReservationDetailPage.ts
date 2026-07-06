@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 
-import { reservationNotices } from '../constants/reservationNotice'
+import { reservationNotices } from '@/pages/reservationDetail/constants/reservationNotice'
 import {
   reservationProgressSteps,
   reservationReceiptInfoItems,
   reservationRestaurant,
-} from '../mocks/reservationDetail.mock'
+} from '@/pages/reservationDetail/mocks/reservationDetail.mock'
 
 export const useReservationDetailPage = () => {
   const navigate = useNavigate()

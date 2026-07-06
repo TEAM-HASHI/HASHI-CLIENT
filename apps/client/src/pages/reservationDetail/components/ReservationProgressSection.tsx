@@ -1,6 +1,5 @@
+import { ReservationRestaurantSummary } from '@/pages/reservationDetail/components/ReservationRestaurantSummary'
 import { cn } from '@/shared/utils'
-
-import { ReservationRestaurantSummary } from './ReservationRestaurantSummary'
 
 export type ReservationProgressStatus = 'completed' | 'current' | 'pending'
 

@@ -1,13 +1,12 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
 
+import { ReservationDetailActionBar } from '@/pages/reservationDetail/components/ReservationDetailActionBar'
+import { ReservationNoticeSection } from '@/pages/reservationDetail/components/ReservationNoticeSection'
+import { ReservationProgressSection } from '@/pages/reservationDetail/components/ReservationProgressSection'
+import { ReservationReceiptInfoCard } from '@/pages/reservationDetail/components/ReservationReceiptInfoCard'
+import { useReservationDetailPage } from '@/pages/reservationDetail/hooks/useReservationDetailPage'
 import { cn } from '@/shared/utils'
-
-import { ReservationDetailActionBar } from './components/ReservationDetailActionBar'
-import { ReservationNoticeSection } from './components/ReservationNoticeSection'
-import { ReservationProgressSection } from './components/ReservationProgressSection'
-import { ReservationReceiptInfoCard } from './components/ReservationReceiptInfoCard'
-import { useReservationDetailPage } from './hooks/useReservationDetailPage'
 
 const actionBarSafeSpaceClassName =
   'pb-[calc(80px+var(--safe-area-bottom,0px))]'

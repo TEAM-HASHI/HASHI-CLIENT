@@ -10,7 +10,10 @@ describe('Calendar', () => {
   it('renders the visible month with weekday labels and month days', () => {
     render(<Calendar month={new Date(2026, 5, 1)} />)
 
-    expect(screen.getByRole('heading', { name: '6월' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: '2026 6월' })).toBeTruthy()
+    expect(screen.getByText('2026').className).toContain('typo-body-3')
+    expect(screen.getByText('2026').className).toContain('text-cool-gray-900')
+    expect(screen.getByText('6월').className).toContain('typo-sub-header-1')
     expect(screen.getAllByText('S')).toHaveLength(2)
     expect(screen.getAllByText('S')[0]?.className).toContain(
       'typo-sub-header-3',
@@ -28,6 +31,20 @@ describe('Calendar', () => {
     expect(screen.getByRole('button', { name: '2026년 6월 1일' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '2026년 6월 30일' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: '2026년 6월 31일' })).toBeNull()
+  })
+
+  it('supports custom year and month labels', () => {
+    render(
+      <Calendar
+        month={new Date(2026, 5, 1)}
+        formatYearLabel={(month) => `${month.getFullYear()}년`}
+        formatMonthLabel={(month) =>
+          String(month.getMonth() + 1).padStart(2, '0')
+        }
+      />,
+    )
+
+    expect(screen.getByRole('heading', { name: '2026년 06' })).toBeTruthy()
   })
 
   it('marks the selected date and blocks disabled date selection', () => {
