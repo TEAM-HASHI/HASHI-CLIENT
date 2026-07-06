@@ -1,13 +1,14 @@
 import { KeywordChipList } from '@/pages/search/components/KeywordChipList'
-import { recommendedSearchKeywords } from '@/pages/search/constants/searchFilters'
 
 interface SearchIdlePanelProps {
   recentSearchKeywords: string[]
+  recommendedSearchKeywords: readonly string[]
   onKeywordSelect: (keyword: string) => void
 }
 
 export const SearchIdlePanel = ({
   recentSearchKeywords,
+  recommendedSearchKeywords,
   onKeywordSelect,
 }: SearchIdlePanelProps) => {
   return (

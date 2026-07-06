@@ -68,7 +68,7 @@
 - [ ] 홈 검색 CTA에서 진입하면 검색창에 자동 focus를 주어 키보드가 노출됩니다.
 - [ ] `/search` 직접 진입 시에도 검색창에 focus를 줄 수 있지만, 브라우저/OS 정책으로 자동 키보드 노출이 제한될 수 있음을 허용합니다.
 - [ ] 검색 전에는 식당 리스트와 필터 바 대신 최근 검색어와 추천 검색어 영역을 보여줍니다.
-- [ ] 최근 검색어 영역은 사용자가 최근에 검색한 키워드를 보여줍니다.
+- [ ] 최근 검색어가 있으면 최근 검색어 영역은 사용자가 최근에 검색한 키워드를 보여줍니다.
 - [ ] 최근 검색어를 탭하면 해당 키워드를 검색어로 채우고 검색 결과 상태로 전환합니다.
 - [ ] 추천 검색어 영역은 운영팀이 지정한 키워드 또는 제품이 제공하는 추천 키워드를 보여줍니다.
 - [ ] 추천 검색어를 탭하면 해당 키워드를 검색어로 채우고 검색 결과 상태로 전환합니다.
@@ -112,12 +112,13 @@
   - 결과 영역에 재시도 가능한 에러 안내를 표시합니다.
 - empty state:
   - empty icon과 `검색된 식당이 없습니다.` 문구를 중앙에 표시합니다.
-- refetch condition:
+- query update condition:
   - 검색 제출
   - 최근 검색어 탭
   - 추천 검색어 탭
   - 정렬 필터 적용
   - 음식 장르 필터 적용
+  - 동일한 검색 파라미터를 다시 제출하면 TanStack Query cache 정책에 따라 새 요청을 강제하지 않을 수 있습니다.
 
 ### Mutation
 
@@ -135,8 +136,11 @@
 ### Static Data
 
 - recommended search keywords:
-  - 초기 구현은 page-local 상수로 시작합니다.
-  - 운영 도구나 API가 생기면 query로 승격합니다.
+  - 초기 구현은 `mocks/searchContent.mock.ts`의 page-local mock content로 시작합니다.
+  - 운영 도구나 API가 생기면 `useSearchPage` 내부에서 query로 교체합니다.
+- search restaurant fixtures:
+  - 초기 구현은 `mocks/searchRestaurants.mock.ts`의 page-local mock data로 시작합니다.
+  - API endpoint가 확정되면 `api/searchRestaurants.ts`에서 실제 request로 교체합니다.
 
 ## User Flow
 
@@ -151,6 +155,9 @@
 
 ## State
 
+- owner:
+  - `SearchPage`는 UI composition만 담당합니다.
+  - `useSearchPage`는 검색어 제출, 최근 검색어 저장, 필터 pending/apply/reset, 바텀시트 open state, navigation, query orchestration을 담당합니다.
 - local state:
   - search input value
   - sort bottom sheet open state
@@ -211,6 +218,7 @@
 
 ```text
 SearchPage
+  useSearchPage
   SearchHeader
     BackButton
     SearchField
@@ -250,6 +258,13 @@ SearchPage
   - `RestaurantResultItem`
   - `SearchEmptyState`
   - `SearchErrorState`
+- page-local hook:
+  - `useSearchPage`
+  - `useRecentSearchKeywords`
+  - `useSearchRestaurantsQuery`
+- page-local mock:
+  - `mocks/searchContent.mock.ts`
+  - `mocks/searchRestaurants.mock.ts`
 - icon:
   - `BackIcon`
   - `TapDownIcon`: 설계서의 `ic_chevron_down`에 해당하는 기존 HDS 아이콘
@@ -264,7 +279,9 @@ SearchPage
 - `SearchField`를 사용합니다. 검색 실행, 최근 검색어, 추천 검색어, query 동기화는 HDS 범위가 아니므로 page가 소유합니다.
 - `IconButton size="xs"`와 `BackIcon`을 조합해 뒤로가기 버튼을 구현합니다.
 - `Chip`을 최근 검색어와 추천 검색어 pill에 사용합니다. 칩 목록의 horizontal scroll과 키워드 선택 동작은 page-local `KeywordChipList`가 소유합니다.
-- `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 `SearchPage`가 주입합니다.
+- `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 `useSearchPage`가 주입합니다.
+- 검색/필터/바텀시트 상태와 이동 로직은 `SearchPage`에 직접 두지 않고 `useSearchPage`가 주입합니다.
+- API 연동 전 임시 식당 데이터와 추천 검색어는 `mocks/`에 둡니다. 필터 option constant와 mock data를 섞지 않습니다.
 - `BottomSheet`를 직접 새로 만들지 않습니다. overlay click과 Escape close는 기존 `BottomSheet`의 접근성 계약을 따릅니다.
 - `Button`을 바텀시트 footer 액션에 사용합니다.
 - `Header`는 사용하지 않습니다. HDS `Header` spec에서 `bar_search_back_button`은 `IconButton` + `SearchField` 조합으로 분류되어 `Header` v1 범위에서 제외되어 있습니다.
@@ -278,13 +295,13 @@ SearchPage
 ### Existing Files To Reuse
 
 - `apps/client/src/pages/search/SearchPage.tsx`
-  - page composition과 route-level state orchestration을 담당합니다.
+  - page composition을 담당합니다.
 - `apps/client/src/pages/search/index.ts`
   - 기존 page export를 유지합니다.
 - `apps/client/src/shared/components/filterBottomSheet/FilterBottomSheet.tsx`
   - 정렬/음식 장르 바텀시트에 재사용합니다.
 - `apps/client/src/shared/api/request.ts`
-  - 검색 API endpoint 함수가 필요하면 이 request helper를 통해 호출합니다.
+  - 실제 검색 API endpoint 함수가 필요해지면 이 request helper를 통해 호출합니다.
 - `apps/client/src/shared/lib/queryClient.ts`
   - 검색 query는 기존 TanStack Query provider/client 정책을 따릅니다.
 
@@ -312,12 +329,18 @@ SearchPage
   - 첨부 설계의 행거 형태 empty image asset입니다.
 - `apps/client/src/pages/search/hooks/useRecentSearchKeywords.ts`
   - localStorage 기반 최근 검색어 읽기/저장/중복 이동/최대 10개 제한을 담당합니다.
+- `apps/client/src/pages/search/hooks/useSearchPage.ts`
+  - 검색 page의 route-level orchestration, navigation, filter state, query params, mock content 주입을 담당합니다.
 - `apps/client/src/pages/search/hooks/useSearchRestaurantsQuery.ts`
   - 검색 결과 query key, enabled 조건, request params mapping을 담당합니다.
 - `apps/client/src/pages/search/api/searchRestaurants.ts`
   - 검색 API endpoint 함수와 response mapping을 담당합니다.
 - `apps/client/src/pages/search/constants/searchFilters.ts`
-  - 정렬 옵션, 음식 장르 옵션, 추천 검색어 초기 상수를 둡니다.
+  - 정렬 옵션, 음식 장르 옵션을 둡니다.
+- `apps/client/src/pages/search/mocks/searchContent.mock.ts`
+  - API 연동 전 추천 검색어 mock content를 둡니다.
+- `apps/client/src/pages/search/mocks/searchRestaurants.mock.ts`
+  - API 연동 전 검색 결과 mock data를 둡니다.
 - `apps/client/src/pages/search/types.ts`
   - page-local search option value, restaurant result item type을 둡니다.
 

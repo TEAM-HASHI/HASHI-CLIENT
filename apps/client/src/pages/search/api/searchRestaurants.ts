@@ -1,4 +1,4 @@
-import { searchRestaurantFixtures } from '@/pages/search/constants/searchFilters'
+import { searchRestaurantFixtures } from '@/pages/search/mocks/searchRestaurants.mock'
 import type {
   SearchRestaurant,
   SearchRestaurantsParams,
