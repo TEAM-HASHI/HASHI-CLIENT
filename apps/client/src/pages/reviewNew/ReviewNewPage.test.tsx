@@ -136,7 +136,10 @@ describe('ReviewNewPage', () => {
     expect(
       screen.getByRole('list', { name: '선택된 리뷰 사진 목록' }),
     ).toHaveClass(
+      'max-w-full',
+      'min-w-0',
       'overflow-x-auto',
+      'overflow-y-hidden',
       '[scrollbar-width:none]',
       '[-ms-overflow-style:none]',
       '[&::-webkit-scrollbar]:hidden',

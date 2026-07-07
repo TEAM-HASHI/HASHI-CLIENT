@@ -29,7 +29,6 @@ export const ReviewSubmitBar = ({
       className={cn('flex w-full justify-center px-5 pt-[17px]', className)}
     >
       <Button
-        className="max-w-[353px]"
         disabled={disabled}
         loading={loading}
         size="lg"

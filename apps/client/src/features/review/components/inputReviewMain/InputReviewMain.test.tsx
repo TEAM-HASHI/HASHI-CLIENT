@@ -50,7 +50,7 @@ describe('InputReviewMain', () => {
 
     expect(
       screen.getByRole('button', { name: '사진을 첨부해 주세요. (선택)' }),
-    ).toHaveClass('h-[130px]', 'max-w-[353px]', 'rounded-[10px]')
+    ).toHaveClass('h-[130px]', 'w-full', 'max-w-full', 'rounded-[10px]')
     expect(screen.getByLabelText('리뷰 사진 첨부')).toHaveAttribute(
       'accept',
       'image/*',
@@ -258,7 +258,10 @@ describe('InputReviewMain', () => {
     expect(
       screen.getByRole('list', { name: '선택된 리뷰 사진 목록' }),
     ).toHaveClass(
+      'max-w-full',
+      'min-w-0',
       'overflow-x-auto',
+      'overflow-y-hidden',
       '[scrollbar-width:none]',
       '[-ms-overflow-style:none]',
       '[&::-webkit-scrollbar]:hidden',
@@ -266,6 +269,9 @@ describe('InputReviewMain', () => {
     expect(
       screen.getByRole('img', { name: 'review-1.png 미리보기' }),
     ).toHaveAttribute('src', 'blob:review-1.png')
+    expect(
+      screen.getByRole('img', { name: 'review-1.png 미리보기' }),
+    ).toHaveClass('rounded-[10px]')
     expect(
       screen.getByRole('img', { name: 'review-2.png 미리보기' }),
     ).toHaveAttribute('src', 'blob:review-2.png')
@@ -303,22 +309,20 @@ describe('InputReviewMain', () => {
     expect(screen.getByText('10자 이상')).toHaveClass('text-warm-gray-300')
   })
 
-  it('shows helper text after focus when the review text is shorter than ten characters', () => {
+  it('shows helper text after blur when the review text is shorter than ten characters', () => {
     render(<InputReviewMain />)
 
-    fireEvent.focus(screen.getByLabelText('리뷰 내용'))
+    fireEvent.blur(screen.getByLabelText('리뷰 내용'))
 
     expect(screen.getByText('10자 이상 작성해주세요.')).toHaveClass(
       'text-primary-400',
     )
   })
 
-  it('shows helper text based on text length after the textarea is focused', () => {
+  it('shows helper text based on text length after text is provided', () => {
     render(<InputReviewMain maxLength={3} value="abcd" />)
 
     const textarea = screen.getByLabelText('리뷰 내용')
-
-    fireEvent.focus(textarea)
 
     expect(textarea).toHaveValue('abc')
     expect(screen.getByText('글자 수 제한을 초과했어요.')).toHaveClass(

@@ -4,7 +4,7 @@
 
 `InputReviewMain`은 리뷰 작성/수정 흐름에서 사진 첨부 입력과 리뷰 본문 textarea를 묶어 보여주는 review feature 전용 입력 컴포넌트입니다.
 
-이 컴포넌트는 사진 선택 트리거, 사진 장당 5MB 초과 파일 거절, 사진 최대 10장 초과 파일 거절, 사진 오류 메시지, 리뷰 본문 입력, 글자 수 표시, 리뷰 본문 helper text 표시, 입력 callback 호출을 담당합니다. 사진 업로드, form submit, API mutation, 저장 버튼 활성화 판단은 호출부가 소유합니다.
+이 컴포넌트는 사진 첨부 영역 조합, 리뷰 본문 입력, 글자 수 표시, 리뷰 본문 helper text 표시, 입력 callback 호출을 담당합니다. 사진 선택 트리거, 사진 장당 5MB 초과 파일 거절, 사진 최대 10장 초과 파일 거절, 사진 오류 메시지, 사진 미리보기 object URL 관리는 page-local 하위 컴포넌트와 hook으로 분리합니다. 사진 업로드, form submit, API mutation, 저장 버튼 활성화 판단은 호출부가 소유합니다.
 
 ## Component Type
 
@@ -76,7 +76,7 @@ InputReviewMain
     text
       title
       description
-    photo area
+    ReviewPhotoUploader
       empty state: photo input button
       selected state: horizontal preview list
         photo add button
@@ -136,8 +136,9 @@ InputReviewMain
 
 ## State
 
-- local state: file input ref, generated id, textarea focus 여부, photo object URL 목록, 사진 용량 오류 메시지를 사용합니다.
-- derived state: `isReviewTextFocused || value.length > 0`, `value.length < 10`, `value.length > maxLength`
+- local state: generated id, textarea blur 여부를 사용합니다.
+- photo uploader local state: file input ref, photo object URL 목록, 사진 용량/개수 오류 메시지를 사용합니다.
+- derived state: `hasReviewTextBlurred || value.length > 0`, `value.length < 10`, `value.length > maxLength`
 - controlled state: `value`
 - uncontrolled state: 없음
 - loading state: 없음
@@ -156,7 +157,7 @@ InputReviewMain
 8. 이미지 미리보기의 삭제 버튼을 누르면 사진 오류 메시지를 초기화하고, 해당 file index를 제외한 다음 `photoFiles` 배열을 `onPhotoFilesChange`에 전달합니다.
 9. 사용자가 textarea를 변경하면 HDS `Textarea`가 `maxLength` 기준으로 제한한 다음 `onValueChange?.(nextValue)`를 호출합니다.
 10. 입력하지 않은 빈 상태에서는 helper text를 `10자 이상`으로 표시합니다.
-11. textarea가 focus되었거나 본문이 입력된 뒤 `value.length < 10`이면 helper text는 `10자 이상 작성해주세요.`입니다.
+11. textarea가 blur되었거나 본문이 입력된 뒤 `value.length < 10`이면 helper text는 `10자 이상 작성해주세요.`입니다.
 12. 호출부에서 전달한 `value.length > maxLength`이면 helper text는 `글자 수 제한을 초과했어요.`입니다.
 13. `disabled=true`이면 사진 첨부 트리거, 이미지 삭제 버튼, textarea는 입력을 받지 않습니다.
 
@@ -183,10 +184,10 @@ InputReviewMain
 - styling 기준: Tailwind CSS utility class, HDS token class, HDS `Textarea`를 사용합니다.
 - layout: root `section`은 full width column layout입니다.
 - spacing: Figma 기준 root `px-5 py-7`, title 영역 `gap-1`, content 영역 `gap-5`를 사용합니다.
-- photo input: width `353px`, height `130px`, border `warm-gray-100`, radius `10px`, icon/text center alignment를 사용합니다.
-- selected photo list: width `353px`, height `130px` tile, hidden scrollbar horizontal scroll, selected image `object-cover`를 사용합니다.
-- textarea: HDS `Textarea`를 사용하고, 본문 text style은 `textareaClassName="typo-long-body-1"`로 주입합니다.
-- responsive: 부모 너비를 따르고 내부 control은 `max-w-[353px]`를 유지합니다.
+- photo input: parent width, height `130px`, `max-w-full`, border `warm-gray-100`, radius `10px`, icon/text center alignment를 사용합니다.
+- selected photo list: parent width, `max-w-full`, `min-w-0`, `overflow-x-auto`, `overflow-y-hidden`, hidden scrollbar horizontal scroll, 130px tile, selected image `rounded-[10px] object-cover`를 사용합니다.
+- textarea: HDS `Textarea`를 사용하고, 본문 text style은 `textareaClassName="typo-long-body-1"`로 주입합니다. Figma에 없는 추가 focus border는 노출하지 않습니다.
+- responsive: 부모 너비를 따르고 내부 control은 고정 max width 없이 `w-full`, `max-w-full`, `min-w-0`, `overflow-x-hidden` 조합으로 viewport 밖으로 밀리지 않게 합니다.
 - layout shift 방지 조건: 사진 첨부 영역은 `h-[130px]`, textarea는 HDS min-height `230px`를 유지합니다.
 
 ## Accessibility
@@ -201,9 +202,9 @@ InputReviewMain
 
 ## Dependencies
 
-- components: `Textarea` from `@hashi/hds-ui`
-- icons: `CameraIcon`, `CloseSmallIcon` from `@hashi/hds-icons`
-- hooks: `useId`, `useRef`
+- components: `Textarea` from `@hashi/hds-ui`, `ReviewPhotoUploader`
+- icons: `CameraIcon`, `CloseSmallIcon` from `@hashi/hds-icons` in `ReviewPhotoUploader`
+- hooks: `useId`, `useState`, `useReviewPhotoUploader`
 - constants: `reviewInputRules` from `@/features/review/constants`
 - utils: `getReviewTextHelperText` from `@/features/review/utils`
 - APIs: 없음

@@ -7,8 +7,9 @@
 
 ## Layout
 
-- 모바일 기준 폭 393px 화면을 중앙 정렬한다.
-- 상단에는 `ReviewHeader`를 고정 흐름의 첫 영역으로 노출한다.
+- 앱 모바일 프레임 기준으로 부모 viewport 너비를 따르며, 내부 영역은 고정 `max-width: 393px`에 의존하지 않는다.
+- 상단에는 `ReviewHeader`를 fixed top 영역으로 노출하고, 본문 form은 header 높이만큼 top padding을 둔다.
+- 페이지와 form 내부 영역은 `min-w-0`, `overflow-x-hidden`을 사용해 작은 viewport에서도 가로 overflow가 생기지 않게 한다.
 - 본문은 다음 순서로 배치한다.
   - `ReviewReservationSummary`
   - `InputReviewRate`

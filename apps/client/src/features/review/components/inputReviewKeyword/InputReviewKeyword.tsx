@@ -31,7 +31,6 @@ export const InputReviewKeyword = ({
     <section
       {...props}
       className={cn('flex flex-col items-start gap-5 px-5 py-7', className)}
-      )}
     >
       <div className="flex w-full flex-col items-start gap-1 break-words">
         <p className="typo-sub-header-1 text-primary-200 w-full">

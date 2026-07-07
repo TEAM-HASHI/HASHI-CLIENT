@@ -29,18 +29,20 @@ export const ReviewNewPage = () => {
   } = useReviewForm()
 
   return (
-    <main
+    <section
       aria-label="리뷰 작성"
-      className="flex min-h-dvh w-full justify-center bg-white"
+      className="flex min-h-dvh w-full min-w-0 justify-center bg-white"
     >
-      <div className="flex min-h-dvh w-full max-w-[393px] flex-col bg-white">
-        <ReviewHeader onBackClick={() => navigate(-1)} />
+      <div className="flex min-h-dvh w-full min-w-0 flex-col overflow-x-hidden bg-white">
+        <div className="app-mobile-fixed-top z-floating">
+          <ReviewHeader onBackClick={() => navigate(-1)} />
+        </div>
         <form
           aria-label="리뷰 작성 폼"
-          className="flex min-h-0 flex-1 flex-col"
+          className="flex min-h-0 min-w-0 flex-1 flex-col pt-18.75"
           onSubmit={handleSubmit}
         >
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
             <ReviewReservationSummary {...REVIEW_RESERVATION_SUMMARY} />
             <InputReviewRate
               value={rating}
@@ -65,6 +67,6 @@ export const ReviewNewPage = () => {
           />
         </form>
       </div>
-    </main>
+    </section>
   )
 }
