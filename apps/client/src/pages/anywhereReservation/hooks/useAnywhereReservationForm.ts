@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 import {
   INITIAL_RESERVATION_GUEST_COUNTS,
@@ -14,15 +14,13 @@ import {
   createMonthStart,
   formatDateToLocalDateString,
 } from '@/shared/utils/date'
-import type { ReservationRestaurant } from '@/pages/restaurantReservationNew/hooks/useReservationRestaurant'
 
-interface UseRestaurantReservationFormParams {
-  restaurant: ReservationRestaurant
-}
-
-export interface ReservationDraft {
-  restaurantId: string
+export interface AnywhereReservationDraft {
+  source: 'anywhere'
+  restaurantId: null
   restaurantName: string
+  restaurantAddress: string
+  restaurantImageUrl: null
   guestName: string
   guests: ReservationGuestCounts
   date: string
@@ -30,9 +28,21 @@ export interface ReservationDraft {
   requestNote: string
 }
 
-export const useRestaurantReservationForm = ({
-  restaurant,
-}: UseRestaurantReservationFormParams) => {
+const ANYWHERE_RESERVATION_BUSINESS_HOURS = {
+  open: '11:00',
+  close: '20:00',
+}
+
+const ANYWHERE_RESERVATION_INTERVAL_MINUTES = 30
+
+const ANYWHERE_RESERVATION_TIME_SLOTS = createReservationTimeSlots(
+  ANYWHERE_RESERVATION_BUSINESS_HOURS,
+  ANYWHERE_RESERVATION_INTERVAL_MINUTES,
+)
+
+export const useAnywhereReservationForm = () => {
+  const [restaurantName, setRestaurantName] = useState('')
+  const [restaurantAddress, setRestaurantAddress] = useState('')
   const [guestName, setGuestName] = useState('')
   const [guestCounts, setGuestCounts] = useState<ReservationGuestCounts>(
     INITIAL_RESERVATION_GUEST_COUNTS,
@@ -44,21 +54,16 @@ export const useRestaurantReservationForm = ({
   const [selectedTime, setSelectedTime] = useState<string>()
   const [requestNote, setRequestNote] = useState('')
 
-  const timeSlots = useMemo(
-    () =>
-      createReservationTimeSlots(
-        restaurant.businessHours,
-        restaurant.reservationIntervalMinutes,
-      ),
-    [restaurant.businessHours, restaurant.reservationIntervalMinutes],
-  )
-
   const totalGuestCount =
     guestCounts.adult + guestCounts.teen + guestCounts.child
+  const isRestaurantNameValid = restaurantName.trim().length > 0
+  const isRestaurantAddressValid = restaurantAddress.trim().length > 0
   const isGuestNameValid = guestName.trim().length > 0
   const isSelectedDateValid =
     selectedDate !== undefined && !checkIsTodayOrBefore(selectedDate)
   const canSubmit =
+    isRestaurantNameValid &&
+    isRestaurantAddressValid &&
     isGuestNameValid &&
     totalGuestCount > 0 &&
     isSelectedDateValid &&
@@ -74,14 +79,19 @@ export const useRestaurantReservationForm = ({
     }))
   }
 
-  const createReservationDraft = (): ReservationDraft | undefined => {
+  const createAnywhereReservationDraft = ():
+    | AnywhereReservationDraft
+    | undefined => {
     if (!canSubmit || selectedDate === undefined || !selectedTime) {
       return undefined
     }
 
     return {
-      restaurantId: restaurant.id,
-      restaurantName: restaurant.name,
+      source: 'anywhere',
+      restaurantId: null,
+      restaurantName: restaurantName.trim(),
+      restaurantAddress: restaurantAddress.trim(),
+      restaurantImageUrl: null,
       guestName: guestName.trim(),
       guests: guestCounts,
       date: formatDateToLocalDateString(selectedDate),
@@ -92,6 +102,14 @@ export const useRestaurantReservationForm = ({
 
   return {
     fields: {
+      restaurantName: {
+        value: restaurantName,
+        onValueChange: setRestaurantName,
+      },
+      restaurantAddress: {
+        value: restaurantAddress,
+        onValueChange: setRestaurantAddress,
+      },
       guestName: {
         value: guestName,
         onValueChange: setGuestName,
@@ -118,13 +136,13 @@ export const useRestaurantReservationForm = ({
       },
     },
     timeSelector: {
-      timeSlots,
+      timeSlots: ANYWHERE_RESERVATION_TIME_SLOTS,
       selectedTime,
       onTimeSelect: setSelectedTime,
     },
     submit: {
       canSubmit,
-      createReservationDraft,
+      createAnywhereReservationDraft,
     },
   }
 }
