@@ -43,7 +43,7 @@
 
 - [x] `저장하기` 텍스트를 가진 버튼을 표시합니다.
 - [x] 버튼은 HDS `Button`을 사용합니다.
-- [x] 버튼 width는 부모 기준 full이고, Figma 기준 content width `353px`를 따릅니다.
+- [x] 버튼 width는 부모 기준 full이며, 호출부의 layout padding 안에서 사용 가능한 너비를 채웁니다.
 - [x] 버튼 height는 Figma 기준 `46px`입니다.
 - [x] disabled 상태를 지원하며 native `disabled`를 버튼에 전달합니다.
 - [x] loading 상태를 지원하며 중복 클릭을 차단합니다.
@@ -125,9 +125,9 @@ ReviewSubmitBar
 
 - styling 기준: Tailwind CSS utility class, HDS token class, HDS `Button`을 사용합니다.
 - layout: root `footer`는 full width bottom bar 영역입니다.
-- spacing: Figma 기준 root `px-5 pt-[17px]`, button width `353px`, height `46px`를 사용합니다.
+- spacing: Figma 기준 root `px-5 pt-[17px]`, button height `46px`를 사용합니다.
 - disabled visual: HDS `Button`의 `secondary-200` background와 `warm-gray-300` text를 사용합니다.
-- responsive: root는 부모 너비를 따르고 버튼은 `w-full max-w-[353px]`를 유지합니다.
+- responsive: root와 버튼은 부모 너비를 따르고 고정 max width를 두지 않습니다.
 - layout shift 방지 조건: loading/disabled 상태에서도 버튼 높이 `46px`를 유지합니다.
 
 ## Accessibility
