@@ -1,6 +1,6 @@
 import { Carousel } from '@hashi/hds-ui'
 
-import type { HomeBanner } from '../homeContent'
+import type { HomeBanner } from '@/pages/home/homeContent'
 
 interface HomeCurationSectionProps {
   banners: HomeBanner[]

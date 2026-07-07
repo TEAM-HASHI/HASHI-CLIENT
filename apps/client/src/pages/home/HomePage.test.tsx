@@ -4,8 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-
-import { HomePage } from './HomePage'
+import { HomePage } from '@/pages/home/HomePage'
 
 const LocationProbe = () => {
   const location = useLocation()

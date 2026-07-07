@@ -8,10 +8,13 @@ import {
   mockHomeBanners,
   mockHotSnsRestaurants,
   mockQuickLinks,
-} from '../mocks/homeContent.mock'
+} from '@/pages/home/mocks/homeContent.mock'
 
 const getRestaurantDetailPath = (restaurantId: string) => {
-  return ROUTES.restaurantDetail.replace(':restaurantId', restaurantId)
+  return ROUTES.restaurantDetail.replace(
+    ':restaurantId',
+    encodeURIComponent(restaurantId),
+  )
 }
 
 export const useHomePage = () => {

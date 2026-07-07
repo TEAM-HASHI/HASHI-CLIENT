@@ -6,8 +6,8 @@ import {
   TodayRestaurantIcon,
 } from '@hashi/hds-icons'
 
-import type { HomeQuickLink } from '../homeContent'
-import { QuickMenuItem } from './QuickMenuItem'
+import { QuickMenuItem } from '@/pages/home/components/QuickMenuItem'
+import type { HomeQuickLink } from '@/pages/home/homeContent'
 
 const quickLinkIcon = {
   hashiPick: <HashiPickIcon />,
@@ -25,7 +25,7 @@ export const HomeQuickMenuSection = ({
 }: HomeQuickMenuSectionProps) => {
   return (
     <nav aria-label="주요 기능" className="mt-6">
-      <ul className="flex justify-center gap-10">
+      <ul className="grid grid-cols-4">
         {quickLinks.map(({ id, label, to }) => (
           <li key={id}>
             <QuickMenuItem icon={quickLinkIcon[id]} label={label} to={to} />

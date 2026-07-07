@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-import type { HotSnsRestaurant } from '../homeContent'
+import type { HotSnsRestaurant } from '@/pages/home/homeContent'
 
 interface HotSnsRestaurantSectionProps {
   getRestaurantDetailPath: (restaurantId: string) => string

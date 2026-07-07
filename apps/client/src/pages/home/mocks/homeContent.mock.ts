@@ -4,7 +4,7 @@ import type {
   HomeBanner,
   HomeQuickLink,
   HotSnsRestaurant,
-} from '../homeContent'
+} from '@/pages/home/homeContent'
 
 const createMockBannerImage = (label: string, backgroundColor: string) => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="360" viewBox="0 0 720 360"><rect width="720" height="360" rx="32" fill="${backgroundColor}"/><text x="52" y="162" fill="#273033" font-family="sans-serif" font-size="42" font-weight="700">${label}</text><text x="52" y="216" fill="#5f696d" font-family="sans-serif" font-size="24" font-weight="500">API 연결 전 임시 이미지</text></svg>`

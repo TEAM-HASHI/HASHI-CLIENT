@@ -313,6 +313,8 @@ BottomNavigationLayout
 - Behavior:
   - 각 버튼은 `button`보다 `Link`를 우선합니다.
   - 아이콘은 장식으로 처리하고 텍스트 label이 접근 가능한 이름이 되게 합니다.
+- Layout:
+  - 최소 모바일 폭에서도 4개 퀵 메뉴가 부모 폭을 넘지 않도록 `grid-cols-4`로 동일한 4칸을 나눕니다.
 - Notes:
   - 현재 아이콘 SVG 자체에 고정 fill/stroke가 들어 있으므로 색상 변경이 필요하면 HDS icon 수정 전에 디자인 요구사항을 재확인합니다.
 
@@ -355,6 +357,7 @@ BottomNavigationLayout
     - `imageAlt`
   - 이동 대상은 식당 상세로 통일합니다.
   - `ROUTES.restaurantDetail`에 `restaurantId`를 주입하는 page-local path helper가 필요합니다.
+  - `restaurantId`는 URL path segment로 들어가므로 `encodeURIComponent`로 인코딩합니다.
 - Behavior:
   - 항목 전체를 링크로 만들고, 제목과 요약은 1줄 말줄임으로 처리합니다.
   - 이미지 alt는 식당명만 반복하지 말고 이미지 의미가 있으면 `돈카츠 후쿠마루 도쿄역 야에스점 대표 메뉴`처럼 작성합니다.
