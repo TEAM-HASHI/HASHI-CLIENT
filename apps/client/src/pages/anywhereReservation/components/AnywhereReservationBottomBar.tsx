@@ -10,7 +10,7 @@ export const AnywhereReservationBottomBar = ({
   formId,
 }: AnywhereReservationBottomBarProps) => {
   return (
-    <div className="app-mobile-fixed-bottom z-20 bg-white px-5 pt-[17px] pb-[calc(17px+var(--safe-area-bottom,0px))]">
+    <div className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-[17px] pb-[calc(17px+var(--safe-area-bottom,0px))]">
       <Button
         disabled={disabled}
         form={formId}

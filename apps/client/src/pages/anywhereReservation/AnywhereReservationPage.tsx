@@ -37,9 +37,9 @@ export const AnywhereReservationPage = () => {
   }
 
   return (
-    <div className="min-h-dvh bg-white pb-[128px]">
+    <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
       <Header
-        className="sticky top-0 z-10"
+        className="app-mobile-fixed-top z-fixed fixed!"
         leftAction={
           <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
             <BackIcon className="size-6" />
