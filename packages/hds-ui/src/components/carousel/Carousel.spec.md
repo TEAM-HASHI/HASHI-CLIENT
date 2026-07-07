@@ -368,7 +368,7 @@ Figma example mapping:
 - controlled `index` 변경 같은 programmatic 이동은 native smooth scroll 기준으로 처리하되, native swipe는 브라우저의 스크롤 동작을 따릅니다.
 - reduced motion 환경에서는 programmatic 이동을 즉시 처리합니다.
 - scroll settle 계산은 item width와 viewport scroll position을 기준으로 합니다.
-- scroll settle delay는 indicator 반응성을 위해 짧게 유지합니다.
+- scroll settle delay는 indicator 반응성을 위해 30ms로 짧게 유지합니다.
 - resize 후에도 현재 index가 유지되도록 `ResizeObserver`로 viewport width 변경을 감지해 viewport 기준 위치를 다시 맞춥니다.
 - resize 보정은 화면 흔들림을 줄이기 위해 smooth scroll이 아닌 `auto` scroll로 처리합니다.
 - `defaultIndex`와 controlled `index`가 item 범위를 벗어나면 사용 가능한 범위로 보정합니다.

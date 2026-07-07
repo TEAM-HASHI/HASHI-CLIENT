@@ -24,6 +24,8 @@ const renderHomePage = () => {
 describe('HomePage', () => {
   afterEach(() => {
     cleanup()
+    window.sessionStorage.clear()
+    document.body.style.overflow = ''
   })
 
   it('renders the home landing content and primary navigation links', () => {
@@ -96,5 +98,16 @@ describe('HomePage', () => {
     expect(
       screen.getByRole('link', { name: /숯불 규카츠 미야비 긴자 본점/ }),
     ).toHaveAttribute('href', '/restaurants/gyukatsu-miyabi-ginza')
+  })
+
+  it('shows the auth gate only once in the same browser session', () => {
+    renderHomePage()
+
+    expect(screen.getByText('간편하게 로그인하고')).toBeInTheDocument()
+
+    cleanup()
+    renderHomePage()
+
+    expect(screen.queryByText('간편하게 로그인하고')).not.toBeInTheDocument()
   })
 })

@@ -72,7 +72,7 @@ type CarouselComponent = {
   Indicator: (props: CarouselIndicatorProps) => ReactElement | null
 }
 
-const SCROLL_SETTLE_DELAY_MS = 40
+const SCROLL_SETTLE_DELAY_MS = 30
 
 const CarouselContext = createContext<CarouselContextValue | null>(null)
 

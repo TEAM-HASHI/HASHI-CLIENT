@@ -33,7 +33,8 @@
   - authenticated guest: 해당 없음
 - auth status:
   - uses `useAuthStatus`: yes
-  - 비로그인 사용자가 홈 페이지에 처음 진입하면 기존 `AuthGateBottomSheet`를 유지합니다.
+  - 비로그인 사용자가 브라우저 세션에서 홈 페이지에 처음 진입하면 기존 `AuthGateBottomSheet`를 유지합니다.
+  - 같은 브라우저 세션에서는 새로고침해도 로그인 유도 바텀시트를 반복 노출하지 않습니다.
 
 ## Location
 
@@ -178,7 +179,7 @@ export const HomeLogo = () => {
 
 1. 사용자가 `/`로 진입합니다.
 2. 페이지가 홈 콘텐츠를 구성합니다.
-3. 비로그인 상태라면 기존 로그인 유도 바텀시트를 표시합니다.
+3. 비로그인 상태이고 현재 브라우저 세션에서 아직 표시한 적이 없다면 기존 로그인 유도 바텀시트를 표시합니다.
 4. 사용자가 검색 영역을 선택하면 홈에서 입력을 받지 않고 `/search`로 이동합니다.
 5. 사용자가 메인 배너를 선택하면 해당 인스타그램 링크로 이동합니다.
 6. 사용자가 퀵 버튼을 선택하면 연결된 앱 내부 화면으로 이동합니다.
@@ -190,6 +191,7 @@ export const HomeLogo = () => {
 
 - local state:
   - `isAuthGateOpen`: 기존 로그인 유도 바텀시트 표시 여부
+  - `sessionStorage['hashi:home-auth-gate-shown']`: 같은 브라우저 세션에서 로그인 유도 바텀시트 반복 노출 방지
 - form state:
   - 없음
   - 홈 검색 영역은 입력 폼을 소유하지 않고 검색 페이지 진입점으로만 동작합니다.
@@ -199,7 +201,7 @@ export const HomeLogo = () => {
   - MVP 정적 데이터에서는 없음
   - API 연동 후 배너/추천 리스트 query state
 - derived state:
-  - 로그인 상태에서 `AuthGateBottomSheet` 표시 여부
+  - 로그인 상태와 세션 노출 여부를 반영한 `AuthGateBottomSheet` 표시 여부
 
 ## Validation
 
@@ -506,7 +508,8 @@ BottomNavigationLayout
 - [ ] `corepack pnpm format:check`
 - [ ] `git diff --check`
 - [ ] `/` 직접 진입 확인
-- [ ] 비로그인 상태에서 `AuthGateBottomSheet` 표시 확인
+- [ ] 비로그인 상태에서 브라우저 세션 첫 홈 진입 시 `AuthGateBottomSheet` 표시 확인
+- [ ] 같은 브라우저 세션에서 새로고침 또는 재진입 시 `AuthGateBottomSheet` 반복 미표시 확인
 - [ ] 검색 영역 선택 시 `/search` 이동 확인
 - [ ] 퀵 버튼 4개 route 이동 확인
 - [ ] 어디든 예약 CTA 선택 시 `/reservations/anywhere` 또는 auth redirect 정책 확인
