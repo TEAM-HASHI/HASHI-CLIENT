@@ -43,7 +43,7 @@ export const RestaurantReservationNewPage = () => {
   return (
     <div className="min-h-dvh bg-white pb-[128px]">
       <Header
-        className="sticky top-0 z-10"
+        className="z-fixed sticky top-0"
         leftAction={
           <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
             <BackIcon className="size-6" />

@@ -413,7 +413,7 @@ const Indicator = ({
       {...props}
       aria-hidden="true"
       className={cn(
-        'pointer-events-none absolute bottom-5 z-10 flex items-center gap-[7px]',
+        'z-raised pointer-events-none absolute bottom-5 flex items-center gap-[7px]',
         indicatorAlignClassNames[align],
         className,
       )}
