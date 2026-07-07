@@ -17,6 +17,7 @@ export const MagazinesPage = () => {
   return (
     <div className="min-h-dvh bg-white">
       <Header
+        className="fixed top-0 right-0 left-0 z-20 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white"
         leftAction={
           <IconButton
             aria-label="홈으로 돌아가기"
@@ -29,7 +30,7 @@ export const MagazinesPage = () => {
         title="매거진"
       />
 
-      <main>
+      <main className="pt-[75px]">
         {hasHeroBanners ? (
           <MagazineHeroBannerSection banners={heroBanners} />
         ) : null}

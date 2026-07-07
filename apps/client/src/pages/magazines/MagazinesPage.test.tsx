@@ -37,6 +37,18 @@ describe('MagazinesPage', () => {
     })
 
     expect(heroBanner).toBeInTheDocument()
+    expect(screen.getByRole('banner')).toHaveClass(
+      'fixed',
+      'top-0',
+      'right-0',
+      'left-0',
+      'z-20',
+      'mx-auto',
+      'w-full',
+      'max-w-[var(--app-mobile-max-width)]',
+      'bg-white',
+    )
+    expect(heroBanner.closest('main')).toHaveClass('pt-[75px]')
     expect(
       heroBanner.querySelector('[data-hds-carousel-indicator]'),
     ).toHaveAttribute('data-align', 'end')

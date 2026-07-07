@@ -236,7 +236,9 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
 - Tailwind layout:
   - mobile-first, `RootLayout` mobile frame 기준
   - root background `bg-white`
-  - header sticky 여부는 구현 시 현재 앱 화면 패턴과 디자인을 비교해 결정한다.
+  - header는 모바일 프레임 상단에 `fixed top-0 right-0 left-0 z-20 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white`로 고정한다.
+  - header는 캐러셀 인디케이터보다 높은 layer에 있어야 하므로 콘텐츠 layer보다 높은 z-index를 사용한다.
+  - fixed header가 콘텐츠를 덮지 않도록 본문에 header height만큼 top padding을 둔다.
 - representative banner:
   - full-width visual area below header
   - viewport height is `260px`.
