@@ -94,7 +94,7 @@ export const BottomSheet = ({
 
   return createPortal(
     <div
-      className="fixed inset-y-0 right-0 left-0 z-50 mx-auto flex w-full max-w-[var(--app-mobile-max-width,100%)] items-end bg-black/50"
+      className="z-overlay fixed inset-y-0 right-0 left-0 mx-auto flex w-full max-w-(--app-mobile-max-width,100%) items-end bg-black/50"
       onClick={handlePressClose}
     >
       <div
@@ -102,7 +102,7 @@ export const BottomSheet = ({
         aria-labelledby={title ? titleId : undefined}
         aria-modal="true"
         className={cn(
-          'relative w-full rounded-t-[20px] bg-white pb-[var(--safe-area-bottom,0px)] transition-transform duration-200 ease-out',
+          'relative w-full rounded-t-[20px] bg-white pb-(--safe-area-bottom,0px) transition-transform duration-200 ease-out',
           isVisible ? 'translate-y-0' : 'translate-y-full',
           className,
         )}
@@ -120,11 +120,11 @@ export const BottomSheet = ({
         tabIndex={-1}
       >
         {hasHeader && (
-          <div className="relative flex min-h-[51px] items-center justify-center px-5 pt-4">
+          <div className="relative flex min-h-12.75 items-center justify-center px-5 pt-4">
             {showHandle && (
               <span
                 aria-hidden="true"
-                className="bg-warm-gray-100 absolute top-2 left-1/2 h-px w-[27px] -translate-x-1/2 rounded-full"
+                className="bg-warm-gray-100 absolute top-2 left-1/2 h-px w-6.75 -translate-x-1/2 rounded-full"
               />
             )}
             {title && (
@@ -135,7 +135,7 @@ export const BottomSheet = ({
             {showCloseButton && (
               <button
                 aria-label="닫기"
-                className="absolute top-[22px] right-5 flex size-6 items-center justify-center"
+                className="absolute top-5.5 right-5 flex size-6 items-center justify-center"
                 onClick={handlePressClose}
                 type="button"
               >

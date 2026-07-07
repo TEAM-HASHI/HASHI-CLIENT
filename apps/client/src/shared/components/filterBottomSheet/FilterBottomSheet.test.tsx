@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { FilterBottomSheet } from './FilterBottomSheet'
+import { FilterBottomSheet } from '@/shared/components/filterBottomSheet/FilterBottomSheet'
 
 const options = [
   { label: '스시/사시미류', value: 'sushi' },

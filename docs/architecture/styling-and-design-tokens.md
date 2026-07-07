@@ -50,7 +50,7 @@ Tailwind CSS를 사용하는 경우:
 - `colors.css`: color token
 - `gradients.css`: gradient token
 - `typography.css`: typography token과 `typo-*` utility
-- `z-index.css`: z-index token. 현재 고정 헤더/하단 바처럼 일반 content 위에 떠야 하는 UI에는 `z-floating`을 사용합니다.
+- `z-index.css`: z-index token. overlay, modal, toast처럼 전역 stacking 계층은 숫자를 직접 쓰지 않고 의미 기반 토큰으로 관리합니다.
 
 현재 제공하는 utility namespace는 다음과 같습니다.
 
@@ -58,7 +58,7 @@ Tailwind CSS를 사용하는 경우:
 - Gradients: `gradient-01`, `background-image-gradient-01`
 - Typography: `typo-header-*`, `typo-sub-header-*`, `typo-body-*`, `typo-caption-*`, `typo-long-body-1`
 - Font family: `font-sans` maps to `Pretendard` first, then system fallback
-- Z-index: `z-floating`
+- Z-index: `z-base`, `z-raised`, `z-fixed`, `z-overlay`, `z-modal`, `z-toast`
 
 App entry CSS example:
 

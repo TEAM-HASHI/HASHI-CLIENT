@@ -10,7 +10,7 @@ import {
 } from '@/features/review/components'
 import { useReviewForm } from '@/features/review/hooks'
 
-import { REVIEW_RESERVATION_SUMMARY } from './constants/reviewNewMockData'
+import { REVIEW_RESERVATION_SUMMARY } from '@/pages/reviewNew/constants/reviewNewMockData'
 
 export const ReviewNewPage = () => {
   const navigate = useNavigate()
@@ -34,7 +34,7 @@ export const ReviewNewPage = () => {
       className="flex min-h-dvh w-full min-w-0 justify-center bg-white"
     >
       <div className="flex min-h-dvh w-full min-w-0 flex-col overflow-x-hidden bg-white">
-        <div className="app-mobile-fixed-top z-floating">
+        <div className="app-mobile-fixed-top z-fixed">
           <ReviewHeader onBackClick={() => navigate(-1)} />
         </div>
         <form

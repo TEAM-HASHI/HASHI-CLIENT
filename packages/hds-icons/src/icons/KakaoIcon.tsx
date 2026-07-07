@@ -1,6 +1,5 @@
 import type { SVGProps } from 'react'
-
-export const KakaoIcon = (props: SVGProps<SVGSVGElement>) => (
+const KakaoIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="1em"
     height="1em"
@@ -11,7 +10,8 @@ export const KakaoIcon = (props: SVGProps<SVGSVGElement>) => (
   >
     <path
       d="M11.2812 0C17.5118 0 22.5625 4.04092 22.5625 9.02539C22.5624 14.0098 17.5118 18.0508 11.2812 18.0508C10.3473 18.0508 9.4402 17.9573 8.57227 17.7861L4.5127 21V16.2461C1.77254 14.5996 8.35815e-05 11.9781 0 9.02539C0 4.04098 5.05077 9.81342e-05 11.2812 0Z"
-      fill="#4A4A4A"
+      fill="currentColor"
     />
   </svg>
 )
+export default KakaoIcon
