@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 import { reservationNotices } from '@/pages/reservationDetail/constants/reservationNotice'
 import {
@@ -9,6 +9,7 @@ import {
 
 export const useReservationDetailPage = () => {
   const navigate = useNavigate()
+  const { reservationId } = useParams<{ reservationId: string }>()
 
   const handleBack = () => {
     navigate(-1)
@@ -23,6 +24,7 @@ export const useReservationDetailPage = () => {
   }
 
   return {
+    reservationId,
     reservationNotices,
     reservationProgressSteps,
     reservationReceiptInfoItems,
