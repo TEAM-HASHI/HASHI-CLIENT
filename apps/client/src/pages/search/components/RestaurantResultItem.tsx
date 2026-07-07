@@ -9,7 +9,10 @@ interface RestaurantResultItemProps {
 }
 
 const createRestaurantDetailPath = (restaurantId: string) => {
-  return ROUTES.restaurantDetail.replace(':restaurantId', restaurantId)
+  return ROUTES.restaurantDetail.replace(
+    ':restaurantId',
+    encodeURIComponent(restaurantId),
+  )
 }
 
 export const RestaurantResultItem = ({

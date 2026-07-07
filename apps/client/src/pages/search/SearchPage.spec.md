@@ -380,6 +380,7 @@ SearchPage
   - `/search` 직접 진입
 - links:
   - 식당 리스트 item 클릭 시 `ROUTES.restaurantDetail`에 해당하는 `/restaurants/:restaurantId`로 이동합니다.
+  - `restaurantId`는 URL path segment로 들어가므로 `encodeURIComponent`로 인코딩합니다.
 - route params:
   - 없음
 - search params:
