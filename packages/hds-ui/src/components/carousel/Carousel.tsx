@@ -72,7 +72,7 @@ type CarouselComponent = {
   Indicator: (props: CarouselIndicatorProps) => ReactElement | null
 }
 
-const SCROLL_SETTLE_DELAY_MS = 120
+const SCROLL_SETTLE_DELAY_MS = 30
 
 const CarouselContext = createContext<CarouselContextValue | null>(null)
 
@@ -426,7 +426,7 @@ const Indicator = ({
         return (
           <span
             className={cn(
-              'block rounded-full transition-[width,background-color] duration-300',
+              'block rounded-full transition-[width,background-color] duration-150',
               isActive
                 ? 'bg-warm-gray-300 h-1 w-[22px]'
                 : 'bg-warm-gray-100 size-1.5',

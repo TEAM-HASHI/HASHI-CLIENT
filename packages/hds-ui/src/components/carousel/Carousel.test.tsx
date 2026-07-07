@@ -158,7 +158,7 @@ describe('Carousel', () => {
     ).toHaveLength(1)
   })
 
-  it('updates uncontrolled index after scroll settles', () => {
+  it('updates uncontrolled index shortly after scroll settles', () => {
     vi.useFakeTimers()
     const handleIndexChange = vi.fn()
 
@@ -167,7 +167,7 @@ describe('Carousel', () => {
 
     fireEvent.scroll(viewport)
     act(() => {
-      vi.advanceTimersByTime(120)
+      vi.advanceTimersByTime(30)
     })
 
     expect(handleIndexChange).toHaveBeenCalledWith(2)
@@ -186,7 +186,7 @@ describe('Carousel', () => {
 
     fireEvent.scroll(viewport)
     act(() => {
-      vi.advanceTimersByTime(120)
+      vi.advanceTimersByTime(30)
     })
 
     expect(handleIndexChange).toHaveBeenCalledWith(2)

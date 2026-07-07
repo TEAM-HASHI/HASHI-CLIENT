@@ -13,6 +13,17 @@ apps/client/src/
   assets/    정적 asset
 ```
 
+앱 코드에서 import해 사용하는 로고와 이미지 asset은 `apps/client/src/shared/assets/`에 둡니다.
+
+```text
+shared/assets/
+  logos/
+    hashi-logo.svg
+  images/
+    empty.webp
+    not-found.webp
+```
+
 `app/`은 앱을 실행하기 위해 조립하는 코드만 둡니다.
 
 ```text
