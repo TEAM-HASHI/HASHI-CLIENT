@@ -33,7 +33,7 @@ export const MyReviewsPage = () => {
   const isEmpty = currentCount === 0
 
   return (
-    <section className="min-h-dvh bg-white">
+    <section className="min-h-dvh min-w-0 overflow-x-hidden bg-white">
       <Header
         leftAction={
           <IconButton aria-label="뒤로가기" onClick={handleBack} size="xs">
@@ -58,10 +58,10 @@ export const MyReviewsPage = () => {
           onClick={handleNavigateToTodayRestaurant}
         />
       ) : (
-        <main className="px-5">
+        <main className="min-w-0 px-5">
           <MyReviewTotalCount count={currentCount} />
           {isWritableTab ? (
-            <div className="flex flex-col gap-5">
+            <div className="flex min-w-0 flex-col gap-5">
               {writableReviews.map((review) => (
                 <ReviewWritableCard
                   key={review.id}
@@ -71,7 +71,7 @@ export const MyReviewsPage = () => {
               ))}
             </div>
           ) : (
-            <div>
+            <div className="min-w-0">
               {writtenReviews.map((review) => (
                 <WrittenReviewCard
                   key={review.id}

@@ -16,7 +16,7 @@ interface MyReviewTabsProps {
 export const MyReviewTabs = ({ items, value, onChange }: MyReviewTabsProps) => {
   return (
     <div
-      className="flex h-10 items-end justify-center bg-white px-5 text-center whitespace-nowrap"
+      className="flex h-10 w-full min-w-0 items-end justify-center overflow-x-hidden bg-white px-5 text-center whitespace-nowrap"
       role="tablist"
     >
       {items.map((item) => {

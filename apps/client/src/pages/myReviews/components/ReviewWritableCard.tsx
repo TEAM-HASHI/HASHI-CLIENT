@@ -13,8 +13,8 @@ export const ReviewWritableCard = ({
   onClick,
 }: ReviewWritableCardProps) => {
   return (
-    <article className="flex w-full flex-col gap-3 pb-5">
-      <div className="flex h-[120px] items-center gap-3">
+    <article className="flex min-w-0 flex-col gap-3 pb-5">
+      <div className="flex h-[120px] min-w-0 items-center gap-3">
         <ReviewImagePlaceholder />
         <div className="min-w-0 flex-1">
           <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2">

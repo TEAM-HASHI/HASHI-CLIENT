@@ -73,11 +73,11 @@ export const WrittenReviewCard = ({
   }
 
   return (
-    <article className="border-warm-gray-50 flex h-[120px] items-center gap-3 border-b">
+    <article className="border-warm-gray-50 flex h-[120px] min-w-0 items-center gap-3 border-b">
       <ReviewImagePlaceholder />
       <div className="min-w-0 flex-1">
-        <div className="flex items-start gap-2">
-          <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2 flex-1">
+        <div className="flex min-w-0 items-start gap-2">
+          <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2 min-w-0 flex-1">
             {review.restaurantName}
           </h2>
           <div
@@ -129,7 +129,7 @@ interface ReviewMoreMenuProps {
 const ReviewMoreMenu = ({ id, onDelete, onEdit }: ReviewMoreMenuProps) => {
   return (
     <div
-      className="border-warm-gray-100 z-fixed absolute top-[calc(100%+12px)] right-0 h-20 w-[140px] rounded-[10px] border bg-white px-2.5"
+      className="border-warm-gray-100 z-floating absolute top-[calc(100%+12px)] right-0 h-20 w-[140px] rounded-[10px] border bg-white px-2.5"
       id={id}
       role="menu"
     >
