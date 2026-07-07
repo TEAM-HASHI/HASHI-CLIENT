@@ -26,7 +26,6 @@ const stepStyleMap: Record<
   ReservationProgressStatus,
   {
     dot: string
-    innerDot?: string
     title: string
     time: string
     description: string
@@ -34,7 +33,6 @@ const stepStyleMap: Record<
 > = {
   completed: {
     dot: 'bg-warm-gray-100',
-    innerDot: 'bg-white',
     title: 'text-warm-gray-300',
     time: 'text-cool-gray-500',
     description: 'text-warm-gray-300',
@@ -86,16 +84,10 @@ export const ReservationProgressSection = ({
               <span
                 aria-hidden="true"
                 className={cn(
-                  'relative flex size-3.5 shrink-0 items-center justify-center rounded-full',
+                  'size-3.5 shrink-0 rounded-full',
                   stepStyle.dot,
                 )}
-              >
-                {stepStyle.innerDot ? (
-                  <span
-                    className={cn('size-1.5 rounded-full', stepStyle.innerDot)}
-                  />
-                ) : null}
-              </span>
+              />
               <div
                 className={cn(
                   'min-w-0 flex-1 rounded-[5px] px-4 py-[8.5px]',
