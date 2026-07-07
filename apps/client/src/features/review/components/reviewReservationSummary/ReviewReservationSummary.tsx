@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react'
 
+import { DefaultImage } from '@/shared/components/defaultImage'
 import { cn } from '@/shared/utils'
 
 export interface ReviewReservationSummaryProps extends Omit<
@@ -29,19 +30,20 @@ export const ReviewReservationSummary = ({
       aria-label={ariaLabel}
       className={cn('flex w-full flex-col items-start px-5', className)}
     >
-      <div className="border-warm-gray-50 flex h-[120px] w-full items-center gap-3 border-b">
+      <div className="border-warm-gray-50 flex h-30 w-full items-center gap-3 border-b">
         {thumbnailSrc ? (
           <img
             src={thumbnailSrc}
             alt={thumbnailLabel}
-            className="size-[92px] shrink-0 rounded-[5px] object-cover"
+            className="size-23 shrink-0 rounded-[5px] object-cover"
           />
         ) : (
-          <div
+          <DefaultImage
             role="img"
             aria-label={thumbnailLabel}
-            data-slot="thumbnail-placeholder"
-            className="size-[92px] shrink-0 rounded-[5px] bg-[linear-gradient(45deg,#f2f3f5_25%,transparent_25%,transparent_75%,#f2f3f5_75%),linear-gradient(45deg,#f2f3f5_25%,transparent_25%,transparent_75%,#f2f3f5_75%)] bg-[length:16px_16px] bg-[position:0_0,8px_8px]"
+            className="size-23 shrink-0 rounded-[5px]"
+            data-slot="thumbnail-default-image"
+            logoSize="sm"
           />
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-2">

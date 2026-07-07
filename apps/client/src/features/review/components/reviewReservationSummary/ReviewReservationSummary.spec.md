@@ -45,7 +45,7 @@
 - [x] root는 부모 너비를 따르고 좌우 `20px` padding을 가집니다.
 - [x] 본문 row는 높이 `120px`, 하단 `Warm_Gray_50` border를 가집니다.
 - [x] 썸네일은 `92px` 정사각형, `5px` radius, cover fit으로 표시합니다.
-- [x] `thumbnailSrc`가 없으면 같은 크기의 placeholder를 표시합니다.
+- [x] `thumbnailSrc`가 없으면 같은 크기의 공통 `DefaultImage`를 표시합니다.
 - [x] 식당명은 `Sub Header 2`, `Cool_Gray_900` 스타일로 최대 2줄까지 표시합니다.
 - [x] 방문 일시와 인원 요약은 `Body 7`, `Cool_Gray_600` 스타일로 표시합니다.
 - [x] 긴 식당명은 텍스트 영역 안에서 줄바꿈되고 레이아웃을 깨지 않습니다.
@@ -57,7 +57,7 @@
 ReviewReservationSummary
   section
     row
-      thumbnail image or placeholder
+      thumbnail image or DefaultImage fallback
       info
         restaurant name
         visited at
@@ -88,7 +88,7 @@ ReviewReservationSummary
 
 - type: `string`
 - required: `false`
-- description: 식당 대표 이미지 URL입니다. 없으면 placeholder를 표시합니다.
+- description: 식당 대표 이미지 URL입니다. 없으면 공통 `DefaultImage`를 표시합니다.
 
 ### Native section props
 
@@ -109,7 +109,7 @@ ReviewReservationSummary
 
 1. 컴포넌트가 렌더링되면 썸네일 영역과 예약 정보 텍스트를 표시합니다.
 2. `thumbnailSrc`가 있으면 `img`를 렌더링합니다.
-3. `thumbnailSrc`가 없으면 접근 가능한 placeholder 영역을 렌더링합니다.
+3. `thumbnailSrc`가 없으면 접근 가능한 `DefaultImage` fallback 영역을 렌더링합니다.
 4. 컴포넌트는 클릭, navigation, mutation을 실행하지 않습니다.
 
 ## Validation
@@ -121,7 +121,7 @@ ReviewReservationSummary
 ## Error Handling
 
 - 자체 에러 표시 없음.
-- 이미지 URL 누락은 placeholder로 처리합니다.
+- 이미지 URL 누락은 공통 `DefaultImage`로 처리합니다.
 - 데이터 조회 실패나 예약 없음 상태는 호출부가 처리합니다.
 
 ## Styling
@@ -143,7 +143,7 @@ ReviewReservationSummary
 
 ## Dependencies
 
-- components: 없음
+- components: `DefaultImage`
 - icons: 없음
 - hooks: 없음
 - APIs: 없음
