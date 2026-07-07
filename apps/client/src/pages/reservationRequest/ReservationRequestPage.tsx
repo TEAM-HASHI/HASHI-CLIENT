@@ -54,9 +54,9 @@ export const ReservationRequestPage = () => {
   }
 
   return (
-    <div className="min-h-dvh bg-white pb-[128px]">
+    <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
       <Header
-        className="sticky top-0 z-10"
+        className="app-mobile-fixed-top z-fixed fixed!"
         leftAction={
           <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
             <BackIcon className="size-6" />
@@ -84,7 +84,7 @@ export const ReservationRequestPage = () => {
 
       <ReservationNoticeSection />
 
-      <div className="app-mobile-fixed-bottom z-20 bg-white px-5 pt-[17px] pb-[calc(17px+var(--safe-area-bottom,0px))]">
+      <div className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-[17px] pb-[calc(17px+var(--safe-area-bottom,0px))]">
         <Button
           className="h-[46px]"
           onClick={handleRequestClick}

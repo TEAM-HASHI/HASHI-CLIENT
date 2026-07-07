@@ -25,7 +25,7 @@ export const ReservationPointSection = ({
 
   return (
     <section aria-labelledby="reservation-point-heading">
-      <div className="px-5 pt-[43px] pb-[54px]">
+      <div className="px-5 pt-[43px] pb-5.75">
         <div className="flex h-[19px] items-center justify-between pl-1.5">
           <div className="flex items-end gap-1.5">
             <HashiPointMark />

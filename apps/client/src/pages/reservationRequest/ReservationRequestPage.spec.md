@@ -83,6 +83,8 @@ const MOCK_RESERVATION_ID = 'mock-reservation-id'
 ### 상단 네비게이션
 
 - HDS `Header`, `IconButton`, `BackIcon`을 사용한다.
+- 상단 네비게이션은 `app-mobile-fixed-top`, `z-fixed`로 화면 상단에 고정한다.
+- 본문은 고정 헤더 높이만큼 상단 여백을 둔다.
 - title은 `예약하기`다.
 - 뒤로가기 클릭 시 `navigate(-1)`을 호출한다.
 
@@ -153,6 +155,8 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - HDS Icons:
   - `BackIcon`
   - `CheckIcon`
+- Shared:
+  - `DefaultImage`
 - Page-local:
   - `ReservationRequestInfoSection`
   - `ReservationPointSection`
@@ -161,8 +165,12 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
   - Hashi point mark
 - Route/shared 영향:
   - 새 route 추가 없음
-  - shared 승격 없음
+  - 새 shared 추가 없음
+  - 식당 이미지 fallback은 기존 shared `DefaultImage` 사용
   - HDS 변경 없음
+
+Hashi point mark는 현재 repo에 동일한 shared asset 또는 HDS icon이 없어 page-local SVG를 유지한다.
+`MoneyIcon`, `MoneySmallIcon`, `HashiPickIcon`은 Figma의 포인트 마크와 형태가 달라 대체하지 않는다.
 
 ## Verification
 
