@@ -14,7 +14,7 @@ export const MyReviewEmptyState = ({
 }: MyReviewEmptyStateProps) => {
   return (
     <main className="flex min-h-[calc(100dvh-115px)] flex-col items-center justify-center px-5 pb-20">
-      {/* TODO: Replace this slot with the shared empty graphic component when it is ready. */}
+      {/* TODO: 여기에 그래픽 컴포넌트 넣어주시면 됩니다 */}
       <div className="flex h-[151px] w-[135px] items-center justify-center">
         {graphic}
       </div>
