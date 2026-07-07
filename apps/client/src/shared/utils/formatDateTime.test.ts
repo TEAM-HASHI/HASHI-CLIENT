@@ -5,7 +5,7 @@ import {
   formatDotDateTime,
   formatMonthDay,
   formatMonthDayTime,
-} from './formatDateTime'
+} from '@/shared/utils/formatDateTime'
 
 describe('formatDateTime', () => {
   it('formats month, day, and time with Korean date units', () => {

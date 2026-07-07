@@ -93,6 +93,8 @@ Exported types:
 - [x] static mode에서는 `selected` 상태를 허용하지 않습니다.
 - [x] selectable mode에서 inactive badge를 누르면 `onSelectedChange(true)`를 호출합니다.
 - [x] selectable mode에서 selected badge를 누르면 `onSelectedChange(false)`를 호출합니다.
+- [x] interactive badge는 `aria-disabled=true`일 때 선택 변경을 호출하지 않습니다.
+- [x] interactive badge는 `aria-disabled=true`일 때 비활성 cursor와 opacity를 표시합니다.
 - [x] 긴 라벨이 들어와도 badge 바깥 layout을 깨지 않습니다.
 - [x] token 또는 Tailwind theme 기준을 우선 사용합니다.
 
@@ -139,6 +141,12 @@ Badge
 - required: `false`
 - description: selectable badge를 눌렀을 때 다음 선택 상태를 전달합니다. `interactive=true`일 때만 호출합니다.
 
+### `aria-disabled`
+
+- type: `ComponentPropsWithoutRef<'button'>['aria-disabled']`
+- required: `false`
+- description: interactive Badge에서 추가 선택이 불가능한 상태를 접근성 속성과 시각 상태로 노출합니다. `true`이면 클릭해도 `onSelectedChange`를 호출하지 않습니다.
+
 ### `className`
 
 - type: `string`
@@ -151,6 +159,7 @@ Badge
 - interactive: `interactive=true`, `button type="button"`으로 렌더링합니다.
 - default: 흰 배경, 회색 border, 기본 텍스트 색상을 표시합니다.
 - selected: interactive Badge에서만 primary border와 primary background로 선택 상태를 표시합니다.
+- aria-disabled: interactive Badge에서만 추가 선택 불가 상태를 접근성 속성과 비활성 시각 상태로 표시하고 선택 변경을 막습니다.
 
 ## Behavior
 
@@ -159,6 +168,7 @@ Badge
 3. `interactive=true`이면 root를 `button type="button"`으로 렌더링합니다.
 4. selectable badge를 누르면 현재 `selected`의 반대 값을 `onSelectedChange`에 전달합니다.
 5. selected 상태여도 같은 badge를 다시 눌러 해제할 수 있습니다.
+6. `aria-disabled=true`이면 click handler가 `onSelectedChange`를 호출하지 않습니다.
 
 ## Validation
 
@@ -180,6 +190,7 @@ HDS는 validation을 수행하지 않습니다.
 - text: typography `typo-body-8`, color `black`
 - selected stroke: weight `1.4px`, color `primary-400`
 - selected background: `primary-400 / 20%`
+- aria-disabled: `cursor-not-allowed`, `opacity-40`
 - label overflow: `min-w-0 truncate`
 - responsive: badge 자체는 layout을 소유하지 않습니다. 줄바꿈, horizontal scroll, grid 배치는 호출부 container가 처리합니다.
 
@@ -190,6 +201,7 @@ Figma 값과 token이 다를 때는 token을 우선합니다. 정확한 radius, 
 - static mode: root는 `span`이며 visible label이 그대로 읽힙니다.
 - interactive mode: root는 native `button type="button"`입니다.
 - selectable mode: button에 `aria-pressed={selected}`를 제공합니다.
+- 추가 선택 불가 상태가 필요하면 button에 `aria-disabled`를 제공합니다.
 - icon은 장식 목적일 때 `aria-hidden`이 적용된 icon을 주입하는 것을 권장합니다.
 - accessible name은 visible label을 기준으로 합니다.
 - keyboard interaction은 native button 동작을 따릅니다.
@@ -211,6 +223,7 @@ Figma 값과 token이 다를 때는 token을 우선합니다. 정확한 radius, 
 - [x] Static badge with icon
 - [x] Selectable default
 - [x] Selectable selected
+- [x] Selectable aria-disabled
 - [x] Long label overflow
 - [x] Review keyword wrap example with multiple badges
 - [x] 393px mobile viewport wrapper
@@ -224,6 +237,8 @@ Storybook 예시는 HDS public API와 상태를 보여주기 위한 샘플이어
 - 선택되지 않은 interactive badge를 누르면 `onSelectedChange(true)`를 호출합니다.
 - 선택된 interactive badge를 누르면 `onSelectedChange(false)`를 호출합니다.
 - 선택 상태를 `aria-pressed`로 노출합니다.
+- `aria-disabled=true`이면 선택 변경 callback을 호출하지 않습니다.
+- `aria-disabled=true`이면 비활성 스타일을 적용합니다.
 - 화면에 보이는 label을 accessible name으로 유지합니다.
 
 ## 범위 제외
