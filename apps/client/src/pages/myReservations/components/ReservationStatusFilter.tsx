@@ -31,7 +31,11 @@ export const ReservationStatusFilter = ({
         <Chip
           key={option.value}
           selected={selectedStatus === option.value}
-          onSelectedChange={() => onStatusChange(option.value)}
+          onSelectedChange={(nextSelected) => {
+            if (nextSelected) {
+              onStatusChange(option.value)
+            }
+          }}
         >
           {option.label}
         </Chip>
