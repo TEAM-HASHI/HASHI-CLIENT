@@ -130,7 +130,7 @@ export const InputReviewMain = ({
     <section
       {...props}
       className={cn(
-        'flex w-full flex-col items-start gap-5 px-5 py-7',
+        'flex w-full min-w-0 flex-col items-start gap-5 px-5 py-7',
         className,
       )}
     >
@@ -142,11 +142,11 @@ export const InputReviewMain = ({
           (첨부 사진 장당 5MB, 최대 10장)
         </p>
       </div>
-      <div className="flex w-full max-w-[353px] flex-col gap-5">
+      <div className="flex w-full max-w-full min-w-0 flex-col gap-5 overflow-x-hidden">
         {hasSelectedPhotoFiles ? (
           <ul
             aria-label="선택된 리뷰 사진 목록"
-            className="flex w-full max-w-[353px] [scrollbar-width:none] gap-2 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="flex w-full max-w-full min-w-0 scrollbar-none gap-2 overflow-x-auto overflow-y-hidden [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             <li className="shrink-0">
               <button
@@ -169,7 +169,7 @@ export const InputReviewMain = ({
                 <img
                   src={src}
                   alt={`${name} 미리보기`}
-                  className="border-warm-gray-100 size-full rounded-[5px] border object-cover"
+                  className="border-warm-gray-100 size-full rounded-[10px] border object-cover"
                 />
                 <button
                   aria-label={`${name} 사진 삭제`}
@@ -186,7 +186,7 @@ export const InputReviewMain = ({
         ) : (
           <button
             aria-controls={photoInputId}
-            className="border-warm-gray-100 text-warm-gray-300 focus-visible:outline-cool-gray-500 flex h-[130px] w-full max-w-[353px] flex-col items-center justify-center gap-2 rounded-[10px] border bg-white px-5 py-10 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+            className="border-warm-gray-100 text-warm-gray-300 focus-visible:outline-cool-gray-500 flex h-[130px] w-full max-w-full flex-col items-center justify-center gap-2 rounded-[10px] border bg-white px-5 py-10 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
             disabled={disabled || hasReachedMaxPhotoCount}
             type="button"
             onClick={handlePhotoButtonClick}

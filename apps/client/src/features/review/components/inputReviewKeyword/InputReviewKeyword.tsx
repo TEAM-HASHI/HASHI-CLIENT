@@ -43,7 +43,7 @@ export const InputReviewKeyword = ({
       </div>
       <div
         aria-label="리뷰 키워드 선택"
-        className="flex w-full max-w-[353px] flex-wrap gap-x-2 gap-y-3 overflow-hidden px-0.5 py-1"
+        className="flex w-full flex-wrap gap-x-2 gap-y-3 overflow-hidden px-0.5 py-1"
         role="group"
       >
         {REVIEW_KEYWORDS.map(({ id, label, Icon }) => {

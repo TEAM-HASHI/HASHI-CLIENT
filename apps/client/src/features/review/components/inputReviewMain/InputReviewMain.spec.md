@@ -61,7 +61,7 @@
 - [x] textarea에는 `maxLength`를 전달해 HDS `Textarea`의 입력 제한 로직을 사용합니다.
 - [x] textarea 본문은 Figma `Long Body 1` 기준인 `typo-long-body-1`을 사용합니다.
 - [x] 입력하지 않은 빈 상태의 helper text는 `10자 이상`입니다.
-- [x] textarea가 focus되었거나 본문이 입력된 뒤 10자 미만이면 helper text를 `10자 이상 작성해주세요.`로 표시합니다.
+- [x] textarea가 blur되었거나 본문이 입력된 뒤 10자 미만이면 helper text를 `10자 이상 작성해주세요.`로 표시합니다.
 - [x] 호출부에서 전달한 본문 값이 최대 글자 수를 초과한 상태면 helper text를 `글자 수 제한을 초과했어요.`로 표시합니다.
 - [x] 글자 수 counter는 기본 `0/1000`을 표시합니다.
 - [x] textarea가 변경되면 `onValueChange`에 다음 문자열을 전달합니다.
