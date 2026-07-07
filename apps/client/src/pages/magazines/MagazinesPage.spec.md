@@ -90,7 +90,7 @@ API 연동 시 `useMagazinesPage` 내부에서 mock 반환을 TanStack Query 기
   - `apps/client/src/pages/magazines/hooks/useMagazinesPage.ts`
   - mock 데이터를 반환한다.
   - 뒤로가기 이동 로직을 소유한다.
-  - 외부 인스타 URL 데이터 제공과 추후 URL 검증 로직을 소유한다.
+  - 외부 인스타 URL 정규화와 검증 로직을 소유한다.
 - page:
   - `MagazinesPage.tsx`는 hook 호출, Header 배치, 섹션 조합만 담당한다.
   - mock 배열이나 외부 URL 이동 로직을 직접 들지 않는다.
@@ -172,7 +172,7 @@ Recommended page hook return shape:
 type MagazineHeroBanner = {
   id: string
   imageUrl: string
-  instagramUrl: string
+  instagramUrl: string | null
   displayOrder: number
   accessibilityLabel: string
 }
@@ -182,7 +182,7 @@ type RecommendedMagazine = {
   title: string
   imageUrl: string
   publishedDate: string
-  instagramUrl: string
+  instagramUrl: string | null
 }
 
 type UseMagazinesPageReturn = {
@@ -194,14 +194,14 @@ type UseMagazinesPageReturn = {
 }
 ```
 
-Hero banners and magazine cards render semantic `<a>` elements with `instagramUrl`. The hook owns the data boundary and back navigation, while link activation stays native.
+Hero banners and magazine cards render semantic `<a>` elements only when the hook returns a valid `instagramUrl`. The hook owns the data boundary, Instagram URL normalization, and back navigation, while valid link activation stays native.
 
 ## Error Handling
 
 - API error: none in MVP
 - validation error: none
 - exceptional case:
-  - missing external URL: render the item as disabled-looking text content or skip navigation; do not crash the page.
+  - missing or invalid external URL: normalize to `null` in `useMagazinesPage`, then render the item as disabled-looking text content; do not crash the page.
   - broken image URL: rely on browser image behavior in MVP; future API work may add page-local fallback.
 - user-facing message:
   - empty recommended list: `아직 추천 매거진이 없어요.`
@@ -228,6 +228,7 @@ Hero banners and magazine cards render semantic `<a>` elements with `instagramUr
   - none
 - external navigation:
   - use semantic `<a href={instagramUrl}>` when possible.
+  - use disabled-looking non-anchor content when `instagramUrl` is missing or invalid.
   - if app/WebView policy later requires bridge handling, keep that behavior inside `useMagazinesPage` or a page-local helper, not inside HDS.
 
 ## Styling

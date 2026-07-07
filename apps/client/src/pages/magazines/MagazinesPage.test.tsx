@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ROUTES } from '@/app/router/path'
 
 import { MagazinesPage } from '@/pages/magazines/MagazinesPage'
+import { normalizeInstagramUrl } from '@/pages/magazines/hooks/useMagazinesPage'
 
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -93,6 +94,18 @@ describe('MagazinesPage', () => {
         name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
       }),
     ).toHaveAttribute('href', 'https://www.instagram.com/hashi.magazine/101')
+  })
+
+  it('normalizes only valid instagram urls for external navigation', () => {
+    expect(
+      normalizeInstagramUrl('https://www.instagram.com/hashi.magazine/1'),
+    ).toBe('https://www.instagram.com/hashi.magazine/1')
+    expect(normalizeInstagramUrl('')).toBeNull()
+    expect(normalizeInstagramUrl('not-a-url')).toBeNull()
+    expect(normalizeInstagramUrl('javascript:alert(1)')).toBeNull()
+    expect(
+      normalizeInstagramUrl('https://example.com/hashi.magazine/1'),
+    ).toBeNull()
   })
 
   it('applies requested magazine layout token classes', () => {

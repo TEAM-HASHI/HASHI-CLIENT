@@ -5,6 +5,22 @@ interface Props {
 }
 
 export const MagazineHeroBannerSlide = ({ banner }: Props) => {
+  const content = (
+    <img alt="" className="size-full object-cover" src={banner.imageUrl} />
+  )
+
+  if (!banner.instagramUrl) {
+    return (
+      <div
+        aria-disabled="true"
+        aria-label={banner.accessibilityLabel}
+        className="bg-cool-gray-100 relative block size-full overflow-hidden opacity-60"
+      >
+        {content}
+      </div>
+    )
+  }
+
   return (
     <a
       aria-label={banner.accessibilityLabel}
@@ -13,7 +29,7 @@ export const MagazineHeroBannerSlide = ({ banner }: Props) => {
       rel="noreferrer"
       target="_blank"
     >
-      <img alt="" className="size-full object-cover" src={banner.imageUrl} />
+      {content}
     </a>
   )
 }
