@@ -1,7 +1,7 @@
+import { HashiPointMarkIcon } from '@hashi/hds-icons'
 import { Button } from '@hashi/hds-ui'
 import type { ChangeEvent } from 'react'
 
-import { HashiPointMark } from '@/pages/reservationRequest/components/HashiPointMark'
 import { formatWon } from '@/pages/reservationRequest/utils/formatWon'
 
 interface ReservationPointSectionProps {
@@ -28,7 +28,10 @@ export const ReservationPointSection = ({
       <div className="px-5 pt-[43px] pb-5.75">
         <div className="flex h-[19px] items-center justify-between pl-1.5">
           <div className="flex items-end gap-1.5">
-            <HashiPointMark />
+            <HashiPointMarkIcon
+              aria-hidden="true"
+              className="h-[18.512px] w-[17px] shrink-0"
+            />
             <h2
               className="typo-sub-header-3 text-black"
               id="reservation-point-heading"

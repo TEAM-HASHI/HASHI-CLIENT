@@ -155,6 +155,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - HDS Icons:
   - `BackIcon`
   - `CheckIcon`
+  - `HashiPointMarkIcon`
 - Shared:
   - `DefaultImage`
 - Page-local:
@@ -162,15 +163,11 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
   - `ReservationPointSection`
   - `ReservationNoticeSection`
   - `ReservationConfirmDialog`
-  - Hashi point mark
 - Route/shared 영향:
   - 새 route 추가 없음
   - 새 shared 추가 없음
   - 식당 이미지 fallback은 기존 shared `DefaultImage` 사용
-  - HDS 변경 없음
-
-Hashi point mark는 현재 repo에 동일한 shared asset 또는 HDS icon이 없어 page-local SVG를 유지한다.
-`MoneyIcon`, `MoneySmallIcon`, `HashiPickIcon`은 Figma의 포인트 마크와 형태가 달라 대체하지 않는다.
+  - `@hashi/hds-icons`에 `HashiPointMarkIcon` 추가
 
 ## Verification
 
