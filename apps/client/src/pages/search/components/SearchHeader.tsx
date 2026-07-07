@@ -25,7 +25,7 @@ export const SearchHeader = ({
 
   return (
     <form
-      className="flex w-full items-center gap-2.5 px-5 pt-[30px]"
+      className="flex w-full items-center gap-2.5 px-5 pt-[30px] pb-[9px]"
       onSubmit={handleSubmit}
       role="search"
     >
