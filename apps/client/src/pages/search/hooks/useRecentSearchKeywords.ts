@@ -30,9 +30,28 @@ const getStoredRecentSearchKeywords = () => {
     return []
   }
 
-  return parseRecentSearchKeywords(
-    window.localStorage.getItem(RECENT_SEARCH_KEYWORDS_STORAGE_KEY),
-  )
+  try {
+    return parseRecentSearchKeywords(
+      window.localStorage.getItem(RECENT_SEARCH_KEYWORDS_STORAGE_KEY),
+    )
+  } catch {
+    return []
+  }
+}
+
+const setStoredRecentSearchKeywords = (keywords: string[]) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(
+      RECENT_SEARCH_KEYWORDS_STORAGE_KEY,
+      JSON.stringify(keywords),
+    )
+  } catch {
+    // Recent keywords are a convenience feature; storage failures should not block search.
+  }
 }
 
 export const useRecentSearchKeywords = () => {
@@ -43,7 +62,7 @@ export const useRecentSearchKeywords = () => {
   const saveRecentSearchKeyword = useCallback((keyword: string) => {
     const normalizedKeyword = keyword.trim()
 
-    if (!normalizedKeyword || typeof window === 'undefined') {
+    if (!normalizedKeyword) {
       return
     }
 
@@ -53,10 +72,7 @@ export const useRecentSearchKeywords = () => {
         ...currentKeywords.filter((value) => value !== normalizedKeyword),
       ].slice(0, MAX_RECENT_SEARCH_KEYWORD_COUNT)
 
-      window.localStorage.setItem(
-        RECENT_SEARCH_KEYWORDS_STORAGE_KEY,
-        JSON.stringify(nextKeywords),
-      )
+      setStoredRecentSearchKeywords(nextKeywords)
 
       return nextKeywords
     })

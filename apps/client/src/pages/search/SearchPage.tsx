@@ -12,7 +12,7 @@ export const SearchPage = () => {
   const searchPage = useSearchPage()
 
   return (
-    <div className="min-h-dvh bg-white">
+    <div className="flex min-h-dvh flex-col bg-white">
       <div className="sticky top-0 z-10 bg-white">
         <SearchHeader
           inputRef={searchPage.searchInputRef}

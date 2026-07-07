@@ -2,7 +2,7 @@ import searchEmptyImage from '@/pages/search/assets/search-empty.svg'
 
 export const SearchEmptyState = () => {
   return (
-    <div className="flex min-h-[420px] flex-col items-center justify-center gap-5">
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5">
       <img
         alt=""
         aria-hidden="true"

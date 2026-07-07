@@ -132,6 +132,7 @@
   - 서버 동기화, 계정별 최근 검색어, 삭제/전체 삭제 기능은 이번 설계 범위에 포함하지 않습니다.
   - 중복 키워드는 최신 검색 시점으로 이동합니다.
   - 최대 저장 개수는 화면에 노출할 수 있는 수보다 넉넉한 10개로 제한합니다.
+  - `localStorage.getItem` 또는 `localStorage.setItem` 실패 시 검색 페이지 전체가 깨지지 않도록 메모리 상태만 유지합니다.
 
 ### Static Data
 
@@ -390,8 +391,8 @@ SearchPage
 - failure redirect:
   - 없음
 - back behavior:
-  - history stack이 있으면 이전 화면으로 이동합니다.
-  - 직접 진입 등 이전 화면이 없으면 `ROUTES.home`으로 이동합니다.
+  - 앱 내부 route 전환으로 진입한 검색 페이지에서는 이전 화면으로 이동합니다.
+  - 주소창 직접 입력, 외부 링크, 세션 복원처럼 앱 내부 route 전환이 아닌 직접 진입에서는 `ROUTES.home`으로 이동합니다.
 - auth redirect:
   - 없음
 
@@ -421,6 +422,7 @@ SearchPage
   - filter trigger 사이 간격은 `12px`입니다.
 - search result item:
   - list item 사이 간격은 `30px`입니다.
+  - 결과 리스트 하단 padding은 `30px`입니다.
   - 식당 이미지는 `92px * 92px`, radius `5px`입니다.
   - 이미지와 내용 사이 간격은 `12px`입니다.
   - 오른쪽 내용 영역은 이미지 높이 기준 vertical center로 정렬합니다.
@@ -433,6 +435,7 @@ SearchPage
   - 시간 icon은 `ClockSmallIcon 16px`, icon과 text 사이 간격은 `6px`입니다.
   - 시간 text는 `typo-body-7 text-primary-200`입니다.
 - empty state:
+  - 고정 `min-height`를 사용하지 않고 결과 영역의 남은 높이 안에서 중앙 정렬합니다.
   - empty icon은 `48px * 28px`, `text-warm-gray-300`입니다.
   - empty text는 `typo-body-2 text-warm-gray-300`입니다.
 - bottom sheet:
@@ -449,7 +452,8 @@ SearchPage
   - 최근 검색어/추천 검색어 title은 `typo-sub-header-3 text-primary-200`입니다.
   - title과 chip 사이 간격은 `16px`입니다.
   - chip은 HDS `Chip`을 사용하고, 배경은 `warm-gray-50` (`#EFEFEF`), radius는 `100px`, text는 `typo-body-7 text-black`, padding은 vertical `8px` / horizontal `12px`입니다.
-  - chip 목록은 길어질 경우 horizontal scroll을 허용하며 시작 padding은 `20px`입니다.
+  - chip 목록은 길어질 경우 horizontal scroll을 허용하며 시작 padding은 `20px`, chip 사이 간격은 `8px`입니다.
+  - chip 목록의 scrollbar는 노출하지 않습니다.
   - 최근 검색어 section과 추천 검색어 section 사이 간격은 `38px`입니다.
 - scroll area:
   - 검색 전 최근/추천 검색어 영역과 검색 후 식당 리스트/상태 영역은 상단 고정 영역 아래에서 스크롤됩니다.

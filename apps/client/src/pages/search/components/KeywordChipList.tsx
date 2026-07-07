@@ -15,7 +15,7 @@ export const KeywordChipList = ({
 
   return (
     <div className="-mx-5 [scrollbar-width:none] overflow-x-auto pl-5 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-      <ul className="flex w-max gap-3">
+      <ul className="flex w-max gap-2">
         {keywords.map((keyword) => (
           <li key={keyword}>
             <Chip

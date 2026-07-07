@@ -1,7 +1,7 @@
 export const SearchResultSkeleton = () => {
   return (
     <ul
-      className="flex flex-col gap-[30px] px-5 pt-[30px]"
+      className="flex flex-col gap-[30px] px-5 pt-[30px] pb-[30px]"
       aria-label="검색 결과 로딩 중"
     >
       {Array.from({ length: 3 }, (_, index) => (

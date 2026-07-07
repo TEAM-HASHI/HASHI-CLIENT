@@ -8,9 +8,10 @@ import {
   within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
-import { MemoryRouter } from 'react-router-dom'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
+import { ROUTES } from '@/app/router/path'
 import { SearchPage } from '@/pages/search/SearchPage'
 
 const renderSearchPage = () => {
@@ -89,6 +90,36 @@ describe('SearchPage', () => {
     )
   })
 
+  it('keeps search usable when recent keyword storage is unavailable', async () => {
+    const user = userEvent.setup()
+    const getItemSpy = vi
+      .spyOn(Storage.prototype, 'getItem')
+      .mockImplementation(() => {
+        throw new Error('storage getItem unavailable')
+      })
+    const setItemSpy = vi
+      .spyOn(Storage.prototype, 'setItem')
+      .mockImplementation(() => {
+        throw new Error('storage setItem unavailable')
+      })
+
+    renderSearchPage()
+
+    await user.click(screen.getByRole('button', { name: '아끼소바' }))
+
+    expect(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+    ).toHaveValue('아끼소바')
+    expect(
+      await screen.findByText(
+        '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
+      ),
+    ).toBeInTheDocument()
+
+    getItemSpy.mockRestore()
+    setItemSpy.mockRestore()
+  })
+
   it('shows empty state when submitted keyword has no result', async () => {
     const user = userEvent.setup()
 
@@ -107,6 +138,32 @@ describe('SearchPage', () => {
     expect(
       screen.getByRole('button', { name: '음식 장르 선택' }),
     ).toBeInTheDocument()
+  })
+
+  it('navigates to home when back button is clicked on a directly opened search page', async () => {
+    const user = userEvent.setup()
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[ROUTES.search]}>
+          <Routes>
+            <Route path={ROUTES.search} element={<SearchPage />} />
+            <Route path={ROUTES.home} element={<div>홈 화면</div>} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+
+    expect(screen.getByText('홈 화면')).toBeInTheDocument()
   })
 
   it('resets sort filter to default and closes the bottom sheet', async () => {

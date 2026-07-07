@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import {
@@ -22,6 +22,7 @@ const getOptionLabel = <TValue extends string>(
 }
 
 export const useSearchPage = () => {
+  const location = useLocation()
   const navigate = useNavigate()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const [keyword, setKeyword] = useState('')
@@ -82,7 +83,7 @@ export const useSearchPage = () => {
   }
 
   const handleBackClick = () => {
-    if (window.history.length > 1) {
+    if (location.key !== 'default') {
       navigate(-1)
       return
     }

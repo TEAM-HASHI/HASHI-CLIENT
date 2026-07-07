@@ -9,7 +9,7 @@ export const RestaurantResultList = ({
   restaurants,
 }: RestaurantResultListProps) => {
   return (
-    <ul className="flex flex-col gap-[30px] px-5 pt-[30px]">
+    <ul className="flex flex-col gap-[30px] px-5 pt-[30px] pb-[30px]">
       {restaurants.map((restaurant) => (
         <RestaurantResultItem key={restaurant.id} restaurant={restaurant} />
       ))}
