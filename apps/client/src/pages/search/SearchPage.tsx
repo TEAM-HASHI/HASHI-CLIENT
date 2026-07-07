@@ -1,3 +1,52 @@
+import { RestaurantResultList } from '@/pages/search/components/RestaurantResultList'
+import { SearchEmptyState } from '@/pages/search/components/SearchEmptyState'
+import { SearchErrorState } from '@/pages/search/components/SearchErrorState'
+import { SearchFilterBar } from '@/pages/search/components/SearchFilterBar'
+import { SearchHeader } from '@/pages/search/components/SearchHeader'
+import { SearchIdlePanel } from '@/pages/search/components/SearchIdlePanel'
+import { SearchResultSkeleton } from '@/pages/search/components/SearchResultSkeleton'
+import { useSearchPage } from '@/pages/search/hooks/useSearchPage'
+import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
+
 export const SearchPage = () => {
-  return <h1>검색 페이지</h1>
+  const searchPage = useSearchPage()
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-white">
+      <div className="sticky top-0 z-10 bg-white">
+        <SearchHeader
+          inputRef={searchPage.searchInputRef}
+          keyword={searchPage.keyword}
+          onBackClick={searchPage.onBackClick}
+          onKeywordChange={searchPage.onKeywordChange}
+          onSearchSubmit={searchPage.onSearchSubmit}
+        />
+        {!searchPage.status.isSearchIdle && (
+          <SearchFilterBar
+            categoryLabel={searchPage.filterLabels.foodCategory}
+            onCategoryClick={searchPage.onFoodCategoryFilterClick}
+            onSortClick={searchPage.onSortFilterClick}
+            sortLabel={searchPage.filterLabels.sort}
+          />
+        )}
+      </div>
+      {searchPage.status.isSearchIdle ? (
+        <SearchIdlePanel
+          recentSearchKeywords={searchPage.recentSearchKeywords}
+          recommendedSearchKeywords={searchPage.recommendedSearchKeywords}
+          onKeywordSelect={searchPage.onKeywordSelect}
+        />
+      ) : searchPage.searchRestaurantsQuery.isLoading ? (
+        <SearchResultSkeleton />
+      ) : searchPage.searchRestaurantsQuery.isError ? (
+        <SearchErrorState onRetry={searchPage.onSearchRetry} />
+      ) : searchPage.restaurants.length > 0 ? (
+        <RestaurantResultList restaurants={searchPage.restaurants} />
+      ) : (
+        <SearchEmptyState />
+      )}
+      <FilterBottomSheet {...searchPage.sortSheet} />
+      <FilterBottomSheet {...searchPage.foodCategorySheet} />
+    </div>
+  )
 }
