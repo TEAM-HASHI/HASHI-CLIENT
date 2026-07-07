@@ -83,10 +83,7 @@ export const ReservationProgressSection = ({
               ) : null}
               <span
                 aria-hidden="true"
-                className={cn(
-                  'size-3.5 shrink-0 rounded-full',
-                  stepStyle.dot,
-                )}
+                className={cn('size-3.5 shrink-0 rounded-full', stepStyle.dot)}
               />
               <div
                 className={cn(
