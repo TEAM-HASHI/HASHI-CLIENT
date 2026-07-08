@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ReviewNewPage } from './ReviewNewPage'
+import { ReviewNewPage } from '@/pages/reviewNew'
 
 const { navigateMock } = vi.hoisted(() => ({
   navigateMock: vi.fn(),

@@ -1,16 +1,20 @@
 import { useMemo, useState } from 'react'
 
-import { createReservationTimeSlots } from '@/pages/restaurantReservationNew/utils/createReservationTimeSlots'
+import {
+  INITIAL_RESERVATION_GUEST_COUNTS,
+  RESERVATION_GUEST_COUNTERS,
+} from '@/features/reservation/constants/guest'
+import type {
+  ReservationGuestCounts,
+  ReservationGuestType,
+} from '@/features/reservation/constants/guest'
+import { createReservationTimeSlots } from '@/features/reservation/utils/createReservationTimeSlots'
 import {
   checkIsTodayOrBefore,
   createMonthStart,
   formatDateToLocalDateString,
 } from '@/shared/utils/date'
 import type { ReservationRestaurant } from '@/pages/restaurantReservationNew/hooks/useReservationRestaurant'
-
-type GuestType = 'adult' | 'teen' | 'child'
-
-type GuestCounts = Record<GuestType, number>
 
 interface UseRestaurantReservationFormParams {
   restaurant: ReservationRestaurant
@@ -20,30 +24,19 @@ export interface ReservationDraft {
   restaurantId: string
   restaurantName: string
   guestName: string
-  guests: GuestCounts
+  guests: ReservationGuestCounts
   date: string
   time: string
   requestNote: string
 }
 
-const GUEST_COUNTERS = [
-  { key: 'adult', label: '어른' },
-  { key: 'teen', label: '청소년' },
-  { key: 'child', label: '어린이' },
-] satisfies { key: GuestType; label: string }[]
-
-const INITIAL_GUEST_COUNTS = {
-  adult: 0,
-  teen: 0,
-  child: 0,
-} satisfies GuestCounts
-
 export const useRestaurantReservationForm = ({
   restaurant,
 }: UseRestaurantReservationFormParams) => {
   const [guestName, setGuestName] = useState('')
-  const [guestCounts, setGuestCounts] =
-    useState<GuestCounts>(INITIAL_GUEST_COUNTS)
+  const [guestCounts, setGuestCounts] = useState<ReservationGuestCounts>(
+    INITIAL_RESERVATION_GUEST_COUNTS,
+  )
   const [visibleMonth, setVisibleMonth] = useState(() =>
     createMonthStart(new Date()),
   )
@@ -71,11 +64,22 @@ export const useRestaurantReservationForm = ({
     isSelectedDateValid &&
     selectedTime !== undefined
 
-  const handleGuestCountChange = (guestType: GuestType, amount: number) => {
+  const handleGuestCountChange = (
+    guestType: ReservationGuestType,
+    amount: number,
+  ) => {
     setGuestCounts((currentGuestCounts) => ({
       ...currentGuestCounts,
       [guestType]: Math.max(0, currentGuestCounts[guestType] + amount),
     }))
+  }
+
+  const handleTimeSelect = (time: string) => {
+    if (!isSelectedDateValid) {
+      return
+    }
+
+    setSelectedTime(time)
   }
 
   const createReservationDraft = (): ReservationDraft | undefined => {
@@ -105,7 +109,7 @@ export const useRestaurantReservationForm = ({
         onValueChange: setRequestNote,
       },
     },
-    guestCounters: GUEST_COUNTERS.map(({ key, label }) => ({
+    guestCounters: RESERVATION_GUEST_COUNTERS.map(({ key, label }) => ({
       key,
       label,
       value: guestCounts[key],
@@ -124,7 +128,8 @@ export const useRestaurantReservationForm = ({
     timeSelector: {
       timeSlots,
       selectedTime,
-      onTimeSelect: setSelectedTime,
+      disabled: !isSelectedDateValid,
+      onTimeSelect: handleTimeSelect,
     },
     submit: {
       canSubmit,

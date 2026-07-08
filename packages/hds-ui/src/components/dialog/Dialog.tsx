@@ -206,7 +206,7 @@ const Content = ({
 
   return (
     <AriaModalOverlay
-      className="z-modal fixed inset-0 flex items-center justify-center bg-black/40 px-6"
+      className="bg-dim z-modal fixed inset-0 flex items-center justify-center px-6"
       data-hds-dialog-overlay=""
       isDismissable={type === 'dialog'}
       isOpen={open}

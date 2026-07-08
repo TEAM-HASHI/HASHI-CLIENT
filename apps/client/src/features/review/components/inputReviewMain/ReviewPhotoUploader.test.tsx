@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { createRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { ReviewPhotoUploader } from './ReviewPhotoUploader'
+import { ReviewPhotoUploader } from '@/features/review/components/inputReviewMain/ReviewPhotoUploader'
 
 const renderReviewPhotoUploader = (
   overrides: Partial<Parameters<typeof ReviewPhotoUploader>[0]> = {},
