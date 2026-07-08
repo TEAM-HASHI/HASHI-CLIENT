@@ -13,16 +13,21 @@ const ALLOWED_REDIRECT_ROUTES = [
   ROUTES.reservationRequest,
 ] as const
 
+const REDIRECT_URL_BASE = 'https://hashi.local'
+
 const getAllowedRedirectPath = (redirectTo: string | null) => {
   if (!redirectTo?.startsWith('/') || redirectTo.startsWith('//')) {
     return ROUTES.home
   }
 
+  const redirectUrl = new URL(redirectTo, REDIRECT_URL_BASE)
   const isAllowedRedirectPath = ALLOWED_REDIRECT_ROUTES.some((route) =>
-    matchPath({ path: route, end: true }, redirectTo),
+    matchPath({ path: route, end: true }, redirectUrl.pathname),
   )
 
-  return isAllowedRedirectPath ? redirectTo : ROUTES.home
+  return isAllowedRedirectPath
+    ? `${redirectUrl.pathname}${redirectUrl.search}${redirectUrl.hash}`
+    : ROUTES.home
 }
 
 export const useProfileNewPage = () => {

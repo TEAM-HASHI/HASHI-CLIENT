@@ -22,6 +22,8 @@ export interface ProfileDraft {
 
 const DUPLICATED_NICKNAMES = new Set(duplicatedNicknames)
 const PROFILE_IMAGE_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
+const PROFILE_IMAGE_INVALID_FILE_TYPE_ERROR_MESSAGE =
+  '이미지 파일만 등록해주세요.'
 const PROFILE_IMAGE_MAX_FILE_SIZE_ERROR_MESSAGE =
   '5MB 이하의 이미지만 등록해주세요.'
 
@@ -40,7 +42,6 @@ export const useProfileNewForm = () => {
     () => new Set(),
   )
   const [hasSubmitAttempted, setHasSubmitAttempted] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
 
   const normalizedBirthDate = normalizeDigits(birthDate).slice(0, 8)
@@ -55,11 +56,7 @@ export const useProfileNewForm = () => {
   const isPhoneNumberValid = checkIsValidPhoneNumber(normalizedPhoneNumber)
   const isEmailValid = checkIsValidEmail(trimmedEmail)
   const canSubmit =
-    isNicknameValid &&
-    isBirthDateValid &&
-    isPhoneNumberValid &&
-    isEmailValid &&
-    !isSubmitting
+    isNicknameValid && isBirthDateValid && isPhoneNumberValid && isEmailValid
 
   const checkShouldShowError = (fieldName: string) => {
     return hasSubmitAttempted || touchedFields.has(fieldName)
@@ -121,6 +118,11 @@ export const useProfileNewForm = () => {
   }, [])
 
   const handleProfileImageChange = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setProfileImageErrorMessage(PROFILE_IMAGE_INVALID_FILE_TYPE_ERROR_MESSAGE)
+      return
+    }
+
     if (file.size > PROFILE_IMAGE_MAX_FILE_SIZE_BYTES) {
       setProfileImageErrorMessage(PROFILE_IMAGE_MAX_FILE_SIZE_ERROR_MESSAGE)
       return
@@ -142,7 +144,7 @@ export const useProfileNewForm = () => {
     setProfileImageFile(undefined)
     revokeProfileImagePreviewUrl()
     setProfileImagePreviewUrl(undefined)
-    setIsProfileImageDeleted(true)
+    setIsProfileImageDeleted(false)
     setProfileImageErrorMessage('')
   }
 
@@ -159,8 +161,6 @@ export const useProfileNewForm = () => {
     if (!canSubmit) {
       return undefined
     }
-
-    setIsSubmitting(true)
 
     return {
       profileImageFile,
@@ -217,7 +217,7 @@ export const useProfileNewForm = () => {
     formError,
     submit: {
       canSubmit,
-      isSubmitting,
+      isSubmitting: false,
       createProfileDraft,
     },
   }

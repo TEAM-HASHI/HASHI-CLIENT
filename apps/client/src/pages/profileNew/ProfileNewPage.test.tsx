@@ -38,6 +38,21 @@ describe('ProfileNewPage', () => {
     expect(screen.getByRole('button', { name: '완료' })).toBeDisabled()
   })
 
+  it('fixes the header wrapper inside the mobile app frame with the shared utility', () => {
+    render(<ProfileNewPage />)
+
+    const backButton = screen.getByRole('button', { name: '뒤로가기' })
+    const header = backButton.closest('header')
+    const fixedHeaderWrapper = header?.parentElement
+
+    expect(header).toHaveClass('relative')
+    expect(fixedHeaderWrapper).toHaveClass(
+      'app-mobile-fixed-top',
+      'z-fixed',
+      'bg-white',
+    )
+  })
+
   it('shows the default profile image before and after deleting profile image', () => {
     render(<ProfileNewPage />)
 
@@ -168,6 +183,33 @@ describe('ProfileNewPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
     expect(mockNavigate).toHaveBeenCalledWith('/restaurants/1/reviews/new')
+  })
+
+  it('preserves search and hash on an allowed redirectTo path after valid submit', () => {
+    mockSearchParams.set(
+      'redirectTo',
+      '/restaurants/1/reviews/new?reservationId=1#review-form',
+    )
+    render(<ProfileNewPage />)
+
+    fireEvent.change(screen.getByLabelText('닉네임'), {
+      target: { value: '하시' },
+    })
+    fireEvent.change(screen.getByLabelText('생년월일'), {
+      target: { value: '20260708' },
+    })
+    fireEvent.change(screen.getByLabelText('연락처'), {
+      target: { value: '01012345678' },
+    })
+    fireEvent.change(screen.getByLabelText('이메일'), {
+      target: { value: 'hashi@example.com' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '완료' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/restaurants/1/reviews/new?reservationId=1#review-form',
+    )
   })
 
   it('ignores unsupported internal redirectTo paths after valid submit', () => {

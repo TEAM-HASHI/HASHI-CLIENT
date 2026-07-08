@@ -8,6 +8,17 @@ describe('useProfileNewForm', () => {
     vi.unstubAllGlobals()
   })
 
+  const fillRequiredFields = (result: {
+    current: ReturnType<typeof useProfileNewForm>
+  }) => {
+    act(() => {
+      result.current.fields.nickname.onValueChange('하시')
+      result.current.fields.birthDate.onValueChange('20260708')
+      result.current.fields.phoneNumber.onValueChange('01012345678')
+      result.current.fields.email.onValueChange('hashi@example.com')
+    })
+  }
+
   it('revokes profile image preview URLs when replacing, deleting, and unmounting', () => {
     const createObjectUrl = vi
       .fn()
@@ -54,5 +65,100 @@ describe('useProfileNewForm', () => {
     unmount()
 
     expect(revokeObjectUrl).toHaveBeenCalledWith('blob:third-preview')
+  })
+
+  it('rejects non-image files without creating a preview URL', () => {
+    const createObjectUrl = vi.fn(() => 'blob:text-preview')
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: createObjectUrl,
+    })
+    const { result } = renderHook(() => useProfileNewForm())
+    const textFile = new File(['profile'], 'profile.txt', {
+      type: 'text/plain',
+    })
+
+    act(() => {
+      result.current.profileImage.onChange(textFile)
+    })
+
+    expect(createObjectUrl).not.toHaveBeenCalled()
+    expect(result.current.profileImage.previewUrl).toBeUndefined()
+    expect(result.current.profileImage.errorMessage).toBe(
+      '이미지 파일만 등록해주세요.',
+    )
+  })
+
+  it('resets selected profile image without marking server image deletion in create flow', () => {
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: vi.fn(() => 'blob:profile-preview'),
+      revokeObjectURL: vi.fn(),
+    })
+    const { result } = renderHook(() => useProfileNewForm())
+    const imageFile = new File(['profile'], 'profile.png', {
+      type: 'image/png',
+    })
+
+    act(() => {
+      result.current.profileImage.onChange(imageFile)
+    })
+    act(() => {
+      result.current.profileImage.onDelete()
+    })
+    fillRequiredFields(result)
+
+    let profileDraft: ReturnType<
+      typeof result.current.submit.createProfileDraft
+    >
+
+    act(() => {
+      profileDraft = result.current.submit.createProfileDraft()
+    })
+
+    expect(profileDraft).toMatchObject({
+      profileImageFile: undefined,
+      isProfileImageDeleted: false,
+    })
+  })
+
+  it('does not keep submitting state after creating a local profile draft', () => {
+    const { result } = renderHook(() => useProfileNewForm())
+    fillRequiredFields(result)
+
+    act(() => {
+      result.current.submit.createProfileDraft()
+    })
+
+    expect(result.current.submit.canSubmit).toBe(true)
+    expect(result.current.submit.isSubmitting).toBe(false)
+  })
+
+  it('creates a normalized profile draft from valid form values', () => {
+    const { result } = renderHook(() => useProfileNewForm())
+
+    act(() => {
+      result.current.fields.nickname.onValueChange('  하시  ')
+      result.current.fields.birthDate.onValueChange('2026/07/08')
+      result.current.fields.phoneNumber.onValueChange('010-1234-5678')
+      result.current.fields.englishName.onValueChange('  Hashi  ')
+      result.current.fields.email.onValueChange('  hashi@example.com  ')
+    })
+
+    let profileDraft: ReturnType<
+      typeof result.current.submit.createProfileDraft
+    >
+
+    act(() => {
+      profileDraft = result.current.submit.createProfileDraft()
+    })
+
+    expect(profileDraft).toMatchObject({
+      nickname: '하시',
+      birthDate: '20260708',
+      phoneNumber: '01012345678',
+      englishName: 'Hashi',
+      email: 'hashi@example.com',
+    })
   })
 })

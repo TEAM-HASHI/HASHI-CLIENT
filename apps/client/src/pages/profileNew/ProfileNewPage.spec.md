@@ -51,8 +51,10 @@ Jira: HASHI-76
 - [ ] 기본 프로필 이미지는 `apps/client/src/shared/assets/images/profile-empty.svg`를 사용한다.
 - [ ] 프로필 이미지 수정 버튼은 이미지 파일 선택을 연다.
 - [ ] 사용자가 이미지를 선택하면 원형 preview로 표시한다.
+- [ ] 이미지가 아닌 파일은 등록하지 않고 `이미지 파일만 등록해주세요.` 오류 문구를 표시한다.
 - [ ] 5MB를 초과하는 프로필 이미지는 등록하지 않고 `5MB 이하의 이미지만 등록해주세요.` 오류 문구를 표시한다.
 - [ ] `프로필 삭제` 버튼은 선택한 이미지를 제거하고 기본 프로필 이미지 상태로 되돌린다.
+- [ ] 신규 프로필 생성 화면에서 `프로필 삭제`는 선택 파일 reset만 의미하며, 서버 이미지 삭제 의도를 draft에 담지 않는다.
 - [ ] 프로필 이미지는 90px 원형으로 노출하고, 수정 아이콘은 `button_edit` 성격의 25px 아이콘을 사용한다.
 - [ ] 프로필 이미지와 `프로필 삭제` 텍스트 사이 간격은 16px이고, 텍스트는 `Body3 / primary-200`을 사용한다.
 - [ ] 닉네임 입력 필드를 보여준다.
@@ -104,7 +106,8 @@ Jira: HASHI-76
   - 현재 확정 API 없음
   - 추후 프로필 생성 API로 교체 예정
 - request data:
-  - `profileImageFile` 또는 이미지 삭제 상태
+  - `profileImageFile`
+  - `isProfileImageDeleted`: 신규 프로필 생성 화면에서는 항상 `false`
   - `nickname`
   - `birthDate`: digits-only `YYYYMMDD`
   - `phoneNumber`: digits-only
@@ -119,6 +122,7 @@ Jira: HASHI-76
   - 제출 중이 아님
 - success handling:
   - `redirectTo` search param이 허용된 내부 경로이면 해당 경로로 이동한다.
+  - 허용된 `redirectTo`에 query string 또는 hash가 포함되어 있으면 `pathname`만 allowlist 기준으로 검증하고, 실제 이동 시에는 query string과 hash를 보존한다.
   - `redirectTo`가 없으면 `ROUTES.home`으로 이동한다.
 - failure handling:
   - field error는 해당 input 아래에 표시한다.
@@ -142,7 +146,7 @@ Jira: HASHI-76
 - local state:
   - selected profile image preview URL
   - selected profile image file
-  - profile image deletion state
+  - profile image deletion state, API payload 호환을 위해 유지하되 신규 생성 화면에서는 `false`
   - profile image file error message
   - form-level error message, API 연동 전에는 기본값 없음
   - owner: `useProfileNewForm`
@@ -154,6 +158,7 @@ Jira: HASHI-76
   - `email`
   - owner: `useProfileNewForm`
   - `react-hook-form`, `zod`는 이번 티켓에서 추가하지 않는다.
+  - 추후 폼 표준화 시 `react-hook-form` + `zod resolver` 기반으로 validation, submit 가능 여부, payload 변환을 schema 중심으로 재검토한다.
 - URL state:
   - optional `redirectTo` search param
   - 허용 경로:
@@ -202,9 +207,10 @@ Jira: HASHI-76
 ```text
 ProfileNewPage
   useProfileNewPage
-  Header
-    BackAction
-    Title
+  FixedHeaderWrapper
+    Header
+      BackAction
+      Title
   Form#PROFILE_NEW_FORM_ID
     ProfileImageSection
       Avatar
@@ -273,8 +279,10 @@ ProfileNewPage
   - 생년월일, 연락처, 이메일 오류는 blur 이후 또는 submit 시도 이후 표시한다.
 - exceptional case:
   - 파일 선택을 취소하면 기존 이미지 상태를 유지한다.
+  - 이미지가 아닌 파일은 선택해도 preview로 반영하지 않고, 프로필 이미지 영역 근처에 오류를 표시한다.
   - 5MB를 초과하는 이미지는 선택해도 preview로 반영하지 않고, 프로필 이미지 영역 근처에 오류를 표시한다.
-  - 이미지 파일 형식 제한은 `accept="image/*"`만 적용하고, 별도 오류는 이번 범위에서 표시하지 않는다.
+  - `accept="image/*"`는 브라우저 선택 UI 힌트로만 사용하고, handler에서 `file.type.startsWith('image/')`를 별도로 검증한다.
+  - `redirectTo`에 query string 또는 hash가 붙어도 허용 여부는 `pathname` 기준으로 판단한다.
   - `redirectTo`가 외부 URL이거나 허용되지 않은 내부 경로이면 무시하고 `ROUTES.home`으로 이동한다.
 - user-facing message:
   - field error는 해당 input 바로 아래 빨간 텍스트로 표시한다.
@@ -295,6 +303,7 @@ ProfileNewPage
   - optional `redirectTo`
 - success redirect:
   - allowed `redirectTo`
+  - allowed `redirectTo`의 query string/hash 보존
   - fallback `ROUTES.home`
 - failure redirect:
   - none
@@ -308,7 +317,8 @@ ProfileNewPage
 - Tailwind layout:
   - mobile-first, `RootLayout` mobile frame 기준
   - page root는 `min-h-dvh bg-white`를 사용한다.
-  - header는 모바일 프레임 상단에 `z-fixed fixed top-0 right-0 left-0 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white`로 고정한다.
+  - header는 `app-mobile-fixed-top z-fixed bg-white` wrapper 안에서 모바일 프레임 상단에 고정한다.
+  - HDS `Header`는 기본 position이 `relative`이므로 `app-mobile-fixed-top`을 `Header`에 직접 붙이지 않는다.
   - fixed header가 form을 덮지 않도록 form에 header height만큼 `pt-[75px]`를 둔다.
   - `ProfileSection`과 `FormSection` 사이는 28px 간격을 둔다.
   - form item 사이는 20px 간격을 둔다.
@@ -335,6 +345,7 @@ ProfileNewPage
 - form state, formatting, validation, submit draft 생성은 `useProfileNewForm`에서 소유한다.
 - API 연동 전 임시 데이터는 `mocks/profileNew.mock.ts`에 둔다.
 - API 연동 전이므로 `useProfileNewForm`은 로컬 draft 생성까지만 담당하고 서버 요청은 실행하지 않는다.
+- API 연동 전 local draft 생성은 submitting 상태를 유지하지 않는다.
 - 하단 CTA는 기존 예약 페이지처럼 `form` attribute와 `PROFILE_NEW_FORM_ID`를 연결해 submit한다.
 - `redirectTo`는 리뷰 작성/예약 플로우 복귀에 필요한 내부 route만 허용한다.
 - page-local 컴포넌트 import는 `@/pages/profileNew/...` alias를 사용한다.

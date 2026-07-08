@@ -12,15 +12,20 @@ export const ProfileNewPage = () => {
   return (
     <div className="min-h-dvh bg-white pb-32">
       <h1 className="sr-only">프로필 생성</h1>
-      <Header
-        className="z-fixed fixed top-0 right-0 left-0 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white"
-        leftAction={
-          <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        title="프로필 생성"
-      />
+      <div className="app-mobile-fixed-top z-fixed bg-white">
+        <Header
+          leftAction={
+            <IconButton
+              aria-label="뒤로가기"
+              onClick={handleBackClick}
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          title="프로필 생성"
+        />
+      </div>
 
       <form className="px-6 pt-[75px]" id={formId} onSubmit={handleSubmit}>
         <ProfileImageSection
