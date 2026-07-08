@@ -63,7 +63,7 @@ export const ReservationRequestPage = () => {
   return (
     <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
       <Header
-        className="app-mobile-fixed-top z-fixed"
+        className="app-mobile-fixed-top z-fixed fixed"
         leftAction={
           <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
             <BackIcon className="size-6" />
