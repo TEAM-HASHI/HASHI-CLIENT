@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import type { SyntheticEvent } from 'react'
 import { useState } from 'react'
 
 import {
@@ -26,7 +26,7 @@ export const useReviewForm = () => {
     checkIsValidReviewText(reviewText) &&
     checkIsValidReviewPhotoFiles(photoFiles)
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!canSubmitReview) {

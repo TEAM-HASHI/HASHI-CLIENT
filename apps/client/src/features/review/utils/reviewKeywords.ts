@@ -1,4 +1,4 @@
-import type { ReviewKeywordId } from '../constants/reviewKeywords'
+import type { ReviewKeywordId } from '@/features/review/constants'
 
 export const getNextSelectedReviewKeywordIds = (
   selectedKeywordIds: ReviewKeywordId[],

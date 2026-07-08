@@ -1,4 +1,4 @@
-import { REVIEW_TEXT_MIN_LENGTH } from '../constants/reviewInputRules'
+import { REVIEW_TEXT_MIN_LENGTH } from '@/features/review/constants'
 
 export const getReviewTextHelperText = (
   valueLength: number,

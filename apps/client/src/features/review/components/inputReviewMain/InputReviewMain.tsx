@@ -9,8 +9,8 @@ import {
 import { getReviewTextHelperText } from '@/features/review/utils'
 import { cn } from '@/shared/utils'
 
-import { ReviewPhotoUploader } from './ReviewPhotoUploader'
-import { useReviewPhotoUploader } from './useReviewPhotoUploader'
+import { ReviewPhotoUploader } from '@/features/review/components/inputReviewMain/ReviewPhotoUploader'
+import { useReviewPhotoUploader } from '@/features/review/components/inputReviewMain/useReviewPhotoUploader'
 
 export interface InputReviewMainProps extends Omit<
   ComponentPropsWithoutRef<'section'>,

@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { InputReviewRate } from './InputReviewRate'
+import { InputReviewRate } from '@/features/review/components'
 
 afterEach(() => {
   cleanup()
