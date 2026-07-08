@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { cva } from 'class-variance-authority'
 import { cn } from '../../utils'
 
@@ -18,6 +18,7 @@ type BadgeInteractiveProps = BadgeBaseProps & {
   interactive: true
   selected?: boolean
   onSelectedChange?: (selected: boolean) => void
+  'aria-disabled'?: ComponentPropsWithoutRef<'button'>['aria-disabled']
 }
 
 export type BadgeProps = BadgeStaticProps | BadgeInteractiveProps
@@ -33,6 +34,10 @@ const badgeVariants = cva(
       selected: {
         true: 'border-primary-400 bg-primary-400/20',
         false: 'border-warm-gray-100 bg-white',
+      },
+      disabled: {
+        true: 'cursor-not-allowed opacity-40',
+        false: null,
       },
     },
   },
@@ -55,19 +60,31 @@ const BadgeContent = ({ icon, label }: Pick<BadgeProps, 'icon' | 'label'>) => {
 }
 
 export const Badge = (props: BadgeProps) => {
-  const { icon, interactive = false, label, className } = props
-  const selected = interactive ? (props.selected ?? false) : false
+  const { icon, label, className } = props
+  const selected = props.interactive ? (props.selected ?? false) : false
 
-  if (interactive) {
+  if (props.interactive) {
+    const {
+      'aria-disabled': ariaDisabled,
+      onSelectedChange,
+      selected: interactiveSelected = false,
+    } = props
+    const isDisabled = ariaDisabled === true || ariaDisabled === 'true'
+
     const handleClick = () => {
-      props.onSelectedChange?.(!selected)
+      if (isDisabled) {
+        return
+      }
+
+      onSelectedChange?.(!interactiveSelected)
     }
 
     return (
       <button
+        aria-disabled={ariaDisabled}
         aria-pressed={selected}
         className={cn(
-          badgeVariants({ interactive: true, selected }),
+          badgeVariants({ disabled: isDisabled, interactive: true, selected }),
           className,
         )}
         onClick={handleClick}

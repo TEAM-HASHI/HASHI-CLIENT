@@ -29,9 +29,19 @@ export const FilterBottomSheet = ({
   onReset,
   onApply,
 }: FilterBottomSheetProps) => {
+  const handleResetClick = () => {
+    onReset()
+    onOpenChange(false)
+  }
+
   const sheetFooter = (
     <div className="grid grid-cols-2 gap-[7px]">
-      <Button onClick={onReset} size="md" variant="neutral" width="full">
+      <Button
+        onClick={handleResetClick}
+        size="md"
+        variant="neutral"
+        width="full"
+      >
         초기화
       </Button>
       <Button onClick={onApply} size="md" variant="primary" width="full">
@@ -45,9 +55,9 @@ export const FilterBottomSheet = ({
       footer={sheetFooter}
       open={open}
       onOpenChange={onOpenChange}
-      title={title}
+      title={<span className="typo-sub-header-2">{title}</span>}
     >
-      <ul className="flex flex-col gap-[20px] pt-[40px]">
+      <ul className="flex flex-col gap-[5px] pt-[40px] pb-1">
         {options.map((option) => {
           const isSelected = option.value === selectedValue
 
@@ -56,7 +66,7 @@ export const FilterBottomSheet = ({
               <button
                 aria-pressed={isSelected}
                 className={cn(
-                  'flex min-h-5 w-full items-center justify-between text-black',
+                  'flex min-h-5 w-full items-center justify-between py-[10px] text-black',
                   isSelected ? 'typo-body-3' : 'typo-body-4',
                 )}
                 onClick={() => onSelect(option.value)}
@@ -64,7 +74,10 @@ export const FilterBottomSheet = ({
               >
                 <span>{option.label}</span>
                 {isSelected && (
-                  <CheckIcon aria-hidden="true" className="size-5 shrink-0" />
+                  <CheckIcon
+                    aria-hidden="true"
+                    className="text-cool-gray-700 size-5 shrink-0"
+                  />
                 )}
               </button>
             </li>

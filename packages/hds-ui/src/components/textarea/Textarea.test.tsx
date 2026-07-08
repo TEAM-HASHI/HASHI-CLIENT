@@ -162,6 +162,15 @@ describe('Textarea', () => {
     expect(textarea.hasAttribute('disabled')).toBe(true)
   })
 
+  it('applies textareaClassName to the inner textarea', () => {
+    render(<Textarea aria-label="memo" textareaClassName="typo-long-body-1" />)
+
+    expect(screen.getByRole('textbox', { name: 'memo' })).toHaveClass(
+      'typo-body-4',
+      'typo-long-body-1',
+    )
+  })
+
   it('calls the provided change handler', () => {
     const handleChange = vi.fn()
 

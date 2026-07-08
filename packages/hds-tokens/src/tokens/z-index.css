@@ -1,1 +1,8 @@
-/* Z-index tokens will be added after overlay and navigation layers are defined. */
+@theme {
+  --z-index-base: 0;
+  --z-index-raised: 10;
+  --z-index-fixed: 20;
+  --z-index-overlay: 40;
+  --z-index-modal: 50;
+  --z-index-toast: 60;
+}
