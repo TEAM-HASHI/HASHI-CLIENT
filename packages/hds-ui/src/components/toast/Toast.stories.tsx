@@ -1,8 +1,8 @@
 import { CheckIcon, LinkIcon, NoteIcon } from '@hashi/hds-icons'
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { useEffect, useMemo, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
-import { createToastQueue, ToastRegion, type ToastContent } from './Toast'
+import type { ToastContent } from './Toast'
 
 const mobileFrameDecorator = (Story: () => ReactNode) => (
   <div className="flex w-[393px] bg-white p-5">
@@ -12,16 +12,16 @@ const mobileFrameDecorator = (Story: () => ReactNode) => (
 
 type ToastPreviewProps = ToastContent
 
-const ToastPreview = ({ icon, children }: ToastPreviewProps) => {
-  const queue = useMemo(() => createToastQueue(), [])
-
-  useEffect(() => {
-    queue.clear()
-    queue.add({ children, icon })
-  }, [children, icon, queue])
-
-  return <ToastRegion queue={queue} />
-}
+const ToastPreview = ({ icon, children }: ToastPreviewProps) => (
+  <div className="bg-primary-200 flex h-15 w-[353px] items-center gap-2.75 rounded-[10px] px-5 text-white">
+    {icon ? (
+      <span aria-hidden="true" className="flex size-6 shrink-0">
+        {icon}
+      </span>
+    ) : null}
+    <span className="typo-long-body-1 line-clamp-2 min-w-0">{children}</span>
+  </div>
+)
 
 const meta = {
   title: 'Components/Toast',
@@ -46,13 +46,16 @@ export default meta
 
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {}
+export const Default: Story = {
+  render: (args) => <ToastPreview {...args} />,
+}
 
 export const WithoutIcon: Story = {
   args: {
     icon: undefined,
     children: '저장되었습니다.',
   },
+  render: (args) => <ToastPreview {...args} />,
 }
 
 export const LongText: Story = {
@@ -60,6 +63,7 @@ export const LongText: Story = {
     children:
       '링크가 복사 되었어요. 길이가 긴 안내 문구는 최대 두 줄까지 표시됩니다.',
   },
+  render: (args) => <ToastPreview {...args} />,
 }
 
 export const Success: Story = {
@@ -67,6 +71,7 @@ export const Success: Story = {
     children: '예약이 취소되었어요.',
     icon: <CheckIcon className="text-success size-6" />,
   },
+  render: (args) => <ToastPreview {...args} />,
 }
 
 export const Error: Story = {
@@ -80,4 +85,5 @@ export const Error: Story = {
     ),
     icon: <NoteIcon className="size-6" />,
   },
+  render: (args) => <ToastPreview {...args} />,
 }
