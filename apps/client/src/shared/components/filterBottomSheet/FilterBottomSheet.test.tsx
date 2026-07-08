@@ -8,7 +8,7 @@ import {
 } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { FilterBottomSheet } from './FilterBottomSheet'
+import { FilterBottomSheet } from '@/shared/components/filterBottomSheet/FilterBottomSheet'
 
 const options = [
   { label: '스시/사시미류', value: 'sushi' },
@@ -43,10 +43,10 @@ describe('FilterBottomSheet', () => {
       screen.getByRole('button', { name: '스시/사시미류' }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: '스시/사시미류' })).toHaveClass(
-      'font-medium',
+      'typo-body-3',
     )
     expect(screen.getByRole('button', { name: '면류' })).toHaveClass(
-      'font-normal',
+      'typo-body-4',
     )
   })
 
@@ -65,24 +65,23 @@ describe('FilterBottomSheet', () => {
       />,
     )
 
-    const sheetContent = screen
-      .getByRole('dialog', { name: '음식 장르 선택' })
-      .querySelector('[data-testid="filter-bottom-sheet-content"]')
+    const dialog = screen.getByRole('dialog', { name: '음식 장르 선택' })
 
-    expect(sheetContent).toHaveClass('max-h-[calc(100dvh-80px)]')
-    expect(sheetContent).not.toHaveAttribute('style')
+    expect(dialog).toHaveClass('max-h-[calc(100dvh-80px)]')
+    expect(dialog).not.toHaveAttribute('style')
   })
 
   it('calls handlers when option and footer buttons are pressed', () => {
     const handleSelect = vi.fn()
     const handleReset = vi.fn()
     const handleApply = vi.fn()
+    const handleOpenChange = vi.fn()
 
     render(
       <FilterBottomSheet
         open
         onApply={handleApply}
-        onOpenChange={vi.fn()}
+        onOpenChange={handleOpenChange}
         onReset={handleReset}
         onSelect={handleSelect}
         options={options}
@@ -97,10 +96,11 @@ describe('FilterBottomSheet', () => {
 
     expect(handleSelect).toHaveBeenCalledWith('noodle')
     expect(handleReset).toHaveBeenCalled()
+    expect(handleOpenChange).not.toHaveBeenCalled()
     expect(handleApply).toHaveBeenCalled()
   })
 
-  it('does not request close from overlay click or escape key', async () => {
+  it('requests close from overlay click and escape key through BottomSheet', async () => {
     const handleOpenChange = vi.fn()
 
     render(
@@ -120,12 +120,16 @@ describe('FilterBottomSheet', () => {
 
     fireEvent.click(dialog.parentElement!)
 
+    expect(handleOpenChange).toHaveBeenCalledWith(false)
+
     await waitFor(() => {
       expect(dialog).toHaveFocus()
     })
 
+    handleOpenChange.mockClear()
+
     fireEvent.keyDown(dialog, { key: 'Escape' })
 
-    expect(handleOpenChange).not.toHaveBeenCalled()
+    expect(handleOpenChange).toHaveBeenCalledWith(false)
   })
 })

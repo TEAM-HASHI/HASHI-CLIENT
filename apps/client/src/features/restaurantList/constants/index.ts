@@ -4,4 +4,3 @@ export {
   RESTAURANT_IMAGE_SLOT_COUNT,
   RESTAURANT_LIST_PAGE_SIZE,
 } from './layout'
-export { MOCK_RESTAURANTS } from './mockRestaurants'

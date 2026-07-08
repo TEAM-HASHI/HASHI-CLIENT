@@ -1,4 +1,4 @@
-import { CancelIcon, CheckIcon } from '@hashi/hds-icons'
+import { CheckIcon } from '@hashi/hds-icons'
 import { BottomSheet, Button } from '@hashi/hds-ui'
 
 import { cn } from '@/shared/utils'
@@ -31,41 +31,33 @@ export const FilterBottomSheet = ({
   onReset,
   onApply,
 }: FilterBottomSheetProps) => {
+  const sheetFooter = (
+    <div className="grid grid-cols-2 gap-3.25">
+      <Button onClick={onReset} size="md" variant="neutral" width="full">
+        초기화
+      </Button>
+      <Button onClick={onApply} size="md" variant="primary" width="full">
+        적용
+      </Button>
+    </div>
+  )
   return (
     <BottomSheet
-      closeOnEscape={false}
-      closeOnOverlayClick={false}
       aria-label={title}
-      className="rounded-t-[10px]"
-      contentClassName="px-0"
+      className={cn(
+        'flex max-h-[calc(100dvh-40px)] flex-col rounded-t-[10px]',
+        maxHeightClassName,
+      )}
+      footer={sheetFooter}
       open={open}
-      overlayClassName="bg-[#1d1d1d]/70"
       onOpenChange={onOpenChange}
-      showCloseButton={false}
-      showHandle={false}
+      title={<span className="typo-sub-header-2">{title}</span>}
     >
       <div
-        className={cn(
-          'flex max-h-[calc(100dvh-40px)] flex-col pt-7',
-          maxHeightClassName,
-        )}
+        className="max-h-[calc(100dvh-180px)] overflow-y-auto"
         data-testid="filter-bottom-sheet-content"
       >
-        <div className="relative mx-6 h-6">
-          <h2 className="absolute inset-x-10 top-1/2 -translate-y-1/2 text-center text-[16px] font-semibold text-black">
-            {title}
-          </h2>
-          <button
-            aria-label="닫기"
-            className="absolute top-0 right-0 flex size-6 items-center justify-center"
-            onClick={() => onOpenChange(false)}
-            type="button"
-          >
-            <CancelIcon aria-hidden="true" className="size-6" />
-          </button>
-        </div>
-
-        <ul className="mx-6 mt-[39px] flex flex-1 flex-col gap-[5px] overflow-y-auto">
+        <ul className="flex flex-col gap-1.25 pt-10 pb-1">
           {options.map((option) => {
             const isSelected = option.value === selectedValue
 
@@ -74,44 +66,24 @@ export const FilterBottomSheet = ({
                 <button
                   aria-pressed={isSelected}
                   className={cn(
-                    'flex h-10 w-full items-center justify-between text-[16px] text-black',
-                    isSelected ? 'font-medium' : 'font-normal',
+                    'flex min-h-5 w-full items-center justify-between py-2.5 text-black',
+                    isSelected ? 'typo-body-3' : 'typo-body-4',
                   )}
                   onClick={() => onSelect(option.value)}
                   type="button"
                 >
                   <span>{option.label}</span>
                   {isSelected && (
-                    <CheckIcon aria-hidden="true" className="size-5 shrink-0" />
+                    <CheckIcon
+                      aria-hidden="true"
+                      className="text-cool-gray-700 size-5 shrink-0"
+                    />
                   )}
                 </button>
               </li>
             )
           })}
         </ul>
-
-        <div className="mt-5 h-[111px] w-full shrink-0 px-5 pt-4">
-          <div className="grid grid-cols-2 gap-[13px]">
-            <Button
-              className="h-[51px] text-[16px] font-medium"
-              onClick={onReset}
-              size="xl"
-              variant="neutral"
-              width="full"
-            >
-              초기화
-            </Button>
-            <Button
-              className="h-[51px] text-[16px] font-medium"
-              onClick={onApply}
-              size="xl"
-              variant="primary"
-              width="full"
-            >
-              적용
-            </Button>
-          </div>
-        </div>
       </div>
     </BottomSheet>
   )

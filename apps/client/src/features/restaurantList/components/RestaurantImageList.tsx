@@ -1,4 +1,5 @@
-import { RESTAURANT_IMAGE_SLOT_COUNT } from './constants'
+import { RESTAURANT_IMAGE_SLOT_COUNT } from '@/features/restaurantList/constants'
+import { DefaultImage } from '@/shared/components/defaultImage'
 
 type RestaurantImageListProps = {
   images: string[]
@@ -23,16 +24,17 @@ export const RestaurantImageList = ({
           return image ? (
             <img
               alt={`${restaurantName} 사진 ${index + 1}`}
-              className="size-[135px] shrink-0 rounded-[5px] object-cover"
+              className="size-33.75 shrink-0 rounded-[5px] object-cover"
               key={`${image}-${index}`}
               src={image}
             />
           ) : (
-            <span
+            <DefaultImage
               aria-hidden="true"
-              className="bg-primary-100 size-[135px] shrink-0 rounded-[5px]"
+              className="size-33.75 shrink-0 rounded-[5px]"
               data-testid="restaurant-image-placeholder"
               key={`placeholder-${index}`}
+              logoSize="md"
             />
           )
         })}
