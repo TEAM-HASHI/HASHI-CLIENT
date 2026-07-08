@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`ReviewHeader`는 리뷰 작성/수정 흐름 상단에서 페이지 제목과 뒤로가기 액션을 보여주는 review feature 전용 topbar입니다.
+`ReviewHeader`는 리뷰 작성/상세/수정 흐름 상단에서 페이지 제목과 뒤로가기 액션을 보여주는 review feature 전용 topbar입니다.
 
 이 컴포넌트는 HDS `Header`, `IconButton`, `BackIcon` 조합만 담당합니다. 실제 라우팅, 이전 화면 결정, 페이지 본문 구성은 호출부가 소유합니다.
 
@@ -19,8 +19,8 @@
 
 ## Usage Location
 
-- route: `/restaurants/:restaurantId/reviews/new`, `/reviews/:reviewId/edit`
-- page: `reviewNew`, `reviewEdit`
+- route: `/restaurants/:restaurantId/reviews/new`, `/reviews/:reviewId`, `/reviews/:reviewId/edit`
+- page: `reviewNew`, `reviewDetail`, `reviewEdit`
 - feature: `review`
 - expected path: `apps/client/src/features/review/components/reviewHeader/ReviewHeader.tsx`
 
@@ -28,6 +28,7 @@
 
 ```tsx
 <ReviewHeader onBackClick={handleBackClick} />
+<ReviewHeader title="리뷰 상세" onBackClick={handleBackClick} />
 ```
 
 - public export 여부: `apps/client/src/features/review/components/index.ts`에서 named export합니다.
@@ -38,7 +39,8 @@
 ## Requirements
 
 - [x] 높이 `75px`의 HDS center header를 렌더링합니다.
-- [x] 중앙 제목은 `리뷰 작성`으로 표시합니다.
+- [x] `title`을 전달하지 않으면 중앙 제목은 `리뷰 작성`으로 표시합니다.
+- [x] `title`을 전달하면 중앙 제목은 전달한 값으로 표시합니다.
 - [x] 왼쪽 액션에는 `aria-label="뒤로가기"`가 있는 아이콘 버튼을 표시합니다.
 - [x] 뒤로가기 버튼을 누르면 `onBackClick` callback을 호출합니다.
 - [x] 예약 요약, 식당명, 방문 정보, 썸네일은 렌더링하지 않습니다.
@@ -49,10 +51,17 @@
 ReviewHeader
   Header
     leftAction: IconButton + BackIcon
-    title: "리뷰 작성"
+    title: title
 ```
 
 ## Props
+
+### `title`
+
+- type: `string`
+- required: `false`
+- default: `'리뷰 작성'`
+- description: Header 중앙에 표시할 제목입니다. 리뷰 작성 화면은 기본값을 사용하고, 상세/수정처럼 화면명이 다른 경우 호출부가 주입합니다.
 
 ### `onBackClick`
 
@@ -90,6 +99,7 @@ ReviewHeader
 
 - styling 기준: HDS `Header`, HDS `IconButton`, `@hashi/hds-icons`의 `BackIcon`을 재사용합니다.
 - layout: 부모 너비를 따르는 `w-full` topbar입니다.
+- position: fixed/sticky 배치는 소유하지 않으며 페이지 layout wrapper가 결정합니다.
 - spacing: HDS `Header`의 `top-[33px]`, `left-[13px]`, title center 배치를 따릅니다.
 - responsive: 고정 width를 소유하지 않고 부모 너비를 따릅니다.
 - hover/focus/active/disabled: `IconButton`이 focus-visible 상태를 소유합니다.
@@ -119,7 +129,7 @@ HDS component가 아니므로 Storybook story를 작성하지 않습니다.
 
 - `ReviewHeader`는 route navigation을 직접 실행하지 않습니다.
 - `ReviewHeader`는 페이지 본문, 예약 요약, 저장 버튼을 포함하지 않습니다.
-- 추후 수정 페이지에서 다른 title이 필요해지면 `title` prop 추가를 검토합니다.
+- `ReviewHeader`는 fixed/sticky wrapper를 포함하지 않습니다. 상단 고정 여부는 각 페이지가 결정합니다.
 
 ## Verification
 
