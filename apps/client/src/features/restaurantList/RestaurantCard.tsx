@@ -23,18 +23,16 @@ export const RestaurantCard = ({
         onClick={handleClickRestaurant}
         type="button"
       >
-        <span className="line-clamp-1 h-[19px] text-[16px] leading-normal font-medium text-[#273033]">
+        <span className="typo-body-3 text-cool-gray-900 line-clamp-1 h-[19px]">
           {restaurant.name}
         </span>
-        <span className="mt-1 flex h-5 items-center text-[#4a4a4a]">
+        <span className="text-primary-200 mt-1 flex h-5 items-center">
           <StarFillIcon
             aria-hidden="true"
             className="text-primary-400 size-[18px] shrink-0"
           />
-          <span className="ml-px text-[16px] leading-normal font-medium">
-            {restaurant.rating}
-          </span>
-          <span className="ml-[5px] text-[14px] leading-5 font-normal">
+          <span className="typo-body-3 ml-px">{restaurant.rating}</span>
+          <span className="typo-body-7 ml-[5px]">
             {restaurant.region} · {restaurant.category}
           </span>
         </span>
@@ -44,13 +42,13 @@ export const RestaurantCard = ({
             restaurantName={restaurant.name}
           />
         </span>
-        <span className="mt-3 line-clamp-2 w-full max-w-[340px] text-[14px] leading-5 font-normal tracking-[0px] text-[#4a4a4a]">
+        <span className="typo-body-7 text-primary-200 mt-3 line-clamp-2 w-full">
           {restaurant.description}
         </span>
         <span className="mt-0.5 flex flex-wrap gap-x-2 gap-y-1">
           {restaurant.hashtags.map((hashtag, index) => (
             <span
-              className="text-[14px] leading-5 font-normal text-[#90a9b4]"
+              className="typo-body-7 text-cool-gray-400"
               key={`${hashtag}-${index}`}
             >
               {hashtag}

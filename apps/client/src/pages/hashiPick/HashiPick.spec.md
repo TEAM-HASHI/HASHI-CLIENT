@@ -43,7 +43,10 @@
 - [x] `초기화`는 현재 열린 sheet의 draft 값만 기본값으로 되돌립니다.
 - [x] 필터 BottomSheet는 X 버튼으로만 닫힙니다.
 - [x] RestaurantCard는 반복 렌더링되고 카드 클릭 시 식당 상세 route로 이동합니다.
-- [x] 식당 이미지는 가로 스크롤 리스트로 표시합니다.
+- [x] 식당 리스트는 최초 10개를 렌더링하고 하단 sentinel 진입 시 10개씩 추가 렌더링합니다.
+- [x] 식당 이미지는 최대 5개까지 가로 스크롤 리스트로 표시합니다.
+- [x] 식당 리스트 공통 UI는 `features/restaurantList`에 두고, route/page 조립과 navigation 상태는 `HashiPickPage`가 소유합니다.
+- [x] 식당 리스트 UI의 color/typography는 대응되는 HDS token utility를 우선 사용합니다.
 
 ## Data Dependencies
 
@@ -67,6 +70,7 @@
   - active bottom sheet: `sort | category | null`
   - selected/draft sort option
   - selected/draft category option
+  - visible restaurant count for infinite scroll
 - form state: none
 - URL state: none
 - server state: none
@@ -77,12 +81,12 @@
 
 ```text
 HashiPickPage
-  RestaurantListPage
-    Header
-    RestaurantFilterBar
-    RestaurantCard list
-    FilterBottomSheet(sort)
-    FilterBottomSheet(category)
+  Header
+  RestaurantFilterBar
+  RestaurantCard list
+    RestaurantImageList
+  FilterBottomSheet(sort)
+  FilterBottomSheet(category)
 ```
 
 ## Component Mapping
@@ -93,9 +97,14 @@ HashiPickPage
   - `BottomSheet`
   - `Button`
 - app shared component:
-  - `RestaurantListPage`
   - `FilterBottomSheet`
 - page-local component: none
+- feature component:
+  - `RestaurantFilterBar`
+  - `RestaurantCard`
+  - `RestaurantImageList`
+- feature hook:
+  - `useInfiniteRestaurantList`
 - icon:
   - `BackIcon`
   - `TapDownIcon`
@@ -115,7 +124,7 @@ HashiPickPage
 
 ## Verification
 
-- [x] `corepack pnpm --filter @hashi/client test -- FilterBottomSheet.test.tsx RestaurantListPage.test.tsx`
+- [x] `corepack pnpm --filter @hashi/client test -- HashiPickPage.test.tsx FilterBottomSheet.test.tsx`
 - [x] `corepack pnpm --filter @hashi/client lint`
 - [x] `corepack pnpm --filter @hashi/client typecheck`
 - [x] `corepack pnpm --filter @hashi/client build`

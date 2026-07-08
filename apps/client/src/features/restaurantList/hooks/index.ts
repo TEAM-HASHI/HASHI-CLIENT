@@ -1,0 +1,1 @@
+export { useInfiniteRestaurantList } from './useInfiniteRestaurantList'

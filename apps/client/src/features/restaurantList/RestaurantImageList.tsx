@@ -1,9 +1,9 @@
+import { RESTAURANT_IMAGE_SLOT_COUNT } from './constants'
+
 type RestaurantImageListProps = {
   images: string[]
   restaurantName: string
 }
-
-const RESTAURANT_IMAGE_SLOT_COUNT = 3
 
 export const RestaurantImageList = ({
   images,
@@ -13,7 +13,7 @@ export const RestaurantImageList = ({
 
   return (
     <span
-      className="block w-full max-w-[353px] [scrollbar-width:none] overflow-x-auto overflow-y-hidden [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      className="block w-full [scrollbar-width:none] overflow-x-auto overflow-y-hidden [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       data-testid="restaurant-image-list"
     >
       <span className="flex w-max gap-2">
