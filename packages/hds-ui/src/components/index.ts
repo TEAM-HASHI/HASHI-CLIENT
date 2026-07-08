@@ -32,8 +32,20 @@ export { Tabs } from './tabs'
 export type { TabsItem, TabsProps } from './tabs'
 export { Textarea } from './textarea'
 export type { TextareaProps } from './textarea'
-export { createToastQueue, Toast, ToastRegion, toastQueue } from './toast'
-export type { ToastContent, ToastProps, ToastRegionProps } from './toast'
+export {
+  createToastQueue,
+  DEFAULT_TOAST_TIMEOUT,
+  showToast,
+  Toast,
+  ToastRegion,
+  toastQueue,
+} from './toast'
+export type {
+  ToastContent,
+  ToastOptions,
+  ToastProps,
+  ToastRegionProps,
+} from './toast'
 export { Dialog } from './dialog'
 export type {
   DialogBodyProps,
