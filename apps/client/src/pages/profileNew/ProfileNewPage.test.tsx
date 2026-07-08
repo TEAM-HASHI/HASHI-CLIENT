@@ -7,8 +7,9 @@ import profileEmptyImage from '@/shared/assets/images/profile-empty.svg'
 
 import { ProfileNewPage } from '@/pages/profileNew/ProfileNewPage'
 
-const { mockNavigate } = vi.hoisted(() => ({
+const { mockNavigate, mockSearchParams } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
+  mockSearchParams: new URLSearchParams(),
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -18,7 +19,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useSearchParams: () => [new URLSearchParams()],
+    useSearchParams: () => [mockSearchParams],
   }
 })
 
@@ -26,6 +27,7 @@ describe('ProfileNewPage', () => {
   afterEach(() => {
     cleanup()
     mockNavigate.mockClear()
+    mockSearchParams.delete('redirectTo')
     vi.unstubAllGlobals()
   })
 
@@ -71,10 +73,40 @@ describe('ProfileNewPage', () => {
       target: { files: [imageFile] },
     })
 
+    expect(screen.getByLabelText('프로필 이미지 파일 선택')).toHaveValue('')
     expect(createObjectUrl).toHaveBeenCalledWith(imageFile)
     expect(screen.getByRole('img', { name: '프로필 이미지' })).toHaveAttribute(
       'src',
       'blob:profile-preview',
+    )
+  })
+
+  it('rejects profile image files larger than 5MB and keeps the current image', () => {
+    const createObjectUrl = vi.fn(() => 'blob:oversized-profile-preview')
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: createObjectUrl,
+    })
+    render(<ProfileNewPage />)
+
+    const oversizedImageFile = new File(
+      [new Uint8Array(5 * 1024 * 1024 + 1)],
+      'oversized-profile.png',
+      { type: 'image/png' },
+    )
+    fireEvent.change(screen.getByLabelText('프로필 이미지 파일 선택'), {
+      target: { files: [oversizedImageFile] },
+    })
+
+    expect(createObjectUrl).not.toHaveBeenCalled()
+    expect(screen.getByRole('img', { name: '프로필 이미지' })).toHaveAttribute(
+      'src',
+      profileEmptyImage,
+    )
+    expect(screen.getByText('5MB 이하의 이미지만 등록해주세요.')).toHaveClass(
+      'typo-body-3',
+      'text-error',
+      'mt-3',
     )
   })
 
@@ -112,6 +144,72 @@ describe('ProfileNewPage', () => {
     expect(submitButton).toBeEnabled()
 
     fireEvent.click(submitButton)
+
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home)
+  })
+
+  it('navigates to an allowed redirectTo path after valid submit', () => {
+    mockSearchParams.set('redirectTo', '/restaurants/1/reviews/new')
+    render(<ProfileNewPage />)
+
+    fireEvent.change(screen.getByLabelText('닉네임'), {
+      target: { value: '하시' },
+    })
+    fireEvent.change(screen.getByLabelText('생년월일'), {
+      target: { value: '20260708' },
+    })
+    fireEvent.change(screen.getByLabelText('연락처'), {
+      target: { value: '01012345678' },
+    })
+    fireEvent.change(screen.getByLabelText('이메일'), {
+      target: { value: 'hashi@example.com' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '완료' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/restaurants/1/reviews/new')
+  })
+
+  it('ignores unsupported internal redirectTo paths after valid submit', () => {
+    mockSearchParams.set('redirectTo', ROUTES.withdrawal)
+    render(<ProfileNewPage />)
+
+    fireEvent.change(screen.getByLabelText('닉네임'), {
+      target: { value: '하시' },
+    })
+    fireEvent.change(screen.getByLabelText('생년월일'), {
+      target: { value: '20260708' },
+    })
+    fireEvent.change(screen.getByLabelText('연락처'), {
+      target: { value: '01012345678' },
+    })
+    fireEvent.change(screen.getByLabelText('이메일'), {
+      target: { value: 'hashi@example.com' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '완료' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home)
+  })
+
+  it('ignores external redirectTo URLs after valid submit', () => {
+    mockSearchParams.set('redirectTo', 'https://example.com/reviews/new')
+    render(<ProfileNewPage />)
+
+    fireEvent.change(screen.getByLabelText('닉네임'), {
+      target: { value: '하시' },
+    })
+    fireEvent.change(screen.getByLabelText('생년월일'), {
+      target: { value: '20260708' },
+    })
+    fireEvent.change(screen.getByLabelText('연락처'), {
+      target: { value: '01012345678' },
+    })
+    fireEvent.change(screen.getByLabelText('이메일'), {
+      target: { value: 'hashi@example.com' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home)
   })

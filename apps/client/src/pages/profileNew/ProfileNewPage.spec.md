@@ -51,6 +51,7 @@ Jira: HASHI-76
 - [ ] 기본 프로필 이미지는 `apps/client/src/shared/assets/images/profile-empty.svg`를 사용한다.
 - [ ] 프로필 이미지 수정 버튼은 이미지 파일 선택을 연다.
 - [ ] 사용자가 이미지를 선택하면 원형 preview로 표시한다.
+- [ ] 5MB를 초과하는 프로필 이미지는 등록하지 않고 `5MB 이하의 이미지만 등록해주세요.` 오류 문구를 표시한다.
 - [ ] `프로필 삭제` 버튼은 선택한 이미지를 제거하고 기본 프로필 이미지 상태로 되돌린다.
 - [ ] 프로필 이미지는 90px 원형으로 노출하고, 수정 아이콘은 `button_edit` 성격의 25px 아이콘을 사용한다.
 - [ ] 프로필 이미지와 `프로필 삭제` 텍스트 사이 간격은 16px이고, 텍스트는 `Body3 / primary-200`을 사용한다.
@@ -71,7 +72,8 @@ Jira: HASHI-76
 - [ ] 이메일은 필수값이며 이메일 형식이 아니면 field error를 표시한다.
 - [ ] 필수값과 validation이 모두 통과하지 않으면 하단 `완료` CTA를 비활성화한다.
 - [ ] 활성화된 CTA 제출 시 프로필 생성 draft를 만들고 다음 화면으로 이동한다.
-- [ ] 제출 중에는 CTA loading 또는 disabled 상태로 중복 submit을 막는다.
+- [ ] API 연동 전 제출은 local draft 생성 후 즉시 이동한다.
+- [ ] API 연동 시 제출 중에는 CTA loading 또는 disabled 상태로 중복 submit을 막는다.
 - [ ] 제출 성공 시 온보딩 이후 화면으로 이동한다.
 - [ ] API 연동 시 field error로 매핑 가능한 제출 실패는 해당 input 아래에 표시한다.
 - [ ] API 연동 시 field error로 매핑할 수 없는 제출 실패는 form 상단 또는 하단 CTA 근처에 사용자 메시지로 표시한다.
@@ -116,7 +118,7 @@ Jira: HASHI-76
   - 이메일이 이메일 형식
   - 제출 중이 아님
 - success handling:
-  - `redirectTo` search param이 안전한 내부 경로이면 해당 경로로 이동한다.
+  - `redirectTo` search param이 허용된 내부 경로이면 해당 경로로 이동한다.
   - `redirectTo`가 없으면 `ROUTES.home`으로 이동한다.
 - failure handling:
   - field error는 해당 input 아래에 표시한다.
@@ -141,6 +143,7 @@ Jira: HASHI-76
   - selected profile image preview URL
   - selected profile image file
   - profile image deletion state
+  - profile image file error message
   - form-level error message, API 연동 전에는 기본값 없음
   - owner: `useProfileNewForm`
 - form state:
@@ -153,6 +156,11 @@ Jira: HASHI-76
   - `react-hook-form`, `zod`는 이번 티켓에서 추가하지 않는다.
 - URL state:
   - optional `redirectTo` search param
+  - 허용 경로:
+    - `ROUTES.reviewNew`
+    - `ROUTES.restaurantReservationNew`
+    - `ROUTES.anywhereReservation`
+    - `ROUTES.reservationRequest`
 - server state:
   - 현재 확정 API 없음
   - 추후 닉네임 중복 확인 결과와 프로필 생성 mutation 결과
@@ -251,7 +259,7 @@ ProfileNewPage
   - `PROFILE_NEW_FORM_ID`
 - icon:
   - `BackIcon`
-  - `CameraIcon` or `PencilIcon`
+  - `PencilIcon`
 
 ## Error Handling
 
@@ -261,11 +269,12 @@ ProfileNewPage
   - API 연동 시 프로필 생성 field error는 각 input 아래에 매핑한다.
   - API 연동 시 field error로 매핑할 수 없는 실패는 form-level error로 표시한다.
 - validation error:
-  - 닉네임 중복 오류는 중복 확인 결과가 확정되면 표시한다.
+  - 닉네임 중복 오류는 입력값 변경 시마다 표시한다.
   - 생년월일, 연락처, 이메일 오류는 blur 이후 또는 submit 시도 이후 표시한다.
 - exceptional case:
   - 파일 선택을 취소하면 기존 이미지 상태를 유지한다.
-  - 지원하지 않는 이미지 형식 또는 허용 크기를 넘는 파일은 프로필 이미지 영역 근처에 오류를 표시한다.
+  - 5MB를 초과하는 이미지는 선택해도 preview로 반영하지 않고, 프로필 이미지 영역 근처에 오류를 표시한다.
+  - 이미지 파일 형식 제한은 `accept="image/*"`만 적용하고, 별도 오류는 이번 범위에서 표시하지 않는다.
   - `redirectTo`가 외부 URL이거나 허용되지 않은 내부 경로이면 무시하고 `ROUTES.home`으로 이동한다.
 - user-facing message:
   - field error는 해당 input 바로 아래 빨간 텍스트로 표시한다.
@@ -285,7 +294,7 @@ ProfileNewPage
 - search params:
   - optional `redirectTo`
 - success redirect:
-  - safe `redirectTo`
+  - allowed `redirectTo`
   - fallback `ROUTES.home`
 - failure redirect:
   - none
@@ -317,7 +326,7 @@ ProfileNewPage
 - empty/loading/error layout:
   - field error가 나타나도 input 자체 width가 변하지 않는다.
   - CTA disabled 상태는 HDS `Button` disabled 스타일을 사용한다.
-  - CTA submitting 상태는 HDS `Button` loading 또는 disabled 상태를 사용한다.
+  - API 연동 시 CTA submitting 상태는 HDS `Button` loading 또는 disabled 상태를 사용한다.
 
 ## Implementation Notes
 
@@ -327,6 +336,7 @@ ProfileNewPage
 - API 연동 전 임시 데이터는 `mocks/profileNew.mock.ts`에 둔다.
 - API 연동 전이므로 `useProfileNewForm`은 로컬 draft 생성까지만 담당하고 서버 요청은 실행하지 않는다.
 - 하단 CTA는 기존 예약 페이지처럼 `form` attribute와 `PROFILE_NEW_FORM_ID`를 연결해 submit한다.
+- `redirectTo`는 리뷰 작성/예약 플로우 복귀에 필요한 내부 route만 허용한다.
 - page-local 컴포넌트 import는 `@/pages/profileNew/...` alias를 사용한다.
 - HDS 컴포넌트에는 route, API, submit, tracking, 제품 검증 정책을 넣지 않는다.
 - `InputField`는 error UI를 소유하지 않으므로 `FieldError`를 page-local로 둔다.

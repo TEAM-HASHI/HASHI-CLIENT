@@ -1,17 +1,28 @@
 import type { SyntheticEvent } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { matchPath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useProfileNewForm } from '@/pages/profileNew/hooks/useProfileNewForm'
 
 export const PROFILE_NEW_FORM_ID = 'profile-new-form'
 
-const getSafeRedirectPath = (redirectTo: string | null) => {
+const ALLOWED_REDIRECT_ROUTES = [
+  ROUTES.reviewNew,
+  ROUTES.restaurantReservationNew,
+  ROUTES.anywhereReservation,
+  ROUTES.reservationRequest,
+] as const
+
+const getAllowedRedirectPath = (redirectTo: string | null) => {
   if (!redirectTo?.startsWith('/') || redirectTo.startsWith('//')) {
     return ROUTES.home
   }
 
-  return redirectTo
+  const isAllowedRedirectPath = ALLOWED_REDIRECT_ROUTES.some((route) =>
+    matchPath({ path: route, end: true }, redirectTo),
+  )
+
+  return isAllowedRedirectPath ? redirectTo : ROUTES.home
 }
 
 export const useProfileNewPage = () => {
@@ -32,7 +43,7 @@ export const useProfileNewPage = () => {
       return
     }
 
-    navigate(getSafeRedirectPath(searchParams.get('redirectTo')))
+    navigate(getAllowedRedirectPath(searchParams.get('redirectTo')))
   }
 
   return {

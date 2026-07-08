@@ -24,6 +24,7 @@ export const ProfileNewPage = () => {
 
       <form className="px-6 pt-[75px]" id={formId} onSubmit={handleSubmit}>
         <ProfileImageSection
+          errorMessage={form.profileImage.errorMessage}
           onImageChange={form.profileImage.onChange}
           onImageDelete={form.profileImage.onDelete}
           previewUrl={form.profileImage.previewUrl}

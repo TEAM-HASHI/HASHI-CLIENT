@@ -2,16 +2,19 @@ import { PencilIcon } from '@hashi/hds-icons'
 import { Avatar, IconButton } from '@hashi/hds-ui'
 import { type ChangeEvent, useRef } from 'react'
 
+import { FieldError } from '@/pages/profileNew/components/FieldError'
 import profileEmptyImage from '@/shared/assets/images/profile-empty.svg'
 
 interface ProfileImageSectionProps {
   previewUrl?: string
+  errorMessage?: string
   onImageChange: (file: File) => void
   onImageDelete: () => void
 }
 
 export const ProfileImageSection = ({
   previewUrl,
+  errorMessage,
   onImageChange,
   onImageDelete,
 }: ProfileImageSectionProps) => {
@@ -29,6 +32,7 @@ export const ProfileImageSection = ({
     }
 
     onImageChange(file)
+    event.currentTarget.value = ''
   }
 
   return (
@@ -55,6 +59,7 @@ export const ProfileImageSection = ({
       <input
         ref={fileInputRef}
         aria-label="프로필 이미지 파일 선택"
+        aria-describedby={errorMessage ? 'profile-image-file-error' : undefined}
         accept="image/*"
         className="hidden"
         onChange={handleFileChange}
@@ -67,6 +72,7 @@ export const ProfileImageSection = ({
       >
         프로필 삭제
       </button>
+      <FieldError id="profile-image-file-error" message={errorMessage} />
     </section>
   )
 }

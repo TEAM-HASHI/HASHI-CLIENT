@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { duplicatedNicknames } from '@/pages/profileNew/mocks/profileNew.mock'
 import {
@@ -21,10 +21,15 @@ export interface ProfileDraft {
 }
 
 const DUPLICATED_NICKNAMES = new Set(duplicatedNicknames)
+const PROFILE_IMAGE_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
+const PROFILE_IMAGE_MAX_FILE_SIZE_ERROR_MESSAGE =
+  '5MB 이하의 이미지만 등록해주세요.'
 
 export const useProfileNewForm = () => {
   const [profileImageFile, setProfileImageFile] = useState<File>()
   const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<string>()
+  const profileImagePreviewUrlRef = useRef<string | undefined>(undefined)
+  const [profileImageErrorMessage, setProfileImageErrorMessage] = useState('')
   const [isProfileImageDeleted, setIsProfileImageDeleted] = useState(false)
   const [nickname, setNickname] = useState('')
   const [birthDate, setBirthDate] = useState('')
@@ -103,20 +108,49 @@ export const useProfileNewForm = () => {
     })
   }
 
+  const revokeProfileImagePreviewUrl = useCallback(() => {
+    if (!profileImagePreviewUrlRef.current) {
+      return
+    }
+
+    if (typeof URL.revokeObjectURL === 'function') {
+      URL.revokeObjectURL(profileImagePreviewUrlRef.current)
+    }
+
+    profileImagePreviewUrlRef.current = undefined
+  }, [])
+
   const handleProfileImageChange = (file: File) => {
+    if (file.size > PROFILE_IMAGE_MAX_FILE_SIZE_BYTES) {
+      setProfileImageErrorMessage(PROFILE_IMAGE_MAX_FILE_SIZE_ERROR_MESSAGE)
+      return
+    }
+
     setProfileImageFile(file)
     setIsProfileImageDeleted(false)
+    setProfileImageErrorMessage('')
 
     if (typeof URL.createObjectURL === 'function') {
-      setProfileImagePreviewUrl(URL.createObjectURL(file))
+      const nextPreviewUrl = URL.createObjectURL(file)
+      revokeProfileImagePreviewUrl()
+      profileImagePreviewUrlRef.current = nextPreviewUrl
+      setProfileImagePreviewUrl(nextPreviewUrl)
     }
   }
 
   const handleProfileImageDelete = () => {
     setProfileImageFile(undefined)
+    revokeProfileImagePreviewUrl()
     setProfileImagePreviewUrl(undefined)
     setIsProfileImageDeleted(true)
+    setProfileImageErrorMessage('')
   }
+
+  useEffect(() => {
+    return () => {
+      revokeProfileImagePreviewUrl()
+    }
+  }, [revokeProfileImagePreviewUrl])
 
   const createProfileDraft = (): ProfileDraft | undefined => {
     setHasSubmitAttempted(true)
@@ -144,6 +178,7 @@ export const useProfileNewForm = () => {
       previewUrl: profileImagePreviewUrl,
       onChange: handleProfileImageChange,
       onDelete: handleProfileImageDelete,
+      errorMessage: profileImageErrorMessage,
     },
     fields: {
       nickname: {
