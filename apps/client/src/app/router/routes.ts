@@ -43,6 +43,10 @@ export const appRoutes: RouteObject[] = [
         element: lazyPages.restaurantDetail(),
       },
       {
+        path: ROUTES.restaurantMenuDetail,
+        element: lazyPages.restaurantMenuDetail(),
+      },
+      {
         path: ROUTES.hashiPickRestaurants,
         element: lazyPages.hashiPick(),
       },
