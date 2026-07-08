@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createReservationTimeSlots } from '@/pages/restaurantReservationNew/utils/createReservationTimeSlots'
+import { createReservationTimeSlots } from '@/features/reservation/utils/createReservationTimeSlots'
 
 describe('createReservationTimeSlots', () => {
   it('creates time slots by the given interval and includes the close time', () => {

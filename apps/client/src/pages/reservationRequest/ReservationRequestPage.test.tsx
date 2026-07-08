@@ -79,6 +79,38 @@ describe('ReservationRequestPage', () => {
     expect(screen.getByText('2026.6.1. 11:00')).toBeInTheDocument()
   })
 
+  it('renders anywhere reservation state with user input and placeholder image', () => {
+    mockLocationState.current = {
+      source: 'anywhere',
+      restaurantId: null,
+      restaurantName: '키츠라멘',
+      restaurantAddress: '도쿄 키츠라멘 본점',
+      restaurantImageUrl: null,
+      guestName: '김하시',
+      guests: {
+        adult: 1,
+        teen: 0,
+        child: 0,
+      },
+      date: '2026-06-02',
+      time: '11:30',
+      requestNote: '',
+    }
+
+    render(<ReservationRequestPage />)
+
+    expect(screen.getByText('키츠라멘')).toBeInTheDocument()
+    expect(screen.getByText('도쿄 키츠라멘 본점')).toBeInTheDocument()
+    expect(
+      screen.queryByText('도쿄 키츠라멘 본점도쿄 키츠라멘 본점'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: '어디든 예약 식당 기본 이미지' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('어른 1명')).toBeInTheDocument()
+    expect(screen.getByText('2026.6.2. 11:30')).toBeInTheDocument()
+  })
+
   it('normalizes point input and clamps it to the maximum usable point', () => {
     render(<ReservationRequestPage />)
 

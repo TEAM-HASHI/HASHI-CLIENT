@@ -36,6 +36,13 @@ export const ReservationRequestPage = () => {
     date: reservationDraft.date,
     time: reservationDraft.time,
   })
+  const restaurantAddress =
+    reservationDraft.restaurantAddress ??
+    RESERVATION_REQUEST_MOCK.restaurantAddress
+  const restaurantImageUrl =
+    reservationDraft.restaurantImageUrl ??
+    RESERVATION_REQUEST_MOCK.restaurantImageUrl
+  const isAnywhereReservation = reservationDraft.source === 'anywhere'
 
   const handleBackClick = () => {
     navigate(-1)
@@ -56,7 +63,7 @@ export const ReservationRequestPage = () => {
   return (
     <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
       <Header
-        className="app-mobile-fixed-top z-fixed fixed!"
+        className="app-mobile-fixed-top z-fixed fixed"
         leftAction={
           <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
             <BackIcon className="size-6" />
@@ -68,8 +75,9 @@ export const ReservationRequestPage = () => {
       <ReservationRequestInfoSection
         guestName={reservationDraft.guestName}
         guestText={guestText}
-        restaurantAddress={RESERVATION_REQUEST_MOCK.restaurantAddress}
-        restaurantImageUrl={RESERVATION_REQUEST_MOCK.restaurantImageUrl}
+        isAnywhereReservation={isAnywhereReservation}
+        restaurantAddress={restaurantAddress}
+        restaurantImageUrl={restaurantImageUrl}
         restaurantName={reservationDraft.restaurantName}
         visitDateTime={visitDateTime}
       />
@@ -102,7 +110,7 @@ export const ReservationRequestPage = () => {
         onConfirm={handleConfirmClick}
         onOpenChange={setIsConfirmOpen}
         open={isConfirmOpen}
-        restaurantAddress={RESERVATION_REQUEST_MOCK.restaurantAddress}
+        restaurantAddress={restaurantAddress}
         visitDateTime={visitDateTime}
       />
     </div>

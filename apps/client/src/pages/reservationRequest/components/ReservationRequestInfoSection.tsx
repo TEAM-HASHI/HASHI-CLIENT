@@ -1,8 +1,11 @@
+import { HashiPlaceholderIcon } from '@hashi/hds-icons'
+
 import { DefaultImage } from '@/shared/components/defaultImage'
 
 interface ReservationRequestInfoSectionProps {
   restaurantName: string
   restaurantImageUrl?: string | null
+  isAnywhereReservation?: boolean
   guestName: string
   guestText: string
   restaurantAddress: string
@@ -37,6 +40,7 @@ const ReservationInfoRow = ({
 export const ReservationRequestInfoSection = ({
   restaurantName,
   restaurantImageUrl,
+  isAnywhereReservation = false,
   guestName,
   guestText,
   restaurantAddress,
@@ -51,6 +55,12 @@ export const ReservationRequestInfoSection = ({
               alt={`${restaurantName} 식당 이미지`}
               className="size-[60px] shrink-0 rounded-[5px] object-cover"
               src={restaurantImageUrl}
+            />
+          ) : isAnywhereReservation ? (
+            <HashiPlaceholderIcon
+              aria-label="어디든 예약 식당 기본 이미지"
+              className="size-15 shrink-0"
+              role="img"
             />
           ) : (
             <DefaultImage
