@@ -4,11 +4,12 @@ import type { SyntheticEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { GuestCounter } from '@/features/reservation/components/guestCounter'
-
-import { AnywhereReservationBottomBar } from '@/pages/anywhereReservation/components/AnywhereReservationBottomBar'
-import { AnywhereReservationTimeSelector } from '@/pages/anywhereReservation/components/AnywhereReservationTimeSelector'
-import { AnywhereReservationUnderlineTextField } from '@/pages/anywhereReservation/components/AnywhereReservationUnderlineTextField'
+import {
+  GuestCounter,
+  ReservationBottomBar,
+  ReservationTimeSelector,
+  ReservationUnderlineTextField,
+} from '@/features/reservation/components'
 import { useAnywhereReservationForm } from '@/pages/anywhereReservation/hooks/useAnywhereReservationForm'
 
 const ANYWHERE_RESERVATION_FORM_ID = 'anywhere-reservation-form'
@@ -39,7 +40,7 @@ export const AnywhereReservationPage = () => {
   return (
     <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
       <Header
-        className="app-mobile-fixed-top z-fixed fixed"
+        className="app-mobile-fixed-top z-fixed"
         leftAction={
           <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
             <BackIcon className="size-6" />
@@ -55,21 +56,21 @@ export const AnywhereReservationPage = () => {
           onSubmit={handleSubmit}
         >
           <div className="flex flex-col gap-8.75">
-            <AnywhereReservationUnderlineTextField
+            <ReservationUnderlineTextField
               label="식당명"
               name="restaurantName"
               onValueChange={fields.restaurantName.onValueChange}
               placeholder="식당명을 입력해주세요."
               value={fields.restaurantName.value}
             />
-            <AnywhereReservationUnderlineTextField
+            <ReservationUnderlineTextField
               label="식당 주소"
               name="restaurantAddress"
               onValueChange={fields.restaurantAddress.onValueChange}
               placeholder="식당 주소를 입력해주세요."
               value={fields.restaurantAddress.value}
             />
-            <AnywhereReservationUnderlineTextField
+            <ReservationUnderlineTextField
               autoComplete="name"
               label="예약자명"
               name="guestName"
@@ -122,7 +123,7 @@ export const AnywhereReservationPage = () => {
             >
               시간
             </h2>
-            <AnywhereReservationTimeSelector
+            <ReservationTimeSelector
               disabled={timeSelector.disabled}
               onTimeSelect={timeSelector.onTimeSelect}
               selectedTime={timeSelector.selectedTime}
@@ -130,7 +131,7 @@ export const AnywhereReservationPage = () => {
             />
           </section>
 
-          <AnywhereReservationUnderlineTextField
+          <ReservationUnderlineTextField
             label="요청사항 (선택)"
             name="requestNote"
             onValueChange={fields.requestNote.onValueChange}
@@ -140,7 +141,7 @@ export const AnywhereReservationPage = () => {
         </form>
       </div>
 
-      <AnywhereReservationBottomBar
+      <ReservationBottomBar
         disabled={!submit.canSubmit}
         formId={ANYWHERE_RESERVATION_FORM_ID}
       />

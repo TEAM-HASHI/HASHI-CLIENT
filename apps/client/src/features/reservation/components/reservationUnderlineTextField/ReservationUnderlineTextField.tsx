@@ -1,7 +1,7 @@
 import type { ChangeEvent, ComponentPropsWithoutRef } from 'react'
 import { useId } from 'react'
 
-interface AnywhereReservationUnderlineTextFieldProps extends Omit<
+interface ReservationUnderlineTextFieldProps extends Omit<
   ComponentPropsWithoutRef<'input'>,
   'className' | 'onChange' | 'value'
 > {
@@ -10,13 +10,13 @@ interface AnywhereReservationUnderlineTextFieldProps extends Omit<
   onValueChange: (value: string) => void
 }
 
-export const AnywhereReservationUnderlineTextField = ({
+export const ReservationUnderlineTextField = ({
   label,
   value,
   onValueChange,
   id,
   ...props
-}: AnywhereReservationUnderlineTextFieldProps) => {
+}: ReservationUnderlineTextFieldProps) => {
   const generatedId = useId()
   const inputId = id ?? generatedId
 

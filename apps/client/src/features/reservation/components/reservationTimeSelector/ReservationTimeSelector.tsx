@@ -1,7 +1,7 @@
 import { cn } from '@/shared/utils'
 
 interface ReservationTimeSelectorProps {
-  timeSlots: string[]
+  timeSlots: readonly string[]
   selectedTime?: string
   disabled?: boolean
   onTimeSelect: (time: string) => void

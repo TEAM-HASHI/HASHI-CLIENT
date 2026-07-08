@@ -183,7 +183,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
   - `BackIcon`
   - `CheckIcon`
   - `HashiPointMarkIcon`
-  - `AnywhereReservationPlaceholderIcon`
+  - `HashiPlaceholderIcon`
 - Shared:
   - `DefaultImage`
 - Page-local:
@@ -195,8 +195,8 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
   - 새 route 추가 없음
   - 새 shared 추가 없음
   - 일반 예약 식당 이미지 fallback은 기존 shared `DefaultImage` 사용
-  - 어디든 예약 식당 이미지 fallback은 HDS `AnywhereReservationPlaceholderIcon` 사용
-  - `@hashi/hds-icons`에 `HashiPointMarkIcon`, `AnywhereReservationPlaceholderIcon` 추가
+  - 어디든 예약 식당 이미지 fallback은 HDS `HashiPlaceholderIcon` 사용
+  - `@hashi/hds-icons`에 `HashiPointMarkIcon`, `HashiPlaceholderIcon` 추가
 
 ## Verification
 

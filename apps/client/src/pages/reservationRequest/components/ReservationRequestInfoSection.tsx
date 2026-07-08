@@ -1,4 +1,4 @@
-import { AnywhereReservationPlaceholderIcon } from '@hashi/hds-icons'
+import { HashiPlaceholderIcon } from '@hashi/hds-icons'
 
 import { DefaultImage } from '@/shared/components/defaultImage'
 
@@ -57,7 +57,7 @@ export const ReservationRequestInfoSection = ({
               src={restaurantImageUrl}
             />
           ) : isAnywhereReservation ? (
-            <AnywhereReservationPlaceholderIcon
+            <HashiPlaceholderIcon
               aria-label="어디든 예약 식당 기본 이미지"
               className="size-15 shrink-0"
               role="img"

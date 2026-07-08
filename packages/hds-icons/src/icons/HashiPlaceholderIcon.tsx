@@ -1,5 +1,6 @@
 import type { SVGProps } from 'react'
-const AnywhereReservationPlaceholderIcon = (props: SVGProps<SVGSVGElement>) => (
+
+const HashiPlaceholderIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="1em"
     height="1em"
@@ -25,4 +26,5 @@ const AnywhereReservationPlaceholderIcon = (props: SVGProps<SVGSVGElement>) => (
     </g>
   </svg>
 )
-export default AnywhereReservationPlaceholderIcon
+
+export default HashiPlaceholderIcon

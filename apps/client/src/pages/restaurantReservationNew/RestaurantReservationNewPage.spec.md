@@ -135,11 +135,11 @@ RestaurantReservationNewPage
   Header
   ReservationRestaurantSummary
   Form
-    UnderlineTextField
+    ReservationUnderlineTextField
     GuestCounter x 3
     Calendar
     ReservationTimeSelector
-    UnderlineTextField
+    ReservationUnderlineTextField
   ReservationBottomBar
 ```
 
@@ -154,11 +154,11 @@ RestaurantReservationNewPage
   - none
 - feature component:
   - `GuestCounter`
-- page-local component:
-  - `ReservationRestaurantSummary`
-  - `UnderlineTextField`
+  - `ReservationUnderlineTextField`
   - `ReservationTimeSelector`
   - `ReservationBottomBar`
+- page-local component:
+  - `ReservationRestaurantSummary`
 - icon:
   - `BackIcon`
 
