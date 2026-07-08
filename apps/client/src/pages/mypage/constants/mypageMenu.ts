@@ -2,9 +2,9 @@ import { ROUTES } from '@/app/router/path'
 import type { MypageMenuItem, MypageMenuSection } from '@/pages/mypage/types'
 
 // TODO: 실제 외부 링크 확정 후 교체합니다.
-export const HASHI_NOTICE_URL = '#'
-export const HASHI_TERMS_URL = '#'
-export const HASHI_KAKAO_CHANNEL_URL = '#'
+export const HASHI_NOTICE_URL = undefined
+export const HASHI_TERMS_URL = undefined
+export const HASHI_KAKAO_CHANNEL_URL = 'https://pf.kakao.com/_xgCxkqG'
 
 export const createMypagePrimaryMenuItems = ({
   savedRestaurantCount,

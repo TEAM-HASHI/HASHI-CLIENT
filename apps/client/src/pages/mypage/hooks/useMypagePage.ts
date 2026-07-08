@@ -33,7 +33,9 @@ export const useMypagePage = () => {
       return
     }
 
-    window.open(action.url, '_blank', 'noopener,noreferrer')
+    if (!action.url) {
+      handleComingSoonPress()
+    }
   }
 
   return {

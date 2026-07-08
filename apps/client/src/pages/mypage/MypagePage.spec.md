@@ -1,6 +1,6 @@
 # Page Spec: `MypagePage`
 
-Jira: HASHI-72
+Jira: HASHI-79
 
 ## Purpose
 
@@ -301,6 +301,12 @@ derived state:
 - 개선 제안: Hashi 공식 카카오톡 채널 URL
 - 이용약관: Hashi 이용약관 노션 URL
 
+외부 링크 처리 기준:
+
+- URL이 확정된 외부 메뉴는 `a`로 렌더링하고 `href`, `target="_blank"`, `rel="noreferrer"`를 사용합니다.
+- URL이 확정되지 않은 외부 메뉴는 `#`를 열지 않고 shared `ComingSoonDialog`를 띄웁니다.
+- 외부 URL은 `mypageMenu` 상수에서 관리하며, URL 확정 시 상수만 교체합니다.
+
 MVP 제외:
 
 - 프로필 수정
@@ -402,7 +408,8 @@ types:
 - 마이 리뷰 클릭 시 `/my-reviews`로 이동하는지 확인
 - 회원탈퇴 클릭 시 `/withdrawal`로 이동하는지 확인
 - 문의하기/개선 제안 클릭 시 카카오톡 채널이 열리는지 확인
-- 공지사항/이용약관 클릭 시 노션 페이지가 열리는지 확인
+- 공지사항/이용약관 URL 확정 전에는 준비중 모달이 열리는지 확인
+- 공지사항/이용약관 URL 확정 후에는 노션 페이지가 열리는지 확인
 - MVP 제외 항목이 잘못된 route로 이동하지 않는지 확인
 - MVP 제외 항목 클릭 시 준비중 모달이 열리는지 확인
 - 준비중 모달에서 확인 버튼 클릭 시 모달이 닫히는지 확인
