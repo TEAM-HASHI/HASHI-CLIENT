@@ -67,7 +67,7 @@ Exported type:
 - labeled: label is rendered and connected to the input.
 - with right icon: external icon is rendered in the right icon slot.
 - with right element: external action/content is rendered in the right element slot.
-- focused: input box receives token outline through `focus-within`.
+- focused: no additional outline style is applied by default.
 - disabled: native disabled input with disabled cursor/text treatment.
 
 ## Behavior
