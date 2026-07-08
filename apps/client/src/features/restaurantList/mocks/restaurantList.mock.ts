@@ -1,4 +1,4 @@
-import type { Restaurant } from '../types'
+import type { Restaurant } from '@/features/restaurantList/types'
 
 export const MOCK_RESTAURANTS: Restaurant[] = Array.from(
   { length: 25 },

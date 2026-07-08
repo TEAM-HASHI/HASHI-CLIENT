@@ -107,25 +107,6 @@ describe('BottomSheet', () => {
     expect(handleOpenChange).toHaveBeenCalledWith(false)
   })
 
-  it('does not call onOpenChange from overlay when closeOnOverlayClick is false', () => {
-    const handleOpenChange = vi.fn()
-
-    render(
-      <BottomSheet
-        closeOnOverlayClick={false}
-        open
-        onOpenChange={handleOpenChange}
-        title="정렬 순서"
-      >
-        기본순
-      </BottomSheet>,
-    )
-
-    fireEvent.click(screen.getByRole('dialog').parentElement!)
-
-    expect(handleOpenChange).not.toHaveBeenCalled()
-  })
-
   it('calls onOpenChange when escape key is pressed', async () => {
     const handleOpenChange = vi.fn()
 
@@ -146,31 +127,6 @@ describe('BottomSheet', () => {
     expect(handleOpenChange).toHaveBeenCalledWith(false)
   })
 
-  it('does not call onOpenChange from escape key when closeOnEscape is false', async () => {
-    const handleOpenChange = vi.fn()
-
-    render(
-      <BottomSheet
-        closeOnEscape={false}
-        open
-        onOpenChange={handleOpenChange}
-        title="정렬 순서"
-      >
-        기본순
-      </BottomSheet>,
-    )
-
-    const dialog = screen.getByRole('dialog', { name: '정렬 순서' })
-
-    await waitFor(() => {
-      expect(dialog).toHaveFocus()
-    })
-
-    fireEvent.keyDown(dialog, { key: 'Escape' })
-
-    expect(handleOpenChange).not.toHaveBeenCalled()
-  })
-
   it('keeps inner content clicks from closing the sheet', () => {
     const handleOpenChange = vi.fn()
 
@@ -183,27 +139,6 @@ describe('BottomSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: '기본순' }))
 
     expect(handleOpenChange).not.toHaveBeenCalled()
-  })
-
-  it('merges overlay and content class names', () => {
-    render(
-      <BottomSheet
-        contentClassName="custom-content"
-        open
-        overlayClassName="custom-overlay"
-        onOpenChange={vi.fn()}
-        title="정렬 순서"
-      >
-        <span data-testid="content-child">기본순</span>
-      </BottomSheet>,
-    )
-
-    expect(screen.getByRole('dialog').parentElement).toHaveClass(
-      'custom-overlay',
-    )
-    expect(screen.getByTestId('content-child').parentElement).toHaveClass(
-      'custom-content',
-    )
   })
 
   it('moves focus into the sheet and restores previous focus when closed', async () => {

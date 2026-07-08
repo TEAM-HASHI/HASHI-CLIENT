@@ -2,11 +2,12 @@ export {
   CATEGORY_OPTIONS,
   DEFAULT_CATEGORY_OPTION,
   HASHI_PICK_SORT_OPTIONS,
-  MOCK_RESTAURANTS,
   POPULAR_RESTAURANTS_SORT_OPTIONS,
   RESTAURANT_LIST_PAGE_SIZE,
 } from './constants'
+export { RestaurantListPage } from './RestaurantListPage'
+export { MOCK_RESTAURANTS } from './mocks'
 export { useInfiniteRestaurantList } from './hooks'
-export { RestaurantCard } from './RestaurantCard'
-export { RestaurantFilterBar } from './RestaurantFilterBar'
+export { useRestaurantListPage } from './hooks'
+export { RestaurantCard, RestaurantFilterBar } from './components'
 export type { FilterOption, Restaurant } from './types'

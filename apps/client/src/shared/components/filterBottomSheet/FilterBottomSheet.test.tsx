@@ -100,7 +100,7 @@ describe('FilterBottomSheet', () => {
     expect(handleApply).toHaveBeenCalled()
   })
 
-  it('does not request close from overlay click or escape key', async () => {
+  it('requests close from overlay click and escape key through BottomSheet', async () => {
     const handleOpenChange = vi.fn()
 
     render(
@@ -120,12 +120,16 @@ describe('FilterBottomSheet', () => {
 
     fireEvent.click(dialog.parentElement!)
 
+    expect(handleOpenChange).toHaveBeenCalledWith(false)
+
     await waitFor(() => {
       expect(dialog).toHaveFocus()
     })
 
+    handleOpenChange.mockClear()
+
     fireEvent.keyDown(dialog, { key: 'Escape' })
 
-    expect(handleOpenChange).not.toHaveBeenCalled()
+    expect(handleOpenChange).toHaveBeenCalledWith(false)
   })
 })

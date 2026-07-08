@@ -14,12 +14,8 @@ export type BottomSheetProps = {
   children: ReactNode
   footer?: ReactNode
   className?: string
-  overlayClassName?: string
-  contentClassName?: string
   showHandle?: boolean
   showCloseButton?: boolean
-  closeOnOverlayClick?: boolean
-  closeOnEscape?: boolean
   'aria-label'?: string
 }
 
@@ -64,11 +60,7 @@ export const BottomSheet = ({
   footer,
   showHandle = true,
   showCloseButton = true,
-  closeOnOverlayClick = true,
-  closeOnEscape = true,
   className,
-  overlayClassName,
-  contentClassName,
   'aria-label': ariaLabel = '바텀시트',
 }: BottomSheetProps) => {
   const titleId = useId()
@@ -78,20 +70,10 @@ export const BottomSheet = ({
   const handlePressClose = useCallback(() => {
     onOpenChange(false)
   }, [onOpenChange])
-  const handlePressOverlay = useCallback(() => {
-    if (closeOnOverlayClick) {
-      onOpenChange(false)
-    }
-  }, [closeOnOverlayClick, onOpenChange])
-  const handleEscape = useCallback(() => {
-    if (closeOnEscape) {
-      onOpenChange(false)
-    }
-  }, [closeOnEscape, onOpenChange])
   const handleKeyDown = useFocusTrap({
     enabled: open,
     containerRef: panelRef,
-    onEscape: handleEscape,
+    onEscape: handlePressClose,
   })
 
   useBodyScrollLock(open)
@@ -112,11 +94,8 @@ export const BottomSheet = ({
 
   return createPortal(
     <div
-      className={cn(
-        'z-overlay fixed inset-y-0 right-0 left-0 mx-auto flex w-full max-w-(--app-mobile-max-width,100%) items-end bg-black/50',
-        overlayClassName,
-      )}
-      onClick={handlePressOverlay}
+      className="z-overlay fixed inset-y-0 right-0 left-0 mx-auto flex w-full max-w-(--app-mobile-max-width,100%) items-end bg-black/50"
+      onClick={handlePressClose}
     >
       <div
         aria-label={title ? undefined : ariaLabel}
@@ -165,7 +144,7 @@ export const BottomSheet = ({
             )}
           </div>
         )}
-        <div className={cn('px-5', contentClassName)}>{children}</div>
+        <div className="px-5">{children}</div>
         {footer && <div className="px-5 pt-4 pb-5">{footer}</div>}
       </div>
     </div>,
