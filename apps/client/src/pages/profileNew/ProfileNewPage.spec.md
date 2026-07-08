@@ -308,7 +308,7 @@ ProfileNewPage
 - Tailwind layout:
   - mobile-first, `RootLayout` mobile frame 기준
   - page root는 `min-h-dvh bg-white`를 사용한다.
-  - header는 매거진 리스트 페이지와 같은 방식으로 모바일 프레임 상단에 `fixed top-0 right-0 left-0 z-20 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white`로 고정한다.
+  - header는 모바일 프레임 상단에 `z-fixed fixed top-0 right-0 left-0 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white`로 고정한다.
   - fixed header가 form을 덮지 않도록 form에 header height만큼 `pt-[75px]`를 둔다.
   - `ProfileSection`과 `FormSection` 사이는 28px 간격을 둔다.
   - form item 사이는 20px 간격을 둔다.
@@ -321,7 +321,7 @@ ProfileNewPage
   - fixed 영역은 `z-fixed`를 사용한다.
   - 하단 padding은 `var(--safe-area-bottom,0px)`를 고려한다.
 - scroll area:
-  - 본문은 fixed bottom bar에 가리지 않도록 하단 padding을 가진다.
+  - 본문은 fixed bottom bar에 가리지 않도록 `pb-32` 하단 padding을 가진다.
   - 입력 필드와 오류 문구가 키보드에 가려지지 않는지 수동 확인한다.
 - empty/loading/error layout:
   - field error가 나타나도 input 자체 width가 변하지 않는다.

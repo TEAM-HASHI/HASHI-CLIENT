@@ -10,10 +10,10 @@ export const ProfileNewPage = () => {
   const { form, formId, handleBackClick, handleSubmit } = useProfileNewPage()
 
   return (
-    <div className="min-h-dvh bg-white pb-[128px]">
+    <div className="min-h-dvh bg-white pb-32">
       <h1 className="sr-only">프로필 생성</h1>
       <Header
-        className="fixed top-0 right-0 left-0 z-20 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white"
+        className="z-fixed fixed top-0 right-0 left-0 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white"
         leftAction={
           <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
             <BackIcon className="size-6" />
