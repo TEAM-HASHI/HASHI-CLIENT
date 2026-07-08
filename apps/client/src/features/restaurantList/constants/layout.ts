@@ -1,0 +1,2 @@
+export const RESTAURANT_IMAGE_SLOT_COUNT = 5
+export const RESTAURANT_LIST_PAGE_SIZE = 10

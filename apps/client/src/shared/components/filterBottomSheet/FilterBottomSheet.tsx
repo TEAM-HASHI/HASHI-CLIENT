@@ -11,6 +11,7 @@ type FilterOption = {
 type FilterBottomSheetProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  maxHeightClassName?: string
   title: string
   options: FilterOption[]
   selectedValue: string
@@ -22,6 +23,7 @@ type FilterBottomSheetProps = {
 export const FilterBottomSheet = ({
   open,
   onOpenChange,
+  maxHeightClassName,
   title,
   options,
   selectedValue,
@@ -29,9 +31,6 @@ export const FilterBottomSheet = ({
   onReset,
   onApply,
 }: FilterBottomSheetProps) => {
-  const sheetHeight =
-    title === '음식 장르 선택' ? 577 : options.length === 2 ? 307 : 352
-
   return (
     <BottomSheet
       closeOnEscape={false}
@@ -45,7 +44,13 @@ export const FilterBottomSheet = ({
       showCloseButton={false}
       showHandle={false}
     >
-      <div className="flex flex-col pt-7" style={{ height: sheetHeight }}>
+      <div
+        className={cn(
+          'flex max-h-[calc(100dvh-40px)] flex-col pt-7',
+          maxHeightClassName,
+        )}
+        data-testid="filter-bottom-sheet-content"
+      >
         <div className="relative mx-6 h-6">
           <h2 className="absolute inset-x-10 top-1/2 -translate-y-1/2 text-center text-[16px] font-semibold text-black">
             {title}
@@ -60,7 +65,7 @@ export const FilterBottomSheet = ({
           </button>
         </div>
 
-        <ul className="mx-6 mt-[39px] flex flex-col gap-[5px]">
+        <ul className="mx-6 mt-[39px] flex flex-1 flex-col gap-[5px] overflow-y-auto">
           {options.map((option) => {
             const isSelected = option.value === selectedValue
 
@@ -85,7 +90,7 @@ export const FilterBottomSheet = ({
           })}
         </ul>
 
-        <div className="mt-5 h-[111px] w-full px-5 pt-4">
+        <div className="mt-5 h-[111px] w-full shrink-0 px-5 pt-4">
           <div className="grid grid-cols-2 gap-[13px]">
             <Button
               className="h-[51px] text-[16px] font-medium"

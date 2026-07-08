@@ -44,6 +44,7 @@
 - [x] 필터 BottomSheet는 X 버튼으로만 닫힙니다.
 - [x] RestaurantCard는 반복 렌더링되고 카드 클릭 시 식당 상세 route로 이동합니다.
 - [x] 식당 이미지는 가로 스크롤 리스트로 표시합니다.
+- [x] 식당 리스트는 mock data 25개를 10개 단위로 무한스크롤 렌더링합니다.
 
 ## Data Dependencies
 
@@ -67,6 +68,7 @@
   - active bottom sheet: `sort | category | null`
   - selected/draft sort option
   - selected/draft category option
+  - visible restaurant count for infinite scroll
 - form state: none
 - URL state: none
 - server state: none
@@ -77,12 +79,11 @@
 
 ```text
 HashiPickPage
-  RestaurantListPage
-    Header
-    RestaurantFilterBar
-    RestaurantCard list
-    FilterBottomSheet(sort)
-    FilterBottomSheet(category)
+  Header
+  RestaurantFilterBar
+  RestaurantCard list
+  FilterBottomSheet(sort)
+  FilterBottomSheet(category)
 ```
 
 ## Component Mapping
@@ -93,8 +94,12 @@ HashiPickPage
   - `BottomSheet`
   - `Button`
 - app shared component:
-  - `RestaurantListPage`
   - `FilterBottomSheet`
+- feature component:
+  - `RestaurantFilterBar`
+  - `RestaurantCard`
+- feature hook:
+  - `useInfiniteRestaurantList`
 - page-local component: none
 - icon:
   - `BackIcon`
@@ -115,7 +120,7 @@ HashiPickPage
 
 ## Verification
 
-- [x] `corepack pnpm --filter @hashi/client test -- FilterBottomSheet.test.tsx RestaurantListPage.test.tsx`
+- [x] `corepack pnpm --filter @hashi/client test -- HashiPickPage.test.tsx FilterBottomSheet.test.tsx`
 - [x] `corepack pnpm --filter @hashi/client lint`
 - [x] `corepack pnpm --filter @hashi/client typecheck`
 - [x] `corepack pnpm --filter @hashi/client build`

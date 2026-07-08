@@ -50,10 +50,11 @@ describe('FilterBottomSheet', () => {
     )
   })
 
-  it('uses the Figma mobile sheet heights for category and sort sheets', () => {
-    const { rerender } = render(
+  it('uses viewport-aware max height instead of fixed inline height', () => {
+    render(
       <FilterBottomSheet
         open
+        maxHeightClassName="max-h-[calc(100dvh-80px)]"
         onApply={vi.fn()}
         onOpenChange={vi.fn()}
         onReset={vi.fn()}
@@ -64,30 +65,12 @@ describe('FilterBottomSheet', () => {
       />,
     )
 
-    expect(
-      screen
-        .getByRole('dialog', { name: '음식 장르 선택' })
-        .querySelector('div[style]'),
-    ).toHaveStyle({ height: '577px' })
+    const sheetContent = screen
+      .getByRole('dialog', { name: '음식 장르 선택' })
+      .querySelector('[data-testid="filter-bottom-sheet-content"]')
 
-    rerender(
-      <FilterBottomSheet
-        open
-        onApply={vi.fn()}
-        onOpenChange={vi.fn()}
-        onReset={vi.fn()}
-        onSelect={vi.fn()}
-        options={options.slice(0, 2)}
-        selectedValue="sushi"
-        title="정렬 순서"
-      />,
-    )
-
-    expect(
-      screen
-        .getByRole('dialog', { name: '정렬 순서' })
-        .querySelector('div[style]'),
-    ).toHaveStyle({ height: '307px' })
+    expect(sheetContent).toHaveClass('max-h-[calc(100dvh-80px)]')
+    expect(sheetContent).not.toHaveAttribute('style')
   })
 
   it('calls handlers when option and footer buttons are pressed', () => {

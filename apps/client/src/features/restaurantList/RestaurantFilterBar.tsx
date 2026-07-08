@@ -8,7 +8,7 @@ type RestaurantFilterBarProps = {
 }
 
 const filterButtonClassName =
-  'flex h-10 items-center gap-0.5 rounded-[5px] text-left text-[15px] font-semibold text-[#4a4a4a]'
+  'typo-sub-header-3 text-primary-200 flex h-10 items-center gap-0.5 rounded-[5px] text-left'
 
 export const RestaurantFilterBar = ({
   sortLabel,
