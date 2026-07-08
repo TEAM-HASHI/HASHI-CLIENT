@@ -1,5 +1,7 @@
 import { createElement, lazy, Suspense } from 'react'
 
+import { LoadingScreen } from '@/shared/components/loadingScreen'
+
 const SearchPage = lazy(() => import('@/pages/search'))
 const ComingSoonPage = lazy(() => import('@/pages/comingSoon'))
 const TodayRestaurantPage = lazy(() => import('@/pages/todayRestaurant'))
@@ -28,7 +30,11 @@ const LoginRequiredPage = lazy(() => import('@/pages/loginRequired'))
 const NotFoundPage = lazy(() => import('@/pages/notFound'))
 
 const lazyPage = (Page: ReturnType<typeof lazy>) => {
-  return createElement(Suspense, { fallback: null }, createElement(Page))
+  return createElement(
+    Suspense,
+    { fallback: createElement(LoadingScreen) },
+    createElement(Page),
+  )
 }
 
 export const lazyPages = {
