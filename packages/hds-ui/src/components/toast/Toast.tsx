@@ -15,6 +15,8 @@ export type ToastContent = {
   children: ReactNode
 }
 
+export type ToastOptions = Parameters<AriaToastQueue<ToastContent>['add']>[1]
+
 export type ToastProps = Omit<
   AriaToastProps<ToastContent>,
   'children' | 'className'
@@ -36,6 +38,14 @@ export const createToastQueue = () =>
   })
 
 export const toastQueue = createToastQueue()
+export const DEFAULT_TOAST_TIMEOUT = 2000
+
+export const showToast = (content: ToastContent, options?: ToastOptions) => {
+  return toastQueue.add(content, {
+    ...options,
+    timeout: options?.timeout ?? DEFAULT_TOAST_TIMEOUT,
+  })
+}
 
 export const Toast = ({ className, ...props }: ToastProps) => {
   const { icon, children } = props.toast.content

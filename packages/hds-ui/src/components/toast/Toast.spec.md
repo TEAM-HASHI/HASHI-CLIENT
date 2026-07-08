@@ -18,22 +18,19 @@ HDS는 toast의 시각 구조, icon slot, message slot, React Aria 기반 접근
 
 ```tsx
 import { LinkIcon } from '@hashi/hds-icons'
-import { ToastRegion, toastQueue } from '@hashi/hds-ui'
+import { showToast, ToastRegion } from '@hashi/hds-ui'
 
 const App = () => {
   return (
     <>
-      <ToastRegion />
+      <ToastRegion className="app-mobile-fixed-top z-toast px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
       <button
         type="button"
         onClick={() => {
-          toastQueue.add(
-            {
-              icon: <LinkIcon className="size-6" />,
-              children: '링크가 복사 되었어요.',
-            },
-            { timeout: 2000 },
-          )
+          showToast({
+            icon: <LinkIcon className="size-6" />,
+            children: '링크가 복사 되었어요.',
+          })
         }}
       >
         링크 복사
@@ -49,10 +46,13 @@ Exported values:
 - `ToastRegion`
 - `toastQueue`
 - `createToastQueue`
+- `showToast`
+- `DEFAULT_TOAST_TIMEOUT`
 
 Exported types:
 
 - `ToastContent`
+- `ToastOptions`
 - `ToastProps`
 - `ToastRegionProps`
 
@@ -61,12 +61,14 @@ Exported types:
 React Aria Toast는 queue 기반으로 동작합니다.
 
 ```text
-toastQueue.add({ icon, children })
+showToast({ icon, children })
   -> ToastRegion
     -> Toast
       -> icon slot
       -> message
 ```
+
+기본 사용은 `showToast` helper를 사용합니다. `showToast`는 close 버튼이 없는 HDS Toast UX에 맞춰 기본 `timeout`을 적용합니다.
 
 ## Props
 
@@ -89,6 +91,18 @@ toastQueue.add({ icon, children })
 - default: package-level `toastQueue`
 - description: 표시할 toast queue입니다. 앱에서 별도 queue가 필요하면 `createToastQueue()`로 만들어 주입합니다.
 
+### `showToast(content, options)`
+
+- type: `(content: ToastContent, options?: ToastOptions) => ReturnType<typeof toastQueue.add>`
+- required: `false`
+- description: package-level `toastQueue`에 toast를 추가하는 기본 helper입니다. `options.timeout`을 넘기지 않으면 `DEFAULT_TOAST_TIMEOUT`을 사용합니다.
+
+### `DEFAULT_TOAST_TIMEOUT`
+
+- type: `number`
+- value: `2000`
+- description: `showToast`의 기본 자동 닫힘 시간입니다.
+
 ### `className`
 
 - type: `string`
@@ -103,6 +117,7 @@ toastQueue.add({ icon, children })
 - [x] 기본 디자인은 Figma toast와 맞춥니다.
 - [x] 긴 메시지는 최대 두 줄까지 표시합니다.
 - [x] ToastRegion은 기본적으로 하나의 toast만 표시합니다.
+- [x] `showToast`는 기본적으로 2000ms 후 toast가 자동으로 닫히도록 timeout을 적용합니다.
 
 ## UI Structure
 
@@ -141,6 +156,8 @@ ToastRegion:
 <ToastRegion className="app-mobile-fixed-top z-toast px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
 ```
 
+`ToastRegion`은 portal로 `document.body`에 렌더링되므로 wrapper로 감싸서 위치를 잡지 않습니다. 앱에서는 위 예시처럼 `ToastRegion` 자체에 위치 class를 전달합니다.
+
 ## Accessibility
 
 - React Aria Toast의 `ToastRegion`, `Toast`, `ToastContent`를 사용합니다.
@@ -157,6 +174,7 @@ ToastRegion:
 - analytics
 - custom animation
 - swipe dismiss
+- close button 또는 수동 dismiss UI
 
 ## Storybook
 
