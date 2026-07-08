@@ -37,10 +37,13 @@
   - 키워드 label/icon은 `features/review/constants`의 `REVIEW_KEYWORDS`를 기준으로 표시한다.
 - 하단에는 fixed action bar를 보여준다.
   - `삭제하기`: 삭제 확인 모달을 연다.
-  - `수정하기`: MVP 제외 기능이며, 공통 ComingSoonDialog PR 머지 후 안내 모달을 연결한다.
+  - `수정하기`: MVP 제외 기능이며, 공통 `ComingSoonDialog`를 연다.
 - 삭제 확인 모달은 HDS `Dialog`를 사용한다.
   - `취소하기`를 누르면 모달만 닫힌다.
   - `삭제하기`를 누르면 모달을 닫고 `ROUTES.myReviews`로 이동한다.
+- 수정 준비중 안내 모달은 app shared `ComingSoonDialog`를 사용한다.
+  - `확인`을 누르면 모달만 닫힌다.
+  - route 이동이나 API 호출은 발생하지 않는다.
 
 ## Data
 
@@ -52,7 +55,7 @@
 ## State And Structure
 
 - `ReviewDetailPage`는 route page로서 layout composition과 hook 연결만 담당한다.
-- `useReviewDetailPage`는 route param, mock 조회, modal open state, navigation handler를 관리한다.
+- `useReviewDetailPage`는 route param, mock 조회, delete/edit modal open state, navigation handler를 관리한다.
 - 리뷰 상세에서만 쓰이는 본문/이미지/액션바/모달 UI는 page-local component로 둔다.
 - 리뷰 작성/상세/수정 흐름에서도 사용하는 `ReviewHeader`, 예약 요약 UI, 키워드 상수, 사진 제한 상수는 `features/review`에서 재사용한다.
 - page-local component에는 review feature에서 재사용 가능한 header wrapper를 중복 구현하지 않는다.
@@ -66,6 +69,7 @@
 - 리뷰 이미지 리스트는 접근 가능한 list label을 가진다.
 - 삭제 확인 모달은 `alertdialog`로 렌더링한다.
 - 모달의 `취소하기`/`삭제하기` 버튼은 각각 명확한 accessible name을 가진다.
+- 수정 준비중 안내 모달은 공통 `ComingSoonDialog`의 접근성 계약을 따른다.
 
 ## Verification
 
@@ -80,4 +84,5 @@
   - `삭제하기` 클릭 시 확인 모달 노출
   - 삭제 모달의 `취소하기` 클릭 시 닫힘
   - 삭제 모달의 `삭제하기` 클릭 시 `/my-reviews` 이동
-  - 공통 ComingSoonDialog PR 머지 후 `수정하기` 클릭 시 준비중 안내 모달 노출
+  - `수정하기` 클릭 시 준비중 안내 모달 노출
+  - 준비중 안내 모달의 `확인` 클릭 시 닫힘

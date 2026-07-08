@@ -6,15 +6,18 @@ import { ReviewDeleteDialog } from '@/pages/reviewDetail/components/ReviewDelete
 import { ReviewDetailActionBar } from '@/pages/reviewDetail/components/ReviewDetailActionBar'
 import { ReviewDetailContentCard } from '@/pages/reviewDetail/components/ReviewDetailContentCard'
 import { useReviewDetailPage } from '@/pages/reviewDetail/hooks/useReviewDetailPage'
+import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 
 export const ReviewDetailPage = () => {
   const {
     isDeleteDialogOpen,
+    isEditComingSoonDialogOpen,
     reviewDetail,
     handleBackClick,
     handleConfirmDeleteClick,
     handleDeleteClick,
     handleDeleteDialogOpenChange,
+    handleEditComingSoonDialogOpenChange,
     handleEditClick,
   } = useReviewDetailPage()
 
@@ -47,6 +50,10 @@ export const ReviewDetailPage = () => {
         open={isDeleteDialogOpen}
         onConfirmDeleteClick={handleConfirmDeleteClick}
         onOpenChange={handleDeleteDialogOpenChange}
+      />
+      <ComingSoonDialog
+        open={isEditComingSoonDialogOpen}
+        onOpenChange={handleEditComingSoonDialogOpenChange}
       />
     </section>
   )

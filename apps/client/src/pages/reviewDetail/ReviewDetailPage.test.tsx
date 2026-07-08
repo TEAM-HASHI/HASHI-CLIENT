@@ -133,10 +133,26 @@ describe('ReviewDetailPage', () => {
     expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
   })
 
-  it('renders the MVP excluded edit button for future coming soon dialog wiring', () => {
+  it('opens the coming soon dialog from the MVP excluded edit button', () => {
     render(<ReviewDetailPage />)
 
-    expect(screen.getByRole('button', { name: '수정하기' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '수정하기' }))
+
+    expect(screen.getByText('서비스를 준비하고 있어요.')).toBeInTheDocument()
+    expect(
+      screen.getByText((_, element) => {
+        return (
+          element?.textContent ===
+          '더 편한 Hashi 이용을 위해현재 기능을 준비하고 있어요.'
+        )
+      }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '확인' }))
+
+    expect(
+      screen.queryByText('서비스를 준비하고 있어요.'),
+    ).not.toBeInTheDocument()
   })
 })
 

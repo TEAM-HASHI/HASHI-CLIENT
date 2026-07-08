@@ -9,6 +9,8 @@ export const useReviewDetailPage = () => {
   const { reviewId } = useParams()
   const reviewDetail = getReviewDetailMock(reviewId)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isEditComingSoonDialogOpen, setIsEditComingSoonDialogOpen] =
+    useState(false)
 
   const handleBackClick = () => {
     navigate(ROUTES.myReviews)
@@ -29,16 +31,22 @@ export const useReviewDetailPage = () => {
   }
 
   const handleEditClick = () => {
-    // TODO: 공통 ComingSoonDialog PR 머지 후 리뷰 수정 MVP 제외 안내 연결
+    setIsEditComingSoonDialogOpen(true)
+  }
+
+  const handleEditComingSoonDialogOpenChange = (open: boolean) => {
+    setIsEditComingSoonDialogOpen(open)
   }
 
   return {
     isDeleteDialogOpen,
+    isEditComingSoonDialogOpen,
     reviewDetail,
     handleBackClick,
     handleConfirmDeleteClick,
     handleDeleteClick,
     handleDeleteDialogOpenChange,
     handleEditClick,
+    handleEditComingSoonDialogOpenChange,
   }
 }
