@@ -14,7 +14,7 @@ export const ReviewWritableCard = ({
 }: ReviewWritableCardProps) => {
   return (
     <article className="flex min-w-0 flex-col gap-3 pb-5">
-      <div className="flex h-[120px] min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3 py-3.5">
         <ReviewImagePlaceholder />
         <div className="min-w-0 flex-1">
           <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2">

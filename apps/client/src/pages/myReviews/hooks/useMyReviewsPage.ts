@@ -11,10 +11,6 @@ import {
   myWrittenReviewMocks,
 } from '@/pages/myReviews/mocks/myReviews.mock'
 
-const getVisibleCount = (count: number) => {
-  return count > 0 ? count : undefined
-}
-
 export const useMyReviewsPage = () => {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<MyReviewTabTypes>(
@@ -29,11 +25,11 @@ export const useMyReviewsPage = () => {
     () => [
       {
         ...MY_REVIEW_TAB_ITEMS.writable,
-        count: getVisibleCount(myWritableReviewMocks.length),
+        count: myWritableReviewMocks.length,
       },
       {
         ...MY_REVIEW_TAB_ITEMS.written,
-        count: getVisibleCount(writtenReviews.length),
+        count: writtenReviews.length,
       },
     ],
     [writtenReviews.length],

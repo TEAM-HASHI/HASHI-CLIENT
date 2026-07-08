@@ -13,7 +13,7 @@ export const MyReviewEmptyState = ({
   onClick,
 }: MyReviewEmptyStateProps) => {
   return (
-    <main className="flex min-h-[calc(100dvh-115px)] min-w-0 flex-col items-center justify-center overflow-x-hidden px-5 pb-20">
+    <section className="flex min-h-[calc(100dvh-115px)] min-w-0 flex-col items-center justify-center overflow-x-hidden px-5 pb-20">
       {/* TODO: 여기에 그래픽 컴포넌트 넣어주시면 됩니다 */}
       <div className="flex aspect-[135/151] w-full max-w-[135px] items-center justify-center">
         {graphic}
@@ -29,6 +29,6 @@ export const MyReviewEmptyState = ({
       >
         일본 맛집 추천받기
       </Button>
-    </main>
+    </section>
   )
 }
