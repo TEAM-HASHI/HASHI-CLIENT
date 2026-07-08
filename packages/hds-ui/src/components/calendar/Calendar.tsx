@@ -34,6 +34,7 @@ export type CalendarProps = Omit<
   isDateDisabled?: (date: Date) => boolean
   onDateSelect?: (date: Date) => void
   onMonthChange?: (nextMonth: Date) => void
+  formatYearLabel?: (month: Date) => string
   formatMonthLabel?: (month: Date) => string
   getDateAriaLabel?: (date: Date) => string
   weekdayLabels?: WeekdayLabels
@@ -73,6 +74,10 @@ const defaultFormatMonthLabel = (month: Date) => {
   return `${month.getMonth() + 1}월`
 }
 
+const defaultFormatYearLabel = (month: Date) => {
+  return String(month.getFullYear())
+}
+
 const defaultGetDateAriaLabel = (date: Date) => {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`
 }
@@ -84,6 +89,7 @@ export const Calendar = ({
   isDateDisabled,
   onDateSelect,
   onMonthChange,
+  formatYearLabel = defaultFormatYearLabel,
   formatMonthLabel = defaultFormatMonthLabel,
   getDateAriaLabel = defaultGetDateAriaLabel,
   weekdayLabels = DEFAULT_WEEKDAY_LABELS,
@@ -110,7 +116,7 @@ export const Calendar = ({
       className={cn('w-full font-sans', className)}
       {...props}
     >
-      <div className="mb-[22px] flex items-center justify-between">
+      <div className="mb-[22px] flex h-11 items-center justify-between">
         <button
           aria-label="이전 달"
           className="text-cool-gray-900 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 flex size-6 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent p-0 text-[24px] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed"
@@ -120,8 +126,13 @@ export const Calendar = ({
         >
           <BackIcon aria-hidden="true" />
         </button>
-        <h2 className="typo-sub-header-1 text-black">
-          {formatMonthLabel(visibleMonth)}
+        <h2 className="flex w-10 flex-col items-center justify-center gap-0.5 text-center">
+          <span className="typo-body-3 text-cool-gray-900">
+            {formatYearLabel(visibleMonth)}
+          </span>
+          <span className="typo-sub-header-1 text-black">
+            {formatMonthLabel(visibleMonth)}
+          </span>
         </h2>
         <button
           aria-label="다음 달"

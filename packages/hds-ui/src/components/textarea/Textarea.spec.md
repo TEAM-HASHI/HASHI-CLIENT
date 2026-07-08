@@ -16,7 +16,7 @@ HDS는 textarea box, helper text, character counter, disabled state, className m
 
 - [x] 제품 도메인 copy나 검증 정책을 하드코딩하지 않습니다.
 - [x] native `textarea` props를 전달합니다.
-- [x] `placeholder`, `helperText`, `maxLength`, `disabled`, `className`을 지원합니다.
+- [x] `placeholder`, `helperText`, `maxLength`, `disabled`, `className`, `textareaClassName`을 지원합니다.
 - [x] `maxLength`가 있으면 counter를 기본 표시합니다.
 - [x] counter는 `value`, `defaultValue`, 사용자 입력 이벤트를 기준으로 내부 계산합니다.
 - [x] `showCounter={false}`로 counter를 숨길 수 있습니다.
@@ -56,6 +56,7 @@ Exported type:
 - `helperText`: `string`, optional helper text rendered below the textarea.
 - `showCounter`: `boolean`, optional. Defaults to `true` when `maxLength` exists.
 - `className`: `string`, optional wrapper className.
+- `textareaClassName`: `string`, optional inner textarea className.
 - native `textarea` props except `children` and inner textarea `className`.
 
 ## States
@@ -84,6 +85,7 @@ Exported type:
 - border: `1px`, `warm-gray-100`
 - border radius: `10px`
 - input text: `font-sans`, `typo-body-4`, `primary-200`
+- input override: consumers can pass `textareaClassName` to extend or override inner textarea styles.
 - placeholder: `warm-gray-300`
 - helper/counter: `font-sans`, `typo-body-6`, `line-height: 1.36`
 - helper text: `warm-gray-300`

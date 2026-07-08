@@ -40,6 +40,10 @@ Tailwind CSS를 사용하는 경우:
 - `cn` 유틸을 도입하면 위치는 `apps/client/src/shared/utils`에서 시작합니다.
 - 여러 패키지에서 같은 class merge 유틸이 필요해지면 별도 shared package 도입을 검토합니다.
 - arbitrary value는 꼭 필요한 경우에만 사용합니다.
+- Tailwind 기본 spacing scale로 표현 가능한 spacing/sizing 값은 arbitrary value 대신 scale class를 사용합니다.
+  - 예: `size-[10px]` 대신 `size-2.5`
+  - 예: `h-[58px]` 대신 `h-14.5`
+  - 예: `mt-[42px]` 대신 `mt-10.5`
 - `!important` 사용은 지양합니다.
 
 ## Current Token Shape
@@ -50,7 +54,7 @@ Tailwind CSS를 사용하는 경우:
 - `colors.css`: color token
 - `gradients.css`: gradient token
 - `typography.css`: typography token과 `typo-*` utility
-- `z-index.css`: z-index token 예약 파일. 현재 확정된 z-index 기준값은 없습니다.
+- `z-index.css`: z-index token. overlay, modal, toast처럼 전역 stacking 계층은 숫자를 직접 쓰지 않고 의미 기반 토큰으로 관리합니다.
 
 현재 제공하는 utility namespace는 다음과 같습니다.
 
@@ -58,6 +62,7 @@ Tailwind CSS를 사용하는 경우:
 - Gradients: `gradient-01`, `background-image-gradient-01`
 - Typography: `typo-header-*`, `typo-sub-header-*`, `typo-body-*`, `typo-caption-*`, `typo-long-body-1`
 - Font family: `font-sans` maps to `Pretendard` first, then system fallback
+- Z-index: `z-base`, `z-raised`, `z-fixed`, `z-overlay`, `z-modal`, `z-toast`
 
 App entry CSS example:
 

@@ -1,21 +1,43 @@
-import { useState } from 'react'
-
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
-import { useAuthStatus } from '@/shared/hooks'
+import { AnywhereReservationCta } from '@/pages/home/components/AnywhereReservationCta'
+import { HomeCurationSection } from '@/pages/home/components/HomeCurationSection'
+import { HomeLogo } from '@/pages/home/components/HomeLogo'
+import { HomeQuickMenuSection } from '@/pages/home/components/HomeQuickMenuSection'
+import { HomeSearchEntry } from '@/pages/home/components/HomeSearchEntry'
+import { HotSnsRestaurantSection } from '@/pages/home/components/HotSnsRestaurantSection'
+import { useHomePage } from '@/pages/home/hooks/useHomePage'
 
 export const HomePage = () => {
-  const { isAuthenticated } = useAuthStatus()
-  const [isAuthGateOpen, setIsAuthGateOpen] = useState(!isAuthenticated)
+  const {
+    authGate,
+    getRestaurantDetailPath,
+    handleAnywhereReservationPress,
+    homeBanners,
+    hotSnsRestaurants,
+    quickLinks,
+    searchPath,
+  } = useHomePage()
 
   return (
     <>
-      <h1>홈 페이지</h1>
+      <div className="px-5 pt-[18px] pb-8">
+        <h1 className="sr-only">Hashi 홈</h1>
+        <HomeLogo />
+        <HomeSearchEntry to={searchPath} />
+        <HomeCurationSection banners={homeBanners} />
+        <HomeQuickMenuSection quickLinks={quickLinks} />
+        <AnywhereReservationCta
+          onReservationPress={handleAnywhereReservationPress}
+        />
+        <HotSnsRestaurantSection
+          getRestaurantDetailPath={getRestaurantDetailPath}
+          restaurants={hotSnsRestaurants}
+        />
+      </div>
       <AuthGateBottomSheet
-        open={!isAuthenticated && isAuthGateOpen}
-        onKakaoPress={() => {
-          // TODO: connect Kakao OAuth flow.
-        }}
-        onOpenChange={setIsAuthGateOpen}
+        open={authGate.open}
+        onKakaoPress={authGate.onKakaoPress}
+        onOpenChange={authGate.onOpenChange}
       />
     </>
   )
