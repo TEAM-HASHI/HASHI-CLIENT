@@ -13,7 +13,7 @@ export const SearchPage = () => {
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <div className="sticky top-0 z-10 bg-white">
+      <div className="app-mobile-fixed-top z-fixed bg-white">
         <SearchHeader
           inputRef={searchPage.searchInputRef}
           keyword={searchPage.keyword}
@@ -21,30 +21,34 @@ export const SearchPage = () => {
           onKeywordChange={searchPage.onKeywordChange}
           onSearchSubmit={searchPage.onSearchSubmit}
         />
-        {!searchPage.status.isSearchIdle && (
-          <SearchFilterBar
-            categoryLabel={searchPage.filterLabels.foodCategory}
-            onCategoryClick={searchPage.onFoodCategoryFilterClick}
-            onSortClick={searchPage.onSortFilterClick}
-            sortLabel={searchPage.filterLabels.sort}
+      </div>
+      <div className="flex flex-1 flex-col pt-[83px]">
+        {searchPage.status.isSearchIdle ? (
+          <SearchIdlePanel
+            recentSearchKeywords={searchPage.recentSearchKeywords}
+            recommendedSearchKeywords={searchPage.recommendedSearchKeywords}
+            onKeywordSelect={searchPage.onKeywordSelect}
           />
+        ) : (
+          <>
+            <SearchFilterBar
+              categoryLabel={searchPage.filterLabels.foodCategory}
+              onCategoryClick={searchPage.onFoodCategoryFilterClick}
+              onSortClick={searchPage.onSortFilterClick}
+              sortLabel={searchPage.filterLabels.sort}
+            />
+            {searchPage.searchRestaurantsQuery.isLoading ? (
+              <SearchResultSkeleton />
+            ) : searchPage.searchRestaurantsQuery.isError ? (
+              <SearchErrorState onRetry={searchPage.onSearchRetry} />
+            ) : searchPage.restaurants.length > 0 ? (
+              <RestaurantResultList restaurants={searchPage.restaurants} />
+            ) : (
+              <SearchEmptyState />
+            )}
+          </>
         )}
       </div>
-      {searchPage.status.isSearchIdle ? (
-        <SearchIdlePanel
-          recentSearchKeywords={searchPage.recentSearchKeywords}
-          recommendedSearchKeywords={searchPage.recommendedSearchKeywords}
-          onKeywordSelect={searchPage.onKeywordSelect}
-        />
-      ) : searchPage.searchRestaurantsQuery.isLoading ? (
-        <SearchResultSkeleton />
-      ) : searchPage.searchRestaurantsQuery.isError ? (
-        <SearchErrorState onRetry={searchPage.onSearchRetry} />
-      ) : searchPage.restaurants.length > 0 ? (
-        <RestaurantResultList restaurants={searchPage.restaurants} />
-      ) : (
-        <SearchEmptyState />
-      )}
       <FilterBottomSheet {...searchPage.sortSheet} />
       <FilterBottomSheet {...searchPage.foodCategorySheet} />
     </div>

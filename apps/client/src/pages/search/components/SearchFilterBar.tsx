@@ -32,7 +32,7 @@ export const SearchFilterBar = ({
   sortLabel,
 }: SearchFilterBarProps) => {
   return (
-    <div className="mt-[9px] flex items-center gap-3 px-5 py-[9px]">
+    <div className="flex items-center gap-3 px-5 py-[9px]">
       <SearchFilterTrigger label={sortLabel} onClick={onSortClick} />
       <SearchFilterTrigger label={categoryLabel} onClick={onCategoryClick} />
     </div>

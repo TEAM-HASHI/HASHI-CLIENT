@@ -141,6 +141,7 @@
   - 운영 도구나 API가 생기면 `useSearchPage` 내부에서 query로 교체합니다.
 - search restaurant fixtures:
   - 초기 구현은 `mocks/searchRestaurants.mock.ts`의 page-local mock data로 시작합니다.
+  - 검색 결과 스크롤 상태를 확인할 수 있도록 대표 추천 키워드에 대해 충분한 개수의 fixture를 둡니다.
   - API endpoint가 확정되면 `api/searchRestaurants.ts`에서 실제 request로 교체합니다.
 
 ## User Flow
@@ -407,14 +408,18 @@ SearchPage
   - 첨부 설계는 모바일 viewport 기준입니다.
   - 넓은 viewport에서는 콘텐츠 폭을 모바일 기준으로 제한하거나 기존 RootLayout 정책을 따릅니다.
 - fixed area:
-  - 검색창과 필터 영역을 포함한 상단 영역은 고정합니다.
+  - 검색창을 포함한 상단 검색 영역만 고정합니다.
+  - 검색 영역은 `app-mobile-fixed-top z-fixed bg-white`로 렌더링해 스크롤 중 결과 리스트보다 위에 표시합니다.
+  - filter bar는 고정 영역에 포함하지 않고 검색 결과 콘텐츠 흐름 안에서 렌더링합니다.
+  - fixed 검색 영역은 SearchField 아래 여백까지 포함하며, 본문을 덮지 않도록 본문은 `pt-[83px]`로 보정합니다.
 - search header:
   - top padding은 `30px`입니다.
+  - bottom padding은 `9px`입니다.
   - 뒤로가기 아이콘은 `24px`입니다.
   - 뒤로가기 버튼과 `SearchField` 사이 간격은 `10px`입니다.
 - filter bar:
   - filter trigger는 page-local component로 조합합니다.
-  - `SearchField`와 filter section 사이 간격은 `9px`입니다.
+  - `SearchField`와 filter section 사이 간격은 fixed search header의 bottom padding `9px`로 확보합니다.
   - filter section 내부 vertical padding은 `9px`입니다.
   - trigger text는 `typo-sub-header-3 text-primary-200`입니다.
   - text와 chevron icon 사이 간격은 `12px`입니다.
@@ -448,7 +453,8 @@ SearchPage
   - unselected option text는 `typo-body-4 text-black`입니다.
   - selected option check icon은 `CheckIcon text-cool-gray-700`, `20px`입니다.
 - search idle state:
-  - `SearchField`와 검색어 section title 사이 간격은 `30px`입니다.
+  - `SearchField`와 검색어 section title 사이 총 간격은 `30px`입니다.
+  - fixed search header의 bottom padding `9px`를 제외한 idle panel top padding은 `21px`입니다.
   - 최근 검색어/추천 검색어 title은 `typo-sub-header-3 text-primary-200`입니다.
   - title과 chip 사이 간격은 `16px`입니다.
   - chip은 HDS `Chip`을 사용하고, 배경은 `warm-gray-50` (`#EFEFEF`), radius는 `100px`, text는 `typo-body-7 text-black`, padding은 vertical `8px` / horizontal `12px`입니다.

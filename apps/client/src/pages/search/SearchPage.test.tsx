@@ -49,6 +49,12 @@ describe('SearchPage', () => {
     expect(
       screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
     ).toHaveAttribute('placeholder', '식당 혹은 메뉴를 검색해보세요')
+    expect(screen.getByRole('search').parentElement).toHaveClass(
+      'app-mobile-fixed-top',
+      'z-fixed',
+      'bg-white',
+    )
+    expect(screen.getByRole('search')).toHaveClass('pb-[9px]')
     expect(screen.getByRole('button', { name: '뒤로가기' })).toBeInTheDocument()
     const recentSection = screen.getByRole('region', { name: '최근 검색어' })
     const recommendedSection = screen.getByRole('region', {
@@ -85,6 +91,14 @@ describe('SearchPage', () => {
         '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
       ),
     ).toBeInTheDocument()
+    expect(screen.getByRole('list').parentElement).toHaveClass('pt-[83px]')
+    expect(
+      screen.getByRole('button', { name: '기본순' }).parentElement,
+    ).not.toHaveClass('app-mobile-fixed-top')
+    expect(
+      screen.getByRole('button', { name: '기본순' }).parentElement,
+    ).not.toHaveClass('mt-[9px]')
+    expect(screen.getAllByRole('listitem')).toHaveLength(10)
     expect(window.localStorage.getItem('hashi:search:recent-keywords')).toBe(
       JSON.stringify(['아끼소바']),
     )

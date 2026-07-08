@@ -12,7 +12,7 @@ export const SearchIdlePanel = ({
   onKeywordSelect,
 }: SearchIdlePanelProps) => {
   return (
-    <div className="flex flex-col gap-[38px] px-5 pt-[30px]">
+    <div className="flex flex-col gap-[38px] px-5 pt-[21px]">
       {recentSearchKeywords.length > 0 && (
         <section aria-labelledby="recent-search-keywords-title">
           <h2
