@@ -40,6 +40,44 @@ describe('RestaurantReservationNewPage', () => {
     expect(screen.getByRole('button', { name: '예약하기' })).toBeDisabled()
   })
 
+  it('keeps time selection disabled until a valid date is selected', () => {
+    render(<RestaurantReservationNewPage />)
+
+    const timeButton = screen.getByRole('button', { name: '11:00' })
+
+    expect(timeButton).toBeDisabled()
+
+    fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
+
+    expect(timeButton).toBeEnabled()
+  })
+
+  it('does not keep a time click made before date selection', () => {
+    render(<RestaurantReservationNewPage />)
+
+    fireEvent.change(
+      screen.getByPlaceholderText('예약자 성함을 입력해주세요.'),
+      {
+        target: { value: '김하시' },
+      },
+    )
+    fireEvent.click(screen.getByRole('button', { name: '어른 인원 늘리기' }))
+    fireEvent.click(screen.getByRole('button', { name: '어른 인원 늘리기' }))
+
+    const timeButton = screen.getByRole('button', { name: '11:00' })
+
+    fireEvent.click(timeButton)
+    fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
+
+    const submitButton = screen.getByRole('button', { name: '예약하기' })
+
+    expect(submitButton).toBeDisabled()
+
+    fireEvent.click(timeButton)
+
+    expect(submitButton).toBeEnabled()
+  })
+
   it('enables submit after required values are selected and navigates with reservation state', () => {
     render(<RestaurantReservationNewPage />)
 

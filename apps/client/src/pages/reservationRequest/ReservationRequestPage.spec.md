@@ -20,6 +20,7 @@
 - Figma node `2088:37445`: 포인트 미적용 상태
 - Figma node `2094:63123`: 포인트 적용 상태
 - Figma node `1735:37425`: 예약 진행 확인 모달
+- Figma node `3313:74992`: 어디든 예약 식당 이미지 placeholder
 
 ## Data Dependencies
 
@@ -28,8 +29,11 @@ API 호출은 없다.
 이전 예약하기 화면에서 `location.state`로 전달한 예약 draft를 사용한다.
 
 ```ts
-interface ReservationRequestDraft {
-  restaurantId: string
+type ReservationRequestDraft =
+  | RestaurantReservationRequestDraft
+  | AnywhereReservationRequestDraft
+
+interface ReservationRequestDraftBase {
   restaurantName: string
   guestName: string
   guests: {
@@ -41,12 +45,27 @@ interface ReservationRequestDraft {
   time: string
   requestNote: string
 }
+
+interface RestaurantReservationRequestDraft extends ReservationRequestDraftBase {
+  source?: 'restaurant'
+  restaurantId: string
+  restaurantAddress?: string
+  restaurantImageUrl?: string | null
+}
+
+interface AnywhereReservationRequestDraft extends ReservationRequestDraftBase {
+  source: 'anywhere'
+  restaurantId: null
+  restaurantAddress: string
+  restaurantImageUrl: null
+}
 ```
 
 직접 URL 진입처럼 `location.state`가 없거나 draft shape이 맞지 않으면 page-local fallback mock을 사용한다.
 
 ```ts
 {
+  source: 'restaurant',
   restaurantId: 'default',
   restaurantName: '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
   guestName: '김하시',
@@ -103,6 +122,14 @@ const MOCK_RESERVATION_ID = 'mock-reservation-id'
 
 방문 일정은 `YYYY.M.D. HH:mm` 형식으로 표시한다.
 
+식당 주소는 `location.state.restaurantAddress`가 있으면 해당 값을 우선 표시하고, 없으면 page-local mock 주소를 표시한다.
+
+식당 이미지는 다음 우선순위로 표시한다.
+
+1. `restaurantImageUrl`이 있으면 해당 이미지 표시
+2. 어디든 예약(`source: 'anywhere'`)에서 넘어왔고 이미지가 없으면 Figma `2-a` placeholder 표시
+3. 일반 예약에서 이미지가 없으면 shared `DefaultImage` 표시
+
 ### 포인트
 
 - 남은 보유 포인트를 표시한다.
@@ -156,6 +183,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
   - `BackIcon`
   - `CheckIcon`
   - `HashiPointMarkIcon`
+  - `AnywhereReservationPlaceholderIcon`
 - Shared:
   - `DefaultImage`
 - Page-local:
@@ -166,12 +194,15 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - Route/shared 영향:
   - 새 route 추가 없음
   - 새 shared 추가 없음
-  - 식당 이미지 fallback은 기존 shared `DefaultImage` 사용
-  - `@hashi/hds-icons`에 `HashiPointMarkIcon` 추가
+  - 일반 예약 식당 이미지 fallback은 기존 shared `DefaultImage` 사용
+  - 어디든 예약 식당 이미지 fallback은 HDS `AnywhereReservationPlaceholderIcon` 사용
+  - `@hashi/hds-icons`에 `HashiPointMarkIcon`, `AnywhereReservationPlaceholderIcon` 추가
 
 ## Verification
 
 - 예약 정보가 fallback 또는 `location.state` 기반으로 렌더링된다.
+- 어디든 예약 state는 사용자가 입력한 식당명/식당 주소를 렌더링한다.
+- 어디든 예약 state에서 식당 이미지가 없으면 `2-a` placeholder를 렌더링한다.
 - 숫자가 아닌 포인트 입력은 제거된다.
 - 포인트 입력이 최대 사용 가능 금액을 넘으면 즉시 보정된다.
 - `전액사용` 클릭 시 최대 사용 가능 포인트가 적용된다.

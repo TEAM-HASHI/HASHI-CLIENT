@@ -79,6 +79,14 @@ export const useAnywhereReservationForm = () => {
     }))
   }
 
+  const handleTimeSelect = (time: string) => {
+    if (!isSelectedDateValid) {
+      return
+    }
+
+    setSelectedTime(time)
+  }
+
   const createAnywhereReservationDraft = ():
     | AnywhereReservationDraft
     | undefined => {
@@ -138,7 +146,8 @@ export const useAnywhereReservationForm = () => {
     timeSelector: {
       timeSlots: ANYWHERE_RESERVATION_TIME_SLOTS,
       selectedTime,
-      onTimeSelect: setSelectedTime,
+      disabled: !isSelectedDateValid,
+      onTimeSelect: handleTimeSelect,
     },
     submit: {
       canSubmit,

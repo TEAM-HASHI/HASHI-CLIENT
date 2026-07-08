@@ -116,6 +116,7 @@ export const RestaurantReservationNewPage = () => {
               시간
             </h2>
             <ReservationTimeSelector
+              disabled={timeSelector.disabled}
               onTimeSelect={timeSelector.onTimeSelect}
               selectedTime={timeSelector.selectedTime}
               timeSlots={timeSelector.timeSlots}

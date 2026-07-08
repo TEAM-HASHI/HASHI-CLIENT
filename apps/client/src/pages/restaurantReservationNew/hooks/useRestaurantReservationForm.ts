@@ -74,6 +74,14 @@ export const useRestaurantReservationForm = ({
     }))
   }
 
+  const handleTimeSelect = (time: string) => {
+    if (!isSelectedDateValid) {
+      return
+    }
+
+    setSelectedTime(time)
+  }
+
   const createReservationDraft = (): ReservationDraft | undefined => {
     if (!canSubmit || selectedDate === undefined || !selectedTime) {
       return undefined
@@ -120,7 +128,8 @@ export const useRestaurantReservationForm = ({
     timeSelector: {
       timeSlots,
       selectedTime,
-      onTimeSelect: setSelectedTime,
+      disabled: !isSelectedDateValid,
+      onTimeSelect: handleTimeSelect,
     },
     submit: {
       canSubmit,

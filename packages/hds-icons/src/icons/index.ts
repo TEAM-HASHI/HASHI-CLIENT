@@ -1,3 +1,4 @@
+export { default as AnywhereReservationPlaceholderIcon } from './AnywhereReservationPlaceholderIcon'
 export { default as BackIcon } from './BackIcon'
 export { default as CalendarIcon } from './CalendarIcon'
 export { default as CameraIcon } from './CameraIcon'

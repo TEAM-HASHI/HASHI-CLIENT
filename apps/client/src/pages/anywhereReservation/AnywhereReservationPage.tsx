@@ -123,6 +123,7 @@ export const AnywhereReservationPage = () => {
               시간
             </h2>
             <AnywhereReservationTimeSelector
+              disabled={timeSelector.disabled}
               onTimeSelect={timeSelector.onTimeSelect}
               selectedTime={timeSelector.selectedTime}
               timeSlots={timeSelector.timeSlots}
