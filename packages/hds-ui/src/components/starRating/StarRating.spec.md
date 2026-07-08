@@ -199,7 +199,7 @@ StarRating
   - `sm`: star icon `18px`
   - `md`: star icon `36px`
 - color:
-  - filled: `primary-500`
+  - filled: `primary-400`
   - empty: `warm-gray-300`
 - state:
   - `filled`: `StarFillIcon`

@@ -15,3 +15,5 @@ export type { ReviewReservationSummaryProps } from './reviewReservationSummary/R
 
 export { ReviewSubmitBar } from './reviewSubmitBar/ReviewSubmitBar'
 export type { ReviewSubmitBarProps } from './reviewSubmitBar/ReviewSubmitBar'
+
+export { ReviewDeleteConfirmDialog } from './reviewDeleteConfirmDialog/ReviewDeleteConfirmDialog'
