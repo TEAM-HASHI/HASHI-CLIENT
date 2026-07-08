@@ -5,7 +5,7 @@ export const useAuthStatus = (): {
   status: AuthStatus
 } => {
   return {
-    isAuthenticated: true,
+    isAuthenticated: false,
     status: 'unauthenticated',
   }
 }
