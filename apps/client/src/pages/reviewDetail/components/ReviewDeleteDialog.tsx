@@ -1,14 +1,11 @@
-import { CloseSmallIcon } from '@hashi/hds-icons'
-import { Dialog } from '@hashi/hds-ui'
+import { OrderCancelIcon } from '@hashi/hds-icons'
+import { Button, Dialog } from '@hashi/hds-ui'
 
 interface ReviewDeleteDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirmDeleteClick: () => void
 }
-
-const dialogActionClassName =
-  'typo-body-6 flex h-8 items-center justify-center rounded-[5px] px-4'
 
 export const ReviewDeleteDialog = ({
   open,
@@ -17,17 +14,11 @@ export const ReviewDeleteDialog = ({
 }: ReviewDeleteDialogProps) => {
   return (
     <Dialog.Root open={open} type="alertdialog" onOpenChange={onOpenChange}>
-      <Dialog.Content
-        aria-label="리뷰 삭제 확인"
-        className="w-68 max-w-[calc(100vw-48px)] rounded-[10px] px-5 pt-4 pb-5"
-      >
-        <Dialog.Header className="gap-4">
-          <Dialog.Close
-            aria-label="삭제 확인 모달 닫기"
-            className="text-primary-400 flex size-5 items-center justify-center"
-          >
-            <CloseSmallIcon className="size-4.5" />
-          </Dialog.Close>
+      <Dialog.Content aria-label="리뷰 삭제 확인" className="py-[23px]">
+        <Dialog.Header>
+          <Dialog.Icon>
+            <OrderCancelIcon className="size-6" />
+          </Dialog.Icon>
           <div className="flex flex-col items-center gap-2">
             <Dialog.Title>정말 삭제하시겠습니까?</Dialog.Title>
             <Dialog.Description>
@@ -35,19 +26,24 @@ export const ReviewDeleteDialog = ({
             </Dialog.Description>
           </div>
         </Dialog.Header>
-        <Dialog.Footer className="mt-5 gap-2">
-          <Dialog.Close
-            className={`${dialogActionClassName} bg-secondary-200 text-black`}
+        <Dialog.Footer>
+          <Button
+            className="text-black"
+            size="sm"
+            variant="neutral"
+            width="full"
+            onClick={() => onOpenChange(false)}
           >
             취소하기
-          </Dialog.Close>
-          <button
-            className={`${dialogActionClassName} bg-cool-gray-800 text-white`}
+          </Button>
+          <Button
             onClick={onConfirmDeleteClick}
-            type="button"
+            size="sm"
+            variant="primary"
+            width="full"
           >
             삭제하기
-          </button>
+          </Button>
         </Dialog.Footer>
       </Dialog.Content>
     </Dialog.Root>

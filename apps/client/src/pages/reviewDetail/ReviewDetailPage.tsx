@@ -6,7 +6,6 @@ import { ReviewDeleteDialog } from '@/pages/reviewDetail/components/ReviewDelete
 import { ReviewDetailActionBar } from '@/pages/reviewDetail/components/ReviewDetailActionBar'
 import { ReviewDetailContentCard } from '@/pages/reviewDetail/components/ReviewDetailContentCard'
 import { useReviewDetailPage } from '@/pages/reviewDetail/hooks/useReviewDetailPage'
-import { NotFoundPage } from '@/pages/notFound'
 
 export const ReviewDetailPage = () => {
   const {
@@ -18,10 +17,6 @@ export const ReviewDetailPage = () => {
     handleDeleteDialogOpenChange,
     handleEditClick,
   } = useReviewDetailPage()
-
-  if (!reviewDetail) {
-    return <NotFoundPage />
-  }
 
   return (
     <section

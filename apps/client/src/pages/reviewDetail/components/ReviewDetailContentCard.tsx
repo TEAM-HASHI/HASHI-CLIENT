@@ -73,7 +73,7 @@ export const ReviewDetailContentCard = ({
           {selectedKeywords.map(({ id, label, Icon }) => (
             <li className="shrink-0" key={id}>
               <Badge
-                className="rounded-[5px] border px-2.5 py-1"
+                className="rounded-[5px] border"
                 icon={<Icon aria-hidden="true" />}
                 label={label}
               />

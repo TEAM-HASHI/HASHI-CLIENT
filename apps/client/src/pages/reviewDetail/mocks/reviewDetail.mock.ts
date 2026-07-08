@@ -36,7 +36,9 @@ export const reviewDetailMockItems: ReviewDetail[] = [
 ]
 
 export const getReviewDetailMock = (reviewId?: string) => {
-  return reviewDetailMockItems.find(
-    (reviewDetail) => reviewDetail.id === reviewId,
+  return (
+    reviewDetailMockItems.find(
+      (reviewDetail) => reviewDetail.id === reviewId,
+    ) ?? reviewDetailMockItems[0]
   )
 }

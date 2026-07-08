@@ -14,20 +14,18 @@ import { REVIEW_PHOTO_MAX_COUNT } from '@/features/review/constants'
 import { ReviewDetailContentCard } from '@/pages/reviewDetail/components/ReviewDetailContentCard'
 import { ReviewDetailPage } from '@/pages/reviewDetail/ReviewDetailPage'
 
-const { navigateMock, useParamsMock } = vi.hoisted(() => ({
+const { navigateMock } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
-  useParamsMock: vi.fn(() => ({ reviewId: 'review-1' })),
 }))
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => navigateMock,
-  useParams: () => useParamsMock(),
+  useParams: () => ({ reviewId: 'review-1' }),
 }))
 
 afterEach(() => {
   cleanup()
   navigateMock.mockClear()
-  useParamsMock.mockReturnValue({ reviewId: 'review-1' })
   vi.restoreAllMocks()
 })
 
@@ -139,19 +137,6 @@ describe('ReviewDetailPage', () => {
     render(<ReviewDetailPage />)
 
     expect(screen.getByRole('button', { name: '수정하기' })).toBeInTheDocument()
-  })
-
-  it('renders the not found page when reviewId does not match a mock review', () => {
-    useParamsMock.mockReturnValue({ reviewId: 'unknown-review' })
-
-    render(<ReviewDetailPage />)
-
-    expect(
-      screen.getByRole('heading', { name: '404 페이지' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('region', { name: '리뷰 대상 예약 정보' }),
-    ).not.toBeInTheDocument()
   })
 })
 

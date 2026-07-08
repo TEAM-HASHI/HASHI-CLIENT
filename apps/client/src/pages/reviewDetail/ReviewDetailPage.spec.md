@@ -45,8 +45,9 @@
 ## Data
 
 - 현재 퍼블리싱 범위에서는 page-local mock 데이터로 리뷰 상세를 표시한다.
-- `reviewId` route param으로 mock 리뷰를 찾고, 없는 경우 404 페이지를 표시한다.
-- API 연동 시 리뷰 상세 query의 not found 응답은 404 페이지로 처리하고, 리뷰 삭제 mutation, 삭제 성공/실패 toast는 hook 내부에서 교체한다.
+- `reviewId` route param으로 mock 리뷰를 찾고, 없는 경우 퍼블리싱 확인을 위해 기본 mock 리뷰를 표시한다.
+- API 연동 전에는 리뷰 상세 query의 not found 응답을 404 또는 에러 상태로 처리할지 확정한다.
+- API 연동 시 리뷰 상세 query, 리뷰 삭제 mutation, 삭제 성공/실패 toast를 hook 내부에서 교체한다.
 
 ## State And Structure
 
