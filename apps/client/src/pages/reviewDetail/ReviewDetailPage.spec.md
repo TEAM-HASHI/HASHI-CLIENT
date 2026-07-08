@@ -65,7 +65,7 @@
 - 리뷰 별점은 read-only `StarRating`의 `role="img"`와 label로 전달한다.
 - 리뷰 이미지 리스트는 접근 가능한 list label을 가진다.
 - 삭제 확인 모달은 `alertdialog`로 렌더링한다.
-- 모달 닫기/취소/삭제 버튼은 각각 명확한 accessible name을 가진다.
+- 모달의 `취소하기`/`삭제하기` 버튼은 각각 명확한 accessible name을 가진다.
 
 ## Verification
 
