@@ -42,6 +42,18 @@ describe('Toast', () => {
     )
   })
 
+  it('renders a full-width toast with 20px horizontal content padding', () => {
+    const queue = createToastQueue()
+    queue.add({ children: '링크가 복사 되었어요.' })
+
+    render(<ToastRegion queue={queue} />)
+
+    expect(
+      screen.getByText('링크가 복사 되었어요.').closest('[role="alert"]')
+        ?.parentElement,
+    ).toHaveClass('w-full', 'px-5')
+  })
+
   it('merges custom region className', () => {
     const queue = createToastQueue()
     queue.add({ children: '저장되었습니다.' })
