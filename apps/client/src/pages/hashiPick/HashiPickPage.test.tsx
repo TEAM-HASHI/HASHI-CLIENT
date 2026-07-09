@@ -10,7 +10,8 @@ import {
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { HashiPickPage } from './HashiPickPage'
+import { ROUTES } from '@/app/router/path'
+import { HashiPickPage } from '@/pages/hashiPick/HashiPickPage'
 
 const LocationPath = () => {
   const location = useLocation()
@@ -20,10 +21,11 @@ const LocationPath = () => {
 
 const renderHashiPickPage = () => {
   return render(
-    <MemoryRouter initialEntries={['/restaurants/hashi-pick']}>
+    <MemoryRouter initialEntries={[ROUTES.hashiPickRestaurants]}>
       <Routes>
-        <Route element={<HashiPickPage />} path="/restaurants/hashi-pick" />
-        <Route element={<LocationPath />} path="/restaurants/:restaurantId" />
+        <Route element={<HashiPickPage />} path={ROUTES.hashiPickRestaurants} />
+        <Route element={<LocationPath />} path={ROUTES.restaurantDetail} />
+        <Route element={<LocationPath />} path={ROUTES.home} />
       </Routes>
     </MemoryRouter>,
   )
@@ -136,6 +138,14 @@ describe('HashiPickPage', () => {
     expect(screen.getByTestId('location-path')).toHaveTextContent(
       '/restaurants/1',
     )
+  })
+
+  it('navigates to home when the header back button is pressed', () => {
+    renderHashiPickPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent(ROUTES.home)
   })
 
   it('renders five fallback image slots that follow the parent content width', () => {

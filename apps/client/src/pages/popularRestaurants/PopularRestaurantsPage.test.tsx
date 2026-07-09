@@ -3,7 +3,8 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { PopularRestaurantsPage } from './PopularRestaurantsPage'
+import { ROUTES } from '@/app/router/path'
+import { PopularRestaurantsPage } from '@/pages/popularRestaurants/PopularRestaurantsPage'
 
 const LocationPath = () => {
   const location = useLocation()
@@ -13,13 +14,14 @@ const LocationPath = () => {
 
 const renderPopularRestaurantsPage = () => {
   return render(
-    <MemoryRouter initialEntries={['/restaurants/popular']}>
+    <MemoryRouter initialEntries={[ROUTES.popularRestaurants]}>
       <Routes>
         <Route
           element={<PopularRestaurantsPage />}
-          path="/restaurants/popular"
+          path={ROUTES.popularRestaurants}
         />
-        <Route element={<LocationPath />} path="/restaurants/:restaurantId" />
+        <Route element={<LocationPath />} path={ROUTES.restaurantDetail} />
+        <Route element={<LocationPath />} path={ROUTES.home} />
       </Routes>
     </MemoryRouter>,
   )
@@ -83,6 +85,14 @@ describe('PopularRestaurantsPage', () => {
     expect(
       screen.queryByRole('button', { name: '인기순' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('navigates to home when the header back button is pressed', () => {
+    renderPopularRestaurantsPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent(ROUTES.home)
   })
 
   it('loads restaurants in 10 item chunks when the bottom sentinel enters the viewport', () => {
