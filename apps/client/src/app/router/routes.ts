@@ -138,7 +138,13 @@ export const appRoutes: RouteObject[] = [
         children: [
           {
             path: ROUTES.loginRequired,
-            element: lazyPages.loginRequired(),
+            element: createElement(BottomNavigationLayout),
+            children: [
+              {
+                index: true,
+                element: lazyPages.loginRequired(),
+              },
+            ],
           },
         ],
       },

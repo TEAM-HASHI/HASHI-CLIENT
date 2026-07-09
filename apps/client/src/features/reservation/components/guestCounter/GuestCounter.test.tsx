@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { GuestCounter } from './GuestCounter'
+import { GuestCounter } from '@/features/reservation/components/guestCounter/GuestCounter'
 
 describe('GuestCounter', () => {
   afterEach(() => {
@@ -22,7 +22,14 @@ describe('GuestCounter', () => {
       'typo-body-4',
       'text-primary-200',
     )
-    expect(screen.getByText('2')).toHaveClass('typo-body-4', 'text-primary-200')
+    expect(screen.getByText('2')).toHaveClass(
+      'typo-body-4',
+      'text-primary-200',
+      'w-[25px]',
+      'shrink-0',
+      'text-center',
+      'tabular-nums',
+    )
     expect(
       screen.getByRole('button', { name: '어른 인원 줄이기' }),
     ).toBeEnabled()

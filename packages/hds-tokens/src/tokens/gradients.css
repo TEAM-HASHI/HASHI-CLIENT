@@ -4,5 +4,11 @@
     var(--color-primary-500) 0%,
     var(--color-cool-gray-900) 100%
   );
+  --gradient-progress-line: linear-gradient(
+    90deg,
+    var(--color-cool-gray-900) 0%,
+    var(--color-primary-400) 100%
+  );
   --background-image-gradient-01: var(--gradient-01);
+  --background-image-gradient-progress-line: var(--gradient-progress-line);
 }

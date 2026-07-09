@@ -74,6 +74,16 @@ describe('InputField', () => {
     expect(input).toHaveFocus()
   })
 
+  it('does not render a focus outline on the input box', () => {
+    render(<InputField aria-label="name" />)
+
+    const inputBox = screen.getByRole('textbox', { name: 'name' }).parentElement
+
+    expect(inputBox).not.toHaveClass('focus-within:outline-cool-gray-500')
+    expect(inputBox).not.toHaveClass('focus-within:outline-2')
+    expect(inputBox).not.toHaveClass('focus-within:outline-offset-0')
+  })
+
   it('does not focus the input when the disabled input box is clicked', () => {
     render(<InputField aria-label="name" disabled />)
 

@@ -32,8 +32,42 @@ export default tseslint.config(
     },
   },
   {
+    files: [
+      'apps/client/**/*.{ts,tsx}',
+      'packages/hds-icons/src/**/*.{ts,tsx}',
+      'packages/hds-ui/src/**/*.{ts,tsx}',
+    ],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-deprecated': 'error',
+    },
+  },
+  {
     files: ['apps/client/**/*.{ts,tsx}'],
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
+  },
+  {
+    files: ['apps/client/src/**/*.{ts,tsx}'],
+    ignores: ['apps/client/src/**/index.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['./*', '../*'],
+              message:
+                'apps/client/src 내부 모듈은 상대 경로 대신 @/ alias import를 사용하세요. 같은 폴더 public barrel인 index.ts만 예외입니다.',
+            },
+          ],
+        },
+      ],
+    },
   },
   {
     files: ['**/*.{test,spec}.{ts,tsx}', '**/e2e/**'],

@@ -1,7 +1,7 @@
 import { PopularIcon } from '@hashi/hds-icons'
 import { BottomSheet } from '@hashi/hds-ui'
 
-import { KakaoStartButton } from './KakaoStartButton'
+import { KakaoStartButton } from '@/shared/components/kakaoStartButton'
 
 type AuthGateBottomSheetProps = {
   open: boolean

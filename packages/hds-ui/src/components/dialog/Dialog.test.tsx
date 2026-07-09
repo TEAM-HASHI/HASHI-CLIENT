@@ -153,6 +153,12 @@ describe('Dialog', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
+  it('uses the dim overlay token', () => {
+    renderDialog({ defaultOpen: true })
+
+    expect(getOverlay()).toHaveClass('bg-dim')
+  })
+
   it('uses button semantics for trigger and close', () => {
     renderDialog()
 

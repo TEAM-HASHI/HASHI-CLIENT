@@ -159,6 +159,7 @@ Dialog.Root
 ## Styling
 
 - placement: viewport-centered modal
+- overlay background: `bg-dim`
 - content width: `327px`, max `calc(100vw - 48px)`
 - background: `white`
 - radius: `15px`

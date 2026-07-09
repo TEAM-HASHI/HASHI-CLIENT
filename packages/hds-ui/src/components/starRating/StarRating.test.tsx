@@ -39,6 +39,13 @@ describe('StarRating', () => {
     ])
   })
 
+  it('uses HDS color tokens for filled and empty stars', () => {
+    const { container } = render(<StarRating value={1} />)
+
+    expect(container.querySelector('.text-primary-400')).toBeInTheDocument()
+    expect(container.querySelector('.text-warm-gray-300')).toBeInTheDocument()
+  })
+
   it('displays zero as five empty stars', () => {
     render(<StarRating value={0} />)
 
