@@ -24,8 +24,9 @@ const { mockRequestAnimationFrame, mockScrollTo } = vi.hoisted(() => ({
   }),
   mockScrollTo: vi.fn(),
 }))
-const { mockClipboardWriteText } = vi.hoisted(() => ({
+const { mockClipboardWriteText, mockShowToast } = vi.hoisted(() => ({
   mockClipboardWriteText: vi.fn(),
+  mockShowToast: vi.fn(),
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -47,6 +48,15 @@ vi.mock('@/shared/hooks', () => ({
   }),
 }))
 
+vi.mock('@hashi/hds-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@hashi/hds-ui')>()
+
+  return {
+    ...actual,
+    showToast: mockShowToast,
+  }
+})
+
 describe('RestaurantDetailPage', () => {
   beforeEach(() => {
     Object.defineProperty(navigator, 'clipboard', {
@@ -63,6 +73,7 @@ describe('RestaurantDetailPage', () => {
     cleanup()
     mockNavigate.mockClear()
     mockClipboardWriteText.mockClear()
+    mockShowToast.mockClear()
     mockRequestAnimationFrame.mockClear()
     mockScrollTo.mockClear()
     mockLocationStore.state = undefined
@@ -214,5 +225,6 @@ describe('RestaurantDetailPage', () => {
     expect(mockClipboardWriteText).toHaveBeenCalledWith(
       '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
     )
+    expect(mockShowToast).not.toHaveBeenCalled()
   })
 })

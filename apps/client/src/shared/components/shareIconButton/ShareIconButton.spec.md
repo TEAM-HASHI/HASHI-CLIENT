@@ -16,7 +16,7 @@
 - `shareUrl`이 있으면 클릭 시 해당 값을 현재 origin 기준 absolute URL로 정규화해 클립보드에 복사합니다.
 - `shareUrl`이 없으면 클릭 시 `window.location.href`를 클립보드에 복사합니다.
 - Clipboard API가 실패하거나 사용할 수 없는 환경에서는 textarea 기반 fallback으로 복사를 시도합니다.
-- 링크 복사 성공 토스트는 추후 토스트 컴포넌트 정책이 확정되면 연결합니다.
+- 링크 복사에 성공하면 HDS `showToast`로 `링크가 복사 되었어요.` 토스트를 표시합니다.
 
 ## Placement
 

@@ -94,11 +94,11 @@ export const RestaurantReviewSection = ({
 
       <div
         className={cn(
-          'bg-cool-gray-50 flex h-[150px] flex-col items-center rounded-[10px] py-4',
+          'bg-cool-gray-50 flex h-[150px] flex-col items-center rounded-[10px] px-4 py-4',
           REVIEW_CONTENT_WIDTH_CLASS_NAME,
         )}
       >
-        <div className="flex w-[321px] max-w-[calc(100%-32px)] flex-col items-center gap-2">
+        <div className="flex w-full flex-col items-center gap-2">
           <div className="flex w-full items-center justify-between">
             <div className="text-primary-200 flex w-[219px] shrink-0 flex-col gap-1">
               <p className="typo-sub-header-2 truncate">{restaurantName}</p>
@@ -125,7 +125,7 @@ export const RestaurantReviewSection = ({
         </div>
       </div>
 
-      <div className="pt-5">
+      <div className="pt-4">
         <div className={REVIEW_CONTENT_WIDTH_CLASS_NAME}>
           <h2 className="typo-sub-header-1 text-primary-200 flex gap-1">
             리뷰 <span className="text-warm-gray-300">{reviewCount}</span>

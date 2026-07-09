@@ -138,4 +138,41 @@ describe('RestaurantReviewSection', () => {
       '[&_path:last-child]:stroke-primary-100',
     )
   })
+
+  it('keeps the review list 16px below the write-review CTA', () => {
+    render(
+      <RestaurantReviewSection
+        onPressReviewImage={vi.fn()}
+        onPressWriteReview={vi.fn()}
+        rating={3.8}
+        restaurantName="야키니쿠 리키마루"
+        reviewCount={10}
+        reviews={createReviews(1)}
+      />,
+    )
+
+    const reviewListWrapper = screen.getByRole('heading', {
+      name: '리뷰 10',
+    }).parentElement?.parentElement
+
+    expect(reviewListWrapper).toHaveClass('pt-4')
+  })
+
+  it('keeps the write-review button inset 16px from the CTA sides', () => {
+    render(
+      <RestaurantReviewSection
+        onPressReviewImage={vi.fn()}
+        onPressWriteReview={vi.fn()}
+        rating={3.8}
+        restaurantName="야키니쿠 리키마루"
+        reviewCount={10}
+        reviews={createReviews(1)}
+      />,
+    )
+
+    const reviewButtonContent = screen.getByText('리뷰 작성하기').parentElement
+    const reviewCta = reviewButtonContent?.parentElement?.parentElement
+
+    expect(reviewCta).toHaveClass('px-4')
+  })
 })

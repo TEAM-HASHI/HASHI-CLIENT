@@ -37,8 +37,8 @@
 - [ ] 하단 fixed bar에는 좋아요 영역과 `예약하기`가 표시됩니다.
 - [ ] 식당 상세 페이지에는 `다시 추천 받기` 버튼이 없습니다.
 - [ ] 메뉴 카드 클릭 시 `ROUTES.restaurantMenuDetail`로 이동합니다.
-- [ ] 공유 클릭 시 `ROUTES.restaurantDetail` 기준 식당 상세 링크를 현재 origin 기준 absolute URL로 클립보드에 복사합니다.
-- [ ] 식당명 복사 클릭 시 현재 표시 중인 식당명을 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
+- [ ] 공유 클릭 시 `ROUTES.restaurantDetail` 기준 식당 상세 링크를 현재 origin 기준 absolute URL로 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
+- [ ] 식당명 복사 클릭 시 현재 표시 중인 식당명을 클립보드에 복사하고 Toast는 표시하지 않습니다.
 - [ ] 비로그인 사용자가 예약하기 또는 좋아요를 누르면 로그인 유도 바텀시트를 표시합니다.
 - [ ] 로그인 사용자가 예약하기를 누르면 `ROUTES.restaurantReservationNew`로 이동합니다.
 - [ ] 로그인 사용자가 좋아요를 누르면 준비중 모달을 표시합니다.

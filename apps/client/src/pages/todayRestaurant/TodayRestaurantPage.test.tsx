@@ -23,8 +23,9 @@ const { mockAuthStore } = vi.hoisted(() => ({
     isAuthenticated: false,
   },
 }))
-const { mockClipboardWriteText } = vi.hoisted(() => ({
+const { mockClipboardWriteText, mockShowToast } = vi.hoisted(() => ({
   mockClipboardWriteText: vi.fn(),
+  mockShowToast: vi.fn(),
 }))
 const { mockExecCommand } = vi.hoisted(() => ({
   mockExecCommand: vi.fn(),
@@ -48,6 +49,15 @@ vi.mock('@/shared/hooks', () => ({
   }),
 }))
 
+vi.mock('@hashi/hds-ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@hashi/hds-ui')>()
+
+  return {
+    ...actual,
+    showToast: mockShowToast,
+  }
+})
+
 describe('TodayRestaurantPage', () => {
   beforeEach(() => {
     Object.defineProperty(navigator, 'clipboard', {
@@ -66,6 +76,7 @@ describe('TodayRestaurantPage', () => {
     cleanup()
     mockNavigate.mockClear()
     mockClipboardWriteText.mockReset()
+    mockShowToast.mockReset()
     mockExecCommand.mockReset()
     mockLocationStore.state = undefined
     mockAuthStore.isAuthenticated = false
@@ -228,6 +239,7 @@ describe('TodayRestaurantPage', () => {
     expect(mockClipboardWriteText).toHaveBeenCalledWith(
       '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
     )
+    expect(mockShowToast).not.toHaveBeenCalled()
   })
 
   it('copies the restaurant name from fallback selection when Clipboard API rejects', async () => {

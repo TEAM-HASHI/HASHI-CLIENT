@@ -1,5 +1,5 @@
-import { ShareIcon } from '@hashi/hds-icons'
-import { IconButton } from '@hashi/hds-ui'
+import { LinkIcon, ShareIcon } from '@hashi/hds-icons'
+import { IconButton, showToast } from '@hashi/hds-ui'
 
 import { copyCurrentUrlToClipboard, copyUrlToClipboard } from '@/shared/utils'
 
@@ -8,9 +8,19 @@ interface ShareIconButtonProps {
 }
 
 export const ShareIconButton = ({ shareUrl }: ShareIconButtonProps) => {
-  const handlePressShare = () => {
-    void (shareUrl ? copyUrlToClipboard(shareUrl) : copyCurrentUrlToClipboard())
-    // TODO: 링크 복사 성공 토스트 연결
+  const handlePressShare = async () => {
+    const isCopied = await (shareUrl
+      ? copyUrlToClipboard(shareUrl)
+      : copyCurrentUrlToClipboard())
+
+    if (!isCopied) {
+      return
+    }
+
+    showToast({
+      icon: <LinkIcon className="size-6" />,
+      children: '링크가 복사 되었어요.',
+    })
   }
 
   return (
