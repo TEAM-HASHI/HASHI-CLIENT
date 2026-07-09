@@ -1,25 +1,42 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
 import {
   MOCK_RESTAURANT_DETAIL,
   RestaurantDetailTemplate,
   type RestaurantDetailTab,
 } from '@/features/restaurantDetail'
-
-const getRestaurantMenuDetailPath = (restaurantId: string, menuId: string) =>
-  ROUTES.restaurantMenuDetail
-    .replace(':restaurantId', restaurantId)
-    .replace(':menuId', menuId)
+import {
+  getRestaurantDetailPath,
+  getRestaurantDetailTabState,
+  getRestaurantMenuDetailPath,
+  getRestaurantReservationNewPath,
+  navigateBackOrReplace,
+} from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
+import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
+import { useAuthStatus } from '@/shared/hooks'
 
 export const RestaurantDetailPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { restaurantId } = useParams()
-  const [activeTab, setActiveTab] = useState<RestaurantDetailTab>('info')
+  const { isAuthenticated } = useAuthStatus()
+  const initialTab = getRestaurantDetailTabState(location.state).activeTab
+  const [activeTab, setActiveTab] = useState<RestaurantDetailTab>(
+    initialTab ?? 'info',
+  )
   const [isReviewImageViewerOpen, setIsReviewImageViewerOpen] = useState(false)
+  const [reviewImageViewerImageUrls, setReviewImageViewerImageUrls] = useState<
+    string[]
+  >([])
+  const [reviewImageViewerInitialIndex, setReviewImageViewerInitialIndex] =
+    useState(0)
   const [isReviewUnavailableModalOpen, setIsReviewUnavailableModalOpen] =
     useState(false)
+  const [isAuthGateOpen, setIsAuthGateOpen] = useState(false)
+  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
 
   const restaurant = {
     ...MOCK_RESTAURANT_DETAIL,
@@ -27,22 +44,40 @@ export const RestaurantDetailPage = () => {
   }
 
   const handlePressBack = () => {
-    navigate(-1)
+    navigateBackOrReplace(navigate, ROUTES.home)
   }
 
   const handlePressLike = () => {
-    // TODO: 에러컴포넌트 머지 시, 에러페이지로 이동
+    if (!isAuthenticated) {
+      setIsAuthGateOpen(true)
+      return
+    }
+
+    setIsComingSoonOpen(true)
   }
 
   const handlePressReservation = () => {
-    // TODO: 예약 페이지 route 확정 후 이동 처리
+    if (!isAuthenticated) {
+      setIsAuthGateOpen(true)
+      return
+    }
+
+    navigate(getRestaurantReservationNewPath(restaurant.id))
   }
 
   const handlePressMenuItem = (menuId: string) => {
-    navigate(getRestaurantMenuDetailPath(restaurant.id, menuId))
+    navigate(getRestaurantMenuDetailPath(restaurant.id, menuId), {
+      state: { source: 'detail' },
+    })
   }
 
-  const handlePressReviewImage = () => {
+  const handlePressReviewImage = (reviewId: string, imageIndex: number) => {
+    const selectedReview = restaurant.reviews.find(
+      (review) => review.id === reviewId,
+    )
+
+    setReviewImageViewerImageUrls(selectedReview?.images ?? [])
+    setReviewImageViewerInitialIndex(imageIndex)
     setIsReviewImageViewerOpen(true)
   }
 
@@ -60,22 +95,36 @@ export const RestaurantDetailPage = () => {
   }
 
   return (
-    <RestaurantDetailTemplate
-      activeTab={activeTab}
-      isReviewImageViewerOpen={isReviewImageViewerOpen}
-      isReviewUnavailableModalOpen={isReviewUnavailableModalOpen}
-      onCloseReviewImageViewer={handleCloseReviewImageViewer}
-      onCloseReviewUnavailableModal={handleCloseReviewUnavailableModal}
-      onPressBack={handlePressBack}
-      onPressLike={handlePressLike}
-      onPressMenuItem={handlePressMenuItem}
-      onPressReservation={handlePressReservation}
-      onPressReviewImage={handlePressReviewImage}
-      onPressWriteReview={handlePressWriteReview}
-      onTabChange={setActiveTab}
-      restaurant={restaurant}
-      title="식당 상세 정보"
-      variant="detail"
-    />
+    <>
+      <RestaurantDetailTemplate
+        activeTab={activeTab}
+        isReviewImageViewerOpen={isReviewImageViewerOpen}
+        isReviewUnavailableModalOpen={isReviewUnavailableModalOpen}
+        onCloseReviewImageViewer={handleCloseReviewImageViewer}
+        onCloseReviewUnavailableModal={handleCloseReviewUnavailableModal}
+        onPressBack={handlePressBack}
+        onPressLike={handlePressLike}
+        onPressMenuItem={handlePressMenuItem}
+        onPressReservation={handlePressReservation}
+        onPressReviewImage={handlePressReviewImage}
+        onPressWriteReview={handlePressWriteReview}
+        onTabChange={setActiveTab}
+        restaurant={restaurant}
+        reviewImageViewerImageUrls={reviewImageViewerImageUrls}
+        reviewImageViewerInitialIndex={reviewImageViewerInitialIndex}
+        shareUrl={getRestaurantDetailPath(restaurant.id)}
+        title="식당 상세 정보"
+        variant="detail"
+      />
+      <AuthGateBottomSheet
+        onKakaoPress={() => undefined}
+        onOpenChange={setIsAuthGateOpen}
+        open={isAuthGateOpen}
+      />
+      <ComingSoonDialog
+        onOpenChange={setIsComingSoonOpen}
+        open={isComingSoonOpen}
+      />
+    </>
   )
 }

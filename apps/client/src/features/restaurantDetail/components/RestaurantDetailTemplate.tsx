@@ -6,7 +6,7 @@ import {
   MoneySmallIcon,
   StarFillIcon,
 } from '@hashi/hds-icons'
-import { Header, IconButton } from '@hashi/hds-ui'
+import { Header, IconButton, showToast } from '@hashi/hds-ui'
 import { useCallback } from 'react'
 
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
@@ -30,11 +30,10 @@ import type {
 import { ShareIconButton } from '@/shared/components/shareIconButton'
 import { cn, copyTextToClipboard } from '@/shared/utils'
 
-const TODAY_RESTAURANT_SHARE_PATH = '/restaurants/today'
-const RESTAURANT_NAME_COPY_TEXT = '식당명'
-
 interface RestaurantDetailTemplateProps {
   activeTab: RestaurantDetailTab
+  reviewImageViewerImageUrls: string[]
+  reviewImageViewerInitialIndex: number
   isReviewImageViewerOpen: boolean
   isReviewUnavailableModalOpen: boolean
   restaurant: RestaurantDetail
@@ -55,6 +54,8 @@ interface RestaurantDetailTemplateProps {
 
 export const RestaurantDetailTemplate = ({
   activeTab,
+  reviewImageViewerImageUrls,
+  reviewImageViewerInitialIndex,
   isReviewImageViewerOpen,
   isReviewUnavailableModalOpen,
   restaurant,
@@ -73,8 +74,6 @@ export const RestaurantDetailTemplate = ({
   onCloseReviewUnavailableModal,
 }: RestaurantDetailTemplateProps) => {
   const { isTabBarFixed, markerRef } = useRestaurantDetailTabBarFixed()
-  const resolvedShareUrl =
-    shareUrl ?? (variant === 'today' ? TODAY_RESTAURANT_SHARE_PATH : undefined)
 
   const scrollToTabBarTop = useCallback(() => {
     const marker = markerRef.current
@@ -100,15 +99,15 @@ export const RestaurantDetailTemplate = ({
   }
 
   const handlePressCopyRestaurantName = () => {
-    void copyTextToClipboard(RESTAURANT_NAME_COPY_TEXT)
-    // TODO: 식당명 복사 성공 토스트 연결
+    void copyTextToClipboard(restaurant.name)
+    showToast({ children: '식당명이 복사 되었어요.' })
   }
 
   return (
     <main className="min-h-dvh bg-white pb-[calc(82px+var(--safe-area-bottom,0px))]">
       <h1 className="sr-only">{title}</h1>
       <div
-        className="fixed inset-x-0 top-0 z-30 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)]"
+        className="z-fixed fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)]"
         data-testid="restaurant-detail-fixed-header"
       >
         <Header
@@ -117,7 +116,7 @@ export const RestaurantDetailTemplate = ({
               <BackIcon className="size-6" />
             </IconButton>
           }
-          rightAction={<ShareIconButton shareUrl={resolvedShareUrl} />}
+          rightAction={<ShareIconButton shareUrl={shareUrl} />}
           title={title}
         />
       </div>
@@ -163,18 +162,24 @@ export const RestaurantDetailTemplate = ({
 
         <dl className="typo-body-7 text-primary-200 mt-5 flex flex-col gap-1.5">
           <div className="flex items-start gap-2">
-            <LocationIcon className="mt-0.5 size-4 shrink-0" />
+            <dt className="sr-only">주소</dt>
+            <LocationIcon
+              aria-hidden="true"
+              className="mt-0.5 size-4 shrink-0"
+            />
             <dd>{restaurant.address}</dd>
           </div>
           <div className="flex items-center gap-2">
-            <ClockSmallIcon className="size-4 shrink-0" />
+            <dt className="sr-only">영업시간</dt>
+            <ClockSmallIcon aria-hidden="true" className="size-4 shrink-0" />
             <dd>
               {restaurant.visitDateLabel} {restaurant.openTime} ~{' '}
               {restaurant.closeTime}
             </dd>
           </div>
           <div className="flex items-center gap-2">
-            <MoneySmallIcon className="size-4 shrink-0" />
+            <dt className="sr-only">예약금</dt>
+            <MoneySmallIcon aria-hidden="true" className="size-4 shrink-0" />
             <dd>예약금 {restaurant.deposit}</dd>
           </div>
         </dl>
@@ -183,7 +188,7 @@ export const RestaurantDetailTemplate = ({
       <div aria-hidden="true" ref={markerRef} />
       <div
         className={cn(
-          'z-20 bg-white',
+          'z-fixed bg-white',
           isTabBarFixed
             ? 'fixed inset-x-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)]'
             : 'relative',
@@ -226,6 +231,8 @@ export const RestaurantDetailTemplate = ({
       )}
 
       <ReviewImageViewer
+        imageUrls={reviewImageViewerImageUrls}
+        initialIndex={reviewImageViewerInitialIndex}
         onClose={onCloseReviewImageViewer}
         open={isReviewImageViewerOpen}
       />

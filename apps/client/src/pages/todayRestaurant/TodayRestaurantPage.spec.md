@@ -25,7 +25,7 @@
   - unauthenticated: none
   - authenticated guest: none
 - auth status:
-  - uses `useAuthStatus`: no
+  - uses `useAuthStatus`: yes, action-level auth gate only
 
 ## Requirements
 
@@ -34,11 +34,16 @@
 - [ ] 탭바는 Header 아래에 sticky로 고정됩니다.
 - [ ] 하단 fixed bar에는 좋아요 영역, `다시 추천 받기`, `예약하기`가 표시됩니다.
 - [ ] 메뉴 카드 클릭 시 `ROUTES.restaurantMenuDetail`로 이동합니다.
-- [ ] 공유 클릭 시 오늘의 식당 대표 링크 `/restaurants/today`를 현재 origin 기준 absolute URL로 클립보드에 복사하고, 성공 토스트는 TODO로 둡니다.
-- [ ] `다시 추천 받기`, `예약하기`는 실제 API/route 연결 없이 page TODO handler로 둡니다.
-- [ ] 좋아요는 에러 컴포넌트 머지 후 에러페이지로 이동하도록 page TODO handler로 둡니다.
+- [ ] 공유 클릭 시 오늘의 식당 대표 링크 `/restaurants/today`를 현재 origin 기준 absolute URL로 클립보드에 복사합니다.
+- [ ] 식당명 복사 클릭 시 현재 표시 중인 식당명을 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
+- [ ] 비로그인 사용자가 예약하기 또는 좋아요를 누르면 로그인 유도 바텀시트를 표시합니다.
+- [ ] 로그인 사용자가 예약하기를 누르면 `ROUTES.restaurantReservationNew`로 이동합니다.
+- [ ] 로그인 사용자가 좋아요를 누르면 준비중 모달을 표시합니다.
+- [ ] `다시 추천 받기`는 추후 API 연결 전까지 no-op handler로 둡니다.
 - [ ] 리뷰 작성 CTA 클릭 시 비방문자 안내 모달을 열 수 있습니다.
-- [ ] 리뷰 이미지 클릭 시 현재 페이지 안에서 이미지 뷰어 상태를 열 수 있습니다.
+- [ ] 리뷰 이미지 클릭 시 선택한 리뷰 이미지 목록과 선택 index를 이미지 뷰어에 전달합니다.
+- [ ] route state `activeTab`이 있으면 해당 탭을 초기 선택 상태로 표시합니다.
+- [ ] 직접 진입 상태에서 뒤로가기를 누르면 `ROUTES.home`으로 replace 이동합니다.
 - [ ] 서버/API 연동 전이므로 Figma 확인용 최소 mock data 1개만 사용합니다.
 - [ ] 모바일 폭에서 horizontal overflow가 없어야 합니다.
 
@@ -66,7 +71,10 @@
 
 - local state:
   - active tab
+  - auth gate bottom sheet open/closed
+  - coming soon dialog open/closed
   - review image viewer open/closed
+  - review image viewer image urls and initial index
   - review unavailable modal open/closed
 - form state: none
 - URL state: none
@@ -87,6 +95,8 @@ TodayRestaurantPage
     ReviewImageViewer
     ReviewUnavailableModal
     RestaurantBottomBar
+    AuthGateBottomSheet
+    ComingSoonDialog
 ```
 
 ## Component Mapping
@@ -96,6 +106,7 @@ TodayRestaurantPage
   - `IconButton`
   - `Tabs`
   - `Button`
+  - `Toast`
   - `Dialog`
   - `StarRating`
   - `Carousel`
@@ -104,6 +115,7 @@ TodayRestaurantPage
   - `Badge`
 - app shared component:
   - `ShareIconButton`
+  - `ComingSoonDialog`
 - feature component:
   - `RestaurantDetailTemplate`
   - `RestaurantDetailHero`
@@ -128,7 +140,7 @@ TodayRestaurantPage
 - search params:
   - none
 - back behavior:
-  - TODO handler in page
+  - uses history when available, otherwise replaces to `ROUTES.home`
 - auth redirect:
   - none
 

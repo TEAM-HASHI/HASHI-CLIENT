@@ -21,7 +21,7 @@ export const RestaurantBottomBar = ({
   const isToday = variant === 'today'
 
   return (
-    <div className="app-mobile-fixed-bottom z-20 bg-white px-5 pt-4 pb-[calc(17px+var(--safe-area-bottom,0px))]">
+    <div className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-4 pb-[calc(17px+var(--safe-area-bottom,0px))]">
       <div className="flex h-[49px] items-center gap-[17px]">
         <div className="text-primary-200 flex w-9 shrink-0 flex-col items-center gap-1">
           <IconButton aria-label="좋아요" onClick={onPressLike} size="xs">

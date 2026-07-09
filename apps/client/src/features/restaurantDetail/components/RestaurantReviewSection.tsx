@@ -1,8 +1,12 @@
 import { FastIcon, MoneyIcon, PencilIcon, SmileIcon } from '@hashi/hds-icons'
 import { Badge, Button, Chip, CollapsibleText, StarRating } from '@hashi/hds-ui'
-import { useEffect, useMemo, useRef, useState } from 'react'
 
 import graphicBillUrl from '@/features/restaurantDetail/assets/graphic-bill.svg'
+import {
+  RATING_DISTRIBUTION,
+  REVIEW_SORT_OPTIONS,
+} from '@/features/restaurantDetail/constants/restaurantReview'
+import { useRestaurantReviews } from '@/features/restaurantDetail/hooks/useRestaurantReviews'
 import type { RestaurantReview } from '@/features/restaurantDetail/types/restaurantDetail'
 import { cn } from '@/shared/utils'
 
@@ -15,27 +19,13 @@ interface RestaurantReviewSectionProps {
   onPressWriteReview: () => void
 }
 
-type ReviewSortValue = 'latest' | 'highRating' | 'lowRating'
-
-const REVIEW_SORT_OPTIONS = [
-  { label: '최신순', value: 'latest' },
-  { label: '높은 평점 순', value: 'highRating' },
-  { label: '낮은 평점 순', value: 'lowRating' },
-] satisfies {
-  label: string
-  value: ReviewSortValue
-}[]
-
 const REVIEW_KEYWORD_ICON = {
   친절해요: <SmileIcon className="size-6" />,
   '음식이 빨리 나와요': <FastIcon className="size-6" />,
   '가성비가 좋아요': <MoneyIcon className="size-6" />,
 }
 
-const RATING_DISTRIBUTION = [5, 4, 3, 2, 1]
-const REVIEW_PAGE_SIZE = 10
-const REVIEW_CONTENT_WIDTH_CLASS_NAME =
-  'mx-auto w-[353px] max-w-[calc(100%-40px)]'
+const REVIEW_CONTENT_WIDTH_CLASS_NAME = 'mx-5'
 const HORIZONTAL_SCROLL_CLASS_NAME =
   'flex [scrollbar-width:none] gap-2 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
 const REVIEW_STAR_RATING_CLASS_NAME =
@@ -75,64 +65,13 @@ export const RestaurantReviewSection = ({
   onPressReviewImage,
   onPressWriteReview,
 }: RestaurantReviewSectionProps) => {
-  const [selectedSort, setSelectedSort] = useState<ReviewSortValue>('latest')
-  const [visibleReviewCount, setVisibleReviewCount] = useState(REVIEW_PAGE_SIZE)
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
-
-  const sortedReviews = useMemo(() => {
-    if (selectedSort === 'latest') {
-      return reviews
-    }
-
-    return [...reviews].sort((firstReview, secondReview) =>
-      selectedSort === 'highRating'
-        ? secondReview.rating - firstReview.rating
-        : firstReview.rating - secondReview.rating,
-    )
-  }, [reviews, selectedSort])
-  const visibleReviews = sortedReviews.slice(0, visibleReviewCount)
-  const hasMoreReviews = visibleReviewCount < sortedReviews.length
-
-  const handleSelectSort = (value: ReviewSortValue) => {
-    setSelectedSort(value)
-    setVisibleReviewCount(REVIEW_PAGE_SIZE)
-  }
-
-  useEffect(() => {
-    const target = loadMoreRef.current
-
-    if (
-      !target ||
-      !hasMoreReviews ||
-      typeof IntersectionObserver === 'undefined'
-    ) {
-      return
-    }
-
-    // TODO: 리뷰 API 연결 후 useInfiniteQuery 기반 cursor pagination으로 교체
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) {
-          return
-        }
-
-        setVisibleReviewCount((prevCount) =>
-          Math.min(prevCount + REVIEW_PAGE_SIZE, sortedReviews.length),
-        )
-      },
-      {
-        root: null,
-        rootMargin: '160px',
-        threshold: 0,
-      },
-    )
-
-    observer.observe(target)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [hasMoreReviews, sortedReviews.length])
+  const {
+    hasMoreReviews,
+    loadMoreRef,
+    selectedSort,
+    visibleReviews,
+    onSelectSort,
+  } = useRestaurantReviews(reviews)
 
   return (
     <section aria-label="리뷰" className="pb-8">
@@ -196,7 +135,7 @@ export const RestaurantReviewSection = ({
               <Chip
                 className="h-8 px-3 py-0"
                 key={option.value}
-                onSelectedChange={() => handleSelectSort(option.value)}
+                onSelectedChange={() => onSelectSort(option.value)}
                 selected={selectedSort === option.value}
               >
                 {option.label}

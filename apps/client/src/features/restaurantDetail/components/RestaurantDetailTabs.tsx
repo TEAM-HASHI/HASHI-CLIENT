@@ -23,9 +23,9 @@ export const RestaurantDetailTabs = ({
   )
 
   return (
-    <div className="after:border-warm-gray-100 relative bg-white after:absolute after:inset-x-5 after:bottom-0 after:border-b after:content-['']">
+    <div className="px-5">
       <Tabs
-        className="relative z-10 h-[50px] border-b-0 px-5"
+        className="z-raised relative h-[50px]"
         items={tabItems}
         onChange={handleChange}
         value={activeTab}

@@ -1,6 +1,7 @@
 import { Badge } from '@hashi/hds-ui'
 
 import type { RestaurantMenu } from '@/features/restaurantDetail/types/restaurantDetail'
+import { DefaultImage } from '@/shared/components/defaultImage'
 
 interface RestaurantMenuSectionProps {
   menus: RestaurantMenu[]
@@ -50,9 +51,10 @@ export const RestaurantMenuSection = ({
                 src={menu.imageUrl}
               />
             ) : (
-              <span
+              <DefaultImage
                 aria-hidden="true"
-                className="bg-secondary-200 size-[100px] shrink-0 rounded-[5px]"
+                className="size-[100px] shrink-0 rounded-[5px]"
+                logoSize="sm"
               />
             )}
           </button>

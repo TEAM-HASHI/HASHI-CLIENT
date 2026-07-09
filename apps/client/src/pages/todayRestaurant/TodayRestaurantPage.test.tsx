@@ -13,6 +13,16 @@ import { TodayRestaurantPage } from '@/pages/todayRestaurant/TodayRestaurantPage
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
 }))
+const { mockLocationStore } = vi.hoisted(() => ({
+  mockLocationStore: {
+    state: undefined as { activeTab?: string } | undefined,
+  },
+}))
+const { mockAuthStore } = vi.hoisted(() => ({
+  mockAuthStore: {
+    isAuthenticated: false,
+  },
+}))
 const { mockClipboardWriteText } = vi.hoisted(() => ({
   mockClipboardWriteText: vi.fn(),
 }))
@@ -26,9 +36,17 @@ vi.mock('react-router-dom', async () => {
 
   return {
     ...actual,
+    useLocation: () => ({ state: mockLocationStore.state }),
     useNavigate: () => mockNavigate,
   }
 })
+
+vi.mock('@/shared/hooks', () => ({
+  useAuthStatus: () => ({
+    isAuthenticated: mockAuthStore.isAuthenticated,
+    status: mockAuthStore.isAuthenticated ? 'authenticated' : 'unauthenticated',
+  }),
+}))
 
 describe('TodayRestaurantPage', () => {
   beforeEach(() => {
@@ -49,6 +67,8 @@ describe('TodayRestaurantPage', () => {
     mockNavigate.mockClear()
     mockClipboardWriteText.mockReset()
     mockExecCommand.mockReset()
+    mockLocationStore.state = undefined
+    mockAuthStore.isAuthenticated = false
   })
 
   it('renders today restaurant detail with recommend again action', async () => {
@@ -119,6 +139,7 @@ describe('TodayRestaurantPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith(
       '/restaurants/default/menus/shio-ramen-1',
+      { state: { source: 'today' } },
     )
 
     fireEvent.click(screen.getByRole('tab', { name: /리뷰/ }))
@@ -135,6 +156,60 @@ describe('TodayRestaurantPage', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('uses route state to select the initial active tab', () => {
+    mockLocationStore.state = { activeTab: 'review' }
+
+    render(<TodayRestaurantPage />)
+
+    expect(screen.getByRole('tab', { name: /리뷰/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+  })
+
+  it('opens login bottom sheet for unauthenticated reservation action', () => {
+    render(<TodayRestaurantPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '예약하기' }))
+
+    expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
+  })
+
+  it('navigates to reservation page for authenticated reservation action', () => {
+    mockAuthStore.isAuthenticated = true
+
+    render(<TodayRestaurantPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '예약하기' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/restaurants/default/reservations/new',
+    )
+  })
+
+  it('opens login bottom sheet for unauthenticated like action', () => {
+    render(<TodayRestaurantPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '좋아요' }))
+
+    expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
+    expect(
+      screen.queryByRole('heading', { name: '서비스를 준비하고 있어요.' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('opens coming soon dialog for authenticated like action', () => {
+    mockAuthStore.isAuthenticated = true
+
+    render(<TodayRestaurantPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '좋아요' }))
+
+    expect(
+      screen.getByRole('heading', { name: '서비스를 준비하고 있어요.' }),
+    ).toBeTruthy()
+  })
+
   it('copies the today restaurant link when share is pressed', () => {
     render(<TodayRestaurantPage />)
 
@@ -145,15 +220,17 @@ describe('TodayRestaurantPage', () => {
     )
   })
 
-  it('copies the restaurant name label when name copy is pressed', () => {
+  it('copies the restaurant name when name copy is pressed', () => {
     render(<TodayRestaurantPage />)
 
     fireEvent.click(screen.getByRole('button', { name: '식당명 복사' }))
 
-    expect(mockClipboardWriteText).toHaveBeenCalledWith('식당명')
+    expect(mockClipboardWriteText).toHaveBeenCalledWith(
+      '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
+    )
   })
 
-  it('copies the restaurant name label from fallback selection when Clipboard API rejects', async () => {
+  it('copies the restaurant name from fallback selection when Clipboard API rejects', async () => {
     const selectedButtonText = document.createElement('button')
     selectedButtonText.textContent = '식당명 복사버튼'
     document.body.append(selectedButtonText)
@@ -166,7 +243,9 @@ describe('TodayRestaurantPage', () => {
 
     mockClipboardWriteText.mockRejectedValue(new Error('not allowed'))
     mockExecCommand.mockImplementation(() => {
-      expect(window.getSelection()?.toString()).toBe('식당명')
+      expect(window.getSelection()?.toString()).toBe(
+        '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
+      )
 
       return true
     })

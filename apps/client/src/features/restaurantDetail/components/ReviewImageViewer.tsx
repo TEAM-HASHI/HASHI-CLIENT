@@ -2,13 +2,15 @@ import { CancelIcon } from '@hashi/hds-icons'
 import { Carousel, IconButton } from '@hashi/hds-ui'
 
 interface ReviewImageViewerProps {
+  imageUrls: string[]
+  initialIndex?: number
   open: boolean
   onClose: () => void
 }
 
-const REVIEW_IMAGE_PLACEHOLDER_COUNT = 5
-
 export const ReviewImageViewer = ({
+  imageUrls,
+  initialIndex = 0,
   open,
   onClose,
 }: ReviewImageViewerProps) => {
@@ -20,12 +22,12 @@ export const ReviewImageViewer = ({
     <div
       aria-label="리뷰 이미지 상세보기"
       aria-modal="true"
-      className="bg-cool-gray-900 fixed inset-0 z-50 overflow-hidden rounded-[20px]"
+      className="bg-cool-gray-900 z-modal fixed inset-0 overflow-hidden rounded-[20px]"
       role="dialog"
     >
       <IconButton
         aria-label="리뷰 이미지 상세보기 닫기"
-        className="text-primary-100 absolute top-[78px] right-5 z-10 size-6"
+        className="text-primary-100 z-raised absolute top-[78px] right-5 size-6"
         onClick={onClose}
         size="xs"
       >
@@ -35,20 +37,26 @@ export const ReviewImageViewer = ({
       <Carousel.Root
         aria-label="리뷰 이미지 상세보기 사진 목록"
         className="absolute inset-0"
+        defaultIndex={initialIndex}
       >
         <Carousel.Viewport className="absolute top-[139px] bottom-[139px] overflow-y-hidden">
           <Carousel.Track>
-            {Array.from(
-              { length: REVIEW_IMAGE_PLACEHOLDER_COUNT },
-              (_, index) => (
-                <Carousel.Item key={index}>
-                  <div
-                    className="bg-primary-100 h-full w-full"
-                    data-testid="review-image-viewer-image"
-                  />
-                </Carousel.Item>
-              ),
-            )}
+            {imageUrls.map((imageUrl, index) => (
+              <Carousel.Item key={`${imageUrl}-${index}`}>
+                <div
+                  className="bg-primary-100 h-full w-full"
+                  data-testid="review-image-viewer-image"
+                >
+                  {imageUrl ? (
+                    <img
+                      alt=""
+                      className="size-full object-cover"
+                      src={imageUrl}
+                    />
+                  ) : null}
+                </div>
+              </Carousel.Item>
+            ))}
           </Carousel.Track>
         </Carousel.Viewport>
         <Carousel.Indicator

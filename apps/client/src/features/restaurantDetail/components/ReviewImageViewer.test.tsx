@@ -10,7 +10,7 @@ describe('ReviewImageViewer', () => {
   })
 
   it('does not render when closed', () => {
-    render(<ReviewImageViewer onClose={vi.fn()} open={false} />)
+    render(<ReviewImageViewer imageUrls={[]} onClose={vi.fn()} open={false} />)
 
     expect(
       screen.queryByRole('dialog', { name: '리뷰 이미지 상세보기' }),
@@ -18,7 +18,14 @@ describe('ReviewImageViewer', () => {
   })
 
   it('matches the Figma review image viewer layout', () => {
-    render(<ReviewImageViewer onClose={vi.fn()} open />)
+    render(
+      <ReviewImageViewer
+        imageUrls={['/review-1.jpg', '/review-2.jpg']}
+        initialIndex={1}
+        onClose={vi.fn()}
+        open
+      />,
+    )
 
     const dialog = screen.getByRole('dialog', { name: '리뷰 이미지 상세보기' })
     const closeButton = screen.getByRole('button', {
@@ -28,6 +35,10 @@ describe('ReviewImageViewer', () => {
       name: '리뷰 이미지 상세보기 사진 목록',
     })
     const imageFrame = screen.getAllByTestId('review-image-viewer-image')[0]
+    const currentImageFrame = screen
+      .getAllByRole('group')
+      .find((slide) => slide.getAttribute('data-current') === 'true')
+      ?.querySelector('[data-testid="review-image-viewer-image"]')
     const indicator = carousel.querySelector('[data-hds-carousel-indicator]')
 
     expect(dialog).toHaveClass(
@@ -39,7 +50,7 @@ describe('ReviewImageViewer', () => {
       'absolute',
       'top-[78px]',
       'right-5',
-      'z-10',
+      'z-raised',
       'size-6',
       'text-primary-100',
     )
@@ -49,7 +60,10 @@ describe('ReviewImageViewer', () => {
       'top-[139px]',
       'bottom-[139px]',
     )
-    expect(imageFrame.querySelector('img')).not.toBeInTheDocument()
+    expect(currentImageFrame?.querySelector('img')).toHaveAttribute(
+      'src',
+      '/review-2.jpg',
+    )
     expect(indicator).toBeInTheDocument()
     expect(indicator).toHaveClass(
       'absolute',
