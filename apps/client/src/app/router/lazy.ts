@@ -6,6 +6,9 @@ const SearchPage = lazy(() => import('@/pages/search'))
 const ComingSoonPage = lazy(() => import('@/pages/comingSoon'))
 const TodayRestaurantPage = lazy(() => import('@/pages/todayRestaurant'))
 const RestaurantDetailPage = lazy(() => import('@/pages/restaurantDetail'))
+const RestaurantMenuDetailPage = lazy(
+  () => import('@/pages/restaurantMenuDetail'),
+)
 const HashiPickPage = lazy(() => import('@/pages/hashiPick'))
 const PopularRestaurantsPage = lazy(() => import('@/pages/popularRestaurants'))
 const MagazinesPage = lazy(() => import('@/pages/magazines'))
@@ -46,6 +49,7 @@ export const lazyPages = {
   search: () => lazyPage(SearchPage),
   todayRestaurant: () => lazyPage(TodayRestaurantPage),
   restaurantDetail: () => lazyPage(RestaurantDetailPage),
+  restaurantMenuDetail: () => lazyPage(RestaurantMenuDetailPage),
   hashiPick: () => lazyPage(HashiPickPage),
   popularRestaurants: () => lazyPage(PopularRestaurantsPage),
   magazines: () => lazyPage(MagazinesPage),

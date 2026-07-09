@@ -6,6 +6,7 @@ export const ROUTES = {
   search: '/search',
   todayRestaurant: '/restaurants/today',
   restaurantDetail: '/restaurants/:restaurantId',
+  restaurantMenuDetail: '/restaurants/:restaurantId/menus/:menuId',
   hashiPickRestaurants: '/restaurants/hashi-pick',
   popularRestaurants: '/restaurants/popular',
   magazines: '/magazines',

@@ -43,6 +43,10 @@ export const appRoutes: RouteObject[] = [
         element: withLazyFallback(lazyPages.restaurantDetail()),
       },
       {
+        path: ROUTES.restaurantMenuDetail,
+        element: lazyPages.restaurantMenuDetail(),
+      },
+      {
         path: ROUTES.hashiPickRestaurants,
         element: withLazyFallback(lazyPages.hashiPick()),
       },

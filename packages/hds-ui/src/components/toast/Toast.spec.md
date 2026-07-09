@@ -23,7 +23,7 @@ import { showToast, ToastRegion } from '@hashi/hds-ui'
 const App = () => {
   return (
     <>
-      <ToastRegion className="app-mobile-fixed-top z-toast px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
+      <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
       <button
         type="button"
         onClick={() => {
@@ -153,7 +153,7 @@ ToastRegion:
 - positioning은 소유하지 않습니다. fixed 위치가 필요하면 wrapper가 아니라 `ToastRegion`의 `className`에 직접 위치 class를 전달합니다.
 
 ```tsx
-<ToastRegion className="app-mobile-fixed-top z-toast px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
+<ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
 ```
 
 `ToastRegion`은 portal로 `document.body`에 렌더링되므로 wrapper로 감싸서 위치를 잡지 않습니다. 앱에서는 위 예시처럼 `ToastRegion` 자체에 위치 class를 전달합니다.

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import type { ToastContent } from './Toast'
 
 const mobileFrameDecorator = (Story: () => ReactNode) => (
-  <div className="flex w-[393px] bg-white p-5">
+  <div className="flex w-[393px] bg-white px-5 py-8">
     <Story />
   </div>
 )
@@ -13,7 +13,7 @@ const mobileFrameDecorator = (Story: () => ReactNode) => (
 type ToastPreviewProps = ToastContent
 
 const ToastPreview = ({ icon, children }: ToastPreviewProps) => (
-  <div className="bg-primary-200 flex h-15 w-[353px] items-center gap-2.75 rounded-[10px] px-5 text-white">
+  <div className="bg-primary-200 flex h-15 w-full items-center gap-2.75 rounded-[10px] px-5 text-white">
     {icon ? (
       <span aria-hidden="true" className="flex size-6 shrink-0">
         {icon}
