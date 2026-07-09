@@ -53,8 +53,7 @@ apps/client/src/pages/myReservations/
 │   ├── InProgressReservationCard.tsx
 │   ├── UpcomingReservationCard.tsx
 │   ├── VisitedReservationCard.tsx
-│   ├── CanceledReservationCard.tsx
-│   └── ReservationCancelDialog.tsx
+│   └── CanceledReservationCard.tsx
 ├── hooks/
 │   └── useMyReservationsPage.ts
 ├── constants/
@@ -393,6 +392,10 @@ shared component:
 
 - `Empty`
 
+feature component:
+
+- `ReservationCancelDialog`
+
 page-local components:
 
 - `MyReservationsHeader`
@@ -405,7 +408,6 @@ page-local components:
 - `UpcomingReservationCard`
 - `VisitedReservationCard`
 - `CanceledReservationCard`
-- `ReservationCancelDialog`
 
 hooks:
 

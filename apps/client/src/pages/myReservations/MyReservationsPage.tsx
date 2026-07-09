@@ -1,5 +1,5 @@
+import { ReservationCancelDialog } from '@/features/reservation/components'
 import { MyReservationsHeader } from '@/pages/myReservations/components/MyReservationsHeader'
-import { ReservationCancelDialog } from '@/pages/myReservations/components/ReservationCancelDialog'
 import { ReservationListSection } from '@/pages/myReservations/components/ReservationListSection'
 import { ReservationStatusFilter } from '@/pages/myReservations/components/ReservationStatusFilter'
 import { useMyReservationsPage } from '@/pages/myReservations/hooks/useMyReservationsPage'

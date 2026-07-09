@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { reservationNotices } from '@/pages/reservationDetail/constants/reservationNotice'
@@ -6,31 +7,45 @@ import {
   reservationReceiptInfoItems,
   reservationRestaurant,
 } from '@/pages/reservationDetail/mocks/reservationDetail.mock'
+import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
 export const useReservationDetailPage = () => {
   const navigate = useNavigate()
   const { reservationId } = useParams<{ reservationId: string }>()
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
 
   const handleBack = () => {
     navigate(-1)
   }
 
   const handleCancelReservation = () => {
-    // TODO: 예약 취소 플로우 연결
+    setIsCancelDialogOpen(true)
+  }
+
+  const handleCancelDialogOpenChange = (open: boolean) => {
+    setIsCancelDialogOpen(open)
+  }
+
+  const handleConfirmCancelPress = () => {
+    // TODO: 예약 취소 API와 성공 Toast 연결
+    setIsCancelDialogOpen(false)
   }
 
   const handleContact = () => {
-    // TODO: 문의하기 플로우 연결
+    window.open(HASHI_KAKAO_CHANNEL_URL, '_blank', 'noreferrer')
   }
 
   return {
     reservationId,
+    isCancelDialogOpen,
     reservationNotices,
     reservationProgressSteps,
     reservationReceiptInfoItems,
     reservationRestaurant,
     handleBack,
+    handleCancelDialogOpenChange,
     handleCancelReservation,
+    handleConfirmCancelPress,
     handleContact,
   }
 }

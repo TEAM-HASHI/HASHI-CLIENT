@@ -79,9 +79,8 @@
 
 - mutation:
   - 예약 취소 요청
-  - 문의하기 연결
 - request data:
-  - API 연동 시 정의
+  - 예약 취소: `reservationId`
 - submit enabled condition:
   - API 연동 시 예약 상태에 따라 정의
 - success handling:
@@ -97,12 +96,14 @@
 4. 회원이면 예약 상세 페이지를 렌더링합니다.
 5. 사용자는 예약 진행 상태, 예약 접수 정보, 안내 문구를 확인합니다.
 6. 사용자가 뒤로가기 버튼을 누르면 이전 페이지로 이동합니다.
-7. 사용자가 예약 취소 또는 문의하기 버튼을 누르면 추후 연결될 액션 플로우가 실행됩니다.
+7. 사용자가 예약 취소 버튼을 누르면 예약 취소 확인 모달이 열립니다.
+8. 사용자가 모달에서 취소하기를 누르면 추후 예약 취소 API가 실행됩니다.
+9. 사용자가 문의하기 버튼을 누르면 Hashi 카카오톡 문의 링크를 새 창으로 엽니다.
 
 ## State
 
 - local state:
-  - 현재 없음
+  - `isCancelDialogOpen`
 - form state:
   - 없음
 - URL state:
@@ -149,6 +150,7 @@ ReservationDetailPage
   ReservationDetailActionBar
     CancelButton
     ContactButton
+  ReservationCancelDialog
 ```
 
 ## Component Mapping
@@ -159,6 +161,8 @@ ReservationDetailPage
   - `Button`
 - app shared component:
   - `DefaultImage`
+- feature component:
+  - `ReservationCancelDialog`
 - page-local component:
   - `ReservationProgressSection`
   - `ReservationRestaurantSummary`
@@ -193,7 +197,7 @@ ReservationDetailPage
   - 예약 정보 페이지의 상세보기 액션
   - 예약 관련 진입점
 - links:
-  - 없음
+  - 문의하기: Hashi 카카오톡 문의 링크
 - route params:
   - `reservationId`
 - search params:
