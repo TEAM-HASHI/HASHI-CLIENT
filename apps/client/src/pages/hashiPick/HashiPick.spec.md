@@ -35,7 +35,8 @@
 ## Requirements
 
 - [x] `하시 Pick` title을 Header에 표시합니다.
-- [x] Header와 FilterBar는 함께 sticky 영역으로 동작합니다.
+- [x] Header는 `app-mobile-fixed-top` 고정 영역으로 동작합니다.
+- [x] FilterBar는 Header 아래의 일반 스크롤 콘텐츠로 동작합니다.
 - [x] 정렬 옵션은 `기본순`, `인기순`, `별점순`입니다.
 - [x] 음식 장르 기본 적용값은 `전체`이고, 필터바 기본 label은 `음식 장르 선택`입니다.
 - [x] 정렬/음식 장르 BottomSheet는 `draft`와 `selected` 상태를 분리합니다.
@@ -45,7 +46,7 @@
 - [x] RestaurantCard는 반복 렌더링되고 카드 클릭 시 식당 상세 route로 이동합니다.
 - [x] 식당 이미지는 가로 스크롤 리스트로 표시하고 이미지가 없으면 공통 `DefaultImage` fallback을 사용합니다.
 - [x] 식당 리스트는 mock data 25개를 10개 단위로 무한스크롤 렌더링합니다.
-- [x] sticky header는 `z-fixed` 토큰을 사용합니다.
+- [x] fixed header는 `z-fixed` 토큰을 사용하고, 스크롤 콘텐츠는 fixed header 높이만큼 top padding을 둡니다.
 
 ## Data Dependencies
 

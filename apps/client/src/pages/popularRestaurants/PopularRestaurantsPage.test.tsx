@@ -72,6 +72,15 @@ describe('PopularRestaurantsPage', () => {
   it('renders popular restaurant list with default and rating sort options', () => {
     renderPopularRestaurantsPage()
 
+    expect(screen.getByTestId('restaurant-list-sticky-header')).toHaveClass(
+      'app-mobile-fixed-top',
+      'z-fixed',
+      'bg-white',
+    )
+    expect(screen.getByTestId('restaurant-list-scroll-content')).toHaveClass(
+      'pt-[75px]',
+    )
+    expect(screen.getByTestId('restaurant-list')).not.toHaveClass('pt-[123px]')
     expect(
       screen.getByRole('heading', { name: '인기 맛집' }),
     ).toBeInTheDocument()

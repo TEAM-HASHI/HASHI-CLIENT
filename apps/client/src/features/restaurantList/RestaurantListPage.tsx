@@ -48,7 +48,10 @@ export const RestaurantListPage = ({
 
   return (
     <div className="min-h-dvh bg-white">
-      <div className="z-fixed sticky top-0 bg-white">
+      <div
+        className="app-mobile-fixed-top z-fixed bg-white"
+        data-testid="restaurant-list-sticky-header"
+      >
         <Header
           className="text-primary-200"
           leftAction={
@@ -62,31 +65,37 @@ export const RestaurantListPage = ({
           }
           title={<h1>{title}</h1>}
         />
+      </div>
+
+      <div className="pt-[75px]" data-testid="restaurant-list-scroll-content">
         <RestaurantFilterBar
           categoryLabel={categoryLabel}
           onClickCategory={handleOpenCategorySheet}
           onClickSort={handleOpenSortSheet}
           sortLabel={selectedSort.label}
         />
-      </div>
 
-      <ul className="mx-auto flex w-full flex-col gap-1 px-5">
-        {visibleRestaurants.map((restaurant) => (
-          <RestaurantCard
-            key={restaurant.id}
-            onClick={handleClickRestaurant}
-            restaurant={restaurant}
-          />
-        ))}
-        {hasMoreRestaurants && (
-          <li
-            aria-hidden="true"
-            className="h-px"
-            data-testid="restaurant-list-load-more"
-            ref={loadMoreRef}
-          />
-        )}
-      </ul>
+        <ul
+          className="mx-auto flex w-full flex-col gap-1 px-5"
+          data-testid="restaurant-list"
+        >
+          {visibleRestaurants.map((restaurant) => (
+            <RestaurantCard
+              key={restaurant.id}
+              onClick={handleClickRestaurant}
+              restaurant={restaurant}
+            />
+          ))}
+          {hasMoreRestaurants && (
+            <li
+              aria-hidden="true"
+              className="h-px"
+              data-testid="restaurant-list-load-more"
+              ref={loadMoreRef}
+            />
+          )}
+        </ul>
+      </div>
 
       <FilterBottomSheet
         onApply={handleApplySort}
