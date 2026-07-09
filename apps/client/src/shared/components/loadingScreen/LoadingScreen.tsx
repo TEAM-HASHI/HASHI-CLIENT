@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
-import chopsticksImage from '@/shared/assets/images/graphic_chopsticks.webp'
+import chopsticksImage from '@/shared/assets/images/graphic_chopsticks.svg'
 import loadingImage from '@/shared/assets/images/loading.gif'
 import { cn } from '@/shared/utils'
 
