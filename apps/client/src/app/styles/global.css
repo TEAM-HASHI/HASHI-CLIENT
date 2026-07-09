@@ -18,7 +18,7 @@
 
   html {
     -webkit-text-size-adjust: 100%;
-    background: var(--color-cool-gray-50);
+    background: white;
     overflow-x: hidden;
   }
 
@@ -26,7 +26,7 @@
     min-width: 320px;
     min-height: 100dvh;
     margin: 0;
-    background: var(--color-cool-gray-50);
+    background: white;
     color: var(--color-cool-gray-900);
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
