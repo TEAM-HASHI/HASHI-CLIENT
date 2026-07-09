@@ -6,7 +6,7 @@ Jira: HASHI-79
 
 - 로그인한 사용자가 본인의 계정 정보, 사용 가능 포인트, 리뷰/고객지원/계정 관련 메뉴를 확인할 수 있는 마이 페이지를 구현합니다.
 - MVP 범위에서는 프로필 수정, 찜한 식당, 로그아웃 기능은 제외합니다.
-- MVP 제외 기능을 클릭하면 공통 준비중 안내 모달을 띄웁니다.
+- MVP 제외 기능 중 프로필 수정 버튼은 disabled 처리하고, 상호작용 가능한 제외 메뉴는 공통 준비중 안내 모달을 띄웁니다.
 - 마이 페이지는 하단 네비게이션의 `마이` 탭 진입 화면입니다.
 
 ## Route
@@ -66,7 +66,7 @@ apps/client/src/shared/components/comingSoonDialog/
   - 닉네임
   - 수정 버튼
 - [ ] 프로필 수정 버튼은 MVP 구현에서 제외합니다.
-- [ ] 프로필 수정 버튼 클릭 시 shared `ComingSoonDialog`를 띄웁니다.
+- [ ] 프로필 수정 버튼은 disabled 처리합니다.
 - [ ] 사용 가능 포인트를 보여줍니다.
 - [ ] 예약/리뷰 관련 주요 메뉴를 보여줍니다.
   - 내가 찜한 식당
@@ -109,7 +109,7 @@ apps/client/src/shared/components/comingSoonDialog/
 - 로그아웃 기능
 
 MVP 제외 항목은 디자인에 노출되더라도 실제 동작은 연결하지 않거나, 기획 확정 후 연결합니다.
-현재 정책은 MVP 제외 항목 클릭 시 shared `ComingSoonDialog`를 띄우는 것입니다.
+현재 정책은 프로필 수정 버튼은 disabled 처리하고, 상호작용 가능한 제외 메뉴는 shared `ComingSoonDialog`를 띄우는 것입니다.
 
 ## Shared Component: `ComingSoonDialog`
 
@@ -160,7 +160,7 @@ type ComingSoonDialogProps = {
 동작:
 
 - 수정 버튼은 MVP 제외입니다.
-- MVP에서는 버튼을 노출하고, 클릭 시 `ComingSoonDialog`를 띄웁니다.
+- MVP에서는 버튼을 노출하되 disabled 처리합니다.
 
 ### 2. Point Section
 
@@ -313,7 +313,7 @@ MVP 제외:
 - 내가 찜한 식당
 - 로그아웃
 
-MVP 제외 기능 클릭:
+상호작용 가능한 MVP 제외 기능 클릭:
 
 - shared `ComingSoonDialog` open
 
@@ -410,8 +410,9 @@ types:
 - 문의하기/개선 제안 클릭 시 카카오톡 채널이 열리는지 확인
 - 공지사항/이용약관 URL 확정 전에는 준비중 모달이 열리는지 확인
 - 공지사항/이용약관 URL 확정 후에는 노션 페이지가 열리는지 확인
+- 프로필 수정 버튼이 disabled인지 확인
 - MVP 제외 항목이 잘못된 route로 이동하지 않는지 확인
-- MVP 제외 항목 클릭 시 준비중 모달이 열리는지 확인
+- 상호작용 가능한 MVP 제외 항목 클릭 시 준비중 모달이 열리는지 확인
 - 준비중 모달에서 확인 버튼 클릭 시 모달이 닫히는지 확인
 
 ## Open Questions

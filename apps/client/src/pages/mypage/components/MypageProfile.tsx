@@ -3,13 +3,11 @@ import { Avatar, Button } from '@hashi/hds-ui'
 type MypageProfileProps = {
   nickname: string
   profileImageUrl?: string | null
-  onEditPress: () => void
 }
 
 export const MypageProfile = ({
   nickname,
   profileImageUrl,
-  onEditPress,
 }: MypageProfileProps) => {
   return (
     <section className="mb-8 flex items-center justify-between">
@@ -23,12 +21,7 @@ export const MypageProfile = ({
           {nickname}님
         </h1>
       </div>
-      <Button
-        className="h-7 px-3"
-        onClick={onEditPress}
-        size="sm"
-        type="button"
-      >
+      <Button className="h-7 px-3" disabled size="sm" type="button">
         수정
       </Button>
     </section>
