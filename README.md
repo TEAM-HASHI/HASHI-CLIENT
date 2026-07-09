@@ -104,6 +104,28 @@
 
 자세한 기술 스택과 버전 기준은 [Tech Stack](./docs/architecture/tech-stack.md)을 따릅니다.
 
+## 🧭 Workspace Apps
+
+| App           | Package         | Description                      |
+| ------------- | --------------- | -------------------------------- |
+| `apps/client` | `@hashi/client` | 사용자 서비스 앱                 |
+| `apps/admin`  | `@hashi/admin`  | HASHI-91 범위의 임시 관리자 콘솔 |
+
+### App Commands
+
+| Target | Dev               | Build               | Preview               |
+| ------ | ----------------- | ------------------- | --------------------- |
+| Client | `pnpm dev:client` | `pnpm build:client` | `pnpm preview:client` |
+| Admin  | `pnpm dev:admin`  | `pnpm build:admin`  | `pnpm preview:admin`  |
+| All    | -                 | `pnpm build`        | -                     |
+
+기본 `vercel.json`은 client 배포용입니다. Admin은 별도 Vercel project에서 `vercel.admin.json`을 사용합니다.
+
+```bash
+pnpm exec vercel build --local-config vercel.admin.json
+pnpm exec vercel deploy --prebuilt --local-config vercel.admin.json
+```
+
 ## 📖 Convention
 
 ### Coding Convention
