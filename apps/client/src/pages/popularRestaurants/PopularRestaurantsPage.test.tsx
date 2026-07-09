@@ -104,6 +104,28 @@ describe('PopularRestaurantsPage', () => {
     expect(screen.getByTestId('location-path')).toHaveTextContent(ROUTES.home)
   })
 
+  it('resets sort to default and closes the bottom sheet when reset is pressed', () => {
+    renderPopularRestaurantsPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 기본순' }))
+    fireEvent.click(screen.getByRole('button', { name: '별점순' }))
+    fireEvent.click(screen.getByRole('button', { name: '적용' }))
+
+    expect(
+      screen.getByRole('button', { name: '정렬 필터: 별점순' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 별점순' }))
+    fireEvent.click(screen.getByRole('button', { name: '초기화' }))
+
+    expect(
+      screen.getByRole('button', { name: '정렬 필터: 기본순' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: '정렬 순서' })).toHaveClass(
+      'translate-y-full',
+    )
+  })
+
   it('loads restaurants in 10 item chunks when the bottom sentinel enters the viewport', () => {
     const { triggerIntersect } = mockIntersectionObserver()
 

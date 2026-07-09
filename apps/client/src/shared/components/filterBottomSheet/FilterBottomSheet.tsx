@@ -31,9 +31,19 @@ export const FilterBottomSheet = ({
   onReset,
   onApply,
 }: FilterBottomSheetProps) => {
+  const handleResetClick = () => {
+    onReset()
+    onOpenChange(false)
+  }
+
   const sheetFooter = (
     <div className="grid grid-cols-2 gap-3.25">
-      <Button onClick={onReset} size="md" variant="neutral" width="full">
+      <Button
+        onClick={handleResetClick}
+        size="md"
+        variant="neutral"
+        width="full"
+      >
         초기화
       </Button>
       <Button onClick={onApply} size="md" variant="primary" width="full">

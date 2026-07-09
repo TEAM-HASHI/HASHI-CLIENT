@@ -122,7 +122,7 @@ describe('HashiPickPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('resets category draft without applying until the apply button is pressed', () => {
+  it('resets category to default and closes the bottom sheet when reset is pressed', () => {
     renderHashiPickPage()
 
     fireEvent.click(
@@ -130,13 +130,15 @@ describe('HashiPickPage', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: '면류' }))
     fireEvent.click(screen.getByRole('button', { name: '초기화' }))
-    fireEvent.click(screen.getByRole('button', { name: '적용' }))
 
     expect(
       screen.getByRole('button', {
         name: '음식 장르 필터: 음식 장르 선택',
       }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: '음식 장르 선택' })).toHaveClass(
+      'translate-y-full',
+    )
   })
 
   it('navigates to restaurant detail when a card is pressed', () => {
