@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { Suspense } from 'react'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
 import { ErrorBoundary } from 'react-error-boundary'
 
@@ -22,7 +21,7 @@ const AsyncBoundary = ({ children }: AsyncBoundaryProps) => {
             </section>
           )}
         >
-          <Suspense fallback={<p>불러오는 중입니다.</p>}>{children}</Suspense>
+          {children}
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
