@@ -50,7 +50,7 @@ export const useRestaurantListPage = ({
       : selectedCategory.label
 
   const handleBackClick = () => {
-    navigate(-1)
+    navigate(ROUTES.home)
   }
 
   const handleOpenSortSheet = () => {

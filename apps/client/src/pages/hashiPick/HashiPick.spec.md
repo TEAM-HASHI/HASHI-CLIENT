@@ -127,7 +127,7 @@ HashiPickPage
   - `restaurantId`
 - search params: none
 - back behavior:
-  - Header back button calls `navigate(-1)`
+  - Header back button navigates to `ROUTES.home`
 
 ## Verification
 
