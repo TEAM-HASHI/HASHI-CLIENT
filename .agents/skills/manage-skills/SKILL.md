@@ -18,13 +18,9 @@ Use this skill to detect and fix:
 
 ## Registered Verify Skills
 
-No verify skills are registered yet.
-
-<!-- When verify skills are added, replace this block with:
-| Skill | Description | Covered file patterns |
-| --- | --- | --- |
-| `verify-example` | Example verification | `src/example/**/*.ts` |
--->
+| Skill                    | Description                                                                                      | Covered file patterns                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `verify-api-integration` | Checks HASHI client API query, mutation, query key, invalidation, UI state, and docs sync rules. | `apps/client/src/pages/**`, `apps/client/src/features/**`, `apps/client/src/shared/api/**`, `docs/architecture/data-layer.md` |
 
 ## Workflow
 

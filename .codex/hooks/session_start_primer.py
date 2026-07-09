@@ -15,6 +15,7 @@ PRIMER = """HASHI Client project context:
 - docs/ is the human-readable source of truth. .agents/ contains agent-facing checklists, recipes, skills, and scripts that operationalize docs/.
 - If docs/ and .agents/ conflict, follow docs/ first and align .agents/ afterward.
 - For page, shared component, hook, API query/mutation, or HDS work, check whether a nearby *.spec.md is required.
+- For API query/mutation work from Swagger or API specs, use api-spec-intake -> api-integrator -> verify-api-integration.
 - Keep HDS packages product-agnostic: no app route, API, query, mutation, tracking, product copy, or domain data in packages/hds-ui or packages/hds-icons.
 - Before final response, report docs impact and verification commands/results."""
 

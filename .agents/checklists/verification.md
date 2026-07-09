@@ -38,6 +38,22 @@ pnpm --filter @hashi/client build
 pnpm --filter @hashi/client test
 ```
 
+## Client API Integration
+
+```bash
+pnpm --filter @hashi/client lint
+pnpm --filter @hashi/client typecheck
+pnpm --filter @hashi/client test
+pnpm --filter @hashi/client build
+```
+
+Manual verification:
+
+- query key factory is used instead of inline query keys.
+- mutation invalidation covers stale list/detail/infinite queries.
+- loading, error, empty, disabled, and success states are connected.
+- page spec `Data Dependencies` matches the implementation.
+
 E2E가 필요한 변경이면 다음 명령을 추가합니다.
 
 ```bash

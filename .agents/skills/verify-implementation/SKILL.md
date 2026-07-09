@@ -19,13 +19,9 @@ This skill:
 
 ## Execution Targets
 
-No verify skills are registered yet.
-
-<!-- When verify skills are added, replace this block with:
-| # | Skill | Description |
-| --- | --- | --- |
-| 1 | `verify-example` | Example verification |
--->
+| #   | Skill                    | Description                                                                                      |
+| --- | ------------------------ | ------------------------------------------------------------------------------------------------ |
+| 1   | `verify-api-integration` | Checks HASHI client API query, mutation, query key, invalidation, UI state, and docs sync rules. |
 
 ## Workflow
 

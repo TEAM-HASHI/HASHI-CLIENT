@@ -17,7 +17,7 @@
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Jira, branch, commit, PR | `docs/conventions/jira-ticket.md`, `docs/conventions/git.md`, `.agents/recipes/jira-branch-pr.md`                                                           |
 | Page or route            | `docs/architecture/app-structure.md`, `docs/architecture/routing-and-access-policy.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/page-feature.md` |
-| API query or mutation    | `docs/architecture/data-layer.md`, `.agents/recipes/api-integration.md`                                                                                     |
+| API query or mutation    | `docs/architecture/data-layer.md`, `docs/workflows/api-integration.md`, `.agents/recipes/api-integration.md`                                                |
 | Form or state flow       | `docs/conventions/coding.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/form-flow.md`                                                              |
 | HDS component            | `packages/AGENTS.md`, `docs/rules/design-system-instructions.md`, `.agents/recipes/hds-component.md`                                                        |
 | Generator                | `docs/workflows/turbo-generators.md`                                                                                                                        |
@@ -28,3 +28,4 @@
 - Jira key, target package, or source design/spec이 없어서 임의 판단이 필요한 경우
 - `docs`와 실제 repository 설정이 서로 다르게 보이는 경우
 - 기존 코드와 충돌하는 새 규칙을 추가해야 하는 경우
+- API 스펙에서 endpoint, response shape, auth, pagination, mutation invalidation을 확정할 수 없는 경우
