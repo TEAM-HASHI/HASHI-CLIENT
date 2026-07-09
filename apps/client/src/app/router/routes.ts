@@ -3,7 +3,7 @@ import type { RouteObject } from 'react-router-dom'
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import { RootLayout } from '@/app/layout/RootLayout'
-import { lazyPages } from '@/app/router/lazy'
+import { lazyPages, withLazyFallback } from '@/app/router/lazy'
 import { ROUTES } from '@/app/router/path'
 import { AuthOnlyRoute, GuestOnlyRoute } from '@/app/router/RouteGuards'
 import { HomePage } from '@/pages/home'
@@ -14,7 +14,7 @@ export const appRoutes: RouteObject[] = [
     element: createElement(RootLayout),
     children: [
       {
-        element: createElement(BottomNavigationLayout),
+        element: withLazyFallback(createElement(BottomNavigationLayout)),
         children: [
           {
             index: true,
@@ -28,38 +28,38 @@ export const appRoutes: RouteObject[] = [
       },
       {
         path: ROUTES.comingSoon,
-        element: lazyPages.comingSoon(),
+        element: withLazyFallback(lazyPages.comingSoon()),
       },
       {
         path: ROUTES.search,
-        element: lazyPages.search(),
+        element: withLazyFallback(lazyPages.search()),
       },
       {
         path: ROUTES.todayRestaurant,
-        element: lazyPages.todayRestaurant(),
-      },
-      {
-        path: ROUTES.hashiPickRestaurants,
-        element: lazyPages.hashiPick(),
-      },
-      {
-        path: ROUTES.popularRestaurants,
-        element: lazyPages.popularRestaurants(),
+        element: withLazyFallback(lazyPages.todayRestaurant()),
       },
       {
         path: ROUTES.restaurantDetail,
-        element: lazyPages.restaurantDetail(),
+        element: withLazyFallback(lazyPages.restaurantDetail()),
+      },
+      {
+        path: ROUTES.hashiPickRestaurants,
+        element: withLazyFallback(lazyPages.hashiPick()),
+      },
+      {
+        path: ROUTES.popularRestaurants,
+        element: withLazyFallback(lazyPages.popularRestaurants()),
       },
       {
         path: ROUTES.magazines,
-        element: lazyPages.magazines(),
+        element: withLazyFallback(lazyPages.magazines()),
       },
       {
         path: ROUTES.magazineDetail,
-        element: lazyPages.magazineDetail(),
+        element: withLazyFallback(lazyPages.magazineDetail()),
       },
       {
-        element: createElement(AuthOnlyRoute),
+        element: withLazyFallback(createElement(AuthOnlyRoute)),
         children: [
           {
             path: ROUTES.reviewNew,
@@ -134,7 +134,7 @@ export const appRoutes: RouteObject[] = [
         ],
       },
       {
-        element: createElement(GuestOnlyRoute),
+        element: withLazyFallback(createElement(GuestOnlyRoute)),
         children: [
           {
             path: ROUTES.loginRequired,
@@ -149,7 +149,7 @@ export const appRoutes: RouteObject[] = [
         ],
       },
       {
-        element: createElement(BottomNavigationLayout),
+        element: withLazyFallback(createElement(BottomNavigationLayout)),
         children: [
           {
             path: '*',
