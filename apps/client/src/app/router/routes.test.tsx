@@ -30,4 +30,15 @@ describe('appRoutes', () => {
       screen.queryByRole('heading', { name: '404 페이지' }),
     ).not.toBeInTheDocument()
   })
+
+  it('renders PopularRestaurantsPage from a direct URL entry', async () => {
+    renderRoute(ROUTES.popularRestaurants)
+
+    expect(
+      await screen.findByRole('heading', { name: '인기 맛집' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: '404 페이지' }),
+    ).not.toBeInTheDocument()
+  })
 })

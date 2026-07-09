@@ -4,3 +4,4 @@ export {
   RESTAURANT_IMAGE_SLOT_COUNT,
   RESTAURANT_LIST_PAGE_SIZE,
 } from './layout'
+export { POPULAR_RESTAURANTS_SORT_OPTIONS } from './popularRestaurants'

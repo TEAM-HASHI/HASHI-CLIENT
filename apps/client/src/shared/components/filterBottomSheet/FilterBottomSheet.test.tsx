@@ -96,7 +96,7 @@ describe('FilterBottomSheet', () => {
 
     expect(handleSelect).toHaveBeenCalledWith('noodle')
     expect(handleReset).toHaveBeenCalled()
-    expect(handleOpenChange).not.toHaveBeenCalled()
+    expect(handleOpenChange).toHaveBeenCalledWith(false)
     expect(handleApply).toHaveBeenCalled()
   })
 

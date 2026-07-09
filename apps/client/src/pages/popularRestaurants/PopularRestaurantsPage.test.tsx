@@ -1,17 +1,10 @@
 import '@testing-library/jest-dom/vitest'
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  within,
-} from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
-import { HashiPickPage } from '@/pages/hashiPick/HashiPickPage'
+import { PopularRestaurantsPage } from '@/pages/popularRestaurants/PopularRestaurantsPage'
 
 const LocationPath = () => {
   const location = useLocation()
@@ -19,11 +12,14 @@ const LocationPath = () => {
   return <div data-testid="location-path">{location.pathname}</div>
 }
 
-const renderHashiPickPage = () => {
+const renderPopularRestaurantsPage = () => {
   return render(
-    <MemoryRouter initialEntries={[ROUTES.hashiPickRestaurants]}>
+    <MemoryRouter initialEntries={[ROUTES.popularRestaurants]}>
       <Routes>
-        <Route element={<HashiPickPage />} path={ROUTES.hashiPickRestaurants} />
+        <Route
+          element={<PopularRestaurantsPage />}
+          path={ROUTES.popularRestaurants}
+        />
         <Route element={<LocationPath />} path={ROUTES.restaurantDetail} />
         <Route element={<LocationPath />} path={ROUTES.home} />
       </Routes>
@@ -66,15 +62,15 @@ const mockIntersectionObserver = () => {
   }
 }
 
-describe('HashiPickPage', () => {
+describe('PopularRestaurantsPage', () => {
   afterEach(() => {
     cleanup()
     document.body.style.overflow = ''
     vi.unstubAllGlobals()
   })
 
-  it('renders title, filters, and restaurant cards', () => {
-    renderHashiPickPage()
+  it('renders popular restaurant list with default and rating sort options', () => {
+    renderPopularRestaurantsPage()
 
     expect(screen.getByTestId('restaurant-list-sticky-header')).toHaveClass(
       'app-mobile-fixed-top',
@@ -86,32 +82,30 @@ describe('HashiPickPage', () => {
     )
     expect(screen.getByTestId('restaurant-list')).not.toHaveClass('pt-[123px]')
     expect(
-      screen.getByRole('heading', { name: '하시 Pick' }),
+      screen.getByRole('heading', { name: '인기 맛집' }),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: '정렬 필터: 기본순' }),
     ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: '음식 장르 필터: 음식 장르 선택' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getAllByRole('button', { name: /히마와리 스시/ }),
-    ).toHaveLength(10)
-  })
-
-  it('keeps selected sort unchanged until apply is pressed', () => {
-    renderHashiPickPage()
 
     fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 기본순' }))
-    fireEvent.click(screen.getByRole('button', { name: '인기순' }))
-    fireEvent.click(screen.getByRole('button', { name: '닫기' }))
 
+    expect(screen.getByRole('button', { name: '별점순' })).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: '정렬 필터: 기본순' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: '정렬 필터: 인기순' }),
+      screen.queryByRole('button', { name: '인기순' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('navigates to home when the header back button is pressed', () => {
+    renderPopularRestaurantsPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent(ROUTES.home)
+  })
+
+  it('resets sort to default and closes the bottom sheet when reset is pressed', () => {
+    renderPopularRestaurantsPage()
 
     fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 기본순' }))
     fireEvent.click(screen.getByRole('button', { name: '별점순' }))
@@ -120,61 +114,22 @@ describe('HashiPickPage', () => {
     expect(
       screen.getByRole('button', { name: '정렬 필터: 별점순' }),
     ).toBeInTheDocument()
-  })
 
-  it('resets category to default and closes the bottom sheet when reset is pressed', () => {
-    renderHashiPickPage()
-
-    fireEvent.click(
-      screen.getByRole('button', { name: '음식 장르 필터: 음식 장르 선택' }),
-    )
-    fireEvent.click(screen.getByRole('button', { name: '면류' }))
+    fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 별점순' }))
     fireEvent.click(screen.getByRole('button', { name: '초기화' }))
 
     expect(
-      screen.getByRole('button', {
-        name: '음식 장르 필터: 음식 장르 선택',
-      }),
+      screen.getByRole('button', { name: '정렬 필터: 기본순' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('dialog', { name: '음식 장르 선택' })).toHaveClass(
+    expect(screen.getByRole('dialog', { name: '정렬 순서' })).toHaveClass(
       'translate-y-full',
     )
-  })
-
-  it('navigates to restaurant detail when a card is pressed', () => {
-    renderHashiPickPage()
-
-    fireEvent.click(screen.getAllByRole('button', { name: /히마와리 스시/ })[0])
-
-    expect(screen.getByTestId('location-path')).toHaveTextContent(
-      '/restaurants/1',
-    )
-  })
-
-  it('navigates to home when the header back button is pressed', () => {
-    renderHashiPickPage()
-
-    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
-
-    expect(screen.getByTestId('location-path')).toHaveTextContent(ROUTES.home)
-  })
-
-  it('renders five fallback image slots that follow the parent content width', () => {
-    renderHashiPickPage()
-    const imageList = screen.getAllByTestId('restaurant-image-list')[0]
-
-    expect(screen.queryAllByRole('img')).toHaveLength(0)
-    expect(imageList).toHaveClass('w-full', 'overflow-x-auto')
-    expect(imageList).not.toHaveClass('max-w-[353px]')
-    expect(
-      within(imageList).getAllByTestId('restaurant-image-placeholder'),
-    ).toHaveLength(5)
   })
 
   it('loads restaurants in 10 item chunks when the bottom sentinel enters the viewport', () => {
     const { triggerIntersect } = mockIntersectionObserver()
 
-    renderHashiPickPage()
+    renderPopularRestaurantsPage()
 
     expect(
       screen.getAllByRole('button', { name: /히마와리 스시/ }),

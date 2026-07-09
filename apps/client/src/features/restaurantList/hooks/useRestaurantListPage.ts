@@ -85,10 +85,12 @@ export const useRestaurantListPage = ({
 
   const handleResetSort = () => {
     setDraftSort(defaultSortOption)
+    setSelectedSort(defaultSortOption)
   }
 
   const handleResetCategory = () => {
     setDraftCategory(DEFAULT_CATEGORY_OPTION)
+    setSelectedCategory(DEFAULT_CATEGORY_OPTION)
   }
 
   const handleApplySort = () => {
