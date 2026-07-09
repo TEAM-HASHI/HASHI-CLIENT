@@ -1,0 +1,6 @@
+interface:
+  display_name: 'API Spec Intake'
+  short_description: 'Map Swagger specs to API integration work'
+  default_prompt: 'Use $api-spec-intake to turn this Swagger or API spec into an implementation map.'
+policy:
+  allow_implicit_invocation: true

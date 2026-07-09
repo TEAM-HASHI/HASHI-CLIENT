@@ -144,6 +144,9 @@ catalogs:
     vitest:
       specifier: ^3.2.4
       version: 3.2.6
+    yaml:
+      specifier: ^2.9.0
+      version: 2.9.0
 
 importers:
 
@@ -197,6 +200,9 @@ importers:
       vercel:
         specifier: 'catalog:'
         version: 54.15.1(@emnapi/core@1.11.0)(@emnapi/runtime@1.11.0)(rollup@4.62.2)
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.0
 
   apps/client:
     dependencies:
@@ -9404,8 +9410,7 @@ snapshots:
 
   yallist@5.0.0: {}
 
-  yaml@2.9.0:
-    optional: true
+  yaml@2.9.0: {}
 
   yauzl-clone@1.0.4:
     dependencies:

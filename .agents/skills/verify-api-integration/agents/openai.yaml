@@ -1,0 +1,6 @@
+interface:
+  display_name: 'Verify API Integration'
+  short_description: 'Review HASHI API query and mutation work'
+  default_prompt: 'Use $verify-api-integration to check this API integration before review.'
+policy:
+  allow_implicit_invocation: true

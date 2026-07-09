@@ -25,6 +25,7 @@ Always read:
 When the page fetches, submits, or caches server data:
 
 - `docs/architecture/data-layer.md`
+- `docs/workflows/api-integration.md`
 - `.agents/recipes/api-integration.md`
 
 When the page includes form validation or step/state flow:
@@ -54,8 +55,12 @@ When mapping Figma or shared UI:
    - `apps/client/src/shared`: app-specific component or hook reused by multiple screens
    - `packages/hds-ui`: product-agnostic primitive with stable public API and accessibility contract
 7. Implement the smallest page structure that satisfies the spec.
-8. Update the spec if implementation decisions change.
-9. Run verification that matches the touched surfaces.
+8. If the page connects to backend APIs, run the API pipeline:
+   - `api-spec-intake` when Swagger/OpenAPI/API specs need mapping.
+   - `api-integrator` for endpoint, query key, query/mutation hook, invalidation, and UI state wiring.
+   - `verify-api-integration` before final verification.
+9. Update the spec if implementation decisions change.
+10. Run verification that matches the touched surfaces.
 
 ## Spec Rules
 

@@ -1,0 +1,6 @@
+interface:
+  display_name: 'API Integrator'
+  short_description: 'Wire API specs into HASHI client pages'
+  default_prompt: 'Use $api-integrator to connect this published HASHI page to the API spec.'
+policy:
+  allow_implicit_invocation: true

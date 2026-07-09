@@ -43,6 +43,7 @@
     "turbo": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
-    "vercel": "catalog:"
+    "vercel": "catalog:",
+    "yaml": "catalog:"
   }
 }
