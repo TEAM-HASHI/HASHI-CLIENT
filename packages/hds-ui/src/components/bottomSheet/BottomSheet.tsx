@@ -102,7 +102,7 @@ export const BottomSheet = ({
         aria-labelledby={title ? titleId : undefined}
         aria-modal="true"
         className={cn(
-          'relative w-full rounded-t-[20px] bg-white pb-(--safe-area-bottom,0px) transition-transform duration-200 ease-out',
+          'relative w-full rounded-t-[20px] bg-white pb-(--safe-area-bottom,0px) transition-transform duration-200 ease-out outline-none',
           isVisible ? 'translate-y-0' : 'translate-y-full',
           className,
         )}

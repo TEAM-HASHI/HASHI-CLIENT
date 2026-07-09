@@ -169,6 +169,18 @@ describe('BottomSheet', () => {
     trigger.remove()
   })
 
+  it('does not render a default focus outline on the sheet panel', () => {
+    render(
+      <BottomSheet open onOpenChange={vi.fn()} title="정렬 순서">
+        기본순
+      </BottomSheet>,
+    )
+
+    expect(screen.getByRole('dialog', { name: '정렬 순서' })).toHaveClass(
+      'outline-none',
+    )
+  })
+
   it('keeps tab focus inside the sheet', async () => {
     render(
       <BottomSheet
