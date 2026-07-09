@@ -37,7 +37,7 @@ export const ReservationDetailPage = () => {
           </IconButton>
         }
         title="예약 상세"
-        className="app-mobile-fixed-top z-fixed border-warm-gray-50 fixed border-b"
+        className="app-mobile-fixed-top z-fixed fixed"
       />
       <div className="px-6">
         <ReservationProgressSection

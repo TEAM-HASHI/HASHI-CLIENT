@@ -1,5 +1,6 @@
 @import './tokens/font.css';
 @import './tokens/colors.css';
 @import './tokens/gradients.css';
+@import './tokens/shadows.css';
 @import './tokens/typography.css';
 @import './tokens/z-index.css';

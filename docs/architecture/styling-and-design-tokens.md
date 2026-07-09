@@ -53,6 +53,7 @@ Tailwind CSS를 사용하는 경우:
 - `font.css`: font family token
 - `colors.css`: color token
 - `gradients.css`: gradient token
+- `shadows.css`: shadow token
 - `typography.css`: typography token과 `typo-*` utility
 - `z-index.css`: z-index token. overlay, modal, toast처럼 전역 stacking 계층은 숫자를 직접 쓰지 않고 의미 기반 토큰으로 관리합니다.
 
@@ -60,6 +61,7 @@ Tailwind CSS를 사용하는 경우:
 
 - Colors: `primary`, `secondary`, `cool-gray`, `warm-gray`, semantic colors
 - Gradients: `gradient-01`, `background-image-gradient-01`
+- Shadows: `shadow-header`
 - Typography: `typo-header-*`, `typo-sub-header-*`, `typo-body-*`, `typo-caption-*`, `typo-long-body-1`
 - Font family: `font-sans` maps to `Pretendard` first, then system fallback
 - Z-index: `z-base`, `z-raised`, `z-fixed`, `z-overlay`, `z-modal`, `z-toast`

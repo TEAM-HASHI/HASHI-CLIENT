@@ -446,6 +446,7 @@ types:
 - `app-mobile-fixed-top` 유틸을 사용합니다.
 - fixed 영역의 높이만큼 본문 상단 padding을 확보합니다.
 - fixed 영역은 배경색을 지정해 리스트가 아래로 스크롤될 때 겹쳐 보이지 않도록 합니다.
+- fixed 영역의 elevation은 `shadow-header` 토큰을 사용하고 status filter 하단 `border-b`를 중복 적용하지 않습니다.
 - fixed 영역은 모바일 프레임 너비를 벗어나지 않아야 합니다.
 - z-index는 하드코딩하지 않고 `z-fixed` 토큰을 사용합니다.
 - status chip 변경 시 리스트 컨테이너 또는 window 스크롤을 맨 위로 이동합니다.

@@ -23,7 +23,7 @@ export const MyReservationsPage = () => {
 
   return (
     <section className="app-mobile-bottom-nav-content flex flex-col">
-      <div className="app-mobile-fixed-top z-fixed bg-white px-5 pt-[calc(32px+var(--safe-area-top,0px))]">
+      <div className="app-mobile-fixed-top z-fixed shadow-header bg-white px-5 pt-[calc(32px+var(--safe-area-top,0px))]">
         <MyReservationsHeader userName={userName} />
         <ReservationStatusFilter
           selectedStatus={selectedStatus}
