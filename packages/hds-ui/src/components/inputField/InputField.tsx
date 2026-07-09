@@ -99,7 +99,6 @@ export const InputField = ({
         className={cn(
           'bg-primary-100 flex h-[51px] w-full items-center rounded-[10px]',
           hasRightContent ? 'pr-[9px] pl-[15px]' : 'px-[15px]',
-          'focus-within:outline-cool-gray-500 focus-within:outline-2 focus-within:outline-offset-0',
           'data-[disabled=true]:cursor-not-allowed',
           className,
         )}

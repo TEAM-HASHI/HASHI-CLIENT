@@ -4,12 +4,14 @@ import type { SyntheticEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { GuestCounter } from '@/features/reservation/components/guestCounter'
+import {
+  GuestCounter,
+  ReservationBottomBar,
+  ReservationTimeSelector,
+  ReservationUnderlineTextField,
+} from '@/features/reservation/components'
 
-import { ReservationBottomBar } from '@/pages/restaurantReservationNew/components/ReservationBottomBar'
 import { ReservationRestaurantSummary } from '@/pages/restaurantReservationNew/components/ReservationRestaurantSummary'
-import { ReservationTimeSelector } from '@/pages/restaurantReservationNew/components/ReservationTimeSelector'
-import { UnderlineTextField } from '@/pages/restaurantReservationNew/components/UnderlineTextField'
 import { useReservationRestaurant } from '@/pages/restaurantReservationNew/hooks/useReservationRestaurant'
 import { useRestaurantReservationForm } from '@/pages/restaurantReservationNew/hooks/useRestaurantReservationForm'
 
@@ -43,7 +45,7 @@ export const RestaurantReservationNewPage = () => {
   return (
     <div className="min-h-dvh bg-white pb-[128px]">
       <Header
-        className="sticky top-0 z-10"
+        className="z-fixed sticky top-0"
         leftAction={
           <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
             <BackIcon className="size-6" />
@@ -63,7 +65,7 @@ export const RestaurantReservationNewPage = () => {
           id={RESERVATION_FORM_ID}
           onSubmit={handleSubmit}
         >
-          <UnderlineTextField
+          <ReservationUnderlineTextField
             autoComplete="name"
             label="예약자명"
             name="guestName"
@@ -116,13 +118,14 @@ export const RestaurantReservationNewPage = () => {
               시간
             </h2>
             <ReservationTimeSelector
+              disabled={timeSelector.disabled}
               onTimeSelect={timeSelector.onTimeSelect}
               selectedTime={timeSelector.selectedTime}
               timeSlots={timeSelector.timeSlots}
             />
           </section>
 
-          <UnderlineTextField
+          <ReservationUnderlineTextField
             label="요청사항 (선택)"
             name="requestNote"
             onValueChange={fields.requestNote.onValueChange}

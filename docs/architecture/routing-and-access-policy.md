@@ -29,7 +29,8 @@
 ## Auth Status
 
 - 현재 `useAuthStatus`는 실제 인증 연동 전 임시 hook입니다.
-- 페이지 개발 중 회원 전용 화면을 바로 확인할 수 있도록 기본값은 `authenticated`입니다.
+- 실제 인증 연동 전까지 기본값은 `unauthenticated`로 두어 route guard 기본 동작을 확인합니다.
+- 회원 전용 화면을 확인해야 할 때는 임시로 값을 바꿀 수 있지만, 머지 전에는 반드시 기본값으로 되돌립니다.
 - 추후 OAuth/API 인증 흐름이 연결되면 `useAuthStatus` 내부 구현을 실제 로그인 상태 기준으로 교체합니다.
 
 ## Public Routes
