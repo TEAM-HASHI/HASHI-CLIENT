@@ -1,4 +1,6 @@
-import { createElement, lazy, Suspense } from 'react'
+import { createElement, lazy, Suspense, type ReactNode } from 'react'
+
+import { LoadingScreen } from '@/shared/components/loadingScreen'
 
 const SearchPage = lazy(() => import('@/pages/search'))
 const ComingSoonPage = lazy(() => import('@/pages/comingSoon'))
@@ -28,7 +30,15 @@ const LoginRequiredPage = lazy(() => import('@/pages/loginRequired'))
 const NotFoundPage = lazy(() => import('@/pages/notFound'))
 
 const lazyPage = (Page: ReturnType<typeof lazy>) => {
-  return createElement(Suspense, { fallback: null }, createElement(Page))
+  return createElement(Page)
+}
+
+export const withLazyFallback = (element: ReactNode) => {
+  return createElement(
+    Suspense,
+    { fallback: createElement(LoadingScreen) },
+    element,
+  )
 }
 
 export const lazyPages = {
