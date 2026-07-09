@@ -22,7 +22,7 @@
 
 - 기본 문구는 `로딩 중이에요`입니다.
 - loading graphic은 `apps/client/src/shared/assets/images/loading.gif`를 사용합니다.
-- chopsticks graphic은 `apps/client/src/shared/assets/images/graphic_chopsticks.webp`를 사용합니다.
+- chopsticks graphic은 `apps/client/src/shared/assets/images/graphic_chopsticks.svg`를 사용합니다.
 - graphic은 장식 이미지로 처리하고, 안내 문구가 접근 가능한 status 역할을 담당합니다.
 - root는 전체 viewport 높이를 채우고 중앙 정렬합니다.
 - root는 landmark 중첩을 피하기 위해 `main`이 아닌 `div`로 렌더링합니다.
@@ -34,6 +34,10 @@
 ## Usage Policy
 
 - route lazy loading fallback에서 사용합니다.
+- route lazy loading fallback은 route branch 단위 `Suspense`에서 렌더링합니다.
+  - 앱 전체를 감싸는 전역 `Suspense` fallback으로 사용하지 않습니다.
+  - lazy page가 `BottomNavigationLayout` 아래에 있더라도 fallback 중에는 하단 네비게이션을 함께 숨기고 `LoadingScreen`만 노출합니다.
+  - page 또는 layout보다 바깥의 route branch에서 fallback 범위를 소유합니다.
 - page 또는 section 내부 Suspense가 화면 전체 loading을 의도할 때 명시적으로 fallback에 주입합니다.
 - page 내부 API loading state에서도 같은 전체 화면 로딩이 필요할 때 명시적으로 재사용할 수 있습니다.
 - 앱 전역 `AsyncBoundary`의 기본 fallback으로 사용하지 않습니다.
@@ -42,4 +46,4 @@
 ## Verification
 
 - `LoadingScreen` 기본 문구와 custom message 렌더링을 확인합니다.
-- route lazy fallback이 `LoadingScreen`을 사용하는지 확인합니다.
+- 실제 route 설정에 포함된 lazy page fallback이 `LoadingScreen`을 사용하고 하단 네비게이션을 함께 렌더링하지 않는지 확인합니다.
