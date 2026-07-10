@@ -20,5 +20,6 @@ export const useSearchRestaurantsQuery = (
       return searchRestaurants(params)
     },
     queryKey: searchRestaurantsQueryKey(params),
+    throwOnError: false,
   })
 }
