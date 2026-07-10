@@ -6,6 +6,7 @@ const buttonVariants = cva(
   [
     'inline-flex items-center justify-center gap-1 rounded-[5px] px-4',
     'typo-body-6 whitespace-nowrap',
+    'enabled:active:opacity-90',
     'disabled:cursor-not-allowed',
   ],
   {
