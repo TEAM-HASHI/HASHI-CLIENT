@@ -1,5 +1,6 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import { alias, plugins as basePlugins } from './vite.shared'
 
 const release =
@@ -20,6 +21,37 @@ export default defineConfig({
   },
   plugins: [
     ...basePlugins,
+    VitePWA({
+      registerType: 'autoUpdate',
+      manifest: {
+        name: 'HASHI - 발견부터 예약까지',
+        short_name: 'HASHI',
+        description: '한국인 여행자를 위한 일본 맛집 큐레이션 및 예약 서비스',
+        lang: 'ko',
+        theme_color: '#273033',
+        background_color: '#F2F7F9',
+        display: 'standalone',
+        start_url: '/',
+        scope: '/',
+        icons: [
+          {
+            src: '/icons/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/icons/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,gif,woff,woff2}'],
+        globIgnores: ['icons/pwa-*.png'],
+      },
+    }),
     ...(process.env.SENTRY_AUTH_TOKEN
       ? [
           sentryVitePlugin({

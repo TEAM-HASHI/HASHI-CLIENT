@@ -26,6 +26,7 @@
 | Monorepo                    | `pnpm workspace`, `pnpm catalog`, `Turborepo` | `pnpm@10.18.3`, `turbo@^2.7.2`           | Current | workspace와 task graph 기준                |
 | Language                    | `React`, `TypeScript`                         | `react@^19.2.6`, `typescript@~6.0.2`     | Current | `apps/client`, `packages/*` 공통 기준      |
 | Bundler                     | `Vite`                                        | `vite@^8.0.12`                           | Current | `@hashi/client` 실행/빌드 기준             |
+| PWA                         | `vite-plugin-pwa`, `Workbox`                  | `vite-plugin-pwa@^1.3.0`                 | Current | Manifest와 정적 앱 셸 캐시 기준            |
 | Routing                     | `React Router`                                | `react-router-dom@^7.18.1`               | Current | `apps/client` 라우팅과 route guard 기준    |
 | Lint and format             | `ESLint`, `Prettier`                          | `eslint@^10.3.0`, `prettier@^3.6.2`      | Current | 루트 script와 공통 ESLint config 기준      |
 | CSS                         | `Tailwind CSS`, `class-variance-authority`    | `tailwindcss@^4.3.1`, `cva@^0.7.1`       | Current | `@tailwindcss/vite`, `tailwind-merge` 사용 |
@@ -47,6 +48,7 @@
 - Monorepo: [Turborepo](https://turborepo.dev/docs)
 - Language: [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/docs/)
 - Bundler: [Vite](https://vite.dev/guide/)
+- PWA: [Vite PWA](https://vite-pwa-org.netlify.app/), [Workbox](https://developer.chrome.com/docs/workbox/)
 - Routing: [React Router](https://reactrouter.com/)
 - Lint and format: [ESLint](https://eslint.org/docs/latest/), [Prettier](https://prettier.io/docs/)
 - CSS: [Tailwind CSS](https://tailwindcss.com/docs/installation), [Class Variance Authority](https://cva.style/docs)
