@@ -113,7 +113,8 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 - header: handle, title, close button을 포함합니다.
 - content: 기본 좌우 padding은 `20px`입니다.
 - footer: 기본 좌우 padding은 `20px`, 하단 padding은 `20px`입니다.
-- open transition: panel은 `translate-y` transition으로 하단에서 올라오거나 내려갑니다.
+- open animation: overlay는 opacity animation으로 fade-in/fade-out되고, panel은 `translateY` animation으로 하단에서 올라오거나 내려갑니다.
+- motion timing: overlay는 `animate-bottom-sheet-overlay-in/out`, panel은 `animate-bottom-sheet-panel-in/out` token utility를 사용해 열림/닫힘 모두 부드럽게 처리합니다.
 
 ## HDS가 가지면 안 되는 것
 

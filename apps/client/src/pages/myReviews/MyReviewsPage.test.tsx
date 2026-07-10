@@ -29,6 +29,7 @@ describe('MyReviewsPage', () => {
     render(<MyReviewsPage />)
 
     expect(screen.getByText('마이 리뷰')).toBeTruthy()
+    expect(screen.getByRole('banner')).toHaveClass('shadow-none')
     expect(screen.getByRole('tab', { name: '리뷰 쓰기 2' })).toHaveAttribute(
       'aria-selected',
       'true',

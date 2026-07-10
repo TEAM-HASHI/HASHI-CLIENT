@@ -57,7 +57,7 @@ describe('BottomSheet', () => {
     ).toBeInTheDocument()
   })
 
-  it('keeps the sheet mounted until close transition ends', () => {
+  it('keeps the sheet mounted until close animation ends', () => {
     const { rerender } = render(
       <BottomSheet open onOpenChange={vi.fn()} title="정렬 순서">
         기본순
@@ -71,12 +71,28 @@ describe('BottomSheet', () => {
     )
 
     const sheet = screen.getByRole('dialog', { name: '정렬 순서' })
+    const overlay = sheet.parentElement
 
-    expect(sheet).toHaveClass('translate-y-full')
+    expect(sheet).toHaveClass('animate-bottom-sheet-panel-out')
+    expect(overlay).toHaveClass('animate-bottom-sheet-overlay-out')
 
-    fireEvent.transitionEnd(sheet)
+    fireEvent.animationEnd(sheet)
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('applies smooth overlay fade and panel slide classes while open', () => {
+    render(
+      <BottomSheet open onOpenChange={vi.fn()} title="정렬 순서">
+        기본순
+      </BottomSheet>,
+    )
+
+    const sheet = screen.getByRole('dialog', { name: '정렬 순서' })
+    const overlay = sheet.parentElement
+
+    expect(overlay).toHaveClass('animate-bottom-sheet-overlay-in')
+    expect(sheet).toHaveClass('animate-bottom-sheet-panel-in')
   })
 
   it('calls onOpenChange when close button is pressed', () => {
@@ -167,6 +183,18 @@ describe('BottomSheet', () => {
 
     expect(trigger).toHaveFocus()
     trigger.remove()
+  })
+
+  it('does not render a default focus outline on the sheet panel', () => {
+    render(
+      <BottomSheet open onOpenChange={vi.fn()} title="정렬 순서">
+        기본순
+      </BottomSheet>,
+    )
+
+    expect(screen.getByRole('dialog', { name: '정렬 순서' })).toHaveClass(
+      'outline-none',
+    )
   })
 
   it('keeps tab focus inside the sheet', async () => {

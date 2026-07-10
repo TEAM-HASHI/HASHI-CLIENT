@@ -9,6 +9,7 @@ import {
 } from '@/pages/myReservations/constants/reservationStatus'
 import { myReservationsMockItems } from '@/pages/myReservations/mocks/myReservations.mock'
 import type { VisitedReservation } from '@/pages/myReservations/types'
+import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
 // TODO: 실제 사용자 이름을 가져오는 로직으로 수정
 const MOCK_USER_NAME = '권혁준'
@@ -34,7 +35,7 @@ export const useMyReservationsPage = () => {
   }
 
   const handleContactPress = () => {
-    window.open('https://pf.kakao.com/_xgCxkqG', '_blank', 'noreferrer')
+    window.open(HASHI_KAKAO_CHANNEL_URL, '_blank', 'noreferrer')
   }
 
   const handleCancelPress = (reservationId: string) => {
