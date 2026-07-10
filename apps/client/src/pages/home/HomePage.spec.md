@@ -107,22 +107,23 @@ export const HomeLogo = () => {
 
 ## Requirements
 
-- [ ] 상단 상태바 영역 아래에 Hashi 로고를 노출합니다.
-- [ ] 검색 진입 영역을 노출하고, 탭 또는 클릭 시 `ROUTES.search`로 이동합니다.
-- [ ] 메인 배너 섹션 타이틀 `맛집 큐레이션을 둘러보세요!`를 노출합니다.
-- [ ] 메인 배너는 여러 장 carousel로 노출합니다.
+- [x] 상단 상태바 영역 아래에 Hashi 로고를 노출합니다.
+- [x] 검색 진입 영역을 노출하고, 탭 또는 클릭 시 `ROUTES.search`로 이동합니다.
+- [x] Hashi 로고와 검색 진입 영역, 검색바 아래 여백은 홈 본문 스크롤과 무관하게 상단에 고정합니다.
+- [x] 메인 배너 섹션 타이틀 `맛집 큐레이션을 둘러보세요!`를 노출합니다.
+- [x] 메인 배너는 여러 장 carousel로 노출합니다.
 - [ ] 메인 배너 데이터는 최종적으로 서버에서 받은 이미지와 인스타그램 이동 대상 정보로 구성합니다.
-- [ ] 퀵 버튼 4개를 노출합니다.
+- [x] 퀵 버튼 4개를 노출합니다.
   - 하시 PICK: `ROUTES.hashiPickRestaurants`
   - 인기 맛집: `ROUTES.popularRestaurants`
   - 매거진: `ROUTES.magazines`
   - 오늘의 식당: `ROUTES.todayRestaurant`
-- [ ] 어디든 예약 CTA를 노출하고, `예약하기` 버튼 클릭 시에만 `ROUTES.anywhereReservation`으로 이동합니다.
-- [ ] `SNS에서 핫한 일본 식당` 섹션을 노출합니다.
-- [ ] SNS 기반 맛집 콘텐츠는 이미지, 식당명, 한 줄 요약을 리스트 형태로 보여주고, 항목 클릭 시 식당 상세 화면으로 이동합니다.
-- [ ] 하단 네비게이션은 홈, 저장, 지도, 내 예약, 마이 탭을 제공합니다.
-- [ ] 저장과 지도는 MVP 범위에서 준비중/임시 화면일 수 있으며, 홈 페이지 내부에서는 별도 구현하지 않습니다.
-- [ ] 이미지나 API 데이터가 아직 없을 때 최종 구현처럼 보이는 임시 체크보드 placeholder를 남기지 않습니다.
+- [x] 어디든 예약 CTA를 노출하고, `예약하기` 버튼 클릭 시에만 `ROUTES.anywhereReservation`으로 이동합니다.
+- [x] `SNS에서 핫한 일본 식당` 섹션을 노출합니다.
+- [x] SNS 기반 맛집 콘텐츠는 이미지, 식당명, 한 줄 요약을 리스트 형태로 보여주고, 항목 클릭 시 식당 상세 화면으로 이동합니다.
+- [x] 하단 네비게이션은 홈, 저장, 지도, 내 예약, 마이 탭을 제공합니다.
+- [x] 저장과 지도는 MVP 범위에서 준비중/임시 화면일 수 있으며, 홈 페이지 내부에서는 별도 구현하지 않습니다.
+- [x] 이미지나 API 데이터가 아직 없을 때 최종 구현처럼 보이는 임시 체크보드 placeholder를 남기지 않습니다.
 
 ## Data Dependencies
 
@@ -453,6 +454,9 @@ BottomNavigationLayout
   - 최소 320px 폭에서도 검색 placeholder, CTA 문구, 버튼 텍스트가 겹치지 않아야 합니다.
   - `--app-mobile-max-width: 430px` 안에서 자연스럽게 확장됩니다.
 - fixed area:
+  - Hashi 로고와 검색 진입 영역은 `app-mobile-fixed-top z-fixed bg-white` wrapper 안에서 고정합니다.
+  - 검색바 아래 `16px` 여백까지 fixed wrapper에 포함해 스크롤 콘텐츠가 검색바 바로 아래로 비치지 않게 합니다.
+  - 고정 상단 영역이 본문을 덮지 않도록 본문은 상단 영역 높이만큼 padding을 확보합니다.
   - 하단 네비게이션은 `BottomNavigationLayout`의 `app-mobile-fixed-bottom`이 담당합니다.
 - scroll area:
   - 홈 본문만 세로 스크롤됩니다.
@@ -501,12 +505,12 @@ BottomNavigationLayout
 
 ## Verification
 
-- [ ] `corepack pnpm --filter @hashi/client lint`
-- [ ] `corepack pnpm --filter @hashi/client typecheck`
-- [ ] `corepack pnpm --filter @hashi/client build`
+- [x] `corepack pnpm --filter @hashi/client lint`
+- [x] `corepack pnpm --filter @hashi/client typecheck`
+- [x] `corepack pnpm --filter @hashi/client build`
 - [ ] `corepack pnpm --filter @hashi/client test`
-- [ ] `corepack pnpm format:check`
-- [ ] `git diff --check`
+- [x] `corepack pnpm format:check`
+- [x] `git diff --check`
 - [ ] `/` 직접 진입 확인
 - [ ] 비로그인 상태에서 브라우저 세션 첫 홈 진입 시 `AuthGateBottomSheet` 표시 확인
 - [ ] 같은 브라우저 세션에서 새로고침 또는 재진입 시 `AuthGateBottomSheet` 반복 미표시 확인
