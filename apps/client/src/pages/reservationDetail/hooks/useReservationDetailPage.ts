@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
+import { ROUTES } from '@/app/router/path'
+import { DEFAULT_RESERVATION_STATUS } from '@/pages/myReservations/constants/reservationStatus'
 import { reservationNotices } from '@/pages/reservationDetail/constants/reservationNotice'
 import {
   reservationProgressSteps,
@@ -29,6 +31,7 @@ export const useReservationDetailPage = () => {
   const handleConfirmCancelPress = () => {
     // TODO: 예약 취소 API와 성공 Toast 연결
     setIsCancelDialogOpen(false)
+    navigate(`${ROUTES.myReservations}?status=${DEFAULT_RESERVATION_STATUS}`)
   }
 
   const handleContact = () => {

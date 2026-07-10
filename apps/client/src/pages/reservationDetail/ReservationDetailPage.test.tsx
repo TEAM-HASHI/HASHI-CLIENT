@@ -9,6 +9,8 @@ import {
 } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ROUTES } from '@/app/router/path'
+import { DEFAULT_RESERVATION_STATUS } from '@/pages/myReservations/constants/reservationStatus'
 import { ReservationDetailPage } from '@/pages/reservationDetail/ReservationDetailPage'
 import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
@@ -55,6 +57,19 @@ describe('ReservationDetailPage', () => {
     expect(
       within(dialog).getByText('동일한 예약은 다시 접수해야 합니다.'),
     ).toBeInTheDocument()
+  })
+
+  it('moves to the in-progress reservation list after confirming cancellation', () => {
+    render(<ReservationDetailPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '예약 취소하기' }))
+
+    const dialog = screen.getByRole('alertdialog')
+    fireEvent.click(within(dialog).getByRole('button', { name: '취소하기' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      `${ROUTES.myReservations}?status=${DEFAULT_RESERVATION_STATUS}`,
+    )
   })
 
   it('opens the Hashi Kakao contact link from the fixed action bar', () => {
