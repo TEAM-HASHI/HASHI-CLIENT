@@ -37,7 +37,14 @@ describe('MyReviewsPage', () => {
     expect(
       screen.getByText((_, element) => element?.textContent === '총 2건'),
     ).toBeTruthy()
-    expect(screen.getAllByRole('button', { name: '리뷰 작성' })).toHaveLength(2)
+    expect(screen.getByTestId('writable-review-list')).toHaveClass('gap-3')
+    const reviewWriteButtons = screen.getAllByRole('button', {
+      name: '리뷰 작성',
+    })
+
+    expect(reviewWriteButtons).toHaveLength(2)
+    expect(reviewWriteButtons[0]).toHaveClass('bg-cool-gray-800')
+    expect(screen.getAllByTestId('my-review-default-image')).toHaveLength(2)
   })
 
   it('navigates to review new page from writable review card', () => {
@@ -59,6 +66,7 @@ describe('MyReviewsPage', () => {
       'true',
     )
     expect(screen.getAllByRole('img', { name: '평점 5점' })).toHaveLength(4)
+    expect(screen.getAllByTestId('my-review-default-image')).toHaveLength(4)
     expect(screen.getByRole('menu')).toBeTruthy()
     expect(screen.getByRole('menuitem', { name: '수정하기' })).toBeTruthy()
     expect(screen.getByRole('menuitem', { name: '삭제하기' })).toBeTruthy()
@@ -100,22 +108,38 @@ describe('MyReviewsPage', () => {
     expect(screen.queryByRole('menuitem', { name: '수정하기' })).toBeNull()
   })
 
-  it('navigates to review edit page from written review menu', () => {
+  it('opens coming soon dialog from written review edit menu', () => {
     render(<MyReviewsPage />)
 
     fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
     fireEvent.click(screen.getAllByLabelText(/리뷰 메뉴 열기/)[0])
     fireEvent.click(screen.getByRole('menuitem', { name: '수정하기' }))
 
-    expect(mockNavigate).toHaveBeenCalledWith('/reviews/written-review-1/edit')
+    expect(
+      screen.getByRole('dialog', { name: '서비스를 준비하고 있어요.' }),
+    ).toBeInTheDocument()
+    expect(mockNavigate).not.toHaveBeenCalledWith(
+      '/reviews/written-review-1/edit',
+    )
   })
 
-  it('moves back from the header action', () => {
+  it('navigates to review detail page from written review card', () => {
+    render(<MyReviewsPage />)
+
+    fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /리뷰 상세 보기/ })[0],
+    )
+
+    expect(mockNavigate).toHaveBeenCalledWith('/reviews/written-review-1')
+  })
+
+  it('navigates to mypage from the header back action', () => {
     render(<MyReviewsPage />)
 
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
-    expect(mockNavigate).toHaveBeenCalledWith(-1)
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.mypage)
   })
 
   it('navigates to today restaurant when written reviews become empty', () => {
@@ -133,7 +157,13 @@ describe('MyReviewsPage', () => {
       )
     }
 
-    fireEvent.click(screen.getByRole('button', { name: '일본 맛집 추천받기' }))
+    const recommendButton = screen.getByRole('button', {
+      name: '일본 맛집 추천받기',
+    })
+
+    expect(recommendButton).toHaveClass('bg-cool-gray-800')
+
+    fireEvent.click(recommendButton)
 
     expect(screen.getByText('작성한 리뷰가 없어요.')).toBeTruthy()
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.todayRestaurant)

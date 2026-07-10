@@ -12,9 +12,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'bg-cool-gray-800 text-white disabled:bg-secondary-200 disabled:text-warm-gray-300',
+          'bg-cool-gray-800 text-white enabled:active:bg-cool-gray-300 disabled:bg-secondary-200 disabled:text-warm-gray-300',
         neutral:
-          'bg-secondary-200 text-cool-gray-900 disabled:bg-secondary-200 disabled:text-warm-gray-300',
+          'bg-secondary-200 text-cool-gray-900 enabled:active:bg-warm-gray-100 disabled:bg-secondary-200 disabled:text-warm-gray-300',
       },
       size: {
         sm: 'h-[2.25rem]',

@@ -13,8 +13,8 @@ export const ReviewWritableCard = ({
   onClick,
 }: ReviewWritableCardProps) => {
   return (
-    <article className="flex min-w-0 flex-col gap-3 pb-5">
-      <div className="flex min-w-0 items-center gap-3 py-3.5">
+    <article className="flex min-w-0 flex-col gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <ReviewImagePlaceholder />
         <div className="min-w-0 flex-1">
           <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2">
@@ -28,7 +28,12 @@ export const ReviewWritableCard = ({
           </p>
         </div>
       </div>
-      <Button className="h-9" onClick={onClick} size="sm" width="full">
+      <Button
+        className="bg-cool-gray-800 h-9"
+        onClick={onClick}
+        size="sm"
+        width="full"
+      >
         리뷰 작성
       </Button>
     </article>

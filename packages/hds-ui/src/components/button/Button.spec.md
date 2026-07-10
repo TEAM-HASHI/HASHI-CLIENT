@@ -172,7 +172,9 @@ HDS가 담당하지 않는 것:
 
 - default: 기본 사용 상태입니다.
 - hover: v1에서는 별도 색상 변경을 정의하지 않습니다.
-- active: v1에서는 별도 색상 변경을 정의하지 않습니다.
+- active: press 상태에서 variant별 feedback background color를 적용합니다.
+  - `primary`: `cool-gray-300`
+  - `neutral`: `warm-gray-100`
 - focus-visible: keyboard focus 시 native outline을 보존합니다.
 - disabled: `disabled`가 `true`일 때 비활성 시각 상태를 표시하고 interaction을 차단합니다.
 - loading: `loading`이 `true`일 때 로딩 시각 상태를 표시하고 중복 click interaction을 차단합니다.
@@ -208,7 +210,8 @@ HDS가 담당하지 않는 것:
 - overflow: 긴 label이 icon과 겹치거나 button box를 깨지 않아야 합니다.
 - focus-visible: v1에서는 별도 token ring을 정의하지 않고 native outline을 보존합니다.
 - disabled: Figma에서 확인된 token 조합으로 HDS 내부 상태 스타일을 매핑합니다.
-- hover/active: Figma 상태 색상이 확인되기 전까지 v1에서 별도 색상 변경을 적용하지 않습니다.
+- hover: Figma 상태 색상이 확인되기 전까지 v1에서 별도 색상 변경을 적용하지 않습니다.
+- active: press 상태는 enabled button에만 variant별 background color feedback을 적용합니다. `primary`는 `cool-gray-300`, `neutral`은 `warm-gray-100`을 사용합니다.
 - disabled: v1에서는 opacity 기반 비활성화 대신 `secondary-200` background + `warm-gray-300` text로 통일합니다. Figma의 opacity disabled 패턴은 별도 기준이 확정되기 전까지 v1 Button에 추가하지 않습니다.
 
 ## Deferred Decisions

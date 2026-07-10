@@ -92,7 +92,11 @@ describe('FilterBottomSheet', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '면류' }))
     fireEvent.click(screen.getByRole('button', { name: '초기화' }))
-    fireEvent.click(screen.getByRole('button', { name: '적용' }))
+    const applyButton = screen.getByRole('button', { name: '적용' })
+
+    expect(applyButton).toHaveClass('bg-cool-gray-800')
+
+    fireEvent.click(applyButton)
 
     expect(handleSelect).toHaveBeenCalledWith('noodle')
     expect(handleReset).toHaveBeenCalled()

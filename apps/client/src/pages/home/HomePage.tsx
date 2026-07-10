@@ -20,10 +20,15 @@ export const HomePage = () => {
 
   return (
     <>
-      <div className="px-5 pt-[18px] pb-8">
+      <div className="px-5 pt-[100px] pb-8">
         <h1 className="sr-only">Hashi 홈</h1>
-        <HomeLogo />
-        <HomeSearchEntry to={searchPath} />
+        <header
+          aria-label="홈 상단 영역"
+          className="app-mobile-fixed-top z-fixed bg-white px-5 pt-[18px] pb-4"
+        >
+          <HomeLogo />
+          <HomeSearchEntry to={searchPath} />
+        </header>
         <HomeCurationSection banners={homeBanners} />
         <HomeQuickMenuSection quickLinks={quickLinks} />
         <AnywhereReservationCta

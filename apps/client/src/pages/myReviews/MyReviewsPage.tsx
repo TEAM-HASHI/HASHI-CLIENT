@@ -8,10 +8,12 @@ import { ReviewWritableCard } from '@/pages/myReviews/components/ReviewWritableC
 import { WrittenReviewCard } from '@/pages/myReviews/components/WrittenReviewCard'
 import { MY_REVIEW_TAB_ITEMS } from '@/pages/myReviews/constants/myReviewTabs'
 import { useMyReviewsPage } from '@/pages/myReviews/hooks/useMyReviewsPage'
+import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 
 export const MyReviewsPage = () => {
   const {
     activeTab,
+    isEditComingSoonDialogOpen,
     openedMenuReviewId,
     tabItems,
     writableReviews,
@@ -20,9 +22,11 @@ export const MyReviewsPage = () => {
     handleChangeTab,
     handleCloseReviewMenu,
     handleDeleteReview,
-    handleNavigateToReviewEdit,
+    handleNavigateToReviewDetail,
     handleNavigateToReviewNew,
     handleNavigateToTodayRestaurant,
+    handleOpenReviewEditComingSoonDialog,
+    handleReviewEditComingSoonDialogOpenChange,
     handleToggleReviewMenu,
   } = useMyReviewsPage()
 
@@ -62,7 +66,10 @@ export const MyReviewsPage = () => {
         <main className="min-w-0 px-5">
           <MyReviewTotalCount count={currentCount} />
           {isWritableTab ? (
-            <div className="flex min-w-0 flex-col gap-5">
+            <div
+              className="flex min-w-0 flex-col gap-3"
+              data-testid="writable-review-list"
+            >
               {writableReviews.map((review) => (
                 <ReviewWritableCard
                   key={review.id}
@@ -80,7 +87,8 @@ export const MyReviewsPage = () => {
                   review={review}
                   onCloseMenu={handleCloseReviewMenu}
                   onDelete={() => handleDeleteReview(review.id)}
-                  onEdit={() => handleNavigateToReviewEdit(review.id)}
+                  onEdit={handleOpenReviewEditComingSoonDialog}
+                  onOpenDetail={() => handleNavigateToReviewDetail(review.id)}
                   onToggleMenu={() => handleToggleReviewMenu(review.id)}
                 />
               ))}
@@ -88,6 +96,10 @@ export const MyReviewsPage = () => {
           )}
         </main>
       )}
+      <ComingSoonDialog
+        open={isEditComingSoonDialogOpen}
+        onOpenChange={handleReviewEditComingSoonDialogOpenChange}
+      />
     </section>
   )
 }

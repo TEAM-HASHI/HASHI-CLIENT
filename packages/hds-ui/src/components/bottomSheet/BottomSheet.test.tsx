@@ -14,6 +14,10 @@ describe('BottomSheet', () => {
   afterEach(() => {
     cleanup()
     document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.documentElement.style.overflow = ''
   })
 
   it('does not render when open is false', () => {
@@ -37,6 +41,39 @@ describe('BottomSheet', () => {
       screen.getByRole('dialog', { name: '정렬 순서' }),
     ).toBeInTheDocument()
     expect(screen.getByText('기본순')).toBeInTheDocument()
+  })
+
+  it('locks document background scroll while open and restores it on close', () => {
+    const scrollToSpy = vi.spyOn(window, 'scrollTo').mockImplementation(vi.fn())
+    const scrollYSpy = vi.spyOn(window, 'scrollY', 'get').mockReturnValue(128)
+
+    const { rerender } = render(
+      <BottomSheet open onOpenChange={vi.fn()} title="정렬 순서">
+        기본순
+      </BottomSheet>,
+    )
+
+    expect(document.body.style.overflow).toBe('hidden')
+    expect(document.body.style.position).toBe('fixed')
+    expect(document.body.style.top).toBe('-128px')
+    expect(document.body.style.width).toBe('100%')
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    rerender(
+      <BottomSheet open={false} onOpenChange={vi.fn()} title="정렬 순서">
+        기본순
+      </BottomSheet>,
+    )
+
+    expect(document.body.style.overflow).toBe('')
+    expect(document.body.style.position).toBe('')
+    expect(document.body.style.top).toBe('')
+    expect(document.body.style.width).toBe('')
+    expect(document.documentElement.style.overflow).toBe('')
+    expect(scrollToSpy).toHaveBeenCalledWith(0, 128)
+
+    scrollToSpy.mockRestore()
+    scrollYSpy.mockRestore()
   })
 
   it('uses aria-label as dialog name when title is not provided', () => {

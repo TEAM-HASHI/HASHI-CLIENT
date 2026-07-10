@@ -139,6 +139,23 @@ describe('RestaurantReviewSection', () => {
     )
   })
 
+  it('uses cool gray 600 for the write-review CTA background', () => {
+    render(
+      <RestaurantReviewSection
+        onPressReviewImage={vi.fn()}
+        onPressWriteReview={vi.fn()}
+        rating={3.8}
+        restaurantName="야키니쿠 리키마루"
+        reviewCount={10}
+        reviews={createReviews(1)}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: '리뷰 작성하기' })).toHaveClass(
+      'bg-cool-gray-600',
+    )
+  })
+
   it('keeps the review list 16px below the write-review CTA', () => {
     render(
       <RestaurantReviewSection

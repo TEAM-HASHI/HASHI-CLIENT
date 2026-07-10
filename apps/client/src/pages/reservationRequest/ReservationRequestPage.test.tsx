@@ -128,7 +128,13 @@ describe('ReservationRequestPage', () => {
   it('uses all usable points when use-all button is clicked', () => {
     render(<ReservationRequestPage />)
 
-    fireEvent.click(screen.getByRole('button', { name: '전액사용' }))
+    const useAllPointsButton = screen.getByRole('button', {
+      name: '전액사용',
+    })
+
+    expect(useAllPointsButton).toHaveClass('typo-body-6')
+
+    fireEvent.click(useAllPointsButton)
 
     expect(screen.getByLabelText('사용 포인트')).toHaveValue('4000원')
     expect(screen.getByText('5,000원')).toBeInTheDocument()
@@ -146,6 +152,12 @@ describe('ReservationRequestPage', () => {
 
     expect(dialog).toBeInTheDocument()
     expect(within(dialog).getByText('4,000원')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: '취소' })).toHaveClass(
+      'typo-sub-header-2',
+    )
+    expect(within(dialog).getByRole('button', { name: '예약' })).toHaveClass(
+      'typo-sub-header-2',
+    )
 
     fireEvent.click(within(dialog).getByRole('button', { name: '취소' }))
 

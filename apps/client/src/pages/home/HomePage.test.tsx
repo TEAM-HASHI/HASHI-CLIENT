@@ -38,6 +38,12 @@ describe('HomePage', () => {
     expect(
       screen.getByRole('link', { name: '식당 또는 메뉴 검색하기' }),
     ).toHaveAttribute('href', ROUTES.search)
+    expect(screen.getByRole('banner', { name: '홈 상단 영역' })).toHaveClass(
+      'app-mobile-fixed-top',
+      'z-fixed',
+      'bg-white',
+      'pb-4',
+    )
     expect(
       screen.getByRole('region', { name: '맛집 큐레이션 배너' }),
     ).toBeInTheDocument()

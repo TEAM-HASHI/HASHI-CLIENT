@@ -31,7 +31,7 @@ export const SearchHeader = ({
     >
       <IconButton
         aria-label="뒤로가기"
-        className="text-cool-gray-900"
+        className="text-cool-gray-900 -m-2.5 size-11"
         onClick={onBackClick}
         size="xs"
       >

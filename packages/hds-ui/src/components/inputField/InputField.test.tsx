@@ -19,6 +19,15 @@ describe('InputField', () => {
     expect(screen.getByPlaceholderText('내용을 입력해 주세요.')).toBeTruthy()
   })
 
+  it('styles placeholder text with the input Body4 typography', () => {
+    render(<InputField aria-label="name" placeholder="내용을 입력해 주세요." />)
+
+    const input = screen.getByPlaceholderText('내용을 입력해 주세요.')
+
+    expect(input).toHaveClass('typo-body-4')
+    expect(input).toHaveClass('placeholder:text-warm-gray-300')
+  })
+
   it('renders a label and connects it to the input', () => {
     render(<InputField label="연락처" />)
 
@@ -82,6 +91,25 @@ describe('InputField', () => {
     expect(inputBox).not.toHaveClass('focus-within:outline-cool-gray-500')
     expect(inputBox).not.toHaveClass('focus-within:outline-2')
     expect(inputBox).not.toHaveClass('focus-within:outline-offset-0')
+  })
+
+  it('uses 13px vertical padding on the input box', () => {
+    render(<InputField aria-label="name" />)
+
+    const inputBox = screen.getByRole('textbox', { name: 'name' }).parentElement
+
+    expect(inputBox).toHaveClass('h-[45px]')
+    expect(inputBox).toHaveClass('py-3.25')
+  })
+
+  it('resets native input spacing so the wrapper owns the inner padding', () => {
+    render(<InputField aria-label="name" />)
+
+    const input = screen.getByRole('textbox', { name: 'name' })
+
+    expect(input).toHaveClass('appearance-none')
+    expect(input).toHaveClass('border-0')
+    expect(input).toHaveClass('p-0')
   })
 
   it('does not focus the input when the disabled input box is clicked', () => {

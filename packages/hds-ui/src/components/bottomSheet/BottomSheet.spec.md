@@ -26,7 +26,7 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 - [x] Tab focus를 sheet 내부에 가둡니다.
 - [x] Escape key로 닫을 수 있습니다.
 - [x] 닫힌 뒤 이전 focus 위치로 복귀합니다.
-- [x] sheet가 열려 있을 때 body scroll을 잠급니다.
+- [x] sheet가 열려 있을 때 `html`/`body` 배경 스크롤을 잠그고 닫힐 때 기존 스크롤 위치를 복구합니다.
 - [x] safe-area bottom padding을 반영합니다.
 - [x] 열림/닫힘 시 translate transition을 적용합니다.
 - [x] 제품 도메인 데이터, route, API, logging, analytics에 의존하지 않습니다.
@@ -96,7 +96,7 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 2. `open`이 `true`이면 `document.body`에 portal로 렌더링합니다.
 3. close button press, overlay press 시 `onOpenChange(false)`를 호출합니다.
 4. sheet 내부 press는 overlay press로 전파되지 않아야 합니다.
-5. sheet가 열려 있는 동안 body scroll을 잠급니다.
+5. sheet가 열려 있는 동안 `documentElement`와 `body`의 배경 스크롤을 잠그고, 닫힐 때 기존 inline style과 스크롤 위치를 복구합니다.
 6. `title`이 있으면 dialog accessible name으로 연결합니다.
 7. `title`이 없으면 `aria-label`을 dialog accessible name으로 연결합니다.
 8. sheet가 열리면 sheet panel로 focus를 이동합니다.
@@ -141,7 +141,7 @@ Storybook은 BottomSheet primitive의 slot과 옵션만 보여줍니다. 음식 
 
 ## Verification
 
-- [ ] `corepack pnpm --filter @hashi/hds-ui lint`
-- [ ] `corepack pnpm --filter @hashi/hds-ui typecheck`
-- [ ] `corepack pnpm --filter @hashi/hds-ui build`
-- [ ] `corepack pnpm --filter @hashi/hds-ui test`
+- [x] `corepack pnpm --filter @hashi/hds-ui lint`
+- [x] `corepack pnpm --filter @hashi/hds-ui typecheck`
+- [x] `corepack pnpm --filter @hashi/hds-ui build`
+- [x] `corepack pnpm --filter @hashi/hds-ui test`
