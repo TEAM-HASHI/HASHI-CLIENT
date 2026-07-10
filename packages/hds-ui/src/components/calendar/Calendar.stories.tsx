@@ -31,6 +31,9 @@ const meta = {
     isDateDisabled: {
       control: false,
     },
+    minMonth: {
+      control: false,
+    },
     onDateSelect: {
       action: 'date selected',
     },
@@ -104,6 +107,13 @@ export const MonthNavigation: Story = {
         onMonthChange={setMonth}
       />
     )
+  },
+}
+
+export const MinimumMonth: Story = {
+  args: {
+    minMonth: JUNE_2026,
+    onMonthChange: () => {},
   },
 }
 

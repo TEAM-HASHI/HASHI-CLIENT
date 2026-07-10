@@ -43,16 +43,24 @@ export const RestaurantReservationNewPage = () => {
   }
 
   return (
-    <div className="min-h-dvh bg-white pb-[128px]">
-      <Header
-        className="z-fixed sticky top-0"
-        leftAction={
-          <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        title="예약하기"
-      />
+    <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
+      <div
+        className="app-mobile-fixed-top z-fixed bg-white"
+        data-testid="reservation-header"
+      >
+        <Header
+          leftAction={
+            <IconButton
+              aria-label="뒤로가기"
+              onClick={handleBackClick}
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          title="예약하기"
+        />
+      </div>
 
       <div className="px-6 pt-6.5">
         <ReservationRestaurantSummary
@@ -103,6 +111,7 @@ export const RestaurantReservationNewPage = () => {
             </h2>
             <Calendar
               isDateDisabled={calendar.isDateDisabled}
+              minMonth={calendar.minMonth}
               month={calendar.visibleMonth}
               onDateSelect={calendar.onDateSelect}
               onMonthChange={calendar.onMonthChange}
