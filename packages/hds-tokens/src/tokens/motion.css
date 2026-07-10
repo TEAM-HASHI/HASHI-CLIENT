@@ -1,0 +1,107 @@
+@keyframes bottom-sheet-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bottom-sheet-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes bottom-sheet-panel-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes bottom-sheet-panel-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@utility animate-bottom-sheet-overlay-in {
+  animation: bottom-sheet-overlay-in 260ms ease-out both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms;
+  }
+}
+
+@utility animate-bottom-sheet-overlay-out {
+  animation: bottom-sheet-overlay-out 260ms ease-out both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms;
+  }
+}
+
+@utility animate-bottom-sheet-panel-in {
+  animation: bottom-sheet-panel-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms;
+  }
+}
+
+@utility animate-bottom-sheet-panel-out {
+  animation: bottom-sheet-panel-out 260ms ease-out both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms;
+  }
+}
+
+@utility animate-toast-enter {
+  animation: toast-enter 200ms ease-out both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms;
+  }
+}
+
+@utility animate-toast-with-timeout {
+  animation:
+    toast-enter 200ms ease-out both,
+    toast-exit 200ms ease-in 1300ms forwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms, 1ms;
+  }
+}

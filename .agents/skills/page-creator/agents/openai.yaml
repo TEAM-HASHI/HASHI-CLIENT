@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Page Creator'
+  short_description: 'Create HASHI pages with specs'
+  default_prompt: 'Use $page-creator to scaffold a HASHI client page and fill its page spec before implementation.'

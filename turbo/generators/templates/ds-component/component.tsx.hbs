@@ -1,0 +1,10 @@
+import type { ComponentPropsWithoutRef } from 'react'
+
+export type {{pascalCase name}}Props = ComponentPropsWithoutRef<'div'>
+
+export const {{pascalCase name}} = ({
+  children,
+  ...props
+}: {{pascalCase name}}Props) => {
+  return <div {...props}>{children}</div>
+}

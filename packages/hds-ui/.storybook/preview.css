@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+@import '@hashi/hds-tokens/styles.css';
+@source '../src';
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+}

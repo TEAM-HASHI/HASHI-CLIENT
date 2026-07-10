@@ -1,0 +1,324 @@
+name: Discord PR Notify
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review, closed]
+  pull_request_review:
+    types: [submitted]
+  check_suite:
+    types: [completed]
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send PR notification to Discord
+        uses: actions/github-script@v7
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        with:
+          script: |
+            const webhookUrl = process.env.DISCORD_WEBHOOK_URL
+
+            if (!webhookUrl) {
+              core.setFailed('DISCORD_WEBHOOK_URL secret is required.')
+              return
+            }
+
+            const owner = context.repo.owner
+            const repo = context.repo.repo
+
+            const colors = {
+              opened: 0x57cc99,
+              review: 0xffd166,
+              mergeable: 0x80ed99,
+              merged: 0x90dbf4,
+              stale: 0xffadad,
+            }
+
+            const truncate = (text, maxLength = 240) => {
+              if (!text) {
+                return '내용 없음'
+              }
+
+              return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text
+            }
+
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+            const getAuthor = (pullRequest) => ({
+              name: pullRequest.user.login,
+              icon_url: pullRequest.user.avatar_url,
+              url: pullRequest.user.html_url,
+            })
+
+            const sendDiscord = async ({
+              title,
+              url,
+              description,
+              color,
+              author,
+              fields = [],
+            }) => {
+              const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  embeds: [
+                    {
+                      title,
+                      url,
+                      description,
+                      color,
+                      author,
+                      fields,
+                      footer: {
+                        text: 'TEAM-HASHI GitHub Automation',
+                      },
+                      timestamp: new Date().toISOString(),
+                    },
+                  ],
+                }),
+              })
+
+              if (!response.ok) {
+                const body = await response.text()
+                core.setFailed(`Discord notification failed: ${response.status} ${body}`)
+              }
+            }
+
+            const getPullRequestState = async (number) => {
+              const query = `
+                query($owner: String!, $repo: String!, $number: Int!) {
+                  repository(owner: $owner, name: $repo) {
+                    pullRequest(number: $number) {
+                      reviewDecision
+                      mergeStateStatus
+                      isDraft
+                    }
+                  }
+                }
+              `
+
+              const result = await github.graphql(query, {
+                owner,
+                repo,
+                number,
+              })
+
+              return result.repository.pullRequest
+            }
+
+            const createPrFields = (pullRequest) => [
+              {
+                name: 'Author',
+                value: `@${pullRequest.user.login}`,
+                inline: true,
+              },
+            ]
+
+            if (context.eventName === 'schedule' || context.eventName === 'workflow_dispatch') {
+              const now = Date.now()
+              const oneDay = 24 * 60 * 60 * 1000
+              const { data: pullRequests } = await github.rest.pulls.list({
+                owner,
+                repo,
+                state: 'open',
+                per_page: 100,
+              })
+
+              const stalePullRequests = pullRequests.filter((pullRequest) => {
+                return !pullRequest.draft && now - new Date(pullRequest.created_at).getTime() >= oneDay
+              })
+
+              if (stalePullRequests.length === 0) {
+                core.info('No stale pull requests found.')
+                return
+              }
+
+              const description = stalePullRequests
+                .slice(0, 10)
+                .map((pullRequest) => {
+                  const createdAt = new Date(pullRequest.created_at).toISOString().slice(0, 10)
+                  return `- [#${pullRequest.number} ${pullRequest.title}](${pullRequest.html_url}) / @${pullRequest.user.login} / ${createdAt}`
+                })
+                .join('\n')
+
+              await sendDiscord({
+                title: '⏰ 24시간 이상 머지되지 않은 PR',
+                url: `https://github.com/${owner}/${repo}/pulls`,
+                description,
+                color: colors.stale,
+                fields: [
+                  {
+                    name: 'Count',
+                    value: `${stalePullRequests.length}`,
+                    inline: true,
+                  },
+                ],
+              })
+
+              return
+            }
+
+            if (context.eventName === 'pull_request_target') {
+              let pullRequest = context.payload.pull_request
+              const action = context.payload.action
+
+              if (action === 'closed' && !pullRequest.merged) {
+                core.info('PR was closed without merge. Skipping Discord notification.')
+                return
+              }
+
+              if (action !== 'closed') {
+                await sleep(10000)
+
+                const { data: refreshedPullRequest } = await github.rest.pulls.get({
+                  owner,
+                  repo,
+                  pull_number: pullRequest.number,
+                })
+
+                pullRequest = refreshedPullRequest
+              }
+
+              const titleByAction = {
+                opened: '🆕 새 PR이 올라왔어요',
+                reopened: '🔄 PR이 다시 열렸어요',
+                ready_for_review: '👀 Draft PR이 리뷰 준비 상태가 됐어요',
+                closed: '✅ PR이 머지됐어요',
+              }
+
+              const requestedReviewers = [
+                ...pullRequest.requested_reviewers.map((reviewer) => `@${reviewer.login}`),
+                ...pullRequest.requested_teams.map((team) => `@${owner}/${team.slug}`),
+              ]
+
+              const fields = [
+                ...createPrFields(pullRequest),
+                {
+                  name: 'Event',
+                  value: action,
+                  inline: true,
+                },
+              ]
+
+              if (action !== 'closed') {
+                fields.push({
+                  name: 'Requested Reviewers',
+                  value: requestedReviewers.length > 0 ? requestedReviewers.join(', ') : '없음',
+                  inline: false,
+                })
+              }
+
+              await sendDiscord({
+                title: titleByAction[action],
+                url: pullRequest.html_url,
+                description: `[#${pullRequest.number}] ${pullRequest.title}\n\n${truncate(pullRequest.body)}`,
+                color: action === 'closed' ? colors.merged : colors.opened,
+                author: getAuthor(pullRequest),
+                fields,
+              })
+
+              return
+            }
+
+            if (context.eventName === 'check_suite') {
+              const checkSuite = context.payload.check_suite
+
+              if (checkSuite.conclusion !== 'success') {
+                core.info(`Check suite conclusion is ${checkSuite.conclusion}. Skipping.`)
+                return
+              }
+
+              const pullRequestReference = checkSuite.pull_requests?.[0]
+
+              if (!pullRequestReference) {
+                core.info('No pull request found for this check suite.')
+                return
+              }
+
+              const { data: pullRequest } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: pullRequestReference.number,
+              })
+
+              const state = await getPullRequestState(pullRequest.number)
+
+              if (
+                state.reviewDecision === 'APPROVED' &&
+                state.mergeStateStatus === 'CLEAN' &&
+                !state.isDraft
+              ) {
+                await sendDiscord({
+                  title: '🟢 PR이 머지 가능한 상태가 됐어요',
+                  url: pullRequest.html_url,
+                  description: `[#${pullRequest.number}] ${pullRequest.title}`,
+                  color: colors.mergeable,
+                  author: getAuthor(pullRequest),
+                  fields: createPrFields(pullRequest),
+                })
+              }
+
+              return
+            }
+
+            if (context.eventName === 'pull_request_review') {
+              const pullRequest = context.payload.pull_request
+              const review = context.payload.review
+              const reviewState = review.state.toLowerCase()
+
+              await sendDiscord({
+                title: '💬 PR 리뷰가 등록됐어요',
+                url: pullRequest.html_url,
+                description: `[#${pullRequest.number}] ${pullRequest.title}\n\n${truncate(review.body)}`,
+                color: colors.review,
+                author: {
+                  name: review.user.login,
+                  icon_url: review.user.avatar_url,
+                  url: review.user.html_url,
+                },
+                fields: [
+                  ...createPrFields(pullRequest),
+                  {
+                    name: 'Reviewer',
+                    value: `@${review.user.login}`,
+                    inline: true,
+                  },
+                  {
+                    name: 'Review Status',
+                    value: reviewState,
+                    inline: true,
+                  },
+                ],
+              })
+
+              const state = await getPullRequestState(pullRequest.number)
+
+              if (
+                reviewState === 'approved' &&
+                state.reviewDecision === 'APPROVED' &&
+                state.mergeStateStatus === 'CLEAN' &&
+                !state.isDraft
+              ) {
+                await sendDiscord({
+                  title: '🟢 PR이 머지 가능한 상태가 됐어요',
+                  url: pullRequest.html_url,
+                  description: `[#${pullRequest.number}] ${pullRequest.title}`,
+                  color: colors.mergeable,
+                  author: getAuthor(pullRequest),
+                  fields: createPrFields(pullRequest),
+                })
+              }
+            }

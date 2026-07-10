@@ -1,0 +1,50 @@
+{
+  "name": "hashi-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @hashi/client dev",
+    "build": "turbo build",
+    "build-storybook": "turbo build-storybook",
+    "gen": "turbo gen",
+    "gen:component": "turbo gen component",
+    "gen:api-types": "pnpm --filter @hashi/client gen:api-types",
+    "gen:ds-component": "turbo gen ds-component",
+    "gen:hook": "turbo gen hook",
+    "gen:page": "turbo gen page",
+    "lint": "turbo lint",
+    "lint-staged": "lint-staged",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "typecheck": "turbo typecheck",
+    "storybook": "pnpm --filter @hashi/hds-ui storybook",
+    "test": "turbo test --filter=@hashi/client --filter=@hashi/hds-ui",
+    "test:e2e": "pnpm --filter @hashi/client test:e2e",
+    "preview": "pnpm --filter @hashi/client preview",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@tanstack/eslint-plugin-query": "catalog:",
+    "@turbo/gen": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "globals": "catalog:",
+    "husky": "catalog:",
+    "lint-staged": "catalog:",
+    "prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vercel": "catalog:",
+    "yaml": "catalog:"
+  }
+}
