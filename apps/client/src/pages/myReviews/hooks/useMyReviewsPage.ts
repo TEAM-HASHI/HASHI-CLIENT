@@ -20,6 +20,8 @@ export const useMyReviewsPage = () => {
   const [openedMenuReviewId, setOpenedMenuReviewId] = useState<string | null>(
     null,
   )
+  const [isEditComingSoonDialogOpen, setIsEditComingSoonDialogOpen] =
+    useState(false)
 
   const tabItems = useMemo(
     () => [
@@ -36,7 +38,7 @@ export const useMyReviewsPage = () => {
   )
 
   const handleBack = () => {
-    navigate(-1)
+    navigate(ROUTES.mypage)
   }
 
   const handleChangeTab = (value: MyReviewTabTypes) => {
@@ -48,8 +50,16 @@ export const useMyReviewsPage = () => {
     navigate(generatePath(ROUTES.reviewNew, { restaurantId }))
   }
 
-  const handleNavigateToReviewEdit = (reviewId: string) => {
-    navigate(generatePath(ROUTES.reviewEdit, { reviewId }))
+  const handleNavigateToReviewDetail = (reviewId: string) => {
+    navigate(generatePath(ROUTES.reviewDetail, { reviewId }))
+  }
+
+  const handleOpenReviewEditComingSoonDialog = () => {
+    setIsEditComingSoonDialogOpen(true)
+  }
+
+  const handleReviewEditComingSoonDialogOpenChange = (open: boolean) => {
+    setIsEditComingSoonDialogOpen(open)
   }
 
   const handleNavigateToTodayRestaurant = () => {
@@ -75,6 +85,7 @@ export const useMyReviewsPage = () => {
 
   return {
     activeTab,
+    isEditComingSoonDialogOpen,
     openedMenuReviewId,
     tabItems,
     writableReviews: myWritableReviewMocks,
@@ -83,9 +94,11 @@ export const useMyReviewsPage = () => {
     handleChangeTab,
     handleCloseReviewMenu,
     handleDeleteReview,
-    handleNavigateToReviewEdit,
+    handleNavigateToReviewDetail,
     handleNavigateToReviewNew,
     handleNavigateToTodayRestaurant,
+    handleOpenReviewEditComingSoonDialog,
+    handleReviewEditComingSoonDialogOpenChange,
     handleToggleReviewMenu,
   }
 }
