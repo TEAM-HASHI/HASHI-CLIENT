@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ApiError } from '@/shared/api/apiError'
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 import { queryClient } from '@/shared/lib/queryClient'
 
@@ -44,6 +44,15 @@ describe('queryClient', () => {
     expect(retry(0, createApiError(401))).toBe(false)
     expect(retry(0, createApiError(404))).toBe(false)
     expect(retry(0, createApiError(409))).toBe(false)
+  })
+
+  it('retries HttpStatusError with server error status only', () => {
+    const retry = getQueryRetry()
+
+    expect(retry(0, new HttpStatusError(502))).toBe(true)
+    expect(retry(0, new HttpStatusError(503))).toBe(true)
+    expect(retry(0, new HttpStatusError(404))).toBe(false)
+    expect(retry(0, new HttpStatusError(409))).toBe(false)
   })
 
   it('does not retry after the max retry count', () => {

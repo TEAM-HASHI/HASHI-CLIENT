@@ -1,4 +1,13 @@
-export { ApiError, isApiError } from './apiError'
+export {
+  ApiError,
+  HttpStatusError,
+  checkHasHttpStatus,
+  checkIsAuthRequiredError,
+  checkIsNotFoundError,
+  checkIsRetryableStatusError,
+  isApiError,
+  isHttpStatusError,
+} from './apiError'
 export { apiClient } from './apiClient'
 export { request } from './request'
 export {

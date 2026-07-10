@@ -1,5 +1,5 @@
 import type { Options } from 'ky'
-import { ApiError } from '@/shared/api/apiError'
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
 import { isErrorResponse, type ApiResponse } from '@/shared/api/types'
 
@@ -17,7 +17,7 @@ export const request = async <TData>(
     response = await httpResponse.json<ApiResponse<TData>>()
   } catch (error) {
     if (!httpResponse.ok) {
-      throw new Error(`HTTP ${httpResponse.status}`, { cause: error })
+      throw new HttpStatusError(httpResponse.status, { cause: error })
     }
 
     throw error
@@ -28,7 +28,7 @@ export const request = async <TData>(
   }
 
   if (!httpResponse.ok) {
-    throw new Error(`HTTP ${httpResponse.status}`)
+    throw new HttpStatusError(httpResponse.status)
   }
 
   return response.data

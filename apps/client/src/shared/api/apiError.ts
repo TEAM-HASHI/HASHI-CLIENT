@@ -20,14 +20,32 @@ export class ApiError extends Error {
   }
 }
 
+export class HttpStatusError extends Error {
+  readonly status: number
+
+  constructor(status: number, options?: ErrorOptions) {
+    super(`HTTP ${status}`, options)
+    this.name = 'HttpStatusError'
+    this.status = status
+  }
+}
+
 export const isApiError = (error: unknown): error is ApiError =>
   error instanceof ApiError
 
-export const checkIsRetryableApiError = (error: unknown) =>
-  isApiError(error) && error.status >= 500
+export const isHttpStatusError = (error: unknown): error is HttpStatusError =>
+  error instanceof HttpStatusError
+
+export const checkHasHttpStatus = (
+  error: unknown,
+): error is ApiError | HttpStatusError =>
+  isApiError(error) || isHttpStatusError(error)
+
+export const checkIsRetryableStatusError = (error: unknown) =>
+  checkHasHttpStatus(error) && error.status >= 500
 
 export const checkIsAuthRequiredError = (error: unknown) =>
-  isApiError(error) && error.status === 401
+  checkHasHttpStatus(error) && error.status === 401
 
 export const checkIsNotFoundError = (error: unknown) =>
-  isApiError(error) && error.status === 404
+  checkHasHttpStatus(error) && error.status === 404

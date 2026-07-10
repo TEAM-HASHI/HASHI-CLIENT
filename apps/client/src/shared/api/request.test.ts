@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError } from '@/shared/api/apiError'
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
 import { request } from '@/shared/api/request'
 import type { ErrorResponse } from '@/shared/api/types'
@@ -135,7 +135,7 @@ describe('request', () => {
     )
   })
 
-  it('throws HTTP status error when error response is not JSON', async () => {
+  it('throws HttpStatusError when error response is not JSON', async () => {
     mockedApiClient.mockResolvedValue(
       createHttpResponse({
         ok: false,
@@ -144,7 +144,11 @@ describe('request', () => {
       }) as never,
     )
 
-    await expect(request('users')).rejects.toThrow('HTTP 502')
+    await expect(request('users')).rejects.toMatchObject({
+      message: 'HTTP 502',
+      status: 502,
+    })
+    await expect(request('users')).rejects.toBeInstanceOf(HttpStatusError)
   })
 
   it('normalizes leading slashes in request path', async () => {

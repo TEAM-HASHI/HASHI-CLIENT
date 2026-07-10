@@ -1,13 +1,13 @@
 import * as Sentry from '@sentry/react'
 
-import { isApiError } from '@/shared/api/apiError'
+import { checkHasHttpStatus } from '@/shared/api/apiError'
 
 export const checkShouldCaptureError = (error: unknown) => {
-  if (!isApiError(error)) {
-    return true
+  if (checkHasHttpStatus(error)) {
+    return error.status === 405 || error.status >= 500
   }
 
-  return error.status === 405 || error.status >= 500
+  return true
 }
 
 export const captureError = (error: unknown) => {

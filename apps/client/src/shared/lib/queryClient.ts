@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { isNetworkError, isTimeoutError } from 'ky'
 
-import { checkIsRetryableApiError } from '@/shared/api/apiError'
+import { checkIsRetryableStatusError } from '@/shared/api/apiError'
 
 const MAX_QUERY_RETRY_COUNT = 1
 
@@ -10,7 +10,7 @@ const checkShouldRetryQuery = (failureCount: number, error: Error) => {
     return false
   }
 
-  if (checkIsRetryableApiError(error)) {
+  if (checkIsRetryableStatusError(error)) {
     return true
   }
 

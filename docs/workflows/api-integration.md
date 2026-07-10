@@ -108,7 +108,7 @@ apps/client/src/features/{feature}/
 - response를 바꾸는 params가 query key에 포함됩니다.
 - mutation 성공 후 stale한 list/detail/infinite query가 invalidated 됩니다.
 - loading, error, empty, disabled, success 상태가 UI에 연결됩니다.
-- API error는 `ApiError.status`, 서버 `code`, `fieldErrors` 중 필요한 기준으로 분류됩니다.
+- API error는 `ApiError`/`HttpStatusError`의 `status`, 서버 `code`, `fieldErrors` 중 필요한 기준으로 분류됩니다.
 - validation, auth, not found, conflict, upload error는 자동 retry나 전역 boundary로 올리지 않고 page/form/local UI에서 처리합니다.
 - 5xx, timeout, network error만 query retry 후보로 둡니다.
 - endpoint 함수가 React Query, route, UI state를 알지 않습니다.

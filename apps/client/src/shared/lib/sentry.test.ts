@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ApiError } from '@/shared/api/apiError'
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 import { checkShouldCaptureError } from '@/shared/lib/sentry'
 
@@ -37,5 +37,13 @@ describe('checkShouldCaptureError', () => {
     expect(checkShouldCaptureError(createApiError(404))).toBe(false)
     expect(checkShouldCaptureError(createApiError(409))).toBe(false)
     expect(checkShouldCaptureError(createApiError(415))).toBe(false)
+  })
+
+  it('captures HttpStatusError with reportable status only', () => {
+    expect(checkShouldCaptureError(new HttpStatusError(502))).toBe(true)
+    expect(checkShouldCaptureError(new HttpStatusError(405))).toBe(true)
+    expect(checkShouldCaptureError(new HttpStatusError(400))).toBe(false)
+    expect(checkShouldCaptureError(new HttpStatusError(404))).toBe(false)
+    expect(checkShouldCaptureError(new HttpStatusError(409))).toBe(false)
   })
 })
