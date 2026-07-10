@@ -1,10 +1,17 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { HomePage } from '@/pages/home/HomePage'
+
+vi.mock('@/shared/hooks', () => ({
+  useAuthStatus: () => ({
+    isAuthenticated: false,
+    status: 'unauthenticated',
+  }),
+}))
 
 const LocationProbe = () => {
   const location = useLocation()

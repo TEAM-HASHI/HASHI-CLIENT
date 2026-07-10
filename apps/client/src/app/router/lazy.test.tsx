@@ -42,10 +42,33 @@ vi.mock(
     }),
 )
 
+const createSignalCompatibleRequest = (NativeRequest: typeof Request) =>
+  function SignalCompatibleRequest(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ) {
+    try {
+      return new NativeRequest(input, init)
+    } catch (error) {
+      if (
+        error instanceof TypeError &&
+        error.message.includes('Expected signal')
+      ) {
+        const nextInit = { ...init }
+        delete nextInit.signal
+
+        return new NativeRequest(input, nextInit)
+      }
+
+      throw error
+    }
+  } as unknown as typeof Request
+
 describe('route lazy fallback', () => {
   afterEach(() => {
     cleanup()
     vi.useRealTimers()
+    vi.unstubAllGlobals()
     isAuthenticated = false
   })
 
@@ -91,6 +114,7 @@ describe('route lazy fallback', () => {
 
   it('renders the next page as soon as the chunk resolves when the fallback is not shown during an AuthOnly boundary navigation', async () => {
     vi.useFakeTimers()
+    vi.stubGlobal('Request', createSignalCompatibleRequest(Request))
     isAuthenticated = true
 
     const router = createMemoryRouter(appRoutes, {
