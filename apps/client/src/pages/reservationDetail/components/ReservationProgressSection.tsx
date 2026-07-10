@@ -69,6 +69,8 @@ export const ReservationProgressSection = ({
         {steps.map((step, index) => {
           const isLastStep = index === steps.length - 1
           const stepStyle = stepStyleMap[step.status]
+          const isContactingCurrentStep =
+            step.id === 'contacting' && step.status === 'current'
 
           return (
             <li
@@ -83,7 +85,12 @@ export const ReservationProgressSection = ({
               ) : null}
               <span
                 aria-hidden="true"
-                className={cn('size-3.5 shrink-0 rounded-full', stepStyle.dot)}
+                className={cn(
+                  'size-3.5 shrink-0 rounded-full',
+                  stepStyle.dot,
+                  isContactingCurrentStep &&
+                    'text-cool-gray-900 animate-reservation-progress-dot',
+                )}
               />
               <div
                 className={cn(

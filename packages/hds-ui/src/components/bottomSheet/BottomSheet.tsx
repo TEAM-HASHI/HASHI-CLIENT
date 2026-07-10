@@ -21,21 +21,10 @@ export type BottomSheetProps = {
 
 const useBottomSheetPresence = (open: boolean) => {
   const [isMounted, setIsMounted] = useState(open)
-  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    if (!open) {
-      setIsVisible(false)
-      return
-    }
-    setIsMounted(true)
-
-    const animationFrameId = window.requestAnimationFrame(() => {
-      setIsVisible(true)
-    })
-
-    return () => {
-      window.cancelAnimationFrame(animationFrameId)
+    if (open) {
+      setIsMounted(true)
     }
   }, [open])
 
@@ -47,7 +36,6 @@ const useBottomSheetPresence = (open: boolean) => {
 
   return {
     isMounted,
-    isVisible,
     unmountAfterClose,
   }
 }
@@ -65,8 +53,7 @@ export const BottomSheet = ({
 }: BottomSheetProps) => {
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
-  const { isMounted, isVisible, unmountAfterClose } =
-    useBottomSheetPresence(open)
+  const { isMounted, unmountAfterClose } = useBottomSheetPresence(open)
   const handlePressClose = useCallback(() => {
     onOpenChange(false)
   }, [onOpenChange])
@@ -83,8 +70,14 @@ export const BottomSheet = ({
   }
 
   const hasHeader = showHandle || title || showCloseButton
+  const overlayAnimationClass = open
+    ? 'animate-bottom-sheet-overlay-in'
+    : 'animate-bottom-sheet-overlay-out'
+  const panelAnimationClass = open
+    ? 'animate-bottom-sheet-panel-in'
+    : 'animate-bottom-sheet-panel-out'
 
-  const handleTransitionEnd = () => {
+  const handleAnimationEnd = () => {
     if (open) {
       return
     }
@@ -94,7 +87,10 @@ export const BottomSheet = ({
 
   return createPortal(
     <div
-      className="z-overlay fixed inset-y-0 right-0 left-0 mx-auto flex w-full max-w-(--app-mobile-max-width,100%) items-end bg-black/50"
+      className={cn(
+        'z-overlay bg-dim/50 fixed inset-y-0 right-0 left-0 mx-auto flex w-full max-w-(--app-mobile-max-width,100%) items-end',
+        overlayAnimationClass,
+      )}
       onClick={handlePressClose}
     >
       <div
@@ -102,17 +98,17 @@ export const BottomSheet = ({
         aria-labelledby={title ? titleId : undefined}
         aria-modal="true"
         className={cn(
-          'relative w-full rounded-t-[20px] bg-white pb-(--safe-area-bottom,0px) transition-transform duration-200 ease-out outline-none',
-          isVisible ? 'translate-y-0' : 'translate-y-full',
+          'relative w-full rounded-t-[20px] bg-white pb-(--safe-area-bottom,0px) will-change-transform outline-none',
+          panelAnimationClass,
           className,
         )}
         onClick={(event) => {
           event.stopPropagation()
         }}
         onKeyDown={handleKeyDown}
-        onTransitionEnd={(event) => {
+        onAnimationEnd={(event) => {
           if (event.target === event.currentTarget) {
-            handleTransitionEnd()
+            handleAnimationEnd()
           }
         }}
         ref={panelRef}

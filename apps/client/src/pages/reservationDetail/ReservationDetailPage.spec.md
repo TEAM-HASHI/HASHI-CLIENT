@@ -115,6 +115,7 @@
 - derived state:
   - 예약 진행 단계별 상태 스타일
   - 예약 접수 정보 카드 item 배열
+  - `식당 컨택 중` 단계가 current이면 현재 dot에 `animate-reservation-progress-dot`을 적용합니다.
 
 ## Validation
 

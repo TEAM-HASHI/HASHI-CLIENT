@@ -133,6 +133,7 @@ const reservationStatusLabels = {
   - 예약 접수
   - 예약 진행 중
   - 예약 확정
+- `예약 진행 중` 단계의 현재 dot은 `animate-reservation-progress-dot`으로 두근거리는 진행 중 interaction을 제공합니다.
 - 문의하기 버튼
 - 상세보기 버튼
 

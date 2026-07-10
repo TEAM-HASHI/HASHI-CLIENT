@@ -31,11 +31,11 @@ const confirmedStep = {
 export const reservationProgressSteps = [
   {
     ...receivedStep,
-    status: 'current',
+    status: 'completed',
   },
   {
     ...contactingStep,
-    status: 'pending',
+    status: 'current',
   },
   {
     ...confirmedStep,
