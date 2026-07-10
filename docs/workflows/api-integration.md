@@ -47,7 +47,7 @@ OPENAPI_SCHEMA_URL=http://localhost:8080/v3/api-docs pnpm gen:api-types
    - endpoint 함수와 request/response type을 작성합니다.
    - query key factory를 작성합니다.
    - `queryOptions`, `mutationOptions`, query/mutation hook을 작성합니다.
-   - 기존 퍼블리싱 UI 상태에 server state를 연결합니다.
+   - 기존 퍼블리싱 UI 상태에 server state와 API error state를 연결합니다.
    - page spec의 `Data Dependencies`와 `Verification`을 갱신합니다.
 
 3. `verify-api-integration`
@@ -108,5 +108,8 @@ apps/client/src/features/{feature}/
 - response를 바꾸는 params가 query key에 포함됩니다.
 - mutation 성공 후 stale한 list/detail/infinite query가 invalidated 됩니다.
 - loading, error, empty, disabled, success 상태가 UI에 연결됩니다.
+- API error는 `ApiError.status`, 서버 `code`, `fieldErrors` 중 필요한 기준으로 분류됩니다.
+- validation, auth, not found, conflict, upload error는 자동 retry나 전역 boundary로 올리지 않고 page/form/local UI에서 처리합니다.
+- 5xx, timeout, network error만 query retry 후보로 둡니다.
 - endpoint 함수가 React Query, route, UI state를 알지 않습니다.
 - 필요한 page spec과 data-layer 문서가 최신 상태입니다.

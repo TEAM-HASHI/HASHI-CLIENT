@@ -1,5 +1,23 @@
 import * as Sentry from '@sentry/react'
 
+import { isApiError } from '@/shared/api/apiError'
+
+export const checkShouldCaptureError = (error: unknown) => {
+  if (!isApiError(error)) {
+    return true
+  }
+
+  return error.status === 405 || error.status >= 500
+}
+
+export const captureError = (error: unknown) => {
+  if (!checkShouldCaptureError(error)) {
+    return
+  }
+
+  Sentry.captureException(error)
+}
+
 export function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN
   if (!dsn) return

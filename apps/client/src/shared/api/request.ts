@@ -11,10 +11,20 @@ export const request = async <TData>(
 ): Promise<TData | null> => {
   const normalizedPath = normalizePath(path)
   const httpResponse = await apiClient(normalizedPath, options)
-  const response = await httpResponse.json<ApiResponse<TData>>()
+  let response: ApiResponse<TData>
+
+  try {
+    response = await httpResponse.json<ApiResponse<TData>>()
+  } catch (error) {
+    if (!httpResponse.ok) {
+      throw new Error(`HTTP ${httpResponse.status}`, { cause: error })
+    }
+
+    throw error
+  }
 
   if (isErrorResponse(response)) {
-    throw new ApiError(response)
+    throw new ApiError(response, httpResponse.status)
   }
 
   if (!httpResponse.ok) {

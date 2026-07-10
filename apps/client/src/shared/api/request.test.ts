@@ -14,14 +14,16 @@ const createHttpResponse = ({
   ok,
   status,
   body,
+  jsonError,
 }: {
   ok: boolean
   status: number
-  body: unknown
+  body?: unknown
+  jsonError?: Error
 }) => ({
   ok,
   status,
-  json: () => Promise.resolve(body),
+  json: () => (jsonError ? Promise.reject(jsonError) : Promise.resolve(body)),
 })
 
 const validationErrorResponse: ErrorResponse = {
@@ -106,6 +108,7 @@ describe('request', () => {
       code: 'VALIDATION_ERROR',
       fieldErrors: validationErrorResponse.errors,
       response: validationErrorResponse,
+      status: 400,
     })
   })
 
@@ -127,7 +130,21 @@ describe('request', () => {
       }) as never,
     )
 
-    await expect(request('users')).rejects.toEqual(new ApiError(serverError))
+    await expect(request('users')).rejects.toEqual(
+      new ApiError(serverError, 500),
+    )
+  })
+
+  it('throws HTTP status error when error response is not JSON', async () => {
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: false,
+        status: 502,
+        jsonError: new SyntaxError('Unexpected token < in JSON'),
+      }) as never,
+    )
+
+    await expect(request('users')).rejects.toThrow('HTTP 502')
   })
 
   it('normalizes leading slashes in request path', async () => {
