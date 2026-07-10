@@ -97,7 +97,7 @@ export const InputField = ({
       <div
         data-disabled={disabled || undefined}
         className={cn(
-          'bg-primary-100 flex h-[51px] w-full items-center rounded-[10px]',
+          'bg-primary-100 flex h-[45px] w-full items-center rounded-[10px] py-3.25',
           hasRightContent ? 'pr-[9px] pl-[15px]' : 'px-[15px]',
           'data-[disabled=true]:cursor-not-allowed',
           className,
@@ -114,7 +114,7 @@ export const InputField = ({
           aria-label={ariaLabel}
           aria-labelledby={ariaLabelledBy}
           disabled={disabled}
-          className="typo-body-4 text-primary-200 placeholder:text-warm-gray-300 disabled:text-warm-gray-300 min-w-0 flex-1 bg-transparent font-sans outline-none disabled:cursor-not-allowed"
+          className="typo-body-4 text-primary-200 placeholder:text-warm-gray-300 disabled:text-warm-gray-300 min-w-0 flex-1 appearance-none border-0 bg-transparent p-0 font-sans outline-none disabled:cursor-not-allowed"
         />
 
         {hasRightContent ? (

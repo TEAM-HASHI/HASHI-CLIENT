@@ -36,6 +36,11 @@ describe('SearchPage', () => {
   afterEach(() => {
     cleanup()
     window.localStorage.clear()
+    document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.documentElement.style.overflow = ''
   })
 
   it('shows recent and recommended keywords before searching', () => {
@@ -55,7 +60,9 @@ describe('SearchPage', () => {
       'bg-white',
     )
     expect(screen.getByRole('search')).toHaveClass('pb-[9px]')
-    expect(screen.getByRole('button', { name: '뒤로가기' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '뒤로가기' })).toHaveClass(
+      'size-11',
+    )
     const recentSection = screen.getByRole('region', { name: '최근 검색어' })
     const recommendedSection = screen.getByRole('region', {
       name: '추천 검색어',
@@ -91,17 +98,43 @@ describe('SearchPage', () => {
         '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
       ),
     ).toBeInTheDocument()
-    expect(screen.getByRole('list').parentElement).toHaveClass('pt-[83px]')
+    expect(screen.getByRole('list').parentElement).toHaveClass('pt-[122px]')
     expect(
-      screen.getByRole('button', { name: '기본순' }).parentElement,
-    ).not.toHaveClass('app-mobile-fixed-top')
-    expect(
-      screen.getByRole('button', { name: '기본순' }).parentElement,
-    ).not.toHaveClass('mt-[9px]')
+      screen.getByRole('button', { name: '기본순' }).parentElement
+        ?.parentElement,
+    ).toHaveClass('app-mobile-fixed-top', 'z-fixed', 'bg-white')
     expect(screen.getAllByRole('listitem')).toHaveLength(10)
+    expect(
+      screen.getAllByRole('listitem')[0].querySelector('a')?.firstChild,
+    ).toHaveClass('bg-warm-gray-50')
     expect(window.localStorage.getItem('hashi:search:recent-keywords')).toBe(
       JSON.stringify(['아끼소바']),
     )
+  })
+
+  it('locks background scroll while a filter bottom sheet is open', async () => {
+    const user = userEvent.setup()
+
+    renderSearchPage()
+
+    await user.click(screen.getByRole('button', { name: '아끼소바' }))
+    await screen.findByText(
+      '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
+    )
+
+    await user.click(screen.getByRole('button', { name: '기본순' }))
+
+    expect(document.body.style.overflow).toBe('hidden')
+    expect(document.body.style.position).toBe('fixed')
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    await user.click(screen.getByRole('button', { name: '적용' }))
+
+    await waitFor(() => {
+      expect(document.body.style.overflow).toBe('')
+      expect(document.body.style.position).toBe('')
+      expect(document.documentElement.style.overflow).toBe('')
+    })
   })
 
   it('keeps search usable when recent keyword storage is unavailable', async () => {
