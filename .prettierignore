@@ -4,4 +4,5 @@ dist-ssr
 storybook-static
 coverage
 pnpm-lock.yaml
+apps/client/src/shared/api/generated/openapi.ts
 turbo/generators/templates/**/*.hbs

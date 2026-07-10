@@ -36,7 +36,6 @@ describe('RestaurantReviewSection', () => {
           observe,
           root: null,
           rootMargin: '',
-          scrollMargin: '',
           thresholds: [],
           takeRecords: () => [],
           unobserve: vi.fn(),

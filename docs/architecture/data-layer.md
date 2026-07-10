@@ -9,7 +9,9 @@ HASHI Client의 데이터 레이어는 앱 내부에서 먼저 조립하고, 실
 - HTTP client: `ky`
 - 서버 상태: `TanStack Query`
 - API base URL: `VITE_API_BASE_URL`
+- OpenAPI type generation: `openapi-typescript`
 - 공통 request helper: `apps/client/src/shared/api`
+- generated API type output: `apps/client/src/shared/api/generated/openapi.ts`
 - Query provider/client: `apps/client/src/app/providers/QueryProvider.tsx`, `apps/client/src/shared/lib/queryClient.ts`
 
 새 dependency를 추가하거나 버전을 바꾸는 경우 `docs/conventions/package-management.md`를 따릅니다.
@@ -44,6 +46,18 @@ apps/client/src/shared/api/
 ## API Integration Workflow
 
 Swagger/OpenAPI 또는 API 스펙을 받아 퍼블리싱된 화면에 연결할 때는 다음 순서를 따릅니다.
+
+OpenAPI 스키마에서 타입을 갱신할 때는 다음 script를 사용합니다.
+
+```bash
+pnpm gen:api-types
+```
+
+schema URL은 공개 문서에 직접 적지 않습니다. 로컬에서는 `apps/client/.env.openapi.local` 또는 shell의 `OPENAPI_SCHEMA_URL`에 raw OpenAPI JSON/YAML URL을 설정합니다. Swagger UI HTML URL은 입력으로 사용할 수 없습니다.
+
+```bash
+OPENAPI_SCHEMA_URL=http://localhost:8080/v3/api-docs pnpm gen:api-types
+```
 
 1. `api-spec-intake`로 endpoint와 UI 상태를 API Integration Map으로 정리합니다.
 2. `api-integrator`로 endpoint, type, query key, query/mutation hook, invalidation을 구현합니다.

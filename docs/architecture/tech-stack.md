@@ -32,6 +32,7 @@
 | CSS                         | `Tailwind CSS`, `class-variance-authority`    | `tailwindcss@^4.3.1`, `cva@^0.7.1`       | Current | `@tailwindcss/vite`, `tailwind-merge` 사용 |
 | Accessibility UI primitives | `React Aria Components`                       | `react-aria-components@^1.19.0`          | Current | HDS overlay/date 계열 primitive 기준       |
 | API client                  | `ky`                                          | `ky@^2.0.2`                              | Current | `apps/client/src/shared/api` 기준          |
+| API type generation         | `openapi-typescript`                          | `openapi-typescript@^7.13.0`             | Current | Swagger/OpenAPI schema 타입 생성 기준      |
 | Server state                | `TanStack Query`                              | `@tanstack/react-query@^5.101.0`         | Current | app provider와 shared query client 기준    |
 | Unit/Component test         | `Vitest`                                      | `vitest@^3.2.4`                          | Current | client, HDS UI, shared config 기준         |
 | E2E test                    | `Playwright`                                  | `@playwright/test@^1.55.0`               | Current | client e2e scaffold 기준                   |
@@ -54,6 +55,7 @@
 - CSS: [Tailwind CSS](https://tailwindcss.com/docs/installation), [Class Variance Authority](https://cva.style/docs)
 - Accessibility UI primitives: [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html)
 - API client: [ky](https://github.com/sindresorhus/ky)
+- API type generation: [OpenAPI TypeScript](https://openapi-ts.dev/)
 - Server state: [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview)
 - Unit/Component test: [Vitest](https://vitest.dev/guide/)
 - E2E test: [Playwright](https://playwright.dev/docs/intro)
