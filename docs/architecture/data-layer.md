@@ -11,6 +11,7 @@ HASHI Client의 데이터 레이어는 앱 내부에서 먼저 조립하고, 실
 - API base URL: `VITE_API_BASE_URL`
 - OpenAPI type generation: `openapi-typescript`
 - 공통 request helper: `apps/client/src/shared/api`
+- API error model: `ApiError`와 `HttpStatusError`가 HTTP status를 보존
 - generated API type output: `apps/client/src/shared/api/generated/openapi.ts`
 - Query provider/client: `apps/client/src/app/providers/QueryProvider.tsx`, `apps/client/src/shared/lib/queryClient.ts`
 
@@ -42,6 +43,25 @@ apps/client/src/shared/api/
 - endpoint 함수는 `request` 같은 low-level helper를 사용합니다.
 - endpoint 함수는 React, TanStack Query, route, UI state를 알면 안 됩니다.
 - 인증, refresh, retry 정책은 실제 요구사항 없이 미리 복잡하게 만들지 않습니다.
+
+## Error Handling Rules
+
+`apps/client/src/shared/api`는 서버 response envelope를 파싱하고 `success: false` 응답을 `ApiError`로 변환합니다.
+
+- `ApiError`는 서버 `code`, `message`, `errors`와 HTTP status를 함께 보존합니다.
+- `HttpStatusError`는 proxy HTML 응답, 빈 503 응답처럼 서버 envelope가 없는 HTTP 실패의 status를 보존합니다.
+- HTTP status는 retry, 로그인 유도, not found, Sentry 기록 여부를 판단할 때 사용합니다.
+- field-level error는 `ApiError.fieldErrors`와 문서화된 error code를 기준으로 page/form 가까이에서 매핑합니다.
+- 서버 `message`는 임시 사용자 문구 후보일 수 있지만, 제품 문구는 page spec에서 확정합니다.
+- non-JSON error response는 `HttpStatusError`로 정규화해 JSON 파싱 오류가 사용자 UI 정책을 깨지 않도록 합니다.
+
+TanStack Query retry는 `shared/lib/queryClient.ts`의 기본 정책에서 한 번만 판단합니다.
+
+- network error, timeout, `ApiError`/`HttpStatusError`의 `status >= 500`만 최대 1회 재시도합니다.
+- `400`, `401`, `403`, `404`, `405`, `409`, `415` 같은 사용자 입력, 인증, 권한, not found, 비즈니스 충돌, 업로드 validation 오류는 자동 재시도하지 않습니다.
+- mutation은 중복 실행 위험이 있으므로 기본 retry를 비활성화합니다.
+- 전역 `throwOnError: true`는 사용하지 않습니다. page-entry required data는 route/page boundary 또는 `useSuspenseQuery`로, 검색/필터/form처럼 부분 실패가 자연스러운 화면은 local error UI로 처리합니다.
+- ErrorBoundary에서 잡힌 에러는 Sentry 필터를 거쳐 unknown error, render error, 5xx status error, 405 integration error만 기록합니다.
 
 ## API Integration Workflow
 

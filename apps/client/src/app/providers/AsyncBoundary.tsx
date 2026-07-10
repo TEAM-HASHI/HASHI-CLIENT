@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
 import { ErrorBoundary } from 'react-error-boundary'
 
+import { captureError } from '@/shared/lib/sentry'
+
 interface AsyncBoundaryProps {
   children: ReactNode
 }
@@ -11,6 +13,7 @@ const AsyncBoundary = ({ children }: AsyncBoundaryProps) => {
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary
+          onError={captureError}
           onReset={reset}
           fallbackRender={({ resetErrorBoundary }) => (
             <section>
