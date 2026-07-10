@@ -89,3 +89,63 @@ Object.defineProperty(window, 'scrollTo', {
   configurable: true,
   value: vi.fn(),
 })
+
+type TestGlobal = typeof globalThis & {
+  IntersectionObserver?: unknown
+  matchMedia?: unknown
+  ResizeObserver?: unknown
+  window?: {
+    matchMedia?: unknown
+  }
+}
+
+const testGlobal = globalThis as TestGlobal
+const testWindow = testGlobal.window ?? testGlobal
+
+if (typeof testWindow.matchMedia !== 'function') {
+  Object.defineProperty(testWindow, 'matchMedia', {
+    value: () => ({
+      addEventListener: () => {},
+      addListener: () => {},
+      dispatchEvent: () => false,
+      matches: false,
+      media: '',
+      onchange: null,
+      removeEventListener: () => {},
+      removeListener: () => {},
+    }),
+    writable: true,
+  })
+}
+
+if (typeof testGlobal.IntersectionObserver === 'undefined') {
+  Object.defineProperty(testGlobal, 'IntersectionObserver', {
+    configurable: true,
+    value: class {
+      disconnect() {}
+
+      observe() {}
+
+      takeRecords() {
+        return []
+      }
+
+      unobserve() {}
+    },
+    writable: true,
+  })
+}
+
+if (typeof testGlobal.ResizeObserver === 'undefined') {
+  Object.defineProperty(testGlobal, 'ResizeObserver', {
+    configurable: true,
+    value: class {
+      disconnect() {}
+
+      observe() {}
+
+      unobserve() {}
+    },
+    writable: true,
+  })
+}
