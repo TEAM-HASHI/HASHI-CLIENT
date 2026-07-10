@@ -89,12 +89,12 @@ export const InProgressReservationCard = ({
                     'flex size-6 items-center justify-center rounded-full',
                     shouldShowCheck && 'bg-cool-gray-900 text-white',
                     isCurrent &&
-                      'border-primary-400 text-primary-400 animate-reservation-progress-dot border-[6px] bg-white',
+                      'border-primary-400 text-primary-400 animate-reservation-progress-dot border-[7px] bg-white',
                     !shouldShowCheck && !isCurrent && 'bg-secondary-200',
                   )}
                 >
                   {shouldShowCheck ? (
-                    <CheckIcon className="size-5 text-white" />
+                    <CheckIcon className="size-full text-white" />
                   ) : null}
                 </span>
                 <span

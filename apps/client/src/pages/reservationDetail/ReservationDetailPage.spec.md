@@ -116,7 +116,15 @@
 - derived state:
   - 예약 진행 단계별 상태 스타일
   - 예약 접수 정보 카드 item 배열
-  - `식당 컨택 중` 단계가 current이면 현재 dot에 `animate-reservation-progress-dot`을 적용합니다.
+  - `completed` 단계는 검정 ring dot으로 표시합니다.
+  - `completed` 단계의 제목과 설명은 current 단계와 같은 색으로 표시하고, 오른쪽 날짜는 `cool-gray-600`으로 표시합니다.
+  - `예약 접수` 단계의 오른쪽 날짜는 시간 없이 월/일만 표시합니다.
+  - `current` 단계는 `primary-400` ring dot으로 표시합니다.
+  - `식당 컨택 중` 단계가 current이면 current dot에 `animate-reservation-progress-dot` 모션을 적용합니다.
+  - `pending` 단계는 회색 fill dot으로 표시합니다.
+  - `예약 확정` 단계는 pending/current이면 `식당 확인 후 예약 결과를 알려드릴게요`, completed이면 `예약이 성공적으로 확정되었어요`를 표시합니다.
+  - `식당 컨택 중` 단계가 current이면 `예약 접수`과의 연결선만 검정에서 `primary-400`으로 이어지는 gradient를 적용합니다.
+  - 연결된 두 단계가 모두 completed이면 연결선을 검정 실선으로 표시합니다.
 
 ## Validation
 

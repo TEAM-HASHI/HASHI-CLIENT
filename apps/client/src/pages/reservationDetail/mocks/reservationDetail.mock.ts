@@ -1,9 +1,4 @@
-import {
-  addDays,
-  formatDotDateTime,
-  formatMonthDay,
-  formatMonthDayTime,
-} from '@/shared/utils'
+import { addDays, formatDotDateTime, formatMonthDay } from '@/shared/utils'
 
 const reservationRequestedAt = new Date('2026-06-21T13:44:00')
 const reservationEstimatedConfirmedAt = addDays(reservationRequestedAt, 2)
@@ -12,7 +7,7 @@ const receivedStep = {
   id: 'received',
   title: '예약 접수',
   description: '예약 요청이 접수되었어요',
-  requestedAt: formatMonthDayTime(reservationRequestedAt),
+  requestedAt: formatMonthDay(reservationRequestedAt),
 } as const
 
 const contactingStep = {
@@ -24,7 +19,7 @@ const contactingStep = {
 const confirmedStep = {
   id: 'confirmed',
   title: '예약 확정',
-  description: '예약이 성공적으로 확정되었어요',
+  description: '식당 확인 후 예약 결과를 알려드릴게요',
 } as const
 
 // TODO: API 연동 후 제거 예정

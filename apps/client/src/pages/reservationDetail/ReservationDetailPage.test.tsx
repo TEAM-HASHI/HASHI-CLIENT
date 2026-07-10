@@ -39,6 +39,7 @@ describe('ReservationDetailPage', () => {
   afterEach(() => {
     cleanup()
     vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
     vi.restoreAllMocks()
     mockNavigate.mockClear()
     mockOpen.mockClear()
@@ -82,5 +83,22 @@ describe('ReservationDetailPage', () => {
       '_blank',
       'noreferrer',
     )
+  })
+
+  it('shows only the date for the received reservation step time', () => {
+    render(<ReservationDetailPage />)
+
+    expect(screen.getByText('6월 21일')).toBeInTheDocument()
+    expect(screen.queryByText('6월 21일 13:44')).not.toBeInTheDocument()
+  })
+
+  it('renders only the contacting progress state in development mode', () => {
+    vi.stubEnv('MODE', 'development')
+
+    render(<ReservationDetailPage />)
+
+    expect(screen.getAllByText('예약 접수')).toHaveLength(1)
+    expect(screen.getByText('식당 컨택 중')).toBeInTheDocument()
+    expect(screen.getAllByText('예약 확정')).toHaveLength(1)
   })
 })
