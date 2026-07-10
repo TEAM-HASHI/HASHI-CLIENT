@@ -41,7 +41,7 @@ Jira: HASHI-78
 
 ## Requirements
 
-- [x] 상단에 `예약하기` 제목과 뒤로가기 버튼을 보여준다.
+- [x] 상단에 `예약하기` 제목과 뒤로가기 버튼을 모바일 프레임 상단에 고정해 보여준다.
 - [x] 뒤로가기 버튼은 `navigate(-1)`을 실행한다.
 - [x] 식당 이미지 영역과 식당명을 보여준다.
 - [x] 예약자명 입력 필드를 보여준다.
@@ -51,12 +51,13 @@ Jira: HASHI-78
 - [x] 날짜 달력 헤더는 연도와 월을 2줄로 보여준다.
 - [x] 오늘 및 오늘 이전 날짜는 선택할 수 없다.
 - [x] 내일 이후 날짜를 선택하면 선택 상태를 표시한다.
+- [x] 날짜를 변경하면 이전에 선택한 시간은 해제한다.
 - [x] 시간 목록은 식당 mock의 영업시간과 예약 간격으로 생성한다.
 - [x] 날짜가 선택되기 전에는 시간 버튼을 비활성화한다.
 - [x] 선택한 시간만 선택 상태를 표시한다.
 - [x] 요청사항은 선택 입력값으로 보여준다.
 - [x] 빨간 오류 문구는 렌더링하지 않는다.
-- [x] 필수값이 모두 확정되지 않으면 하단 `예약하기` CTA를 비활성화한다.
+- [x] 필수값이 모두 확정되지 않으면 하단 `예약 요청하기` CTA를 비활성화한다.
 - [x] 활성화된 CTA 제출 시 `/reservations/request`로 이동한다.
 
 ## Data Dependencies
@@ -200,6 +201,7 @@ RestaurantReservationNewPage
 - responsive:
   - app mobile frame width를 따른다.
 - fixed area:
+  - Header wrapper는 `app-mobile-fixed-top z-fixed bg-white`로 모바일 프레임 상단에 고정한다.
   - 하단 CTA bar는 `app-mobile-fixed-bottom`
 - scroll area:
   - 본문은 CTA에 가리지 않도록 하단 padding을 가진다.

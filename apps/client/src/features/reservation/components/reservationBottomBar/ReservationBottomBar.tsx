@@ -18,7 +18,7 @@ export const ReservationBottomBar = ({
         type="submit"
         width="full"
       >
-        예약하기
+        예약 요청하기
       </Button>
     </div>
   )
