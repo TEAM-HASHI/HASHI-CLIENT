@@ -50,6 +50,7 @@
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
+    "vite-plugin-pwa": "catalog:",
     "vitest": "catalog:"
   }
 }
