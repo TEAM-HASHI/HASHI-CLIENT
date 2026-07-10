@@ -34,6 +34,28 @@
   }
 }
 
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
 @utility animate-bottom-sheet-overlay-in {
   animation: bottom-sheet-overlay-in 260ms ease-out both;
 
@@ -63,5 +85,23 @@
 
   @media (prefers-reduced-motion: reduce) {
     animation-duration: 1ms;
+  }
+}
+
+@utility animate-toast-enter {
+  animation: toast-enter 200ms ease-out both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms;
+  }
+}
+
+@utility animate-toast-with-timeout {
+  animation:
+    toast-enter 200ms ease-out both,
+    toast-exit 200ms ease-in 1300ms forwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1ms, 1ms;
   }
 }

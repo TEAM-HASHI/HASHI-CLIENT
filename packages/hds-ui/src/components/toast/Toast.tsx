@@ -15,7 +15,11 @@ export type ToastContent = {
   children: ReactNode
 }
 
-export type ToastOptions = Parameters<AriaToastQueue<ToastContent>['add']>[1]
+type AriaToastOptions = NonNullable<
+  Parameters<AriaToastQueue<ToastContent>['add']>[1]
+>
+
+export type ToastOptions = Omit<AriaToastOptions, 'timeout'>
 
 export type ToastProps = Omit<
   AriaToastProps<ToastContent>,
@@ -43,7 +47,7 @@ export const DEFAULT_TOAST_TIMEOUT = 1500
 export const showToast = (content: ToastContent, options?: ToastOptions) => {
   return toastQueue.add(content, {
     ...options,
-    timeout: options?.timeout ?? DEFAULT_TOAST_TIMEOUT,
+    timeout: DEFAULT_TOAST_TIMEOUT,
   })
 }
 
@@ -56,8 +60,10 @@ export const Toast = ({ className, ...props }: ToastProps) => {
       className={cn(
         'flex h-15 w-full items-center gap-2.75 px-5',
         'bg-primary-200 rounded-[10px] text-white',
-        'translate-y-0 transform-gpu opacity-100 transition-[transform,opacity] duration-200 ease-out',
-        'starting:-translate-y-full starting:opacity-0',
+        'transform-gpu',
+        props.toast.timeout
+          ? 'animate-toast-with-timeout'
+          : 'animate-toast-enter',
         className,
       )}
     >

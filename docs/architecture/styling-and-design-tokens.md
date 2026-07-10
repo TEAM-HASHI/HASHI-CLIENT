@@ -63,7 +63,7 @@ Tailwind CSS를 사용하는 경우:
 - Colors: `primary`, `secondary`, `cool-gray`, `warm-gray`, semantic colors
 - Gradients: `gradient-01`, `background-image-gradient-01`
 - Shadows: `shadow-header`
-- Motion: `animate-bottom-sheet-overlay-in`, `animate-bottom-sheet-overlay-out`, `animate-bottom-sheet-panel-in`, `animate-bottom-sheet-panel-out`
+- Motion: `animate-bottom-sheet-overlay-in`, `animate-bottom-sheet-overlay-out`, `animate-bottom-sheet-panel-in`, `animate-bottom-sheet-panel-out`, `animate-toast-enter`, `animate-toast-with-timeout`
 - Typography: `typo-header-*`, `typo-sub-header-*`, `typo-body-*`, `typo-caption-*`, `typo-long-body-1`
 - Font family: `font-sans` maps to `Pretendard` first, then system fallback
 - Z-index: `z-base`, `z-raised`, `z-fixed`, `z-overlay`, `z-modal`, `z-toast`
