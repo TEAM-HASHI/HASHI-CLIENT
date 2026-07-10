@@ -96,7 +96,7 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 2. `open`이 `true`이면 `document.body`에 portal로 렌더링합니다.
 3. close button press, overlay press 시 `onOpenChange(false)`를 호출합니다.
 4. sheet 내부 press는 overlay press로 전파되지 않아야 합니다.
-5. sheet가 열려 있는 동안 body scroll을 잠급니다.
+5. sheet가 열려 있는 동안 body scroll을 현재 위치에 고정하고 닫힐 때 기존 scroll 위치와 body style을 복구합니다.
 6. `title`이 있으면 dialog accessible name으로 연결합니다.
 7. `title`이 없으면 `aria-label`을 dialog accessible name으로 연결합니다.
 8. sheet가 열리면 sheet panel로 focus를 이동합니다.

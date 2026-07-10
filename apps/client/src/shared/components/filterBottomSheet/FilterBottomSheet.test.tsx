@@ -6,7 +6,7 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet/FilterBottomSheet'
 
@@ -17,9 +17,17 @@ const options = [
 ]
 
 describe('FilterBottomSheet', () => {
+  beforeEach(() => {
+    vi.stubGlobal('scrollTo', vi.fn())
+  })
+
   afterEach(() => {
     cleanup()
     document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    vi.unstubAllGlobals()
   })
 
   it('renders filter options and selected state', () => {

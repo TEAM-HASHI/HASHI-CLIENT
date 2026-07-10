@@ -6,14 +6,23 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { BottomSheet } from './BottomSheet'
 
 describe('BottomSheet', () => {
+  beforeEach(() => {
+    vi.stubGlobal('scrollTo', vi.fn())
+  })
+
   afterEach(() => {
     cleanup()
     document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('does not render when open is false', () => {
@@ -139,6 +148,35 @@ describe('BottomSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: '기본순' }))
 
     expect(handleOpenChange).not.toHaveBeenCalled()
+  })
+
+  it('locks body scroll position while the sheet is open and restores it when closed', () => {
+    const scrollTo = vi.fn()
+    vi.spyOn(window, 'scrollY', 'get').mockReturnValue(128)
+    vi.stubGlobal('scrollTo', scrollTo)
+
+    const { rerender } = render(
+      <BottomSheet open onOpenChange={vi.fn()} title="정렬 순서">
+        기본순
+      </BottomSheet>,
+    )
+
+    expect(document.body.style.overflow).toBe('hidden')
+    expect(document.body.style.position).toBe('fixed')
+    expect(document.body.style.top).toBe('-128px')
+    expect(document.body.style.width).toBe('100%')
+
+    rerender(
+      <BottomSheet open={false} onOpenChange={vi.fn()} title="정렬 순서">
+        기본순
+      </BottomSheet>,
+    )
+
+    expect(document.body.style.overflow).toBe('')
+    expect(document.body.style.position).toBe('')
+    expect(document.body.style.top).toBe('')
+    expect(document.body.style.width).toBe('')
+    expect(scrollTo).toHaveBeenCalledWith(0, 128)
   })
 
   it('moves focus into the sheet and restores previous focus when closed', async () => {

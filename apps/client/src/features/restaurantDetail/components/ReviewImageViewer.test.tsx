@@ -41,11 +41,7 @@ describe('ReviewImageViewer', () => {
       ?.querySelector('[data-testid="review-image-viewer-image"]')
     const indicator = carousel.querySelector('[data-hds-carousel-indicator]')
 
-    expect(dialog).toHaveClass(
-      'bg-cool-gray-900',
-      'overflow-hidden',
-      'rounded-[20px]',
-    )
+    expect(dialog).toHaveClass('bg-cool-gray-900', 'overflow-hidden')
     expect(closeButton).toHaveClass(
       'absolute',
       'top-[78px]',

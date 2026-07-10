@@ -6,7 +6,7 @@ import {
   MoneySmallIcon,
   StarFillIcon,
 } from '@hashi/hds-icons'
-import { Header, IconButton } from '@hashi/hds-ui'
+import { Header, IconButton, showToast } from '@hashi/hds-ui'
 import { useCallback } from 'react'
 
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
@@ -98,8 +98,16 @@ export const RestaurantDetailTemplate = ({
     }
   }
 
-  const handlePressCopyRestaurantName = () => {
-    void copyTextToClipboard(restaurant.name)
+  const handlePressCopyRestaurantName = async () => {
+    const isCopied = await copyTextToClipboard(restaurant.name)
+
+    if (!isCopied) {
+      return
+    }
+
+    showToast({
+      children: '식당명이 복사되었어요',
+    })
   }
 
   return (
