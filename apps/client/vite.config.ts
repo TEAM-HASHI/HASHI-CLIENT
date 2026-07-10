@@ -6,6 +6,30 @@ import { alias, plugins as basePlugins } from './vite.shared'
 const release =
   process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'local'
 
+const getManualChunk = (id: string) => {
+  if (!id.includes('node_modules')) {
+    return undefined
+  }
+
+  if (id.includes('/react/') || id.includes('/react-dom/')) {
+    return 'vendor-react'
+  }
+
+  if (id.includes('/react-router/') || id.includes('/react-router-dom/')) {
+    return 'vendor-router'
+  }
+
+  if (id.includes('/@sentry/')) {
+    return 'vendor-sentry'
+  }
+
+  if (id.includes('/@tanstack/')) {
+    return 'vendor-query'
+  }
+
+  return 'vendor'
+}
+
 export default defineConfig({
   define: {
     'import.meta.env.VITE_VERCEL_ENV': JSON.stringify(
@@ -15,6 +39,11 @@ export default defineConfig({
   },
   build: {
     sourcemap: process.env.SENTRY_AUTH_TOKEN ? 'hidden' : false,
+    rollupOptions: {
+      output: {
+        manualChunks: getManualChunk,
+      },
+    },
   },
   resolve: {
     alias,
