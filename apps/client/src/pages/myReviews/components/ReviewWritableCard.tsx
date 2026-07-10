@@ -29,7 +29,7 @@ export const ReviewWritableCard = ({
         </div>
       </div>
       <Button
-        className="bg-cool-gray-600 h-9"
+        className="bg-cool-gray-800 h-9"
         onClick={onClick}
         size="sm"
         width="full"

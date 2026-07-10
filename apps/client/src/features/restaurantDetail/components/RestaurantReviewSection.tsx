@@ -114,7 +114,7 @@ export const RestaurantReviewSection = ({
             />
           </div>
           <Button
-            className="bg-cool-gray-700 typo-body-5 h-9 w-full"
+            className="bg-cool-gray-600 typo-body-5 h-9 w-full"
             leftIcon={<PencilIcon className={REVIEW_WRITE_ICON_CLASS_NAME} />}
             onClick={onPressWriteReview}
             size="sm"

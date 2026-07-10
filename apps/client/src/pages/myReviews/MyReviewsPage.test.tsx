@@ -42,7 +42,7 @@ describe('MyReviewsPage', () => {
     })
 
     expect(reviewWriteButtons).toHaveLength(2)
-    expect(reviewWriteButtons[0]).toHaveClass('bg-cool-gray-600')
+    expect(reviewWriteButtons[0]).toHaveClass('bg-cool-gray-800')
     expect(screen.getAllByTestId('my-review-default-image')).toHaveLength(2)
   })
 
