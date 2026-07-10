@@ -122,7 +122,7 @@ describe('PopularRestaurantsPage', () => {
       screen.getByRole('button', { name: '정렬 필터: 기본순' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('dialog', { name: '정렬 순서' })).toHaveClass(
-      'translate-y-full',
+      'animate-bottom-sheet-panel-out',
     )
   })
 
