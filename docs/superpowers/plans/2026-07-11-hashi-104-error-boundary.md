@@ -1577,7 +1577,7 @@ Add this section after `HTTP Client Boundary` in `data-layer.md`:
 - 외부 error code의 사용자 문구와 예상 status는 공통 error catalog에서 관리합니다.
 - 실제 response status는 retry와 boundary 판단에 사용하며 catalog status로 덮어쓰지 않습니다.
 - 미등록 code와 비JSON/malformed error body는 원본 정보를 진단용으로 보존하되, 사용자에게 임의의 서버 message를 직접 노출하지 않습니다.
-- query는 5xx, network, timeout만 1회 retry한 뒤 ErrorBoundary로 전달합니다.
+- query는 5xx, network, timeout만 1회 retry합니다. 이 오류들과 예상하지 못한 비-API 오류는 ErrorBoundary로 전달합니다.
 - 예상 가능한 4xx query는 기본적으로 호출부의 local error state에 남깁니다.
 - mutation은 retry하거나 render boundary로 throw하지 않고, 개별 `onError`가 없을 때 공통 toast를 fallback으로 사용합니다.
 - page/form이 field error, NotFound, Forbidden, conflict UX를 소유하면 query/mutation option에서 전역 기본값을 명시적으로 override합니다.
