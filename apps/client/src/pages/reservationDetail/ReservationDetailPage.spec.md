@@ -79,13 +79,13 @@
 
 - mutation:
   - 예약 취소 요청
-  - 문의하기 연결
 - request data:
-  - API 연동 시 정의
+  - 예약 취소: `reservationId`
 - submit enabled condition:
   - API 연동 시 예약 상태에 따라 정의
 - success handling:
-  - API 연동 시 toast 또는 페이지 상태 갱신으로 처리
+  - 예약 취소 확인 후 예약 정보 페이지의 진행 중 상태(`/my-reservations?status=IN_PROGRESS`)로 이동합니다.
+  - API 연동 시 toast 또는 페이지 상태 갱신이 필요하면 함께 처리합니다.
 - failure handling:
   - API 연동 시 toast 또는 user-facing error로 처리
 
@@ -97,12 +97,14 @@
 4. 회원이면 예약 상세 페이지를 렌더링합니다.
 5. 사용자는 예약 진행 상태, 예약 접수 정보, 안내 문구를 확인합니다.
 6. 사용자가 뒤로가기 버튼을 누르면 이전 페이지로 이동합니다.
-7. 사용자가 예약 취소 또는 문의하기 버튼을 누르면 추후 연결될 액션 플로우가 실행됩니다.
+7. 사용자가 예약 취소 버튼을 누르면 예약 취소 확인 모달이 열립니다.
+8. 사용자가 모달에서 취소하기를 누르면 예약 정보 페이지의 진행 중 상태로 이동합니다.
+9. 사용자가 문의하기 버튼을 누르면 Hashi 카카오톡 문의 링크를 새 창으로 엽니다.
 
 ## State
 
 - local state:
-  - 현재 없음
+  - `isCancelDialogOpen`
 - form state:
   - 없음
 - URL state:
@@ -114,6 +116,15 @@
 - derived state:
   - 예약 진행 단계별 상태 스타일
   - 예약 접수 정보 카드 item 배열
+  - `completed` 단계는 검정 ring dot으로 표시합니다.
+  - `completed` 단계의 제목과 설명은 current 단계와 같은 색으로 표시하고, 오른쪽 날짜는 `cool-gray-600`으로 표시합니다.
+  - `예약 접수` 단계의 오른쪽 날짜는 시간 없이 월/일만 표시합니다.
+  - `current` 단계는 `primary-400` ring dot으로 표시합니다.
+  - `식당 컨택 중` 단계가 current이면 current dot에 `animate-reservation-progress-dot` 모션을 적용합니다.
+  - `pending` 단계는 회색 fill dot으로 표시합니다.
+  - `예약 확정` 단계는 pending/current이면 `식당 확인 후 예약 결과를 알려드릴게요`, completed이면 `예약이 성공적으로 확정되었어요`를 표시합니다.
+  - `식당 컨택 중` 단계가 current이면 `예약 접수`과의 연결선만 검정에서 `primary-400`으로 이어지는 gradient를 적용합니다.
+  - 연결된 두 단계가 모두 completed이면 연결선을 검정 실선으로 표시합니다.
 
 ## Validation
 
@@ -149,6 +160,7 @@ ReservationDetailPage
   ReservationDetailActionBar
     CancelButton
     ContactButton
+  ReservationCancelDialog
 ```
 
 ## Component Mapping
@@ -159,6 +171,8 @@ ReservationDetailPage
   - `Button`
 - app shared component:
   - `DefaultImage`
+- feature component:
+  - `ReservationCancelDialog`
 - page-local component:
   - `ReservationProgressSection`
   - `ReservationRestaurantSummary`
@@ -193,7 +207,7 @@ ReservationDetailPage
   - 예약 정보 페이지의 상세보기 액션
   - 예약 관련 진입점
 - links:
-  - 없음
+  - 문의하기: Hashi 카카오톡 문의 링크
 - route params:
   - `reservationId`
 - search params:

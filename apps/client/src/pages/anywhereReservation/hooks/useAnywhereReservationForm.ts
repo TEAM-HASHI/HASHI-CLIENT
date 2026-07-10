@@ -53,6 +53,7 @@ export const useAnywhereReservationForm = () => {
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedTime, setSelectedTime] = useState<string>()
   const [requestNote, setRequestNote] = useState('')
+  const minMonth = createMonthStart(new Date())
 
   const totalGuestCount =
     guestCounts.adult + guestCounts.teen + guestCounts.child
@@ -85,6 +86,14 @@ export const useAnywhereReservationForm = () => {
     }
 
     setSelectedTime(time)
+  }
+
+  const handleDateSelect = (nextDate: Date) => {
+    if (selectedDate?.getTime() !== nextDate.getTime()) {
+      setSelectedTime(undefined)
+    }
+
+    setSelectedDate(nextDate)
   }
 
   const createAnywhereReservationDraft = ():
@@ -136,9 +145,10 @@ export const useAnywhereReservationForm = () => {
     })),
     calendar: {
       isDateDisabled: checkIsTodayOrBefore,
+      minMonth,
       visibleMonth,
       selectedDate,
-      onDateSelect: setSelectedDate,
+      onDateSelect: handleDateSelect,
       onMonthChange: (nextMonth: Date) => {
         setVisibleMonth(createMonthStart(nextMonth))
       },

@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 
 import {
-  act,
   cleanup,
   fireEvent,
   render,
@@ -68,26 +67,31 @@ const getIndicator = () => {
   return indicator
 }
 
-const setViewportMetrics = ({
-  scrollLeft,
-  width,
-}: {
-  scrollLeft: number
-  width: number
-}) => {
-  const viewport = getViewport()
+const mockCarouselLayout = () => {
+  const getPropertyValue = CSSStyleDeclaration.prototype.getPropertyValue
 
-  Object.defineProperty(viewport, 'clientWidth', {
-    configurable: true,
-    value: width,
-  })
-  Object.defineProperty(viewport, 'scrollLeft', {
-    configurable: true,
-    value: scrollLeft,
-    writable: true,
-  })
+  vi.spyOn(
+    CSSStyleDeclaration.prototype,
+    'getPropertyValue',
+  ).mockImplementation(function (this: CSSStyleDeclaration, property: string) {
+    const value = getPropertyValue.call(this, property)
 
-  return viewport
+    return property === 'margin-right' && value === '' ? '0px' : value
+  })
+  vi.spyOn(HTMLElement.prototype, 'offsetParent', 'get').mockReturnValue(
+    document.body,
+  )
+  vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(300)
+  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(200)
+  vi.spyOn(HTMLElement.prototype, 'offsetLeft', 'get').mockImplementation(
+    function (this: HTMLElement) {
+      if (!this.hasAttribute('data-hds-carousel-item')) {
+        return 0
+      }
+
+      return Array.from(this.parentElement?.children ?? []).indexOf(this) * 300
+    },
+  )
 }
 
 afterEach(() => {
@@ -158,64 +162,11 @@ describe('Carousel', () => {
     ).toHaveLength(1)
   })
 
-  it('updates uncontrolled index shortly after scroll settles', () => {
-    vi.useFakeTimers()
-    const handleIndexChange = vi.fn()
-
-    renderCarousel({ onIndexChange: handleIndexChange })
-    const viewport = setViewportMetrics({ scrollLeft: 200, width: 100 })
-
-    fireEvent.scroll(viewport)
-    act(() => {
-      vi.advanceTimersByTime(30)
-    })
-
-    expect(handleIndexChange).toHaveBeenCalledWith(2)
-    expect(screen.getByRole('group', { name: '3 / 3' })).toHaveAttribute(
-      'data-current',
-      'true',
-    )
-  })
-
-  it('does not change DOM state directly when controlled', () => {
-    vi.useFakeTimers()
-    const handleIndexChange = vi.fn()
-
-    renderCarousel({ index: 0, onIndexChange: handleIndexChange })
-    const viewport = setViewportMetrics({ scrollLeft: 200, width: 100 })
-
-    fireEvent.scroll(viewport)
-    act(() => {
-      vi.advanceTimersByTime(30)
-    })
-
-    expect(handleIndexChange).toHaveBeenCalledWith(2)
-    expect(screen.getByRole('group', { name: '1 / 3' })).toHaveAttribute(
-      'data-current',
-      'true',
-    )
-  })
-
-  it('scrolls to a controlled index when it changes', () => {
-    const handleIndexChange = vi.fn()
-    const { rerender } = renderCarousel({
-      index: 0,
-      onIndexChange: handleIndexChange,
-    })
-    const viewport = setViewportMetrics({ scrollLeft: 0, width: 100 })
-    const scrollTo = vi.fn()
-
-    Object.defineProperty(viewport, 'scrollTo', {
-      configurable: true,
-      value: scrollTo,
-    })
+  it('renders the controlled active slide after index changes', () => {
+    const { rerender } = renderCarousel({ index: 0 })
 
     rerender(
-      <Carousel.Root
-        aria-label="콘텐츠 배너"
-        index={2}
-        onIndexChange={handleIndexChange}
-      >
+      <Carousel.Root aria-label="콘텐츠 배너" index={2}>
         <Carousel.Viewport>
           <Carousel.Track>
             <Carousel.Item>Slide 1</Carousel.Item>
@@ -227,10 +178,10 @@ describe('Carousel', () => {
       </Carousel.Root>,
     )
 
-    expect(scrollTo).toHaveBeenCalledWith({
-      behavior: 'smooth',
-      left: 200,
-    })
+    expect(screen.getByRole('group', { name: '3 / 3' })).toHaveAttribute(
+      'data-current',
+      'true',
+    )
   })
 
   it('merges className values for slots', () => {
@@ -257,7 +208,7 @@ describe('Carousel', () => {
     expect(getIndicator()).toHaveClass('custom-indicator')
   })
 
-  it('keeps horizontal scroll behavior when viewport className includes overflow-hidden', () => {
+  it('keeps the Embla overflow wrapper when caller className includes overflow-hidden', () => {
     render(
       <Carousel.Root aria-label="콘텐츠 배너">
         <Carousel.Viewport className="overflow-hidden">
@@ -270,53 +221,60 @@ describe('Carousel', () => {
       </Carousel.Root>,
     )
 
-    expect(getViewport()).toHaveClass('overflow-x-auto')
+    expect(getViewport()).toHaveClass('overflow-hidden')
   })
 
-  it('realigns the current slide when the viewport width changes', () => {
-    let resizeCallback: ResizeObserverCallback | undefined
-    const observe = vi.fn()
-    const disconnect = vi.fn()
+  it('allows vertical page scrolling while handling horizontal swipes', () => {
+    renderCarousel()
 
-    vi.stubGlobal(
-      'ResizeObserver',
-      vi.fn(function (callback: ResizeObserverCallback) {
-        resizeCallback = callback
+    expect(getViewport()).toHaveClass('touch-pan-y')
+  })
 
-        return {
-          disconnect,
-          observe,
-          unobserve: vi.fn(),
-        }
-      }),
+  it('adds tactile feedback only to the current slide while dragging', () => {
+    mockCarouselLayout()
+
+    renderCarousel()
+
+    const viewport = getViewport()
+    const currentSlide = screen.getByRole('group', { name: '1 / 3' })
+    const nextSlide = screen.getByRole('group', { name: '2 / 3' })
+
+    expect(viewport).toHaveClass('cursor-grab')
+    expect(viewport).not.toHaveAttribute('data-dragging')
+
+    fireEvent.mouseDown(viewport, {
+      button: 0,
+      clientX: 200,
+      clientY: 100,
+    })
+
+    expect(viewport).toHaveAttribute('data-dragging', 'true')
+    expect(viewport).toHaveClass('cursor-grabbing')
+    expect(currentSlide).toHaveAttribute('data-dragging', 'true')
+    expect(currentSlide).toHaveClass('scale-[0.985]', 'opacity-[0.98]')
+    expect(nextSlide).not.toHaveAttribute('data-dragging')
+
+    fireEvent.mouseUp(document, {
+      clientX: 200,
+      clientY: 100,
+    })
+
+    expect(viewport).not.toHaveAttribute('data-dragging')
+    expect(viewport).toHaveClass('cursor-grab')
+    expect(currentSlide).not.toHaveAttribute('data-dragging')
+  })
+
+  it('animates active and inactive indicator states', () => {
+    renderCarousel()
+
+    const dots = getIndicator().querySelectorAll('span')
+
+    expect(dots[0]).toHaveClass(
+      'scale-100',
+      'opacity-100',
+      'transition-[width,height,opacity,transform,background-color]',
+      'motion-reduce:transition-none',
     )
-    vi.stubGlobal(
-      'requestAnimationFrame',
-      vi.fn((callback: FrameRequestCallback) => {
-        callback(0)
-
-        return 1
-      }),
-    )
-    vi.stubGlobal('cancelAnimationFrame', vi.fn())
-
-    renderCarousel({ defaultIndex: 1 })
-    const viewport = setViewportMetrics({ scrollLeft: 393, width: 353 })
-    const scrollTo = vi.fn()
-
-    Object.defineProperty(viewport, 'scrollTo', {
-      configurable: true,
-      value: scrollTo,
-    })
-
-    act(() => {
-      resizeCallback?.([], {} as ResizeObserver)
-    })
-
-    expect(observe).toHaveBeenCalledWith(viewport)
-    expect(scrollTo).toHaveBeenCalledWith({
-      behavior: 'auto',
-      left: 353,
-    })
+    expect(dots[1]).toHaveClass('scale-90', 'opacity-70')
   })
 })

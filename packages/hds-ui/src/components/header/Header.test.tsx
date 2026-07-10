@@ -16,7 +16,7 @@ describe('Header', () => {
     const header = screen.getByRole('banner')
 
     expect(screen.getByText('식당 상세 정보')).toBeInTheDocument()
-    expect(header).toHaveClass('h-[75px]', 'w-full')
+    expect(header).toHaveClass('h-[75px]', 'shadow-header', 'w-full')
     expect(header).not.toHaveClass('w-[393px]', 'w-[394px]')
   })
 
@@ -83,13 +83,13 @@ describe('Header', () => {
   it('merges root and content class names', () => {
     render(
       <Header
-        className="border-b"
+        className="data-test-root"
         contentClassName="data-test-content"
         title="리뷰 작성"
       />,
     )
 
-    expect(screen.getByRole('banner')).toHaveClass('border-b')
+    expect(screen.getByRole('banner')).toHaveClass('data-test-root')
     expect(screen.getByText('리뷰 작성').parentElement).toHaveClass(
       'data-test-content',
     )

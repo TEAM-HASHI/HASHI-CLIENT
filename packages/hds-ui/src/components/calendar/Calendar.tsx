@@ -32,6 +32,7 @@ export type CalendarProps = Omit<
   selectedDate?: Date
   disabledDates?: Date[]
   isDateDisabled?: (date: Date) => boolean
+  minMonth?: Date
   onDateSelect?: (date: Date) => void
   onMonthChange?: (nextMonth: Date) => void
   formatYearLabel?: (month: Date) => string
@@ -87,6 +88,7 @@ export const Calendar = ({
   selectedDate,
   disabledDates = [],
   isDateDisabled,
+  minMonth,
   onDateSelect,
   onMonthChange,
   formatYearLabel = defaultFormatYearLabel,
@@ -99,8 +101,12 @@ export const Calendar = ({
   ...props
 }: CalendarProps) => {
   const visibleMonth = createMonthDate(month)
+  const minimumMonth = minMonth ? createMonthDate(minMonth) : undefined
   const monthDays = getMonthDays(visibleMonth)
   const firstWeekday = visibleMonth.getDay()
+  const isPreviousMonthDisabled =
+    onMonthChange === undefined ||
+    (minimumMonth !== undefined && visibleMonth <= minimumMonth)
 
   const checkIsDateDisabled = (date: Date) => {
     return (
@@ -120,7 +126,7 @@ export const Calendar = ({
         <button
           aria-label="이전 달"
           className="text-cool-gray-900 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 flex size-6 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent p-0 text-[24px] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed"
-          disabled={onMonthChange === undefined}
+          disabled={isPreviousMonthDisabled}
           onClick={() => onMonthChange?.(createAdjacentMonth(visibleMonth, -1))}
           type="button"
         >

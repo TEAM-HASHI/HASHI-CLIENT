@@ -107,6 +107,28 @@ describe('Calendar', () => {
     expect(handleMonthChange).toHaveBeenNthCalledWith(2, new Date(2026, 6, 1))
   })
 
+  it('disables previous-month navigation at the minimum month', () => {
+    const handleMonthChange = vi.fn()
+
+    render(
+      <Calendar
+        minMonth={new Date(2026, 5, 1)}
+        month={new Date(2026, 5, 1)}
+        onMonthChange={handleMonthChange}
+      />,
+    )
+
+    const previousMonthButton = screen.getByRole('button', {
+      name: '이전 달',
+    })
+
+    expect(previousMonthButton).toBeDisabled()
+
+    fireEvent.click(previousMonthButton)
+
+    expect(handleMonthChange).not.toHaveBeenCalled()
+  })
+
   it('supports custom date aria label and disables month navigation without handler', () => {
     render(
       <Calendar

@@ -7,9 +7,11 @@ import { SearchIdlePanel } from '@/pages/search/components/SearchIdlePanel'
 import { SearchResultSkeleton } from '@/pages/search/components/SearchResultSkeleton'
 import { useSearchPage } from '@/pages/search/hooks/useSearchPage'
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
+import { cn } from '@/shared/utils'
 
 export const SearchPage = () => {
   const searchPage = useSearchPage()
+  const isSearchIdle = searchPage.status.isSearchIdle
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
@@ -21,9 +23,22 @@ export const SearchPage = () => {
           onKeywordChange={searchPage.onKeywordChange}
           onSearchSubmit={searchPage.onSearchSubmit}
         />
+        {!isSearchIdle && (
+          <SearchFilterBar
+            categoryLabel={searchPage.filterLabels.foodCategory}
+            onCategoryClick={searchPage.onFoodCategoryFilterClick}
+            onSortClick={searchPage.onSortFilterClick}
+            sortLabel={searchPage.filterLabels.sort}
+          />
+        )}
       </div>
-      <div className="flex flex-1 flex-col pt-[83px]">
-        {searchPage.status.isSearchIdle ? (
+      <div
+        className={cn(
+          'flex flex-1 flex-col',
+          isSearchIdle ? 'pt-[83px]' : 'pt-[122px]',
+        )}
+      >
+        {isSearchIdle ? (
           <SearchIdlePanel
             recentSearchKeywords={searchPage.recentSearchKeywords}
             recommendedSearchKeywords={searchPage.recommendedSearchKeywords}
@@ -31,12 +46,6 @@ export const SearchPage = () => {
           />
         ) : (
           <>
-            <SearchFilterBar
-              categoryLabel={searchPage.filterLabels.foodCategory}
-              onCategoryClick={searchPage.onFoodCategoryFilterClick}
-              onSortClick={searchPage.onSortFilterClick}
-              sortLabel={searchPage.filterLabels.sort}
-            />
             {searchPage.searchRestaurantsQuery.isLoading ? (
               <SearchResultSkeleton />
             ) : searchPage.searchRestaurantsQuery.isError ? (
