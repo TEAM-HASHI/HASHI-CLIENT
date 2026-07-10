@@ -37,10 +37,10 @@ describe('RestaurantReservationNewPage', () => {
     render(<RestaurantReservationNewPage />)
 
     expect(screen.getByRole('heading', { name: '2026 6월' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: '예약 요청하기' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
   })
 
-  it('fixes the header to the mobile frame and labels the CTA as a request', () => {
+  it('fixes the header to the mobile frame and labels the CTA as the next step', () => {
     render(<RestaurantReservationNewPage />)
 
     expect(screen.getByTestId('reservation-header')).toHaveClass(
@@ -48,7 +48,7 @@ describe('RestaurantReservationNewPage', () => {
       'z-fixed',
       'bg-white',
     )
-    expect(screen.getByRole('button', { name: '예약 요청하기' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
   })
 
   it('keeps time selection disabled until a valid date is selected', () => {
@@ -80,7 +80,7 @@ describe('RestaurantReservationNewPage', () => {
     fireEvent.click(timeButton)
     fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
 
-    const submitButton = screen.getByRole('button', { name: '예약 요청하기' })
+    const submitButton = screen.getByRole('button', { name: '다음' })
 
     expect(submitButton).toBeDisabled()
 
@@ -103,11 +103,11 @@ describe('RestaurantReservationNewPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
     fireEvent.click(screen.getByRole('button', { name: '11:00' }))
 
-    expect(screen.getByRole('button', { name: '예약 요청하기' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '다음' })).toBeEnabled()
 
     fireEvent.click(screen.getByRole('button', { name: '2026년 6월 3일' }))
 
-    expect(screen.getByRole('button', { name: '예약 요청하기' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
     expect(screen.getByRole('button', { name: '11:00' })).toHaveAttribute(
       'aria-pressed',
       'false',
@@ -128,7 +128,7 @@ describe('RestaurantReservationNewPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
     fireEvent.click(screen.getByRole('button', { name: '11:00' }))
 
-    const submitButton = screen.getByRole('button', { name: '예약 요청하기' })
+    const submitButton = screen.getByRole('button', { name: '다음' })
 
     expect(submitButton).toBeEnabled()
 

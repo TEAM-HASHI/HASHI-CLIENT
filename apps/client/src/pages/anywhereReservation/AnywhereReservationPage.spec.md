@@ -37,7 +37,7 @@ Jira: HASHI-86
   - `11:00`부터 `20:00`까지
   - 30분 간격
   - 종료 시각 포함
-- 필수값이 모두 확정되기 전까지 하단 `예약 요청하기` CTA는 disabled 상태다.
+- 필수값이 모두 확정되기 전까지 하단 `다음` CTA는 disabled 상태다.
 - 활성화된 CTA 클릭 시 `/reservations/request`로 이동한다.
 
 ## Required Values

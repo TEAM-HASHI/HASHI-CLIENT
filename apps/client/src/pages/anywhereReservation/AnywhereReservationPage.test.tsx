@@ -36,7 +36,7 @@ describe('AnywhereReservationPage', () => {
     render(<AnywhereReservationPage />)
 
     expect(screen.getByRole('heading', { name: '2026 6월' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: '예약 요청하기' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
   })
 
   it('keeps time selection disabled until a valid date is selected', () => {
@@ -73,7 +73,7 @@ describe('AnywhereReservationPage', () => {
     fireEvent.click(timeButton)
     fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
 
-    const submitButton = screen.getByRole('button', { name: '예약 요청하기' })
+    const submitButton = screen.getByRole('button', { name: '다음' })
 
     expect(submitButton).toBeDisabled()
 
@@ -101,11 +101,11 @@ describe('AnywhereReservationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
     fireEvent.click(screen.getByRole('button', { name: '11:00' }))
 
-    expect(screen.getByRole('button', { name: '예약 요청하기' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '다음' })).toBeEnabled()
 
     fireEvent.click(screen.getByRole('button', { name: '2026년 6월 3일' }))
 
-    expect(screen.getByRole('button', { name: '예약 요청하기' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
     expect(screen.getByRole('button', { name: '11:00' })).toHaveAttribute(
       'aria-pressed',
       'false',
@@ -131,7 +131,7 @@ describe('AnywhereReservationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
     fireEvent.click(screen.getByRole('button', { name: '11:30' }))
 
-    const submitButton = screen.getByRole('button', { name: '예약 요청하기' })
+    const submitButton = screen.getByRole('button', { name: '다음' })
 
     expect(submitButton).toBeEnabled()
 
@@ -184,7 +184,7 @@ describe('AnywhereReservationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
     fireEvent.click(screen.getByRole('button', { name: '11:30' }))
 
-    expect(screen.getByRole('button', { name: '예약 요청하기' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '다음' })).toBeEnabled()
   })
 
   it('disables today and previous dates', () => {
