@@ -139,6 +139,7 @@ const MOCK_RESERVATION_ID = 'mock-reservation-id'
 - 최대 사용 가능 포인트는 `min(availablePoint, paymentAmount)`다.
 - 한도 초과 입력 시 입력값을 즉시 최대 사용 가능 포인트로 보정한다.
 - `전액사용` 클릭 시 최대 사용 가능 포인트를 적용한다.
+- `전액사용` 버튼 typography는 `typo-body-6`을 사용한다.
 - 남은 포인트는 `availablePoint - usedPoint`다.
 - 최종 결제 금액은 `paymentAmount - usedPoint`이며 0원 미만으로 내려가지 않는다.
 
@@ -159,6 +160,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - 모달은 예약자, 인원, 식당 주소, 식당 방문 일정, 최종 결제 금액을 표시한다.
 - `취소` 클릭 시 모달을 닫는다.
 - `예약` 클릭 시 `/reservations/mock-reservation-id`로 이동한다.
+- 모달 하단의 `취소`, `예약` 버튼 typography는 `typo-sub-header-2`를 사용한다.
 
 ## State
 

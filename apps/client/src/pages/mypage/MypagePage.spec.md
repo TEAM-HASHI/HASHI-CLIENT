@@ -161,6 +161,7 @@ type ComingSoonDialogProps = {
 
 - 수정 버튼은 MVP 제외입니다.
 - MVP에서는 버튼을 노출하고, 클릭 시 `ComingSoonDialog`를 띄웁니다.
+- 수정 버튼 배경은 `bg-cool-gray-800` 토큰을 사용합니다.
 
 ### 2. Point Section
 
@@ -182,6 +183,7 @@ type ComingSoonDialogProps = {
 - MVP 제외입니다.
 - 디자인상 카운트가 함께 표시될 수 있습니다.
 - 사용자가 클릭하면 `ComingSoonDialog`를 띄웁니다.
+- 강조 카드 배경은 `bg-cool-gray-800` 토큰을 사용합니다.
 
 #### 마이 리뷰
 
