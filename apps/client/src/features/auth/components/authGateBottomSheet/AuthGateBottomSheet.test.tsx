@@ -43,7 +43,7 @@ describe('AuthGateBottomSheet', () => {
 
     expect(kakaoButton).toHaveClass('bg-point-200')
     expect(kakaoButton).toHaveClass('enabled:active:bg-point-200')
-    expect(kakaoButton).toHaveClass('enabled:active:opacity-90')
+    expect(kakaoButton).toHaveClass('enabled:active:opacity-80')
     expect(kakaoButton).not.toHaveClass('enabled:active:bg-cool-gray-300')
   })
 

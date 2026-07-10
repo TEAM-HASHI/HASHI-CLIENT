@@ -17,7 +17,7 @@ export const KakaoStartButton = ({
   return (
     <Button
       className={cn(
-        'typo-sub-header-1 bg-point-200 enabled:active:bg-point-200 relative h-14.5 rounded-full text-black enabled:active:opacity-90',
+        'typo-sub-header-1 bg-point-200 enabled:active:bg-point-200 relative h-14.5 rounded-full text-black enabled:active:opacity-80',
         className,
       )}
       leftIcon={
