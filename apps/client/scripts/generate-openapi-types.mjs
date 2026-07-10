@@ -1,98 +1,119 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
-import { spawnSync } from 'node:child_process'
+#!/usr/bin/env node
 
-const appRoot = resolve(import.meta.dirname, '..')
+import { spawnSync } from 'node:child_process'
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const localEnvPath = resolve(appRoot, '.env.openapi.local')
 const outputPath = 'src/shared/api/generated/openapi.ts'
 
-function readLocalEnvSchemaUrl() {
-  const envPath = join(appRoot, '.env.openapi.local')
+function stripOptionalQuotes(value) {
+  const trimmed = value.trim()
 
-  try {
-    const envText = readFileSync(envPath, 'utf8')
-    const line = envText
-      .split('\n')
-      .map((value) => value.trim())
-      .find((value) => value.startsWith('OPENAPI_SCHEMA_URL='))
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1)
+  }
 
-    if (!line) {
-      return undefined
-    }
+  return trimmed
+}
 
-    return line
-      .slice('OPENAPI_SCHEMA_URL='.length)
-      .trim()
-      .replace(/^['"]|['"]$/g, '')
-  } catch {
+function readSchemaUrlFromLocalEnv() {
+  if (!existsSync(localEnvPath)) {
     return undefined
   }
-}
 
-function resolveSchemaUrl() {
-  return process.env.OPENAPI_SCHEMA_URL?.trim() || readLocalEnvSchemaUrl()
-}
+  const lines = readFileSync(localEnvPath, 'utf8').split(/\r?\n/)
 
-function printMissingSchemaUrlGuide() {
-  console.error(
-    [
-      'OpenAPI schema URL이 설정되지 않았습니다.',
-      '',
-      '다음 중 하나로 raw OpenAPI JSON/YAML URL을 설정하세요.',
-      '- OPENAPI_SCHEMA_URL=<schema-url> pnpm gen:api-types',
-      '- apps/client/.env.openapi.local 파일에 OPENAPI_SCHEMA_URL=<schema-url> 작성',
-      '',
-      'Swagger UI HTML URL이 아니라 /v3/api-docs 같은 raw schema URL이어야 합니다.',
-    ].join('\n'),
-  )
-}
+  for (const line of lines) {
+    const trimmed = line.trim()
 
-async function prepareSchemaInput(schemaUrl) {
-  if (!/^https?:\/\//.test(schemaUrl)) {
-    return { input: schemaUrl, cleanup: () => {} }
+    if (!trimmed || trimmed.startsWith('#')) {
+      continue
+    }
+
+    const match = /^OPENAPI_SCHEMA_URL\s*=\s*(.*)$/.exec(trimmed)
+
+    if (match) {
+      return stripOptionalQuotes(match[1])
+    }
   }
 
-  const response = await fetch(schemaUrl)
-
-  if (!response.ok) {
-    throw new Error(
-      `OpenAPI schema 요청 실패: ${response.status} ${response.statusText}`,
-    )
-  }
-
-  const tempDir = mkdtempSync(join(tmpdir(), 'hashi-openapi-'))
-  const schemaPath = join(tempDir, 'schema.json')
-  const schemaText = await response.text()
-
-  writeFileSync(schemaPath, schemaText)
-
-  return {
-    input: schemaPath,
-    cleanup: () => rmSync(tempDir, { force: true, recursive: true }),
-  }
+  return undefined
 }
 
-const schemaUrl = resolveSchemaUrl()
+const schemaUrl = process.env.OPENAPI_SCHEMA_URL || readSchemaUrlFromLocalEnv()
 
 if (!schemaUrl) {
-  printMissingSchemaUrlGuide()
+  console.error(`OPENAPI_SCHEMA_URL이 필요합니다.
+
+실제 dev/staging schema URL은 repository에 커밋하지 않습니다.
+
+일회성 실행:
+  OPENAPI_SCHEMA_URL=<raw-openapi-schema-url> pnpm gen:api-types
+
+로컬 파일 사용:
+  apps/client/.env.openapi.local 파일에 아래 값을 추가하세요.
+  OPENAPI_SCHEMA_URL=<raw-openapi-schema-url>
+
+주의:
+  Swagger UI HTML이 아니라 raw OpenAPI JSON/YAML URL을 넣어야 합니다.`)
   process.exit(1)
 }
 
-const { input, cleanup } = await prepareSchemaInput(schemaUrl)
+const isRemoteSchema = /^https?:\/\//.test(schemaUrl)
+let schemaInput = schemaUrl
+let tempDir
+let exitCode = 1
 
 try {
-  const result = spawnSync('openapi-typescript', [input, '-o', outputPath], {
-    cwd: appRoot,
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  })
+  if (isRemoteSchema) {
+    tempDir = mkdtempSync(resolve(tmpdir(), 'hashi-openapi-'))
+    schemaInput = resolve(tempDir, 'schema.json')
 
-  if (result.error) {
-    throw result.error
+    const response = await fetch(schemaUrl, {
+      headers: {
+        accept: 'application/json, application/yaml, text/yaml, */*',
+      },
+    })
+
+    if (!response.ok) {
+      console.error(
+        `OpenAPI schema 요청에 실패했습니다. status=${response.status}`,
+      )
+    } else {
+      writeFileSync(schemaInput, await response.text())
+    }
   }
 
-  process.exit(result.status ?? 1)
+  if (!isRemoteSchema || existsSync(schemaInput)) {
+    const result = spawnSync(
+      'openapi-typescript',
+      [schemaInput, '-o', outputPath],
+      {
+        cwd: appRoot,
+        stdio: 'inherit',
+        shell: process.platform === 'win32',
+      },
+    )
+
+    exitCode = result.status ?? 1
+  }
 } finally {
-  cleanup()
+  if (tempDir) {
+    rmSync(tempDir, { force: true, recursive: true })
+  }
 }
+
+process.exitCode = exitCode

@@ -43,6 +43,33 @@ Use this after `api-spec-intake` when API docs are available or when the API Int
 - Infinite queries: `references/infinite-query.md`
 - UI states: `references/ui-state-mapping.md`
 
+## File Placement
+
+Use the smallest owning boundary first.
+
+```text
+apps/client/src/pages/{pageName}/
+  api/{endpointName}.ts
+  queries/{domain}QueryKeys.ts
+  queries/use{Domain}Query.ts
+  mutations/use{Action}Mutation.ts
+  hooks/use{PageName}.ts
+  types.ts
+```
+
+Promote to `apps/client/src/features/{featureName}` only when the same API flow is reused by multiple pages. Keep `apps/client/src/shared/api` limited to low-level `request`, client config, and generated OpenAPI types.
+
+Naming rules:
+
+- Endpoint files use network actions: `getRestaurants.ts`, `createReservation.ts`, `cancelReservation.ts`.
+- Endpoint files may export OpenAPI-derived aliases such as `CreateReservationBody` and `CreateReservationData` when only that endpoint needs them.
+- If multiple endpoint/query files share the aliases, move them to the same page/feature `types.ts`.
+- Query key factories live in `queries/{domain}QueryKeys.ts`.
+- Query hooks live in `queries/use{Domain}Query.ts` or `queries/use{Domain}InfiniteQuery.ts`.
+- Mutation hooks live in `mutations/use{Action}Mutation.ts`.
+- Page hooks may compose query/mutation hooks, but should not contain raw `request` calls.
+- Components should receive view-ready props and should not import `paths` or `components` from generated OpenAPI types directly.
+
 ## Frontend Fundamentals Pass
 
 - Cohesion: keep endpoint, query key, options, hook, and types in the same page or feature until reuse exists.
