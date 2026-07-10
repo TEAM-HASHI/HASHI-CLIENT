@@ -95,7 +95,7 @@ export const WrittenReviewCard = ({
       </button>
       <div
         ref={menuContainerRef}
-        className="relative mt-3.5 flex size-[18px] shrink-0 self-start items-center justify-center"
+        className="relative mt-3.5 flex size-[18px] shrink-0 items-center justify-center self-start"
       >
         <button
           aria-controls={isMenuOpen ? menuId : undefined}

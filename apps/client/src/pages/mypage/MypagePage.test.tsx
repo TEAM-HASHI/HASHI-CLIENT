@@ -30,8 +30,8 @@ describe('MypagePage', () => {
     expect(screen.getByRole('button', { name: '수정' })).toHaveClass(
       'bg-cool-gray-800',
     )
-    expect(
-      screen.getByRole('button', { name: /내가 찜한 식당/ }),
-    ).toHaveClass('bg-cool-gray-800')
+    expect(screen.getByRole('button', { name: /내가 찜한 식당/ })).toHaveClass(
+      'bg-cool-gray-800',
+    )
   })
 })

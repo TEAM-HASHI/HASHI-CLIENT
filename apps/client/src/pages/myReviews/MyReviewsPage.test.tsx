@@ -114,8 +114,9 @@ describe('MyReviewsPage', () => {
     fireEvent.click(screen.getAllByLabelText(/리뷰 메뉴 열기/)[0])
     fireEvent.click(screen.getByRole('menuitem', { name: '수정하기' }))
 
-    expect(screen.getByRole('dialog', { name: '서비스를 준비하고 있어요.' }))
-      .toBeInTheDocument()
+    expect(
+      screen.getByRole('dialog', { name: '서비스를 준비하고 있어요.' }),
+    ).toBeInTheDocument()
     expect(mockNavigate).not.toHaveBeenCalledWith(
       '/reviews/written-review-1/edit',
     )
@@ -125,7 +126,9 @@ describe('MyReviewsPage', () => {
     render(<MyReviewsPage />)
 
     fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
-    fireEvent.click(screen.getAllByRole('button', { name: /리뷰 상세 보기/ })[0])
+    fireEvent.click(
+      screen.getAllByRole('button', { name: /리뷰 상세 보기/ })[0],
+    )
 
     expect(mockNavigate).toHaveBeenCalledWith('/reviews/written-review-1')
   })
