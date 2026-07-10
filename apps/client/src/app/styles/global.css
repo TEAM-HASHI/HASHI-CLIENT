@@ -18,7 +18,7 @@
 
   html {
     -webkit-text-size-adjust: 100%;
-    background: var(--color-cool-gray-50);
+    background: white;
     overflow-x: hidden;
   }
 
@@ -26,7 +26,7 @@
     min-width: 320px;
     min-height: 100dvh;
     margin: 0;
-    background: var(--color-cool-gray-50);
+    background: white;
     color: var(--color-cool-gray-900);
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
@@ -104,4 +104,39 @@
 
 @utility app-mobile-bottom-nav-content {
   min-height: calc(100dvh - 84px - var(--safe-area-bottom, 0px));
+}
+
+@keyframes reservation-progress-dot-ripple {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+@utility animate-reservation-progress-dot {
+  isolation: isolate;
+  position: relative;
+
+  &::after {
+    position: absolute;
+    inset: -4px;
+    z-index: -1;
+    border: 2px solid currentColor;
+    border-radius: 9999px;
+    content: '';
+    animation: reservation-progress-dot-ripple 1.4s ease-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      opacity: 0;
+      animation: none;
+    }
+  }
 }

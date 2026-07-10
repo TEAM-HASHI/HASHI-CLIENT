@@ -16,6 +16,7 @@ Use this after `api-spec-intake` when API docs are available or when the API Int
 - `docs/architecture/app-structure.md`
 - `docs/workflows/api-integration.md`
 - `.agents/recipes/api-integration.md`
+- `apps/client/src/shared/api/generated/openapi.ts`
 - Target page or feature code and nearby `*.spec.md`
 - Existing `apps/client/src/shared/api` and `apps/client/src/shared/lib/queryClient.ts`
 
@@ -24,7 +25,7 @@ Use this after `api-spec-intake` when API docs are available or when the API Int
 1. Confirm the target page or feature owns the API flow. Keep one-page flows page-local.
 2. Remove mock usage only where the API Integration Map covers real behavior.
 3. Add endpoint functions that use `request`; endpoint functions must not import React or TanStack Query.
-4. Add request/response/view types close to the page or feature.
+4. Add request/response/view types close to the page or feature. Prefer aliases derived from generated OpenAPI types at the API boundary.
 5. Add query key factories before writing query hooks.
 6. Add `queryOptions`, `useSuspenseQuery`, `useQuery`, `useInfiniteQuery`, or mutation hooks based on `references/query-mode-decision.md`.
 7. Wire existing UI states without changing unrelated layout or copy.

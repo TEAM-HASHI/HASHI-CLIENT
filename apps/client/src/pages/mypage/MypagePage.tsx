@@ -12,7 +12,6 @@ export const MypagePage = () => {
     primaryMenuItems,
     setIsComingSoonOpen,
     summary,
-    handleComingSoonPress,
     handleMenuAction,
   } = useMypagePage()
 
@@ -21,7 +20,6 @@ export const MypagePage = () => {
       <section className="app-mobile-bottom-nav-content px-5 pt-[calc(42px+var(--safe-area-top,0px))]">
         <MypageProfile
           nickname={summary.nickname}
-          onEditPress={handleComingSoonPress}
           profileImageUrl={summary.profileImageUrl}
         />
 

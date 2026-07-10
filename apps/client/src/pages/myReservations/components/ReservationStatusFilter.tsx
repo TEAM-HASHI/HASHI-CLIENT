@@ -20,11 +20,7 @@ export const ReservationStatusFilter = ({
   return (
     <div
       aria-label="예약 상태 필터"
-      className={cn(
-        '-mx-5 flex gap-2 overflow-x-auto px-5 pb-3.25',
-        'border-warm-gray-50 border-b',
-        className,
-      )}
+      className={cn('-mx-5 flex gap-2 overflow-x-auto px-5 pb-3.25', className)}
       role="group"
     >
       {RESERVATION_STATUS_FILTER_OPTIONS.map((option) => (

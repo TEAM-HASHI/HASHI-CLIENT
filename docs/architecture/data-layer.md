@@ -53,7 +53,7 @@ OpenAPI 스키마에서 타입을 갱신할 때는 다음 script를 사용합니
 pnpm gen:api-types
 ```
 
-기본 schema는 `https://dev-api.hashi.kr/v3/api-docs`입니다. 로컬 backend schema를 사용해야 하면 `OPENAPI_SCHEMA_URL`로 덮어씁니다.
+schema URL은 공개 문서에 직접 적지 않습니다. 로컬에서는 `apps/client/.env.openapi.local` 또는 shell의 `OPENAPI_SCHEMA_URL`에 raw OpenAPI JSON/YAML URL을 설정합니다. Swagger UI HTML URL은 입력으로 사용할 수 없습니다.
 
 ```bash
 OPENAPI_SCHEMA_URL=http://localhost:8080/v3/api-docs pnpm gen:api-types

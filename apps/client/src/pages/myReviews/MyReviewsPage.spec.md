@@ -145,6 +145,7 @@ MyReviewsPage
 - Tailwind layout:
   - mobile-first, `RootLayout` mobile frame 기준
   - 리스트 본문 좌우 20px padding
+  - Header 바로 아래에 tab underline이 붙어 있어 Header shadow는 `shadow-none`으로 예외 처리한다.
 - responsive:
   - app mobile frame width를 따른다.
 - fixed area:

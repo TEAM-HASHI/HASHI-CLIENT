@@ -137,7 +137,7 @@ describe('HashiPickPage', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.getByRole('dialog', { name: '음식 장르 선택' })).toHaveClass(
-      'translate-y-full',
+      'animate-bottom-sheet-panel-out',
     )
   })
 

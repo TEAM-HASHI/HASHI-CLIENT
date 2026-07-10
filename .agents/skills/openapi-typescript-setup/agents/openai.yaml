@@ -1,0 +1,4 @@
+---
+name: openapi-typescript-setup
+description: HASHI Client OpenAPI 타입 생성, schema URL, generated type 사용법, 관련 검증을 점검합니다.
+---
