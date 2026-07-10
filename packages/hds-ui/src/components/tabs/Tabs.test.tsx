@@ -58,6 +58,19 @@ describe('Tabs', () => {
     )
   })
 
+  it('moves the active indicator to the selected tab', () => {
+    render(<Tabs items={items} value="written" onChange={() => undefined} />)
+
+    expect(document.querySelector('[data-hds-tabs-indicator]')).toHaveClass(
+      'transition-transform',
+      'motion-reduce:transition-none',
+    )
+    expect(document.querySelector('[data-hds-tabs-indicator]')).toHaveStyle({
+      width: `${100 / items.length}%`,
+      transform: 'translateX(100%)',
+    })
+  })
+
   it('exposes the selected tab state for assistive technologies', () => {
     render(<Tabs items={items} value="written" onChange={() => undefined} />)
 

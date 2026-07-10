@@ -231,7 +231,7 @@ describe('TodayRestaurantPage', () => {
     )
   })
 
-  it('copies the restaurant name when name copy is pressed', () => {
+  it('copies the restaurant name and shows a toast when name copy is pressed', async () => {
     render(<TodayRestaurantPage />)
 
     fireEvent.click(screen.getByRole('button', { name: '식당명 복사' }))
@@ -239,7 +239,11 @@ describe('TodayRestaurantPage', () => {
     expect(mockClipboardWriteText).toHaveBeenCalledWith(
       '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
     )
-    expect(mockShowToast).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(mockShowToast).toHaveBeenCalledWith({
+        children: '식당명이 복사되었어요',
+      })
+    })
   })
 
   it('copies the restaurant name from fallback selection when Clipboard API rejects', async () => {

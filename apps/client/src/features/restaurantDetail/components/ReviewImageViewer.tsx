@@ -22,7 +22,7 @@ export const ReviewImageViewer = ({
     <div
       aria-label="리뷰 이미지 상세보기"
       aria-modal="true"
-      className="bg-cool-gray-900 z-modal fixed inset-0 overflow-hidden rounded-[20px]"
+      className="bg-cool-gray-900 z-modal fixed inset-0 overflow-hidden"
       role="dialog"
     >
       <IconButton
