@@ -338,6 +338,7 @@ BottomNavigationLayout
   - 어디든 예약 페이지는 `authOnly`이므로 비로그인 사용자는 기존 route guard 정책에 따라 `/login-required`로 이동합니다.
 - Styling:
   - CTA container의 어두운 배경, 문구, 버튼 배치는 홈 페이지 전용 스타일입니다.
+  - `예약하기` 버튼 배경은 `bg-cool-gray-600` 토큰을 사용합니다.
   - HDS `Button`의 기본 `primary`가 디자인과 맞지 않으면 `className`으로 홈 CTA 범위에서만 보정합니다.
 
 ### 5. SNS hot restaurants section

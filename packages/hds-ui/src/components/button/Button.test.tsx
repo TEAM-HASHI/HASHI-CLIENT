@@ -57,6 +57,25 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: '더보기' })).toBeTruthy()
   })
 
+  it('uses variant-specific active background feedback instead of opacity feedback', () => {
+    render(
+      <>
+        <Button variant="primary">확인 완료</Button>
+        <Button variant="neutral">수정하기</Button>
+      </>,
+    )
+
+    expect(
+      screen.getByRole('button', { name: '확인 완료' }).className,
+    ).toContain('enabled:active:bg-cool-gray-300')
+    expect(
+      screen.getByRole('button', { name: '수정하기' }).className,
+    ).toContain('enabled:active:bg-warm-gray-100')
+    expect(
+      screen.getByRole('button', { name: '확인 완료' }).className,
+    ).not.toContain('active:opacity')
+  })
+
   it('hides slot icons while loading', () => {
     render(
       <Button

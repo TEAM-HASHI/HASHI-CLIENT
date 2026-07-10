@@ -53,7 +53,7 @@ export const ReservationPointSection = ({
             value={formatWon(usedPoint, { useGrouping: false })}
           />
           <Button
-            className="typo-sub-header-3 h-[46px] w-[94px] px-0"
+            className="typo-body-6 h-[46px] w-[94px] px-0"
             onClick={onUseAllPointsClick}
             size="lg"
           >

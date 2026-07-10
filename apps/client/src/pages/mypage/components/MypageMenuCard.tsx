@@ -22,7 +22,7 @@ export const MypageMenuCard = ({
       className={cn(
         'flex h-13 w-full items-center justify-between rounded-[5px] px-4 text-left',
         highlighted
-          ? 'bg-cool-gray-900 text-white'
+          ? 'bg-cool-gray-800 text-white'
           : 'bg-primary-100 text-cool-gray-900',
       )}
       onClick={() => {
