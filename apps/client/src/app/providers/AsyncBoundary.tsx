@@ -1,9 +1,18 @@
-import type { ReactNode } from 'react'
+import * as Sentry from '@sentry/react'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
+import type { ErrorInfo, ReactNode } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
+
+import { AsyncErrorFallback } from '@/app/providers/AsyncErrorFallback'
 
 interface AsyncBoundaryProps {
   children: ReactNode
+}
+
+const handleBoundaryError = (error: unknown, info: ErrorInfo) => {
+  Sentry.captureException(error, {
+    extra: { componentStack: info.componentStack },
+  })
 }
 
 const AsyncBoundary = ({ children }: AsyncBoundaryProps) => {
@@ -11,15 +20,9 @@ const AsyncBoundary = ({ children }: AsyncBoundaryProps) => {
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary
+          FallbackComponent={AsyncErrorFallback}
+          onError={handleBoundaryError}
           onReset={reset}
-          fallbackRender={({ resetErrorBoundary }) => (
-            <section>
-              <p>일시적인 오류가 발생했습니다.</p>
-              <button type="button" onClick={resetErrorBoundary}>
-                다시 시도
-              </button>
-            </section>
-          )}
         >
           {children}
         </ErrorBoundary>
