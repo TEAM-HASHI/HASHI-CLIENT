@@ -1,36 +1,102 @@
-import { createElement, lazy, Suspense, type ReactNode } from 'react'
+import {
+  createElement,
+  lazy,
+  Suspense,
+  type ComponentType,
+  type ReactNode,
+  useEffect,
+  useState,
+} from 'react'
 
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 
-const SearchPage = lazy(() => import('@/pages/search'))
-const ComingSoonPage = lazy(() => import('@/pages/comingSoon'))
-const TodayRestaurantPage = lazy(() => import('@/pages/todayRestaurant'))
-const RestaurantDetailPage = lazy(() => import('@/pages/restaurantDetail'))
-const RestaurantMenuDetailPage = lazy(
+const ROUTE_LOADING_DELAY_MS = 150
+const ROUTE_LOADING_MIN_VISIBLE_MS = 300
+
+type LazyRouteModule = {
+  default: ComponentType
+}
+
+const wait = (ms: number) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+const applyRouteLoadingTiming = async <T extends LazyRouteModule>(
+  modulePromise: Promise<T>,
+) => {
+  const startedAt = Date.now()
+  const module = await modulePromise
+  const elapsedMs = Date.now() - startedAt
+  const minimumPendingMs = ROUTE_LOADING_DELAY_MS + ROUTE_LOADING_MIN_VISIBLE_MS
+
+  if (elapsedMs >= ROUTE_LOADING_DELAY_MS && elapsedMs < minimumPendingMs) {
+    await wait(minimumPendingMs - elapsedMs)
+  }
+
+  return module
+}
+
+const lazyRoute = <T extends LazyRouteModule>(importPage: () => Promise<T>) => {
+  return lazy(() => applyRouteLoadingTiming(importPage()))
+}
+
+const RouteLoadingFallback = () => {
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setIsVisible(true)
+    }, ROUTE_LOADING_DELAY_MS)
+
+    return () => {
+      clearTimeout(timerId)
+    }
+  }, [])
+
+  if (!isVisible) {
+    return null
+  }
+
+  return createElement(LoadingScreen)
+}
+
+const SearchPage = lazyRoute(() => import('@/pages/search'))
+const ComingSoonPage = lazyRoute(() => import('@/pages/comingSoon'))
+const TodayRestaurantPage = lazyRoute(() => import('@/pages/todayRestaurant'))
+const RestaurantDetailPage = lazyRoute(() => import('@/pages/restaurantDetail'))
+const RestaurantMenuDetailPage = lazyRoute(
   () => import('@/pages/restaurantMenuDetail'),
 )
-const HashiPickPage = lazy(() => import('@/pages/hashiPick'))
-const PopularRestaurantsPage = lazy(() => import('@/pages/popularRestaurants'))
-const MagazinesPage = lazy(() => import('@/pages/magazines'))
-const MagazineDetailPage = lazy(() => import('@/pages/magazineDetail'))
-const ReviewNewPage = lazy(() => import('@/pages/reviewNew'))
-const MyReviewsPage = lazy(() => import('@/pages/myReviews'))
-const ReviewDetailPage = lazy(() => import('@/pages/reviewDetail'))
-const ReviewEditPage = lazy(() => import('@/pages/reviewEdit'))
-const MypagePage = lazy(() => import('@/pages/mypage'))
-const ProfileNewPage = lazy(() => import('@/pages/profileNew'))
-const WithdrawalPage = lazy(() => import('@/pages/withdrawal'))
-const RestaurantReservationNewPage = lazy(
+const HashiPickPage = lazyRoute(() => import('@/pages/hashiPick'))
+const PopularRestaurantsPage = lazyRoute(
+  () => import('@/pages/popularRestaurants'),
+)
+const MagazinesPage = lazyRoute(() => import('@/pages/magazines'))
+const MagazineDetailPage = lazyRoute(() => import('@/pages/magazineDetail'))
+const ReviewNewPage = lazyRoute(() => import('@/pages/reviewNew'))
+const MyReviewsPage = lazyRoute(() => import('@/pages/myReviews'))
+const ReviewDetailPage = lazyRoute(() => import('@/pages/reviewDetail'))
+const ReviewEditPage = lazyRoute(() => import('@/pages/reviewEdit'))
+const MypagePage = lazyRoute(() => import('@/pages/mypage'))
+const ProfileNewPage = lazyRoute(() => import('@/pages/profileNew'))
+const WithdrawalPage = lazyRoute(() => import('@/pages/withdrawal'))
+const RestaurantReservationNewPage = lazyRoute(
   () => import('@/pages/restaurantReservationNew'),
 )
-const AnywhereReservationPage = lazy(
+const AnywhereReservationPage = lazyRoute(
   () => import('@/pages/anywhereReservation'),
 )
-const ReservationRequestPage = lazy(() => import('@/pages/reservationRequest'))
-const MyReservationsPage = lazy(() => import('@/pages/myReservations'))
-const ReservationDetailPage = lazy(() => import('@/pages/reservationDetail'))
-const LoginRequiredPage = lazy(() => import('@/pages/loginRequired'))
-const NotFoundPage = lazy(() => import('@/pages/notFound'))
+const ReservationRequestPage = lazyRoute(
+  () => import('@/pages/reservationRequest'),
+)
+const MyReservationsPage = lazyRoute(() => import('@/pages/myReservations'))
+const ReservationDetailPage = lazyRoute(
+  () => import('@/pages/reservationDetail'),
+)
+const LoginRequiredPage = lazyRoute(() => import('@/pages/loginRequired'))
+const NotFoundPage = lazyRoute(() => import('@/pages/notFound'))
 
 const lazyPage = (Page: ReturnType<typeof lazy>) => {
   return createElement(Page)
@@ -39,7 +105,7 @@ const lazyPage = (Page: ReturnType<typeof lazy>) => {
 export const withLazyFallback = (element: ReactNode) => {
   return createElement(
     Suspense,
-    { fallback: createElement(LoadingScreen) },
+    { fallback: createElement(RouteLoadingFallback) },
     element,
   )
 }
