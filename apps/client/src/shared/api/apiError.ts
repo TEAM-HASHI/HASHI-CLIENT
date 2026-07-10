@@ -1,20 +1,28 @@
-import type { ErrorResponse } from '@/shared/api/types'
+import type { ErrorResponse, FieldError } from '@/shared/api/types'
+
+export interface ApiErrorOptions {
+  status: number
+  response?: ErrorResponse
+  cause?: unknown
+}
 
 export class ApiError extends Error {
-  readonly response: ErrorResponse
+  readonly status: number
+  readonly response?: ErrorResponse
 
-  constructor(response: ErrorResponse) {
-    super(response.message)
+  constructor({ status, response, cause }: ApiErrorOptions) {
+    super(response?.message ?? `HTTP ${status}`, { cause })
     this.name = 'ApiError'
+    this.status = status
     this.response = response
   }
 
-  get code() {
-    return this.response.code
+  get code(): string | undefined {
+    return this.response?.code
   }
 
-  get fieldErrors() {
-    return this.response.errors ?? []
+  get fieldErrors(): FieldError[] {
+    return this.response?.errors ?? []
   }
 }
 
