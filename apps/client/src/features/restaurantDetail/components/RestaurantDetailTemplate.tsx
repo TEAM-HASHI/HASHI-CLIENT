@@ -6,7 +6,7 @@ import {
   MoneySmallIcon,
   StarFillIcon,
 } from '@hashi/hds-icons'
-import { Header, IconButton } from '@hashi/hds-ui'
+import { Header, IconButton, showToast } from '@hashi/hds-ui'
 import { useCallback } from 'react'
 
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
@@ -87,19 +87,28 @@ export const RestaurantDetailTemplate = ({
       window.scrollY -
       RESTAURANT_DETAIL_HEADER_HEIGHT
 
-    window.scrollTo({ top: nextScrollTop })
+    window.scrollTo({ top: nextScrollTop, behavior: 'smooth' })
   }, [markerRef])
 
   const handleTabChange = (tab: RestaurantDetailTab) => {
     onTabChange(tab)
 
-    if (tab !== 'info') {
-      requestAnimationFrame(scrollToTabBarTop)
+    if (tab === 'info') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
     }
+
+    requestAnimationFrame(scrollToTabBarTop)
   }
 
-  const handlePressCopyRestaurantName = () => {
-    void copyTextToClipboard(restaurant.name)
+  const handlePressCopyRestaurantName = async () => {
+    const isCopied = await copyTextToClipboard(restaurant.name)
+
+    if (!isCopied) {
+      return
+    }
+
+    showToast({ children: '식당명이 복사되었어요' })
   }
 
   return (

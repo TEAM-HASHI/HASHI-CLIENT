@@ -1,5 +1,11 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RestaurantDetailPage } from '@/pages/restaurantDetail/RestaurantDetailPage'
@@ -199,12 +205,26 @@ describe('RestaurantDetailPage', () => {
     ).toBeTruthy()
   })
 
-  it('scrolls to the tab content position when menu tab is selected', () => {
+  it('smoothly scrolls to the tab position for menu or review and to the top for info', () => {
     render(<RestaurantDetailPage />)
 
     fireEvent.click(screen.getByRole('tab', { name: '메뉴' }))
+    fireEvent.click(screen.getByRole('tab', { name: /리뷰/ }))
+    fireEvent.click(screen.getByRole('tab', { name: '매장 정보' }))
 
-    expect(mockScrollTo).toHaveBeenCalledWith({ top: expect.any(Number) })
+    expect(mockScrollTo).toHaveBeenCalledTimes(3)
+    expect(mockScrollTo).toHaveBeenNthCalledWith(1, {
+      top: expect.any(Number),
+      behavior: 'smooth',
+    })
+    expect(mockScrollTo).toHaveBeenNthCalledWith(2, {
+      top: expect.any(Number),
+      behavior: 'smooth',
+    })
+    expect(mockScrollTo).toHaveBeenNthCalledWith(3, {
+      top: 0,
+      behavior: 'smooth',
+    })
   })
 
   it('copies the current page link when share is pressed', () => {
@@ -217,7 +237,7 @@ describe('RestaurantDetailPage', () => {
     )
   })
 
-  it('copies the restaurant name when name copy is pressed', () => {
+  it('copies the restaurant name and shows a toast when name copy is pressed', async () => {
     render(<RestaurantDetailPage />)
 
     fireEvent.click(screen.getByRole('button', { name: '식당명 복사' }))
@@ -225,6 +245,10 @@ describe('RestaurantDetailPage', () => {
     expect(mockClipboardWriteText).toHaveBeenCalledWith(
       '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
     )
-    expect(mockShowToast).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(mockShowToast).toHaveBeenCalledWith({
+        children: '식당명이 복사되었어요',
+      })
+    })
   })
 })
