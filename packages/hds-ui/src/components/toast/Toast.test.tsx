@@ -54,6 +54,27 @@ describe('Toast', () => {
     ).toHaveClass('w-full', 'px-5')
   })
 
+  it('applies a top-down enter transition', () => {
+    const queue = createToastQueue()
+    queue.add({ children: '링크가 복사 되었어요.' })
+
+    render(<ToastRegion queue={queue} />)
+
+    expect(
+      screen.getByText('링크가 복사 되었어요.').closest('[role="alert"]')
+        ?.parentElement,
+    ).toHaveClass(
+      'translate-y-0',
+      'opacity-100',
+      'transform-gpu',
+      'transition-[transform,opacity]',
+      'duration-200',
+      'ease-out',
+      'starting:-translate-y-full',
+      'starting:opacity-0',
+    )
+  })
+
   it('merges custom region className', () => {
     const queue = createToastQueue()
     queue.add({ children: '저장되었습니다.' })
@@ -70,6 +91,7 @@ describe('Toast', () => {
 
     showToast({ children: '저장되었습니다.' })
 
+    expect(DEFAULT_TOAST_TIMEOUT).toBe(1500)
     expect(addToast).toHaveBeenCalledWith(
       { children: '저장되었습니다.' },
       { timeout: DEFAULT_TOAST_TIMEOUT },

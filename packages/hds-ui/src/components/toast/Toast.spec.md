@@ -100,7 +100,7 @@ showToast({ icon, children })
 ### `DEFAULT_TOAST_TIMEOUT`
 
 - type: `number`
-- value: `2000`
+- value: `1500`
 - description: `showToast`의 기본 자동 닫힘 시간입니다.
 
 ### `className`
@@ -117,7 +117,7 @@ showToast({ icon, children })
 - [x] 기본 디자인은 Figma toast와 맞춥니다.
 - [x] 긴 메시지는 최대 두 줄까지 표시합니다.
 - [x] ToastRegion은 기본적으로 하나의 toast만 표시합니다.
-- [x] `showToast`는 기본적으로 2000ms 후 toast가 자동으로 닫히도록 timeout을 적용합니다.
+- [x] `showToast`는 기본적으로 1500ms 후 toast가 자동으로 닫히도록 timeout을 적용합니다.
 
 ## UI Structure
 
@@ -143,6 +143,10 @@ Toast:
 - typography: `typo-long-body-1`
 - icon slot: `24px * 24px`, `shrink-0`
 - message: `min-w-0 line-clamp-2`
+- enter transition: 상단 ToastRegion 기준으로 `-translate-y-full` 위치에서 `translate-y-0`으로 내려오며 표시합니다.
+- enter opacity: `opacity-0`에서 `opacity-100`으로 전환합니다.
+- transition duration: `200ms`
+- transition easing: `ease-out`
 
 ToastRegion:
 
@@ -172,7 +176,6 @@ ToastRegion:
 - 제품별 copy
 - API 성공/실패 처리
 - analytics
-- custom animation
 - swipe dismiss
 - close button 또는 수동 dismiss UI
 

@@ -38,7 +38,7 @@ export const createToastQueue = () =>
   })
 
 export const toastQueue = createToastQueue()
-export const DEFAULT_TOAST_TIMEOUT = 2000
+export const DEFAULT_TOAST_TIMEOUT = 1500
 
 export const showToast = (content: ToastContent, options?: ToastOptions) => {
   return toastQueue.add(content, {
@@ -56,6 +56,8 @@ export const Toast = ({ className, ...props }: ToastProps) => {
       className={cn(
         'flex h-15 w-full items-center gap-2.75 px-5',
         'bg-primary-200 rounded-[10px] text-white',
+        'translate-y-0 transform-gpu opacity-100 transition-[transform,opacity] duration-200 ease-out',
+        'starting:-translate-y-full starting:opacity-0',
         className,
       )}
     >
