@@ -154,8 +154,9 @@ MyReviewsPage
   - mobile-first, `RootLayout` mobile frame 기준
   - 리스트 본문 좌우 20px padding
   - `리뷰 쓰기` 카드 리스트 간격은 카드 내부 상하 여백이 더해지지 않는 12px(`gap-3`)로 표시한다.
-  - `리뷰 쓰기` 카드의 `리뷰 작성` CTA 배경은 `bg-cool-gray-600` 토큰을 사용한다.
+  - `리뷰 쓰기` 카드의 `리뷰 작성` CTA 배경은 `bg-cool-gray-800` 토큰을 사용한다.
   - empty state의 `일본 맛집 추천받기` CTA 배경은 `bg-cool-gray-800` 토큰을 사용한다.
+  - Header 바로 아래에 tab underline이 붙어 있어 Header shadow는 `shadow-none`으로 예외 처리한다.
 - responsive:
   - app mobile frame width를 따른다.
 - fixed area:

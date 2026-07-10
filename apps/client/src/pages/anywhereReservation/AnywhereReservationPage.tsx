@@ -109,6 +109,7 @@ export const AnywhereReservationPage = () => {
             </h2>
             <Calendar
               isDateDisabled={calendar.isDateDisabled}
+              minMonth={calendar.minMonth}
               month={calendar.visibleMonth}
               onDateSelect={calendar.onDateSelect}
               onMonthChange={calendar.onMonthChange}

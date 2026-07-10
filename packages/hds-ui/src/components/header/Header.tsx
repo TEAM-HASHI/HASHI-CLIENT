@@ -3,34 +3,37 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
 import { cn } from '../../utils'
 
-const headerVariants = cva('relative w-full bg-white text-primary-200', {
-  variants: {
-    variant: {
-      center: '',
-      largeTitle: 'h-[97px]',
+const headerVariants = cva(
+  'shadow-header relative w-full bg-white text-primary-200',
+  {
+    variants: {
+      variant: {
+        center: '',
+        largeTitle: 'h-[97px]',
+      },
+      hasSubtitle: {
+        true: '',
+        false: '',
+      },
     },
-    hasSubtitle: {
-      true: '',
-      false: '',
-    },
-  },
-  compoundVariants: [
-    {
-      variant: 'center',
-      hasSubtitle: true,
-      className: 'h-[80px]',
-    },
-    {
+    compoundVariants: [
+      {
+        variant: 'center',
+        hasSubtitle: true,
+        className: 'h-[80px]',
+      },
+      {
+        variant: 'center',
+        hasSubtitle: false,
+        className: 'h-[75px]',
+      },
+    ],
+    defaultVariants: {
       variant: 'center',
       hasSubtitle: false,
-      className: 'h-[75px]',
     },
-  ],
-  defaultVariants: {
-    variant: 'center',
-    hasSubtitle: false,
   },
-})
+)
 
 type HeaderVariantProps = VariantProps<typeof headerVariants>
 

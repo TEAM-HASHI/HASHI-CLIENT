@@ -44,6 +44,7 @@ export const MyReviewsPage = () => {
             <BackIcon className="size-6" />
           </IconButton>
         }
+        className="shadow-none"
         title="마이 리뷰"
       />
       <MyReviewTabs

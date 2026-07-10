@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet/AuthGateBottomSheet'
+import loginImage from '@/shared/assets/images/login.webp'
 
 describe('AuthGateBottomSheet', () => {
   afterEach(() => {
@@ -26,6 +27,17 @@ describe('AuthGateBottomSheet', () => {
     expect(
       screen.getByRole('button', { name: '카카오로 1초 만에 시작하기' }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('presentation', { hidden: true })).toHaveAttribute(
+      'src',
+      loginImage,
+    )
+    expect(screen.getByRole('presentation', { hidden: true })).toHaveAttribute(
+      'width',
+      '200',
+    )
+    expect(screen.getByRole('presentation', { hidden: true })).toHaveClass(
+      'h-auto',
+    )
   })
 
   it('keeps kakao brand color for active feedback', () => {

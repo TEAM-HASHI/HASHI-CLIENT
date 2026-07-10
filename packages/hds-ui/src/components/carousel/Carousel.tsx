@@ -1,3 +1,6 @@
+import useEmblaCarousel, {
+  type EmblaViewportRefType,
+} from 'embla-carousel-react'
 import {
   Children,
   cloneElement,
@@ -6,14 +9,11 @@ import {
   type ComponentPropsWithoutRef,
   type ReactElement,
   type ReactNode,
-  type RefObject,
-  type UIEvent,
   useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react'
 
@@ -53,10 +53,11 @@ export type CarouselIndicatorProps = ComponentPropsWithoutRef<'div'> & {
 
 type CarouselContextValue = {
   currentIndex: number
+  isDragging: boolean
   itemCount: number
   setCurrentIndex: (index: number) => void
   setItemCount: (itemCount: number) => void
-  viewportRef: RefObject<HTMLDivElement | null>
+  viewportRef: EmblaViewportRefType
 }
 
 type CarouselItemInternalProps = CarouselItemProps & {
@@ -72,8 +73,6 @@ type CarouselComponent = {
   Indicator: (props: CarouselIndicatorProps) => ReactElement | null
 }
 
-const SCROLL_SETTLE_DELAY_MS = 30
-
 const CarouselContext = createContext<CarouselContextValue | null>(null)
 
 const indicatorAlignClassNames: Record<CarouselIndicatorAlign, string> = {
@@ -81,26 +80,12 @@ const indicatorAlignClassNames: Record<CarouselIndicatorAlign, string> = {
   end: 'right-6',
 }
 
-const viewportBaseClassName =
-  'w-full [scrollbar-width:none] overscroll-x-contain [-ms-overflow-style:none] motion-safe:scroll-smooth motion-reduce:scroll-auto [&::-webkit-scrollbar]:hidden'
-
-const viewportBehaviorClassName = 'snap-x snap-mandatory overflow-x-auto'
+const viewportBaseClassName = 'w-full touch-pan-y overflow-hidden'
 
 const clampIndex = (index: number, itemCount: number) => {
   const maxIndex = Math.max(itemCount - 1, 0)
 
   return Math.min(Math.max(index, 0), maxIndex)
-}
-
-const getNearestIndex = (viewport: HTMLDivElement, itemCount: number) => {
-  if (itemCount <= 0 || viewport.clientWidth <= 0) {
-    return 0
-  }
-
-  return clampIndex(
-    Math.round(viewport.scrollLeft / viewport.clientWidth),
-    itemCount,
-  )
 }
 
 const prefersReducedMotion = () => {
@@ -112,43 +97,6 @@ const prefersReducedMotion = () => {
   }
 
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
-
-const scrollViewportToIndex = (
-  viewport: HTMLDivElement,
-  index: number,
-  itemCount: number,
-  behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth',
-) => {
-  if (itemCount <= 0 || viewport.clientWidth <= 0) {
-    return
-  }
-
-  const nextLeft = clampIndex(index, itemCount) * viewport.clientWidth
-
-  if (Math.abs(viewport.scrollLeft - nextLeft) < 1) {
-    return
-  }
-
-  if (typeof viewport.scrollTo === 'function') {
-    viewport.scrollTo({
-      behavior,
-      left: nextLeft,
-    })
-    return
-  }
-
-  viewport.scrollLeft = nextLeft
-}
-
-const useCarouselContext = (componentName: string) => {
-  const context = useContext(CarouselContext)
-
-  if (!context) {
-    throw new Error(`${componentName} must be used within Carousel.Root`)
-  }
-
-  return context
 }
 
 const useControllableIndex = ({
@@ -184,6 +132,16 @@ const useControllableIndex = ({
   return [currentIndex, setCurrentIndex] as const
 }
 
+const useCarouselContext = (componentName: string) => {
+  const context = useContext(CarouselContext)
+
+  if (!context) {
+    throw new Error(`${componentName} must be used within Carousel.Root`)
+  }
+
+  return context
+}
+
 const Root = ({
   index,
   defaultIndex,
@@ -193,7 +151,11 @@ const Root = ({
   ...props
 }: CarouselRootProps) => {
   const [itemCount, setItemCount] = useState(0)
-  const viewportRef = useRef<HTMLDivElement | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [viewportRef, emblaApi] = useEmblaCarousel({
+    align: 'start',
+    loop: false,
+  })
   const [currentIndex, setCurrentIndex] = useControllableIndex({
     defaultIndex,
     index,
@@ -201,15 +163,63 @@ const Root = ({
     onIndexChange,
   })
 
+  useEffect(() => {
+    if (!emblaApi) {
+      return
+    }
+
+    const handleSelect = () => {
+      setCurrentIndex(emblaApi.selectedScrollSnap())
+    }
+
+    emblaApi.on('select', handleSelect)
+
+    return () => {
+      emblaApi.off('select', handleSelect)
+    }
+  }, [emblaApi, setCurrentIndex])
+
+  useEffect(() => {
+    if (!emblaApi) {
+      return
+    }
+
+    const handlePointerDown = () => setIsDragging(true)
+    const handlePointerRelease = () => setIsDragging(false)
+
+    emblaApi.on('pointerDown', handlePointerDown)
+    emblaApi.on('pointerUp', handlePointerRelease)
+    emblaApi.on('settle', handlePointerRelease)
+
+    return () => {
+      emblaApi.off('pointerDown', handlePointerDown)
+      emblaApi.off('pointerUp', handlePointerRelease)
+      emblaApi.off('settle', handlePointerRelease)
+    }
+  }, [emblaApi])
+
+  useEffect(() => {
+    if (!emblaApi || itemCount === 0) {
+      return
+    }
+
+    if (emblaApi.selectedScrollSnap() === currentIndex) {
+      return
+    }
+
+    emblaApi.scrollTo(currentIndex, prefersReducedMotion())
+  }, [currentIndex, emblaApi, itemCount])
+
   const value = useMemo<CarouselContextValue>(
     () => ({
       currentIndex,
+      isDragging,
       itemCount,
       setCurrentIndex,
       setItemCount,
       viewportRef,
     }),
-    [currentIndex, itemCount, setCurrentIndex],
+    [currentIndex, isDragging, itemCount, setCurrentIndex, viewportRef],
   )
 
   return (
@@ -227,107 +237,19 @@ const Root = ({
   )
 }
 
-const Viewport = ({
-  className,
-  onScroll,
-  children,
-  ...props
-}: CarouselViewportProps) => {
-  const { currentIndex, itemCount, setCurrentIndex, viewportRef } =
-    useCarouselContext('Carousel.Viewport')
-  const scrollSettleTimerRef = useRef<number | null>(null)
-
-  const updateIndexFromScroll = useCallback(() => {
-    const viewport = viewportRef.current
-
-    if (!viewport) {
-      return
-    }
-
-    setCurrentIndex(getNearestIndex(viewport, itemCount))
-  }, [itemCount, setCurrentIndex, viewportRef])
-
-  const handleScroll = (event: UIEvent<HTMLDivElement>) => {
-    onScroll?.(event)
-
-    if (scrollSettleTimerRef.current !== null) {
-      window.clearTimeout(scrollSettleTimerRef.current)
-    }
-
-    scrollSettleTimerRef.current = window.setTimeout(
-      updateIndexFromScroll,
-      SCROLL_SETTLE_DELAY_MS,
-    )
-  }
-
-  useEffect(() => {
-    const viewport = viewportRef.current
-
-    if (!viewport) {
-      return
-    }
-
-    scrollViewportToIndex(viewport, currentIndex, itemCount)
-  }, [currentIndex, itemCount, viewportRef])
-
-  useEffect(() => {
-    const viewport = viewportRef.current
-
-    if (!viewport || itemCount <= 0 || typeof ResizeObserver === 'undefined') {
-      return
-    }
-
-    let previousWidth = viewport.clientWidth
-    let animationFrameId: number | null = null
-
-    const observer = new ResizeObserver(() => {
-      const nextWidth = viewport.clientWidth
-
-      if (nextWidth === previousWidth) {
-        return
-      }
-
-      previousWidth = nextWidth
-
-      if (animationFrameId !== null) {
-        window.cancelAnimationFrame(animationFrameId)
-      }
-
-      animationFrameId = window.requestAnimationFrame(() => {
-        animationFrameId = null
-        scrollViewportToIndex(viewport, currentIndex, itemCount, 'auto')
-      })
-    })
-
-    observer.observe(viewport)
-
-    return () => {
-      observer.disconnect()
-
-      if (animationFrameId !== null) {
-        window.cancelAnimationFrame(animationFrameId)
-      }
-    }
-  }, [currentIndex, itemCount, viewportRef])
-
-  useEffect(() => {
-    return () => {
-      if (scrollSettleTimerRef.current !== null) {
-        window.clearTimeout(scrollSettleTimerRef.current)
-      }
-    }
-  }, [])
+const Viewport = ({ className, children, ...props }: CarouselViewportProps) => {
+  const { isDragging, viewportRef } = useCarouselContext('Carousel.Viewport')
 
   return (
     <div
       {...props}
       className={cn(
         viewportBaseClassName,
+        isDragging ? 'cursor-grabbing' : 'cursor-grab',
         className,
-        viewportBehaviorClassName,
       )}
+      data-dragging={isDragging || undefined}
       data-hds-carousel-viewport=""
-      onScroll={handleScroll}
       ref={viewportRef}
     >
       {children}
@@ -376,8 +298,9 @@ const Item = ({
   'aria-label': ariaLabel,
   ...props
 }: CarouselItemInternalProps) => {
-  const { currentIndex } = useCarouselContext('Carousel.Item')
+  const { currentIndex, isDragging } = useCarouselContext('Carousel.Item')
   const isCurrent = currentIndex === __index
+  const hasDragFeedback = isCurrent && isDragging
   const slideLabel = ariaLabel ?? `${__index + 1} / ${__count}`
 
   return (
@@ -385,8 +308,13 @@ const Item = ({
       {...props}
       aria-label={slideLabel}
       aria-roledescription="slide"
-      className={cn('h-full min-w-0 flex-[0_0_100%] snap-start', className)}
+      className={cn(
+        'h-full min-w-0 flex-[0_0_100%] transform-gpu transition-[transform,opacity] duration-[220ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transform-none motion-reduce:opacity-100 motion-reduce:transition-none',
+        hasDragFeedback && 'scale-[0.985] opacity-[0.98]',
+        className,
+      )}
       data-current={isCurrent || undefined}
+      data-dragging={hasDragFeedback || undefined}
       data-hds-carousel-item=""
       role="group"
     >
@@ -426,10 +354,10 @@ const Indicator = ({
         return (
           <span
             className={cn(
-              'block rounded-full transition-[width,background-color] duration-150',
+              'block rounded-full transition-[width,height,opacity,transform,background-color] duration-150 ease-out motion-reduce:transition-none',
               isActive
-                ? 'bg-warm-gray-300 h-1 w-[22px]'
-                : 'bg-warm-gray-100 size-1.5',
+                ? 'bg-warm-gray-300 h-1 w-[22px] scale-100 opacity-100'
+                : 'bg-warm-gray-100 size-1.5 scale-90 opacity-70',
               dotClassName,
               isActive && activeDotClassName,
             )}
