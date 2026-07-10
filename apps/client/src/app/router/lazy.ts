@@ -7,6 +7,7 @@ import {
   useEffect,
   useState,
 } from 'react'
+import { useLocation } from 'react-router-dom'
 
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 
@@ -15,6 +16,16 @@ const ROUTE_LOADING_MIN_VISIBLE_MS = 300
 
 type LazyRouteModule = {
   default: ComponentType
+}
+
+let wasRouteLoadingFallbackShown = false
+
+const resetRouteLoadingFallbackShown = () => {
+  wasRouteLoadingFallbackShown = false
+}
+
+const markRouteLoadingFallbackShown = () => {
+  wasRouteLoadingFallbackShown = true
 }
 
 const wait = (ms: number) => {
@@ -31,7 +42,11 @@ const applyRouteLoadingTiming = async <T extends LazyRouteModule>(
   const elapsedMs = Date.now() - startedAt
   const minimumPendingMs = ROUTE_LOADING_DELAY_MS + ROUTE_LOADING_MIN_VISIBLE_MS
 
-  if (elapsedMs >= ROUTE_LOADING_DELAY_MS && elapsedMs < minimumPendingMs) {
+  if (
+    wasRouteLoadingFallbackShown &&
+    elapsedMs >= ROUTE_LOADING_DELAY_MS &&
+    elapsedMs < minimumPendingMs
+  ) {
     await wait(minimumPendingMs - elapsedMs)
   }
 
@@ -46,7 +61,10 @@ const RouteLoadingFallback = () => {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
+    resetRouteLoadingFallbackShown()
+
     const timerId = setTimeout(() => {
+      markRouteLoadingFallbackShown()
       setIsVisible(true)
     }, ROUTE_LOADING_DELAY_MS)
 
@@ -60,6 +78,20 @@ const RouteLoadingFallback = () => {
   }
 
   return createElement(LoadingScreen)
+}
+
+const RouteLoadingBoundary = ({ children }: { children: ReactNode }) => {
+  const location = useLocation()
+
+  useEffect(() => {
+    resetRouteLoadingFallbackShown()
+  }, [location.key])
+
+  return createElement(
+    Suspense,
+    { fallback: createElement(RouteLoadingFallback) },
+    children,
+  )
 }
 
 const SearchPage = lazyRoute(() => import('@/pages/search'))
@@ -103,11 +135,7 @@ const lazyPage = (Page: ReturnType<typeof lazy>) => {
 }
 
 export const withLazyFallback = (element: ReactNode) => {
-  return createElement(
-    Suspense,
-    { fallback: createElement(RouteLoadingFallback) },
-    element,
-  )
+  return createElement(RouteLoadingBoundary, null, element)
 }
 
 export const lazyPages = {

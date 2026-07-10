@@ -5,6 +5,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { appRoutes } from '@/app/router/routes'
 
+let isAuthenticated = false
+
+vi.mock('@/shared/hooks/useAuthStatus', () => ({
+  useAuthStatus: () => ({
+    isAuthenticated,
+    status: isAuthenticated ? 'authenticated' : 'unauthenticated',
+  }),
+}))
+
+vi.mock('@/pages/mypage', () => ({
+  default: () => <main>마이페이지 화면</main>,
+}))
+
 vi.mock(
   '@/pages/loginRequired',
   () =>
@@ -17,10 +30,23 @@ vi.mock(
     }),
 )
 
+vi.mock(
+  '@/pages/myReviews',
+  () =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          default: () => <main>마이 리뷰</main>,
+        })
+      }, 200)
+    }),
+)
+
 describe('route lazy fallback', () => {
   afterEach(() => {
     cleanup()
     vi.useRealTimers()
+    isAuthenticated = false
   })
 
   it('delays LoadingScreen and keeps it visible for the minimum duration when a lazy route is pending', async () => {
@@ -61,5 +87,52 @@ describe('route lazy fallback', () => {
 
     expect(screen.getByText('로그인 필요 페이지')).toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('renders the next page as soon as the chunk resolves when the fallback is not shown during an AuthOnly boundary navigation', async () => {
+    vi.useFakeTimers()
+    isAuthenticated = true
+
+    const router = createMemoryRouter(appRoutes, {
+      initialEntries: ['/mypage'],
+    })
+
+    render(<RouterProvider router={router} />)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+
+    expect(screen.getByText('마이페이지 화면')).toBeInTheDocument()
+    expect(screen.getByText('마이')).toBeInTheDocument()
+
+    await act(async () => {
+      await router.navigate('/my-reviews')
+    })
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.getByText('마이페이지 화면')).toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(199)
+    })
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.queryByText('마이 리뷰')).not.toBeInTheDocument()
+    expect(screen.getByText('마이페이지 화면')).toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1)
+    })
+
+    expect(screen.getByText('마이 리뷰')).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(screen.queryByText('마이페이지 화면')).not.toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250)
+    })
+
+    expect(screen.getByText('마이 리뷰')).toBeInTheDocument()
   })
 })
