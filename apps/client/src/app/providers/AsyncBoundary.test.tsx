@@ -13,12 +13,12 @@ import AsyncBoundary from '@/app/providers/AsyncBoundary'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 
-const { mockCaptureException } = vi.hoisted(() => ({
-  mockCaptureException: vi.fn(),
+const { mockCaptureError } = vi.hoisted(() => ({
+  mockCaptureError: vi.fn(),
 }))
 
-vi.mock('@sentry/react', () => ({
-  captureException: mockCaptureException,
+vi.mock('@/shared/lib/sentry', () => ({
+  captureError: mockCaptureError,
 }))
 
 const response: ErrorResponse = {
@@ -48,7 +48,7 @@ describe('AsyncBoundary', () => {
   it('shows mapped copy, captures the error, and refetches after reset', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     const user = userEvent.setup()
-    const error = new ApiError({ status: 500, response })
+    const error = new ApiError(response, 500)
     const queryFn = vi
       .fn<() => Promise<string>>()
       .mockRejectedValueOnce(error)
@@ -73,7 +73,7 @@ describe('AsyncBoundary', () => {
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('COMMON-500')
     expect(alert).toHaveTextContent('서버 오류입니다')
-    expect(mockCaptureException).toHaveBeenCalledWith(error, {
+    expect(mockCaptureError).toHaveBeenCalledWith(error, {
       extra: { componentStack: expect.any(String) },
     })
 

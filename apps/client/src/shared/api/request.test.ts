@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError } from '@/shared/api/apiError'
+
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
 import { request } from '@/shared/api/request'
 import type { ErrorResponse } from '@/shared/api/types'
@@ -149,12 +150,15 @@ describe('request', () => {
       }) as never,
     )
 
-    await expect(request('users')).rejects.toMatchObject({
-      name: 'ApiError',
+    const requestPromise = request('users')
+
+    await expect(requestPromise).rejects.toMatchObject({
+      name: 'HttpStatusError',
       message: 'HTTP 502',
       status: 502,
       cause: parseError,
     })
+    await expect(requestPromise).rejects.toBeInstanceOf(HttpStatusError)
   })
 
   it('normalizes a malformed parsed HTTP failure without trusting its body', async () => {
@@ -167,12 +171,15 @@ describe('request', () => {
       }) as never,
     )
 
-    await expect(request('users')).rejects.toMatchObject({
-      name: 'ApiError',
+    const requestPromise = request('users')
+
+    await expect(requestPromise).rejects.toMatchObject({
+      name: 'HttpStatusError',
       message: 'HTTP 500',
       status: 500,
       cause: malformedBody,
     })
+    await expect(requestPromise).rejects.toBeInstanceOf(HttpStatusError)
   })
 
   it('rejects a malformed success response as a contract error', async () => {

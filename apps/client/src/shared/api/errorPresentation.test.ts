@@ -1,7 +1,7 @@
 import { NetworkError, TimeoutError } from 'ky'
 import { describe, expect, it } from 'vitest'
 
-import { ApiError } from '@/shared/api/apiError'
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import {
   DEFAULT_ERROR_MESSAGE,
   NETWORK_ERROR_MESSAGE,
@@ -21,10 +21,7 @@ const createResponse = (code: string): ErrorResponse => ({
 
 describe('getErrorPresentation', () => {
   it('prefers known external code copy over raw server copy', () => {
-    const error = new ApiError({
-      status: 409,
-      response: createResponse('USER-001'),
-    })
+    const error = new ApiError(createResponse('USER-001'), 409)
 
     expect(getErrorPresentation(error)).toEqual({
       code: 'USER-001',
@@ -33,12 +30,13 @@ describe('getErrorPresentation', () => {
   })
 
   it('falls back to the common HTTP status for an unknown envelope code', () => {
-    const error = new ApiError({
-      status: 404,
-      response: createResponse('FUTURE-404'),
-    })
+    const error = new ApiError(createResponse('FUTURE-404'), 404)
 
     expect(getErrorPresentation(error)).toEqual({
+      code: 'COMMON-404',
+      message: '리소스를 찾을 수 없습니다',
+    })
+    expect(getErrorPresentation(new HttpStatusError(404))).toEqual({
       code: 'COMMON-404',
       message: '리소스를 찾을 수 없습니다',
     })
@@ -59,7 +57,7 @@ describe('getErrorPresentation', () => {
     expect(getErrorPresentation(new Error('secret detail'))).toEqual({
       message: DEFAULT_ERROR_MESSAGE,
     })
-    expect(getErrorPresentation(new ApiError({ status: 502 }))).toEqual({
+    expect(getErrorPresentation(new HttpStatusError(502))).toEqual({
       message: DEFAULT_ERROR_MESSAGE,
     })
   })

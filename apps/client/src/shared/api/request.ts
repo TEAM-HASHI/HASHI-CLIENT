@@ -1,6 +1,6 @@
 import type { Options } from 'ky'
 
-import { ApiError } from '@/shared/api/apiError'
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
 import { isErrorResponse, isSuccessResponse } from '@/shared/api/types'
 
@@ -11,7 +11,7 @@ const parseResponseBody = async (httpResponse: Response): Promise<unknown> => {
     return await httpResponse.json()
   } catch (cause) {
     if (!httpResponse.ok) {
-      throw new ApiError({ status: httpResponse.status, cause })
+      throw new HttpStatusError(httpResponse.status, { cause })
     }
 
     throw new Error('Invalid API response', { cause })
@@ -27,11 +27,11 @@ export const request = async <TData>(
   const response = await parseResponseBody(httpResponse)
 
   if (isErrorResponse(response)) {
-    throw new ApiError({ status: httpResponse.status, response })
+    throw new ApiError(response, httpResponse.status)
   }
 
   if (!httpResponse.ok) {
-    throw new ApiError({ status: httpResponse.status, cause: response })
+    throw new HttpStatusError(httpResponse.status, { cause: response })
   }
 
   if (!isSuccessResponse<TData>(response)) {

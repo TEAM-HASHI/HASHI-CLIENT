@@ -1,4 +1,13 @@
-export { ApiError, isApiError, type ApiErrorOptions } from './apiError'
+export {
+  ApiError,
+  HttpStatusError,
+  checkHasHttpStatus,
+  checkIsAuthRequiredError,
+  checkIsNotFoundError,
+  checkIsRetryableStatusError,
+  isApiError,
+  isHttpStatusError,
+} from './apiError'
 export {
   ERROR_CATALOG,
   checkIsKnownApiErrorCode,

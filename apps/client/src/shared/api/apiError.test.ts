@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ApiError } from '@/shared/api/apiError'
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 
 const response: ErrorResponse = {
@@ -22,7 +22,7 @@ const response: ErrorResponse = {
 describe('ApiError', () => {
   it('preserves actual status, response fields, and cause', () => {
     const cause = new SyntaxError('invalid response')
-    const error = new ApiError({ status: 409, response, cause })
+    const error = new ApiError(response, 409, { cause })
 
     expect(error).toMatchObject({
       name: 'ApiError',
@@ -35,12 +35,12 @@ describe('ApiError', () => {
     })
   })
 
-  it('supports status-only HTTP failures without inventing a server envelope', () => {
-    const error = new ApiError({ status: 502 })
+  it('uses HttpStatusError for failures without a server envelope', () => {
+    const cause = new SyntaxError('invalid response')
+    const error = new HttpStatusError(502, { cause })
 
     expect(error.message).toBe('HTTP 502')
-    expect(error.code).toBeUndefined()
-    expect(error.response).toBeUndefined()
-    expect(error.fieldErrors).toEqual([])
+    expect(error.status).toBe(502)
+    expect(error.cause).toBe(cause)
   })
 })

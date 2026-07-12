@@ -1,16 +1,16 @@
-import * as Sentry from '@sentry/react'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
 import type { ErrorInfo, ReactNode } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
 import { AsyncErrorFallback } from '@/app/providers/AsyncErrorFallback'
+import { captureError } from '@/shared/lib/sentry'
 
 interface AsyncBoundaryProps {
   children: ReactNode
 }
 
 const handleBoundaryError = (error: unknown, info: ErrorInfo) => {
-  Sentry.captureException(error, {
+  captureError(error, {
     extra: { componentStack: info.componentStack },
   })
 }

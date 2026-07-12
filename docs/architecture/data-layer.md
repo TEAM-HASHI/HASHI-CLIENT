@@ -11,6 +11,7 @@ HASHI Client의 데이터 레이어는 앱 내부에서 먼저 조립하고, 실
 - API base URL: `VITE_API_BASE_URL`
 - OpenAPI type generation: `openapi-typescript`
 - 공통 request helper: `apps/client/src/shared/api`
+- API error model: `ApiError`와 `HttpStatusError`가 HTTP status를 보존
 - generated API type output: `apps/client/src/shared/api/generated/openapi.ts`
 - Query provider/client: `apps/client/src/app/providers/QueryProvider.tsx`, `apps/client/src/shared/lib/queryClient.ts`
 
@@ -45,16 +46,21 @@ apps/client/src/shared/api/
 
 ## Error Handling Policy
 
-`apps/client/src/shared/api`는 서버 error envelope와 실제 HTTP status를
-`ApiError`로 정규화합니다.
+`apps/client/src/shared/api`는 서버 response envelope와 HTTP 실패를 구분해
+정규화합니다.
 
+- `ApiError`는 유효한 서버 error envelope의 `code`, `message`, `errors`와 실제 HTTP status를 보존합니다.
+- `HttpStatusError`는 proxy HTML 응답, 빈 응답, malformed body처럼 서버 error envelope가 없는 HTTP 실패의 status와 cause를 보존합니다.
 - 외부 error code의 사용자 문구와 예상 status는 공통 error catalog에서 관리합니다.
 - 실제 response status는 retry와 boundary 판단에 사용하며 catalog status로 덮어쓰지 않습니다.
-- 미등록 code와 비JSON/malformed error body는 원본 정보를 진단용으로 보존하되, 사용자에게 임의의 서버 message를 직접 노출하지 않습니다.
-- query는 5xx, network, timeout만 1회 retry합니다. 이 오류들과 예상하지 못한 비-API 오류는 ErrorBoundary로 전달합니다.
+- 미등록 code와 비JSON/malformed error body는 진단 정보를 보존하되, 사용자에게 임의의 서버 message를 직접 노출하지 않습니다.
+- field-level error는 `ApiError.fieldErrors`와 문서화된 error code를 기준으로 page/form 가까이에서 매핑합니다.
+- query는 5xx status error, network error, timeout만 최대 1회 retry합니다.
+- blanket `throwOnError: true` 대신 status 기반 predicate를 사용해 5xx, network, timeout, 예상하지 못한 비-API 오류만 ErrorBoundary로 전달합니다.
 - 예상 가능한 4xx query는 기본적으로 호출부의 local error state에 남깁니다.
 - mutation은 retry하거나 render boundary로 throw하지 않고, 개별 `onError`가 없을 때 공통 toast를 fallback으로 사용합니다.
 - page/form이 field error, NotFound, Forbidden, conflict UX를 소유하면 query/mutation option에서 전역 기본값을 명시적으로 override합니다.
+- ErrorBoundary가 소비한 오류는 공통 Sentry 필터를 거쳐 unknown/render error, 5xx status error, 405 integration error만 기록합니다.
 - 인증 token refresh, request replay, logout은 error boundary가 아니라 별도 auth flow가 소유합니다.
 
 route content용 `AsyncBoundary`는 `RootLayout` 내부에서 `Outlet`을 감싸며,

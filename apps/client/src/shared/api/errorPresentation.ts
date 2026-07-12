@@ -1,6 +1,6 @@
 import { isNetworkError, isTimeoutError } from 'ky'
 
-import { isApiError } from '@/shared/api/apiError'
+import { checkHasHttpStatus, isApiError } from '@/shared/api/apiError'
 import {
   getCommonErrorCatalogEntryByStatus,
   getErrorCatalogEntry,
@@ -33,6 +33,14 @@ export const getErrorPresentation = (error: unknown): ErrorPresentation => {
     }
 
     return { message: DEFAULT_ERROR_MESSAGE }
+  }
+
+  if (checkHasHttpStatus(error)) {
+    const statusEntry = getCommonErrorCatalogEntryByStatus(error.status)
+
+    return statusEntry
+      ? { code: statusEntry.code, message: statusEntry.message }
+      : { message: DEFAULT_ERROR_MESSAGE }
   }
 
   if (isTimeoutError(error)) {
