@@ -4,8 +4,7 @@
 
 - 사용자가 예약 상세 상태와 접수 정보를 확인할 수 있는 페이지입니다.
 - 예약 진행 단계, 예약 접수 정보, 예약 안내 문구, 하단 액션을 한 화면에서 제공합니다.
-- 현재는 API 연동 전 mock 데이터로 화면을 구성합니다.
-- `useReservationDetailPage`에서 `reservationId` route param을 읽어두며, 추후 해당 값을 기반으로 예약 상세 API 조회로 교체합니다.
+- `reservationId` route param을 기반으로 예약 상세 API를 조회해 화면 데이터를 구성합니다.
 
 ## Route
 
@@ -54,40 +53,47 @@
 - [ ] 하단 액션에는 `예약 취소하기`, `홈으로 돌아가기` 버튼을 표시합니다.
 - [ ] 식당 이미지가 없으면 공통 `DefaultImage`를 사용합니다.
 - [ ] fixed Header와 fixed ActionBar는 z-index 토큰을 사용합니다.
+- [ ] 취소된 예약(`reservationStatus: CANCELED`)은 URL 직접 접근으로도 상세 화면을 표시하지 않고 `NotFoundPage`를 표시합니다.
+- [ ] 예약 취소 요청 중에는 취소 확인 버튼과 닫기 버튼을 비활성화해 중복 요청과 중간 닫기를 방지합니다.
 
 ## Data Dependencies
 
 ### Query
 
 - query:
-  - 현재 없음
-  - 추후 예약 상세 조회 API로 교체 예정
+  - `GET /api/v1/reservations/{reservationId}`
 - enabled condition:
-  - `reservationId` route param이 존재할 때 API query를 활성화합니다.
+  - `reservationId` route param이 양의 정수로 파싱될 때 API query를 활성화합니다.
 - request params:
   - `reservationId`
 - loading state:
-  - API 연동 시 정의
+  - `LoadingScreen`
 - error state:
-  - API 연동 시 정의
+  - 공통 query error policy를 따릅니다.
+  - 예약 상세 API가 404를 응답하면 `NotFoundPage`를 표시합니다.
+  - 예약 상세 API가 `reservationStatus: CANCELED` 데이터를 응답하면 `NotFoundPage`를 표시합니다.
 - empty state:
-  - 예약 상세 데이터가 없는 경우 404 또는 에러 상태로 처리하는 방향을 API 연동 시 확정
+  - 응답 `data`가 없으면 API 계약 오류로 처리합니다.
 - refetch condition:
-  - API 연동 시 정의
+  - React Query 기본 정책을 따릅니다.
 
 ### Mutation
 
 - mutation:
-  - 예약 취소 요청
+  - `POST /api/v1/reservations/{reservationId}/cancel`
 - request data:
   - 예약 취소: `reservationId`
 - submit enabled condition:
-  - API 연동 시 예약 상태에 따라 정의
+  - `reservationId`가 양의 정수로 파싱된 경우에만 예약 취소 API를 호출합니다.
+  - 예약 취소 요청 중에는 취소 확인 버튼과 닫기 버튼을 비활성화합니다.
+  - 예약 취소 요청 중 닫힘 요청이 발생해도 모달을 유지합니다.
 - success handling:
+  - 예약 취소 성공 toast를 표시합니다.
+  - toast 문구는 예약 취소 API 성공 응답의 `message`를 사용합니다.
   - 예약 취소 확인 후 예약 정보 페이지의 진행 중 상태(`/my-reservations?status=IN_PROGRESS`)로 이동합니다.
-  - API 연동 시 toast 또는 페이지 상태 갱신이 필요하면 함께 처리합니다.
 - failure handling:
-  - API 연동 시 toast 또는 user-facing error로 처리
+  - 공통 mutation error handler를 통해 실패 toast를 표시합니다.
+  - 예약 정보 페이지로 이동하지 않습니다.
 
 ## User Flow
 
@@ -98,8 +104,10 @@
 5. 사용자는 예약 진행 상태, 예약 접수 정보, 안내 문구를 확인합니다.
 6. 사용자가 뒤로가기 버튼을 누르면 이전 페이지로 이동합니다.
 7. 사용자가 예약 취소 버튼을 누르면 예약 취소 확인 모달이 열립니다.
-8. 사용자가 모달에서 취소하기를 누르면 예약 정보 페이지의 진행 중 상태로 이동합니다.
-9. 사용자가 홈 버튼을 누르면 홈(`/`)으로 이동합니다.
+8. 사용자가 모달에서 취소하기를 누르면 예약 취소 API를 호출합니다.
+9. 예약 취소에 성공하면 서버 응답 `message`로 성공 toast를 표시하고 예약 정보 페이지의 진행 중 상태로 이동합니다.
+10. 예약 취소에 실패하면 실패 toast를 표시하고 현재 페이지에 머무릅니다.
+11. 사용자가 홈 버튼을 누르면 홈(`/`)으로 이동합니다.
 
 ## State
 
@@ -109,10 +117,9 @@
   - 없음
 - URL state:
   - `reservationId`
-  - 현재 hook에서 읽고 있으며, mock 단계에서는 API 요청에 사용하지 않습니다.
+  - API 요청 path parameter로 사용합니다.
 - server state:
-  - 현재 mock 데이터
-  - 추후 예약 상세 API 응답
+  - 예약 상세 API 응답
 - derived state:
   - 예약 진행 단계별 상태 스타일
   - 예약 접수 정보 카드 item 배열
@@ -125,25 +132,25 @@
   - `예약 확정` 단계는 pending/current이면 `식당 확인 후 예약 결과를 알려드릴게요`, completed이면 `예약이 성공적으로 확정되었어요`를 표시합니다.
   - `식당 컨택 중` 단계가 current이면 `예약 접수`과의 연결선만 검정에서 `primary-400`으로 이어지는 gradient를 적용합니다.
   - 연결된 두 단계가 모두 completed이면 연결선을 검정 실선으로 표시합니다.
+  - `reservationStatus`가 `CANCELED`이면 상세 표시 대상에서 제외합니다.
 
 ## Validation
 
 - route param:
   - `reservationId`
-  - 현재 mock 단계에서는 읽기만 하고 검증하지 않음
-  - API 연동 시 누락 또는 유효하지 않은 값에 대한 처리 기준을 추가합니다.
+  - 양의 정수로 파싱되는 경우에만 예약 상세 query를 활성화합니다.
 - submit enabled condition:
   - 현재 없음
 
 ## Route Param Policy
 
 - `reservationId`는 예약 상세 조회를 위한 필수 route param입니다.
-- 현재 mock 단계에서는 `useParams`로 `reservationId`를 읽어두지만, mock 데이터 조회에는 사용하지 않습니다.
-- API 연동 시 `reservationId`를 예약 상세 조회 API의 request param으로 사용합니다.
-- `reservationId`가 없거나 형식이 유효하지 않은 경우 404 페이지로 이동합니다.
+- `reservationId`를 예약 상세 조회 API의 request param으로 사용합니다.
+- `reservationId`가 없거나 양의 정수가 아니면 예약 상세 query를 실행하지 않고 `NotFoundPage`를 표시합니다.
 - `reservationId`는 형식 검증을 먼저 수행하고, 실제 존재 여부와 접근 권한은 서버 응답을 기준으로 처리합니다.
-- 서버에서 예약 없음 응답을 내려주면 404 페이지로 이동합니다.
+- 서버에서 예약 없음 응답을 내려주면 공통 API error policy를 따릅니다.
 - 서버에서 권한 없음 응답을 내려주면 인증/권한 정책에 맞는 화면으로 이동합니다.
+- 서버에서 취소된 예약(`reservationStatus: CANCELED`)을 정상 응답하더라도 상세 화면 대신 `NotFoundPage`를 표시합니다.
 
 ## UI Structure
 
@@ -181,25 +188,32 @@ ReservationDetailPage
   - `ReservationDetailActionBar`
 - page-local hook:
   - `useReservationDetailPage`
+  - `useReservationDetailQuery`
+  - `useCancelReservationMutation`
+- page-local api:
+  - `getReservationDetail`
+  - `cancelReservation`
+- page-local util:
+  - `createReservationDetailViewModel`
+  - `reservationDetailPolicy`
 - page-local constants:
   - `reservationNotices`
-- page-local mock:
-  - `reservationDetail.mock.ts`
 - icon:
   - `BackIcon`
 
 ## Error Handling
 
 - API error:
-  - API 연동 시 정의합니다.
+  - 공통 query error policy를 따릅니다.
 - validation error:
   - 현재 없음
 - exceptional case:
-  - `reservationId`가 없거나 유효하지 않은 경우 API 연동 시 404 또는 에러 상태로 처리합니다.
+  - `reservationId`가 없거나 유효하지 않은 경우 query를 실행하지 않고 `NotFoundPage`를 표시합니다.
+  - 취소된 예약은 URL 직접 접근으로도 상세 화면을 표시하지 않고 `NotFoundPage`를 표시합니다.
 - user-facing message:
-  - API 연동 시 정의합니다.
+  - 공통 error presentation을 따릅니다.
 - retry or fallback:
-  - API 연동 시 정의합니다.
+  - 공통 query retry policy를 따릅니다.
 
 ## Navigation
 
@@ -236,7 +250,9 @@ ReservationDetailPage
   - Header와 ActionBar를 제외한 본문 영역이 스크롤됩니다.
   - fixed Header와 ActionBar에 가려지지 않도록 본문 상단/하단 여백을 둡니다.
 - empty/loading/error layout:
-  - API 연동 시 정의합니다.
+  - loading: `LoadingScreen`
+  - not found: `NotFoundPage`
+  - error: 공통 query error policy
 
 ## Verification
 

@@ -3,18 +3,20 @@ import { Dialog } from '@hashi/hds-ui'
 
 type ReservationCancelDialogProps = {
   open: boolean
+  isConfirming?: boolean
   onOpenChange: (open: boolean) => void
   onConfirmCancelPress: () => void
 }
 
 const primaryActionClassName =
-  'flex h-9 items-center justify-center rounded-[5px] border-0 bg-cool-gray-800 px-4 font-sans text-[14px] font-medium leading-[1.36] text-white'
+  'flex h-9 items-center justify-center rounded-[5px] border-0 bg-cool-gray-800 px-4 font-sans text-[14px] font-medium leading-[1.36] text-white disabled:cursor-not-allowed disabled:opacity-40'
 
 const secondaryActionClassName =
-  'flex h-9 items-center justify-center rounded-[5px] border-0 bg-secondary-200 px-4 font-sans text-[14px] font-medium leading-[1.36] text-black'
+  'flex h-9 items-center justify-center rounded-[5px] border-0 bg-secondary-200 px-4 font-sans text-[14px] font-medium leading-[1.36] text-black disabled:cursor-not-allowed disabled:opacity-40'
 
 export const ReservationCancelDialog = ({
   open,
+  isConfirming = false,
   onOpenChange,
   onConfirmCancelPress,
 }: ReservationCancelDialogProps) => {
@@ -38,12 +40,18 @@ export const ReservationCancelDialog = ({
         <Dialog.Footer>
           <button
             className={secondaryActionClassName}
+            disabled={isConfirming}
             onClick={onConfirmCancelPress}
             type="button"
           >
             취소하기
           </button>
-          <Dialog.Close className={primaryActionClassName}>닫기</Dialog.Close>
+          <Dialog.Close
+            className={primaryActionClassName}
+            isDisabled={isConfirming}
+          >
+            닫기
+          </Dialog.Close>
         </Dialog.Footer>
       </Dialog.Content>
     </Dialog.Root>
