@@ -15,7 +15,6 @@ export const useMypagePage = () => {
   const summary = mypageSummaryMock
   const primaryMenuItems = createMypagePrimaryMenuItems({
     myReviewCount: summary.myReviewCount,
-    savedRestaurantCount: summary.savedRestaurantCount,
   })
 
   const handleComingSoonPress = () => {

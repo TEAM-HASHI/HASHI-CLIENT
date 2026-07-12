@@ -6,5 +6,4 @@ export const mypageSummaryMock: MypageSummary = {
   profileImageUrl: null,
   availablePoint: 7000,
   myReviewCount: 8,
-  savedRestaurantCount: 12,
 }

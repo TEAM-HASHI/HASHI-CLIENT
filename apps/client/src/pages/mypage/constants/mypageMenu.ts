@@ -8,16 +8,14 @@ export const HASHI_TERMS_URL =
   'https://ringed-mitten-50f.notion.site/Hashi-38dc804d7e5e80eebf2be0fc0ae448ac'
 
 export const createMypagePrimaryMenuItems = ({
-  savedRestaurantCount,
   myReviewCount,
 }: {
-  savedRestaurantCount?: number
   myReviewCount: number
 }): MypageMenuItem[] => [
   {
     id: 'saved-restaurants',
     label: '내가 찜한 식당',
-    count: savedRestaurantCount,
+    count: 0,
     highlighted: true,
     action: {
       type: 'comingSoon',
@@ -69,27 +67,6 @@ export const mypageMenuSections: MypageMenuSection[] = [
         action: {
           type: 'external',
           url: HASHI_TERMS_URL,
-        },
-      },
-    ],
-  },
-  {
-    id: 'account',
-    title: '계정',
-    items: [
-      {
-        id: 'logout',
-        label: '로그아웃',
-        action: {
-          type: 'comingSoon',
-        },
-      },
-      {
-        id: 'withdrawal',
-        label: '회원탈퇴',
-        action: {
-          type: 'navigate',
-          path: ROUTES.withdrawal,
         },
       },
     ],

@@ -39,6 +39,14 @@ describe('MypagePage', () => {
     )
   })
 
+  it('renders saved restaurant count as zero during MVP', () => {
+    render(<MypagePage />)
+
+    expect(
+      screen.getByRole('button', { name: /내가 찜한 식당 0/ }),
+    ).toBeInTheDocument()
+  })
+
   it('renders confirmed notice and terms links as external links', () => {
     render(<MypagePage />)
 
@@ -50,5 +58,13 @@ describe('MypagePage', () => {
       'href',
       HASHI_TERMS_URL,
     )
+  })
+
+  it('does not render the MVP-excluded account section', () => {
+    render(<MypagePage />)
+
+    expect(screen.queryByText('계정')).not.toBeInTheDocument()
+    expect(screen.queryByText('로그아웃')).not.toBeInTheDocument()
+    expect(screen.queryByText('회원탈퇴')).not.toBeInTheDocument()
   })
 })
