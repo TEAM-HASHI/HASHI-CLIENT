@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
-import { getMyPointBalance } from '@/pages/mypage/api/getMyPointBalance'
+import { useMyPointBalanceQuery } from '@/features/point'
 import { getMyReviewCount } from '@/pages/mypage/api/getMyReviewCount'
 import { getMypageProfileSummary } from '@/pages/mypage/api/getMypageProfileSummary'
 import {
@@ -24,17 +24,11 @@ export const useMypagePage = () => {
   const myReviewCountQuery = useQuery({
     queryFn: getMyReviewCount,
     queryKey: ['mypage', 'myReviewCount'],
-    throwOnError: false,
   })
-  const pointBalanceQuery = useQuery({
-    queryFn: getMyPointBalance,
-    queryKey: ['mypage', 'pointBalance'],
-    throwOnError: false,
-  })
+  const pointBalanceQuery = useMyPointBalanceQuery()
   const profileSummaryQuery = useQuery({
     queryFn: getMypageProfileSummary,
     queryKey: ['mypage', 'profileSummary'],
-    throwOnError: false,
   })
 
   const summary = {

@@ -40,7 +40,6 @@ apps/client/src/pages/mypage/
 ├── MypagePage.spec.md
 ├── api/
 │   ├── getMypageProfileSummary.ts
-│   ├── getMyPointBalance.ts
 │   └── getMyReviewCount.ts
 ├── components/
 │   ├── MypageProfile.tsx
@@ -58,14 +57,22 @@ apps/client/src/pages/mypage/
 apps/client/src/shared/components/comingSoonDialog/
 ├── ComingSoonDialog.tsx
 └── index.ts
+
+apps/client/src/features/point/
+├── api/
+│   └── getMyPointBalance.ts
+├── hooks/
+│   └── useMyPointBalanceQuery.ts
+└── index.ts
 ```
 
 설계 기준:
 
 - `request`와 공통 response 처리는 `shared/api`를 사용합니다.
 - API 응답 타입은 `shared/api/generated/openapi.ts`의 `components['schemas']` 타입을 참조합니다.
-- `request<T>()`는 성공 응답의 `data`가 비어 있을 수 있으므로 endpoint 함수에서 page-local view type으로 정규화합니다.
+- `request<T>()`는 성공 응답의 `data`가 비어 있을 수 있으므로 endpoint 함수에서 UI view type으로 정규화합니다.
 - 마이페이지에서만 사용하는 endpoint 함수와 query key는 `pages/mypage` 내부에 둡니다.
+- 다른 페이지에서도 재사용되는 포인트 잔액 조회는 `features/point`에서 관리합니다.
 - API 연동 전후 테스트 fixture가 필요하면 해당 테스트 파일 안에서 endpoint별 mock으로 둡니다.
 
 ## Requirements
@@ -291,10 +298,10 @@ Generated OpenAPI type:
 type PointBalanceResponse = components['schemas']['PointBalanceResponse']
 ```
 
-page-local normalized type:
+feature normalized type:
 
 ```ts
-type MypagePointBalance = {
+type MyPointBalance = {
   availablePoint: number
 }
 ```
@@ -450,12 +457,16 @@ page-local components:
 page-local api:
 
 - `getMypageProfileSummary`
-- `getMyPointBalance`
 - `getMyReviewCount`
 
 hooks:
 
 - `useMypagePage`
+
+feature api:
+
+- `features/point/api/getMyPointBalance`
+- `features/point/hooks/useMyPointBalanceQuery`
 
 constants:
 
@@ -488,11 +499,10 @@ types:
 
 ### Error
 
-- 특정 query 실패 시 해당 영역만 fallback 값을 사용합니다.
-- 프로필 조회 실패: nickname `하시`, profile fallback 이미지
-- 포인트 조회 실패: `0 P`
-- 리뷰 count 조회 실패: `0`
-- 내부/외부 메뉴는 가능한 경우 유지합니다.
+- 특정 query의 API 요청이 실패하면 앱의 `AsyncBoundary`로 에러를 전달합니다.
+- API 실패 시 fallback 값을 실제 사용자 데이터처럼 보여주지 않습니다.
+- endpoint 함수의 fallback 정규화는 API 요청이 성공했지만 응답 값이 비어 있는 경우에만 사용합니다.
+- 내가 찜한 식당 count `0`은 API 실패 fallback이 아니라 MVP 제외 범위에 따른 고정 표시입니다.
 
 ### Empty
 

@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
+import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -29,18 +30,25 @@ vi.mock('@/shared/api/request', () => ({
   request: mockRequest,
 }))
 
-const renderMypagePage = () => {
+const renderMypagePage = ({
+  throwOnError = false,
+}: {
+  throwOnError?: boolean
+} = {}) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
+        throwOnError,
       },
     },
   })
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MypagePage />
+      <ErrorBoundary fallback={<p role="alert">boundary error</p>}>
+        <MypagePage />
+      </ErrorBoundary>
     </QueryClientProvider>,
   )
 }
@@ -130,6 +138,29 @@ describe('MypagePage', () => {
       screen.getByRole('img', { name: '테스트유저 프로필 이미지' }),
     ).toHaveAttribute('src', 'https://example.com/profile.png')
     expect(request).toHaveBeenCalledWith('/api/v1/users/me/profile-summary')
+  })
+
+  it('lets API request failures propagate to the error boundary', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    mockRequest.mockImplementation((path: string) => {
+      if (path === '/api/v1/points/me') {
+        return Promise.reject(new Error('point request failed'))
+      }
+
+      if (path === '/api/v1/users/me/profile-summary') {
+        return Promise.resolve({
+          nickname: '테스트유저',
+          profileImageUrl: 'https://example.com/profile.png',
+        })
+      }
+
+      return Promise.resolve({ reviewCount: 8 })
+    })
+
+    renderMypagePage({ throwOnError: true })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('boundary error')
+    expect(screen.queryByText('0 P')).not.toBeInTheDocument()
   })
 
   it('renders confirmed notice and terms links as external links', () => {
