@@ -1,4 +1,4 @@
-import type { FilterOption } from '../types'
+import type { FilterOption } from '@/features/restaurantList/types'
 
 export const CATEGORY_OPTIONS: FilterOption[] = [
   { label: '전체', value: 'all' },

@@ -34,6 +34,7 @@ export default tseslint.config(
   {
     files: [
       'apps/client/**/*.{ts,tsx}',
+      'apps/admin/**/*.{ts,tsx}',
       'packages/hds-icons/src/**/*.{ts,tsx}',
       'packages/hds-ui/src/**/*.{ts,tsx}',
     ],
@@ -48,12 +49,13 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/client/**/*.{ts,tsx}'],
+    files: ['apps/client/**/*.{ts,tsx}', 'apps/admin/**/*.{ts,tsx}'],
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
   },
   {
     files: [
       '.agents/scripts/**/*.{js,mjs}',
+      'apps/admin/scripts/**/*.{js,mjs}',
       'apps/client/scripts/**/*.{js,mjs}',
       'scripts/**/*.{js,mjs}',
     ],
@@ -65,8 +67,8 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/client/src/**/*.{ts,tsx}'],
-    ignores: ['apps/client/src/**/index.ts'],
+    files: ['apps/client/src/**/*.{ts,tsx}', 'apps/admin/src/**/*.{ts,tsx}'],
+    ignores: ['apps/client/src/**/index.ts', 'apps/admin/src/**/index.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -75,7 +77,7 @@ export default tseslint.config(
             {
               group: ['./*', '../*'],
               message:
-                'apps/client/src 내부 모듈은 상대 경로 대신 @/ alias import를 사용하세요. 같은 폴더 public barrel인 index.ts만 예외입니다.',
+                'apps/*/src 내부 모듈은 상대 경로 대신 @/ alias import를 사용하세요. 같은 폴더 public barrel인 index.ts만 예외입니다.',
             },
           ],
         },

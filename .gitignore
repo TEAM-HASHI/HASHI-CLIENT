@@ -21,6 +21,8 @@ storybook-static
 .env
 .env.*
 !.env.example
+.serena/
+.playwright-mcp/
 
 # Editor directories and files
 .vscode/*

@@ -1,4 +1,4 @@
-import type { FilterOption } from '../types'
+import type { FilterOption } from '@/features/restaurantList/types'
 
 export const POPULAR_RESTAURANTS_SORT_OPTIONS: FilterOption[] = [
   { label: '기본순', value: 'default' },

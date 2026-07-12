@@ -18,19 +18,30 @@ OpenAPI JSON/YAML이 있으면 다음 보조 스크립트로 endpoint 요약을 
 node .agents/scripts/summarize-openapi.mjs <path-or-url>
 ```
 
-OpenAPI 타입은 backend schema URL 또는 local schema file을 기준으로 생성합니다.
+OpenAPI 타입은 backend schema URL 또는 local schema file을 기준으로 owning app마다 생성합니다.
 
 ```bash
 pnpm gen:api-types
+pnpm gen:admin-api-types
+pnpm gen:admin-user-api-types
+pnpm gen:admin-all-api-types
 ```
 
-schema URL은 공개 문서에 직접 적지 않습니다. 로컬에서는 `apps/client/.env.openapi.local` 또는 shell의 `OPENAPI_SCHEMA_URL`에 raw OpenAPI JSON/YAML URL을 설정합니다.
+schema URL은 공개 문서에 직접 적지 않습니다. client는 `OPENAPI_SCHEMA_URL`, admin은 `ADMIN_OPENAPI_SCHEMA_URL`과 `USER_OPENAPI_SCHEMA_URL`을 `apps/*/.env.openapi.local` 또는 shell에 설정합니다.
 
 ```bash
 OPENAPI_SCHEMA_URL=http://localhost:8080/v3/api-docs pnpm gen:api-types
 ```
 
-생성 결과는 `apps/client/src/shared/api/generated/openapi.ts`에 둡니다.
+생성 결과는 owning app에 분리합니다.
+
+| App                 | Command                         | Output                                                |
+| ------------------- | ------------------------------- | ----------------------------------------------------- |
+| Client              | `pnpm gen:api-types`            | `apps/client/src/shared/api/generated/openapi.ts`     |
+| Admin write         | `pnpm gen:admin-api-types`      | `apps/admin/src/shared/api/generated/openapi.ts`      |
+| Admin public/upload | `pnpm gen:admin-user-api-types` | `apps/admin/src/shared/api/generated/user-openapi.ts` |
+
+한 앱의 schema로 다른 앱의 generated output을 덮어쓰거나 cross-import하지 않습니다.
 
 ## Pipeline
 
@@ -43,7 +54,7 @@ OPENAPI_SCHEMA_URL=http://localhost:8080/v3/api-docs pnpm gen:api-types
 
 2. `api-integrator`
    - page-local 또는 feature-local 위치를 결정합니다.
-   - `apps/client/src/shared/api/generated/openapi.ts`의 OpenAPI type을 확인합니다.
+   - owning app의 `src/shared/api/generated/openapi.ts` OpenAPI type을 확인합니다.
    - endpoint 함수와 request/response type을 작성합니다.
    - query key factory를 작성합니다.
    - `queryOptions`, `mutationOptions`, query/mutation hook을 작성합니다.
@@ -79,6 +90,7 @@ apps/client/src/features/{feature}/
 ```
 
 `apps/client/src/shared/api`는 low-level HTTP client와 response/error 처리만 담당합니다.
+Admin console API boundary는 `apps/admin/src/shared/api`에서 같은 원칙을 따릅니다.
 
 ## Query Mode Defaults
 
