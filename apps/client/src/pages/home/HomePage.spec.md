@@ -6,7 +6,7 @@
 - 현재 디자인 기준 구현 범위는 첨부 이미지의 홈 화면입니다.
 - 새 공통 컴포넌트를 무리하게 만들지 않고, 현재 프로젝트에 이미 있는 HDS 컴포넌트와 아이콘을 우선 사용합니다.
 - 메인 배너는 `GET /api/v1/magazines/banners` API와 `features/magazine`의 shared magazine banner query를 사용합니다.
-- SNS 맛집 데이터는 아직 API가 확정되지 않았으므로 page-local 정적 mock 데이터로 먼저 구현하고, API 확정 시 홈 전용 query로 교체합니다.
+- SNS 맛집 데이터는 `GET /api/v1/restaurants?type=sns-hot&size=5`로 조회합니다.
 
 ## Route
 
@@ -134,13 +134,17 @@ export const HomeLogo = () => {
 - query:
   - 메인 배너 API는 `GET /api/v1/magazines/banners`를 사용하며, 매거진 리스트 페이지와 공유하므로 `features/magazine`의 magazine banner query를 사용합니다.
   - `useHomePage` 내부의 `homeBanners`는 shared magazine banner query로 조합합니다.
-  - `hotSnsRestaurants`는 아직 API가 확정되지 않았으므로 page-local 정적 mock 데이터를 유지하고, API 확정 시 홈 전용 query로 교체합니다.
+  - home hot SNS restaurants query
+  - 메인 배너와 퀵 링크는 아직 page-local 정적 데이터로 유지합니다.
   - query/mutation 코드는 HDS나 아이콘 패키지에 넣지 않습니다.
 - enabled condition:
   - 메인 배너 API: 홈 진입 즉시
+  - hot SNS API: 홈 진입 즉시
 - request params:
   - 메인 배너 API: `GET /api/v1/magazines/banners`, params 없음
   - API 연동 후: SNS 맛집 개수, 지역 또는 언어 필터가 생기면 명시합니다.
+  - `type`: `sns-hot`
+  - `size`: `5`
 - response shape:
   - `homeBanners` API response fields:
     - source: `MagazineBannerResponse`
@@ -151,20 +155,23 @@ export const HomeLogo = () => {
   - `magazineId`와 `bannerImageUrl`이 있으면 홈 배너로 렌더링합니다.
   - `title`이 없으면 `맛집 큐레이션 배너`를 이미지 대체 텍스트 fallback으로 사용합니다.
   - `instagramRedirectUrl`이 없거나 유효한 Instagram URL이 아니면 배너 이미지는 렌더링하되 외부 링크로 만들지 않습니다.
-  - `hotSnsRestaurants` 예상 필드:
-    - `restaurantId`
-    - `name`
-    - `summary`
-    - `imageUrl`
-    - `imageAlt`
+  - source: `RestaurantListResponse.content`
+  - `restaurantId` -> link id
+  - `name` -> list title
+  - `summary` fallback `genre` -> list summary
+  - `thumbnailUrl` -> image
 - loading state:
   - 메인 배너 API: 배너 비율을 유지하는 skeleton을 사용합니다.
+  - API 응답 전에는 SNS 리스트 섹션을 빈 상태로 유지합니다.
 - error state:
+  - 전체 페이지 실패로 막지 않고 빈 SNS 리스트를 유지합니다.
+  - route-level ErrorBoundary로 throw하지 않습니다.
   - 메인 배너 API: 전체 페이지 실패로 막지 않고 실패한 섹션만 재시도 UI를 제공합니다.
 - empty state:
   - 배너 데이터가 없으면 메인 배너 영역을 숨깁니다.
   - SNS 리스트가 없으면 섹션을 숨기는 것을 우선합니다.
 - refetch condition:
+  - TanStack Query 기본 stale/refetch 정책을 따릅니다.
   - 메인 배너 API: 섹션 재시도 버튼 클릭 시 TanStack Query `refetch`를 호출합니다.
 
 ### Mutation
@@ -203,8 +210,6 @@ export const HomeLogo = () => {
 - URL state:
   - 없음
 - server state:
-  - MVP 정적 데이터에서는 없음
-  - API 연동 후:
     - 메인 배너: `features/magazine`의 magazine banner query state
     - SNS 맛집 리스트: 홈 전용 query state
 - derived state:
@@ -517,7 +522,7 @@ BottomNavigationLayout
 - [x] `corepack pnpm --filter @hashi/client lint`
 - [x] `corepack pnpm --filter @hashi/client typecheck`
 - [x] `corepack pnpm --filter @hashi/client build`
-- [ ] `corepack pnpm --filter @hashi/client test`
+- [x] `corepack pnpm --filter @hashi/client test`
 - [x] `corepack pnpm format:check`
 - [x] `git diff --check`
 - [ ] `/` 직접 진입 확인

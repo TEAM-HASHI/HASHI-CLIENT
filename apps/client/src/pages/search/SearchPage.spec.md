@@ -95,6 +95,84 @@
 
 ## Data Dependencies
 
+### Source
+
+- OpenAPI generated type:
+  - `apps/client/src/shared/api/generated/openapi.ts`
+- HTTP client:
+  - `apps/client/src/shared/api/request.ts`
+  - `apps/client/src/shared/api/apiClient.ts`
+- Query defaults:
+  - `apps/client/src/shared/lib/queryClient.ts`
+- Route error boundary:
+  - `apps/client/src/app/providers/AsyncBoundary.tsx`
+  - `apps/client/src/app/layout/RootLayout.tsx`
+- Type generation note:
+  - 현재 저장소 문서와 generated file header 기준 client API type generator는 `openapi-typescript`입니다.
+  - `swagger-typescript-api`로 생성된 별도 산출물은 현재 저장소에서 확인되지 않습니다.
+
+### API Integration Map
+
+| UI area          | Endpoint                                                 | Params                                                               | Response data                                              | Query key                                                    | Mode       | Enabled                                 | States                                                 |
+| ---------------- | -------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ | ---------- | --------------------------------------- | ------------------------------------------------------ |
+| 검색 결과 리스트 | `GET /api/v1/restaurants`                                | `keyword`, `genre`, `foodCategory`, `sort`, `type`, `cursor`, `size` | `RestaurantListResponse.content`, `nextCursor`, `hasNext`  | `searchRestaurantQueryKeys.infiniteList(params)`             | `infinite` | trim 처리한 submitted keyword가 있을 때 | loading, next-page fetching, error, empty, success     |
+| 추천 검색어      | `GET /api/v1/restaurants/search-keyword-recommendations` | optional `size`                                                      | `RestaurantSearchKeywordRecommendationResponse.keywords[]` | `searchRestaurantQueryKeys.keywordRecommendations({ size })` | `query`    | 검색 전 idle panel 렌더링 시            | loading, empty fallback, error local fallback, success |
+
+### Endpoint Type Mapping
+
+| Endpoint                                                 | Generated operation                             | Request type source                                                    | Response type source                                                     |
+| -------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `GET /api/v1/restaurants`                                | `operations['getRestaurants']`                  | `operations['getRestaurants']['parameters']['query']`                  | `components['schemas']['RestaurantListResponse']`                        |
+| `GET /api/v1/restaurants/search-keyword-recommendations` | `operations['getSearchKeywordRecommendations']` | `operations['getSearchKeywordRecommendations']['parameters']['query']` | `components['schemas']['RestaurantSearchKeywordRecommendationResponse']` |
+
+### Query Key Factory
+
+- 검색 결과와 추천 검색어 query는 page-local query key factory를 사용합니다.
+- 위치:
+  - `apps/client/src/pages/search/queries/searchRestaurantQueryKeys.ts`
+- key는 응답을 바꾸는 모든 params를 포함합니다.
+- finite list와 infinite list는 key prefix를 분리합니다. 현재 검색 결과 화면은 infinite list key를 사용합니다.
+- 추천 키워드는 식당 목록 key와 같은 domain factory 안에서 별도 prefix를 둡니다.
+
+```ts
+export const searchRestaurantQueryKeys = {
+  all: ['searchRestaurants'] as const,
+  lists: () => [...searchRestaurantQueryKeys.all, 'list'] as const,
+  list: (params: SearchRestaurantsRequestParams) =>
+    [...searchRestaurantQueryKeys.lists(), params] as const,
+  infiniteLists: () =>
+    [...searchRestaurantQueryKeys.all, 'infiniteList'] as const,
+  infiniteList: (params: SearchRestaurantsRequestParams) =>
+    [...searchRestaurantQueryKeys.infiniteLists(), params] as const,
+  keywordRecommendations: (params: SearchKeywordRecommendationsRequestParams) =>
+    [
+      ...searchRestaurantQueryKeys.all,
+      'keywordRecommendations',
+      params,
+    ] as const,
+}
+```
+
+### Endpoint Functions
+
+- 위치:
+  - `apps/client/src/pages/search/api/getRestaurants.ts`
+  - `apps/client/src/pages/search/api/getSearchKeywordRecommendations.ts`
+- endpoint 함수는 `request`만 사용하고 React, TanStack Query, route, UI state를 import하지 않습니다.
+- base URL, timeout, retry, HTTP error normalization은 `apps/client/src/shared/api`의 기존 설정을 사용합니다.
+- response envelope는 `request<TData>()`가 벗겨낸 `data`를 반환합니다.
+- `data`가 `null`이거나 optional response field가 누락될 수 있으므로 endpoint 또는 mapper에서 화면이 소비할 기본값을 정합니다.
+
+### Query Hooks
+
+- 검색 결과:
+  - 현재 구현은 `useSearchRestaurantsInfiniteQuery`에서 `GET /api/v1/restaurants`를 `useInfiniteQuery`로 호출합니다.
+  - 첫 페이지는 `cursor` 없이 호출하고, 하단 sentinel이 노출되면 `nextCursor`를 API `cursor`로 보내 다음 페이지를 조회합니다.
+  - `useSuspenseQuery`는 사용하지 않습니다. 검색어/필터 local state가 fetch 여부를 결정하고, 결과 영역만 local loading/error UI를 가져야 하기 때문입니다.
+- 추천 검색어:
+  - 현재 구현은 `useSearchKeywordRecommendationsQuery`에서 `GET /api/v1/restaurants/search-keyword-recommendations`를 `useQuery`로 호출합니다.
+  - 실패 시 page 전체를 ErrorBoundary로 올리지 않고 검색 전 추천 키워드 영역만 빈 상태로 유지합니다.
+
 ### Query
 
 - query:
@@ -104,15 +182,31 @@
   - 검색 제출 또는 최근/추천 검색어 탭 이후 조회합니다.
   - trim 처리한 검색어가 비어 있으면 조회하지 않고 검색 전 상태를 유지합니다.
 - request params:
-  - `keyword`: trim 처리한 검색어
-  - `sort`: `default` | `popular` | `rating`
-  - `category`: `all` | `sushiSashimi` | `noodle` | `riceBowl` | `nabe` | `fried` | `teppanGrill` | `etc`
+  - UI `keyword` -> API `keyword`
+  - UI `category` -> API `genre`
+    - `all` -> `all`
+    - `sushiSashimi` -> `sushi`
+    - `noodle` -> `noodle`
+    - `riceBowl` -> `rice-bowl`
+    - `nabe` -> `nabe`
+    - `fried` -> `fried`
+    - `teppanGrill` -> `grill`
+    - `etc` -> `etc`
+  - UI `sort` -> API `sort`
+  - `default` 정렬은 dev API에서 `RESTAURANT-002`를 반환하므로 API `sort`를 생략합니다.
+  - `popular`, `rating` 정렬은 API `sort`에 그대로 보냅니다.
+  - 검색 페이지는 API `type`을 보내지 않습니다.
+  - API `size`는 현재 첫 목록 조회 기준 `20`을 보냅니다.
+  - API `cursor`는 첫 페이지에는 보내지 않고, 다음 페이지 조회 시 이전 응답의 `nextCursor`를 보냅니다.
 - loading state:
   - 상단 검색/필터 영역은 유지합니다.
   - 결과 영역은 리스트 item 크기에 맞춘 skeleton을 보여줍니다.
+  - infinite query 사용 시 다음 페이지 fetch loading은 기존 리스트를 유지하고 리스트 하단 pending 상태로 표시합니다.
 - error state:
   - 상단 검색/필터 영역과 입력 상태는 유지합니다.
   - 결과 영역에 재시도 가능한 에러 안내를 표시합니다.
+  - 예상 가능한 400/401 API error는 local error state에서 처리합니다.
+  - 5xx, network, timeout, unexpected non-API error는 기본 query policy에 따라 retry 또는 ErrorBoundary throw 후보가 될 수 있지만, 검색 결과 영역 local error UI를 유지해야 하면 query option에서 `throwOnError: false`를 명시합니다.
 - empty state:
   - empty icon과 `검색된 식당이 없습니다.` 문구를 중앙에 표시합니다.
 - query update condition:
@@ -140,12 +234,17 @@
 ### Static Data
 
 - recommended search keywords:
-  - 초기 구현은 `mocks/searchContent.mock.ts`의 page-local mock content로 시작합니다.
-  - 운영 도구나 API가 생기면 `useSearchPage` 내부에서 query로 교체합니다.
+  - `GET /api/v1/restaurants/search-keyword-recommendations`로 조회합니다.
 - search restaurant fixtures:
-  - 초기 구현은 `mocks/searchRestaurants.mock.ts`의 page-local mock data로 시작합니다.
-  - 검색 결과 스크롤 상태를 확인할 수 있도록 대표 추천 키워드에 대해 충분한 개수의 fixture를 둡니다.
-  - API endpoint가 확정되면 `api/searchRestaurants.ts`에서 실제 request로 교체합니다.
+  - production query는 page-local mock data에 의존하지 않습니다.
+  - 테스트에서는 endpoint 함수를 mock하고 필요한 fixture는 테스트 파일 내부에 둡니다.
+
+### Missing API Questions
+
+- `GET /api/v1/restaurants`
+  - 현재 화면은 무한 스크롤로 `cursor`, `size`, `hasNext`, `nextCursor`를 사용합니다.
+- `GET /api/v1/restaurants/search-keyword-recommendations`
+  - 추천 키워드 `size` 기본값은 현재 client에서 `8`로 보냅니다. 서버/제품 기준이 다르면 조정합니다.
 
 ## User Flow
 
@@ -266,10 +365,6 @@ SearchPage
 - page-local hook:
   - `useSearchPage`
   - `useRecentSearchKeywords`
-  - `useSearchRestaurantsQuery`
-- page-local mock:
-  - `mocks/searchContent.mock.ts`
-  - `mocks/searchRestaurants.mock.ts`
 - icon:
   - `BackIcon`
   - `TapDownIcon`: 설계서의 `ic_chevron_down`에 해당하는 기존 HDS 아이콘
@@ -286,7 +381,7 @@ SearchPage
 - `Chip`을 최근 검색어와 추천 검색어 pill에 사용합니다. 칩 목록의 horizontal scroll과 키워드 선택 동작은 page-local `KeywordChipList`가 소유합니다.
 - `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 `useSearchPage`가 주입합니다.
 - 검색/필터/바텀시트 상태와 이동 로직은 `SearchPage`에 직접 두지 않고 `useSearchPage`가 주입합니다.
-- API 연동 전 임시 식당 데이터와 추천 검색어는 `mocks/`에 둡니다. 필터 option constant와 mock data를 섞지 않습니다.
+- API 연동된 검색 식당 데이터와 추천 검색어는 page-local mock data에 의존하지 않습니다.
 - `BottomSheet`를 직접 새로 만들지 않습니다. overlay click과 Escape close는 기존 `BottomSheet`의 접근성 계약을 따릅니다.
 - `Button`을 바텀시트 footer 액션에 사용합니다.
 - `Header`는 사용하지 않습니다. HDS `Header` spec에서 `bar_search_back_button`은 `IconButton` + `SearchField` 조합으로 분류되어 `Header` v1 범위에서 제외되어 있습니다.
@@ -306,11 +401,11 @@ SearchPage
 - `apps/client/src/shared/components/filterBottomSheet/FilterBottomSheet.tsx`
   - 정렬/음식 장르 바텀시트에 재사용합니다.
 - `apps/client/src/shared/api/request.ts`
-  - 실제 검색 API endpoint 함수가 필요해지면 이 request helper를 통해 호출합니다.
+  - 실제 검색 API endpoint 함수는 이 request helper를 통해 호출합니다.
 - `apps/client/src/shared/lib/queryClient.ts`
   - 검색 query는 기존 TanStack Query provider/client 정책을 따릅니다.
 
-### Page-Local Files To Add
+### Page-Local Files To Keep
 
 - `apps/client/src/pages/search/components/SearchHeader.tsx`
   - 뒤로가기 `IconButton`과 `SearchField`를 조합합니다.
@@ -335,25 +430,31 @@ SearchPage
 - `apps/client/src/pages/search/hooks/useRecentSearchKeywords.ts`
   - localStorage 기반 최근 검색어 읽기/저장/중복 이동/최대 10개 제한을 담당합니다.
 - `apps/client/src/pages/search/hooks/useSearchPage.ts`
-  - 검색 page의 route-level orchestration, navigation, filter state, query params, mock content 주입을 담당합니다.
-- `apps/client/src/pages/search/hooks/useSearchRestaurantsQuery.ts`
-  - 검색 결과 query key, enabled 조건, request params mapping을 담당합니다.
-- `apps/client/src/pages/search/api/searchRestaurants.ts`
-  - 검색 API endpoint 함수와 response mapping을 담당합니다.
+  - 검색 page의 route-level orchestration, navigation, filter state, query params, 추천 키워드 query 주입을 담당합니다.
 - `apps/client/src/pages/search/constants/searchFilters.ts`
   - 정렬 옵션, 음식 장르 옵션을 둡니다.
-- `apps/client/src/pages/search/mocks/searchContent.mock.ts`
-  - API 연동 전 추천 검색어 mock content를 둡니다.
-- `apps/client/src/pages/search/mocks/searchRestaurants.mock.ts`
-  - API 연동 전 검색 결과 mock data를 둡니다.
 - `apps/client/src/pages/search/types.ts`
   - page-local search option value, restaurant result item type을 둡니다.
 
+### Page-Local API Files To Add Or Rename
+
+- `apps/client/src/pages/search/api/getRestaurants.ts`
+  - `GET /api/v1/restaurants` endpoint 함수와 API response -> `SearchRestaurant` view model mapping을 담당합니다.
+- `apps/client/src/pages/search/api/getSearchKeywordRecommendations.ts`
+  - `GET /api/v1/restaurants/search-keyword-recommendations` endpoint 함수와 keywords 기본값 mapping을 담당합니다.
+- `apps/client/src/pages/search/queries/searchRestaurantQueryKeys.ts`
+  - 검색 결과와 추천 키워드 query key factory를 담당합니다.
+- `apps/client/src/pages/search/queries/useSearchRestaurantsInfiniteQuery.ts`
+  - 검색 결과 infinite query option/hook, enabled 조건, request params mapping을 담당합니다.
+- `apps/client/src/pages/search/queries/useSearchKeywordRecommendationsQuery.ts`
+  - 추천 검색어 query option/hook을 담당합니다.
+
 ### Optional Page-Local Files
 
-- `apps/client/src/pages/search/components/RestaurantImageFallback.tsx`
-  - API 결과에 이미지가 없을 때 빈 이미지 영역이 필요하면 추가합니다.
-  - 단순 회색 placeholder로 충분하면 별도 파일 없이 `RestaurantResultItem` 내부 Tailwind로 처리합니다.
+- `apps/client/src/pages/search/utils/mapSearchRestaurant.ts`
+  - API response optional field와 UI fallback mapping이 길어지면 pure helper로 분리합니다.
+- `apps/client/src/pages/search/utils/searchRestaurantParams.ts`
+  - sort/genre/type mapping이 길어지면 pure helper로 분리합니다.
 
 ### Files Not To Add
 
@@ -367,16 +468,22 @@ SearchPage
 
 - API error:
   - 검색/필터 상태는 유지하고 결과 영역에 에러 안내와 재시도 액션을 표시합니다.
+  - 검색 결과 query는 local error UI가 필요하므로 `throwOnError: false`를 명시합니다.
+  - 추천 검색어 query도 route-level ErrorBoundary보다 local fallback을 우선합니다.
+  - retry는 `queryClient` 기본 정책을 따릅니다. 5xx, network, timeout만 최대 1회 retry합니다.
+  - `ApiError`의 `status`, `code`, `fieldErrors`를 사용할 수 있지만, 검색 페이지는 현재 field-level error를 표시하지 않습니다.
+  - malformed body, proxy HTML, empty non-OK response는 `HttpStatusError`로 보존됩니다.
 - validation error:
   - 이번 범위에서는 검색어 validation error를 노출하지 않습니다.
 - exceptional case:
   - 식당 이미지가 없으면 공통 `DefaultImage` fallback을 사용합니다.
-  - 별점 또는 영업시간이 없으면 API/제품 정책에 따라 숨김 또는 대체 문구를 선택합니다.
+  - 별점, 태그, 영업시간이 없을 때 숨김 또는 대체 문구는 추가 확인 후 구현합니다.
 - user-facing message:
   - empty: `검색된 식당이 없습니다.`
   - API error: `검색 결과를 불러오지 못했습니다.`
 - retry or fallback:
   - API error state에서 재시도 버튼 또는 검색 재제출로 refetch합니다.
+  - 추천 검색어 API error fallback 정책은 추가 확인 후 spec을 확정합니다.
 
 ## Navigation
 
@@ -478,10 +585,11 @@ SearchPage
 ## Verification
 
 - [x] `corepack pnpm format:check`
+- [x] `git diff --check`
 - [x] `corepack pnpm --filter @hashi/client lint`
 - [x] `corepack pnpm --filter @hashi/client typecheck`
+- [x] `corepack pnpm --filter @hashi/client test`
 - [x] `corepack pnpm --filter @hashi/client build`
-- [ ] `corepack pnpm --filter @hashi/client test`
 - [ ] `/search` 직접 진입 확인
 - [ ] 홈 검색 CTA에서 `/search` 진입 확인
 - [ ] 뒤로가기 동작 확인
@@ -489,8 +597,12 @@ SearchPage
 - [ ] 검색 전 최근 검색어 / 추천 검색어 노출 확인
 - [ ] 최근 검색어 탭 시 해당 키워드로 검색 결과 상태 전환 확인
 - [ ] 추천 검색어 탭 시 해당 키워드로 검색 결과 상태 전환 확인
-- [ ] 검색 제출 시 request params 확인
+- [ ] 검색 제출 시 `GET /api/v1/restaurants` request params 확인
+- [ ] 검색 전 idle panel에서 `GET /api/v1/restaurants/search-keyword-recommendations` request params 확인
 - [ ] 정렬 필터 open / 선택 / 초기화 / 적용 / close 확인
 - [ ] 음식 장르 필터 open / 선택 / 초기화 / 적용 / close 확인
-- [ ] loading / empty / error / success 상태 확인
+- [ ] loading / background fetching / empty / local error / success 상태 확인
+- [ ] 400 API error가 route ErrorBoundary로 올라가지 않고 결과 영역 error UI에 남는지 확인
+- [ ] 5xx, network, timeout retry 정책이 `queryClient` 기본값 또는 query override와 일치하는지 확인
+- [ ] API `data: null`, `content` 누락, `keywords` 누락 시 화면이 깨지지 않는지 확인
 - [ ] bottom navigation이 표시되지 않는지 확인

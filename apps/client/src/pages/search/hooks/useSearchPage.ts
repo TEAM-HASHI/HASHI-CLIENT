@@ -7,8 +7,8 @@ import {
   sortOptions,
 } from '@/pages/search/constants/searchFilters'
 import { useRecentSearchKeywords } from '@/pages/search/hooks/useRecentSearchKeywords'
-import { useSearchRestaurantsQuery } from '@/pages/search/hooks/useSearchRestaurantsQuery'
-import { recommendedSearchKeywords } from '@/pages/search/mocks/searchContent.mock'
+import { useSearchKeywordRecommendationsQuery } from '@/pages/search/queries/useSearchKeywordRecommendationsQuery'
+import { useSearchRestaurantsInfiniteQuery } from '@/pages/search/queries/useSearchRestaurantsInfiniteQuery'
 import type { FoodCategoryValue, SearchSortValue } from '@/pages/search/types'
 
 const DEFAULT_SORT_VALUE = 'default' satisfies SearchSortValue
@@ -25,6 +25,7 @@ export const useSearchPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const [keyword, setKeyword] = useState('')
   const [submittedKeyword, setSubmittedKeyword] = useState('')
   const [sortValue, setSortValue] =
@@ -55,8 +56,17 @@ export const useSearchPage = () => {
     }
   }, [foodCategoryValue, sortValue, submittedKeyword])
 
-  const searchRestaurantsQuery = useSearchRestaurantsQuery(searchParams)
-  const restaurants = searchRestaurantsQuery.data ?? []
+  const searchRestaurantsQuery = useSearchRestaurantsInfiniteQuery(searchParams)
+  const searchKeywordRecommendationsQuery =
+    useSearchKeywordRecommendationsQuery()
+  const {
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch: refetchSearchRestaurants,
+  } = searchRestaurantsQuery
+  const restaurants =
+    searchRestaurantsQuery.data?.pages.flatMap((page) => page.restaurants) ?? []
   const isSearchIdle = searchParams === null
   const sortLabel = getOptionLabel(sortOptions, sortValue)
   const foodCategoryLabel =
@@ -67,6 +77,40 @@ export const useSearchPage = () => {
   useEffect(() => {
     searchInputRef.current?.focus()
   }, [])
+
+  useEffect(() => {
+    const target = loadMoreRef.current
+
+    if (
+      !target ||
+      !hasNextPage ||
+      isFetchingNextPage ||
+      typeof IntersectionObserver === 'undefined'
+    ) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting || !hasNextPage || isFetchingNextPage) {
+          return
+        }
+
+        void fetchNextPage()
+      },
+      {
+        root: null,
+        rootMargin: '160px 0px',
+        threshold: 0,
+      },
+    )
+
+    observer.observe(target)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
   const submitSearch = (nextKeyword = keyword) => {
     const normalizedKeyword = nextKeyword.trim()
@@ -136,7 +180,7 @@ export const useSearchPage = () => {
   }
 
   const handleSearchRetry = () => {
-    void searchRestaurantsQuery.refetch()
+    void refetchSearchRestaurants()
   }
 
   return {
@@ -155,10 +199,12 @@ export const useSearchPage = () => {
       onSelect: handleFoodCategorySelect,
     },
     keyword,
+    loadMoreRef,
     recentSearchKeywords,
-    recommendedSearchKeywords,
+    recommendedSearchKeywords: searchKeywordRecommendationsQuery.data ?? [],
     restaurants,
     searchInputRef,
+    searchKeywordRecommendationsQuery,
     searchRestaurantsQuery,
     sortSheet: {
       open: isSortSheetOpen,

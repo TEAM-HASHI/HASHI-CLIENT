@@ -8,9 +8,11 @@ import { useAuthStatus } from '@/shared/hooks'
 import type { HomeBanner } from '@/pages/home/homeContent'
 
 import {
+  mockHomeBanners,
   mockHotSnsRestaurants,
   mockQuickLinks,
 } from '@/pages/home/mocks/homeContent.mock'
+import { useHotSnsRestaurantsQuery } from '@/pages/home/queries/useHotSnsRestaurantsQuery'
 
 const HOME_AUTH_GATE_SESSION_KEY = 'hashi:home-auth-gate-shown'
 
@@ -47,6 +49,7 @@ const getRestaurantDetailPath = (restaurantId: string) => {
 
 export const useHomePage = () => {
   const { isAuthenticated } = useAuthStatus()
+  const hotSnsRestaurantsQuery = useHotSnsRestaurantsQuery()
   const [isAuthGateOpen, setIsAuthGateOpen] = useState(() =>
     getShouldOpenAuthGate(isAuthenticated),
   )
@@ -100,6 +103,9 @@ export const useHomePage = () => {
       onRetry: magazineBannersQuery.refetch,
     },
     hotSnsRestaurants: mockHotSnsRestaurants,
+    homeBanners: mockHomeBanners,
+    hotSnsRestaurants: hotSnsRestaurantsQuery.data ?? [],
+    hotSnsRestaurantsQuery,
     quickLinks: mockQuickLinks,
     searchPath: ROUTES.search,
   }

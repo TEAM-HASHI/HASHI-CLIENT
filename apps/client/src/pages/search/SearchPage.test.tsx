@@ -8,11 +8,166 @@ import {
   within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { SearchPage } from '@/pages/search/SearchPage'
+import type { SearchRestaurant } from '@/pages/search/types'
+
+const { mockGetRestaurants, mockGetSearchKeywordRecommendations } = vi.hoisted(
+  () => ({
+    mockGetRestaurants: vi.fn(),
+    mockGetSearchKeywordRecommendations: vi.fn(),
+  }),
+)
+
+vi.mock('@/pages/search/api/getRestaurants', () => ({
+  getRestaurants: mockGetRestaurants,
+}))
+
+vi.mock('@/pages/search/api/getSearchKeywordRecommendations', () => ({
+  getSearchKeywordRecommendations: mockGetSearchKeywordRecommendations,
+}))
+
+const searchRestaurantFixtures: SearchRestaurant[] = [
+  {
+    businessHours: '6/19 (금) 10:00~22:00',
+    category: 'etc',
+    id: 'akitori-musashi-1',
+    keywords: ['아끼소바', '야끼소바', '오코노미야키'],
+    name: '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
+    popularity: 95,
+    rating: 3.8,
+    tag: '아끼소바',
+  },
+  {
+    businessHours: '6/19 (금) 11:30~22:30',
+    category: 'teppanGrill',
+    id: 'yakisoba-kitchen-1',
+    keywords: ['아끼소바', '야끼소바', '철판'],
+    name: '긴자 야끼소바 키친',
+    popularity: 90,
+    rating: 4.6,
+    tag: '아끼소바',
+  },
+  {
+    businessHours: '6/19 (금) 10:30~21:30',
+    category: 'etc',
+    id: 'osaka-table-1',
+    keywords: ['아끼소바', '오코노미야키', '타코야키'],
+    name: '오사카 테이블',
+    popularity: 84,
+    rating: 4.2,
+    tag: '아끼소바',
+  },
+  {
+    businessHours: '6/19 (금) 12:00~23:00',
+    category: 'noodle',
+    id: 'musashi-noodle-bar-1',
+    keywords: ['아끼소바', '면류', '야끼우동'],
+    name: '무사시 누들바',
+    popularity: 79,
+    rating: 4,
+    tag: '아끼소바',
+  },
+  {
+    businessHours: '6/19 (금) 10:30~22:00',
+    category: 'teppanGrill',
+    id: 'tokyo-yakisoba-terrace-1',
+    keywords: ['아끼소바', '야끼소바', '철판'],
+    name: '도쿄 야끼소바 테라스',
+    popularity: 82,
+    rating: 4.3,
+    tag: '아끼소바',
+  },
+  {
+    businessHours: '6/19 (금) 11:00~22:30',
+    category: 'etc',
+    id: 'shibuya-sauce-table-1',
+    keywords: ['아끼소바', '오코노미야키', '소스'],
+    name: '시부야 소스 테이블',
+    popularity: 76,
+    rating: 4.1,
+    tag: '아끼소바',
+  },
+  {
+    businessHours: '6/19 (금) 12:00~23:00',
+    category: 'teppanGrill',
+    id: 'ginza-teppan-house-1',
+    keywords: ['아끼소바', '야끼소바', '철판요리'],
+    name: '긴자 철판 하우스',
+    popularity: 86,
+    rating: 4.5,
+    tag: '아끼소바',
+  },
+  {
+    businessHours: '6/19 (금) 10:00~21:00',
+    category: 'noodle',
+    id: 'ueno-noodle-stand-1',
+    keywords: ['아끼소바', '면류', '야끼우동'],
+    name: '우에노 누들 스탠드',
+    popularity: 72,
+    rating: 3.9,
+    tag: '아끼소바',
+  },
+  {
+    businessHours: '6/19 (금) 11:30~22:00',
+    category: 'etc',
+    id: 'asakusa-yatai-kitchen-1',
+    keywords: ['아끼소바', '야끼소바', '타코야키'],
+    name: '아사쿠사 야타이 키친',
+    popularity: 80,
+    rating: 4.2,
+    tag: '아끼소바',
+  },
+  {
+    businessHours: '6/19 (금) 12:00~22:30',
+    category: 'teppanGrill',
+    id: 'nakameguro-grill-1',
+    keywords: ['아끼소바', '철판', '야끼소바'],
+    name: '나카메구로 그릴',
+    popularity: 83,
+    rating: 4.4,
+    tag: '아끼소바',
+  },
+  {
+    businessHours: '6/19 (금) 12:00~22:00',
+    category: 'sushiSashimi',
+    id: 'sushi-haru-1',
+    keywords: ['스시', '사시미'],
+    name: '스시 하루',
+    popularity: 91,
+    rating: 4.7,
+    tag: '스시',
+  },
+]
+
+const mockIntersectionObserver = () => {
+  let handleIntersection: IntersectionObserverCallback = () => {}
+  const IntersectionObserverMock = vi.fn(
+    (callback: IntersectionObserverCallback) => {
+      handleIntersection = callback
+
+      return {
+        disconnect: vi.fn(),
+        observe: vi.fn(),
+        unobserve: vi.fn(),
+      } satisfies Partial<IntersectionObserver>
+    },
+  )
+
+  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
+
+  return {
+    triggerIntersect: () => {
+      handleIntersection(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      )
+    },
+  }
+}
 
 const renderSearchPage = () => {
   const queryClient = new QueryClient({
@@ -35,15 +190,49 @@ const renderSearchPage = () => {
 describe('SearchPage', () => {
   afterEach(() => {
     cleanup()
+    vi.clearAllMocks()
     window.localStorage.clear()
     document.body.style.overflow = ''
     document.body.style.position = ''
     document.body.style.top = ''
     document.body.style.width = ''
     document.documentElement.style.overflow = ''
+    vi.unstubAllGlobals()
   })
 
-  it('shows recent and recommended keywords before searching', () => {
+  beforeEach(() => {
+    mockGetSearchKeywordRecommendations.mockResolvedValue(['아끼소바'])
+    mockGetRestaurants.mockImplementation(({ genre, keyword, sort }) => {
+      const normalizedKeyword = keyword.trim().toLowerCase()
+      const restaurants = searchRestaurantFixtures
+        .filter((restaurant) => {
+          const matchesKeyword = [
+            restaurant.name,
+            restaurant.tag,
+            ...restaurant.keywords,
+          ].some((value) => value.toLowerCase().includes(normalizedKeyword))
+
+          return (
+            matchesKeyword && (genre === 'all' || restaurant.category === genre)
+          )
+        })
+        .sort((firstRestaurant, secondRestaurant) => {
+          if (sort === 'popular') {
+            return secondRestaurant.popularity - firstRestaurant.popularity
+          }
+
+          if (sort === 'rating') {
+            return secondRestaurant.rating - firstRestaurant.rating
+          }
+
+          return 0
+        })
+
+      return Promise.resolve({ hasNext: false, restaurants })
+    })
+  })
+
+  it('shows recent and recommended keywords before searching', async () => {
     window.localStorage.setItem(
       'hashi:search:recent-keywords',
       JSON.stringify(['라멘']),
@@ -74,7 +263,9 @@ describe('SearchPage', () => {
     ).toBeInTheDocument()
     expect(recommendedSection).toBeInTheDocument()
     expect(
-      within(recommendedSection).getByRole('button', { name: '아끼소바' }),
+      await within(recommendedSection).findByRole('button', {
+        name: '아끼소바',
+      }),
     ).toBeInTheDocument()
     expect(screen.queryByText('기본순')).not.toBeInTheDocument()
   })
@@ -84,7 +275,7 @@ describe('SearchPage', () => {
 
     renderSearchPage()
 
-    await user.click(screen.getByRole('button', { name: '아끼소바' }))
+    await user.click(await screen.findByRole('button', { name: '아끼소바' }))
 
     expect(
       screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
@@ -117,7 +308,7 @@ describe('SearchPage', () => {
 
     renderSearchPage()
 
-    await user.click(screen.getByRole('button', { name: '아끼소바' }))
+    await user.click(await screen.findByRole('button', { name: '아끼소바' }))
     await screen.findByText(
       '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
     )
@@ -152,7 +343,7 @@ describe('SearchPage', () => {
 
     renderSearchPage()
 
-    await user.click(screen.getByRole('button', { name: '아끼소바' }))
+    await user.click(await screen.findByRole('button', { name: '아끼소바' }))
 
     expect(
       screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
@@ -218,7 +409,7 @@ describe('SearchPage', () => {
 
     renderSearchPage()
 
-    await user.click(screen.getByRole('button', { name: '아끼소바' }))
+    await user.click(await screen.findByRole('button', { name: '아끼소바' }))
     await screen.findByText(
       '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
     )
@@ -236,6 +427,105 @@ describe('SearchPage', () => {
 
     expect(
       screen.getAllByRole('button', { name: '기본순' })[0],
+    ).toBeInTheDocument()
+  })
+
+  it('refetches restaurants with the applied sort filter', async () => {
+    const user = userEvent.setup()
+
+    renderSearchPage()
+
+    await user.type(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+      '스시',
+    )
+    await user.keyboard('{Enter}')
+
+    await waitFor(() => {
+      expect(mockGetRestaurants).toHaveBeenCalledWith({
+        genre: 'all',
+        keyword: '스시',
+        size: 20,
+      })
+    })
+
+    await user.click(screen.getByRole('button', { name: '기본순' }))
+    await user.click(screen.getByRole('button', { name: '별점순' }))
+    await user.click(screen.getByRole('button', { name: '적용' }))
+
+    await waitFor(() => {
+      expect(mockGetRestaurants).toHaveBeenCalledWith({
+        genre: 'all',
+        keyword: '스시',
+        size: 20,
+        sort: 'rating',
+      })
+    })
+  })
+
+  it('refetches restaurants with the applied food category filter', async () => {
+    const user = userEvent.setup()
+
+    renderSearchPage()
+
+    await user.type(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+      '스시',
+    )
+    await user.keyboard('{Enter}')
+
+    await user.click(screen.getByRole('button', { name: '음식 장르 선택' }))
+    await user.click(screen.getByRole('button', { name: '스시/사시미류' }))
+    await user.click(screen.getByRole('button', { name: '적용' }))
+
+    await waitFor(() => {
+      expect(mockGetRestaurants).toHaveBeenCalledWith({
+        genre: 'sushi',
+        keyword: '스시',
+        size: 20,
+      })
+    })
+  })
+
+  it('fetches the next restaurant page when the bottom sentinel enters the viewport', async () => {
+    const { triggerIntersect } = mockIntersectionObserver()
+    const user = userEvent.setup()
+
+    mockGetRestaurants
+      .mockResolvedValueOnce({
+        hasNext: true,
+        nextCursor: 'next-search-cursor',
+        restaurants: [searchRestaurantFixtures[0]],
+      })
+      .mockResolvedValueOnce({
+        hasNext: false,
+        restaurants: [searchRestaurantFixtures[1]],
+      })
+
+    renderSearchPage()
+
+    await user.type(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+      '아끼소바',
+    )
+    await user.keyboard('{Enter}')
+
+    expect(
+      await screen.findByText(searchRestaurantFixtures[0].name),
+    ).toBeInTheDocument()
+
+    triggerIntersect()
+
+    await waitFor(() => {
+      expect(mockGetRestaurants).toHaveBeenCalledWith({
+        cursor: 'next-search-cursor',
+        genre: 'all',
+        keyword: '아끼소바',
+        size: 20,
+      })
+    })
+    expect(
+      await screen.findByText(searchRestaurantFixtures[1].name),
     ).toBeInTheDocument()
   })
 })
