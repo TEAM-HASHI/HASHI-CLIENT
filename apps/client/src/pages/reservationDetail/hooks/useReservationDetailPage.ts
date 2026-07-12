@@ -12,7 +12,7 @@ import {
   checkIsReservationDetailBlockedStatus,
   parseReservationId,
 } from '@/pages/reservationDetail/utils/reservationDetailPolicy'
-import { checkIsNotFoundError } from '@/shared/api'
+import { checkIsNotFoundError } from '@/shared/api/apiError'
 
 export const useReservationDetailPage = () => {
   const navigate = useNavigate()

@@ -16,8 +16,8 @@ import { DEFAULT_RESERVATION_STATUS } from '@/pages/myReservations/constants/res
 import { cancelReservation } from '@/pages/reservationDetail/api/cancelReservation'
 import { getReservationDetail } from '@/pages/reservationDetail/api/getReservationDetail'
 import { ReservationDetailPage } from '@/pages/reservationDetail/ReservationDetailPage'
-import { ApiError } from '@/shared/api'
-import type { ErrorResponse } from '@/shared/api'
+import { ApiError } from '@/shared/api/apiError'
+import type { ErrorResponse } from '@/shared/api/types'
 import { createQueryClient } from '@/shared/lib/queryClient'
 
 const { mockNavigate, mockReservationParams, mockShowToast } = vi.hoisted(

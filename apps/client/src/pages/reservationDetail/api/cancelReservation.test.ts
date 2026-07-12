@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { cancelReservation } from '@/pages/reservationDetail/api/cancelReservation'
-import { requestSuccessResponse } from '@/shared/api'
+import { requestSuccessResponse } from '@/shared/api/request'
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@/shared/api/request', () => ({
   requestSuccessResponse: vi.fn(),
 }))
 

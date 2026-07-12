@@ -1,5 +1,5 @@
 import type { components } from '@/shared/api/generated/openapi'
-import { requestSuccessResponse } from '@/shared/api'
+import { requestSuccessResponse } from '@/shared/api/request'
 
 export type CancelReservationResponse =
   components['schemas']['ReservationResponse']
