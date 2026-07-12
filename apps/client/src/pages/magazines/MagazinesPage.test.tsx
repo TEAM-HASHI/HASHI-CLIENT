@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
 
@@ -9,6 +10,11 @@ import { normalizeInstagramUrl } from '@/pages/magazines/hooks/useMagazinesPage'
 
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
+}))
+
+const { mockGetMagazineBanners, mockGetMagazines } = vi.hoisted(() => ({
+  mockGetMagazineBanners: vi.fn(),
+  mockGetMagazines: vi.fn(),
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -21,19 +27,87 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
+  getMagazineBanners: mockGetMagazineBanners,
+}))
+
+vi.mock('@/pages/magazines/api/getMagazines', () => ({
+  getMagazines: mockGetMagazines,
+}))
+
+const magazineBannersResponse = {
+  banners: [
+    {
+      magazineId: 1,
+      title: '하시가 추천하는 도쿄 미식 매거진 1',
+      bannerImageUrl: 'https://example.com/banner-1.jpg',
+      instagramRedirectUrl: 'https://www.instagram.com/hashi.magazine/1',
+    },
+    {
+      magazineId: 2,
+      title: '하시가 추천하는 도쿄 미식 매거진 2',
+      bannerImageUrl: 'https://example.com/banner-2.jpg',
+      instagramRedirectUrl: 'https://www.instagram.com/hashi.magazine/2',
+    },
+  ],
+}
+
+const magazinesResponse = {
+  hasNext: false,
+  magazines: [
+    {
+      magazineId: 101,
+      title:
+        '[청와대 셰프가 추천하는 도쿄 스시 맛집 8선] 제목은 여기까지 좌랄랄랄라라라 넘으면...',
+      bannerImageUrl: 'https://example.com/magazine-101.jpg',
+      instagramRedirectUrl: 'https://www.instagram.com/hashi.magazine/101',
+      createdAt: '2026-07-12T00:00:00.000Z',
+    },
+    {
+      magazineId: 102,
+      title: '청와대 셰프가 추천하는 도쿄 스시 맛집 8선입니다.',
+      bannerImageUrl: 'https://example.com/magazine-102.jpg',
+      instagramRedirectUrl: 'https://www.instagram.com/hashi.magazine/102',
+      createdAt: '2026-07-11T00:00:00.000Z',
+    },
+  ],
+}
+
+const renderMagazinesPage = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        throwOnError: false,
+      },
+    },
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MagazinesPage />
+    </QueryClientProvider>,
+  )
+}
+
 describe('MagazinesPage', () => {
   afterEach(() => {
     cleanup()
     mockNavigate.mockClear()
+    vi.clearAllMocks()
   })
 
-  it('renders magazine banner and recommended magazine list without category filters', () => {
-    render(<MagazinesPage />)
+  beforeEach(() => {
+    mockGetMagazineBanners.mockResolvedValue(magazineBannersResponse)
+    mockGetMagazines.mockResolvedValue(magazinesResponse)
+  })
+
+  it('renders magazine banner and recommended magazine list without category filters', async () => {
+    renderMagazinesPage()
 
     expect(screen.getByRole('banner')).toHaveTextContent('매거진')
-    const heroBanner = screen.getByRole('region', { name: '대표 매거진 배너' })
-    const sectionTitle = screen.getByRole('heading', {
-      name: '최근 _한 추천 매거진',
+    const heroBanner = await screen.findByRole('region', {
+      name: '대표 매거진 배너',
     })
 
     expect(heroBanner).toBeInTheDocument()
@@ -56,11 +130,10 @@ describe('MagazinesPage', () => {
     expect(
       screen.queryByText('짧은 매거진에 대한 소개를 넣어보기'),
     ).not.toBeInTheDocument()
-    expect(sectionTitle).toHaveClass('typo-header-3', 'text-black')
     expect(
-      screen.getByRole('heading', { name: '최근 _한 추천 매거진' }),
-    ).toBeInTheDocument()
-    expect(screen.getAllByRole('listitem')).toHaveLength(5)
+      screen.queryByRole('heading', { name: '최근 _한 추천 매거진' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getAllByRole('listitem')).toHaveLength(2)
     expect(screen.queryByText(/부드러운 돈카츠/)).not.toBeInTheDocument()
 
     expect(screen.queryByText('인기순')).not.toBeInTheDocument()
@@ -69,14 +142,14 @@ describe('MagazinesPage', () => {
     expect(screen.queryByText('장르별')).not.toBeInTheDocument()
   })
 
-  it('renders hero banners in display order with meaningful accessible names', () => {
-    render(<MagazinesPage />)
+  it('renders hero banners in API response order with meaningful accessible names', async () => {
+    renderMagazinesPage()
 
-    const heroLinks = screen.getAllByRole('link', {
+    const heroLinks = await screen.findAllByRole('link', {
       name: /하시가 추천하는 도쿄 미식 매거진/,
     })
 
-    expect(heroLinks).toHaveLength(5)
+    expect(heroLinks).toHaveLength(2)
     expect(heroLinks[0]).toHaveAccessibleName(
       '하시가 추천하는 도쿄 미식 매거진 1',
     )
@@ -86,18 +159,18 @@ describe('MagazinesPage', () => {
   })
 
   it('moves to home from header back action', () => {
-    render(<MagazinesPage />)
+    renderMagazinesPage()
 
     fireEvent.click(screen.getByRole('button', { name: '홈으로 돌아가기' }))
 
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home)
   })
 
-  it('renders semantic external links for banner and magazine cards', () => {
-    render(<MagazinesPage />)
+  it('renders semantic external links for banner and magazine cards', async () => {
+    renderMagazinesPage()
 
     expect(
-      screen.getByRole('link', {
+      await screen.findByRole('link', {
         name: '하시가 추천하는 도쿄 미식 매거진 1',
       }),
     ).toHaveAttribute('href', 'https://www.instagram.com/hashi.magazine/1')
@@ -120,17 +193,16 @@ describe('MagazinesPage', () => {
     ).toBeNull()
   })
 
-  it('applies requested magazine layout token classes', () => {
-    render(<MagazinesPage />)
+  it('applies requested magazine layout token classes', async () => {
+    renderMagazinesPage()
 
-    const heroBanner = screen.getByRole('region', { name: '대표 매거진 배너' })
+    const heroBanner = await screen.findByRole('region', {
+      name: '대표 매거진 배너',
+    })
     const heroViewport = heroBanner.querySelector(
       '[data-hds-carousel-viewport]',
     )
     const indicator = heroBanner.querySelector('[data-hds-carousel-indicator]')
-    const sectionTitle = screen.getByRole('heading', {
-      name: '최근 _한 추천 매거진',
-    })
     const firstItem = screen.getAllByRole('listitem')[0]
     const firstLink = screen.getByRole('link', {
       name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
@@ -139,11 +211,13 @@ describe('MagazinesPage', () => {
       name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
     })
     const firstImage = firstLink.querySelector('img')
-    const firstDate = screen.getAllByText('2000. 00. 00.')[0]
+    const firstDate = screen.getByText('2026. 07. 12.')
 
     expect(heroViewport).toHaveClass('h-[260px]')
     expect(indicator).toHaveAttribute('data-align', 'end')
-    expect(sectionTitle.parentElement).toHaveClass('px-5', 'pt-7', 'pb-3')
+    expect(
+      screen.queryByRole('heading', { name: '최근 _한 추천 매거진' }),
+    ).not.toBeInTheDocument()
     expect(firstItem).toHaveClass('border-warm-gray-50')
     expect(firstLink).toHaveClass('py-3.5')
     expect(firstTitle).toHaveClass('typo-body-6', 'text-black')

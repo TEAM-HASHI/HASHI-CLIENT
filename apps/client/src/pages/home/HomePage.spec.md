@@ -5,7 +5,8 @@
 - 사용자가 Hashi 서비스의 주요 기능과 추천 콘텐츠를 한눈에 확인하고 검색, 큐레이션, 예약, SNS 기반 맛집 콘텐츠, 하단 탭 화면으로 빠르게 이동할 수 있는 첫 진입 화면을 제공합니다.
 - 현재 디자인 기준 구현 범위는 첨부 이미지의 홈 화면입니다.
 - 새 공통 컴포넌트를 무리하게 만들지 않고, 현재 프로젝트에 이미 있는 HDS 컴포넌트와 아이콘을 우선 사용합니다.
-- API가 아직 확정되지 않은 배너와 SNS 맛집 데이터는 page-local 정적 mock 데이터로 먼저 구현하고, API 확정 시 page-local query로 교체합니다.
+- 메인 배너는 `GET /api/v1/magazines/banners` API와 `features/magazine`의 shared magazine banner query를 사용합니다.
+- SNS 맛집 데이터는 아직 API가 확정되지 않았으므로 page-local 정적 mock 데이터로 먼저 구현하고, API 확정 시 홈 전용 query로 교체합니다.
 
 ## Route
 
@@ -130,21 +131,25 @@ export const HomeLogo = () => {
 ### Query
 
 - query:
-  - MVP에서는 서버 query 없이 page-local 정적 mock 데이터로 구현합니다.
-  - API가 확정되면 `useHomePage` 내부의 `homeBanners`, `hotSnsRestaurants` 같은 홈 전용 query로 교체합니다.
+  - 메인 배너 API는 `GET /api/v1/magazines/banners`를 사용하며, 매거진 리스트 페이지와 공유하므로 `features/magazine`의 magazine banner query를 사용합니다.
+  - `useHomePage` 내부의 `homeBanners`는 shared magazine banner query로 조합합니다.
+  - `hotSnsRestaurants`는 아직 API가 확정되지 않았으므로 page-local 정적 mock 데이터를 유지하고, API 확정 시 홈 전용 query로 교체합니다.
   - query/mutation 코드는 HDS나 아이콘 패키지에 넣지 않습니다.
 - enabled condition:
-  - MVP 정적 데이터: 해당 없음
-  - API 연동 후: 홈 진입 즉시
+  - 메인 배너 API: 홈 진입 즉시
 - request params:
-  - MVP 정적 데이터: 해당 없음
-  - API 연동 후: 서버 스펙에 맞춰 배너 개수, SNS 맛집 개수, 지역 또는 언어 필터가 생기면 명시합니다.
+  - 메인 배너 API: `GET /api/v1/magazines/banners`, params 없음
+  - API 연동 후: SNS 맛집 개수, 지역 또는 언어 필터가 생기면 명시합니다.
 - response shape:
-  - `homeBanners` 예상 필드:
-    - `id`
-    - `imageUrl`
-    - `imageAlt`
-    - `instagramUrl`
+  - `homeBanners` API response fields:
+    - source: `MagazineBannerResponse`
+    - `magazineId`
+    - `title`
+    - `bannerImageUrl`
+    - `instagramRedirectUrl`
+  - `magazineId`와 `bannerImageUrl`이 있으면 홈 배너로 렌더링합니다.
+  - `title`이 없으면 `맛집 큐레이션 배너`를 이미지 대체 텍스트 fallback으로 사용합니다.
+  - `instagramRedirectUrl`이 없거나 유효한 Instagram URL이 아니면 배너 이미지는 렌더링하되 외부 링크로 만들지 않습니다.
   - `hotSnsRestaurants` 예상 필드:
     - `restaurantId`
     - `name`
@@ -152,16 +157,14 @@ export const HomeLogo = () => {
     - `imageUrl`
     - `imageAlt`
 - loading state:
-  - MVP 정적 데이터: 없음
-  - API 연동 후: 배너와 리스트 높이를 유지하는 skeleton 또는 대체 레이아웃을 사용합니다.
+  - 메인 배너 API: 배너 높이를 유지하는 skeleton을 사용합니다.
 - error state:
-  - MVP 정적 데이터: 없음
-  - API 연동 후: 전체 페이지 실패로 막지 않고 실패한 섹션만 축소하거나 재시도 UI를 제공합니다.
+  - 메인 배너 API: 전체 페이지 실패로 막지 않고 실패한 섹션만 재시도 UI를 제공합니다.
 - empty state:
-  - 배너 데이터가 없으면 메인 배너 영역을 숨기거나 서비스 기본 배너를 사용합니다.
+  - 배너 데이터가 없으면 메인 배너 영역을 숨깁니다.
   - SNS 리스트가 없으면 섹션을 숨기는 것을 우선합니다.
 - refetch condition:
-  - API 연동 후 정책 확정 시 작성합니다.
+  - 메인 배너 API: 섹션 재시도 버튼 클릭 시 TanStack Query `refetch`를 호출합니다.
 
 ### Mutation
 
@@ -200,7 +203,9 @@ export const HomeLogo = () => {
   - 없음
 - server state:
   - MVP 정적 데이터에서는 없음
-  - API 연동 후 배너/추천 리스트 query state
+  - API 연동 후:
+    - 메인 배너: `features/magazine`의 magazine banner query state
+    - SNS 맛집 리스트: 홈 전용 query state
 - derived state:
   - 로그인 상태와 세션 노출 여부를 반영한 `AuthGateBottomSheet` 표시 여부
 
@@ -281,18 +286,19 @@ BottomNavigationLayout
 - Page-local:
   - `HomeCurationSection`
 - Assets:
-  - 최종 배너 이미지는 서버 응답의 `imageUrl`을 사용합니다.
+  - 최종 배너 이미지는 서버 응답의 `bannerImageUrl`을 사용합니다.
   - API 전까지는 page-local mock 데이터와 임시 이미지 asset을 사용할 수 있습니다.
   - 임시 이미지 asset은 홈 전용이면 `apps/client/src/pages/home/assets/`, 여러 화면에서 재사용하면 `apps/client/src/shared/assets/`에 둡니다.
   - 임시 체크보드 placeholder를 최종 구현처럼 남기지 않습니다.
 - Data:
-  - 최종 서버 응답은 이미지와 인스타그램 이동 대상 정보를 포함한다고 가정합니다.
+  - 최종 서버 응답은 `GET /api/v1/magazines/banners`의 `MagazineBannerResponse`를 사용합니다.
   - 문구는 이미지에 포함되어 있으므로 홈 UI가 별도 제목/설명 copy를 배너 위에 덧씌우지 않습니다.
-  - 이동 대상은 서버가 내려주는 인스타그램 URL입니다.
+  - 이동 대상은 서버가 내려주는 `instagramRedirectUrl`입니다.
 - Behavior:
   - 배너 항목은 `instagramUrl`을 데이터에 포함합니다.
   - 외부 링크이므로 React Router `Link`가 아니라 `<a>`를 사용합니다.
-  - 클릭 영역 전체가 하나의 링크로 동작합니다.
+  - 유효한 `instagramUrl`이 있으면 클릭 영역 전체가 하나의 링크로 동작합니다.
+  - 유효한 `instagramUrl`이 없으면 배너 이미지는 노출하되 클릭 가능한 링크로 렌더링하지 않습니다.
   - carousel은 여러 장을 지원하고, 단일 mock 데이터만 있을 때도 구조는 `Carousel` 기반으로 유지합니다.
 
 ### 3. Quick buttons
@@ -491,15 +497,16 @@ BottomNavigationLayout
   - 홈 전체 error message는 만들지 않습니다.
   - 특정 섹션 실패가 사용자에게 의미 있을 때만 짧은 안내를 노출합니다.
 - retry or fallback:
-  - API 연동 후 필요 시 섹션 단위 재시도 버튼을 검토합니다.
+  - 메인 배너 API 실패 시 섹션 단위 재시도 버튼을 제공합니다.
 
 ## Implementation Notes
 
 - `HomePage.tsx`는 page-local section 컴포넌트 조합과 auth gate 렌더링에 집중합니다.
-- 정적 mock 데이터는 `apps/client/src/pages/home/mocks/homeContent.mock.ts`에 둡니다.
+- SNS 맛집 정적 mock 데이터는 `apps/client/src/pages/home/mocks/homeContent.mock.ts`에 둡니다.
 - 홈 데이터 반환, 검색 path, 어디든 예약 이동, 식당 상세 path 생성, 로그인 유도 바텀시트 상태는 `apps/client/src/pages/home/hooks/useHomePage.ts`가 담당합니다.
-- API 확정 후 query는 우선 `useHomePage` 내부에서 mock 데이터를 교체합니다.
-- 여러 페이지에서 같은 홈 콘텐츠 API를 재사용하게 될 때만 feature/shared 승격을 검토합니다.
+- 메인 배너 query는 `features/magazine`의 shared magazine banner query를 사용하고, `useHomePage`는 홈 화면에 필요한 view model로 조합합니다.
+- SNS 맛집 query는 API 확정 후 우선 홈 page-local query로 mock 데이터를 교체합니다.
+- 여러 페이지에서 같은 SNS 맛집 API를 재사용하게 될 때만 feature/shared 승격을 검토합니다.
 - route path 조합이 필요하면 문자열 직접 조합을 흩뿌리지 말고 page-local helper를 둡니다.
 - API 전 임시 식당 이미지 asset이 필요하면 page-local assets에 두고, API 전환 시 제거합니다.
 - 로고는 새 SVG asset으로 추가하고 Vite asset import로 사용합니다.

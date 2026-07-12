@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -13,6 +14,14 @@ vi.mock('@/shared/hooks', () => ({
   }),
 }))
 
+const { mockGetMagazineBanners } = vi.hoisted(() => ({
+  mockGetMagazineBanners: vi.fn(),
+}))
+
+vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
+  getMagazineBanners: mockGetMagazineBanners,
+}))
+
 const LocationProbe = () => {
   const location = useLocation()
 
@@ -20,22 +29,48 @@ const LocationProbe = () => {
 }
 
 const renderHomePage = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        throwOnError: false,
+      },
+    },
+  })
+
   return render(
-    <MemoryRouter initialEntries={[ROUTES.home]}>
-      <HomePage />
-      <LocationProbe />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[ROUTES.home]}>
+        <HomePage />
+        <LocationProbe />
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 
 describe('HomePage', () => {
+  beforeEach(() => {
+    mockGetMagazineBanners.mockResolvedValue({
+      banners: [
+        {
+          magazineId: 1,
+          title: '도쿄 미식 큐레이션 배너',
+          bannerImageUrl: 'https://example.com/home-banner.jpg',
+          instagramRedirectUrl:
+            'https://www.instagram.com/hashi_tokyo_curation/',
+        },
+      ],
+    })
+  })
+
   afterEach(() => {
     cleanup()
+    vi.clearAllMocks()
     window.sessionStorage.clear()
     document.body.style.overflow = ''
   })
 
-  it('renders the home landing content and primary navigation links', () => {
+  it('renders the home landing content and primary navigation links', async () => {
     renderHomePage()
 
     const logo = screen.getByRole('img', { name: 'Hashi' })
@@ -52,7 +87,7 @@ describe('HomePage', () => {
       'pb-4',
     )
     expect(
-      screen.getByRole('region', { name: '맛집 큐레이션 배너' }),
+      await screen.findByRole('region', { name: '맛집 큐레이션 배너' }),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('link', { name: '도쿄 미식 큐레이션 배너' }),
@@ -76,6 +111,29 @@ describe('HomePage', () => {
       'href',
       ROUTES.todayRestaurant,
     )
+  })
+
+  it('renders API banner images even when title or Instagram URL is missing', async () => {
+    mockGetMagazineBanners.mockResolvedValue({
+      banners: [
+        {
+          magazineId: 1,
+          bannerImageUrl: 'https://example.com/home-banner-without-link.jpg',
+        },
+      ],
+    })
+
+    renderHomePage()
+
+    expect(
+      await screen.findByRole('region', { name: '맛집 큐레이션 배너' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: '맛집 큐레이션 배너' }),
+    ).toHaveAttribute('src', 'https://example.com/home-banner-without-link.jpg')
+    expect(
+      screen.queryByRole('link', { name: '맛집 큐레이션 배너' }),
+    ).not.toBeInTheDocument()
   })
 
   it('moves to anywhere reservation only when the CTA button is clicked', () => {
