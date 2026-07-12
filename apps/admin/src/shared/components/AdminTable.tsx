@@ -59,8 +59,7 @@ export const AdminTable = ({
                   데이터를 불러오지 못했습니다
                 </p>
                 <p className="text-cool-gray-500 mt-1 text-sm">
-                  mock adapter 오류 상태입니다. 다시 시도하거나 상태를 정상으로
-                  바꿔주세요.
+                  서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.
                 </p>
                 {onRetry ? (
                   <Button

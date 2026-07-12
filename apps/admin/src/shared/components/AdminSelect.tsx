@@ -115,7 +115,6 @@ export const AdminSelect = <TValue extends string>({
 
   useEffect(() => {
     if (!isOpen) {
-      setDropdownLayout(null)
       return
     }
 

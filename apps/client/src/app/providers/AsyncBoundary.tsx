@@ -1,28 +1,32 @@
-import type { ReactNode } from 'react'
-import { Suspense } from 'react'
 import { QueryErrorResetBoundary } from '@tanstack/react-query'
+import type { ErrorInfo, ReactNode } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
+
+import { AsyncErrorFallback } from '@/app/providers/AsyncErrorFallback'
+import { captureError } from '@/shared/lib/sentry'
 
 interface AsyncBoundaryProps {
   children: ReactNode
+  resetKeys?: unknown[]
 }
 
-const AsyncBoundary = ({ children }: AsyncBoundaryProps) => {
+const handleBoundaryError = (error: unknown, info: ErrorInfo) => {
+  captureError(error, {
+    extra: { componentStack: info.componentStack },
+  })
+}
+
+const AsyncBoundary = ({ children, resetKeys }: AsyncBoundaryProps) => {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary
+          FallbackComponent={AsyncErrorFallback}
+          onError={handleBoundaryError}
           onReset={reset}
-          fallbackRender={({ resetErrorBoundary }) => (
-            <section>
-              <p>일시적인 오류가 발생했습니다.</p>
-              <button type="button" onClick={resetErrorBoundary}>
-                다시 시도
-              </button>
-            </section>
-          )}
+          resetKeys={resetKeys}
         >
-          <Suspense fallback={<p>불러오는 중입니다.</p>}>{children}</Suspense>
+          {children}
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>

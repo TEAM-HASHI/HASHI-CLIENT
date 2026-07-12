@@ -1,80 +1,36 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { adminQueryKeys } from '@/shared/api/queryKeys'
-import { adminService } from '@/shared/api/adminService'
-import type {
-  AdminReservationStatus,
-  MagazineFormData,
-  MockScenario,
-  RestaurantFormData,
-} from '@/shared/api/adminTypes'
+import {
+  reservationApi,
+  type ChangeReservationStatusBody,
+  type ListReservationsQuery,
+} from '@/shared/api/reservationApi'
+import {
+  toReservationListView,
+  toReservationUserView,
+} from '@/shared/api/reservationViewModel'
 
-export const useDashboardMetricsQuery = () =>
+export const useReservationsQuery = (params: ListReservationsQuery) =>
   useQuery({
-    queryKey: adminQueryKeys.dashboard,
-    queryFn: adminService.getDashboardMetrics,
+    placeholderData: keepPreviousData,
+    queryFn: async () =>
+      toReservationListView(await reservationApi.listReservations(params)),
+    queryKey: adminQueryKeys.reservations.list(params),
   })
 
-export const useRestaurantsQuery = (scenario: MockScenario) =>
+export const useReservationUserQuery = (reservationId: number | null) =>
   useQuery({
-    queryKey: [...adminQueryKeys.restaurants, scenario],
-    queryFn: () => adminService.listRestaurants(scenario),
-  })
-
-export const useCreateRestaurantMutation = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: adminService.createRestaurant,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.restaurants,
-      })
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.dashboard,
-      })
-    },
-  })
-}
-
-export const useUpdateRestaurantMutation = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({
-      restaurantId,
-      input,
-    }: {
-      restaurantId: string
-      input: RestaurantFormData
-    }) => adminService.updateRestaurant(restaurantId, input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.restaurants,
-      })
-    },
-  })
-}
-
-export const useDeleteRestaurantMutation = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: adminService.deleteRestaurant,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.restaurants,
-      })
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.dashboard,
-      })
-    },
-  })
-}
-
-export const useReservationsQuery = (scenario: MockScenario) =>
-  useQuery({
-    queryKey: [...adminQueryKeys.reservations, scenario],
-    queryFn: () => adminService.listReservations(scenario),
+    enabled: reservationId != null,
+    queryFn: async () =>
+      toReservationUserView(
+        await reservationApi.getReservationUser(reservationId ?? 0),
+      ),
+    queryKey: adminQueryKeys.reservations.user(reservationId ?? 0),
   })
 
 export const useUpdateReservationStatusMutation = () => {
@@ -85,85 +41,12 @@ export const useUpdateReservationStatusMutation = () => {
       reservationId,
       status,
     }: {
-      reservationId: string
-      status: AdminReservationStatus
-    }) => adminService.updateReservationStatus(reservationId, status),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.reservations,
-      })
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.dashboard,
-      })
-    },
-  })
-}
-
-export const useReservationUserQuery = (
-  reservationId: string | null,
-  enabled: boolean,
-) =>
-  useQuery({
-    queryKey: adminQueryKeys.reservationUser(reservationId ?? 'none'),
-    queryFn: () => adminService.getReservationUser(reservationId ?? ''),
-    enabled: enabled && reservationId != null,
-  })
-
-export const useMagazinesQuery = (scenario: MockScenario) =>
-  useQuery({
-    queryKey: [...adminQueryKeys.magazines, scenario],
-    queryFn: () => adminService.listMagazines(scenario),
-  })
-
-export const useCreateMagazineMutation = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: adminService.createMagazine,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.magazines,
-      })
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.dashboard,
-      })
-    },
-  })
-}
-
-export const useUpdateMagazineMutation = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({
-      magazineId,
-      input,
-    }: {
-      magazineId: string
-      input: MagazineFormData
-    }) => adminService.updateMagazine(magazineId, input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.magazines,
-      })
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.dashboard,
-      })
-    },
-  })
-}
-
-export const useDeleteMagazineMutation = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: adminService.deleteMagazine,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.magazines,
-      })
-      void queryClient.invalidateQueries({
-        queryKey: adminQueryKeys.dashboard,
+      reservationId: number
+      status: ChangeReservationStatusBody['status']
+    }) => reservationApi.updateReservationStatus(reservationId, { status }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: adminQueryKeys.reservations.lists(),
       })
     },
   })

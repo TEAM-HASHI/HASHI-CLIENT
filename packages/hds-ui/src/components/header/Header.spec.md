@@ -218,6 +218,7 @@ v1에서는 `largeTitle`과 `subtitle` 조합, disabled, loading, selected, inva
 
 - element: root `header`
 - background: `white`
+- shadow: `shadow-header` (`0 4px 4px rgb(179 179 179 / 10%)`)
 - width: `w-full`; no fixed `393px`/`394px` component width
 - visual reference: Figma mobile frame `393-394px`
 - default height: `75px`
@@ -236,6 +237,8 @@ v1에서는 `largeTitle`과 `subtitle` 조합, disabled, loading, selected, inva
 - fixed/sticky: HDS에서 결정하지 않습니다.
 
 `13px`, `33px`, `75px`, `80px`, `97px`는 Figma topbar와 직접 대응되는 값이므로 v1에서는 arbitrary value로 유지합니다. 같은 값이 여러 topbar/header 계열에서 반복되고 token 기준이 확정되면 spacing/height token 승격을 검토합니다.
+
+Header elevation은 HDS token `shadow-header`로 관리합니다. Header를 사용하는 페이지는 기본 elevation과 중복되는 `border-b`를 추가하지 않습니다.
 
 ## Accessibility
 

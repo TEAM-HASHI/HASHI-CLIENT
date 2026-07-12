@@ -12,6 +12,7 @@ interface WrittenReviewCardProps {
   onCloseMenu: () => void
   onDelete: () => void
   onEdit: () => void
+  onOpenDetail: () => void
   onToggleMenu: () => void
 }
 
@@ -21,6 +22,7 @@ export const WrittenReviewCard = ({
   onCloseMenu,
   onDelete,
   onEdit,
+  onOpenDetail,
   onToggleMenu,
 }: WrittenReviewCardProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -74,40 +76,45 @@ export const WrittenReviewCard = ({
 
   return (
     <article className="border-warm-gray-50 flex h-[120px] min-w-0 items-center gap-3 border-b">
-      <ReviewImagePlaceholder />
-      <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 items-start gap-2">
+      <button
+        aria-label={`${review.restaurantName} 리뷰 상세 보기`}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        onClick={onOpenDetail}
+        type="button"
+      >
+        <ReviewImagePlaceholder />
+        <div className="min-w-0 flex-1">
           <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2 min-w-0 flex-1">
             {review.restaurantName}
           </h2>
-          <div
-            ref={menuContainerRef}
-            className="relative flex size-[18px] shrink-0 items-center justify-center"
-          >
-            <button
-              aria-controls={isMenuOpen ? menuId : undefined}
-              aria-expanded={isMenuOpen}
-              aria-haspopup="menu"
-              aria-label={`${review.restaurantName} 리뷰 메뉴 열기`}
-              className="text-warm-gray-300 flex size-[18px] items-center justify-center"
-              onClick={onToggleMenu}
-              type="button"
-            >
-              <MenuIcon className="size-[18px]" />
-            </button>
-            {isMenuOpen ? (
-              <ReviewMoreMenu
-                id={menuId}
-                onDelete={handleDeleteClick}
-                onEdit={handleEdit}
-              />
-            ) : null}
-          </div>
+          <p className="typo-body-7 text-cool-gray-500 mt-2">
+            {review.visitedAt}
+          </p>
+          <StarRating className="mt-0.5" size="sm" value={review.rating} />
         </div>
-        <p className="typo-body-7 text-cool-gray-500 mt-2">
-          {review.visitedAt}
-        </p>
-        <StarRating className="mt-0.5" size="sm" value={review.rating} />
+      </button>
+      <div
+        ref={menuContainerRef}
+        className="relative mt-3.5 flex size-[18px] shrink-0 items-center justify-center self-start"
+      >
+        <button
+          aria-controls={isMenuOpen ? menuId : undefined}
+          aria-expanded={isMenuOpen}
+          aria-haspopup="menu"
+          aria-label={`${review.restaurantName} 리뷰 메뉴 열기`}
+          className="text-warm-gray-300 flex size-[18px] items-center justify-center"
+          onClick={onToggleMenu}
+          type="button"
+        >
+          <MenuIcon className="size-[18px]" />
+        </button>
+        {isMenuOpen ? (
+          <ReviewMoreMenu
+            id={menuId}
+            onDelete={handleDeleteClick}
+            onEdit={handleEdit}
+          />
+        ) : null}
       </div>
       <Dialog.Root
         onOpenChange={setIsDeleteDialogOpen}

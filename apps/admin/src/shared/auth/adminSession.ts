@@ -1,9 +1,8 @@
 const ADMIN_SESSION_STORAGE_KEY = 'hashi.admin.session.v1'
 
 export interface AdminSession {
-  token: string
-  email: string
-  name: string
+  accessToken: string
+  loginId: string
   issuedAt: string
 }
 
@@ -15,9 +14,8 @@ const checkIsAdminSession = (value: unknown): value is AdminSession => {
   const session = value as Partial<AdminSession>
 
   return (
-    typeof session.token === 'string' &&
-    typeof session.email === 'string' &&
-    typeof session.name === 'string' &&
+    typeof session.accessToken === 'string' &&
+    typeof session.loginId === 'string' &&
     typeof session.issuedAt === 'string'
   )
 }
@@ -55,4 +53,4 @@ export const clearAdminSession = () => {
   window.localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY)
 }
 
-export const getAdminAccessToken = () => getAdminSession()?.token ?? null
+export const getAdminAccessToken = () => getAdminSession()?.accessToken ?? null

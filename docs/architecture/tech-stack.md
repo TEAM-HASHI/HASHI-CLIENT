@@ -26,11 +26,13 @@
 | Monorepo                    | `pnpm workspace`, `pnpm catalog`, `Turborepo` | `pnpm@10.18.3`, `turbo@^2.7.2`           | Current | workspace와 task graph 기준                |
 | Language                    | `React`, `TypeScript`                         | `react@^19.2.6`, `typescript@~6.0.2`     | Current | `apps/client`, `packages/*` 공통 기준      |
 | Bundler                     | `Vite`                                        | `vite@^8.0.12`                           | Current | `@hashi/client` 실행/빌드 기준             |
+| PWA                         | `vite-plugin-pwa`, `Workbox`                  | `vite-plugin-pwa@^1.3.0`                 | Current | Manifest와 정적 앱 셸 캐시 기준            |
 | Routing                     | `React Router`                                | `react-router-dom@^7.18.1`               | Current | `apps/client` 라우팅과 route guard 기준    |
 | Lint and format             | `ESLint`, `Prettier`                          | `eslint@^10.3.0`, `prettier@^3.6.2`      | Current | 루트 script와 공통 ESLint config 기준      |
 | CSS                         | `Tailwind CSS`, `class-variance-authority`    | `tailwindcss@^4.3.1`, `cva@^0.7.1`       | Current | `@tailwindcss/vite`, `tailwind-merge` 사용 |
 | Accessibility UI primitives | `React Aria Components`                       | `react-aria-components@^1.19.0`          | Current | HDS overlay/date 계열 primitive 기준       |
 | API client                  | `ky`                                          | `ky@^2.0.2`                              | Current | `apps/client/src/shared/api` 기준          |
+| API type generation         | `openapi-typescript`                          | `openapi-typescript@^7.13.0`             | Current | Swagger/OpenAPI schema 타입 생성 기준      |
 | Server state                | `TanStack Query`                              | `@tanstack/react-query@^5.101.0`         | Current | app provider와 shared query client 기준    |
 | Unit/Component test         | `Vitest`                                      | `vitest@^3.2.4`                          | Current | client, HDS UI, shared config 기준         |
 | E2E test                    | `Playwright`                                  | `@playwright/test@^1.55.0`               | Current | client e2e scaffold 기준                   |
@@ -47,11 +49,13 @@
 - Monorepo: [Turborepo](https://turborepo.dev/docs)
 - Language: [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/docs/)
 - Bundler: [Vite](https://vite.dev/guide/)
+- PWA: [Vite PWA](https://vite-pwa-org.netlify.app/), [Workbox](https://developer.chrome.com/docs/workbox/)
 - Routing: [React Router](https://reactrouter.com/)
 - Lint and format: [ESLint](https://eslint.org/docs/latest/), [Prettier](https://prettier.io/docs/)
 - CSS: [Tailwind CSS](https://tailwindcss.com/docs/installation), [Class Variance Authority](https://cva.style/docs)
 - Accessibility UI primitives: [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html)
 - API client: [ky](https://github.com/sindresorhus/ky)
+- API type generation: [OpenAPI TypeScript](https://openapi-ts.dev/)
 - Server state: [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview)
 - Unit/Component test: [Vitest](https://vitest.dev/guide/)
 - E2E test: [Playwright](https://playwright.dev/docs/intro)

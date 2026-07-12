@@ -1,5 +1,11 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet/FilterBottomSheet'
@@ -44,6 +50,27 @@ describe('FilterBottomSheet', () => {
     )
   })
 
+  it('uses viewport-aware max height instead of fixed inline height', () => {
+    render(
+      <FilterBottomSheet
+        open
+        maxHeightClassName="max-h-[calc(100dvh-80px)]"
+        onApply={vi.fn()}
+        onOpenChange={vi.fn()}
+        onReset={vi.fn()}
+        onSelect={vi.fn()}
+        options={options}
+        selectedValue="sushi"
+        title="음식 장르 선택"
+      />,
+    )
+
+    const dialog = screen.getByRole('dialog', { name: '음식 장르 선택' })
+
+    expect(dialog).toHaveClass('max-h-[calc(100dvh-80px)]')
+    expect(dialog).not.toHaveAttribute('style')
+  })
+
   it('calls handlers when option and footer buttons are pressed', () => {
     const handleSelect = vi.fn()
     const handleReset = vi.fn()
@@ -65,11 +92,48 @@ describe('FilterBottomSheet', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '면류' }))
     fireEvent.click(screen.getByRole('button', { name: '초기화' }))
-    fireEvent.click(screen.getByRole('button', { name: '적용' }))
+    const applyButton = screen.getByRole('button', { name: '적용' })
+
+    expect(applyButton).toHaveClass('bg-cool-gray-800')
+
+    fireEvent.click(applyButton)
 
     expect(handleSelect).toHaveBeenCalledWith('noodle')
     expect(handleReset).toHaveBeenCalled()
     expect(handleOpenChange).toHaveBeenCalledWith(false)
     expect(handleApply).toHaveBeenCalled()
+  })
+
+  it('requests close from overlay click and escape key through BottomSheet', async () => {
+    const handleOpenChange = vi.fn()
+
+    render(
+      <FilterBottomSheet
+        open
+        onApply={vi.fn()}
+        onOpenChange={handleOpenChange}
+        onReset={vi.fn()}
+        onSelect={vi.fn()}
+        options={options}
+        selectedValue="sushi"
+        title="음식 장르 선택"
+      />,
+    )
+
+    const dialog = screen.getByRole('dialog', { name: '음식 장르 선택' })
+
+    fireEvent.click(dialog.parentElement!)
+
+    expect(handleOpenChange).toHaveBeenCalledWith(false)
+
+    await waitFor(() => {
+      expect(dialog).toHaveFocus()
+    })
+
+    handleOpenChange.mockClear()
+
+    fireEvent.keyDown(dialog, { key: 'Escape' })
+
+    expect(handleOpenChange).toHaveBeenCalledWith(false)
   })
 })

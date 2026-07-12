@@ -1,9 +1,32 @@
 import type { Options } from 'ky'
 import { apiClient } from '@/shared/api/apiClient'
-import type {
-  AdminApiErrorResponse,
-  AdminApiResponse,
-} from '@/shared/api/adminTypes'
+
+export interface AdminFieldError {
+  field: string
+  rejectedValue: unknown
+  reason: string
+}
+
+export interface AdminApiSuccessResponse<TData> {
+  success: true
+  code: string
+  message: string
+  data: TData
+}
+
+export interface AdminApiErrorResponse {
+  success: false
+  code: string
+  message: string
+  data: null
+  timestamp: string
+  path: string
+  errors?: AdminFieldError[]
+}
+
+export type AdminApiResponse<TData> =
+  | AdminApiSuccessResponse<TData>
+  | AdminApiErrorResponse
 
 const normalizePath = (path: string) => path.replace(/^\/+/, '')
 

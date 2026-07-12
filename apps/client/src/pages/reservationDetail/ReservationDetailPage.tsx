@@ -1,6 +1,7 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
 
+import { ReservationCancelDialog } from '@/features/reservation/components'
 import { ReservationDetailActionBar } from '@/pages/reservationDetail/components/ReservationDetailActionBar'
 import { ReservationNoticeSection } from '@/pages/reservationDetail/components/ReservationNoticeSection'
 import { ReservationProgressSection } from '@/pages/reservationDetail/components/ReservationProgressSection'
@@ -17,8 +18,11 @@ export const ReservationDetailPage = () => {
     reservationProgressSteps,
     reservationReceiptInfoItems,
     reservationRestaurant,
+    isCancelDialogOpen,
     handleBack,
+    handleCancelDialogOpenChange,
     handleCancelReservation,
+    handleConfirmCancelPress,
     handleContact,
   } = useReservationDetailPage()
 
@@ -37,7 +41,7 @@ export const ReservationDetailPage = () => {
           </IconButton>
         }
         title="예약 상세"
-        className="app-mobile-fixed-top z-fixed border-warm-gray-50 fixed border-b"
+        className="app-mobile-fixed-top z-fixed fixed"
       />
       <div className="px-6">
         <ReservationProgressSection
@@ -55,6 +59,11 @@ export const ReservationDetailPage = () => {
       <ReservationDetailActionBar
         onCancel={handleCancelReservation}
         onContact={handleContact}
+      />
+      <ReservationCancelDialog
+        open={isCancelDialogOpen}
+        onConfirmCancelPress={handleConfirmCancelPress}
+        onOpenChange={handleCancelDialogOpenChange}
       />
     </section>
   )

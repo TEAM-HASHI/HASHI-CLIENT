@@ -32,13 +32,13 @@ const stepStyleMap: Record<
   }
 > = {
   completed: {
-    dot: 'bg-warm-gray-100',
-    title: 'text-warm-gray-300',
-    time: 'text-cool-gray-500',
-    description: 'text-warm-gray-300',
+    dot: 'border-cool-gray-900 border-4 bg-white',
+    title: 'text-cool-gray-900',
+    time: 'text-cool-gray-600',
+    description: 'text-primary-200',
   },
   current: {
-    dot: 'border-cool-gray-900 border-4 bg-white',
+    dot: 'border-primary-400 border-4 bg-white',
     title: 'text-cool-gray-900',
     time: 'text-primary-200',
     description: 'text-primary-200',
@@ -49,6 +49,42 @@ const stepStyleMap: Record<
     time: 'text-warm-gray-300',
     description: 'text-warm-gray-300',
   },
+}
+
+const getConnectorClassName = (
+  step: ReservationProgressStep,
+  nextStep: ReservationProgressStep,
+) => {
+  const isContactingCurrentStep =
+    nextStep.id === 'contacting' && nextStep.status === 'current'
+
+  if (step.status === 'completed' && isContactingCurrentStep) {
+    return 'bg-gradient-to-b from-cool-gray-900 to-primary-400'
+  }
+
+  if (step.status === 'completed' && nextStep.status === 'completed') {
+    return 'bg-cool-gray-900'
+  }
+
+  return 'bg-warm-gray-300'
+}
+
+const getStepDescription = (step: ReservationProgressStep) => {
+  if (step.id !== 'confirmed') {
+    return step.description
+  }
+
+  return step.status === 'completed'
+    ? '예약이 성공적으로 확정되었어요'
+    : '식당 확인 후 예약 결과를 알려드릴게요'
+}
+
+const getStepDotClassName = (step: ReservationProgressStep) => {
+  if (step.id === 'received' && step.status === 'current') {
+    return stepStyleMap.completed.dot
+  }
+
+  return stepStyleMap[step.status].dot
 }
 
 export const ReservationProgressSection = ({
@@ -67,23 +103,35 @@ export const ReservationProgressSection = ({
 
       <ol>
         {steps.map((step, index) => {
-          const isLastStep = index === steps.length - 1
+          const nextStep = steps[index + 1]
           const stepStyle = stepStyleMap[step.status]
+          const isContactingCurrentStep =
+            step.id === 'contacting' && step.status === 'current'
 
           return (
             <li
               className="relative flex items-center gap-3 pb-4 last:pb-0"
               key={step.id}
             >
-              {!isLastStep ? (
+              {nextStep ? (
                 <span
                   aria-hidden="true"
-                  className="bg-warm-gray-300 absolute top-1/2 left-[6.5px] h-full w-px"
+                  className={cn(
+                    'absolute top-[calc(50%-4px)] left-[6.5px] z-0 h-[calc(100%-4px)] w-px',
+                    getConnectorClassName(step, nextStep),
+                  )}
+                  data-testid={`reservation-progress-connector-${step.id}`}
                 />
               ) : null}
               <span
                 aria-hidden="true"
-                className={cn('size-3.5 shrink-0 rounded-full', stepStyle.dot)}
+                className={cn(
+                  'z-raised relative size-3.5 shrink-0 rounded-full',
+                  getStepDotClassName(step),
+                  isContactingCurrentStep &&
+                    'text-primary-400 animate-reservation-progress-dot',
+                )}
+                data-testid={`reservation-progress-dot-${step.id}`}
               />
               <div
                 className={cn(
@@ -106,7 +154,7 @@ export const ReservationProgressSection = ({
                   ) : null}
                 </div>
                 <p className={cn('typo-body-8 mt-px', stepStyle.description)}>
-                  {step.description}
+                  {getStepDescription(step)}
                 </p>
               </div>
             </li>

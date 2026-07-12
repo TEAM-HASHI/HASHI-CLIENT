@@ -5,19 +5,17 @@ import type { SyntheticEvent } from 'react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
-import { adminService } from '@/shared/api/adminService'
+import { authApi } from '@/shared/api/authApi'
+import { setAdminSession } from '@/shared/auth/adminSession'
 
 export const LoginPage = () => {
-  const [email, setEmail] = useState('admin@hashi.kr')
-  const [password, setPassword] = useState('hashi91!')
+  const [loginId, setLoginId] = useState('')
+  const [password, setPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const loginMutation = useMutation({
-    mutationFn: adminService.login,
-    onSuccess: () => {
-      navigate(ROUTES.dashboard, { replace: true })
-    },
+    mutationFn: authApi.login,
     onError: (error) => {
       setErrorMessage(
         error instanceof Error
@@ -25,17 +23,21 @@ export const LoginPage = () => {
           : '관리자 로그인에 실패했습니다.',
       )
     },
+    onSuccess: (session) => {
+      setAdminSession(session)
+      navigate(ROUTES.dashboard, { replace: true })
+    },
   })
 
   const isSubmitDisabled =
-    email.trim().length === 0 ||
+    loginId.trim().length === 0 ||
     password.trim().length === 0 ||
     loginMutation.isPending
 
   const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
     setErrorMessage(null)
-    loginMutation.mutate({ email, password })
+    loginMutation.mutate({ loginId: loginId.trim(), password })
   }
 
   return (
@@ -56,11 +58,10 @@ export const LoginPage = () => {
             </div>
             <div className="mt-16 space-y-4">
               <p className="text-4xl leading-tight font-bold">
-                예약, 식당, 매거진을 한 화면에서 관리하세요.
+                예약, 식당, 매거진을 API 기준으로 관리하세요.
               </p>
               <p className="text-cool-gray-200 text-sm leading-6">
-                API 확정 전 mock adapter 기반으로 퍼블리싱과 인터랙션을 검증할
-                수 있는 임시 관리자 콘솔입니다.
+                관리자 계정으로 로그인하면 실제 운영 API에 연결됩니다.
               </p>
             </div>
           </div>
@@ -94,18 +95,16 @@ export const LoginPage = () => {
               관리자 로그인
             </h1>
             <p className="text-cool-gray-500 mt-2 text-sm leading-6">
-              기본 샘플 계정이 입력되어 있습니다. 실패 상태 확인은 비밀번호에
-              `fail`을 입력하세요.
+              발급받은 관리자 로그인 ID와 비밀번호를 입력하세요.
             </p>
           </div>
 
           <div className="space-y-4">
             <InputField
-              label="이메일"
-              type="email"
+              label="로그인 ID"
               autoComplete="username"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              value={loginId}
+              onChange={(event) => setLoginId(event.target.value)}
             />
             <InputField
               label="비밀번호"

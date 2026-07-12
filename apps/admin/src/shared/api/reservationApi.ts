@@ -1,33 +1,31 @@
 import { ADMIN_ENDPOINTS } from '@/shared/api/adminEndpoints'
+import type { components, paths } from '@/shared/api/generated/openapi'
 import { request } from '@/shared/api/request'
-import type {
-  AdminResourceId,
-  ListReservationsRequest,
-  ListReservationsResponseData,
-  ReservationUserResponseData,
-  UpdateReservationStatusRequest,
-  UpdateReservationStatusResponseData,
-} from '@/shared/api/adminTypes'
+
+export type ListReservationsQuery = NonNullable<
+  paths['/api/v1/admin/reservations']['get']['parameters']['query']
+>
+export type ChangeReservationStatusBody =
+  paths['/api/v1/admin/reservations/{reservationId}/status']['post']['requestBody']['content']['application/json']
+export type AdminReservationListData =
+  components['schemas']['AdminReservationListResponse']
+export type AdminReservationData =
+  components['schemas']['AdminReservationResponse']
+export type AdminReservationUserData =
+  components['schemas']['AdminReservationUserResponse']
+
+type ReservationId =
+  paths['/api/v1/admin/reservations/{reservationId}/status']['post']['parameters']['path']['reservationId']
 
 const getReservationSearchParams = ({
   status,
-  reservedFrom,
-  reservedTo,
   page,
   size,
-}: ListReservationsRequest) => {
+}: ListReservationsQuery) => {
   const searchParams = new URLSearchParams()
 
   if (status) {
     searchParams.set('status', status)
-  }
-
-  if (reservedFrom) {
-    searchParams.set('reservedFrom', reservedFrom)
-  }
-
-  if (reservedTo) {
-    searchParams.set('reservedTo', reservedTo)
   }
 
   if (page != null) {
@@ -42,17 +40,17 @@ const getReservationSearchParams = ({
 }
 
 export const reservationApi = {
-  listReservations(params: ListReservationsRequest = {}) {
-    return request<ListReservationsResponseData>(ADMIN_ENDPOINTS.reservations, {
+  listReservations(params: ListReservationsQuery = {}) {
+    return request<AdminReservationListData>(ADMIN_ENDPOINTS.reservations, {
       method: 'get',
       searchParams: getReservationSearchParams(params),
     })
   },
   updateReservationStatus(
-    reservationId: AdminResourceId,
-    input: UpdateReservationStatusRequest,
+    reservationId: ReservationId,
+    input: ChangeReservationStatusBody,
   ) {
-    return request<UpdateReservationStatusResponseData>(
+    return request<AdminReservationData>(
       ADMIN_ENDPOINTS.reservationStatus(reservationId),
       {
         method: 'post',
@@ -60,8 +58,8 @@ export const reservationApi = {
       },
     )
   },
-  getReservationUser(reservationId: AdminResourceId) {
-    return request<ReservationUserResponseData>(
+  getReservationUser(reservationId: ReservationId) {
+    return request<AdminReservationUserData>(
       ADMIN_ENDPOINTS.reservationUser(reservationId),
       { method: 'get' },
     )

@@ -9,6 +9,7 @@ const API_BASE_URL =
 
 export const apiClient = ky.create({
   baseUrl: API_BASE_URL,
+  credentials: 'include',
   timeout: API_TIMEOUT,
   retry: 0,
   throwHttpErrors: false,

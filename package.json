@@ -17,6 +17,10 @@
     "build-storybook": "turbo build-storybook",
     "gen": "turbo gen",
     "gen:component": "turbo gen component",
+    "gen:admin-api-types": "pnpm --filter @hashi/admin gen:api-types",
+    "gen:admin-user-api-types": "pnpm --filter @hashi/admin gen:user-api-types",
+    "gen:admin-all-api-types": "pnpm --filter @hashi/admin gen:all-api-types",
+    "gen:api-types": "pnpm --filter @hashi/client gen:api-types",
     "gen:ds-component": "turbo gen ds-component",
     "gen:hook": "turbo gen hook",
     "gen:page": "turbo gen page",
@@ -53,6 +57,7 @@
     "turbo": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
-    "vercel": "catalog:"
+    "vercel": "catalog:",
+    "yaml": "catalog:"
   }
 }

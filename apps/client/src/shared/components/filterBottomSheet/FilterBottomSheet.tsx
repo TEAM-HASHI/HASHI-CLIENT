@@ -11,6 +11,7 @@ type FilterOption = {
 type FilterBottomSheetProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  maxHeightClassName?: string
   title: string
   options: FilterOption[]
   selectedValue: string
@@ -22,6 +23,7 @@ type FilterBottomSheetProps = {
 export const FilterBottomSheet = ({
   open,
   onOpenChange,
+  maxHeightClassName,
   title,
   options,
   selectedValue,
@@ -35,7 +37,7 @@ export const FilterBottomSheet = ({
   }
 
   const sheetFooter = (
-    <div className="grid grid-cols-2 gap-[7px]">
+    <div className="grid grid-cols-2 gap-3.25">
       <Button
         onClick={handleResetClick}
         size="md"
@@ -49,41 +51,50 @@ export const FilterBottomSheet = ({
       </Button>
     </div>
   )
-
   return (
     <BottomSheet
+      aria-label={title}
+      className={cn(
+        'flex max-h-[calc(100dvh-40px)] flex-col rounded-t-[10px]',
+        maxHeightClassName,
+      )}
       footer={sheetFooter}
       open={open}
       onOpenChange={onOpenChange}
       title={<span className="typo-sub-header-2">{title}</span>}
     >
-      <ul className="flex flex-col gap-[5px] pt-[40px] pb-1">
-        {options.map((option) => {
-          const isSelected = option.value === selectedValue
+      <div
+        className="max-h-[calc(100dvh-180px)] overflow-y-auto"
+        data-testid="filter-bottom-sheet-content"
+      >
+        <ul className="flex flex-col gap-1.25 pt-10 pb-1">
+          {options.map((option) => {
+            const isSelected = option.value === selectedValue
 
-          return (
-            <li key={option.value}>
-              <button
-                aria-pressed={isSelected}
-                className={cn(
-                  'flex min-h-5 w-full items-center justify-between py-[10px] text-black',
-                  isSelected ? 'typo-body-3' : 'typo-body-4',
-                )}
-                onClick={() => onSelect(option.value)}
-                type="button"
-              >
-                <span>{option.label}</span>
-                {isSelected && (
-                  <CheckIcon
-                    aria-hidden="true"
-                    className="text-cool-gray-700 size-5 shrink-0"
-                  />
-                )}
-              </button>
-            </li>
-          )
-        })}
-      </ul>
+            return (
+              <li key={option.value}>
+                <button
+                  aria-pressed={isSelected}
+                  className={cn(
+                    'flex min-h-5 w-full items-center justify-between py-2.5 text-black',
+                    isSelected ? 'typo-body-3' : 'typo-body-4',
+                  )}
+                  onClick={() => onSelect(option.value)}
+                  type="button"
+                >
+                  <span>{option.label}</span>
+                  {isSelected && (
+                    <CheckIcon
+                      aria-hidden="true"
+                      className="text-cool-gray-700 size-5 shrink-0"
+                    />
+                  )}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
     </BottomSheet>
   )
 }

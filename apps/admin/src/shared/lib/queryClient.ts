@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
 import { isHTTPError, isNetworkError, isTimeoutError } from 'ky'
+import { AdminApiRequestError } from '@/shared/api/request'
 
 const MAX_QUERY_RETRY_COUNT = 1
 
@@ -10,6 +11,10 @@ const checkShouldRetryQuery = (failureCount: number, error: Error) => {
 
   if (isHTTPError(error)) {
     return error.response.status >= 500
+  }
+
+  if (error instanceof AdminApiRequestError) {
+    return error.status >= 500
   }
 
   return isNetworkError(error) || isTimeoutError(error)

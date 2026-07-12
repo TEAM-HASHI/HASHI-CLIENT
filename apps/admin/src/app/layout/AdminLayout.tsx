@@ -7,11 +7,12 @@ import {
   TodayRestaurantIcon,
 } from '@hashi/hds-icons'
 import { Button } from '@hashi/hds-ui'
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
-import { adminService } from '@/shared/api/adminService'
-import { getAdminSession } from '@/shared/auth/adminSession'
+import { authApi } from '@/shared/api/authApi'
+import { clearAdminSession, getAdminSession } from '@/shared/auth/adminSession'
 import { cn } from '@/shared/utils/cn'
 
 const navigationItems = [
@@ -39,12 +40,22 @@ const navigationItems = [
 
 export const AdminLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const session = getAdminSession()
 
   const handleLogoutClick = async () => {
-    await adminService.logout()
-    navigate(ROUTES.login, { replace: true })
+    setIsLoggingOut(true)
+
+    try {
+      await authApi.logout()
+    } finally {
+      clearAdminSession()
+      queryClient.clear()
+      navigate(ROUTES.login, { replace: true })
+      setIsLoggingOut(false)
+    }
   }
 
   const handleNavClick = () => {
@@ -81,7 +92,8 @@ export const AdminLayout = () => {
         />
         <div className="relative h-full w-[min(18rem,82vw)] bg-white">
           <Sidebar
-            adminName={session?.name ?? '관리자'}
+            adminName={session?.loginId ?? '관리자'}
+            isLoggingOut={isLoggingOut}
             onLogoutClick={handleLogoutClick}
             onNavClick={handleNavClick}
           />
@@ -90,7 +102,8 @@ export const AdminLayout = () => {
 
       <aside className="border-cool-gray-100 fixed top-0 bottom-0 left-0 z-20 hidden w-[var(--admin-sidebar-width)] border-r bg-white lg:block">
         <Sidebar
-          adminName={session?.name ?? '관리자'}
+          adminName={session?.loginId ?? '관리자'}
+          isLoggingOut={isLoggingOut}
           onLogoutClick={handleLogoutClick}
           onNavClick={handleNavClick}
         />
@@ -119,10 +132,12 @@ const AdminBrand = ({ compact = false }: { compact?: boolean }) => {
 
 const Sidebar = ({
   adminName,
+  isLoggingOut,
   onLogoutClick,
   onNavClick,
 }: {
   adminName: string
+  isLoggingOut: boolean
   onLogoutClick: () => void
   onNavClick: () => void
 }) => {
@@ -159,6 +174,8 @@ const Sidebar = ({
           className="mt-3 w-full"
           size="sm"
           variant="neutral"
+          loading={isLoggingOut}
+          disabled={isLoggingOut}
           onClick={onLogoutClick}
         >
           로그아웃

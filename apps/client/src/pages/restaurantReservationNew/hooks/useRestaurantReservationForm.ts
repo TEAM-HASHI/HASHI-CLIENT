@@ -43,6 +43,7 @@ export const useRestaurantReservationForm = ({
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedTime, setSelectedTime] = useState<string>()
   const [requestNote, setRequestNote] = useState('')
+  const minMonth = createMonthStart(new Date())
 
   const timeSlots = useMemo(
     () =>
@@ -82,6 +83,14 @@ export const useRestaurantReservationForm = ({
     setSelectedTime(time)
   }
 
+  const handleDateSelect = (nextDate: Date) => {
+    if (selectedDate?.getTime() !== nextDate.getTime()) {
+      setSelectedTime(undefined)
+    }
+
+    setSelectedDate(nextDate)
+  }
+
   const createReservationDraft = (): ReservationDraft | undefined => {
     if (!canSubmit || selectedDate === undefined || !selectedTime) {
       return undefined
@@ -118,9 +127,10 @@ export const useRestaurantReservationForm = ({
     })),
     calendar: {
       isDateDisabled: checkIsTodayOrBefore,
+      minMonth,
       visibleMonth,
       selectedDate,
-      onDateSelect: setSelectedDate,
+      onDateSelect: handleDateSelect,
       onMonthChange: (nextMonth: Date) => {
         setVisibleMonth(createMonthStart(nextMonth))
       },

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import type { SearchRestaurant } from '@/pages/search/types'
+import { DefaultImage } from '@/shared/components/defaultImage'
 
 interface RestaurantResultItemProps {
   restaurant: SearchRestaurant
@@ -31,9 +32,10 @@ export const RestaurantResultItem = ({
             src={restaurant.imageUrl}
           />
         ) : (
-          <div
+          <DefaultImage
             aria-hidden="true"
-            className="from-cool-gray-100 to-warm-gray-50 h-[92px] w-[92px] shrink-0 rounded-[5px] bg-linear-to-br"
+            className="h-[92px] w-[92px] shrink-0 rounded-[5px]"
+            logoSize="sm"
           />
         )}
         <div className="min-w-0 flex-1 self-center">

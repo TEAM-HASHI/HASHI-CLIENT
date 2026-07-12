@@ -39,15 +39,15 @@
 
 ## 작업 유형별 라우팅
 
-| 작업 유형                | 먼저 볼 문서                                                                                              |
-| ------------------------ | --------------------------------------------------------------------------------------------------------- |
-| Jira, branch, commit, PR | `docs/conventions/jira-ticket.md`, `docs/conventions/git.md`, `.agents/recipes/jira-branch-pr.md`         |
-| page 또는 route          | `docs/architecture/app-structure.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/page-feature.md` |
-| API query 또는 mutation  | `docs/architecture/data-layer.md`, `.agents/recipes/api-integration.md`                                   |
-| form 또는 state flow     | `docs/conventions/coding.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/form-flow.md`            |
-| HDS component            | `packages/AGENTS.md`, `docs/rules/design-system-instructions.md`, `.agents/recipes/hds-component.md`      |
-| generator                | `docs/workflows/turbo-generators.md`                                                                      |
-| agent harness            | `docs/agent/skills.md`, `.agents/README.md`                                                               |
+| 작업 유형                | 먼저 볼 문서                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Jira, branch, commit, PR | `docs/conventions/jira-ticket.md`, `docs/conventions/git.md`, `.agents/recipes/jira-branch-pr.md`            |
+| page 또는 route          | `docs/architecture/app-structure.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/page-feature.md`    |
+| API query 또는 mutation  | `docs/architecture/data-layer.md`, `docs/workflows/api-integration.md`, `.agents/recipes/api-integration.md` |
+| form 또는 state flow     | `docs/conventions/coding.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/form-flow.md`               |
+| HDS component            | `packages/AGENTS.md`, `docs/rules/design-system-instructions.md`, `.agents/recipes/hds-component.md`         |
+| generator                | `docs/workflows/turbo-generators.md`                                                                         |
+| agent harness            | `docs/agent/skills.md`, `.agents/README.md`                                                                  |
 
 아직 라우팅 대상 파일이 없는 작업은 현재 코드와 저장소 설정을 먼저 확인하고, 가장 가까운 `docs/` 하위 문서를 참고합니다.
 

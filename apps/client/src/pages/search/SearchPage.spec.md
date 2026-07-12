@@ -61,34 +61,37 @@
 
 ## Requirements
 
-- [ ] 상단 영역은 페이지 내 스크롤과 무관하게 고정합니다.
-- [ ] 상단 영역은 뒤로가기 버튼과 검색창을 같은 행에 배치합니다.
-- [ ] 뒤로가기 버튼을 누르면 이전 화면으로 돌아갑니다.
-- [ ] 검색창 placeholder는 `식당 혹은 메뉴를 검색해보세요`를 사용합니다.
-- [ ] 홈 검색 CTA에서 진입하면 검색창에 자동 focus를 주어 키보드가 노출됩니다.
-- [ ] `/search` 직접 진입 시에도 검색창에 focus를 줄 수 있지만, 브라우저/OS 정책으로 자동 키보드 노출이 제한될 수 있음을 허용합니다.
-- [ ] 검색 전에는 식당 리스트와 필터 바 대신 최근 검색어와 추천 검색어 영역을 보여줍니다.
-- [ ] 최근 검색어가 있으면 최근 검색어 영역은 사용자가 최근에 검색한 키워드를 보여줍니다.
-- [ ] 최근 검색어를 탭하면 해당 키워드를 검색어로 채우고 검색 결과 상태로 전환합니다.
-- [ ] 추천 검색어 영역은 운영팀이 지정한 키워드 또는 제품이 제공하는 추천 키워드를 보여줍니다.
-- [ ] 추천 검색어를 탭하면 해당 키워드를 검색어로 채우고 검색 결과 상태로 전환합니다.
-- [ ] 검색창 Enter 또는 검색 제출 시 현재 검색어, 정렬값, 음식 장르값 기준으로 결과를 조회합니다.
-- [ ] 검색 제출에 성공하면 trim 처리한 검색어를 최근 검색어 목록에 저장합니다.
-- [ ] 정렬 필터 trigger는 현재 적용된 정렬 label을 보여줍니다.
-- [ ] 정렬 필터 기본값은 `기본순`입니다.
-- [ ] 음식 장르 필터 trigger는 현재 적용된 음식 장르 label을 보여줍니다.
-- [ ] 음식 장르 필터 기본값은 `전체`이며, 기본 상태에서는 trigger label을 `음식 장르 선택`으로 보여줍니다.
-- [ ] 필터 trigger 클릭 시 해당 바텀시트를 엽니다.
-- [ ] 바텀시트에서 옵션을 선택해도 즉시 결과에 반영하지 않고, `적용` 버튼 클릭 시에만 적용합니다.
-- [ ] 바텀시트의 `초기화` 버튼은 해당 필터를 기본값으로 적용하고 바텀시트를 닫습니다.
-- [ ] 화면에 노출되는 닫기 컨트롤은 바텀시트의 `X` 버튼입니다.
-- [ ] HDS `BottomSheet`의 기본 접근성 계약에 따라 overlay click과 Escape key 닫기는 허용합니다.
-- [ ] 식당 리스트에는 식당 사진, 식당명, 별점, 음식 종류 태그, 당일 영업시간을 보여줍니다.
-- [ ] 검색 결과가 없으면 결과 리스트 대신 empty state를 보여줍니다.
-- [ ] empty state에서도 검색어와 적용된 필터값은 유지합니다.
-- [ ] 좁은 viewport에서 긴 식당명은 최대 2줄까지 보여주고 카드 레이아웃을 깨지 않습니다.
-- [ ] 모든 버튼성 요소는 `button` 또는 접근 가능한 interactive element로 구현합니다.
-- [ ] 텍스트 없는 아이콘 버튼에는 `aria-label`을 제공합니다.
+- [x] 상단 영역은 페이지 내 스크롤과 무관하게 고정합니다.
+- [x] 상단 영역은 뒤로가기 버튼과 검색창을 같은 행에 배치합니다.
+- [x] 검색 결과 상태에서는 정렬/음식 장르 필터 바까지 상단 고정 영역에 포함합니다.
+- [x] 뒤로가기 버튼은 24px 아이콘을 유지하고 44px 터치 영역을 제공합니다.
+- [x] 뒤로가기 버튼을 누르면 이전 화면으로 돌아갑니다.
+- [x] 검색창 placeholder는 `식당 혹은 메뉴를 검색해보세요`를 사용합니다.
+- [x] 홈 검색 CTA에서 진입하면 검색창에 자동 focus를 주어 키보드가 노출됩니다.
+- [x] `/search` 직접 진입 시에도 검색창에 focus를 줄 수 있지만, 브라우저/OS 정책으로 자동 키보드 노출이 제한될 수 있음을 허용합니다.
+- [x] 검색 전에는 식당 리스트와 필터 바 대신 최근 검색어와 추천 검색어 영역을 보여줍니다.
+- [x] 최근 검색어가 있으면 최근 검색어 영역은 사용자가 최근에 검색한 키워드를 보여줍니다.
+- [x] 최근 검색어를 탭하면 해당 키워드를 검색어로 채우고 검색 결과 상태로 전환합니다.
+- [x] 추천 검색어 영역은 운영팀이 지정한 키워드 또는 제품이 제공하는 추천 키워드를 보여줍니다.
+- [x] 추천 검색어를 탭하면 해당 키워드를 검색어로 채우고 검색 결과 상태로 전환합니다.
+- [x] 검색창 Enter 또는 검색 제출 시 현재 검색어, 정렬값, 음식 장르값 기준으로 결과를 조회합니다.
+- [x] 검색 제출에 성공하면 trim 처리한 검색어를 최근 검색어 목록에 저장합니다.
+- [x] 정렬 필터 trigger는 현재 적용된 정렬 label을 보여줍니다.
+- [x] 정렬 필터 기본값은 `기본순`입니다.
+- [x] 음식 장르 필터 trigger는 현재 적용된 음식 장르 label을 보여줍니다.
+- [x] 음식 장르 필터 기본값은 `전체`이며, 기본 상태에서는 trigger label을 `음식 장르 선택`으로 보여줍니다.
+- [x] 필터 trigger 클릭 시 해당 바텀시트를 엽니다.
+- [x] 바텀시트에서 옵션을 선택해도 즉시 결과에 반영하지 않고, `적용` 버튼 클릭 시에만 적용합니다.
+- [x] 바텀시트의 `초기화` 버튼은 해당 필터를 기본값으로 적용하고 바텀시트를 닫습니다.
+- [x] 화면에 노출되는 닫기 컨트롤은 바텀시트의 `X` 버튼입니다.
+- [x] HDS `BottomSheet`의 기본 접근성 계약에 따라 overlay click과 Escape key 닫기는 허용합니다.
+- [x] 식당 리스트에는 식당 사진, 식당명, 별점, 음식 종류 태그, 당일 영업시간을 보여줍니다.
+- [x] 식당 이미지가 없으면 임시 placeholder 대신 공통 `DefaultImage` fallback을 사용합니다.
+- [x] 검색 결과가 없으면 결과 리스트 대신 empty state를 보여줍니다.
+- [x] empty state에서도 검색어와 적용된 필터값은 유지합니다.
+- [x] 좁은 viewport에서 긴 식당명은 최대 2줄까지 보여주고 카드 레이아웃을 깨지 않습니다.
+- [x] 모든 버튼성 요소는 `button` 또는 접근 가능한 interactive element로 구현합니다.
+- [x] 텍스트 없는 아이콘 버튼에는 `aria-label`을 제공합니다.
 
 ## Data Dependencies
 
@@ -279,7 +282,7 @@ SearchPage
 ## Reuse Audit
 
 - `SearchField`를 사용합니다. 검색 실행, 최근 검색어, 추천 검색어, query 동기화는 HDS 범위가 아니므로 page가 소유합니다.
-- `IconButton size="xs"`와 `BackIcon`을 조합해 뒤로가기 버튼을 구현합니다.
+- `IconButton size="xs"`와 `BackIcon`을 조합해 뒤로가기 버튼을 구현합니다. 호출부에서 `44px` 터치 영역을 확보하고 아이콘은 `24px`로 유지합니다.
 - `Chip`을 최근 검색어와 추천 검색어 pill에 사용합니다. 칩 목록의 horizontal scroll과 키워드 선택 동작은 page-local `KeywordChipList`가 소유합니다.
 - `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 `useSearchPage`가 주입합니다.
 - 검색/필터/바텀시트 상태와 이동 로직은 `SearchPage`에 직접 두지 않고 `useSearchPage`가 주입합니다.
@@ -367,7 +370,7 @@ SearchPage
 - validation error:
   - 이번 범위에서는 검색어 validation error를 노출하지 않습니다.
 - exceptional case:
-  - 식당 이미지가 없으면 fallback image 또는 placeholder 영역을 사용합니다.
+  - 식당 이미지가 없으면 공통 `DefaultImage` fallback을 사용합니다.
   - 별점 또는 영업시간이 없으면 API/제품 정책에 따라 숨김 또는 대체 문구를 선택합니다.
 - user-facing message:
   - empty: `검색된 식당이 없습니다.`
@@ -408,18 +411,19 @@ SearchPage
   - 첨부 설계는 모바일 viewport 기준입니다.
   - 넓은 viewport에서는 콘텐츠 폭을 모바일 기준으로 제한하거나 기존 RootLayout 정책을 따릅니다.
 - fixed area:
-  - 검색창을 포함한 상단 검색 영역만 고정합니다.
-  - 검색 영역은 `app-mobile-fixed-top z-fixed bg-white`로 렌더링해 스크롤 중 결과 리스트보다 위에 표시합니다.
-  - filter bar는 고정 영역에 포함하지 않고 검색 결과 콘텐츠 흐름 안에서 렌더링합니다.
-  - fixed 검색 영역은 SearchField 아래 여백까지 포함하며, 본문을 덮지 않도록 본문은 `pt-[83px]`로 보정합니다.
+  - 검색창을 포함한 상단 검색 영역은 항상 고정합니다.
+  - 검색 결과 상태에서는 filter bar도 같은 `app-mobile-fixed-top z-fixed bg-white` 영역에 포함해 스크롤 중 결과 리스트보다 위에 표시합니다.
+  - 검색 전 본문은 `pt-[83px]`, 검색 결과 본문은 filter bar 높이까지 반영해 `pt-[122px]`로 보정합니다.
 - search header:
   - top padding은 `30px`입니다.
   - bottom padding은 `9px`입니다.
   - 뒤로가기 아이콘은 `24px`입니다.
+  - 뒤로가기 버튼 터치 영역은 `44px * 44px`입니다.
   - 뒤로가기 버튼과 `SearchField` 사이 간격은 `10px`입니다.
 - filter bar:
   - filter trigger는 page-local component로 조합합니다.
   - `SearchField`와 filter section 사이 간격은 fixed search header의 bottom padding `9px`로 확보합니다.
+  - 검색 결과 상태에서 fixed search header 아래에 렌더링합니다.
   - filter section 내부 vertical padding은 `9px`입니다.
   - trigger text는 `typo-sub-header-3 text-primary-200`입니다.
   - text와 chevron icon 사이 간격은 `12px`입니다.
@@ -429,6 +433,7 @@ SearchPage
   - list item 사이 간격은 `30px`입니다.
   - 결과 리스트 하단 padding은 `30px`입니다.
   - 식당 이미지는 `92px * 92px`, radius `5px`입니다.
+  - 식당 이미지가 없으면 `DefaultImage`를 같은 크기와 radius로 렌더링합니다.
   - 이미지와 내용 사이 간격은 `12px`입니다.
   - 오른쪽 내용 영역은 이미지 높이 기준 vertical center로 정렬합니다.
   - title은 `typo-sub-header-2 text-cool-gray-900`이며 최대 2줄입니다.
@@ -468,14 +473,14 @@ SearchPage
 - empty/loading/error layout:
   - 상단 고정 영역은 유지합니다.
   - empty state는 결과 영역 중앙에 배치합니다.
-  - 바텀시트 open 시 배경 overlay로 본문을 dim 처리합니다.
+  - 바텀시트 open 시 배경 overlay로 본문을 dim 처리하고 `html`/`body` 배경 스크롤을 lock합니다.
 
 ## Verification
 
-- [ ] `corepack pnpm format:check`
-- [ ] `corepack pnpm --filter @hashi/client lint`
-- [ ] `corepack pnpm --filter @hashi/client typecheck`
-- [ ] `corepack pnpm --filter @hashi/client build`
+- [x] `corepack pnpm format:check`
+- [x] `corepack pnpm --filter @hashi/client lint`
+- [x] `corepack pnpm --filter @hashi/client typecheck`
+- [x] `corepack pnpm --filter @hashi/client build`
 - [ ] `corepack pnpm --filter @hashi/client test`
 - [ ] `/search` 직접 진입 확인
 - [ ] 홈 검색 CTA에서 `/search` 진입 확인

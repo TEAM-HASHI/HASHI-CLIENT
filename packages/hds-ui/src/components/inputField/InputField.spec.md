@@ -82,17 +82,19 @@ Exported type:
 
 - root width: `100%`
 - label/input gap: `8px`
-- input box height: `51px`
+- input box height: `45px`
+- input box padding-top / padding-bottom: `13px` (`py-3.25`)
 - input box padding-left: `15px`
 - input box padding-right: `15px` without right content, `9px` with right content
 - input box radius: `10px`
 - input box background: `primary-100`
 - label: `font-sans`, `typo-sub-header-2`, `black`
 - input text: `font-sans`, `typo-body-4`, `primary-200`
-- placeholder: `warm-gray-300`
+- placeholder/hint: input typography와 동일한 `typo-body-4`, `warm-gray-300`
+- inner native input resets: `appearance-none`, `border-0`, `p-0`
 - input and right content minimum gap: `10px`
 - right icon and right element gap: `10px`
-- right action position in Figma examples: `right 9px`, vertically centered in the `51px` box
+- right action position in Figma examples: `right 9px`, vertically centered in the `45px` box
 - right icon visual box: `22px`
 
 Figma selection width is `345px`, but the component uses `w-full` for mobile app layouts. Storybook examples wrap the component in a `345px` preview frame.

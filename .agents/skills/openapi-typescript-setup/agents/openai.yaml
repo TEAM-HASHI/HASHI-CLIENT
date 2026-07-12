@@ -1,0 +1,6 @@
+interface:
+  display_name: 'OpenAPI TypeScript Setup'
+  short_description: 'OpenAPI 타입 생성 설정'
+  default_prompt: 'HASHI Client의 OpenAPI 타입 생성 설정이나 오류 해결에 $openapi-typescript-setup을 사용해줘.'
+policy:
+  allow_implicit_invocation: true

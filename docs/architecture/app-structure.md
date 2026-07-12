@@ -16,7 +16,7 @@ apps/client/src/
 apps/admin/src/
   app/       관리자 앱 실행 조립 코드
   pages/     관리자 라우트 단위 화면
-  shared/    admin 앱 내부 공통 코드, mock API adapter
+  shared/    admin 앱 내부 공통 코드와 실제 API boundary
 ```
 
 앱 코드에서 import해 사용하는 로고와 이미지 asset은 `apps/client/src/shared/assets/`에 둡니다.
@@ -43,7 +43,8 @@ app/
 `apps/admin`은 임시 관리자 콘솔입니다. 실제 관리자 레포가 분리되기 전까지 다음 기준을 따릅니다.
 
 - package name은 `@hashi/admin`을 사용합니다.
-- API가 확정되지 않은 필드는 `apps/admin/src/shared/api`의 type, endpoint, mock adapter에 격리합니다.
+- admin API type은 `apps/admin/src/shared/api/generated`에 생성하고 endpoint boundary에서 좁혀 사용합니다.
+- OpenAPI에 없는 기능은 mock으로 채우지 않고 UI에서 지원하지 않는 상태로 명시합니다.
 - 사용자 앱 인증과 관리자 인증을 섞지 않고 관리자 세션은 `apps/admin/src/shared/auth`에서 관리합니다.
 - 관리자 전용 UI는 `apps/admin/src/shared/components`에서 시작하고, 제품 공통 primitive로 확정되기 전까지 `packages/hds-ui`로 승격하지 않습니다.
 - HDS UI, HDS Icons, HDS Tokens는 workspace dependency로 재사용합니다.

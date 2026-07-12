@@ -7,8 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
-    "lint": "eslint . --config ../../eslint.config.js",
-    "preview": "vite preview"
+    "lint": "pnpm --dir ../.. exec eslint apps/admin --config eslint.config.js",
+    "gen:api-types": "node scripts/generate-openapi-types.mjs --schema-env ADMIN_OPENAPI_SCHEMA_URL --output src/shared/api/generated/openapi.ts",
+    "gen:user-api-types": "node scripts/generate-openapi-types.mjs --schema-env USER_OPENAPI_SCHEMA_URL --output src/shared/api/generated/user-openapi.ts",
+    "gen:all-api-types": "pnpm gen:api-types && pnpm gen:user-api-types",
+    "preview": "vite preview",
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@hashi/hds-icons": "workspace:*",
@@ -25,6 +29,9 @@
   "devDependencies": {
     "@eslint/js": "catalog:",
     "@tailwindcss/vite": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
@@ -33,9 +40,12 @@
     "eslint-plugin-react-hooks": "catalog:",
     "eslint-plugin-react-refresh": "catalog:",
     "globals": "catalog:",
+    "jsdom": "catalog:",
+    "openapi-typescript": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

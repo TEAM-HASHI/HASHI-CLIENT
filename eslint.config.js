@@ -53,6 +53,20 @@ export default tseslint.config(
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
   },
   {
+    files: [
+      '.agents/scripts/**/*.{js,mjs}',
+      'apps/admin/scripts/**/*.{js,mjs}',
+      'apps/client/scripts/**/*.{js,mjs}',
+      'scripts/**/*.{js,mjs}',
+    ],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        fetch: 'readonly',
+      },
+    },
+  },
+  {
     files: ['apps/client/src/**/*.{ts,tsx}', 'apps/admin/src/**/*.{ts,tsx}'],
     ignores: ['apps/client/src/**/index.ts', 'apps/admin/src/**/index.ts'],
     rules: {
