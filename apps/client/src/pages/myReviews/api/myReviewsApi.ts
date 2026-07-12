@@ -1,5 +1,5 @@
 import type { components } from '@/shared/api/generated/openapi'
-import { request } from '@/shared/api'
+import { request } from '@/shared/api/request'
 
 export type MyReviewsData = components['schemas']['MyReviewListResponse']
 export type MyReviewSummary = components['schemas']['MyReviewSummaryResponse']

@@ -3,14 +3,12 @@ import { act, renderHook } from '@testing-library/react'
 import type { PropsWithChildren } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { deleteReview } from '@/features/review/api'
+import { deleteReview } from '@/features/review/api/deleteReview'
 import { useDeleteReviewMutation } from '@/features/review/mutations/useDeleteReviewMutation'
-import {
-  myReviewQueryKeys,
-  visitedReservationQueryKeys,
-} from '@/features/review/queries'
+import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
+import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 
-vi.mock('@/features/review/api', () => ({
+vi.mock('@/features/review/api/deleteReview', () => ({
   deleteReview: vi.fn(),
 }))
 

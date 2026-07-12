@@ -12,12 +12,17 @@ const keywordIdByLabel = new Map<string, ReviewKeywordId>([
   ['직원분이 친절해요', 'kind'],
 ])
 
+const timeZoneSuffixPattern = /(Z|[+-]\d{2}:\d{2})$/
+
+const parseKoreanDateTime = (value: string) =>
+  new Date(timeZoneSuffixPattern.test(value) ? value : `${value}+09:00`)
+
 const getDateParts = (value: string | undefined) => {
   if (!value) {
     return null
   }
 
-  const date = new Date(value)
+  const date = parseKoreanDateTime(value)
 
   if (Number.isNaN(date.getTime())) {
     return null

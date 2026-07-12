@@ -10,11 +10,9 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
-import {
-  deleteReview,
-  getMyReviewCount,
-  getVisitedReservations,
-} from '@/features/review/api'
+import { deleteReview } from '@/features/review/api/deleteReview'
+import { getMyReviewCount } from '@/features/review/api/getMyReviewCount'
+import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
 import { getMyReviews } from '@/pages/myReviews/api/myReviewsApi'
 import { MyReviewsPage } from '@/pages/myReviews/MyReviewsPage'
 
@@ -36,9 +34,15 @@ vi.mock('@/pages/myReviews/api/myReviewsApi', () => ({
   getMyReviews: vi.fn(),
 }))
 
-vi.mock('@/features/review/api', () => ({
+vi.mock('@/features/review/api/deleteReview', () => ({
   deleteReview: vi.fn(),
+}))
+
+vi.mock('@/features/review/api/getMyReviewCount', () => ({
   getMyReviewCount: vi.fn(),
+}))
+
+vi.mock('@/features/review/api/getVisitedReservations', () => ({
   getVisitedReservations: vi.fn(),
 }))
 

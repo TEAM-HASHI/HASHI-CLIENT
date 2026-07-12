@@ -1,10 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import { deleteReview } from '@/features/review/api'
-import {
-  myReviewQueryKeys,
-  visitedReservationQueryKeys,
-} from '@/features/review/queries'
+import { deleteReview } from '@/features/review/api/deleteReview'
+import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
+import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 
 export const useDeleteReviewMutation = () => {
   const queryClient = useQueryClient()

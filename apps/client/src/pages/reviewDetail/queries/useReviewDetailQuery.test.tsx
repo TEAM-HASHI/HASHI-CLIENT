@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import type { PropsWithChildren } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { myReviewQueryKeys } from '@/features/review/queries'
+import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
 import { getMyReviewDetail } from '@/pages/reviewDetail/api/getMyReviewDetail'
 import { useReviewDetailQuery } from '@/pages/reviewDetail/queries/useReviewDetailQuery'
 

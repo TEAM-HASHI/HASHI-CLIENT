@@ -12,7 +12,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
-import { deleteReview } from '@/features/review/api'
+import { deleteReview } from '@/features/review/api/deleteReview'
 import { REVIEW_PHOTO_MAX_COUNT } from '@/features/review/constants'
 import { getMyReviewDetail } from '@/pages/reviewDetail/api/getMyReviewDetail'
 import { ReviewDetailContentCard } from '@/pages/reviewDetail/components/ReviewDetailContentCard'
@@ -32,7 +32,7 @@ vi.mock('@/pages/reviewDetail/api/getMyReviewDetail', () => ({
   getMyReviewDetail: vi.fn(),
 }))
 
-vi.mock('@/features/review/api', () => ({
+vi.mock('@/features/review/api/deleteReview', () => ({
   deleteReview: vi.fn(),
 }))
 

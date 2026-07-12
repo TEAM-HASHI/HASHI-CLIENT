@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
 import { useMyPointBalanceQuery } from '@/features/point'
-import { useMyReviewCountQuery } from '@/features/review/queries'
+import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
 import { getMypageProfileSummary } from '@/pages/mypage/api/getMypageProfileSummary'
 import {
   createMypagePrimaryMenuItems,

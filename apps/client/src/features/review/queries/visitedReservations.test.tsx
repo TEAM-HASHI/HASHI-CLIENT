@@ -4,10 +4,8 @@ import type { PropsWithChildren } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
-import {
-  useVisitedReservationsInfiniteQuery,
-  visitedReservationQueryKeys,
-} from '@/features/review/queries/visitedReservations'
+import { useVisitedReservationsInfiniteQuery } from '@/features/review/queries/visitedReservations'
+import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 
 vi.mock('@/features/review/api/getVisitedReservations', () => ({
   getVisitedReservations: vi.fn(),

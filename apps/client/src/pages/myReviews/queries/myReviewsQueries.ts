@@ -4,7 +4,7 @@ import {
   getMyReviews,
   type MyReviewsData,
 } from '@/pages/myReviews/api/myReviewsApi'
-import { myReviewQueryKeys } from '@/features/review/queries'
+import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
 
 export const MY_REVIEWS_PAGE_SIZE = 20
 

@@ -3,10 +3,8 @@ import { generatePath, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useDeleteReviewMutation } from '@/features/review/mutations'
-import {
-  useMyReviewCountQuery,
-  useVisitedReservationsInfiniteQuery,
-} from '@/features/review/queries'
+import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
+import { useVisitedReservationsInfiniteQuery } from '@/features/review/queries/visitedReservations'
 import {
   MY_REVIEW_TAB_ITEMS,
   type MyReviewTabTypes,

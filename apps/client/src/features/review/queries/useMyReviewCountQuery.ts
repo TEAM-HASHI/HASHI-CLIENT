@@ -1,6 +1,6 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
 
-import { getMyReviewCount } from '@/features/review/api'
+import { getMyReviewCount } from '@/features/review/api/getMyReviewCount'
 import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
 
 export const myReviewCountQueryOptions = () =>

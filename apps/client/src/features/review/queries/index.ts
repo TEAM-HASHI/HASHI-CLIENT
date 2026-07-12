@@ -3,8 +3,8 @@ export {
   myReviewCountQueryOptions,
   useMyReviewCountQuery,
 } from './useMyReviewCountQuery'
+export { visitedReservationQueryKeys } from './visitedReservationQueryKeys'
 export {
   useVisitedReservationsInfiniteQuery,
-  visitedReservationQueryKeys,
   visitedReservationsQueryOptions,
 } from './visitedReservations'

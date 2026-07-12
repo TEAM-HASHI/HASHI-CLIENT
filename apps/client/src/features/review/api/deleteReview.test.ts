@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { deleteReview } from '@/features/review/api/deleteReview'
-import { request } from '@/shared/api'
+import { request } from '@/shared/api/request'
 
-vi.mock('@/shared/api', () => ({ request: vi.fn() }))
+vi.mock('@/shared/api/request', () => ({ request: vi.fn() }))
 
 const mockRequest = vi.mocked(request)
 

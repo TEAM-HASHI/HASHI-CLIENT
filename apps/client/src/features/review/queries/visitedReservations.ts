@@ -9,15 +9,8 @@ import {
   type VisitedReservationFilters,
   type VisitedReservationListData,
   type VisitedReservationParams,
-} from '@/features/review/api'
-
-export const visitedReservationQueryKeys = {
-  all: ['reviews', 'visitedReservations'] as const,
-  infiniteList: (params: VisitedReservationFilters) =>
-    [...visitedReservationQueryKeys.all, 'infiniteList', params] as const,
-  list: (params: VisitedReservationParams) =>
-    [...visitedReservationQueryKeys.all, 'list', params] as const,
-}
+} from '@/features/review/api/getVisitedReservations'
+import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 
 export const visitedReservationsQueryOptions = (
   params: VisitedReservationParams,
