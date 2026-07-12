@@ -27,6 +27,7 @@ const getApiClientOptions = async () => {
 describe('apiClient', () => {
   beforeEach(() => {
     vi.resetModules()
+    vi.stubEnv('VITE_API_BASE_URL', 'https://api.hashi.test')
     mockKyCreate.mockClear()
     window.localStorage.clear()
   })
@@ -36,7 +37,7 @@ describe('apiClient', () => {
 
     const options = await getApiClientOptions()
     const request = new Request(
-      'https://dev-api.hashi.kr/api/v1/reviews/me/count',
+      'https://api.hashi.test/api/v1/reviews/me/count',
     )
 
     options?.hooks?.beforeRequest?.[0]?.({ request })
@@ -49,7 +50,7 @@ describe('apiClient', () => {
   it('does not attach Authorization when accessToken is empty', async () => {
     const options = await getApiClientOptions()
     const request = new Request(
-      'https://dev-api.hashi.kr/api/v1/reviews/me/count',
+      'https://api.hashi.test/api/v1/reviews/me/count',
     )
 
     options?.hooks?.beforeRequest?.[0]?.({ request })
