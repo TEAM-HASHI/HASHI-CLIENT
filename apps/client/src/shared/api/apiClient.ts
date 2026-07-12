@@ -27,9 +27,11 @@ export const apiClient = ky.create({
       ({ request }) => {
         const accessToken = getAccessToken()
 
-        if (accessToken) {
-          request.headers.set('Authorization', `Bearer ${accessToken}`)
+        if (!accessToken) {
+          return
         }
+
+        request.headers.set('Authorization', `Bearer ${accessToken}`)
       },
     ],
   },

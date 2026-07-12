@@ -4,16 +4,22 @@ import { MypageMenuSection } from '@/pages/mypage/components/MypageMenuSection'
 import { MypagePointSummary } from '@/pages/mypage/components/MypagePointSummary'
 import { MypageProfile } from '@/pages/mypage/components/MypageProfile'
 import { useMypagePage } from '@/pages/mypage/hooks/useMypagePage'
+import { LoadingScreen } from '@/shared/components/loadingScreen'
 
 export const MypagePage = () => {
   const {
     isComingSoonOpen,
+    isLoading,
     menuSections,
     primaryMenuItems,
     setIsComingSoonOpen,
     summary,
     handleMenuAction,
   } = useMypagePage()
+
+  if (isLoading) {
+    return <LoadingScreen />
+  }
 
   return (
     <>

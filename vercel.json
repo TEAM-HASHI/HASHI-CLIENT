@@ -4,5 +4,11 @@
   "devCommand": "pnpm dev:client",
   "installCommand": "pnpm install",
   "framework": "vite",
-  "outputDirectory": "apps/client/dist"
+  "outputDirectory": "apps/client/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
 }
