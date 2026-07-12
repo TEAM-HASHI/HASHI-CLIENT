@@ -23,7 +23,7 @@ export const ReservationDetailPage = () => {
     handleCancelDialogOpenChange,
     handleCancelReservation,
     handleConfirmCancelPress,
-    handleContact,
+    handleHome,
   } = useReservationDetailPage()
 
   return (
@@ -58,7 +58,7 @@ export const ReservationDetailPage = () => {
       <ReservationNoticeSection notices={reservationNotices} />
       <ReservationDetailActionBar
         onCancel={handleCancelReservation}
-        onContact={handleContact}
+        onHome={handleHome}
       />
       <ReservationCancelDialog
         open={isCancelDialogOpen}

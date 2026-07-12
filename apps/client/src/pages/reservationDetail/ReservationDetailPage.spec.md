@@ -51,7 +51,7 @@
 - [ ] 예약 접수 정보 카드는 예약자, 인원, 식당 주소, 식당 방문 일정, 수수료를 표시합니다.
 - [ ] 예약 안내 문구는 고정 정책 문구로 표시합니다.
 - [ ] 하단 액션 영역은 스크롤해도 유지됩니다.
-- [ ] 하단 액션에는 `예약 취소하기`, `문의하기` 버튼을 표시합니다.
+- [ ] 하단 액션에는 `예약 취소하기`, `홈으로 돌아가기` 버튼을 표시합니다.
 - [ ] 식당 이미지가 없으면 공통 `DefaultImage`를 사용합니다.
 - [ ] fixed Header와 fixed ActionBar는 z-index 토큰을 사용합니다.
 
@@ -99,7 +99,7 @@
 6. 사용자가 뒤로가기 버튼을 누르면 이전 페이지로 이동합니다.
 7. 사용자가 예약 취소 버튼을 누르면 예약 취소 확인 모달이 열립니다.
 8. 사용자가 모달에서 취소하기를 누르면 예약 정보 페이지의 진행 중 상태로 이동합니다.
-9. 사용자가 문의하기 버튼을 누르면 Hashi 카카오톡 문의 링크를 새 창으로 엽니다.
+9. 사용자가 홈 버튼을 누르면 홈(`/`)으로 이동합니다.
 
 ## State
 
@@ -159,7 +159,7 @@ ReservationDetailPage
   ReservationNoticeSection
   ReservationDetailActionBar
     CancelButton
-    ContactButton
+    HomeButton
   ReservationCancelDialog
 ```
 
@@ -207,7 +207,7 @@ ReservationDetailPage
   - 예약 정보 페이지의 상세보기 액션
   - 예약 관련 진입점
 - links:
-  - 문의하기: Hashi 카카오톡 문의 링크
+  - 홈: `ROUTES.home`
 - route params:
   - `reservationId`
 - search params:

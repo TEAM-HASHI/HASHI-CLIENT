@@ -7,12 +7,11 @@ import {
   screen,
   within,
 } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
 import { DEFAULT_RESERVATION_STATUS } from '@/pages/myReservations/constants/reservationStatus'
 import { ReservationDetailPage } from '@/pages/reservationDetail/ReservationDetailPage'
-import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -30,19 +29,12 @@ vi.mock('react-router-dom', async () => {
 })
 
 describe('ReservationDetailPage', () => {
-  const mockOpen = vi.fn()
-
-  beforeEach(() => {
-    vi.stubGlobal('open', mockOpen)
-  })
-
   afterEach(() => {
     cleanup()
     vi.unstubAllGlobals()
     vi.unstubAllEnvs()
     vi.restoreAllMocks()
     mockNavigate.mockClear()
-    mockOpen.mockClear()
   })
 
   it('opens the reservation cancel dialog from the fixed action bar', () => {
@@ -73,16 +65,12 @@ describe('ReservationDetailPage', () => {
     )
   })
 
-  it('opens the Hashi Kakao contact link from the fixed action bar', () => {
+  it('moves to home from the fixed action bar', () => {
     render(<ReservationDetailPage />)
 
-    fireEvent.click(screen.getByRole('button', { name: '문의하기' }))
+    fireEvent.click(screen.getByRole('button', { name: '홈' }))
 
-    expect(mockOpen).toHaveBeenCalledWith(
-      HASHI_KAKAO_CHANNEL_URL,
-      '_blank',
-      'noreferrer',
-    )
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home)
   })
 
   it('shows only the date for the received reservation step time', () => {

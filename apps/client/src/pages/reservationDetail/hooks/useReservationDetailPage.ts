@@ -9,7 +9,6 @@ import {
   reservationReceiptInfoItems,
   reservationRestaurant,
 } from '@/pages/reservationDetail/mocks/reservationDetail.mock'
-import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
 export const useReservationDetailPage = () => {
   const navigate = useNavigate()
@@ -34,8 +33,8 @@ export const useReservationDetailPage = () => {
     navigate(`${ROUTES.myReservations}?status=${DEFAULT_RESERVATION_STATUS}`)
   }
 
-  const handleContact = () => {
-    window.open(HASHI_KAKAO_CHANNEL_URL, '_blank', 'noreferrer')
+  const handleHome = () => {
+    navigate(ROUTES.home)
   }
 
   return {
@@ -49,6 +48,6 @@ export const useReservationDetailPage = () => {
     handleCancelDialogOpenChange,
     handleCancelReservation,
     handleConfirmCancelPress,
-    handleContact,
+    handleHome,
   }
 }
