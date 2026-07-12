@@ -1,5 +1,17 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import '@testing-library/jest-dom/vitest'
+
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from '@tanstack/react-query'
+import { cleanup, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import AsyncBoundary from '@/app/providers/AsyncBoundary'
+import { ApiError } from '@/shared/api/apiError'
+import type { ErrorResponse } from '@/shared/api/types'
 
 const { mockCaptureError } = vi.hoisted(() => ({
   mockCaptureError: vi.fn(),
@@ -9,23 +21,92 @@ vi.mock('@/shared/lib/sentry', () => ({
   captureError: mockCaptureError,
 }))
 
-import AsyncBoundary from '@/app/providers/AsyncBoundary'
+const response: ErrorResponse = {
+  success: false,
+  code: 'COMMON-500',
+  message: 'raw server message',
+  data: null,
+  timestamp: '2026-07-11T00:00:00.000Z',
+  path: '/api/v1/restaurants',
+}
 
-const ErrorThrowingChild = () => {
-  throw new Error('render failed')
+const QueryContent = ({ queryFn }: { queryFn: () => Promise<string> }) => {
+  const { data } = useQuery({
+    queryKey: ['async-boundary-test'],
+    queryFn,
+  })
+
+  return <p>{data}</p>
+}
+
+const RouteContent = ({ shouldThrow }: { shouldThrow: boolean }) => {
+  if (shouldThrow) {
+    throw new Error('route failed')
+  }
+
+  return <p>next route</p>
 }
 
 describe('AsyncBoundary', () => {
-  it('captures errors handled by the boundary', () => {
+  afterEach(() => {
+    cleanup()
+    vi.restoreAllMocks()
+  })
+
+  it('shows mapped copy, captures the error, and refetches after reset', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
+    const user = userEvent.setup()
+    const error = new ApiError(response, 500)
+    const queryFn = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(error)
+      .mockResolvedValueOnce('recovered')
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          throwOnError: true,
+        },
+      },
+    })
 
     render(
-      <AsyncBoundary>
-        <ErrorThrowingChild />
+      <QueryClientProvider client={queryClient}>
+        <AsyncBoundary>
+          <QueryContent queryFn={queryFn} />
+        </AsyncBoundary>
+      </QueryClientProvider>,
+    )
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('COMMON-500')
+    expect(alert).toHaveTextContent('서버 오류입니다')
+    expect(mockCaptureError).toHaveBeenCalledWith(error, {
+      extra: { componentStack: expect.any(String) },
+    })
+
+    await user.click(screen.getByRole('button', { name: '다시 시도' }))
+
+    expect(await screen.findByText('recovered')).toBeInTheDocument()
+    expect(queryFn).toHaveBeenCalledTimes(2)
+  })
+
+  it('resets a caught route error when reset keys change', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { rerender } = render(
+      <AsyncBoundary resetKeys={['/failed']}>
+        <RouteContent shouldThrow />
       </AsyncBoundary>,
     )
 
-    expect(screen.getByText('일시적인 오류가 발생했습니다.')).toBeVisible()
-    expect(mockCaptureError.mock.calls[0]?.[0]).toEqual(expect.any(Error))
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+
+    rerender(
+      <AsyncBoundary resetKeys={['/next']}>
+        <RouteContent shouldThrow={false} />
+      </AsyncBoundary>,
+    )
+
+    expect(await screen.findByText('next route')).toBeInTheDocument()
   })
 })

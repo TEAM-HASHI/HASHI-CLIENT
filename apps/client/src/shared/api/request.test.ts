@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
 import { request } from '@/shared/api/request'
@@ -19,11 +20,12 @@ const createHttpResponse = ({
   ok: boolean
   status: number
   body?: unknown
-  jsonError?: Error
+  jsonError?: unknown
 }) => ({
   ok,
   status,
-  json: () => (jsonError ? Promise.reject(jsonError) : Promise.resolve(body)),
+  json: () =>
+    jsonError === undefined ? Promise.resolve(body) : Promise.reject(jsonError),
 })
 
 const validationErrorResponse: ErrorResponse = {
@@ -105,17 +107,17 @@ describe('request', () => {
 
     await expect(request('users')).rejects.toMatchObject({
       message: '입력값이 올바르지 않습니다.',
+      status: 400,
       code: 'VALIDATION_ERROR',
       fieldErrors: validationErrorResponse.errors,
       response: validationErrorResponse,
-      status: 400,
     })
   })
 
   it('parses error body on HTTP 500', async () => {
     const serverError: ErrorResponse = {
       success: false,
-      code: 'INTERNAL_ERROR',
+      code: 'COMMON-500',
       message: '서버 오류',
       data: null,
       timestamp: '2026-06-27T12:34:56.789Z',
@@ -130,25 +132,71 @@ describe('request', () => {
       }) as never,
     )
 
-    await expect(request('users')).rejects.toEqual(
-      new ApiError(serverError, 500),
-    )
+    await expect(request('users')).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 500,
+      code: 'COMMON-500',
+      response: serverError,
+    })
   })
 
-  it('throws HttpStatusError when error response is not JSON', async () => {
+  it('normalizes a non-JSON HTTP failure with its actual status', async () => {
+    const parseError = new SyntaxError('Unexpected token <')
     mockedApiClient.mockResolvedValue(
       createHttpResponse({
         ok: false,
         status: 502,
-        jsonError: new SyntaxError('Unexpected token < in JSON'),
+        jsonError: parseError,
+      }) as never,
+    )
+
+    const requestPromise = request('users')
+
+    await expect(requestPromise).rejects.toMatchObject({
+      name: 'HttpStatusError',
+      message: 'HTTP 502',
+      status: 502,
+      cause: parseError,
+    })
+    await expect(requestPromise).rejects.toBeInstanceOf(HttpStatusError)
+  })
+
+  it('normalizes a malformed parsed HTTP failure without trusting its body', async () => {
+    const malformedBody = { error: 'proxy detail' }
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: false,
+        status: 500,
+        body: malformedBody,
+      }) as never,
+    )
+
+    const requestPromise = request('users')
+
+    await expect(requestPromise).rejects.toMatchObject({
+      name: 'HttpStatusError',
+      message: 'HTTP 500',
+      status: 500,
+      cause: malformedBody,
+    })
+    await expect(requestPromise).rejects.toBeInstanceOf(HttpStatusError)
+  })
+
+  it('rejects a malformed success response as a contract error', async () => {
+    const malformedBody = { success: true, message: 'missing data and code' }
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: true,
+        status: 200,
+        body: malformedBody,
       }) as never,
     )
 
     await expect(request('users')).rejects.toMatchObject({
-      message: 'HTTP 502',
-      status: 502,
+      name: 'Error',
+      message: 'Invalid API response',
+      cause: malformedBody,
     })
-    await expect(request('users')).rejects.toBeInstanceOf(HttpStatusError)
   })
 
   it('normalizes leading slashes in request path', async () => {
