@@ -113,6 +113,7 @@ export const HomeLogo = () => {
 - [x] Hashi 로고와 검색 진입 영역, 검색바 아래 여백은 홈 본문 스크롤과 무관하게 상단에 고정합니다.
 - [x] 메인 배너 섹션 타이틀 `맛집 큐레이션을 둘러보세요!`를 노출합니다.
 - [x] 메인 배너는 여러 장 carousel로 노출합니다.
+- [x] 메인 배너는 매거진 상단 배너, 매거진 리스트 썸네일과 같은 `353:160` 이미지 비율을 사용합니다.
 - [ ] 메인 배너 데이터는 최종적으로 서버에서 받은 이미지와 인스타그램 이동 대상 정보로 구성합니다.
 - [x] 퀵 버튼 4개를 노출합니다.
   - 하시 PICK: `ROUTES.hashiPickRestaurants`
@@ -157,7 +158,7 @@ export const HomeLogo = () => {
     - `imageUrl`
     - `imageAlt`
 - loading state:
-  - 메인 배너 API: 배너 높이를 유지하는 skeleton을 사용합니다.
+  - 메인 배너 API: 배너 비율을 유지하는 skeleton을 사용합니다.
 - error state:
   - 메인 배너 API: 전체 페이지 실패로 막지 않고 실패한 섹션만 재시도 UI를 제공합니다.
 - empty state:

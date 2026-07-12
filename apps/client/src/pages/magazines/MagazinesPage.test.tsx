@@ -1,6 +1,12 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
@@ -203,6 +209,10 @@ describe('MagazinesPage', () => {
       '[data-hds-carousel-viewport]',
     )
     const indicator = heroBanner.querySelector('[data-hds-carousel-indicator]')
+    const recommendedSection = screen.getByRole('region', {
+      name: '추천 매거진 목록',
+    })
+    const magazineList = within(recommendedSection).getByRole('list')
     const firstItem = screen.getAllByRole('listitem')[0]
     const firstLink = screen.getByRole('link', {
       name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
@@ -211,18 +221,26 @@ describe('MagazinesPage', () => {
       name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
     })
     const firstImage = firstLink.querySelector('img')
-    const firstDate = screen.getByText('2026. 07. 12.')
+    const firstDate = screen.getByText('2026. 07.12.')
 
-    expect(heroViewport).toHaveClass('h-[260px]')
+    expect(heroBanner).toHaveClass('mt-[4px]', 'px-5')
+    expect(heroViewport).toHaveClass('aspect-[353/160]')
     expect(indicator).toHaveAttribute('data-align', 'end')
+    expect(indicator).toHaveClass('!right-[33px]')
     expect(
       screen.queryByRole('heading', { name: '최근 _한 추천 매거진' }),
     ).not.toBeInTheDocument()
+    expect(recommendedSection).toHaveClass('pt-5')
     expect(firstItem).toHaveClass('border-warm-gray-50')
-    expect(firstLink).toHaveClass('py-3.5')
+    expect(magazineList).toHaveClass('gap-5', 'px-5')
+    expect(firstLink).toHaveClass('gap-[21px]', 'pt-5', 'pb-2')
     expect(firstTitle).toHaveClass('typo-body-6', 'text-black')
     expect(firstImage).toHaveAttribute('alt', '')
-    expect(firstImage).toHaveClass('h-[108px]', 'w-[164px]', 'rounded-[5px]')
+    expect(firstImage).toHaveClass(
+      'aspect-[353/160]',
+      'w-[164px]',
+      'rounded-[5px]',
+    )
     expect(firstDate).toHaveClass(
       'typo-caption-1',
       'font-medium',

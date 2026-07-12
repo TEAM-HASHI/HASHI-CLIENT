@@ -15,17 +15,15 @@ const MAGAZINE_LIST_PAGE_SIZE = 10
 export { normalizeInstagramUrl }
 
 const formatMagazinePublishedDate = (createdAt: string) => {
-  const date = new Date(createdAt)
+  const dateParts = /^(\d{4})-(\d{2})-(\d{2})/.exec(createdAt)
 
-  if (Number.isNaN(date.getTime())) {
+  if (!dateParts) {
     return null
   }
 
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
+  const [, year, month, day] = dateParts
 
-  return `${year}. ${month}. ${day}.`
+  return `${year}. ${month}.${day}.`
 }
 
 export const useMagazinesPage = () => {

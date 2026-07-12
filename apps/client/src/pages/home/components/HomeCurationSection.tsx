@@ -26,7 +26,7 @@ export const HomeCurationSection = ({
         </h2>
         <div
           aria-label="맛집 큐레이션 배너 로딩 중"
-          className="bg-cool-gray-100 mt-2.5 h-[160px] w-full rounded-[8px]"
+          className="bg-cool-gray-100 mt-2.5 aspect-[353/160] w-full rounded-[8px]"
         />
       </section>
     )
@@ -78,7 +78,7 @@ export const HomeCurationSection = ({
         className="mt-2.5"
         defaultIndex={0}
       >
-        <Carousel.Viewport className="h-[160px] w-full overflow-y-hidden rounded-[8px]">
+        <Carousel.Viewport className="aspect-[353/160] w-full overflow-y-hidden rounded-[8px]">
           <Carousel.Track>
             {banners.map((banner) => (
               <Carousel.Item key={banner.id}>

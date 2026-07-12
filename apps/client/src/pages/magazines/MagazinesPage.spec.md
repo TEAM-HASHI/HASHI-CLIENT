@@ -47,6 +47,7 @@ Jira: HASHI-77
 - [x] 상단 대표 매거진 배너 영역을 보여준다.
 - [x] 대표 매거진 배너는 이미지와 페이지 인디케이터를 포함한다.
 - [x] 대표 매거진 배너 데이터는 이미지와 인스타 게시글 URL을 포함한다.
+- [x] 대표 매거진 배너와 추천 매거진 썸네일은 홈 메인 배너와 같은 `353:160` 이미지 비율을 사용한다.
 - [x] 대표 매거진 배너를 탭하면 해당 매거진의 외부 인스타 게시글로 이동한다.
 - [x] 카테고리 필터는 MVP 범위에서 제외하므로 화면에 렌더링하지 않는다.
 - [x] 추천 매거진 목록은 제목, 이미지, 발행일을 포함한다.
@@ -119,19 +120,19 @@ Jira: HASHI-77
 
 #### Type Mapping
 
-| API field                                      | UI use                           | Nullable/optional          | Transform                                                              |
-| ---------------------------------------------- | -------------------------------- | -------------------------- | ---------------------------------------------------------------------- |
-| `MagazineBannerResponse.magazineId`            | banner `id`, React key           | optional in generated type | convert to string; item is unusable if missing                         |
-| `MagazineBannerResponse.title`                 | banner accessible label fallback | optional                   | fallback to `매거진 배너`                                              |
-| `MagazineBannerResponse.bannerImageUrl`        | banner image `src`               | optional                   | item is unusable if missing                                            |
-| `MagazineBannerResponse.instagramRedirectUrl`  | banner external link             | optional                   | validate through `normalizeInstagramUrl`; invalid value becomes `null` |
-| `MagazineSummaryResponse.magazineId`           | list item `id`, React key        | optional in generated type | convert to string; item is unusable if missing                         |
-| `MagazineSummaryResponse.title`                | list item title/link name        | optional                   | item is unusable if missing                                            |
-| `MagazineSummaryResponse.bannerImageUrl`       | list item thumbnail `src`        | optional                   | item is unusable if missing                                            |
-| `MagazineSummaryResponse.instagramRedirectUrl` | list item external link          | optional                   | validate through `normalizeInstagramUrl`; invalid value becomes `null` |
-| `MagazineSummaryResponse.createdAt`            | published date                   | optional, `date-time`      | format as `YYYY. MM. DD.`; item is unusable if missing or invalid      |
-| `MagazineListResponse.nextCursor`              | next page cursor                 | optional                   | pass as next page param only when `hasNext` is true                    |
-| `MagazineListResponse.hasNext`                 | load-more availability           | optional                   | omitted value means no next page in the first implementation           |
+| API field                                      | UI use                           | Nullable/optional          | Transform                                                                                     |
+| ---------------------------------------------- | -------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
+| `MagazineBannerResponse.magazineId`            | banner `id`, React key           | optional in generated type | convert to string; item is unusable if missing                                                |
+| `MagazineBannerResponse.title`                 | banner accessible label fallback | optional                   | fallback to `매거진 배너`                                                                     |
+| `MagazineBannerResponse.bannerImageUrl`        | banner image `src`               | optional                   | item is unusable if missing                                                                   |
+| `MagazineBannerResponse.instagramRedirectUrl`  | banner external link             | optional                   | validate through `normalizeInstagramUrl`; invalid value becomes `null`                        |
+| `MagazineSummaryResponse.magazineId`           | list item `id`, React key        | optional in generated type | convert to string; item is unusable if missing                                                |
+| `MagazineSummaryResponse.title`                | list item title/link name        | optional                   | item is unusable if missing                                                                   |
+| `MagazineSummaryResponse.bannerImageUrl`       | list item thumbnail `src`        | optional                   | item is unusable if missing                                                                   |
+| `MagazineSummaryResponse.instagramRedirectUrl` | list item external link          | optional                   | validate through `normalizeInstagramUrl`; invalid value becomes `null`                        |
+| `MagazineSummaryResponse.createdAt`            | published date                   | optional, `date-time`      | use the server date part and format as `YYYY. MM.DD.`; item is unusable if missing or invalid |
+| `MagazineListResponse.nextCursor`              | next page cursor                 | optional                   | pass as next page param only when `hasNext` is true                                           |
+| `MagazineListResponse.hasNext`                 | load-more availability           | optional                   | omitted value means no next page in the first implementation                                  |
 
 #### UI States
 
@@ -245,7 +246,7 @@ MagazinesPage
 - page-local mock:
   - none
 - page-local util:
-  - `formatMagazinePublishedDate` if API/mock stores dates as ISO strings and UI needs `YYYY. MM. DD.` format
+  - `formatMagazinePublishedDate` if API/mock stores dates as ISO strings and UI needs server-date-based `YYYY. MM.DD.` format
 - icon:
   - `BackIcon`
 
@@ -337,22 +338,26 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
   - header는 캐러셀 인디케이터보다 높은 layer에 있어야 하므로 콘텐츠 layer보다 높은 z-index를 사용한다.
   - fixed header가 콘텐츠를 덮지 않도록 본문에 header height만큼 top padding을 둔다.
 - representative banner:
-  - full-width visual area below header
-  - viewport height is `260px`.
+  - visual area below header uses horizontal page padding `px-5`.
+  - visual area starts `4px` below the fixed header content offset.
+  - viewport keeps the shared magazine image ratio `353:160`.
   - image uses `object-cover`.
   - title/description overlay is not rendered because those are included in the banner image.
   - indicator uses `Carousel.Indicator align="end"` to avoid overlay text collision.
+  - indicator keeps `13px` horizontal inset from the image edge, which is `33px` from the padded carousel root edge.
 - recommendation section:
-  - horizontal padding uses `px-5` except the full-width banner.
+  - horizontal padding uses `px-5`.
   - large section heading such as `최근 _한 추천 매거진` is not rendered.
-  - list starts directly below the hero banner with the final design spacing.
+  - list starts `20px` below the hero banner.
+  - list uses `20px` gap between items.
   - list item uses text column and fixed image area.
-  - list item vertical padding is `14px`.
+  - list item text/image column gap is `21px`.
+  - list item top padding is `20px` and bottom padding is `8px`.
   - list item title uses `typo-body-6 text-black`.
-  - list item image is `164px x 108px`, radius `5px`.
+  - list item image width is `164px`, keeps the shared magazine image ratio `353:160`, and uses radius `5px`.
   - list item date uses `typo-caption-1 font-medium text-warm-gray-300`.
   - list item divider uses `border-b border-warm-gray-50`.
-  - image keeps a stable width/height so text loading and long copy do not shift layout.
+  - image keeps a stable width/aspect ratio so text loading and long copy do not shift layout.
   - title uses line clamp.
   - published date uses muted typography.
 - responsive:

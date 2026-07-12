@@ -88,7 +88,12 @@ describe('HomePage', () => {
     )
     expect(
       await screen.findByRole('region', { name: '맛집 큐레이션 배너' }),
-    ).toBeInTheDocument()
+    ).toHaveClass('mt-2.5')
+    expect(
+      screen
+        .getByRole('region', { name: '맛집 큐레이션 배너' })
+        .querySelector('[data-hds-carousel-viewport]'),
+    ).toHaveClass('aspect-[353/160]')
     expect(
       screen.getByRole('link', { name: '도쿄 미식 큐레이션 배너' }),
     ).toHaveAttribute('href', 'https://www.instagram.com/hashi_tokyo_curation/')
