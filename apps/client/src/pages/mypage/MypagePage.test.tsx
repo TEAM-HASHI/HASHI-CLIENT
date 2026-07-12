@@ -30,16 +30,12 @@ vi.mock('@/shared/api/request', () => ({
   request: mockRequest,
 }))
 
-const renderMypagePage = ({
-  throwOnError = false,
-}: {
-  throwOnError?: boolean
-} = {}) => {
+const renderMypagePage = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
-        throwOnError,
+        throwOnError: false,
       },
     },
   })
@@ -77,10 +73,32 @@ describe('MypagePage', () => {
     vi.clearAllMocks()
   })
 
-  it('renders primary action buttons with design token colors', () => {
+  it('shows loading screen before required API responses settle', async () => {
+    mockRequest.mockImplementation((path: string) => {
+      if (path === '/api/v1/users/me/profile-summary') {
+        return new Promise(() => {})
+      }
+
+      if (path === '/api/v1/points/me') {
+        return Promise.resolve({ balance: 7000 })
+      }
+
+      return Promise.resolve({ reviewCount: 8 })
+    })
+
     renderMypagePage()
 
-    expect(screen.getByRole('button', { name: '수정' })).toHaveClass(
+    expect(await screen.findByRole('status')).toHaveTextContent('로딩 중이에요')
+    expect(
+      screen.queryByRole('heading', { name: '하시님' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText('0 P')).not.toBeInTheDocument()
+  })
+
+  it('renders primary action buttons with design token colors', async () => {
+    renderMypagePage()
+
+    expect(await screen.findByRole('button', { name: '수정' })).toHaveClass(
       'bg-cool-gray-800',
     )
     expect(screen.getByRole('button', { name: /내가 찜한 식당/ })).toHaveClass(
@@ -88,21 +106,32 @@ describe('MypagePage', () => {
     )
   })
 
-  it('renders saved restaurant count as zero during MVP', () => {
+  it('renders saved restaurant count as zero during MVP', async () => {
     renderMypagePage()
 
     expect(
-      screen.getByRole('button', { name: /내가 찜한 식당 0/ }),
+      await screen.findByRole('button', { name: /내가 찜한 식당 0/ }),
     ).toBeInTheDocument()
   })
 
   it('renders my review count from the API response', async () => {
     mockRequest.mockImplementation((path: string) => {
+      if (path === '/api/v1/users/me/profile-summary') {
+        return Promise.resolve({
+          nickname: '테스트유저',
+          profileImageUrl: 'https://example.com/profile.png',
+        })
+      }
+
+      if (path === '/api/v1/points/me') {
+        return Promise.resolve({ balance: 7000 })
+      }
+
       if (path === '/api/v1/reviews/me/count') {
         return Promise.resolve({ reviewCount: 3 })
       }
 
-      return Promise.resolve({ balance: 7000 })
+      return Promise.resolve(null)
     })
 
     renderMypagePage()
@@ -115,6 +144,13 @@ describe('MypagePage', () => {
 
   it('renders available point from the API response', async () => {
     mockRequest.mockImplementation((path: string) => {
+      if (path === '/api/v1/users/me/profile-summary') {
+        return Promise.resolve({
+          nickname: '테스트유저',
+          profileImageUrl: 'https://example.com/profile.png',
+        })
+      }
+
       if (path === '/api/v1/points/me') {
         return Promise.resolve({ balance: 12345 })
       }
@@ -157,28 +193,30 @@ describe('MypagePage', () => {
       return Promise.resolve({ reviewCount: 8 })
     })
 
-    renderMypagePage({ throwOnError: true })
+    renderMypagePage()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('boundary error')
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
   })
 
-  it('renders confirmed notice and terms links as external links', () => {
+  it('renders confirmed notice and terms links as external links', async () => {
     renderMypagePage()
 
-    expect(screen.getByRole('link', { name: '공지사항' })).toHaveAttribute(
-      'href',
-      HASHI_NOTICE_URL,
-    )
+    expect(
+      await screen.findByRole('link', { name: '공지사항' }),
+    ).toHaveAttribute('href', HASHI_NOTICE_URL)
     expect(screen.getByRole('link', { name: '이용약관' })).toHaveAttribute(
       'href',
       HASHI_TERMS_URL,
     )
   })
 
-  it('does not render the MVP-excluded account section', () => {
+  it('does not render the MVP-excluded account section', async () => {
     renderMypagePage()
 
+    expect(
+      await screen.findByRole('heading', { name: '테스트유저님' }),
+    ).toBeInTheDocument()
     expect(screen.queryByText('계정')).not.toBeInTheDocument()
     expect(screen.queryByText('로그아웃')).not.toBeInTheDocument()
     expect(screen.queryByText('회원탈퇴')).not.toBeInTheDocument()

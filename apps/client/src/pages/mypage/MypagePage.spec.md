@@ -501,10 +501,15 @@ types:
 
 - 마이페이지 query 실패는 전역 QueryClient error policy를 따릅니다.
 - 5xx, 네트워크 오류, timeout, 예상하지 못한 에러는 `AsyncBoundary`로 전달합니다.
-- 4xx API 에러는 `AsyncBoundary`로 전달하지 않고 query error 상태로 유지합니다.
-- `AsyncBoundary`로 전달되는 API 실패 시 fallback 값을 실제 사용자 데이터처럼 보여주지 않습니다.
+- 마이페이지 필수 query 중 하나라도 실패하면 페이지 hook에서 해당 error를 throw해 `AsyncBoundary`로 전달합니다.
+- 4xx API 에러도 마이페이지에서는 fallback 값을 실제 사용자 데이터처럼 보여주지 않고 `AsyncBoundary`로 전달합니다.
 - endpoint 함수의 fallback 정규화는 API 요청이 성공했지만 응답 값이 비어 있는 경우에만 사용합니다.
 - 내가 찜한 식당 count `0`은 API 실패 fallback이 아니라 MVP 제외 범위에 따른 고정 표시입니다.
+
+### Loading
+
+- 마이페이지 필수 query 중 하나라도 pending 상태이면 `LoadingScreen`을 표시합니다.
+- API 응답이 오기 전에는 `DEFAULT_MYPAGE_SUMMARY`를 실제 사용자 데이터처럼 렌더링하지 않습니다.
 
 ### Empty
 

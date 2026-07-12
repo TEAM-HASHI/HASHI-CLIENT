@@ -30,6 +30,19 @@ export const useMypagePage = () => {
     queryFn: getMypageProfileSummary,
     queryKey: ['mypage', 'profileSummary'],
   })
+  const queryError =
+    profileSummaryQuery.error ??
+    pointBalanceQuery.error ??
+    myReviewCountQuery.error
+
+  if (queryError) {
+    throw queryError
+  }
+
+  const isLoading =
+    profileSummaryQuery.isPending ||
+    pointBalanceQuery.isPending ||
+    myReviewCountQuery.isPending
 
   const summary = {
     ...DEFAULT_MYPAGE_SUMMARY,
@@ -67,6 +80,7 @@ export const useMypagePage = () => {
 
   return {
     isComingSoonOpen,
+    isLoading,
     menuSections: mypageMenuSections,
     primaryMenuItems,
     setIsComingSoonOpen,
