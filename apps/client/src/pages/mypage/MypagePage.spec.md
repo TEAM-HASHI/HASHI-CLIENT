@@ -273,16 +273,16 @@ type MypageProfileSummary = {
 }
 ```
 
-fallback:
+normalization:
 
-- `nickname`: `하시`
+- `nickname`: 성공 응답에서 비어 있으면 에러로 처리합니다.
 - `profileImageUrl`: `null`
 
 notes:
 
 - generated 타입은 `profileImageUrl?: string`이지만, Swagger description은 프로필 사진 미등록 시 `null`을 내려준다고 명시합니다.
-- page-local 타입은 실제 응답과 UI fallback 처리를 위해 `string | null | undefined`를 허용합니다.
-- `request<ProfileSummaryResponse>()` 결과가 `null`이면 fallback 값으로 정규화합니다.
+- page-local 타입은 실제 응답과 이미지 fallback 처리를 위해 `string | null | undefined`를 허용합니다.
+- `request<ProfileSummaryResponse>()` 결과가 `null`이거나 `nickname`이 비어 있으면 정상 프로필 데이터가 아니므로 ErrorBoundary로 전파합니다.
 
 ### Query: Point Balance
 
@@ -499,8 +499,10 @@ types:
 
 ### Error
 
-- 특정 query의 API 요청이 실패하면 앱의 `AsyncBoundary`로 에러를 전달합니다.
-- API 실패 시 fallback 값을 실제 사용자 데이터처럼 보여주지 않습니다.
+- 마이페이지 query 실패는 전역 QueryClient error policy를 따릅니다.
+- 5xx, 네트워크 오류, timeout, 예상하지 못한 에러는 `AsyncBoundary`로 전달합니다.
+- 4xx API 에러는 `AsyncBoundary`로 전달하지 않고 query error 상태로 유지합니다.
+- `AsyncBoundary`로 전달되는 API 실패 시 fallback 값을 실제 사용자 데이터처럼 보여주지 않습니다.
 - endpoint 함수의 fallback 정규화는 API 요청이 성공했지만 응답 값이 비어 있는 경우에만 사용합니다.
 - 내가 찜한 식당 count `0`은 API 실패 fallback이 아니라 MVP 제외 범위에 따른 고정 표시입니다.
 

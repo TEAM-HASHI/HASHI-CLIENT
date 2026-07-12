@@ -8,16 +8,18 @@ type MypageProfileSummary = {
   profileImageUrl?: string | null
 }
 
-const DEFAULT_NICKNAME = '하시'
-
 export const getMypageProfileSummary =
   async (): Promise<MypageProfileSummary> => {
     const response = await request<ProfileSummaryResponse>(
       '/api/v1/users/me/profile-summary',
     )
 
+    if (!response?.nickname) {
+      throw new Error('Missing mypage profile nickname')
+    }
+
     return {
-      nickname: response?.nickname ?? DEFAULT_NICKNAME,
+      nickname: response.nickname,
       profileImageUrl: response?.profileImageUrl ?? null,
     }
   }
