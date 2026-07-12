@@ -39,6 +39,14 @@ const QueryContent = ({ queryFn }: { queryFn: () => Promise<string> }) => {
   return <p>{data}</p>
 }
 
+const RouteContent = ({ shouldThrow }: { shouldThrow: boolean }) => {
+  if (shouldThrow) {
+    throw new Error('route failed')
+  }
+
+  return <p>next route</p>
+}
+
 describe('AsyncBoundary', () => {
   afterEach(() => {
     cleanup()
@@ -81,5 +89,24 @@ describe('AsyncBoundary', () => {
 
     expect(await screen.findByText('recovered')).toBeInTheDocument()
     expect(queryFn).toHaveBeenCalledTimes(2)
+  })
+
+  it('resets a caught route error when reset keys change', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { rerender } = render(
+      <AsyncBoundary resetKeys={['/failed']}>
+        <RouteContent shouldThrow />
+      </AsyncBoundary>,
+    )
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+
+    rerender(
+      <AsyncBoundary resetKeys={['/next']}>
+        <RouteContent shouldThrow={false} />
+      </AsyncBoundary>,
+    )
+
+    expect(await screen.findByText('next route')).toBeInTheDocument()
   })
 })

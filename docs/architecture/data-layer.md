@@ -59,12 +59,14 @@ apps/client/src/shared/api/
 - blanket `throwOnError: true` 대신 status 기반 predicate를 사용해 5xx, network, timeout, 예상하지 못한 비-API 오류만 ErrorBoundary로 전달합니다.
 - 예상 가능한 4xx query는 기본적으로 호출부의 local error state에 남깁니다.
 - mutation은 retry하거나 render boundary로 throw하지 않고, 개별 `onError`가 없을 때 공통 toast를 fallback으로 사용합니다.
+- mutation 오류는 공통 Sentry 필터를 거쳐 5xx status error, 405 integration error, 예상하지 못한 오류만 기록합니다.
 - page/form이 field error, NotFound, Forbidden, conflict UX를 소유하면 query/mutation option에서 전역 기본값을 명시적으로 override합니다.
 - ErrorBoundary가 소비한 오류는 공통 Sentry 필터를 거쳐 unknown/render error, 5xx status error, 405 integration error만 기록합니다.
 - 인증 token refresh, request replay, logout은 error boundary가 아니라 별도 auth flow가 소유합니다.
 
 route content용 `AsyncBoundary`는 `RootLayout` 내부에서 `Outlet`을 감싸며,
-retry 시 React error state와 TanStack Query error state를 함께 reset합니다.
+retry 시 React error state와 TanStack Query error state를 함께 reset합니다. 또한
+pathname이 변경되면 이전 route에서 잡힌 error state를 reset합니다.
 
 ## API Integration Workflow
 

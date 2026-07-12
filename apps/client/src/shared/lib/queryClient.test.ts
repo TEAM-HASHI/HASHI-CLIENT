@@ -76,21 +76,36 @@ describe('queryClient', () => {
   })
 
   it('shows catalog copy without throwing an expected API error', () => {
-    callDefaultMutationOnError(new ApiError(mutationErrorResponse, 409))
+    const error = new ApiError(mutationErrorResponse, 409)
+
+    callDefaultMutationOnError(error)
 
     expect(mockShowToast).toHaveBeenCalledWith({
       children: '이미 취소된 예약입니다',
     })
-    expect(mockCaptureError).not.toHaveBeenCalled()
+    expect(mockCaptureError).toHaveBeenCalledWith(error)
   })
 
   it('shows a status fallback for an HTTP-only mutation failure', () => {
-    callDefaultMutationOnError(new HttpStatusError(404))
+    const error = new HttpStatusError(404)
+
+    callDefaultMutationOnError(error)
 
     expect(mockShowToast).toHaveBeenCalledWith({
       children: '리소스를 찾을 수 없습니다',
     })
-    expect(mockCaptureError).not.toHaveBeenCalled()
+    expect(mockCaptureError).toHaveBeenCalledWith(error)
+  })
+
+  it('delegates reportable mutation status errors to the Sentry filter', () => {
+    const apiError = createApiError(500)
+    const httpStatusError = new HttpStatusError(502)
+
+    callDefaultMutationOnError(apiError)
+    callDefaultMutationOnError(httpStatusError)
+
+    expect(mockCaptureError).toHaveBeenNthCalledWith(1, apiError)
+    expect(mockCaptureError).toHaveBeenNthCalledWith(2, httpStatusError)
   })
 
   it('shows generic copy and captures an unexpected mutation error', () => {

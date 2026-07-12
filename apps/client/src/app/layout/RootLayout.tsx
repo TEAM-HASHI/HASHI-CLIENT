@@ -14,7 +14,7 @@ export const RootLayout = () => {
   return (
     <>
       <main className="app-mobile-frame min-h-dvh bg-white">
-        <AsyncBoundary>
+        <AsyncBoundary resetKeys={[pathname]}>
           <Outlet />
         </AsyncBoundary>
       </main>

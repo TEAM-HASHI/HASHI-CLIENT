@@ -7,6 +7,7 @@ import { captureError } from '@/shared/lib/sentry'
 
 interface AsyncBoundaryProps {
   children: ReactNode
+  resetKeys?: unknown[]
 }
 
 const handleBoundaryError = (error: unknown, info: ErrorInfo) => {
@@ -15,7 +16,7 @@ const handleBoundaryError = (error: unknown, info: ErrorInfo) => {
   })
 }
 
-const AsyncBoundary = ({ children }: AsyncBoundaryProps) => {
+const AsyncBoundary = ({ children, resetKeys }: AsyncBoundaryProps) => {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
@@ -23,6 +24,7 @@ const AsyncBoundary = ({ children }: AsyncBoundaryProps) => {
           FallbackComponent={AsyncErrorFallback}
           onError={handleBoundaryError}
           onReset={reset}
+          resetKeys={resetKeys}
         >
           {children}
         </ErrorBoundary>

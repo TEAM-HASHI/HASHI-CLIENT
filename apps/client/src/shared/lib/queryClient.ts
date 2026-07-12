@@ -3,16 +3,13 @@ import { QueryClient } from '@tanstack/react-query'
 
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import {
-  checkIsExpectedRequestError,
   checkShouldRetryQuery,
   checkShouldThrowQueryError,
 } from '@/shared/api/errorPolicy'
 import { captureError } from '@/shared/lib/sentry'
 
 const handleMutationError = (error: Error) => {
-  if (!checkIsExpectedRequestError(error)) {
-    captureError(error)
-  }
+  captureError(error)
 
   const { message } = getErrorPresentation(error)
   showToast({ children: message })

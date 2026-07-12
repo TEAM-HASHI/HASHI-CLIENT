@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 
 import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import {
-  checkIsExpectedRequestError,
   checkShouldRetryQuery,
   checkShouldThrowQueryError,
 } from '@/shared/api/errorPolicy'
@@ -50,15 +49,5 @@ describe('query error policy', () => {
     expect(checkShouldThrowQueryError(createApiError(500))).toBe(true)
     expect(checkShouldThrowQueryError(new HttpStatusError(502))).toBe(true)
     expect(checkShouldThrowQueryError(new Error('render bug'))).toBe(true)
-  })
-
-  it('classifies API and transport failures as expected request errors', () => {
-    const request = new Request('https://api.hashi.test')
-
-    expect(checkIsExpectedRequestError(createApiError(400))).toBe(true)
-    expect(checkIsExpectedRequestError(new HttpStatusError(502))).toBe(true)
-    expect(checkIsExpectedRequestError(new NetworkError(request))).toBe(true)
-    expect(checkIsExpectedRequestError(new TimeoutError(request))).toBe(true)
-    expect(checkIsExpectedRequestError(new Error('render bug'))).toBe(false)
   })
 })

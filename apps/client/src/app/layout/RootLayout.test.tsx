@@ -7,9 +7,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { RootLayout } from '@/app/layout/RootLayout'
 
 const { mockAsyncBoundary, mockToastRegion } = vi.hoisted(() => ({
-  mockAsyncBoundary: vi.fn(({ children }: { children: ReactNode }) => (
-    <div data-testid="async-boundary">{children}</div>
-  )),
+  mockAsyncBoundary: vi.fn(
+    ({
+      children,
+      resetKeys,
+    }: {
+      children: ReactNode
+      resetKeys?: unknown[]
+    }) => (
+      <div
+        data-testid="async-boundary"
+        data-reset-key={String(resetKeys?.[0] ?? '')}
+      >
+        {children}
+      </div>
+    ),
+  ),
   mockToastRegion: vi.fn(({ className }: { className?: string }) => (
     <div data-testid="toast-region" data-class-name={className} />
   )),
@@ -42,6 +55,7 @@ describe('RootLayout', () => {
   afterEach(() => {
     cleanup()
     vi.unstubAllGlobals()
+    mockAsyncBoundary.mockClear()
     mockToastRegion.mockClear()
     mockScrollTo.mockClear()
     mockLocationStore.pathname = '/'
@@ -79,5 +93,22 @@ describe('RootLayout', () => {
       left: 0,
       behavior: 'auto',
     })
+  })
+
+  it('uses the current pathname as the AsyncBoundary reset key', () => {
+    const { rerender } = render(<RootLayout />)
+
+    expect(screen.getByTestId('async-boundary')).toHaveAttribute(
+      'data-reset-key',
+      '/',
+    )
+
+    mockLocationStore.pathname = '/restaurants/restaurant-1'
+    rerender(<RootLayout />)
+
+    expect(screen.getByTestId('async-boundary')).toHaveAttribute(
+      'data-reset-key',
+      '/restaurants/restaurant-1',
+    )
   })
 })
