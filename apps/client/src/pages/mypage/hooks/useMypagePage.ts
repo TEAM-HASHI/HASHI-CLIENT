@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { getMyPointBalance } from '@/pages/mypage/api/getMyPointBalance'
 import { getMyReviewCount } from '@/pages/mypage/api/getMyReviewCount'
+import { getMypageProfileSummary } from '@/pages/mypage/api/getMypageProfileSummary'
 import {
   createMypagePrimaryMenuItems,
   mypageMenuSections,
@@ -30,9 +31,19 @@ export const useMypagePage = () => {
     queryKey: ['mypage', 'pointBalance'],
     throwOnError: false,
   })
+  const profileSummaryQuery = useQuery({
+    queryFn: getMypageProfileSummary,
+    queryKey: ['mypage', 'profileSummary'],
+    throwOnError: false,
+  })
 
   const summary = {
     ...DEFAULT_MYPAGE_SUMMARY,
+    nickname:
+      profileSummaryQuery.data?.nickname ?? DEFAULT_MYPAGE_SUMMARY.nickname,
+    profileImageUrl:
+      profileSummaryQuery.data?.profileImageUrl ??
+      DEFAULT_MYPAGE_SUMMARY.profileImageUrl,
     availablePoint: pointBalanceQuery.data?.availablePoint ?? 0,
     myReviewCount: myReviewCountQuery.data?.myReviewCount ?? 0,
   }

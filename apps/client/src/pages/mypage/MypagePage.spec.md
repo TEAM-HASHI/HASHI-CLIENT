@@ -52,8 +52,6 @@ apps/client/src/pages/mypage/
 │   └── mypageMenu.ts
 ├── hooks/
 │   └── useMypagePage.ts
-├── mocks/
-│   └── mypage.mock.ts
 ├── types.ts
 └── index.ts
 
@@ -68,36 +66,36 @@ apps/client/src/shared/components/comingSoonDialog/
 - API 응답 타입은 `shared/api/generated/openapi.ts`의 `components['schemas']` 타입을 참조합니다.
 - `request<T>()`는 성공 응답의 `data`가 비어 있을 수 있으므로 endpoint 함수에서 page-local view type으로 정규화합니다.
 - 마이페이지에서만 사용하는 endpoint 함수와 query key는 `pages/mypage` 내부에 둡니다.
-- API 연동 전후 테스트 fixture가 필요하면 `mocks/mypage.mock.ts`에 둡니다.
+- API 연동 전후 테스트 fixture가 필요하면 해당 테스트 파일 안에서 endpoint별 mock으로 둡니다.
 
 ## Requirements
 
-- [ ] 사용자 프로필 영역을 보여줍니다.
+- [x] 사용자 프로필 영역을 보여줍니다.
   - 프로필 이미지
   - 닉네임
   - 수정 버튼
-- [ ] 프로필 정보는 `GET /api/v1/users/me/profile-summary`로 조회합니다.
-- [ ] 프로필 수정 버튼은 MVP 구현에서 제외합니다.
-- [ ] 프로필 수정 버튼은 disabled 처리합니다.
-- [ ] 사용 가능 포인트를 보여줍니다.
-- [ ] 포인트는 `GET /api/v1/points/me`로 조회합니다.
-- [ ] 예약/리뷰 관련 주요 메뉴를 보여줍니다.
+- [x] 프로필 정보는 `GET /api/v1/users/me/profile-summary`로 조회합니다.
+- [x] 프로필 수정 버튼은 MVP 구현에서 제외합니다.
+- [x] 프로필 수정 버튼은 disabled 처리합니다.
+- [x] 사용 가능 포인트를 보여줍니다.
+- [x] 포인트는 `GET /api/v1/points/me`로 조회합니다.
+- [x] 예약/리뷰 관련 주요 메뉴를 보여줍니다.
   - 내가 찜한 식당
   - 마이 리뷰
-- [ ] 내가 찜한 식당 메뉴는 MVP 구현에서 제외합니다.
-- [ ] 내가 찜한 식당 count는 서버 조회 없이 `0`으로 표시합니다.
-- [ ] 내가 찜한 식당 메뉴 클릭 시 shared `ComingSoonDialog`를 띄웁니다.
-- [ ] 마이 리뷰 count는 `GET /api/v1/reviews/me/count`로 조회합니다.
-- [ ] 마이 리뷰 메뉴는 사용자가 작성한 리뷰 또는 작성 가능한 리뷰를 확인하는 페이지로 이동합니다.
-- [ ] 고객지원 메뉴를 보여줍니다.
+- [x] 내가 찜한 식당 메뉴는 MVP 구현에서 제외합니다.
+- [x] 내가 찜한 식당 count는 서버 조회 없이 `0`으로 표시합니다.
+- [x] 내가 찜한 식당 메뉴 클릭 시 shared `ComingSoonDialog`를 띄웁니다.
+- [x] 마이 리뷰 count는 `GET /api/v1/reviews/me/count`로 조회합니다.
+- [x] 마이 리뷰 메뉴는 사용자가 작성한 리뷰 또는 작성 가능한 리뷰를 확인하는 페이지로 이동합니다.
+- [x] 고객지원 메뉴를 보여줍니다.
   - 공지사항
   - 문의하기
   - 개선 제안
   - 이용약관
-- [ ] 공지사항과 이용약관은 Hashi 노션 페이지로 이동합니다.
-- [ ] 문의하기와 개선 제안은 Hashi 공식 카카오톡 채널로 이동합니다.
-- [ ] 계정 섹션은 MVP 제외 범위이므로 UI에서 제거합니다.
-- [ ] 하단 네비게이션은 고정으로 유지됩니다.
+- [x] 공지사항과 이용약관은 Hashi 노션 페이지로 이동합니다.
+- [x] 문의하기와 개선 제안은 Hashi 공식 카카오톡 채널로 이동합니다.
+- [x] 계정 섹션은 MVP 제외 범위이므로 UI에서 제거합니다.
+- [x] 하단 네비게이션은 고정으로 유지됩니다.
 
 ## MVP Scope
 
@@ -350,11 +348,10 @@ type MypageSummary = {
   profileImageUrl?: string | null
   availablePoint: number
   myReviewCount: number
-  savedRestaurantCount: 0
 }
 ```
 
-`savedRestaurantCount`는 이번 MVP에서 API를 호출하지 않고 항상 `0`입니다.
+찜한 식당 count는 이번 MVP에서 API를 호출하지 않고 `createMypagePrimaryMenuItems` 내부에서 항상 `0`으로 고정합니다.
 
 ### Mutation
 
@@ -465,17 +462,12 @@ constants:
 - `mypageMenu`
 - 외부 링크 URL 상수
 
-mocks:
-
-- `mypage.mock`
-
 types:
 
 - `MypageSummary`
-- `MypageProfileSummary`
-- `MypagePointBalance`
-- `MypageReviewCount`
 - `MypageMenuItem`
+- `MypageMenuAction`
+- `MypageMenuSection`
 
 ## Layout Policy
 
@@ -525,7 +517,7 @@ types:
 
 - `pnpm --filter @hashi/client typecheck`
 - `pnpm --filter @hashi/client lint`
-- `pnpm --filter @hashi/client test -- MypagePage`
+- `pnpm --filter @hashi/client test -- MypagePage apiClient`
 - 마이 페이지가 `/mypage`에서 렌더링되는지 확인
 - 하단 네비게이션의 `마이` 탭이 active인지 확인
 - `GET /api/v1/users/me/profile-summary` 결과의 닉네임과 프로필 이미지가 표시되는지 확인

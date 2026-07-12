@@ -48,6 +48,13 @@ const renderMypagePage = () => {
 describe('MypagePage', () => {
   beforeEach(() => {
     mockRequest.mockImplementation((path: string) => {
+      if (path === '/api/v1/users/me/profile-summary') {
+        return Promise.resolve({
+          nickname: '테스트유저',
+          profileImageUrl: 'https://example.com/profile.png',
+        })
+      }
+
       if (path === '/api/v1/points/me') {
         return Promise.resolve({ balance: 7000 })
       }
@@ -111,6 +118,18 @@ describe('MypagePage', () => {
 
     expect(await screen.findByText('12,345 P')).toBeInTheDocument()
     expect(request).toHaveBeenCalledWith('/api/v1/points/me')
+  })
+
+  it('renders profile summary from the API response', async () => {
+    renderMypagePage()
+
+    expect(
+      await screen.findByRole('heading', { name: '테스트유저님' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: '테스트유저 프로필 이미지' }),
+    ).toHaveAttribute('src', 'https://example.com/profile.png')
+    expect(request).toHaveBeenCalledWith('/api/v1/users/me/profile-summary')
   })
 
   it('renders confirmed notice and terms links as external links', () => {
