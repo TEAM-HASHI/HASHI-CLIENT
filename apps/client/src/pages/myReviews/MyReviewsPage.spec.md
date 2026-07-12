@@ -1,11 +1,11 @@
 # Page Spec: `MyReviews`
 
-Jira: HASHI-83
+Jira: HASHI-83, HASHI-114
 
 ## Purpose
 
 - 로그인한 사용자가 마이 페이지에서 리뷰 작성 대상 예약과 이미 작성한 리뷰를 확인할 수 있게 한다.
-- 이번 범위는 API 연동 없이 화면 UI, 탭 상태, 리스트/empty 상태, 리뷰 작성/상세 이동, 리뷰 수정 준비중 모달, 삭제 확인 모달까지 포함한다.
+- HASHI-114 범위에서 작성 가능 예약, 작성한 리뷰, 탭별 개수, 리뷰 삭제 API를 연결한다.
 
 ## Route
 
@@ -30,12 +30,14 @@ Jira: HASHI-83
 - [x] 상단에 `마이 리뷰` 제목과 뒤로가기 버튼을 보여준다.
 - [x] 뒤로가기 버튼은 마이페이지 `ROUTES.mypage`로 이동한다.
 - [x] `리뷰 쓰기`, `작성한 리뷰` 탭을 보여준다.
-- [x] 탭에 각 목록의 개수를 표시한다.
+- [x] API에서 전체 개수를 제공하는 탭에 목록 개수를 표시한다.
+- [x] 작성 가능 예약 개수는 예약 목록 응답의 `totalCount`를 표시한다.
+- [x] 작성한 리뷰 개수는 리뷰 count API 응답을 표시한다.
 - [x] `리뷰 쓰기` 탭은 최근 방문했지만 아직 리뷰를 쓰지 않은 예약 목록을 보여준다.
-- [x] `리뷰 쓰기` 카드 이미지는 공통 `DefaultImage` fallback으로 표시한다.
+- [x] `리뷰 쓰기` 카드 이미지는 서버 썸네일을 사용하고, 값이 없거나 로딩에 실패하면 공통 `DefaultImage` fallback을 표시한다.
 - [x] `리뷰 쓰기` 카드의 CTA를 누르면 해당 식당의 리뷰 작성 페이지로 이동한다.
 - [x] `작성한 리뷰` 탭은 사용자가 작성한 리뷰 목록을 보여준다.
-- [x] `작성한 리뷰` 카드 이미지는 공통 `DefaultImage` fallback으로 표시한다.
+- [x] `작성한 리뷰` 카드 이미지는 서버 썸네일을 사용하고, 값이 없거나 로딩에 실패하면 공통 `DefaultImage` fallback을 표시한다.
 - [x] `작성한 리뷰` 카드 본문을 누르면 해당 리뷰 상세 페이지로 이동한다.
 - [x] 작성한 리뷰 카드에는 별점과 더보기 메뉴를 보여준다.
 - [x] 더보기 메뉴는 `수정하기`, `삭제하기` 액션을 보여준다.
@@ -43,7 +45,10 @@ Jira: HASHI-83
 - [x] 더보기 메뉴는 탭 전환 또는 `Escape` 입력 시 닫힌다.
 - [x] `수정하기`를 누르면 준비중 모달을 보여준다.
 - [x] `삭제하기`를 누르면 삭제 확인 모달을 보여준다.
-- [x] 삭제 확인 모달에서 `삭제하기`를 누르면 해당 리뷰를 목록에서 제거한다.
+- [x] 삭제 확인 모달에서 `삭제하기`를 누르면 삭제 API를 호출한다.
+- [x] 삭제 성공 후 작성 가능 예약 목록과 작성한 리뷰 목록을 갱신한다.
+- [x] 목록은 서버의 `nextCursor`, `hasNext`를 사용해 하단 진입 시 다음 페이지를 불러온다.
+- [x] 활성 탭의 초기 로딩, 오류와 재시도, empty 상태를 표시한다.
 - [x] 목록이 비어 있으면 empty graphic slot, 안내 문구, `일본 맛집 추천받기` 버튼을 보여준다.
 - [x] empty graphic은 추후 shared graphic component가 준비되면 `MyReviewEmptyState.graphic`으로 주입한다.
 - [x] empty CTA를 누르면 오늘의 식당 페이지로 이동한다.
@@ -52,28 +57,55 @@ Jira: HASHI-83
 
 ### Query
 
-- query: none
-- enabled condition: none
-- request params: none
-- loading state: none
-- error state: none
+- query: `GET /api/v1/reviews/visited-reservations`
+  - owner: `features/review`
+  - mode: infinite query
+  - enabled condition: `activeTab === writable`
+  - request params:
+    - `reviewStatus=unreviewed`
+    - `cursor`
+    - `size=20`
+  - count: 첫 페이지 `totalCount`
+- query: `GET /api/v1/reviews/me`
+  - mode: infinite query
+  - enabled condition: `activeTab === written`
+  - request params:
+    - `cursor`
+    - `size=20`
+- query: `GET /api/v1/reviews/me/count`
+  - owner: `features/review`
+  - mode: query
+  - response: `reviewCount`
+  - usage:
+    - 작성한 리뷰 탭 숫자
+    - 작성한 리뷰 탭의 `총 N건`
+    - 마이페이지 리뷰 개수와 같은 query cache 공유
+- loading state:
+  - 활성 탭의 첫 페이지 요청 중 로딩 문구를 표시한다.
+- error state:
+  - 활성 탭의 목록 요청 실패 시 로컬 오류와 `다시 시도` 버튼을 표시한다.
 - empty state:
   - `writableReviews.length === 0`
   - `writtenReviews.length === 0`
 
 ### Mutation
 
-- mutation: none
-- current delete behavior:
-  - page-local mock state에서 삭제된 리뷰를 제거한다.
-- future behavior:
-  - API 연동 시 삭제 mutation 성공 후 query cache를 갱신한다.
+- mutation: `DELETE /api/v1/reviews/{reviewId}`
+- owner: `features/review`
+- variables:
+  - `reviewId`
+- pending state:
+  - 삭제 요청 중 같은 리뷰의 삭제 버튼을 비활성화하고 `삭제 중`을 표시한다.
+- success:
+  - 삭제한 review detail cache를 제거한다.
+  - 마이리뷰 count, list query prefix와 review feature의 방문 완료 예약 query를 invalidate한다.
+- error:
+  - 공통 mutation error toast 정책을 사용하고 기존 목록을 유지한다.
 
 ## State
 
 - local state:
   - `activeTab`
-  - `writtenReviews`
   - `openedMenuReviewId`
     - owner: `useMyReviewsPage`
   - `isEditComingSoonDialogOpen`
@@ -83,7 +115,10 @@ Jira: HASHI-83
 - URL state:
   - none
 - server state:
-  - none
+  - 작성 가능 예약 infinite query
+  - 작성한 리뷰 infinite query
+  - 작성한 리뷰 count query
+  - 리뷰 삭제 mutation
 - derived state:
   - `tabItems`
   - current tab count
@@ -96,6 +131,7 @@ MyReviewsPage
   useMyReviewsPage
   Header
   MyReviewTabs
+  MyReviewsErrorState
   MyReviewEmptyState
   MyReviewTotalCount
   ReviewWritableCard
@@ -138,9 +174,9 @@ MyReviewsPage
 - route params:
   - none
 - search params:
-  - none
+  - 리뷰 작성 페이지 이동 시 `reservationId`
 - links:
-  - 리뷰 작성 CTA: `generatePath(ROUTES.reviewNew, { restaurantId })`
+  - 리뷰 작성 CTA: `generatePath(ROUTES.reviewNew, { restaurantId })?reservationId={reservationId}`
   - 작성한 리뷰 카드: `generatePath(ROUTES.reviewDetail, { reviewId })`
   - empty CTA: `ROUTES.todayRestaurant`
 - back behavior:
@@ -166,9 +202,9 @@ MyReviewsPage
 
 ## Verification
 
-- [ ] `corepack pnpm --filter @hashi/client lint`
-- [ ] `corepack pnpm --filter @hashi/client typecheck`
-- [ ] `corepack pnpm --filter @hashi/client build`
-- [ ] `corepack pnpm --filter @hashi/client test`
-- [ ] `/my-reviews` 직접 진입 확인
-- [ ] 탭 전환, 메뉴, 삭제 모달, empty CTA 수동 확인
+- [x] `pnpm --filter @hashi/client lint`
+- [x] `pnpm --filter @hashi/client typecheck`
+- [x] `pnpm --filter @hashi/client build`
+- [x] `pnpm --filter @hashi/client test`
+- [x] `/my-reviews` 직접 진입 확인
+- [ ] 탭 전환, 커서 페이지네이션, 메뉴, 삭제, 오류 재시도, empty CTA 수동 확인

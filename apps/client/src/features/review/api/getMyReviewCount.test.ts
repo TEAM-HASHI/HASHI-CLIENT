@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMyReviewCount } from '@/pages/mypage/api/getMyReviewCount'
+import { getMyReviewCount } from '@/features/review/api/getMyReviewCount'
 import { request } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({
@@ -14,7 +14,7 @@ describe('getMyReviewCount', () => {
     mockRequest.mockReset()
   })
 
-  it('maps current user review count to myReviewCount', async () => {
+  it('maps the current user review count', async () => {
     mockRequest.mockResolvedValue({ reviewCount: 8 })
 
     await expect(getMyReviewCount()).resolves.toEqual({

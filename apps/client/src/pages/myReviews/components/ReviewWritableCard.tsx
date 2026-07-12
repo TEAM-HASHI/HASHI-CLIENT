@@ -15,7 +15,7 @@ export const ReviewWritableCard = ({
   return (
     <article className="flex min-w-0 flex-col gap-3">
       <div className="flex min-w-0 items-center gap-3">
-        <ReviewImagePlaceholder />
+        <ReviewImagePlaceholder src={review.thumbnailUrl} />
         <div className="min-w-0 flex-1">
           <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2">
             {review.restaurantName}

@@ -1,117 +1,129 @@
 import '@testing-library/jest-dom/vitest'
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   cleanup,
   fireEvent,
   render,
   screen,
+  waitFor,
   within,
 } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
+import { deleteReview } from '@/features/review/api'
 import { REVIEW_PHOTO_MAX_COUNT } from '@/features/review/constants'
+import { getMyReviewDetail } from '@/pages/reviewDetail/api/getMyReviewDetail'
 import { ReviewDetailContentCard } from '@/pages/reviewDetail/components/ReviewDetailContentCard'
 import { ReviewDetailPage } from '@/pages/reviewDetail/ReviewDetailPage'
 
-const { navigateMock } = vi.hoisted(() => ({
+const { navigateMock, reviewIdParam } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
+  reviewIdParam: { current: '5' },
 }))
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => navigateMock,
-  useParams: () => ({ reviewId: 'review-1' }),
+  useParams: () => ({ reviewId: reviewIdParam.current }),
 }))
+
+vi.mock('@/pages/reviewDetail/api/getMyReviewDetail', () => ({
+  getMyReviewDetail: vi.fn(),
+}))
+
+vi.mock('@/features/review/api', () => ({
+  deleteReview: vi.fn(),
+}))
+
+const reviewDetailResponse = {
+  adultCount: 2,
+  childCount: 1,
+  content: '정말 맛있습니다. 다음에도 방문하고 싶어요.',
+  createdAt: '2026-07-12T13:11:01.19277',
+  imageUrls: ['https://cdn.hashi.kr/review-1.jpg'],
+  keywords: ['음식이 맛있어요', '직원분이 친절해요'],
+  rating: 4,
+  reviewId: 5,
+  restaurantName: '아키토리 라멘',
+  restaurantThumbnailUrl: 'https://cdn.hashi.kr/restaurant.jpg',
+  visitedAt: '2026-06-12T18:30:00',
+}
+
+const renderPage = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <ReviewDetailPage />
+    </QueryClientProvider>,
+  )
+}
+
+beforeEach(() => {
+  reviewIdParam.current = '5'
+  vi.mocked(deleteReview).mockResolvedValue(null)
+  vi.mocked(getMyReviewDetail).mockResolvedValue(reviewDetailResponse)
+})
 
 afterEach(() => {
   cleanup()
   navigateMock.mockClear()
-  vi.restoreAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('ReviewDetailPage', () => {
-  it('renders review detail contents from the review detail mock', () => {
-    render(<ReviewDetailPage />)
+  it('renders the API review detail', async () => {
+    renderPage()
 
-    expect(screen.getByText('리뷰 상세')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '뒤로가기' })).toBeInTheDocument()
-    expect(
-      screen.getByRole('region', { name: '리뷰 대상 예약 정보' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        '야키토리 무사시 제목은 여기까지 그러나 최대길이 이 정도로까지',
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByText('2026. 6. 22 17:00 방문')).toBeInTheDocument()
-    expect(screen.getByText('어른 2명')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: '평점 4점' })).toBeInTheDocument()
-    expect(screen.getByText('2026.06.28')).toBeInTheDocument()
-    expect(
-      screen.getByRole('list', { name: '리뷰 이미지 목록' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('list', { name: '선택한 리뷰 키워드' }),
-    ).toBeInTheDocument()
-    expect(screen.getByText('친절해요')).toBeInTheDocument()
-    expect(screen.getByText('음식이 빨리 나와요')).toBeInTheDocument()
-    expect(screen.getByText('가성비가 좋아요')).toBeInTheDocument()
+    expect(screen.getByText('리뷰 정보를 불러오는 중입니다.')).toBeVisible()
+    expect(await screen.findByText('아키토리 라멘')).toBeVisible()
+    expect(screen.getByText('2026. 6. 12 18:30 방문')).toBeVisible()
+    expect(screen.getByText('어른 2명 · 어린이 1명')).toBeVisible()
+    expect(screen.getByRole('img', { name: '평점 4점' })).toBeVisible()
+    expect(screen.getByText('2026.07.12')).toBeVisible()
+    expect(screen.getByText('음식이 맛있어요')).toBeVisible()
+    expect(screen.getByText('친절해요')).toBeVisible()
+    expect(getMyReviewDetail).toHaveBeenCalledWith(5)
   })
 
-  it('expands and collapses the review body when the more button is clicked', () => {
-    const getComputedStyle = window.getComputedStyle.bind(window)
+  it('shows a local error and retries the detail request', async () => {
+    vi.mocked(getMyReviewDetail)
+      .mockRejectedValueOnce(new Error('network'))
+      .mockResolvedValue(reviewDetailResponse)
+    renderPage()
 
-    vi.spyOn(window, 'getComputedStyle').mockImplementation((element) => {
-      const style = getComputedStyle(element)
+    expect(
+      await screen.findByText('리뷰 정보를 불러오지 못했습니다.'),
+    ).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }))
 
-      Object.defineProperty(style, 'fontSize', {
-        configurable: true,
-        value: '16px',
-      })
-      Object.defineProperty(style, 'lineHeight', {
-        configurable: true,
-        value: '24px',
-      })
-
-      return style
-    })
-    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120)
-
-    render(<ReviewDetailPage />)
-
-    fireEvent.click(screen.getByRole('button', { name: /더보기/ }))
-
-    expect(screen.getByRole('button', { name: /접기/ })).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: /접기/ }))
-
-    expect(screen.getByRole('button', { name: /더보기/ })).toBeInTheDocument()
+    expect(await screen.findByText('아키토리 라멘')).toBeVisible()
+    expect(getMyReviewDetail).toHaveBeenCalledTimes(2)
   })
 
-  it('moves to my reviews when the back button is clicked', () => {
-    render(<ReviewDetailPage />)
+  it('moves to my reviews when the back button is clicked', async () => {
+    renderPage()
 
+    await screen.findByText('아키토리 라멘')
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
     expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
   })
 
-  it('opens the delete confirmation dialog and closes it from cancel', () => {
-    render(<ReviewDetailPage />)
+  it('opens the delete confirmation dialog and closes it from cancel', async () => {
+    renderPage()
 
+    await screen.findByText('아키토리 라멘')
     fireEvent.click(screen.getByRole('button', { name: '삭제하기' }))
 
     const dialog = screen.getByRole('alertdialog', {
       name: '리뷰 삭제 확인',
     })
 
-    expect(
-      within(dialog).getByText('정말 삭제하시겠습니까?'),
-    ).toBeInTheDocument()
-    expect(
-      within(dialog).getByText('삭제한 리뷰는 다시 되돌릴 수 없어요.'),
-    ).toBeInTheDocument()
-
+    expect(within(dialog).getByText('정말 삭제하시겠습니까?')).toBeVisible()
     fireEvent.click(within(dialog).getByRole('button', { name: '취소하기' }))
 
     expect(
@@ -119,40 +131,62 @@ describe('ReviewDetailPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('moves to my reviews after confirming delete', () => {
-    render(<ReviewDetailPage />)
+  it('deletes the review before moving to my reviews', async () => {
+    renderPage()
 
+    await screen.findByText('아키토리 라멘')
     fireEvent.click(screen.getByRole('button', { name: '삭제하기' }))
-
     const dialog = screen.getByRole('alertdialog', {
       name: '리뷰 삭제 확인',
     })
-
     fireEvent.click(within(dialog).getByRole('button', { name: '삭제하기' }))
 
+    await waitFor(() =>
+      expect(deleteReview).toHaveBeenCalledWith(5, expect.anything()),
+    )
     expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
   })
 
-  it('opens the coming soon dialog from the MVP excluded edit button', () => {
-    render(<ReviewDetailPage />)
+  it('keeps the delete dialog open when deletion fails', async () => {
+    vi.mocked(deleteReview).mockRejectedValue(new Error('network'))
+    renderPage()
 
+    await screen.findByText('아키토리 라멘')
+    fireEvent.click(screen.getByRole('button', { name: '삭제하기' }))
+    const dialog = screen.getByRole('alertdialog', {
+      name: '리뷰 삭제 확인',
+    })
+    fireEvent.click(within(dialog).getByRole('button', { name: '삭제하기' }))
+
+    await waitFor(() => expect(deleteReview).toHaveBeenCalled())
+    expect(dialog).toBeVisible()
+    expect(navigateMock).not.toHaveBeenCalled()
+  })
+
+  it.each(['1e2', '0x10', '5.0', '0', '-1', 'not-a-number'])(
+    'rejects non-canonical review ID %s and returns to my reviews',
+    async (invalidReviewId) => {
+      reviewIdParam.current = invalidReviewId
+      renderPage()
+
+      const backToListButton = await screen.findByRole('button', {
+        name: '마이 리뷰로 돌아가기',
+      })
+
+      expect(getMyReviewDetail).not.toHaveBeenCalled()
+      expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
+      fireEvent.click(backToListButton)
+      expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
+    },
+  )
+
+  it('opens the coming soon dialog from the edit button', async () => {
+    renderPage()
+
+    await screen.findByText('아키토리 라멘')
     fireEvent.click(screen.getByRole('button', { name: '수정하기' }))
 
-    expect(screen.getByText('서비스를 준비하고 있어요.')).toBeInTheDocument()
-    expect(
-      screen.getByText((_, element) => {
-        return (
-          element?.textContent ===
-          '더 편한 Hashi 이용을 위해현재 기능을 준비하고 있어요.'
-        )
-      }),
-    ).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: '확인' }))
-
-    expect(
-      screen.queryByText('서비스를 준비하고 있어요.'),
-    ).not.toBeInTheDocument()
+    expect(screen.getByText('서비스를 준비하고 있어요.')).toBeVisible()
   })
 })
 

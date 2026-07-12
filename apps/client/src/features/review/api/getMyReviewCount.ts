@@ -3,11 +3,11 @@ import { request } from '@/shared/api/request'
 
 type MyReviewCountResponse = components['schemas']['MyReviewCountResponse']
 
-type MypageReviewCount = {
+export interface MyReviewCountData {
   myReviewCount: number
 }
 
-export const getMyReviewCount = async (): Promise<MypageReviewCount> => {
+export const getMyReviewCount = async (): Promise<MyReviewCountData> => {
   const response = await request<MyReviewCountResponse>(
     '/api/v1/reviews/me/count',
   )
