@@ -1,14 +1,43 @@
 export const GENRE_OPTIONS = [
-  { value: 'sushi', label: '스시' },
-  { value: 'noodle', label: '면' },
-  { value: 'rice-bowl', label: '덮밥' },
-  { value: 'nabe', label: '나베' },
-  { value: 'fried', label: '튀김' },
-  { value: 'grill', label: '구이' },
+  { value: 'sushi', label: '스시/사시미류' },
+  { value: 'noodle', label: '면류' },
+  { value: 'rice-bowl', label: '덮밥류' },
+  { value: 'nabe', label: '나베/냄비류' },
+  { value: 'fried', label: '튀김류' },
+  { value: 'grill', label: '철판/구이류' },
   { value: 'etc', label: '기타' },
 ] as const
 
-export const FOOD_CATEGORY_OPTIONS = GENRE_OPTIONS
+export const FOOD_CATEGORY_OPTIONS = [
+  { value: 'sushi', label: '초밥' },
+  { value: 'noodle', label: '면류' },
+  { value: 'rice-bowl', label: '덮밥류' },
+  { value: 'nabe', label: '나베/냄비류' },
+  { value: 'fried', label: '튀김류' },
+  { value: 'grill', label: '철판/구이류' },
+  { value: 'etc', label: '기타' },
+] as const
+
+const normalizeOptionValue = (
+  value: string | null | undefined,
+  options: readonly { value: string; label: string }[],
+) => {
+  const normalizedValue = value?.trim()
+  if (!normalizedValue) return ''
+
+  return (
+    options.find(
+      (option) =>
+        option.value === normalizedValue || option.label === normalizedValue,
+    )?.value ?? ''
+  )
+}
+
+export const normalizeRestaurantGenre = (value?: string | null) =>
+  normalizeOptionValue(value, GENRE_OPTIONS)
+
+export const normalizeRestaurantFoodCategory = (value?: string | null) =>
+  normalizeOptionValue(value, FOOD_CATEGORY_OPTIONS)
 
 export const CURRENCY_OPTIONS = [
   { value: 'JPY', label: '일본 엔 (JPY)' },

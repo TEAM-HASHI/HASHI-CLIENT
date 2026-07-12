@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   createRestaurantForm,
+  createRestaurantFormFromPrefill,
   toCreateRestaurantBody,
   toUpdateRestaurantBody,
   validateRestaurantForm,
@@ -73,6 +74,31 @@ describe('restaurant options', () => {
 })
 
 describe('restaurant form serializers', () => {
+  it('does not invent sushi when public prefill categories are unavailable', () => {
+    const form = createRestaurantFormFromPrefill({
+      restaurantId: 12,
+      name: '하시 식당',
+      localName: 'HASHI',
+      summary: '소개',
+      description: '설명',
+      address: '주소',
+      area: '도쿄',
+      genre: '',
+      foodCategory: '',
+      priceCurrency: 'JPY',
+      minPrice: 1000,
+      maxPrice: 2000,
+      images: [],
+      menus: [],
+      hashtags: [],
+      curationTypes: [],
+      businessHours: [],
+    })
+
+    expect(form.genre).toBe('')
+    expect(form.foodCategory).toBe('')
+  })
+
   it('serializes create fields using only the current backend names', () => {
     expect(toCreateRestaurantBody(createValidForm())).toEqual({
       name: '하시 스시',

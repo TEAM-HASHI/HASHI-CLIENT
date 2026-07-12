@@ -39,6 +39,30 @@ describe('LoginPage', () => {
     loginMock.mockReset()
   })
 
+  it('shows logo-focused branding without implementation copy', () => {
+    renderLoginPage()
+
+    const brandMarks = screen.getAllByRole('img', {
+      name: 'HASHI Admin 로고',
+    })
+
+    expect(brandMarks).toHaveLength(2)
+    expect(brandMarks[0]).toHaveClass('size-40')
+    expect(brandMarks[1]).toHaveClass('size-20')
+    expect(
+      screen.queryByText('운영 데이터를 빠르게 확인하고 조치합니다.'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('예약, 식당, 매거진을 API 기준으로 관리하세요.'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(
+        '관리자 계정으로 로그인하면 실제 운영 API에 연결됩니다.',
+      ),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText('HASHI-91 Admin Console')).not.toBeInTheDocument()
+  })
+
   it('logs in with login ID and stores the returned session', async () => {
     const user = userEvent.setup()
     loginMock.mockResolvedValue({

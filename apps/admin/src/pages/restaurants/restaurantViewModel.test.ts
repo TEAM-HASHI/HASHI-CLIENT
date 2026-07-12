@@ -8,8 +8,8 @@ describe('toRestaurantPrefillView', () => {
         restaurantId: 12,
         name: '하시 스시',
         area: '시부야',
-        genre: 'sushi',
-        foodCategory: 'sushi',
+        genre: '철판/구이류',
+        foodCategory: '철판/구이류',
         hashtags: ['현지인맛집'],
       },
       summary: {
@@ -17,6 +17,7 @@ describe('toRestaurantPrefillView', () => {
         name: '하시 스시',
         localName: 'ハシ寿司',
         summary: '현지 스시 전문점',
+        foodCategory: '철판/구이류',
         address: '東京都渋谷区1-1-1',
         imageUrls: ['https://cdn.example/a.webp'],
       },
@@ -46,7 +47,7 @@ describe('toRestaurantPrefillView', () => {
       uploaded: null,
     })
     expect(view.curationTypes).toEqual([])
-    expect(view.genre).toBe('sushi')
-    expect(view.foodCategory).toBe('sushi')
+    expect(view.genre).toBe('grill')
+    expect(view.foodCategory).toBe('grill')
   })
 })

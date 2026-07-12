@@ -77,7 +77,7 @@ const formatDateTime = (value: string) =>
 
 const formatReservationId = (id: number) => `RSV-${id}`
 
-const getReservationGuestLabel = ({
+const getReservationGuestLabels = ({
   adultCount,
   teenCount,
   childCount,
@@ -88,7 +88,29 @@ const getReservationGuestLabel = ({
     childCount > 0 ? `어린이 ${childCount}` : null,
   ].filter(Boolean)
 
-  return breakdown.length > 0 ? breakdown.join(', ') : '0명'
+  return breakdown.length > 0 ? breakdown : ['0명']
+}
+
+const ReservationGuestLabel = ({
+  reservation,
+}: {
+  reservation: AdminReservationView
+}) => {
+  const guestLabels = getReservationGuestLabels(reservation)
+
+  return (
+    <span className="inline-flex items-start gap-1">
+      <PeopleIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+      <span className="flex min-w-0 flex-wrap gap-x-1 gap-y-0.5">
+        {guestLabels.map((label, index) => (
+          <span key={label} className="whitespace-nowrap">
+            {label}
+            {index < guestLabels.length - 1 ? ',' : ''}
+          </span>
+        ))}
+      </span>
+    </span>
+  )
 }
 
 export const ReservationsPage = () => {
@@ -190,10 +212,7 @@ export const ReservationsPage = () => {
                   </span>
                 </td>
                 <td className="text-cool-gray-700 px-3 py-3 text-sm font-semibold">
-                  <span className="inline-flex items-center gap-1">
-                    <PeopleIcon aria-hidden="true" className="size-4" />
-                    {getReservationGuestLabel(reservation)}
-                  </span>
+                  <ReservationGuestLabel reservation={reservation} />
                 </td>
                 <td className="text-cool-gray-600 px-3 py-3 text-sm">
                   {reservationTypeLabel[reservation.reservationType]}
@@ -208,7 +227,7 @@ export const ReservationsPage = () => {
                   <StatusBadge status={reservation.reservationStatus} />
                 </td>
                 <td className="px-3 py-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-max flex-nowrap items-center gap-2">
                     <ActionButton
                       ariaLabel="예약자 보기"
                       onClick={() => setUserTargetId(reservation.id)}
@@ -318,7 +337,7 @@ const PaymentStatusBadge = ({
   status: ReservationPaymentStatus
 }) => (
   <span
-    className={`${paymentStatusClassName[status]} inline-flex h-7 items-center rounded-full px-2.5 text-xs font-bold`}
+    className={`${paymentStatusClassName[status]} inline-flex h-7 shrink-0 items-center rounded-full px-2.5 text-xs font-bold whitespace-nowrap`}
   >
     {paymentStatusLabel[status]}
   </span>

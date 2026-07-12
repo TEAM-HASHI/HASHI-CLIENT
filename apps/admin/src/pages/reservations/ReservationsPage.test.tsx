@@ -37,7 +37,7 @@ const reservation = {
   restaurantId: 7,
   restaurantImageUrl: '',
   restaurantName: '하시 스시',
-  teenCount: 0,
+  teenCount: 1,
   usedPoint: 1_000,
   userId: 3,
 }
@@ -112,6 +112,45 @@ describe('ReservationsPage', () => {
     expect(
       screen.getByRole('dialog', { name: '예약자 정보' }),
     ).toHaveTextContent('hashi@example.com')
+  })
+
+  it('keeps reservation actions on a single line', () => {
+    render(<ReservationsPage />)
+
+    const userButton = screen.getByRole('button', { name: '예약자 보기' })
+    const statusButton = screen.getByRole('button', {
+      name: '예약 상태 변경',
+    })
+
+    expect(userButton).toHaveClass('shrink-0', 'whitespace-nowrap')
+    expect(statusButton).toHaveClass('shrink-0', 'whitespace-nowrap')
+    expect(userButton.parentElement).toHaveClass('min-w-max', 'flex-nowrap')
+  })
+
+  it('keeps payment and reservation status chips on a single line', () => {
+    render(<ReservationsPage />)
+
+    expect(screen.getByText('결제완료')).toHaveClass(
+      'shrink-0',
+      'whitespace-nowrap',
+    )
+    expect(screen.getByText('요청됨')).toHaveClass(
+      'shrink-0',
+      'whitespace-nowrap',
+    )
+  })
+
+  it('wraps guest categories only between complete labels', () => {
+    render(<ReservationsPage />)
+
+    const adultCount = screen.getByText('성인 2,')
+    const teenCount = screen.getByText('청소년 1,')
+    const childCount = screen.getByText('어린이 1')
+
+    expect(adultCount).toHaveClass('whitespace-nowrap')
+    expect(teenCount).toHaveClass('whitespace-nowrap')
+    expect(childCount).toHaveClass('whitespace-nowrap')
+    expect(adultCount.parentElement).toHaveClass('flex-wrap')
   })
 
   it('changes a reservation to a documented status', async () => {

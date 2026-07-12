@@ -23,7 +23,7 @@ export const ActionButton = ({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'inline-flex h-8 items-center justify-center gap-1 rounded-md border px-2.5 text-xs font-bold transition disabled:opacity-50',
+        'inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-md border px-2.5 text-xs font-bold whitespace-nowrap transition disabled:opacity-50',
         variant === 'danger'
           ? 'border-error-100 text-error hover:bg-error-100'
           : 'border-cool-gray-100 text-cool-gray-700 hover:bg-cool-gray-50',

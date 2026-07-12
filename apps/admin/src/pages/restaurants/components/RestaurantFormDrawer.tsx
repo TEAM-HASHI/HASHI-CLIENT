@@ -201,9 +201,9 @@ export const RestaurantFormDrawer = ({
         mode === 'create' ? '식당 등록' : `식당 수정 #${restaurantId ?? ''}`
       }
       description={
-        mode === 'create'
-          ? '백엔드 등록 규칙에 맞춰 4단계로 입력합니다.'
-          : '공개 정보를 불러오되, 목록형 항목은 명시적으로 전체 교체할 때만 전송합니다.'
+        mode === 'update'
+          ? '공개 정보를 불러오되, 목록형 항목은 명시적으로 전체 교체할 때만 전송합니다.'
+          : undefined
       }
       onClose={onClose}
       footer={

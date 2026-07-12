@@ -4,6 +4,10 @@ import type {
   RestaurantStoreInformationData,
   RestaurantSummaryData,
 } from '@/pages/restaurants/api/restaurantCatalogApi'
+import {
+  normalizeRestaurantFoodCategory,
+  normalizeRestaurantGenre,
+} from '@/pages/restaurants/restaurantOptions'
 import type { UploadedImage } from '@/shared/api/uploadApi'
 
 export interface RestaurantPrefillImage {
@@ -60,8 +64,10 @@ export const toRestaurantPrefillView = ({
   description: storeInformation.description ?? '',
   address: summary.address ?? '',
   area: listItem?.area ?? '',
-  genre: listItem?.genre ?? '',
-  foodCategory: summary.foodCategory ?? listItem?.foodCategory ?? '',
+  genre: normalizeRestaurantGenre(listItem?.genre),
+  foodCategory:
+    normalizeRestaurantFoodCategory(summary.foodCategory) ||
+    normalizeRestaurantFoodCategory(listItem?.foodCategory),
   priceCurrency: storeInformation.priceRange?.currency ?? '',
   minPrice: storeInformation.priceRange?.minPrice ?? null,
   maxPrice: storeInformation.priceRange?.maxPrice ?? null,

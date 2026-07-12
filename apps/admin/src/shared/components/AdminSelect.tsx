@@ -55,7 +55,7 @@ export const AdminSelect = <TValue extends string>({
   const buttonRef = useRef<HTMLButtonElement | null>(null)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
   const selectedOption = useMemo(
-    () => options.find((option) => option.value === value) ?? options[0],
+    () => options.find((option) => option.value === value),
     [options, value],
   )
 

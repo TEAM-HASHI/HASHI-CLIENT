@@ -93,6 +93,9 @@ describe('RestaurantsPage', () => {
     await user.click(registerButton)
 
     expect(screen.getByRole('dialog')).toBeVisible()
+    expect(
+      screen.queryByText('백엔드 등록 규칙에 맞춰 4단계로 입력합니다.'),
+    ).not.toBeInTheDocument()
     expect(screen.getByText('1. 기본 정보')).toBeVisible()
     expect(screen.getByText('4. 메뉴·노출')).toBeVisible()
     expect(

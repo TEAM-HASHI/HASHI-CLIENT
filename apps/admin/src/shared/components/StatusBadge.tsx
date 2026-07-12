@@ -29,7 +29,7 @@ export const StatusBadge = ({ status }: StatusBadgeProps) => {
   return (
     <span
       className={cn(
-        'inline-flex h-7 items-center rounded-full px-2.5 text-xs font-bold',
+        'inline-flex h-7 shrink-0 items-center rounded-full px-2.5 text-xs font-bold whitespace-nowrap',
         statusClassName[status],
       )}
     >
