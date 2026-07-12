@@ -2,9 +2,10 @@ import { ROUTES } from '@/app/router/path'
 import type { MypageMenuItem, MypageMenuSection } from '@/pages/mypage/types'
 import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
-// TODO: 실제 외부 링크 확정 후 교체합니다.
-export const HASHI_NOTICE_URL = undefined
-export const HASHI_TERMS_URL = undefined
+export const HASHI_NOTICE_URL =
+  'https://ringed-mitten-50f.notion.site/Hashi-399c804d7e5e80b1991bd7b1f5165b0b'
+export const HASHI_TERMS_URL =
+  'https://ringed-mitten-50f.notion.site/Hashi-38dc804d7e5e80eebf2be0fc0ae448ac'
 
 export const createMypagePrimaryMenuItems = ({
   savedRestaurantCount,

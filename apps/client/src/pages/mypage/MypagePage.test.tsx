@@ -2,6 +2,10 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  HASHI_NOTICE_URL,
+  HASHI_TERMS_URL,
+} from '@/pages/mypage/constants/mypageMenu'
 import { MypagePage } from '@/pages/mypage/MypagePage'
 
 const { mockNavigate } = vi.hoisted(() => ({
@@ -32,6 +36,19 @@ describe('MypagePage', () => {
     )
     expect(screen.getByRole('button', { name: /내가 찜한 식당/ })).toHaveClass(
       'bg-cool-gray-800',
+    )
+  })
+
+  it('renders confirmed notice and terms links as external links', () => {
+    render(<MypagePage />)
+
+    expect(screen.getByRole('link', { name: '공지사항' })).toHaveAttribute(
+      'href',
+      HASHI_NOTICE_URL,
+    )
+    expect(screen.getByRole('link', { name: '이용약관' })).toHaveAttribute(
+      'href',
+      HASHI_TERMS_URL,
     )
   })
 })
