@@ -11,7 +11,7 @@ const { mockGetRestaurants } = vi.hoisted(() => ({
   mockGetRestaurants: vi.fn(),
 }))
 
-vi.mock('@/pages/search/api/getRestaurants', () => ({
+vi.mock('@/features/restaurantList/api/getRestaurants', () => ({
   getRestaurants: mockGetRestaurants,
 }))
 

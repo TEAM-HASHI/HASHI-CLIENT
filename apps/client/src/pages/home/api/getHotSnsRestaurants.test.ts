@@ -2,22 +2,22 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getHotSnsRestaurants } from '@/pages/home/api/getHotSnsRestaurants'
 
-const { mockRequest } = vi.hoisted(() => ({
-  mockRequest: vi.fn(),
+const { mockGetRestaurants } = vi.hoisted(() => ({
+  mockGetRestaurants: vi.fn(),
 }))
 
-vi.mock('@/shared/api', () => ({
-  request: mockRequest,
+vi.mock('@/features/restaurantList/api/getRestaurants', () => ({
+  getRestaurants: mockGetRestaurants,
 }))
 
 describe('getHotSnsRestaurants', () => {
   beforeEach(() => {
-    mockRequest.mockReset()
+    mockGetRestaurants.mockReset()
   })
 
   it('requests five sns hot restaurants', async () => {
-    mockRequest.mockResolvedValue({
-      content: [
+    mockGetRestaurants.mockResolvedValue({
+      restaurants: [
         {
           restaurantId: 3,
           name: '규카츠 하시',
@@ -37,11 +37,9 @@ describe('getHotSnsRestaurants', () => {
       },
     ])
 
-    expect(mockRequest).toHaveBeenCalledWith('/api/v1/restaurants', {
-      searchParams: {
-        size: 5,
-        type: 'sns-hot',
-      },
+    expect(mockGetRestaurants).toHaveBeenCalledWith({
+      size: 5,
+      type: 'sns-hot',
     })
   })
 })

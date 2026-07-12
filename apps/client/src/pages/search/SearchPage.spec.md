@@ -115,7 +115,7 @@
 
 | UI area          | Endpoint                                                 | Params                                                               | Response data                                              | Query key                                                    | Mode       | Enabled                                 | States                                                 |
 | ---------------- | -------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ | ---------- | --------------------------------------- | ------------------------------------------------------ |
-| 검색 결과 리스트 | `GET /api/v1/restaurants`                                | `keyword`, `genre`, `foodCategory`, `sort`, `type`, `cursor`, `size` | `RestaurantListResponse.content`, `nextCursor`, `hasNext`  | `searchRestaurantQueryKeys.infiniteList(params)`             | `infinite` | trim 처리한 submitted keyword가 있을 때 | loading, next-page fetching, error, empty, success     |
+| 검색 결과 리스트 | `GET /api/v1/restaurants`                                | `keyword`, `genre`, `foodCategory`, `sort`, `type`, `cursor`, `size` | `RestaurantListResponse.content`, `nextCursor`, `hasNext`  | `restaurantListQueryKeys.infiniteList(params)`               | `infinite` | trim 처리한 submitted keyword가 있을 때 | loading, next-page fetching, error, empty, success     |
 | 추천 검색어      | `GET /api/v1/restaurants/search-keyword-recommendations` | optional `size`                                                      | `RestaurantSearchKeywordRecommendationResponse.keywords[]` | `searchRestaurantQueryKeys.keywordRecommendations({ size })` | `query`    | 검색 전 idle panel 렌더링 시            | loading, empty fallback, error local fallback, success |
 
 ### Endpoint Type Mapping
@@ -127,23 +127,18 @@
 
 ### Query Key Factory
 
-- 검색 결과와 추천 검색어 query는 page-local query key factory를 사용합니다.
+- 식당 목록 query는 `features/restaurantList`의 공통 query key factory를 사용합니다.
+- 추천 검색어 query는 page-local query key factory를 사용합니다.
 - 위치:
+  - `apps/client/src/features/restaurantList/queries/restaurantListQueryKeys.ts`
   - `apps/client/src/pages/search/queries/searchRestaurantQueryKeys.ts`
 - key는 응답을 바꾸는 모든 params를 포함합니다.
 - finite list와 infinite list는 key prefix를 분리합니다. 현재 검색 결과 화면은 infinite list key를 사용합니다.
-- 추천 키워드는 식당 목록 key와 같은 domain factory 안에서 별도 prefix를 둡니다.
+- 추천 키워드는 검색 page-local query key factory 안에서 별도 prefix를 둡니다.
 
 ```ts
 export const searchRestaurantQueryKeys = {
   all: ['searchRestaurants'] as const,
-  lists: () => [...searchRestaurantQueryKeys.all, 'list'] as const,
-  list: (params: SearchRestaurantsRequestParams) =>
-    [...searchRestaurantQueryKeys.lists(), params] as const,
-  infiniteLists: () =>
-    [...searchRestaurantQueryKeys.all, 'infiniteList'] as const,
-  infiniteList: (params: SearchRestaurantsRequestParams) =>
-    [...searchRestaurantQueryKeys.infiniteLists(), params] as const,
   keywordRecommendations: (params: SearchKeywordRecommendationsRequestParams) =>
     [
       ...searchRestaurantQueryKeys.all,
@@ -156,17 +151,18 @@ export const searchRestaurantQueryKeys = {
 ### Endpoint Functions
 
 - 위치:
-  - `apps/client/src/pages/search/api/getRestaurants.ts`
+  - `apps/client/src/features/restaurantList/api/getRestaurants.ts`
   - `apps/client/src/pages/search/api/getSearchKeywordRecommendations.ts`
 - endpoint 함수는 `request`만 사용하고 React, TanStack Query, route, UI state를 import하지 않습니다.
 - base URL, timeout, retry, HTTP error normalization은 `apps/client/src/shared/api`의 기존 설정을 사용합니다.
 - response envelope는 `request<TData>()`가 벗겨낸 `data`를 반환합니다.
 - `data`가 `null`이거나 optional response field가 누락될 수 있으므로 endpoint 또는 mapper에서 화면이 소비할 기본값을 정합니다.
+- 검색 결과용 `RestaurantSummaryResponse` -> `SearchRestaurant` 변환은 page-local `apps/client/src/pages/search/utils/mapSearchRestaurantSummary.ts`가 담당합니다.
 
 ### Query Hooks
 
 - 검색 결과:
-  - 현재 구현은 `useSearchRestaurantsInfiniteQuery`에서 `GET /api/v1/restaurants`를 `useInfiniteQuery`로 호출합니다.
+  - 현재 구현은 `useSearchRestaurantsInfiniteQuery`에서 `features/restaurantList`의 `restaurantsInfiniteQueryOptions`를 감싸 `GET /api/v1/restaurants`를 `useInfiniteQuery`로 호출합니다.
   - 첫 페이지는 `cursor` 없이 호출하고, 하단 sentinel이 노출되면 `nextCursor`를 API `cursor`로 보내 다음 페이지를 조회합니다.
   - `useSuspenseQuery`는 사용하지 않습니다. 검색어/필터 local state가 fetch 여부를 결정하고, 결과 영역만 local loading/error UI를 가져야 하기 때문입니다.
 - 추천 검색어:
@@ -436,18 +432,27 @@ SearchPage
 - `apps/client/src/pages/search/types.ts`
   - page-local search option value, restaurant result item type을 둡니다.
 
+### Shared Feature API Files To Reuse
+
+- `apps/client/src/features/restaurantList/api/getRestaurants.ts`
+  - `GET /api/v1/restaurants` endpoint 함수와 nullable list response 기본값 mapping을 담당합니다.
+- `apps/client/src/features/restaurantList/queries/restaurantListQueryKeys.ts`
+  - 식당 목록 list/infinite list query key factory를 담당합니다.
+- `apps/client/src/features/restaurantList/queries/useRestaurantsInfiniteQuery.ts`
+  - 식당 목록 infinite query option/hook, cursor pagination 처리를 담당합니다.
+
 ### Page-Local API Files To Add Or Rename
 
-- `apps/client/src/pages/search/api/getRestaurants.ts`
-  - `GET /api/v1/restaurants` endpoint 함수와 API response -> `SearchRestaurant` view model mapping을 담당합니다.
 - `apps/client/src/pages/search/api/getSearchKeywordRecommendations.ts`
   - `GET /api/v1/restaurants/search-keyword-recommendations` endpoint 함수와 keywords 기본값 mapping을 담당합니다.
 - `apps/client/src/pages/search/queries/searchRestaurantQueryKeys.ts`
-  - 검색 결과와 추천 키워드 query key factory를 담당합니다.
+  - 추천 키워드 query key factory를 담당합니다.
 - `apps/client/src/pages/search/queries/useSearchRestaurantsInfiniteQuery.ts`
-  - 검색 결과 infinite query option/hook, enabled 조건, request params mapping을 담당합니다.
+  - 검색 화면의 필터 값을 공통 식당 목록 API params로 변환하고, local error policy를 적용합니다.
 - `apps/client/src/pages/search/queries/useSearchKeywordRecommendationsQuery.ts`
   - 추천 검색어 query option/hook을 담당합니다.
+- `apps/client/src/pages/search/utils/mapSearchRestaurantSummary.ts`
+  - 공통 식당 목록 응답의 `RestaurantSummaryResponse`를 검색 결과 item view model로 변환합니다.
 
 ### Optional Page-Local Files
 

@@ -22,7 +22,7 @@ const { mockGetRestaurants, mockGetSearchKeywordRecommendations } = vi.hoisted(
   }),
 )
 
-vi.mock('@/pages/search/api/getRestaurants', () => ({
+vi.mock('@/features/restaurantList/api/getRestaurants', () => ({
   getRestaurants: mockGetRestaurants,
 }))
 
@@ -143,6 +143,18 @@ const searchRestaurantFixtures: SearchRestaurant[] = [
   },
 ]
 
+const convertSearchRestaurantFixtureToSummary = (
+  restaurant: SearchRestaurant,
+) => {
+  return {
+    name: restaurant.name,
+    rating: restaurant.rating,
+    genre: restaurant.category,
+    summary: restaurant.businessHours,
+    hashtags: [restaurant.tag],
+  }
+}
+
 const mockIntersectionObserver = () => {
   let handleIntersection: IntersectionObserverCallback = () => {}
   const IntersectionObserverMock = vi.fn(
@@ -228,7 +240,10 @@ describe('SearchPage', () => {
           return 0
         })
 
-      return Promise.resolve({ hasNext: false, restaurants })
+      return Promise.resolve({
+        hasNext: false,
+        restaurants: restaurants.map(convertSearchRestaurantFixtureToSummary),
+      })
     })
   })
 
@@ -495,11 +510,15 @@ describe('SearchPage', () => {
       .mockResolvedValueOnce({
         hasNext: true,
         nextCursor: 'next-search-cursor',
-        restaurants: [searchRestaurantFixtures[0]],
+        restaurants: [
+          convertSearchRestaurantFixtureToSummary(searchRestaurantFixtures[0]),
+        ],
       })
       .mockResolvedValueOnce({
         hasNext: false,
-        restaurants: [searchRestaurantFixtures[1]],
+        restaurants: [
+          convertSearchRestaurantFixtureToSummary(searchRestaurantFixtures[1]),
+        ],
       })
 
     renderSearchPage()

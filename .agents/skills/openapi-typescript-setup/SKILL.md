@@ -158,7 +158,7 @@ export const createReservation = (body: CreateReservationBody) => {
 
 ```ts
 import { useQuery } from '@tanstack/react-query'
-import { getRestaurants } from '@/pages/search/api/getRestaurants'
+import { getRestaurants } from '@/features/restaurantList/api/getRestaurants'
 
 export const restaurantListQueryKey = (params: GetRestaurantsQuery) =>
   ['restaurants', params] as const

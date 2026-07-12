@@ -1,11 +1,8 @@
-import { request } from '@/shared/api'
-import type { components } from '@/shared/api/generated/openapi'
-
+import {
+  getRestaurants,
+  type RestaurantSummaryResponse,
+} from '@/features/restaurantList/api/getRestaurants'
 import type { HotSnsRestaurant } from '@/pages/home/homeContent'
-
-type RestaurantListResponse = components['schemas']['RestaurantListResponse']
-type RestaurantSummaryResponse =
-  components['schemas']['RestaurantSummaryResponse']
 
 const HOT_SNS_RESTAURANT_SIZE = 5
 
@@ -28,12 +25,10 @@ const mapHotSnsRestaurant = ({
 }
 
 export const getHotSnsRestaurants = async () => {
-  const data = await request<RestaurantListResponse>('/api/v1/restaurants', {
-    searchParams: {
-      size: HOT_SNS_RESTAURANT_SIZE,
-      type: 'sns-hot',
-    },
+  const { restaurants } = await getRestaurants({
+    size: HOT_SNS_RESTAURANT_SIZE,
+    type: 'sns-hot',
   })
 
-  return data?.content?.map(mapHotSnsRestaurant) ?? []
+  return restaurants.map(mapHotSnsRestaurant)
 }

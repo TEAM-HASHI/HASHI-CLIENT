@@ -10,6 +10,7 @@ import { useRecentSearchKeywords } from '@/pages/search/hooks/useRecentSearchKey
 import { useSearchKeywordRecommendationsQuery } from '@/pages/search/queries/useSearchKeywordRecommendationsQuery'
 import { useSearchRestaurantsInfiniteQuery } from '@/pages/search/queries/useSearchRestaurantsInfiniteQuery'
 import type { FoodCategoryValue, SearchSortValue } from '@/pages/search/types'
+import { mapSearchRestaurantSummary } from '@/pages/search/utils/mapSearchRestaurantSummary'
 
 const DEFAULT_SORT_VALUE = 'default' satisfies SearchSortValue
 const DEFAULT_FOOD_CATEGORY_VALUE = 'all' satisfies FoodCategoryValue
@@ -66,7 +67,9 @@ export const useSearchPage = () => {
     refetch: refetchSearchRestaurants,
   } = searchRestaurantsQuery
   const restaurants =
-    searchRestaurantsQuery.data?.pages.flatMap((page) => page.restaurants) ?? []
+    searchRestaurantsQuery.data?.pages.flatMap((page) =>
+      page.restaurants.map(mapSearchRestaurantSummary),
+    ) ?? []
   const isSearchIdle = searchParams === null
   const sortLabel = getOptionLabel(sortOptions, sortValue)
   const foodCategoryLabel =

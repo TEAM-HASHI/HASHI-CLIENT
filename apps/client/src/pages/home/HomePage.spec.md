@@ -160,6 +160,9 @@ export const HomeLogo = () => {
   - `name` -> list title
   - `summary` fallback `genre` -> list summary
   - `thumbnailUrl` -> image
+- data owner:
+  - `GET /api/v1/restaurants` endpoint는 `apps/client/src/features/restaurantList/api/getRestaurants.ts`의 공통 함수가 소유합니다.
+  - 홈은 `apps/client/src/pages/home/api/getHotSnsRestaurants.ts`에서 `type=sns-hot`, `size=5` params를 전달하고, SNS 리스트 view model로 변환합니다.
 - loading state:
   - 메인 배너 API: 배너 비율을 유지하는 skeleton을 사용합니다.
   - API 응답 전에는 SNS 리스트 섹션을 빈 상태로 유지합니다.
@@ -511,8 +514,9 @@ BottomNavigationLayout
 - SNS 맛집 정적 mock 데이터는 `apps/client/src/pages/home/mocks/homeContent.mock.ts`에 둡니다.
 - 홈 데이터 반환, 검색 path, 어디든 예약 이동, 식당 상세 path 생성, 로그인 유도 바텀시트 상태는 `apps/client/src/pages/home/hooks/useHomePage.ts`가 담당합니다.
 - 메인 배너 query는 `features/magazine`의 shared magazine banner query를 사용하고, `useHomePage`는 홈 화면에 필요한 view model로 조합합니다.
-- SNS 맛집 query는 API 확정 후 우선 홈 page-local query로 mock 데이터를 교체합니다.
-- 여러 페이지에서 같은 SNS 맛집 API를 재사용하게 될 때만 feature/shared 승격을 검토합니다.
+- SNS 맛집 query는 `useHomePage` 내부에서 `useHotSnsRestaurantsQuery`로 조회합니다.
+- `GET /api/v1/restaurants` endpoint 자체는 `features/restaurantList`의 공통 API 함수를 재사용합니다.
+- 여러 페이지에서 같은 홈 콘텐츠 API를 재사용하게 될 때만 feature/shared 승격을 검토합니다.
 - route path 조합이 필요하면 문자열 직접 조합을 흩뿌리지 말고 page-local helper를 둡니다.
 - API 전 임시 식당 이미지 asset이 필요하면 page-local assets에 두고, API 전환 시 제거합니다.
 - 로고는 새 SVG asset으로 추가하고 Vite asset import로 사용합니다.

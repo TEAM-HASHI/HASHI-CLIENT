@@ -1,21 +1,5 @@
-import { request } from '@/shared/api'
-import type { components, operations } from '@/shared/api/generated/openapi'
-
+import type { RestaurantSummaryResponse } from '@/features/restaurantList/api/getRestaurants'
 import type { FoodCategoryValue, SearchRestaurant } from '@/pages/search/types'
-
-export type GetRestaurantsParams = NonNullable<
-  operations['getRestaurants']['parameters']['query']
->
-
-type RestaurantListResponse = components['schemas']['RestaurantListResponse']
-type RestaurantSummaryResponse =
-  components['schemas']['RestaurantSummaryResponse']
-
-export interface SearchRestaurantsResult {
-  restaurants: SearchRestaurant[]
-  nextCursor?: string
-  hasNext: boolean
-}
 
 const foodCategoryValues = [
   'all',
@@ -73,7 +57,7 @@ const getRestaurantBusinessHours = ({ summary }: RestaurantSummaryResponse) => {
   return '영업시간 확인 필요'
 }
 
-const mapRestaurantSummary = (
+export const mapSearchRestaurantSummary = (
   restaurant: RestaurantSummaryResponse,
 ): SearchRestaurant => {
   const name = restaurant.name ?? '이름 없는 식당'
@@ -97,16 +81,4 @@ const mapRestaurantSummary = (
     rating: restaurant.rating ?? 0,
     tag,
   }
-}
-
-export const getRestaurants = async (params: GetRestaurantsParams) => {
-  const data = await request<RestaurantListResponse>('/api/v1/restaurants', {
-    searchParams: params,
-  })
-
-  return {
-    hasNext: data?.hasNext ?? false,
-    nextCursor: data?.nextCursor,
-    restaurants: data?.content?.map(mapRestaurantSummary) ?? [],
-  } satisfies SearchRestaurantsResult
 }

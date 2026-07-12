@@ -1,22 +1,10 @@
-import {
-  type InfiniteData,
-  infiniteQueryOptions,
-  useInfiniteQuery,
-} from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 
-import {
-  getRestaurants,
-  type GetRestaurantsParams,
-  type SearchRestaurantsResult,
-} from '@/pages/search/api/getRestaurants'
-import { searchRestaurantQueryKeys } from '@/pages/search/queries/searchRestaurantQueryKeys'
+import { type GetRestaurantsParams } from '@/features/restaurantList/api/getRestaurants'
+import { restaurantsInfiniteQueryOptions } from '@/features/restaurantList/queries/useRestaurantsInfiniteQuery'
 import type { SearchRestaurantsParams } from '@/pages/search/types'
 
 const SEARCH_RESTAURANTS_PAGE_SIZE = 20
-
-type SearchRestaurantsPageParam = NonNullable<
-  GetRestaurantsParams['cursor']
-> | null
 
 const apiGenreByCategory = {
   all: 'all',
@@ -42,32 +30,6 @@ export const createSearchRestaurantsRequestParams = ({
   }
 }
 
-export const searchRestaurantsInfiniteQueryOptions = (
-  params: GetRestaurantsParams,
-) =>
-  infiniteQueryOptions<
-    SearchRestaurantsResult,
-    Error,
-    InfiniteData<SearchRestaurantsResult>,
-    ReturnType<typeof searchRestaurantQueryKeys.infiniteList>,
-    SearchRestaurantsPageParam
-  >({
-    queryFn: ({ pageParam }) =>
-      getRestaurants({
-        ...params,
-        ...(pageParam !== null && { cursor: pageParam }),
-      }),
-    queryKey: searchRestaurantQueryKeys.infiniteList(params),
-    initialPageParam: null as SearchRestaurantsPageParam,
-    getNextPageParam: (lastPage) => {
-      if (!lastPage.hasNext) {
-        return undefined
-      }
-
-      return lastPage.nextCursor ?? undefined
-    },
-  })
-
 export const useSearchRestaurantsInfiniteQuery = (
   params: SearchRestaurantsParams | null,
 ) => {
@@ -76,7 +38,7 @@ export const useSearchRestaurantsInfiniteQuery = (
     : undefined
 
   return useInfiniteQuery({
-    ...searchRestaurantsInfiniteQueryOptions(requestParams ?? {}),
+    ...restaurantsInfiniteQueryOptions(requestParams ?? {}),
     enabled: requestParams !== undefined,
     throwOnError: false,
   })
