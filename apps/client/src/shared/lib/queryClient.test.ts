@@ -1,10 +1,32 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
-import { queryClient } from '@/shared/lib/queryClient'
+import { createQueryClient } from '@/shared/lib/queryClient'
+
+const { mockCaptureError, mockShowToast } = vi.hoisted(() => ({
+  mockCaptureError: vi.fn(),
+  mockShowToast: vi.fn(),
+}))
+
+vi.mock('@hashi/hds-ui', () => ({
+  showToast: mockShowToast,
+}))
+
+vi.mock('@/shared/lib/sentry', () => ({
+  captureError: mockCaptureError,
+}))
 
 type QueryRetry = (failureCount: number, error: Error) => boolean
+
+const mutationErrorResponse: ErrorResponse = {
+  success: false,
+  code: 'RESERVATION-004',
+  message: 'raw server message',
+  data: null,
+  timestamp: '2026-07-11T00:00:00.000Z',
+  path: '/api/v1/reservations/1/cancel',
+}
 
 const createApiError = (status: number) => {
   const response: ErrorResponse = {
@@ -20,7 +42,7 @@ const createApiError = (status: number) => {
 }
 
 const getQueryRetry = () => {
-  const retry = queryClient.getDefaultOptions().queries?.retry
+  const retry = createQueryClient().getDefaultOptions().queries?.retry
 
   if (typeof retry !== 'function') {
     throw new Error('query retry option must be a function')
@@ -29,35 +51,71 @@ const getQueryRetry = () => {
   return retry as QueryRetry
 }
 
+const callDefaultMutationOnError = (error: Error) => {
+  const onError = createQueryClient().getDefaultOptions().mutations?.onError as
+    | ((nextError: Error) => void)
+    | undefined
+
+  expect(onError).toBeTypeOf('function')
+  onError?.(error)
+}
+
 describe('queryClient', () => {
-  it('retries ApiError with server error status before the max retry count', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('retries status errors only for server failures before the limit', () => {
     const retry = getQueryRetry()
 
     expect(retry(0, createApiError(500))).toBe(true)
-    expect(retry(0, createApiError(502))).toBe(true)
-  })
-
-  it('does not retry ApiError with client or business error status', () => {
-    const retry = getQueryRetry()
-
-    expect(retry(0, createApiError(400))).toBe(false)
-    expect(retry(0, createApiError(401))).toBe(false)
-    expect(retry(0, createApiError(404))).toBe(false)
-    expect(retry(0, createApiError(409))).toBe(false)
-  })
-
-  it('retries HttpStatusError with server error status only', () => {
-    const retry = getQueryRetry()
-
     expect(retry(0, new HttpStatusError(502))).toBe(true)
-    expect(retry(0, new HttpStatusError(503))).toBe(true)
+    expect(retry(0, createApiError(409))).toBe(false)
     expect(retry(0, new HttpStatusError(404))).toBe(false)
-    expect(retry(0, new HttpStatusError(409))).toBe(false)
+    expect(retry(1, createApiError(500))).toBe(false)
   })
 
-  it('does not retry after the max retry count', () => {
-    const retry = getQueryRetry()
+  it('shows catalog copy without throwing an expected API error', () => {
+    const error = new ApiError(mutationErrorResponse, 409)
 
-    expect(retry(1, createApiError(500))).toBe(false)
+    callDefaultMutationOnError(error)
+
+    expect(mockShowToast).toHaveBeenCalledWith({
+      children: '이미 취소된 예약입니다',
+    })
+    expect(mockCaptureError).toHaveBeenCalledWith(error)
+  })
+
+  it('shows a status fallback for an HTTP-only mutation failure', () => {
+    const error = new HttpStatusError(404)
+
+    callDefaultMutationOnError(error)
+
+    expect(mockShowToast).toHaveBeenCalledWith({
+      children: '리소스를 찾을 수 없습니다',
+    })
+    expect(mockCaptureError).toHaveBeenCalledWith(error)
+  })
+
+  it('delegates reportable mutation status errors to the Sentry filter', () => {
+    const apiError = createApiError(500)
+    const httpStatusError = new HttpStatusError(502)
+
+    callDefaultMutationOnError(apiError)
+    callDefaultMutationOnError(httpStatusError)
+
+    expect(mockCaptureError).toHaveBeenNthCalledWith(1, apiError)
+    expect(mockCaptureError).toHaveBeenNthCalledWith(2, httpStatusError)
+  })
+
+  it('shows generic copy and captures an unexpected mutation error', () => {
+    const error = new Error('unexpected mutation bug')
+
+    callDefaultMutationOnError(error)
+
+    expect(mockShowToast).toHaveBeenCalledWith({
+      children: '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+    })
+    expect(mockCaptureError).toHaveBeenCalledWith(error)
   })
 })

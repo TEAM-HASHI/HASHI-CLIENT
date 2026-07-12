@@ -44,24 +44,29 @@ apps/client/src/shared/api/
 - endpoint 함수는 React, TanStack Query, route, UI state를 알면 안 됩니다.
 - 인증, refresh, retry 정책은 실제 요구사항 없이 미리 복잡하게 만들지 않습니다.
 
-## Error Handling Rules
+## Error Handling Policy
 
-`apps/client/src/shared/api`는 서버 response envelope를 파싱하고 `success: false` 응답을 `ApiError`로 변환합니다.
+`apps/client/src/shared/api`는 서버 response envelope와 HTTP 실패를 구분해
+정규화합니다.
 
-- `ApiError`는 서버 `code`, `message`, `errors`와 HTTP status를 함께 보존합니다.
-- `HttpStatusError`는 proxy HTML 응답, 빈 503 응답처럼 서버 envelope가 없는 HTTP 실패의 status를 보존합니다.
-- HTTP status는 retry, 로그인 유도, not found, Sentry 기록 여부를 판단할 때 사용합니다.
+- `ApiError`는 유효한 서버 error envelope의 `code`, `message`, `errors`와 실제 HTTP status를 보존합니다.
+- `HttpStatusError`는 proxy HTML 응답, 빈 응답, malformed body처럼 서버 error envelope가 없는 HTTP 실패의 status와 cause를 보존합니다.
+- 외부 error code의 사용자 문구와 예상 status는 공통 error catalog에서 관리합니다.
+- 실제 response status는 retry와 boundary 판단에 사용하며 catalog status로 덮어쓰지 않습니다.
+- 미등록 code와 비JSON/malformed error body는 진단 정보를 보존하되, 사용자에게 임의의 서버 message를 직접 노출하지 않습니다.
 - field-level error는 `ApiError.fieldErrors`와 문서화된 error code를 기준으로 page/form 가까이에서 매핑합니다.
-- 서버 `message`는 임시 사용자 문구 후보일 수 있지만, 제품 문구는 page spec에서 확정합니다.
-- non-JSON error response는 `HttpStatusError`로 정규화해 JSON 파싱 오류가 사용자 UI 정책을 깨지 않도록 합니다.
+- query는 5xx status error, network error, timeout만 최대 1회 retry합니다.
+- blanket `throwOnError: true` 대신 status 기반 predicate를 사용해 5xx, network, timeout, 예상하지 못한 비-API 오류만 ErrorBoundary로 전달합니다.
+- 예상 가능한 4xx query는 기본적으로 호출부의 local error state에 남깁니다.
+- mutation은 retry하거나 render boundary로 throw하지 않고, 개별 `onError`가 없을 때 공통 toast를 fallback으로 사용합니다.
+- mutation 오류는 공통 Sentry 필터를 거쳐 5xx status error, 405 integration error, 예상하지 못한 오류만 기록합니다.
+- page/form이 field error, NotFound, Forbidden, conflict UX를 소유하면 query/mutation option에서 전역 기본값을 명시적으로 override합니다.
+- ErrorBoundary가 소비한 오류는 공통 Sentry 필터를 거쳐 unknown/render error, 5xx status error, 405 integration error만 기록합니다.
+- 인증 token refresh, request replay, logout은 error boundary가 아니라 별도 auth flow가 소유합니다.
 
-TanStack Query retry는 `shared/lib/queryClient.ts`의 기본 정책에서 한 번만 판단합니다.
-
-- network error, timeout, `ApiError`/`HttpStatusError`의 `status >= 500`만 최대 1회 재시도합니다.
-- `400`, `401`, `403`, `404`, `405`, `409`, `415` 같은 사용자 입력, 인증, 권한, not found, 비즈니스 충돌, 업로드 validation 오류는 자동 재시도하지 않습니다.
-- mutation은 중복 실행 위험이 있으므로 기본 retry를 비활성화합니다.
-- 전역 `throwOnError: true`는 사용하지 않습니다. page-entry required data는 route/page boundary 또는 `useSuspenseQuery`로, 검색/필터/form처럼 부분 실패가 자연스러운 화면은 local error UI로 처리합니다.
-- ErrorBoundary에서 잡힌 에러는 Sentry 필터를 거쳐 unknown error, render error, 5xx status error, 405 integration error만 기록합니다.
+route content용 `AsyncBoundary`는 `RootLayout` 내부에서 `Outlet`을 감싸며,
+retry 시 React error state와 TanStack Query error state를 함께 reset합니다. 또한
+pathname이 변경되면 이전 route에서 잡힌 error state를 reset합니다.
 
 ## API Integration Workflow
 
