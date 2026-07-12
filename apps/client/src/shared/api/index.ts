@@ -24,7 +24,7 @@ export {
   type ErrorPresentation,
 } from './errorPresentation'
 export { apiClient } from './apiClient'
-export { request } from './request'
+export { request, requestSuccessResponse } from './request'
 export {
   isErrorResponse,
   type ApiResponse,

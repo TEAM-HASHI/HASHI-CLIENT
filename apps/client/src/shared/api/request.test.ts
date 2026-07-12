@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
-import { request } from '@/shared/api/request'
+import { request, requestSuccessResponse } from '@/shared/api/request'
 import type { ErrorResponse } from '@/shared/api/types'
 
 vi.mock('@/shared/api/apiClient', () => ({
@@ -65,6 +65,27 @@ describe('request', () => {
 
     await expect(request<{ id: number }>('users')).resolves.toEqual({ id: 1 })
     expect(mockedApiClient).toHaveBeenCalledWith('users', undefined)
+  })
+
+  it('returns the success response envelope when requested', async () => {
+    const successResponse = {
+      success: true,
+      code: 'SUCCESS',
+      message: '요청에 성공했습니다.',
+      data: { id: 1 },
+    }
+
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: true,
+        status: 200,
+        body: successResponse,
+      }) as never,
+    )
+
+    await expect(
+      requestSuccessResponse<{ id: number }>('users'),
+    ).resolves.toEqual(successResponse)
   })
 
   it('returns null when success response has null data', async () => {
