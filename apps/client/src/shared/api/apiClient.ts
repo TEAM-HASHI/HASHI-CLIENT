@@ -13,7 +13,11 @@ const getAccessToken = () => {
     return null
   }
 
-  return window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY)
+  try {
+    return window.localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY)
+  } catch {
+    return null
+  }
 }
 
 export const apiClient = ky.create({

@@ -23,6 +23,7 @@ Audit HASHI client API integration for data-layer boundaries, query key correctn
 | `apps/client/src/features/**/hooks/**/*.{ts,tsx}`     | Feature hooks                  |
 | `apps/client/src/shared/api/**/*.{ts,tsx}`            | Low-level API helpers          |
 | `apps/client/src/shared/lib/queryClient.ts`           | QueryClient defaults           |
+| `apps/client/src/**/*.test.{ts,tsx}`                  | API integration test isolation |
 | `apps/client/src/**/*.spec.md`                        | Data dependency specs          |
 | `docs/architecture/data-layer.md`                     | Data-layer source of truth     |
 
@@ -57,16 +58,27 @@ git diff --name-only origin/develop...HEAD 2>/dev/null || true
 7. Check UI states:
    - loading, error, empty, disabled, and success states are mapped to existing UI
    - destructive or submit actions cannot double-fire while pending
-8. Check docs sync:
+8. Check tests:
+   - page and component tests mock page/feature API modules with `vi.mock(...)`
+   - API wrapper tests mock `@/shared/api/request` or another approved low-level helper
+   - tests do not import `@/shared/api` barrels when direct module imports avoid `apiClient.ts`
+   - tests do not depend on `VITE_API_BASE_URL` or hardcoded real API origins unless URL construction is the unit under test
+9. Check docs sync:
    - target page spec includes `Data Dependencies` when behavior changed
    - `docs/architecture/data-layer.md` still matches implementation patterns
-9. Run matching verification commands.
+10. Run matching verification commands.
 
 ```bash
 pnpm --filter @hashi/client lint
 pnpm --filter @hashi/client typecheck
 pnpm --filter @hashi/client test
 pnpm --filter @hashi/client build
+```
+
+For CI-only failures related to missing API env values:
+
+```bash
+env -u VITE_API_BASE_URL pnpm --filter @hashi/client test -- <test-file>
 ```
 
 ## Output Format
@@ -88,6 +100,7 @@ Status: PASS | FAIL
 - Query mode: PASS/FAIL
 - Mutation invalidation: PASS/FAIL
 - UI states: PASS/FAIL
+- Test isolation: PASS/FAIL
 - Docs sync: PASS/FAIL
 
 ### Commands
@@ -101,3 +114,4 @@ Status: PASS | FAIL
 - Pure mock files may keep local fixture helpers until the API Integration Map explicitly removes them.
 - Local `useQuery` calls inside tests are not production integration findings.
 - A page without server data does not need `Data Dependencies`.
+- API wrapper tests may assert normalized request paths, but they should mock the request helper rather than loading `apiClient.ts`.
