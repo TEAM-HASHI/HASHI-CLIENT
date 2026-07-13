@@ -69,7 +69,8 @@ interface AnywhereReservationRequestDraft extends ReservationRequestDraftBase {
 - query mode: 페이지 렌더링에 필요한 값이므로 `useSuspenseQuery`를 사용한다.
 - loading state: route Suspense fallback을 사용한다.
 - error state: 공통 query 오류 정책과 route ErrorBoundary를 사용한다.
-- empty state: 응답 data 또는 `balance`가 없으면 보유 포인트 0으로 표시한다.
+- zero balance state: `{ balance: 0 }`을 보유 포인트 0으로 표시한다.
+- invalid response state: 응답 data가 `null`이거나 `balance`가 숫자가 아니면 계약 위반 오류로 처리한다.
 
 예약 확인 모달에서 `예약`을 누르면 draft 유형에 맞는 API를 호출한다.
 

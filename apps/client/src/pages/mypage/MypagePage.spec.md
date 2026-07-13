@@ -203,7 +203,7 @@ type ComingSoonDialogProps = {
 - `balance`: `GET /api/v1/points/me`
 
 포인트 값은 서버에서 내려주는 숫자를 화면 표시용 문자열로 포맷합니다.
-응답이 없거나 값이 없으면 `0 P`로 표시합니다.
+`{ balance: 0 }`은 `0 P`로 표시하고, 응답 data가 `null`이거나 `balance`가 숫자가 아니면 `AsyncBoundary`로 오류를 전파합니다.
 
 ### 3. Primary Menu Cards
 
@@ -305,14 +305,15 @@ type MyPointBalance = {
 }
 ```
 
-fallback:
+validation:
 
-- `availablePoint`: `0`
+- 숫자인 `balance`를 `availablePoint`로 매핑합니다.
+- `{ balance: 0 }`은 유효한 0포인트 응답으로 처리합니다.
 
 notes:
 
 - Swagger description은 포인트 이력이 없는 사용자의 `balance`를 `0`으로 내려준다고 명시합니다.
-- `request<PointBalanceResponse>()` 결과가 `null`이거나 `balance`가 없으면 `0`으로 정규화합니다.
+- `request<PointBalanceResponse>()` 결과가 `null`이거나 `balance`가 숫자가 아니면 계약 위반 오류를 ErrorBoundary로 전파합니다.
 
 ### Query: My Review Count
 
@@ -516,7 +517,7 @@ types:
 - 마이 페이지 자체 empty state는 없습니다.
 - 값이 없는 항목은 아래처럼 처리합니다.
   - 프로필 이미지 없음: 프로필 생성 화면과 같은 `profile-empty.svg` fallback 이미지
-  - 포인트 없음: `0 P`
+  - 포인트 이력 없음: 유효한 `{ balance: 0 }` 응답을 `0 P`로 표시
   - 리뷰 개수 없음: `0`
   - 찜한 식당 개수: MVP 고정값 `0`
 
@@ -540,6 +541,8 @@ types:
 - `GET /api/v1/users/me/profile-summary` 결과의 닉네임과 프로필 이미지가 표시되는지 확인
 - 프로필 이미지가 없을 때 fallback 이미지가 표시되는지 확인
 - `GET /api/v1/points/me` 결과의 `balance`가 `7,000 P` 형식으로 표시되는지 확인
+- `GET /api/v1/points/me` 결과가 `{ balance: 0 }`이면 `0 P`로 표시되는지 확인
+- `GET /api/v1/points/me` 결과가 `null`이거나 `balance`가 없으면 계약 위반 오류를 `AsyncBoundary`로 전달하는지 확인
 - `GET /api/v1/reviews/me/count` 결과의 `reviewCount`가 마이 리뷰 count로 표시되는지 확인
 - 내가 찜한 식당 count가 API 없이 `0`으로 표시되는지 확인
 - 내가 찜한 식당 클릭 시 준비중 모달이 열리는지 확인
@@ -550,7 +553,7 @@ types:
 - 프로필 수정 버튼이 disabled인지 확인
 - 로그아웃과 회원탈퇴가 화면에 노출되지 않는지 확인
 - 계정 섹션 title이 화면에 노출되지 않는지 확인
-- 각 query 실패 시 해당 영역이 fallback 값으로 렌더링되는지 확인
+- 각 query 실패 시 해당 오류를 `AsyncBoundary`로 전달하는지 확인
 
 ## Open Questions
 
