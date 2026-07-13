@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { uploadFileToPresignedUrl } from '@/pages/reviewNew/api/uploadFileToPresignedUrl'
+import { uploadFileToPresignedUrl } from '@/shared/api/uploadFileToPresignedUrl'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -18,7 +18,6 @@ describe('uploadFileToPresignedUrl', () => {
 
     await uploadFileToPresignedUrl(file, {
       uploadUrl: 'https://upload.example/review.jpg',
-      fileKey: 'uploads/reviews/review.jpg',
       uploadMethod: 'PUT',
     })
 
@@ -43,7 +42,6 @@ describe('uploadFileToPresignedUrl', () => {
         new File(['review-image'], 'review.jpg', { type: 'image/jpeg' }),
         {
           uploadUrl: 'https://upload.example/review.jpg',
-          fileKey: 'uploads/reviews/review.jpg',
           uploadMethod: 'PUT',
         },
       ),

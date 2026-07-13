@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { uploadProfileImage } from '@/pages/profileNew/api/uploadProfileImage'
-import { uploadFileToPresignedUrl } from '@/pages/reviewNew/api/uploadFileToPresignedUrl'
+import { uploadFileToPresignedUrl } from '@/shared/api/uploadFileToPresignedUrl'
 import { request } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({
   request: vi.fn(),
 }))
 
-vi.mock('@/pages/reviewNew/api/uploadFileToPresignedUrl', () => ({
+vi.mock('@/shared/api/uploadFileToPresignedUrl', () => ({
   uploadFileToPresignedUrl: vi.fn(),
 }))
 

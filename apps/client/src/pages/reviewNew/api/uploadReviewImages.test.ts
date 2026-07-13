@@ -12,7 +12,7 @@ vi.mock('@/pages/reviewNew/api/issueReviewImageUploads', () => ({
   issueReviewImageUploads: issueReviewImageUploadsMock,
 }))
 
-vi.mock('@/pages/reviewNew/api/uploadFileToPresignedUrl', () => ({
+vi.mock('@/shared/api/uploadFileToPresignedUrl', () => ({
   uploadFileToPresignedUrl: uploadFileToPresignedUrlMock,
 }))
 

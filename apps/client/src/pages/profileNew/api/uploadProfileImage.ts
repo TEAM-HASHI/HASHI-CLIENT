@@ -1,6 +1,6 @@
 import type { components } from '@/shared/api/generated/openapi'
-import { uploadFileToPresignedUrl } from '@/pages/reviewNew/api/uploadFileToPresignedUrl'
 import { request } from '@/shared/api/request'
+import { uploadFileToPresignedUrl } from '@/shared/api/uploadFileToPresignedUrl'
 
 type IssuePresignedUrlsBody = components['schemas']['IssuePresignedUrlsRequest']
 type PresignedUrlsData = components['schemas']['PresignedUrlsResponse']

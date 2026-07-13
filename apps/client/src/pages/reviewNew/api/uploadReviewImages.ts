@@ -1,7 +1,7 @@
 import { REVIEW_PHOTO_TYPE_ERROR_MESSAGE } from '@/features/review/constants'
 import { checkIsSupportedReviewPhotoFile } from '@/features/review/utils'
 import { issueReviewImageUploads } from '@/pages/reviewNew/api/issueReviewImageUploads'
-import { uploadFileToPresignedUrl } from '@/pages/reviewNew/api/uploadFileToPresignedUrl'
+import { uploadFileToPresignedUrl } from '@/shared/api/uploadFileToPresignedUrl'
 
 interface FailedUpload {
   file: File

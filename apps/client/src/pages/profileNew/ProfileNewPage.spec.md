@@ -118,7 +118,7 @@ Jira: HASHI-120
   - credentials: `include`
   - request usage: `profile`
   - response `uploadUrl`로 S3 `PUT` 업로드
-  - S3 업로드 실행은 `apps/client/src/pages/reviewNew/api/uploadFileToPresignedUrl.ts`의 presigned URL uploader를 재사용한다.
+  - S3 업로드 실행은 `apps/client/src/shared/api/uploadFileToPresignedUrl.ts`의 presigned URL uploader를 재사용한다.
   - response `fileKey`를 온보딩 API의 `profileImageKey`로 전달
 - request data:
   - `nickname`: trimmed string
