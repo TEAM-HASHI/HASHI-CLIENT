@@ -155,6 +155,9 @@ describe('HashiPickPage', () => {
     expect(
       await screen.findAllByRole('button', { name: /히마와리 스시/ }),
     ).toHaveLength(3)
+    expect(
+      screen.getByRole('button', { name: /히마와리 스시 3/ }).closest('li'),
+    ).toHaveClass('last:border-b-0')
     expect(screen.getAllByText('4.0')).toHaveLength(3)
     expect(mockedGetRestaurants).toHaveBeenCalledWith({
       genre: 'all',
@@ -235,6 +238,23 @@ describe('HashiPickPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
     expect(screen.getByTestId('location-path')).toHaveTextContent(ROUTES.home)
+  })
+
+  it('renders secondary color skeletons while the first page is loading', () => {
+    mockedGetRestaurants.mockReturnValueOnce(new Promise(() => {}))
+
+    renderHashiPickPage()
+
+    const skeletonItems = screen.getAllByTestId('restaurant-list-skeleton-item')
+
+    expect(skeletonItems).toHaveLength(3)
+    expect(skeletonItems[2]).toHaveClass('last:border-b-0')
+    expect(
+      skeletonItems[0]?.querySelector('.bg-secondary-200'),
+    ).toBeInTheDocument()
+    expect(
+      skeletonItems[0]?.querySelector('.bg-cool-gray-100'),
+    ).not.toBeInTheDocument()
   })
 
   it('renders only image urls returned by the server', async () => {

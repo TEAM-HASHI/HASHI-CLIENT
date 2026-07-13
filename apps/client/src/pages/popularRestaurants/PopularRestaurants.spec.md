@@ -136,7 +136,7 @@
   - 다음 페이지 fetching 중에는 기존 리스트를 유지하고 중복 호출은 shared hook lock과 `isFetchingNextPage`로 막습니다.
 - loading state:
   - Header와 FilterBar는 유지합니다.
-  - 첫 페이지 loading은 리스트 영역에 card skeleton 또는 `LoadingScreen` 계열 fallback을 표시합니다.
+  - 첫 페이지 loading은 화면 전체 `LoadingScreen`이 아니라 리스트 영역 card skeleton만 표시합니다.
   - 다음 페이지 fetching은 기존 리스트를 유지하고 하단 sentinel 영역에 pending indicator를 둡니다.
 - error state:
   - 예상 가능한 400 계열 API error는 리스트 영역 local error UI로 표시하고 재시도 버튼을 제공합니다.

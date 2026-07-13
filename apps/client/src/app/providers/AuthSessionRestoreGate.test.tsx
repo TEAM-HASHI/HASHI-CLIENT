@@ -4,6 +4,7 @@ import { StrictMode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AuthSessionRestoreGate } from '@/app/providers/AuthSessionRestoreGate'
+import { ROUTES } from '@/app/router/path'
 import { getAuthMe } from '@/features/auth/api/getAuthMe'
 import { requestTokenReissue } from '@/features/auth/api/reissueToken'
 import {
@@ -45,6 +46,7 @@ describe('AuthSessionRestoreGate', () => {
     mockedGetAuthMe.mockReset()
     mockedGetApiAccessToken.mockReset()
     clearAuthSession()
+    window.history.pushState({}, '', '/')
   })
 
   it('restores access token before rendering children', async () => {
@@ -104,6 +106,29 @@ describe('AuthSessionRestoreGate', () => {
     })
     expect(mockedGetAuthMe).toHaveBeenCalledWith()
     expect(getAuthSessionStatus()).toBe('onboarding')
+  })
+
+  it('renders public restaurant list routes while auth restore runs in the background', async () => {
+    mockedRequestTokenReissue.mockResolvedValue({
+      accessToken: 'restored-access-token',
+    })
+    window.history.pushState({}, '', ROUTES.hashiPickRestaurants)
+
+    render(
+      <AuthSessionRestoreGate>
+        <div>하시픽 화면</div>
+      </AuthSessionRestoreGate>,
+    )
+
+    expect(screen.getByText('하시픽 화면')).toBeInTheDocument()
+    expect(
+      screen.queryByText('로그인 상태를 확인하고 있어요'),
+    ).not.toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(getAccessToken()).toBe('restored-access-token')
+    })
+    expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
   })
 
   it('does not authenticate an admin session in the user client', async () => {

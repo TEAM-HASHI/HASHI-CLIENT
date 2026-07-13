@@ -19,7 +19,7 @@ export const RestaurantCard = ({
   }
 
   return (
-    <li className="border-warm-gray-50 w-full border-b py-4.75">
+    <li className="border-warm-gray-50 w-full border-b py-4.75 last:border-b-0">
       <button
         className="flex w-full flex-col text-left"
         onClick={handleClickRestaurant}

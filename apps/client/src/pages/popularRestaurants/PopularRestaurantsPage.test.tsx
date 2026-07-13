@@ -151,6 +151,9 @@ describe('PopularRestaurantsPage', () => {
     expect(
       await screen.findAllByRole('button', { name: /히마와리 스시/ }),
     ).toHaveLength(3)
+    expect(
+      screen.getByRole('button', { name: /히마와리 스시 3/ }).closest('li'),
+    ).toHaveClass('last:border-b-0')
     expect(screen.getAllByText('4.0')).toHaveLength(3)
     expect(mockedGetRestaurants).toHaveBeenCalledWith({
       genre: 'all',

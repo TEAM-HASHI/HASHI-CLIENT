@@ -23,22 +23,23 @@ const renderSkeletonItems = (count: number) => {
   return Array.from({ length: count }, (_, index) => (
     <li
       aria-hidden="true"
-      className="border-warm-gray-50 w-full border-b py-4.75"
+      className="border-warm-gray-50 w-full border-b py-4.75 last:border-b-0"
+      data-testid="restaurant-list-skeleton-item"
       key={index}
     >
       <div className="flex flex-col">
-        <div className="bg-cool-gray-100 h-5 w-40 animate-pulse rounded" />
-        <div className="bg-cool-gray-100 mt-2 h-5 w-28 animate-pulse rounded" />
+        <div className="bg-secondary-200 h-5 w-40 animate-pulse rounded" />
+        <div className="bg-secondary-200 mt-2 h-5 w-28 animate-pulse rounded" />
         <div className="mt-2.75 flex gap-2">
           {Array.from({ length: 3 }, (_, imageIndex) => (
             <div
-              className="bg-cool-gray-100 h-[143px] w-[143px] shrink-0 animate-pulse rounded-[5px]"
+              className="bg-secondary-200 h-[143px] w-[143px] shrink-0 animate-pulse rounded-[5px]"
               key={imageIndex}
             />
           ))}
         </div>
-        <div className="bg-cool-gray-100 mt-3 h-4 w-full animate-pulse rounded" />
-        <div className="bg-cool-gray-100 mt-2 h-4 w-3/4 animate-pulse rounded" />
+        <div className="bg-secondary-200 mt-3 h-4 w-full animate-pulse rounded" />
+        <div className="bg-secondary-200 mt-2 h-4 w-3/4 animate-pulse rounded" />
       </div>
     </li>
   ))
