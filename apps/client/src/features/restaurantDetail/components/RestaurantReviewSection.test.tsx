@@ -116,7 +116,7 @@ describe('RestaurantReviewSection', () => {
   })
 
   it('renders only review list skeleton while review list is loading', () => {
-    renderReviewSection({
+    const { container } = renderReviewSection({
       isReviewListLoading: true,
       reviews: createReviews(10),
     })
@@ -127,6 +127,9 @@ describe('RestaurantReviewSection', () => {
     expect(screen.queryByText('혁줌마')).not.toBeInTheDocument()
     expect(screen.queryByTestId('restaurant-review-load-more')).toBeNull()
     expect(screen.getByRole('button', { name: '최신순' })).toBeInTheDocument()
+    expect(
+      container.querySelectorAll('.bg-secondary-200').length,
+    ).toBeGreaterThan(0)
   })
 
   it('renders default image when review image fails to load', () => {
