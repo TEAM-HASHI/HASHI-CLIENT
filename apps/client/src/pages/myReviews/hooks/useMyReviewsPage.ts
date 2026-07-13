@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { generatePath, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { useDeleteReviewMutation } from '@/features/review/mutations'
+import { useDeleteReviewMutation } from '@/features/review/mutations/useDeleteReviewMutation'
 import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
 import { useVisitedReservationsInfiniteQuery } from '@/features/review/queries/visitedReservations'
 import {

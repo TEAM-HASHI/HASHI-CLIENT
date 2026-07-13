@@ -1,4 +1,4 @@
-import type { VisitedReservation } from '@/features/review/api'
+import type { VisitedReservation } from '@/features/review/api/getVisitedReservations'
 import type { MyReviewSummary } from '@/pages/myReviews/api/myReviewsApi'
 import type {
   WritableReview,

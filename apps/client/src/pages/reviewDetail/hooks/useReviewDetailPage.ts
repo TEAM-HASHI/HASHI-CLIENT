@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { useDeleteReviewMutation } from '@/features/review/mutations'
+import { useDeleteReviewMutation } from '@/features/review/mutations/useDeleteReviewMutation'
 import { useReviewDetailQuery } from '@/pages/reviewDetail/queries/useReviewDetailQuery'
 import { toReviewDetail } from '@/pages/reviewDetail/utils/reviewDetailViewModel'
 

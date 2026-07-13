@@ -4,10 +4,8 @@ import type { PropsWithChildren } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { getMyReviewCount } from '@/features/review/api/getMyReviewCount'
-import {
-  myReviewQueryKeys,
-  useMyReviewCountQuery,
-} from '@/features/review/queries'
+import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
+import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
 
 vi.mock('@/features/review/api/getMyReviewCount', () => ({
   getMyReviewCount: vi.fn(),
