@@ -39,8 +39,7 @@ apps/client/src/pages/mypage/
 ├── MypagePage.tsx
 ├── MypagePage.spec.md
 ├── api/
-│   ├── getMypageProfileSummary.ts
-│   └── getMyReviewCount.ts
+│   └── getMypageProfileSummary.ts
 ├── components/
 │   ├── MypageProfile.tsx
 │   ├── MypagePointSummary.tsx
@@ -329,10 +328,10 @@ Generated OpenAPI type:
 type MyReviewCountResponse = components['schemas']['MyReviewCountResponse']
 ```
 
-page-local normalized type:
+feature normalized type:
 
 ```ts
-type MypageReviewCount = {
+type MyReviewCountData = {
   myReviewCount: number
 }
 ```
@@ -457,7 +456,6 @@ page-local components:
 page-local api:
 
 - `getMypageProfileSummary`
-- `getMyReviewCount`
 
 hooks:
 
@@ -467,6 +465,8 @@ feature api:
 
 - `features/point/api/getMyPointBalance`
 - `features/point/hooks/useMyPointBalanceQuery`
+- `features/review/api/getMyReviewCount`
+- `features/review/queries/useMyReviewCountQuery`
 
 constants:
 

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMyReviewCount } from '@/pages/mypage/api/getMyReviewCount'
+import { getMyReviewCount } from '@/features/review/api/getMyReviewCount'
 import { request } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({
@@ -14,7 +14,7 @@ describe('getMyReviewCount', () => {
     mockRequest.mockReset()
   })
 
-  it('maps current user review count to myReviewCount', async () => {
+  it('maps the current user review count', async () => {
     mockRequest.mockResolvedValue({ reviewCount: 8 })
 
     await expect(getMyReviewCount()).resolves.toEqual({
@@ -23,11 +23,19 @@ describe('getMyReviewCount', () => {
     expect(mockRequest).toHaveBeenCalledWith('/api/v1/reviews/me/count')
   })
 
-  it('falls back to 0 when review count is empty', async () => {
+  it('throws when response data is missing', async () => {
     mockRequest.mockResolvedValue(null)
 
-    await expect(getMyReviewCount()).resolves.toEqual({
-      myReviewCount: 0,
-    })
+    await expect(getMyReviewCount()).rejects.toThrow(
+      'Missing API response data: GET /api/v1/reviews/me/count',
+    )
+  })
+
+  it('throws when review count is missing', async () => {
+    mockRequest.mockResolvedValue({})
+
+    await expect(getMyReviewCount()).rejects.toThrow(
+      'Missing reviewCount: GET /api/v1/reviews/me/count',
+    )
   })
 })
