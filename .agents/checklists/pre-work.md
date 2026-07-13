@@ -28,4 +28,4 @@
 - Jira key, target package, or source design/spec이 없어서 임의 판단이 필요한 경우
 - `docs`와 실제 repository 설정이 서로 다르게 보이는 경우
 - 기존 코드와 충돌하는 새 규칙을 추가해야 하는 경우
-- API 스펙에서 endpoint, response shape, auth, pagination, mutation invalidation을 확정할 수 없는 경우
+- API 스펙에서 endpoint, response shape, auth, pagination, mutation cache synchronization을 확정할 수 없는 경우

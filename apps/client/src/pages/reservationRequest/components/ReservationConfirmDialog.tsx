@@ -7,6 +7,7 @@ interface ReservationConfirmDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
+  isConfirming: boolean
   guestName: string
   guestText: string
   restaurantAddress: string
@@ -48,6 +49,7 @@ export const ReservationConfirmDialog = ({
   open,
   onOpenChange,
   onConfirm,
+  isConfirming,
   guestName,
   guestText,
   restaurantAddress,
@@ -108,6 +110,7 @@ export const ReservationConfirmDialog = ({
           </Dialog.Close>
           <Button
             className="typo-sub-header-2 h-[46px]"
+            disabled={isConfirming}
             onClick={onConfirm}
             size="lg"
             width="full"

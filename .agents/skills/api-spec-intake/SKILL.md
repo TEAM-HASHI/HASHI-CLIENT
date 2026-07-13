@@ -30,7 +30,7 @@ node .agents/scripts/summarize-openapi.mjs <path-or-url>
 2. Extract endpoints, methods, params, request bodies, response shapes, status codes, auth assumptions, pagination shape, and nullable fields.
 3. Classify each operation as query, infinite query, mutation, or non-client concern.
 4. Map each operation to UI states: initial loading, background fetching, empty, error, disabled, success, and optimistic state if explicitly required.
-5. Propose query key factory names, enabled conditions, and invalidation targets.
+5. Propose query key factory names, enabled conditions, and mutation cache synchronization (`setQueryData`, invalidation, or both).
 6. Write an API Integration Map using `references/integration-map-template.md`.
 7. Stop and ask if required implementation data is missing.
 

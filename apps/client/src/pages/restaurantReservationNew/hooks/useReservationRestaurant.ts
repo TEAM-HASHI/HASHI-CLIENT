@@ -1,46 +1,71 @@
 import { useMemo } from 'react'
+import { useSuspenseQueries } from '@tanstack/react-query'
+
+import {
+  restaurantMainQueryOptions,
+  restaurantStoreInformationQueryOptions,
+} from '@/features/restaurantDetail'
+
+const RESERVATION_INTERVAL_MINUTES = 30
+
+export interface ReservationRestaurantBusinessHour {
+  dayOfWeek: string
+  open: string | null
+  close: string | null
+  breakStart: string | null
+  breakEnd: string | null
+  closed: boolean
+}
 
 export interface ReservationRestaurant {
   id: string
   name: string
+  address: string
   imageUrl: string | null
-  businessHours: {
-    open: string
-    close: string
-  }
+  reservationFee: number
+  businessHours: ReservationRestaurantBusinessHour[]
   reservationIntervalMinutes: number
 }
 
-const DEFAULT_RESTAURANT = {
-  id: 'default',
-  name: '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
-  imageUrl: null,
-  businessHours: {
-    open: '11:00',
-    close: '20:00',
-  },
-  reservationIntervalMinutes: 30,
-} satisfies ReservationRestaurant
+const parseRestaurantId = (restaurantId?: string) => {
+  const parsedRestaurantId = Number(restaurantId)
 
-const RESTAURANT_MOCKS: Record<string, ReservationRestaurant> = {
-  default: DEFAULT_RESTAURANT,
-}
-
-const getReservationRestaurant = (restaurantId?: string) => {
-  if (restaurantId && RESTAURANT_MOCKS[restaurantId]) {
-    return RESTAURANT_MOCKS[restaurantId]
+  if (!Number.isSafeInteger(parsedRestaurantId) || parsedRestaurantId <= 0) {
+    throw new Error('유효하지 않은 식당 ID입니다.')
   }
 
-  if (restaurantId) {
-    return {
-      ...DEFAULT_RESTAURANT,
-      id: restaurantId,
-    }
-  }
-
-  return DEFAULT_RESTAURANT
+  return parsedRestaurantId
 }
 
 export const useReservationRestaurant = (restaurantId?: string) => {
-  return useMemo(() => getReservationRestaurant(restaurantId), [restaurantId])
+  const parsedRestaurantId = parseRestaurantId(restaurantId)
+  const [mainQuery, storeInformationQuery] = useSuspenseQueries({
+    queries: [
+      restaurantMainQueryOptions(parsedRestaurantId),
+      restaurantStoreInformationQueryOptions(parsedRestaurantId),
+    ],
+  })
+
+  return useMemo<ReservationRestaurant>(
+    () => ({
+      id: String(mainQuery.data.restaurantId),
+      name: mainQuery.data.name,
+      address: mainQuery.data.address,
+      imageUrl:
+        mainQuery.data.thumbnailUrl ?? mainQuery.data.imageUrls[0] ?? null,
+      reservationFee: mainQuery.data.reservationFee,
+      businessHours: storeInformationQuery.data.businessHours.map(
+        ({ dayOfWeek, openTime, closeTime, breakStart, breakEnd, closed }) => ({
+          dayOfWeek: dayOfWeek ?? '',
+          open: openTime ?? null,
+          close: closeTime ?? null,
+          breakStart: breakStart ?? null,
+          breakEnd: breakEnd ?? null,
+          closed: closed ?? false,
+        }),
+      ),
+      reservationIntervalMinutes: RESERVATION_INTERVAL_MINUTES,
+    }),
+    [mainQuery.data, storeInformationQuery.data.businessHours],
+  )
 }

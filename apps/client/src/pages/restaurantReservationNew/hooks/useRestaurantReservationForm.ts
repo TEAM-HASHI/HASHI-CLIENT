@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import {
   INITIAL_RESERVATION_GUEST_COUNTS,
@@ -23,11 +23,46 @@ interface UseRestaurantReservationFormParams {
 export interface ReservationDraft {
   restaurantId: string
   restaurantName: string
+  restaurantAddress: string
+  restaurantImageUrl: string | null
+  reservationFee: number
   guestName: string
   guests: ReservationGuestCounts
   date: string
   time: string
   requestNote: string
+}
+
+const DAY_OF_WEEK_NAMES = [
+  'SUNDAY',
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+] as const
+
+const getBusinessHoursForDate = (
+  date: Date,
+  businessHours: ReservationRestaurant['businessHours'],
+) => {
+  const dayOfWeek = DAY_OF_WEEK_NAMES[date.getDay()]
+
+  return businessHours.find(
+    (hours) => hours.dayOfWeek.trim().toUpperCase() === dayOfWeek,
+  )
+}
+
+const checkIsReservableBusinessHours = (
+  businessHours: ReservationRestaurant['businessHours'][number] | undefined,
+) => {
+  return Boolean(
+    businessHours &&
+    !businessHours.closed &&
+    businessHours.open &&
+    businessHours.close,
+  )
 }
 
 export const useRestaurantReservationForm = ({
@@ -45,20 +80,54 @@ export const useRestaurantReservationForm = ({
   const [requestNote, setRequestNote] = useState('')
   const minMonth = createMonthStart(new Date())
 
-  const timeSlots = useMemo(
-    () =>
-      createReservationTimeSlots(
+  const checkIsDateDisabled = useCallback(
+    (date: Date) => {
+      const businessHours = getBusinessHoursForDate(
+        date,
         restaurant.businessHours,
-        restaurant.reservationIntervalMinutes,
-      ),
-    [restaurant.businessHours, restaurant.reservationIntervalMinutes],
+      )
+
+      return (
+        checkIsTodayOrBefore(date) ||
+        !checkIsReservableBusinessHours(businessHours)
+      )
+    },
+    [restaurant.businessHours],
   )
+
+  const timeSlots = useMemo(() => {
+    const businessHours = selectedDate
+      ? getBusinessHoursForDate(selectedDate, restaurant.businessHours)
+      : restaurant.businessHours.find(checkIsReservableBusinessHours)
+
+    if (
+      !checkIsReservableBusinessHours(businessHours) ||
+      !businessHours?.open ||
+      !businessHours.close
+    ) {
+      return []
+    }
+
+    return createReservationTimeSlots(
+      {
+        open: businessHours.open,
+        close: businessHours.close,
+        breakStart: businessHours.breakStart,
+        breakEnd: businessHours.breakEnd,
+      },
+      restaurant.reservationIntervalMinutes,
+    )
+  }, [
+    restaurant.businessHours,
+    restaurant.reservationIntervalMinutes,
+    selectedDate,
+  ])
 
   const totalGuestCount =
     guestCounts.adult + guestCounts.teen + guestCounts.child
   const isGuestNameValid = guestName.trim().length > 0
   const isSelectedDateValid =
-    selectedDate !== undefined && !checkIsTodayOrBefore(selectedDate)
+    selectedDate !== undefined && !checkIsDateDisabled(selectedDate)
   const canSubmit =
     isGuestNameValid &&
     totalGuestCount > 0 &&
@@ -99,6 +168,9 @@ export const useRestaurantReservationForm = ({
     return {
       restaurantId: restaurant.id,
       restaurantName: restaurant.name,
+      restaurantAddress: restaurant.address,
+      restaurantImageUrl: restaurant.imageUrl,
+      reservationFee: restaurant.reservationFee,
       guestName: guestName.trim(),
       guests: guestCounts,
       date: formatDateToLocalDateString(selectedDate),
@@ -126,7 +198,7 @@ export const useRestaurantReservationForm = ({
       onIncrease: () => handleGuestCountChange(key, 1),
     })),
     calendar: {
-      isDateDisabled: checkIsTodayOrBefore,
+      isDateDisabled: checkIsDateDisabled,
       minMonth,
       visibleMonth,
       selectedDate,

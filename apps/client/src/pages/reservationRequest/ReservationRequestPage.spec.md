@@ -4,7 +4,9 @@
 
 `/reservations/request`에서 예약자가 입력한 예약 정보를 확인하고, 보유 포인트를 적용한 뒤 최종 예약 진행 전 확인 모달을 보여준다.
 
-이번 범위는 API 없이 퍼블리싱, page-local 입력 상태, 포인트 계산, 확인 모달, 예약 상세 화면 이동까지다.
+예약 확인 모달에서 일반 예약 또는 어디든 예약 생성 API를 호출하고, 성공 응답의 예약 ID로 상세 화면에 이동한다.
+
+보유 포인트 조회 API를 사용하고, 예약 생성 성공 후 포인트 잔액 query를 무효화한다.
 
 ## Route
 
@@ -23,8 +25,6 @@
 - Figma node `3313:74992`: 어디든 예약 식당 이미지 placeholder
 
 ## Data Dependencies
-
-API 호출은 없다.
 
 이전 예약하기 화면에서 `location.state`로 전달한 예약 draft를 사용한다.
 
@@ -49,8 +49,9 @@ interface ReservationRequestDraftBase {
 interface RestaurantReservationRequestDraft extends ReservationRequestDraftBase {
   source?: 'restaurant'
   restaurantId: string
-  restaurantAddress?: string
-  restaurantImageUrl?: string | null
+  restaurantAddress: string
+  restaurantImageUrl: string | null
+  reservationFee: number
 }
 
 interface AnywhereReservationRequestDraft extends ReservationRequestDraftBase {
@@ -61,41 +62,35 @@ interface AnywhereReservationRequestDraft extends ReservationRequestDraftBase {
 }
 ```
 
-직접 URL 진입처럼 `location.state`가 없거나 draft shape이 맞지 않으면 page-local fallback mock을 사용한다.
+직접 URL 진입처럼 `location.state`가 없거나 draft shape이 맞지 않으면 mock 예약을 표시하지 않고 홈으로 replace 이동한다.
 
-```ts
-{
-  source: 'restaurant',
-  restaurantId: 'default',
-  restaurantName: '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
-  guestName: '김하시',
-  guests: {
-    adult: 2,
-    teen: 0,
-    child: 0,
-  },
-  date: '2026-06-01',
-  time: '11:00',
-  requestNote: '',
-}
+보유 포인트는 `GET /api/v1/points/me`를 `pointQueryKeys.myBalance()`로 조회한다. 일반 예약의 결제 기준 금액은 식당 요약 API에서 draft로 전달한 `reservationFee`를 사용하고, 어디든 예약은 기본 수수료 4,000원을 사용한다.
+
+- query mode: 페이지 렌더링에 필요한 값이므로 `useSuspenseQuery`를 사용한다.
+- loading state: route Suspense fallback을 사용한다.
+- error state: 공통 query 오류 정책과 route ErrorBoundary를 사용한다.
+- empty state: 응답 data 또는 `balance`가 없으면 보유 포인트 0으로 표시한다.
+
+예약 확인 모달에서 `예약`을 누르면 draft 유형에 맞는 API를 호출한다.
+
+```http
+POST /api/v1/reservations
+POST /api/v1/reservations/anywhere
 ```
 
-페이지 전용 mock 데이터는 다음 값으로 둔다.
+- `reservedAt`: draft의 `date`와 `time`을 `YYYY-MM-DDTHH:mm:ss`로 결합한다.
+- `usedPoint`: 현재 화면에서 선택한 사용 포인트다.
+- `amount`: 일반 예약은 `reservationFee - usedPoint`, 어디든 예약은 `4000 - usedPoint`다.
+- 일반 예약은 문자열 route param을 양의 정수 `restaurantId`로 변환한다.
+- 어디든 예약은 draft의 `restaurantName`, `restaurantAddress`를 전송한다.
+- 빈 요청사항은 생략한다.
+- 성공 응답에 `reservationId`가 없으면 실패로 처리한다.
+- 생성 응답은 `reservationId`만 보장하고 최신 포인트 잔액이나 완전한 예약 상세 객체를 제공하지 않는다.
+- 같은 화면에 즉시 반영할 완전한 객체가 없고 성공 후 상세 화면으로 이동하므로 `setQueryData`는 사용하지 않는다.
+- 생성 성공 시 `pointQueryKeys.myBalance()`를 무효화한 뒤 예약 상세 화면으로 이동한다.
+- 예약 상세/목록 API query는 아직 없으므로 speculative cache key나 cache write를 추가하지 않는다.
 
-```ts
-{
-  restaurantImageUrl: null,
-  restaurantAddress: '도쿄 키츠라멘 본점도쿄 키츠라멘 본점',
-  availablePoint: 9000,
-  paymentAmount: 4000,
-}
-```
-
-예약 확인 모달에서 `예약`을 누르면 API 없이 mock reservation id를 사용해 예약 상세 화면으로 이동한다.
-
-```ts
-const MOCK_RESERVATION_ID = 'mock-reservation-id'
-```
+공통 API 클라이언트는 `localStorage`의 `accessToken`을 우선 사용한다. 로그인 연동 전 로컬 개발에서는 ignored `.env.local`의 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있으며 운영 빌드에서는 이 fallback을 사용하지 않는다.
 
 ## Requirements
 
@@ -122,7 +117,7 @@ const MOCK_RESERVATION_ID = 'mock-reservation-id'
 
 방문 일정은 `YYYY.M.D. HH:mm` 형식으로 표시한다.
 
-식당 주소는 `location.state.restaurantAddress`가 있으면 해당 값을 우선 표시하고, 없으면 page-local mock 주소를 표시한다.
+식당 주소는 `location.state.restaurantAddress`를 표시한다. 일반 예약은 식당 요약 API 값, 어디든 예약은 사용자가 입력한 값을 이전 단계에서 전달한다.
 
 식당 이미지는 다음 우선순위로 표시한다.
 
@@ -132,6 +127,7 @@ const MOCK_RESERVATION_ID = 'mock-reservation-id'
 
 ### 포인트
 
+- `GET /api/v1/points/me` 응답의 보유 포인트를 사용한다.
 - 남은 보유 포인트를 표시한다.
 - 사용 포인트 입력값은 숫자만 허용한다.
 - 숫자가 아닌 문자는 제거한다.
@@ -159,15 +155,21 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - route를 추가하지 않는다.
 - 모달은 예약자, 인원, 식당 주소, 식당 방문 일정, 최종 결제 금액을 표시한다.
 - `취소` 클릭 시 모달을 닫는다.
-- `예약` 클릭 시 `/reservations/mock-reservation-id`로 이동한다.
+- `예약` 클릭 시 draft 종류에 맞는 예약 생성 mutation을 실행한다.
+- mutation 진행 중에는 `예약` 버튼을 비활성화해 중복 생성을 막는다.
+- 성공 시 모달을 닫고 `/reservations/{reservationId}`로 이동한다.
+- 실패 시 공통 mutation 오류 토스트를 표시하고 모달을 유지한다.
 - 모달 하단의 `취소`, `예약` 버튼 typography는 `typo-sub-header-2`를 사용한다.
 
 ## State
 
 - `location.state`: 이전 화면에서 전달한 예약 draft
+- server state:
+  - `pointQueryKeys.myBalance()`: 현재 사용자 포인트 잔액
 - local state:
   - `usedPoint`
   - `isConfirmOpen`
+  - reservation creation mutation state
 - derived state:
   - `remainingPoint`
   - `finalPaymentAmount`
@@ -193,16 +195,22 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
   - `ReservationPointSection`
   - `ReservationNoticeSection`
   - `ReservationConfirmDialog`
+  - `useCreateReservationMutation`
+  - `createReservation`
+- Feature:
+  - `myPointBalanceQueryOptions`
+  - `pointQueryKeys`
 - Route/shared 영향:
   - 새 route 추가 없음
-  - 새 shared 추가 없음
+  - shared API client의 액세스 토큰 주입 정책 갱신
   - 일반 예약 식당 이미지 fallback은 기존 shared `DefaultImage` 사용
   - 어디든 예약 식당 이미지 fallback은 HDS `HashiPlaceholderIcon` 사용
   - `@hashi/hds-icons`에 `HashiPointMarkIcon`, `HashiPlaceholderIcon` 추가
 
 ## Verification
 
-- 예약 정보가 fallback 또는 `location.state` 기반으로 렌더링된다.
+- 유효한 `location.state` 기반으로 예약 정보가 렌더링된다.
+- draft state가 없거나 잘못되면 홈으로 replace 이동한다.
 - 어디든 예약 state는 사용자가 입력한 식당명/식당 주소를 렌더링한다.
 - 어디든 예약 state에서 식당 이미지가 없으면 `2-a` placeholder를 렌더링한다.
 - 숫자가 아닌 포인트 입력은 제거된다.
@@ -211,7 +219,14 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - 최종 결제 금액과 남은 포인트가 갱신된다.
 - `예약 요청` 클릭 시 확인 모달이 열린다.
 - `취소` 클릭 시 확인 모달이 닫힌다.
-- `예약` 클릭 시 `/reservations/mock-reservation-id`로 이동한다.
+- 일반 예약 draft가 `/api/v1/reservations` 요청 스키마로 변환된다.
+- 어디든 예약 draft가 `/api/v1/reservations/anywhere` 요청 스키마로 변환된다.
+- 포인트 조회 응답이 보유 포인트와 최대 사용 가능 포인트 계산에 반영된다.
+- 일반 예약은 식당 요약 응답의 `reservationFee`를 결제 기준으로 사용한다.
+- 예약 생성 성공 시 포인트 잔액 query가 무효화된다.
+- 예약 생성 성공 시 응답의 `reservationId` 상세 화면으로 이동한다.
+- 예약 생성 실패 시 모달을 유지한다.
+- 예약 생성 중 확인 버튼이 비활성화된다.
 
 검증 명령:
 

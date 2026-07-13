@@ -1,34 +1,42 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
-import { useState } from 'react'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { generatePath, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { myPointBalanceQueryOptions } from '@/features/point'
 import { ReservationConfirmDialog } from '@/pages/reservationRequest/components/ReservationConfirmDialog'
 import { ReservationNoticeSection } from '@/pages/reservationRequest/components/ReservationNoticeSection'
 import { ReservationPointSection } from '@/pages/reservationRequest/components/ReservationPointSection'
 import { ReservationRequestInfoSection } from '@/pages/reservationRequest/components/ReservationRequestInfoSection'
+import { useCreateReservationMutation } from '@/pages/reservationRequest/hooks/useCreateReservationMutation'
 import { useReservationPoint } from '@/pages/reservationRequest/hooks/useReservationPoint'
 import { useReservationRequestDraft } from '@/pages/reservationRequest/hooks/useReservationRequestDraft'
+import type { ReservationRequestDraft } from '@/pages/reservationRequest/hooks/useReservationRequestDraft'
 import { formatReservationDateTime } from '@/pages/reservationRequest/utils/formatReservationDateTime'
 import { formatReservationGuests } from '@/pages/reservationRequest/utils/formatReservationGuests'
 
-const MOCK_RESERVATION_ID = 'mock-reservation-id'
+const ANYWHERE_RESERVATION_FEE = 4_000
 
-const RESERVATION_REQUEST_MOCK = {
-  restaurantImageUrl: null,
-  restaurantAddress: '도쿄 키츠라멘 본점도쿄 키츠라멘 본점',
-  availablePoint: 9000,
-  paymentAmount: 4000,
+interface ReservationRequestContentProps {
+  reservationDraft: ReservationRequestDraft
 }
 
-export const ReservationRequestPage = () => {
+const ReservationRequestContent = ({
+  reservationDraft,
+}: ReservationRequestContentProps) => {
   const navigate = useNavigate()
-  const reservationDraft = useReservationRequestDraft()
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const { data: pointBalance } = useSuspenseQuery(myPointBalanceQueryOptions)
+  const createReservationMutation = useCreateReservationMutation()
+  const paymentAmount =
+    reservationDraft.source === 'anywhere'
+      ? ANYWHERE_RESERVATION_FEE
+      : reservationDraft.reservationFee
   const reservationPoint = useReservationPoint({
-    availablePoint: RESERVATION_REQUEST_MOCK.availablePoint,
-    paymentAmount: RESERVATION_REQUEST_MOCK.paymentAmount,
+    availablePoint: pointBalance.availablePoint,
+    paymentAmount,
   })
 
   const guestText = formatReservationGuests(reservationDraft.guests)
@@ -36,12 +44,8 @@ export const ReservationRequestPage = () => {
     date: reservationDraft.date,
     time: reservationDraft.time,
   })
-  const restaurantAddress =
-    reservationDraft.restaurantAddress ??
-    RESERVATION_REQUEST_MOCK.restaurantAddress
-  const restaurantImageUrl =
-    reservationDraft.restaurantImageUrl ??
-    RESERVATION_REQUEST_MOCK.restaurantImageUrl
+  const restaurantAddress = reservationDraft.restaurantAddress
+  const restaurantImageUrl = reservationDraft.restaurantImageUrl
   const isAnywhereReservation = reservationDraft.source === 'anywhere'
 
   const handleBackClick = () => {
@@ -53,10 +57,25 @@ export const ReservationRequestPage = () => {
   }
 
   const handleConfirmClick = () => {
-    navigate(
-      generatePath(ROUTES.reservationDetail, {
-        reservationId: MOCK_RESERVATION_ID,
-      }),
+    if (createReservationMutation.isPending) {
+      return
+    }
+
+    createReservationMutation.mutate(
+      {
+        draft: reservationDraft,
+        usedPoint: reservationPoint.usedPoint,
+      },
+      {
+        onSuccess: ({ reservationId }) => {
+          setIsConfirmOpen(false)
+          navigate(
+            generatePath(ROUTES.reservationDetail, {
+              reservationId: String(reservationId),
+            }),
+          )
+        },
+      },
     )
   }
 
@@ -107,6 +126,7 @@ export const ReservationRequestPage = () => {
         finalPaymentAmount={reservationPoint.finalPaymentAmount}
         guestName={reservationDraft.guestName}
         guestText={guestText}
+        isConfirming={createReservationMutation.isPending}
         onConfirm={handleConfirmClick}
         onOpenChange={setIsConfirmOpen}
         open={isConfirmOpen}
@@ -115,4 +135,21 @@ export const ReservationRequestPage = () => {
       />
     </div>
   )
+}
+
+export const ReservationRequestPage = () => {
+  const navigate = useNavigate()
+  const reservationDraft = useReservationRequestDraft()
+
+  useEffect(() => {
+    if (!reservationDraft) {
+      navigate(ROUTES.home, { replace: true })
+    }
+  }, [navigate, reservationDraft])
+
+  if (!reservationDraft) {
+    return null
+  }
+
+  return <ReservationRequestContent reservationDraft={reservationDraft} />
 }

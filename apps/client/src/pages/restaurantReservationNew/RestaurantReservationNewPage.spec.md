@@ -5,7 +5,7 @@ Jira: HASHI-78
 ## Purpose
 
 - 로그인한 사용자가 식당 상세 페이지에서 예약 정보를 입력하고 예약 요청 확인 화면으로 이동할 수 있게 한다.
-- 이번 범위는 API 연동 없이 화면 UI, 로컬 입력 상태, CTA 활성/비활성, 다음 화면 이동까지 포함한다.
+- 식당 요약·매장 정보 API를 조회해 실제 식당 정보와 영업시간을 예약 입력에 사용한다.
 
 ## Route
 
@@ -52,10 +52,13 @@ Jira: HASHI-78
 - [x] 오늘 및 오늘 이전 날짜는 선택할 수 없다.
 - [x] 내일 이후 날짜를 선택하면 선택 상태를 표시한다.
 - [x] 날짜를 변경하면 이전에 선택한 시간은 해제한다.
-- [x] 시간 목록은 식당 mock의 영업시간과 예약 간격으로 생성한다.
+- [x] 시간 목록은 선택 날짜에 해당하는 식당 영업시간과 30분 예약 간격으로 생성한다.
+- [x] 휴무이거나 영업시간이 없는 날짜는 선택할 수 없다.
+- [x] 브레이크 타임에 포함되는 시간은 예약 시간 목록에서 제외한다.
 - [x] 날짜가 선택되기 전에는 시간 버튼을 비활성화한다.
 - [x] 선택한 시간만 선택 상태를 표시한다.
-- [x] 요청사항은 선택 입력값으로 보여준다.
+- [x] 요청사항은 HDS 박스형 textarea 기반의 선택 입력값으로 보여준다.
+- [x] 요청사항은 최대 1000자까지 입력할 수 있고 현재 글자 수를 `0/1000` 형식으로 표시한다.
 - [x] 빨간 오류 문구는 렌더링하지 않는다.
 - [x] 필수값이 모두 확정되지 않으면 하단 `다음` CTA를 비활성화한다.
 - [x] 활성화된 CTA 제출 시 `/reservations/request`로 이동한다.
@@ -64,13 +67,17 @@ Jira: HASHI-78
 
 ### Query
 
-- query: none
-- enabled condition: none
-- request params: none
-- loading state: none
-- error state: none
-- empty state: none
-- refetch condition: none
+- query:
+  - `GET /api/v1/restaurants/{restaurantId}/summary`
+  - `GET /api/v1/restaurants/{restaurantId}/store-information`
+- query key:
+  - `restaurantDetailQueryKeys.main(restaurantId)`
+  - `restaurantDetailQueryKeys.storeInformation(restaurantId)`
+- request params: 양의 정수로 변환한 route `restaurantId`
+- loading state: 두 query를 `useSuspenseQueries`로 병렬 실행하고 route Suspense fallback을 사용한다.
+- error state: 공통 query 오류 정책과 route ErrorBoundary를 사용한다.
+- empty state: 예약 필수 응답 필드가 없으면 잘못된 API 응답으로 실패 처리한다.
+- refetch condition: 공통 TanStack Query stale 정책을 따른다.
 
 ### Mutation
 
@@ -102,7 +109,8 @@ Jira: HASHI-78
 - URL state:
   - `restaurantId` route param
 - server state:
-  - none
+  - 식당 요약: 이름, 주소, 이미지, 예약 수수료
+  - 매장 정보: 요일별 영업시간, 브레이크 타임, 휴무 여부
 - derived state:
   - `totalGuestCount`
   - `isGuestNameValid`
@@ -119,7 +127,7 @@ Jira: HASHI-78
   - rule: 총합 1명 이상
   - error message: none
 - `selectedDate`
-  - rule: 내일 이후 날짜
+  - rule: 내일 이후이며 해당 요일에 유효한 영업시간이 있는 날짜
   - error message: none
 - `selectedTime`
   - rule: 시간 선택됨
@@ -140,7 +148,7 @@ RestaurantReservationNewPage
     GuestCounter x 3
     Calendar
     ReservationTimeSelector
-    ReservationUnderlineTextField
+    ReservationRequestNoteField
   ReservationBottomBar
 ```
 
@@ -151,11 +159,13 @@ RestaurantReservationNewPage
   - `IconButton`
   - `Button`
   - `Calendar`
+  - `Textarea` (`ReservationRequestNoteField` 내부)
 - app shared component:
   - none
 - feature component:
   - `GuestCounter`
   - `ReservationUnderlineTextField`
+  - `ReservationRequestNoteField`
   - `ReservationTimeSelector`
   - `ReservationBottomBar`
 - page-local component:
@@ -165,12 +175,14 @@ RestaurantReservationNewPage
 
 ## Error Handling
 
-- API error: none
+- API error:
+  - 식당 조회의 5xx/network/timeout은 route ErrorBoundary에서 처리한다.
+  - 404와 잘못된 응답은 공통 오류 정책에 따라 실패 상태로 처리한다.
 - validation error:
   - visible error message 없음
   - CTA disabled 상태로만 표현
 - exceptional case:
-  - `restaurantId`가 mock에 없으면 기본 식당 데이터를 사용한다.
+  - `restaurantId`가 양의 정수가 아니면 API를 호출하지 않고 오류로 처리한다.
 - user-facing message: none
 - retry or fallback: none
 
@@ -206,10 +218,15 @@ RestaurantReservationNewPage
 - scroll area:
   - 본문은 CTA에 가리지 않도록 하단 padding을 가진다.
 - empty/loading/error layout:
-  - API 연동이 없으므로 없음
+  - route `AsyncBoundary`의 loading/error UI를 사용한다.
 
 ## Verification
 
+- [ ] 요청사항을 1000자까지만 입력할 수 있고 글자 수 counter가 표시된다.
+- [ ] 요청사항이 예약 확인 draft에 포함된다.
+- [ ] 식당 요약 응답의 ID, 이름, 주소, 이미지, 예약 수수료가 draft에 포함된다.
+- [ ] 선택 날짜의 영업시간으로 예약 시간 목록을 생성한다.
+- [ ] 휴무일과 브레이크 타임에는 예약할 수 없다.
 - [ ] `pnpm --filter @hashi/client lint`
 - [ ] `pnpm --filter @hashi/client typecheck`
 - [ ] `pnpm --filter @hashi/client build`

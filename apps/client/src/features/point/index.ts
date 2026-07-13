@@ -1,5 +1,4 @@
 export { getMyPointBalance } from './api/getMyPointBalance'
-export {
-  MY_POINT_BALANCE_QUERY_KEY,
-  useMyPointBalanceQuery,
-} from './hooks/useMyPointBalanceQuery'
+export { useMyPointBalanceQuery } from './hooks/useMyPointBalanceQuery'
+export { pointQueryKeys } from './queries/pointQueryKeys'
+export { myPointBalanceQueryOptions } from './queries/pointQueryOptions'
