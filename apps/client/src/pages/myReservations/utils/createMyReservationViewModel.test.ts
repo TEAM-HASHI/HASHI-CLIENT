@@ -73,7 +73,6 @@ describe('createMyReservationViewModel', () => {
         restaurantThumbnailUrl: 'https://example.com/visited.png',
         visitedAt: '2026-07-10T18:30:00',
         adultCount: 2,
-        reviewed: true,
         reviewId: 51,
         rating: 4,
         earnedPoint: 300,

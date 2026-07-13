@@ -148,9 +148,12 @@ export const createMyVisitedReservationViewModel = (
     visitDateTime: formatReservationDateTime(reservation.visitedAt, '방문'),
     guestSummary: formatPeopleCount(reservation),
     status: 'VISITED',
-    hasReview: reservation.reviewed ?? false,
+    hasReview:
+      reservation.reviewId !== undefined && reservation.reviewId !== null,
     reviewId:
-      reservation.reviewId === undefined ? null : String(reservation.reviewId),
+      reservation.reviewId === undefined || reservation.reviewId === null
+        ? null
+        : String(reservation.reviewId),
     rating: reservation.rating ?? null,
     earnedPoint: reservation.earnedPoint ?? null,
   }

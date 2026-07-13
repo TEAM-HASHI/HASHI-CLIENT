@@ -646,6 +646,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/restaurants/recommendations/random": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 오늘의 식당 중 현재 식당을 제외한 랜덤 추천 조회.
+         * @description 오늘의 식당 중 현재 식당을 제외한 랜덤 추천 조회.
+         */
+        get: operations["getRandomRestaurantRecommendation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reservations/{reservationId}": {
         parameters: {
             query?: never;
@@ -3730,6 +3750,47 @@ export interface operations {
             };
             /** @description 에러 응답 */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    getRandomRestaurantRecommendation: {
+        parameters: {
+            query?: {
+                excludeRestaurantId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseRestaurantMainResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
