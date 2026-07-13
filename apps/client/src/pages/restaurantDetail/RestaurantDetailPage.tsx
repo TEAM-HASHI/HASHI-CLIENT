@@ -8,6 +8,7 @@ import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
 import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import { RestaurantDetailTemplate } from '@/features/restaurantDetail'
 import { useRestaurantDetailContent } from '@/features/restaurantDetail/hooks/useRestaurantDetailContent'
+import { useRestaurantReviewWriteNavigation } from '@/features/restaurantDetail/hooks/useRestaurantReviewWriteNavigation'
 import { restaurantSummaryQueryOptions } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
 import {
   getRestaurantDetailPath,
@@ -54,8 +55,15 @@ const RestaurantDetailContent = ({
     restaurantId,
     summary: summaryQuery.data,
   })
+  const reviewWriteNavigation = useRestaurantReviewWriteNavigation({
+    isAuthenticated,
+    onAuthRequired: () => setIsAuthGateOpen(true),
+    onReviewUnavailable: detailContent.onOpenReviewUnavailableModal,
+    restaurantId,
+  })
 
-  const requestError = summaryQuery.error ?? detailContent.error
+  const requestError =
+    summaryQuery.error ?? detailContent.error ?? reviewWriteNavigation.error
 
   if (requestError) {
     if (checkIsNotFoundError(requestError)) {
@@ -122,7 +130,7 @@ const RestaurantDetailContent = ({
         onPressMenuItem={handlePressMenuItem}
         onPressReservation={handlePressReservation}
         onPressReviewImage={detailContent.onPressReviewImage}
-        onPressWriteReview={detailContent.onPressWriteReview}
+        onPressWriteReview={reviewWriteNavigation.onPressWriteReview}
         onRetryMenuList={detailContent.onRetryMenuList}
         onRetryReviewList={detailContent.onRetryReviewList}
         onSelectReviewSort={detailContent.onSelectReviewSort}

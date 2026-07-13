@@ -10,6 +10,7 @@ import { RestaurantDetailTemplate } from '@/features/restaurantDetail'
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'
 import type { RestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import { useRestaurantDetailContent } from '@/features/restaurantDetail/hooks/useRestaurantDetailContent'
+import { useRestaurantReviewWriteNavigation } from '@/features/restaurantDetail/hooks/useRestaurantReviewWriteNavigation'
 import { randomRestaurantRecommendationQueryOptions } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
 import {
   getRestaurantDetailTabState,
@@ -49,6 +50,12 @@ export const TodayRestaurantPage = () => {
     restaurantId,
     summary,
   })
+  const reviewWriteNavigation = useRestaurantReviewWriteNavigation({
+    isAuthenticated,
+    onAuthRequired: () => setIsAuthGateOpen(true),
+    onReviewUnavailable: detailContent.onOpenReviewUnavailableModal,
+    restaurantId,
+  })
   const recommendAgainMutation = useMutation({
     mutationFn: ({ excludeRestaurantId }: { excludeRestaurantId?: number }) =>
       getRandomRestaurantRecommendation(
@@ -62,7 +69,8 @@ export const TodayRestaurantPage = () => {
   const requestError =
     randomRecommendationQuery.error ??
     recommendAgainMutation.error ??
-    detailContent.error
+    detailContent.error ??
+    reviewWriteNavigation.error
 
   if (requestError) {
     if (checkIsNotFoundError(requestError)) {
@@ -145,7 +153,7 @@ export const TodayRestaurantPage = () => {
         onPressRecommendAgain={handlePressRecommendAgain}
         onPressReservation={handlePressReservation}
         onPressReviewImage={detailContent.onPressReviewImage}
-        onPressWriteReview={detailContent.onPressWriteReview}
+        onPressWriteReview={reviewWriteNavigation.onPressWriteReview}
         onRetryMenuList={detailContent.onRetryMenuList}
         onRetryReviewList={detailContent.onRetryReviewList}
         onSelectReviewSort={detailContent.onSelectReviewSort}

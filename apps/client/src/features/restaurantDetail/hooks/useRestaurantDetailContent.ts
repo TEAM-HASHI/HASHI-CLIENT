@@ -125,8 +125,7 @@ export const useRestaurantDetailContent = ({
     setIsReviewImageViewerOpen(false)
   }
 
-  const handlePressWriteReview = () => {
-    // TODO: 로그인/방문 여부에 따른 리뷰 작성 플로우 연결
+  const handleOpenReviewUnavailableModal = () => {
     setIsReviewUnavailableModalOpen(true)
   }
 
@@ -158,8 +157,8 @@ export const useRestaurantDetailContent = ({
     menuLoadMoreRef,
     onCloseReviewImageViewer: handleCloseReviewImageViewer,
     onCloseReviewUnavailableModal: handleCloseReviewUnavailableModal,
+    onOpenReviewUnavailableModal: handleOpenReviewUnavailableModal,
     onPressReviewImage: handlePressReviewImage,
-    onPressWriteReview: handlePressWriteReview,
     onRetryMenuList: () => void menusQuery.refetch(),
     onRetryReviewList: () => void reviewsQuery.refetch(),
     onSelectReviewSort: setSelectedReviewSort,
