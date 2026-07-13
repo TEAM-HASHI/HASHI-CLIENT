@@ -28,6 +28,7 @@
 
 ```tsx
 <InputReviewKeyword
+  keywordOptions={reviewKeywordOptions}
   selectedKeywordIds={selectedKeywordIds}
   onSelectedKeywordIdsChange={setSelectedKeywordIds}
 />
@@ -36,6 +37,10 @@
 - public export 여부: `apps/client/src/features/review/components/index.ts`에서 named export합니다.
 - public props type export 여부: `InputReviewKeywordProps`를 함께 export합니다.
 - 키워드 id와 option type은 `apps/client/src/features/review/constants/reviewKeywords.ts`에서 export합니다.
+- `keywordOptions`가 없으면 기존 `REVIEW_KEYWORDS`를 기본값으로 사용합니다.
+- context API의 키워드 선택지를 주입하면 API `code`를 id로, `label`을 화면 문구로 사용합니다.
+- 알려진 API keyword code는 `features/review/constants`의 HDS icon과 매핑합니다.
+- 아직 등록되지 않은 API keyword code는 icon 없이도 안전하게 렌더링합니다.
 - 호출부가 소유하는 책임: 선택 state 보관, form validation, 저장 가능 여부, API mutation.
 - 컴포넌트가 소유하지 않는 책임: 서버 데이터 shape, route params, 리뷰 저장/수정 요청, validation 문구 표시.
 
@@ -45,6 +50,7 @@
 - [x] 안내 문구 `( 키워드를 1개~3개 선택해주세요.)`를 표시합니다.
 - [x] 키워드 선택 영역은 `role="group"`과 `aria-label="리뷰 키워드 선택"`을 가집니다.
 - [x] Figma 기준 10개의 리뷰 키워드를 렌더링합니다.
+- [x] `keywordOptions`가 전달되면 해당 선택지만 렌더링합니다.
 - [x] 각 키워드는 HDS `Badge`와 HDS icon을 사용해 `button`으로 렌더링합니다.
 - [x] 선택된 키워드는 `aria-pressed="true"` 상태를 가집니다.
 - [x] 선택되지 않은 키워드를 누르면 `onSelectedKeywordIdsChange`에 기존 선택값 뒤로 해당 id를 추가해 전달합니다.
@@ -69,6 +75,13 @@ InputReviewKeyword
 ```
 
 ## Props
+
+### `keywordOptions`
+
+- type: `{ id: string; label: string; Icon?: ComponentType<SVGProps<SVGSVGElement>> }[]`
+- required: `false`
+- default: `REVIEW_KEYWORDS`
+- description: 화면에 표시할 키워드 목록입니다. API context의 keyword code와 label을 주입할 수 있습니다.
 
 ### `selectedKeywordIds`
 

@@ -13,6 +13,7 @@ export const HomePage = () => {
     getRestaurantDetailPath,
     handleAnywhereReservationPress,
     homeBanners,
+    homeBannersState,
     hotSnsRestaurants,
     quickLinks,
     searchPath,
@@ -29,7 +30,14 @@ export const HomePage = () => {
           <HomeLogo />
           <HomeSearchEntry to={searchPath} />
         </header>
-        <HomeCurationSection banners={homeBanners} />
+        <HomeCurationSection
+          banners={homeBanners}
+          isError={homeBannersState.isError}
+          isLoading={homeBannersState.isLoading}
+          onRetry={() => {
+            void homeBannersState.onRetry()
+          }}
+        />
         <HomeQuickMenuSection quickLinks={quickLinks} />
         <AnywhereReservationCta
           onReservationPress={handleAnywhereReservationPress}

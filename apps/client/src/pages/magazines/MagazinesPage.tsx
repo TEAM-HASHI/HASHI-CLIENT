@@ -8,9 +8,18 @@ import { RecommendedMagazineSection } from '@/pages/magazines/sections/Recommend
 export const MagazinesPage = () => {
   const {
     handleBackClick,
+    hasNextMagazinePage,
     hasHeroBanners,
     hasRecommendedMagazines,
     heroBanners,
+    isFetchingNextMagazinePage,
+    isHeroBannerError,
+    isHeroBannerLoading,
+    isRecommendedMagazineError,
+    isRecommendedMagazineLoading,
+    loadMoreRef,
+    refetchHeroBanners,
+    refetchRecommendedMagazines,
     recommendedMagazines,
   } = useMagazinesPage()
 
@@ -31,11 +40,26 @@ export const MagazinesPage = () => {
       />
 
       <main className="pt-[75px]">
-        {hasHeroBanners ? (
-          <MagazineHeroBannerSection banners={heroBanners} />
+        {hasHeroBanners || isHeroBannerLoading || isHeroBannerError ? (
+          <MagazineHeroBannerSection
+            banners={heroBanners}
+            isError={isHeroBannerError}
+            isLoading={isHeroBannerLoading}
+            onRetry={() => {
+              void refetchHeroBanners()
+            }}
+          />
         ) : null}
         <RecommendedMagazineSection
+          hasNextPage={hasNextMagazinePage}
+          isError={isRecommendedMagazineError}
+          isFetchingNextPage={isFetchingNextMagazinePage}
+          isLoading={isRecommendedMagazineLoading}
+          loadMoreRef={loadMoreRef}
           magazines={hasRecommendedMagazines ? recommendedMagazines : []}
+          onRetry={() => {
+            void refetchRecommendedMagazines()
+          }}
         />
       </main>
     </div>

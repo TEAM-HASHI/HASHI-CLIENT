@@ -1,3 +1,15 @@
+import type { components } from '@/shared/api/generated/openapi'
+
+type OnboardingRequestBody = components['schemas']['CompleteOnboardingRequest']
+
+interface OnboardingFormDraft {
+  nickname: string
+  birthDate: string
+  phoneNumber: string
+  englishName?: string
+  email: string
+}
+
 export const normalizeDigits = (value: string) => {
   return value.replace(/\D/g, '')
 }
@@ -52,20 +64,39 @@ export const checkIsValidBirthDate = (value: string) => {
   return (
     date.getFullYear() === year &&
     date.getMonth() === month - 1 &&
-    date.getDate() === day
+    date.getDate() === day &&
+    date < new Date()
   )
 }
 
 export const checkIsValidPhoneNumber = (value: string) => {
   const digits = normalizeDigits(value)
 
-  if (digits.startsWith('02')) {
-    return digits.length === 9 || digits.length === 10
-  }
-
-  return digits.length === 10 || digits.length === 11
+  return /^0\d{9,10}$/.test(digits)
 }
 
 export const checkIsValidEmail = (value: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
+
+export const formatBirthDateForOnboarding = (value: string) => {
+  const digits = normalizeDigits(value).slice(0, 8)
+
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`
+}
+
+export const createOnboardingRequestBody = (
+  draft: OnboardingFormDraft,
+  profileImageKey?: string,
+): OnboardingRequestBody => {
+  const nameEng = draft.englishName?.trim()
+
+  return {
+    nickname: draft.nickname,
+    birthDate: formatBirthDateForOnboarding(draft.birthDate),
+    phone: normalizeDigits(draft.phoneNumber),
+    email: draft.email,
+    ...(nameEng ? { nameEng } : {}),
+    ...(profileImageKey ? { profileImageKey } : {}),
+  }
 }

@@ -5,7 +5,7 @@
 ## 저장소 정체
 
 - Package manager: `pnpm`
-- App: `apps/client`
+- Apps: `apps/client`, `apps/admin` (HASHI-91 임시 관리자 콘솔)
 - Shared packages: `packages/hds-ui`, `packages/hds-icons`
 - Shared config: `configs/tsconfig`
 - Generator: `turbo/generators`

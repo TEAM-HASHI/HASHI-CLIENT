@@ -1,5 +1,5 @@
 import { Badge } from '@hashi/hds-ui'
-import type { ComponentPropsWithoutRef } from 'react'
+import type { ComponentPropsWithoutRef, ComponentType, SVGProps } from 'react'
 
 import {
   REVIEW_KEYWORD_MAX_SELECTED_COUNT,
@@ -9,15 +9,23 @@ import {
 import { getNextSelectedReviewKeywordIds } from '@/features/review/utils'
 import { cn } from '@/shared/utils'
 
+export interface InputReviewKeywordOption {
+  id: ReviewKeywordId
+  label: string
+  Icon?: ComponentType<SVGProps<SVGSVGElement>>
+}
+
 export interface InputReviewKeywordProps extends Omit<
   ComponentPropsWithoutRef<'section'>,
   'children' | 'onChange'
 > {
+  keywordOptions?: InputReviewKeywordOption[]
   selectedKeywordIds?: ReviewKeywordId[]
   onSelectedKeywordIdsChange?: (selectedKeywordIds: ReviewKeywordId[]) => void
 }
 
 export const InputReviewKeyword = ({
+  keywordOptions = REVIEW_KEYWORDS,
   selectedKeywordIds = [],
   onSelectedKeywordIdsChange,
   className,
@@ -45,7 +53,7 @@ export const InputReviewKeyword = ({
         className="flex w-full flex-wrap gap-x-2 gap-y-3 overflow-hidden px-0.5 py-1"
         role="group"
       >
-        {REVIEW_KEYWORDS.map(({ id, label, Icon }) => {
+        {keywordOptions.map(({ id, label, Icon }) => {
           const isSelected = selectedKeywordIdSet.has(id)
           const isAdditionDisabled = !isSelected && hasReachedMaxSelection
 
@@ -53,7 +61,7 @@ export const InputReviewKeyword = ({
             <Badge
               aria-disabled={isAdditionDisabled ? 'true' : undefined}
               className="rounded-[5px] border px-2.5 py-1"
-              icon={<Icon aria-hidden="true" />}
+              icon={Icon ? <Icon aria-hidden="true" /> : undefined}
               interactive
               key={id}
               label={label}

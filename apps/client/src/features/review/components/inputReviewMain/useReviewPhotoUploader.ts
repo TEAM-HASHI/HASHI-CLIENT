@@ -6,7 +6,9 @@ import {
   REVIEW_PHOTO_MAX_COUNT_ERROR_MESSAGE,
   REVIEW_PHOTO_MAX_SIZE_BYTES,
   REVIEW_PHOTO_SIZE_ERROR_MESSAGE,
+  REVIEW_PHOTO_TYPE_ERROR_MESSAGE,
 } from '@/features/review/constants'
+import { checkIsSupportedReviewPhotoFile } from '@/features/review/utils'
 
 type UseReviewPhotoUploaderParams = {
   disabled: boolean
@@ -47,18 +49,25 @@ export const useReviewPhotoUploader = ({
       REVIEW_PHOTO_MAX_COUNT - photoFiles.length,
       0,
     )
-    const validPhotoFiles = selectedPhotoFiles.filter(
+    const supportedPhotoFiles = selectedPhotoFiles.filter(
+      checkIsSupportedReviewPhotoFile,
+    )
+    const validPhotoFiles = supportedPhotoFiles.filter(
       (selectedPhotoFile) =>
         selectedPhotoFile.size <= REVIEW_PHOTO_MAX_SIZE_BYTES,
     )
     const nextPhotoFiles = validPhotoFiles.slice(0, availablePhotoCount)
+    const hasRejectedPhotoFilesByType =
+      supportedPhotoFiles.length !== selectedPhotoFiles.length
     const hasRejectedPhotoFilesBySize =
-      validPhotoFiles.length !== selectedPhotoFiles.length
+      validPhotoFiles.length !== supportedPhotoFiles.length
     const hasRejectedPhotoFilesByCount =
       validPhotoFiles.length > availablePhotoCount
     let nextPhotoErrorMessage = ''
 
-    if (hasRejectedPhotoFilesBySize) {
+    if (hasRejectedPhotoFilesByType) {
+      nextPhotoErrorMessage = REVIEW_PHOTO_TYPE_ERROR_MESSAGE
+    } else if (hasRejectedPhotoFilesBySize) {
       nextPhotoErrorMessage = REVIEW_PHOTO_SIZE_ERROR_MESSAGE
     } else if (hasRejectedPhotoFilesByCount) {
       nextPhotoErrorMessage = REVIEW_PHOTO_MAX_COUNT_ERROR_MESSAGE

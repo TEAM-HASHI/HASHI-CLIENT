@@ -24,6 +24,7 @@ export const ROUTES = {
   myReservations: '/my-reservations',
   reservationDetail: '/reservations/:reservationId',
   loginRequired: '/login-required',
+  kakaoOAuthCallback: '/oauth/callback/kakao',
 } as const
 
 export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES]

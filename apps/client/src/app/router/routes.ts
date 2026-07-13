@@ -3,7 +3,11 @@ import type { RouteObject } from 'react-router-dom'
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import { RootLayout } from '@/app/layout/RootLayout'
-import { lazyPages, withLazyFallback } from '@/app/router/lazy'
+import {
+  lazyPages,
+  withLazyFallback,
+  withSilentLazyFallback,
+} from '@/app/router/lazy'
 import { ROUTES } from '@/app/router/path'
 import { AuthOnlyRoute, GuestOnlyRoute } from '@/app/router/RouteGuards'
 import { HomePage } from '@/pages/home'
@@ -48,11 +52,11 @@ export const appRoutes: RouteObject[] = [
       },
       {
         path: ROUTES.hashiPickRestaurants,
-        element: withLazyFallback(lazyPages.hashiPick()),
+        element: withSilentLazyFallback(lazyPages.hashiPick()),
       },
       {
         path: ROUTES.popularRestaurants,
-        element: withLazyFallback(lazyPages.popularRestaurants()),
+        element: withSilentLazyFallback(lazyPages.popularRestaurants()),
       },
       {
         path: ROUTES.magazines,
@@ -61,6 +65,10 @@ export const appRoutes: RouteObject[] = [
       {
         path: ROUTES.magazineDetail,
         element: withLazyFallback(lazyPages.magazineDetail()),
+      },
+      {
+        path: ROUTES.kakaoOAuthCallback,
+        element: withLazyFallback(lazyPages.kakaoOAuthCallback()),
       },
       {
         element: withLazyFallback(createElement(AuthOnlyRoute)),

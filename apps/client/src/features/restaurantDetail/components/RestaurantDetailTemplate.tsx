@@ -6,7 +6,8 @@ import {
   MoneySmallIcon,
   StarFillIcon,
 } from '@hashi/hds-icons'
-import { Header, IconButton } from '@hashi/hds-ui'
+import { Header, IconButton, showToast, toastQueue } from '@hashi/hds-ui'
+import type { Ref } from 'react'
 import { useCallback } from 'react'
 
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
@@ -27,6 +28,7 @@ import type {
   RestaurantDetailTab,
   RestaurantDetailVariant,
 } from '@/features/restaurantDetail/types/restaurantDetail'
+import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 import { ShareIconButton } from '@/shared/components/shareIconButton'
 import { cn, copyTextToClipboard } from '@/shared/utils'
 
@@ -37,6 +39,14 @@ interface RestaurantDetailTemplateProps {
   isReviewImageViewerOpen: boolean
   isReviewUnavailableModalOpen: boolean
   restaurant: RestaurantDetail
+  hasMoreMenus: boolean
+  hasMoreReviews: boolean
+  isMenuListError: boolean
+  isReviewListError: boolean
+  isReviewListLoading: boolean
+  menuLoadMoreRef: Ref<HTMLDivElement>
+  reviewLoadMoreRef: Ref<HTMLDivElement>
+  selectedReviewSort: ReviewSortValue
   shareUrl?: string
   title: string
   variant: RestaurantDetailVariant
@@ -47,6 +57,9 @@ interface RestaurantDetailTemplateProps {
   onPressReservation: () => void
   onPressReviewImage: (reviewId: string, imageIndex: number) => void
   onPressWriteReview: () => void
+  onRetryMenuList: () => void
+  onRetryReviewList: () => void
+  onSelectReviewSort: (sort: ReviewSortValue) => void
   onTabChange: (tab: RestaurantDetailTab) => void
   onCloseReviewImageViewer: () => void
   onCloseReviewUnavailableModal: () => void
@@ -59,6 +72,14 @@ export const RestaurantDetailTemplate = ({
   isReviewImageViewerOpen,
   isReviewUnavailableModalOpen,
   restaurant,
+  hasMoreMenus,
+  hasMoreReviews,
+  isMenuListError,
+  isReviewListError,
+  isReviewListLoading,
+  menuLoadMoreRef,
+  reviewLoadMoreRef,
+  selectedReviewSort,
   shareUrl,
   title,
   variant,
@@ -69,6 +90,9 @@ export const RestaurantDetailTemplate = ({
   onPressReservation,
   onPressReviewImage,
   onPressWriteReview,
+  onRetryMenuList,
+  onRetryReviewList,
+  onSelectReviewSort,
   onTabChange,
   onCloseReviewImageViewer,
   onCloseReviewUnavailableModal,
@@ -87,19 +111,29 @@ export const RestaurantDetailTemplate = ({
       window.scrollY -
       RESTAURANT_DETAIL_HEADER_HEIGHT
 
-    window.scrollTo({ top: nextScrollTop })
+    window.scrollTo({ top: nextScrollTop, behavior: 'smooth' })
   }, [markerRef])
 
   const handleTabChange = (tab: RestaurantDetailTab) => {
     onTabChange(tab)
 
-    if (tab !== 'info') {
-      requestAnimationFrame(scrollToTabBarTop)
+    if (tab === 'info') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
     }
+
+    requestAnimationFrame(scrollToTabBarTop)
   }
 
-  const handlePressCopyRestaurantName = () => {
-    void copyTextToClipboard(restaurant.name)
+  const handlePressCopyRestaurantName = async () => {
+    const isCopied = await copyTextToClipboard(restaurant.name)
+
+    if (!isCopied) {
+      return
+    }
+
+    toastQueue.clear()
+    showToast({ children: '식당명이 복사되었어요' })
   }
 
   return (
@@ -171,10 +205,7 @@ export const RestaurantDetailTemplate = ({
           <div className="flex items-center gap-2">
             <dt className="sr-only">영업시간</dt>
             <ClockSmallIcon aria-hidden="true" className="size-4 shrink-0" />
-            <dd>
-              {restaurant.visitDateLabel} {restaurant.openTime} ~{' '}
-              {restaurant.closeTime}
-            </dd>
+            <dd>{restaurant.businessHoursSummary}</dd>
           </div>
           <div className="flex items-center gap-2">
             <dt className="sr-only">예약금</dt>
@@ -215,17 +246,28 @@ export const RestaurantDetailTemplate = ({
         <RestaurantInfoSection restaurant={restaurant} />
       ) : activeTab === 'menu' ? (
         <RestaurantMenuSection
+          hasMoreMenus={hasMoreMenus}
+          isMenuListError={isMenuListError}
+          loadMoreRef={menuLoadMoreRef}
           menus={restaurant.menus}
           onPressMenuItem={onPressMenuItem}
+          onRetryMenuList={onRetryMenuList}
         />
       ) : (
         <RestaurantReviewSection
+          hasMoreReviews={hasMoreReviews}
+          isReviewListError={isReviewListError}
+          isReviewListLoading={isReviewListLoading}
+          loadMoreRef={reviewLoadMoreRef}
           onPressReviewImage={onPressReviewImage}
+          onRetryReviewList={onRetryReviewList}
           onPressWriteReview={onPressWriteReview}
+          onSelectSort={onSelectReviewSort}
           rating={restaurant.rating}
           restaurantName={restaurant.name}
           reviewCount={restaurant.reviewCount}
           reviews={restaurant.reviews}
+          selectedSort={selectedReviewSort}
         />
       )}
 

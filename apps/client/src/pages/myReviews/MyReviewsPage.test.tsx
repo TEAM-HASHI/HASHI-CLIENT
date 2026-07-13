@@ -1,9 +1,22 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
+import { deleteReview } from '@/features/review/api/deleteReview'
+import { getMyReviewCount } from '@/features/review/api/getMyReviewCount'
+import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
+import { getMyReviews } from '@/pages/myReviews/api/myReviewsApi'
 import { MyReviewsPage } from '@/pages/myReviews/MyReviewsPage'
+import emptyImage from '@/shared/assets/images/empty.webp'
 
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -19,153 +32,265 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+vi.mock('@/pages/myReviews/api/myReviewsApi', () => ({
+  getMyReviews: vi.fn(),
+}))
+
+vi.mock('@/features/review/api/deleteReview', () => ({
+  deleteReview: vi.fn(),
+}))
+
+vi.mock('@/features/review/api/getMyReviewCount', () => ({
+  getMyReviewCount: vi.fn(),
+}))
+
+vi.mock('@/features/review/api/getVisitedReservations', () => ({
+  getVisitedReservations: vi.fn(),
+}))
+
+const writableReservations = [
+  {
+    adultCount: 2,
+    reservationId: 23,
+    restaurantId: 1,
+    restaurantName: '아키토리 라멘',
+    visitedAt: '2026-06-28T19:00:00+09:00',
+  },
+  {
+    adultCount: 1,
+    reservationId: 22,
+    restaurantId: 2,
+    restaurantName: '하시 스시',
+    visitedAt: '2026-06-22T17:00:00+09:00',
+  },
+]
+
+const writtenReviews = Array.from({ length: 4 }, (_, index) => ({
+  rating: 5,
+  reviewId: 31 + index,
+  restaurantId: index + 1,
+  restaurantName: `작성한 식당 ${index + 1}`,
+  visitedAt: '2026-06-22T17:00:00+09:00',
+}))
+
+const renderPage = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      mutations: { retry: false },
+      queries: { retry: false },
+    },
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MyReviewsPage />
+    </QueryClientProvider>,
+  )
+}
+
+const mockIntersectionObserver = () => {
+  let triggerIntersect = () => {}
+
+  const IntersectionObserverMock = vi.fn(
+    (callback: IntersectionObserverCallback) => {
+      triggerIntersect = () => {
+        callback(
+          [{ isIntersecting: true } as IntersectionObserverEntry],
+          {} as IntersectionObserver,
+        )
+      }
+
+      return {
+        observe: vi.fn(),
+        unobserve: vi.fn(),
+        disconnect: vi.fn(),
+        root: null,
+        rootMargin: '',
+        thresholds: [],
+        takeRecords: vi.fn(() => []),
+      }
+    },
+  )
+
+  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
+
+  return {
+    triggerIntersect: () => {
+      act(() => {
+        triggerIntersect()
+      })
+    },
+  }
+}
+
 describe('MyReviewsPage', () => {
+  beforeEach(() => {
+    vi.mocked(getVisitedReservations).mockResolvedValue({
+      content: writableReservations,
+      hasNext: false,
+      totalCount: 2,
+    })
+    vi.mocked(getMyReviews).mockResolvedValue({
+      content: writtenReviews,
+      hasNext: false,
+    })
+    vi.mocked(getMyReviewCount).mockResolvedValue({ myReviewCount: 4 })
+    vi.mocked(deleteReview).mockResolvedValue(null)
+  })
+
   afterEach(() => {
     cleanup()
     mockNavigate.mockClear()
+    vi.clearAllMocks()
   })
 
-  it('renders writable review tab as the initial tab', () => {
-    render(<MyReviewsPage />)
+  it('renders API-backed writable reviews and their server count', async () => {
+    renderPage()
 
-    expect(screen.getByText('마이 리뷰')).toBeTruthy()
-    expect(screen.getByRole('banner')).toHaveClass('shadow-none')
-    expect(screen.getByRole('tab', { name: '리뷰 쓰기 2' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    )
+    expect(screen.getByText('리뷰 목록을 불러오는 중입니다.')).toBeVisible()
+    expect(
+      await screen.findByRole('tab', { name: '리뷰 쓰기 2' }),
+    ).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: '작성한 리뷰 4' })).toBeVisible()
+    expect(getVisitedReservations).not.toHaveBeenCalledWith({
+      reviewStatus: 'reviewed',
+      size: 1,
+    })
     expect(
       screen.getByText((_, element) => element?.textContent === '총 2건'),
-    ).toBeTruthy()
-    expect(screen.getByTestId('writable-review-list')).toHaveClass('gap-3')
-    const reviewWriteButtons = screen.getAllByRole('button', {
-      name: '리뷰 작성',
-    })
-
-    expect(reviewWriteButtons).toHaveLength(2)
-    expect(reviewWriteButtons[0]).toHaveClass('bg-cool-gray-800')
-    expect(screen.getAllByTestId('my-review-default-image')).toHaveLength(2)
+    ).toBeVisible()
+    expect(screen.getAllByRole('button', { name: '리뷰 작성' })).toHaveLength(2)
   })
 
-  it('navigates to review new page from writable review card', () => {
-    render(<MyReviewsPage />)
+  it('does not request the same next writable review page twice when the sentinel intersects repeatedly', async () => {
+    const { triggerIntersect } = mockIntersectionObserver()
 
-    fireEvent.click(screen.getAllByRole('button', { name: '리뷰 작성' })[0])
+    vi.mocked(getVisitedReservations)
+      .mockResolvedValueOnce({
+        content: [writableReservations[0]],
+        hasNext: true,
+        nextCursor: 20,
+        totalCount: 2,
+      })
+      .mockResolvedValueOnce({
+        content: [writableReservations[1]],
+        hasNext: false,
+        totalCount: 2,
+      })
 
-    expect(mockNavigate).toHaveBeenCalledWith('/restaurants/1/reviews/new')
+    renderPage()
+
+    expect(await screen.findByText('아키토리 라멘')).toBeVisible()
+
+    triggerIntersect()
+    triggerIntersect()
+
+    expect(await screen.findByText('하시 스시')).toBeVisible()
+    expect(getVisitedReservations).toHaveBeenCalledTimes(2)
   })
 
-  it('renders written review list after tab change and opens review menu', () => {
-    render(<MyReviewsPage />)
+  it('navigates to review new with restaurant and reservation IDs', async () => {
+    renderPage()
 
-    fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
-    fireEvent.click(screen.getAllByLabelText(/리뷰 메뉴 열기/)[0])
-
-    expect(screen.getByRole('tab', { name: '작성한 리뷰 4' })).toHaveAttribute(
-      'aria-selected',
-      'true',
+    fireEvent.click(
+      (await screen.findAllByRole('button', { name: '리뷰 작성' }))[0],
     )
-    expect(screen.getAllByRole('img', { name: '평점 5점' })).toHaveLength(4)
-    expect(screen.getAllByTestId('my-review-default-image')).toHaveLength(4)
-    expect(screen.getByRole('menu')).toBeTruthy()
-    expect(screen.getByRole('menuitem', { name: '수정하기' })).toBeTruthy()
-    expect(screen.getByRole('menuitem', { name: '삭제하기' })).toBeTruthy()
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/restaurants/1/reviews/new?reservationId=23',
+    )
   })
 
-  it('keeps only one written review menu open and closes it on outside click or escape', () => {
-    render(<MyReviewsPage />)
+  it('loads written reviews after tab change and opens one menu at a time', async () => {
+    renderPage()
 
-    fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
-
-    const menuButtons = screen.getAllByLabelText(/리뷰 메뉴 열기/)
+    fireEvent.click(await screen.findByRole('tab', { name: '작성한 리뷰 4' }))
+    const menuButtons = await screen.findAllByLabelText(/리뷰 메뉴 열기/)
 
     fireEvent.click(menuButtons[0])
-    expect(screen.getByRole('menuitem', { name: '수정하기' })).toBeTruthy()
-
     fireEvent.click(menuButtons[1])
+
     expect(screen.getAllByRole('menuitem', { name: '수정하기' })).toHaveLength(
       1,
     )
-
-    fireEvent.mouseDown(document.body)
-    expect(screen.queryByRole('menuitem', { name: '수정하기' })).toBeNull()
-
-    fireEvent.click(menuButtons[1])
-    fireEvent.keyDown(document, { key: 'Escape' })
-    expect(screen.queryByRole('menuitem', { name: '수정하기' })).toBeNull()
+    expect(screen.getAllByRole('img', { name: '평점 5점' })).toHaveLength(4)
+    expect(
+      screen.getByText((_, element) => element?.textContent === '총 4건'),
+    ).toBeVisible()
   })
 
-  it('closes the written review menu when changing tabs', () => {
-    render(<MyReviewsPage />)
+  it('navigates to the API review detail', async () => {
+    renderPage()
 
-    fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
-    fireEvent.click(screen.getAllByLabelText(/리뷰 메뉴 열기/)[0])
-    expect(screen.getByRole('menuitem', { name: '수정하기' })).toBeTruthy()
+    fireEvent.click(await screen.findByRole('tab', { name: '작성한 리뷰 4' }))
+    fireEvent.click(
+      (await screen.findAllByRole('button', { name: /리뷰 상세 보기/ }))[0],
+    )
 
-    fireEvent.click(screen.getByRole('tab', { name: '리뷰 쓰기 2' }))
-    fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
-
-    expect(screen.queryByRole('menuitem', { name: '수정하기' })).toBeNull()
+    expect(mockNavigate).toHaveBeenCalledWith('/reviews/31')
   })
 
-  it('opens coming soon dialog from written review edit menu', () => {
-    render(<MyReviewsPage />)
+  it('deletes through the API and refreshes the written list', async () => {
+    vi.mocked(getMyReviews)
+      .mockResolvedValueOnce({ content: [writtenReviews[0]], hasNext: false })
+      .mockResolvedValue({ content: [], hasNext: false })
+    vi.mocked(getMyReviewCount)
+      .mockResolvedValueOnce({ myReviewCount: 1 })
+      .mockResolvedValue({ myReviewCount: 0 })
+    const { container } = renderPage()
 
-    fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
-    fireEvent.click(screen.getAllByLabelText(/리뷰 메뉴 열기/)[0])
-    fireEvent.click(screen.getByRole('menuitem', { name: '수정하기' }))
+    fireEvent.click(await screen.findByRole('tab', { name: '작성한 리뷰 1' }))
+    fireEvent.click((await screen.findAllByLabelText(/리뷰 메뉴 열기/))[0])
+    fireEvent.click(screen.getByRole('menuitem', { name: '삭제하기' }))
+    fireEvent.click(screen.getByRole('button', { name: '삭제하기' }))
+
+    await waitFor(() =>
+      expect(deleteReview).toHaveBeenCalledWith(31, expect.anything()),
+    )
+    expect(await screen.findByText('작성한 리뷰가 없어요.')).toBeVisible()
+    expect(
+      container.querySelector(`img[src="${emptyImage}"]`),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '일본 맛집 추천받기' }),
+    ).toBeVisible()
+    expect(screen.getByRole('tab', { name: '작성한 리뷰 0' })).toBeVisible()
+  })
+
+  it('shows a local error state and retries the active list', async () => {
+    let writableRequestCount = 0
+
+    vi.mocked(getVisitedReservations).mockImplementation(async () => {
+      writableRequestCount += 1
+
+      if (writableRequestCount === 1) {
+        throw new Error('network')
+      }
+
+      return {
+        content: writableReservations,
+        hasNext: false,
+        totalCount: 2,
+      }
+    })
+    renderPage()
 
     expect(
-      screen.getByRole('dialog', { name: '서비스를 준비하고 있어요.' }),
-    ).toBeInTheDocument()
-    expect(mockNavigate).not.toHaveBeenCalledWith(
-      '/reviews/written-review-1/edit',
-    )
+      await screen.findByText('리뷰 목록을 불러오지 못했습니다.'),
+    ).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도' }))
+
+    expect(
+      (await screen.findAllByRole('button', { name: '리뷰 작성' }))[0],
+    ).toBeVisible()
+    expect(writableRequestCount).toBe(2)
   })
 
-  it('navigates to review detail page from written review card', () => {
-    render(<MyReviewsPage />)
-
-    fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
-    fireEvent.click(
-      screen.getAllByRole('button', { name: /리뷰 상세 보기/ })[0],
-    )
-
-    expect(mockNavigate).toHaveBeenCalledWith('/reviews/written-review-1')
-  })
-
-  it('navigates to mypage from the header back action', () => {
-    render(<MyReviewsPage />)
+  it('navigates back to mypage', async () => {
+    renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.mypage)
-  })
-
-  it('navigates to today restaurant when written reviews become empty', () => {
-    render(<MyReviewsPage />)
-
-    fireEvent.click(screen.getByRole('tab', { name: '작성한 리뷰 4' }))
-
-    for (let index = 0; index < 4; index += 1) {
-      fireEvent.click(screen.getAllByLabelText(/리뷰 메뉴 열기/)[0])
-      fireEvent.click(screen.getByRole('menuitem', { name: '삭제하기' }))
-      fireEvent.click(
-        screen.getByRole('button', {
-          name: '삭제하기',
-        }),
-      )
-    }
-
-    const recommendButton = screen.getByRole('button', {
-      name: '일본 맛집 추천받기',
-    })
-
-    expect(recommendButton).toHaveClass('bg-cool-gray-800')
-
-    fireEvent.click(recommendButton)
-
-    expect(screen.getByText('작성한 리뷰가 없어요.')).toBeTruthy()
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.todayRestaurant)
   })
 })

@@ -2,9 +2,29 @@ name: Vercel Preview Deployment
 
 on:
   pull_request:
+    paths:
+      - '.github/workflows/vercel-preview.yml'
+      - 'apps/client/**'
+      - 'configs/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'vercel.json'
   push:
     branches:
       - develop
+    paths:
+      - '.github/workflows/vercel-preview.yml'
+      - 'apps/client/**'
+      - 'configs/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'vercel.json'
 
 concurrency:
   group: vercel-preview-${{ github.event.pull_request.number || github.ref }}
@@ -63,5 +83,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 Preview deployed: ${{ steps.deploy.outputs.url }}`,
+              body: `🚀 Client Preview deployed: ${{ steps.deploy.outputs.url }}`,
             })

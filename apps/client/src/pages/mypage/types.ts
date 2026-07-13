@@ -1,10 +1,8 @@
 export type MypageSummary = {
-  userId: string
   nickname: string
   profileImageUrl?: string | null
   availablePoint: number
   myReviewCount: number
-  savedRestaurantCount?: number
 }
 
 export type MypageMenuAction =

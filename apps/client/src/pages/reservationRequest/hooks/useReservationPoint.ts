@@ -19,13 +19,27 @@ export const useReservationPoint = ({
   availablePoint,
   paymentAmount,
 }: UseReservationPointParams) => {
-  const [usedPoint, setUsedPoint] = useState(0)
-
   const maxUsablePoint = Math.min(availablePoint, paymentAmount)
+  const [pointState, setPointState] = useState(() => ({
+    maxUsablePoint,
+    usedPoint: 0,
+  }))
+
+  if (pointState.maxUsablePoint !== maxUsablePoint) {
+    setPointState({
+      maxUsablePoint,
+      usedPoint: Math.min(pointState.usedPoint, maxUsablePoint),
+    })
+  }
+
+  const usedPoint = Math.min(pointState.usedPoint, maxUsablePoint)
 
   const applyUsedPoint = useCallback(
     (nextUsedPoint: number) => {
-      setUsedPoint(Math.min(Math.max(0, nextUsedPoint), maxUsablePoint))
+      setPointState({
+        maxUsablePoint,
+        usedPoint: Math.min(Math.max(0, nextUsedPoint), maxUsablePoint),
+      })
     },
     [maxUsablePoint],
   )

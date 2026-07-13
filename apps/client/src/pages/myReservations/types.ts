@@ -2,7 +2,7 @@ import type { ReservationStatusFilterValue } from '@/pages/myReservations/consta
 
 type MyReservationBase = {
   reservationId: string
-  restaurantId: string
+  restaurantId: string | null
   restaurantName: string
   restaurantImageUrl?: string | null
   visitDateTime: string
@@ -12,7 +12,7 @@ type MyReservationBase = {
 
 export type InProgressReservation = MyReservationBase & {
   status: 'IN_PROGRESS'
-  requestedAt: string
+  reservedAt: string
   remainingDays: number
   progressStep: 'RECEIVED' | 'CONTACTING' | 'CONFIRMED'
 }
@@ -24,7 +24,13 @@ export type UpcomingReservation = MyReservationBase & {
 export type VisitedReservation = MyReservationBase & {
   status: 'VISITED'
   hasReview: boolean
+  isReviewable: boolean
   reviewId?: string | null
+  reviewUnavailableReason?:
+    | 'NOT_VISITED'
+    | 'ALREADY_REVIEWED'
+    | 'UNSUPPORTED_RESERVATION_TYPE'
+    | null
   rating?: number | null
   earnedPoint?: number | null
 }

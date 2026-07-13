@@ -1,6 +1,7 @@
 import { CameraIcon, CloseSmallIcon } from '@hashi/hds-icons'
 import type { ChangeEvent, RefObject } from 'react'
 
+import { REVIEW_PHOTO_ACCEPT } from '@/features/review/constants'
 import { cn } from '@/shared/utils'
 
 type PhotoPreviewItem = {
@@ -107,7 +108,7 @@ export const ReviewPhotoUploader = ({
       <input
         ref={photoInputRef}
         id={photoInputId}
-        accept="image/*"
+        accept={REVIEW_PHOTO_ACCEPT}
         aria-label="리뷰 사진 첨부"
         className="sr-only"
         disabled={isPhotoInputDisabled}

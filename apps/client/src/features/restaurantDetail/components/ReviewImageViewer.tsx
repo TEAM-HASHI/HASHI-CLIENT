@@ -1,5 +1,8 @@
 import { CancelIcon } from '@hashi/hds-icons'
 import { Carousel, IconButton } from '@hashi/hds-ui'
+import { useEffect } from 'react'
+
+import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
 
 interface ReviewImageViewerProps {
   imageUrls: string[]
@@ -14,6 +17,26 @@ export const ReviewImageViewer = ({
   open,
   onClose,
 }: ReviewImageViewerProps) => {
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const previousBodyOverflow = document.body.style.overflow
+    const previousBodyPosition = document.body.style.position
+    const previousDocumentOverflow = document.documentElement.style.overflow
+
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.documentElement.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow
+      document.body.style.position = previousBodyPosition
+      document.documentElement.style.overflow = previousDocumentOverflow
+    }
+  }, [open])
+
   if (!open) {
     return null
   }
@@ -22,7 +45,7 @@ export const ReviewImageViewer = ({
     <div
       aria-label="리뷰 이미지 상세보기"
       aria-modal="true"
-      className="bg-cool-gray-900 z-modal fixed inset-0 overflow-hidden rounded-[20px]"
+      className="bg-cool-gray-900 z-modal fixed inset-0 overflow-hidden"
       role="dialog"
     >
       <IconButton
@@ -47,13 +70,12 @@ export const ReviewImageViewer = ({
                   className="bg-primary-100 h-full w-full"
                   data-testid="review-image-viewer-image"
                 >
-                  {imageUrl ? (
-                    <img
-                      alt=""
-                      className="size-full object-cover"
-                      src={imageUrl}
-                    />
-                  ) : null}
+                  <RestaurantImage
+                    className="size-full object-cover"
+                    defaultImageTestId="review-image-viewer-default-image"
+                    logoSize="lg"
+                    src={imageUrl}
+                  />
                 </div>
               </Carousel.Item>
             ))}

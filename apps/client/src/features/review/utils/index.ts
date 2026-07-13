@@ -6,4 +6,5 @@ export {
   checkIsValidReviewPhotoFiles,
   checkIsValidReviewRating,
   checkIsValidReviewText,
+  checkIsSupportedReviewPhotoFile,
 } from './reviewValidation'

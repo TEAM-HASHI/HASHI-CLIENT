@@ -1,17 +1,26 @@
 import '@testing-library/jest-dom/vitest'
+import { QueryClientProvider } from '@tanstack/react-query'
 import {
   act,
   cleanup,
   fireEvent,
   render,
   screen,
-  within,
+  waitFor,
 } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
+import { getRestaurants } from '@/features/restaurantList'
 import { HashiPickPage } from '@/pages/hashiPick/HashiPickPage'
+import { createQueryClient } from '@/shared/lib/queryClient'
+
+vi.mock('@/features/restaurantList/api/getRestaurants', () => ({
+  getRestaurants: vi.fn(),
+}))
+
+const mockedGetRestaurants = vi.mocked(getRestaurants)
 
 const LocationPath = () => {
   const location = useLocation()
@@ -19,15 +28,57 @@ const LocationPath = () => {
   return <div data-testid="location-path">{location.pathname}</div>
 }
 
+const createRestaurantsResult = ({
+  count,
+  hasNext = false,
+  imageUrls = [],
+  nextCursor,
+  rating = 4,
+  startId = 1,
+}: {
+  count: number
+  hasNext?: boolean
+  imageUrls?: string[]
+  nextCursor?: string
+  rating?: number
+  startId?: number
+}): Awaited<ReturnType<typeof getRestaurants>> => {
+  return {
+    hasNext,
+    nextCursor,
+    restaurants: Array.from({ length: count }, (_, index) => {
+      const restaurantId = startId + index
+
+      return {
+        area: '도쿄',
+        foodCategory: '초밥',
+        hashtags: ['해시태그'],
+        imageUrls,
+        name: `히마와리 스시 ${restaurantId}`,
+        rating,
+        restaurantId,
+        summary: '식당 소개를 여기 간단하게 한 줄 적어주세요.',
+      }
+    }),
+  }
+}
+
 const renderHashiPickPage = () => {
+  const queryClient = createQueryClient()
+
   return render(
-    <MemoryRouter initialEntries={[ROUTES.hashiPickRestaurants]}>
-      <Routes>
-        <Route element={<HashiPickPage />} path={ROUTES.hashiPickRestaurants} />
-        <Route element={<LocationPath />} path={ROUTES.restaurantDetail} />
-        <Route element={<LocationPath />} path={ROUTES.home} />
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[ROUTES.hashiPickRestaurants]}>
+        <Routes>
+          <Route
+            element={<HashiPickPage />}
+            path={ROUTES.hashiPickRestaurants}
+          />
+          <Route element={<LocationPath />} path={ROUTES.restaurantDetail} />
+          <Route element={<LocationPath />} path={ROUTES.home} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 
@@ -67,13 +118,20 @@ const mockIntersectionObserver = () => {
 }
 
 describe('HashiPickPage', () => {
+  beforeEach(() => {
+    mockedGetRestaurants.mockResolvedValue(
+      createRestaurantsResult({ count: 3 }),
+    )
+  })
+
   afterEach(() => {
     cleanup()
     document.body.style.overflow = ''
+    mockedGetRestaurants.mockReset()
     vi.unstubAllGlobals()
   })
 
-  it('renders title, filters, and restaurant cards', () => {
+  it('renders title, filters, and restaurants from API response', async () => {
     renderHashiPickPage()
 
     expect(screen.getByTestId('restaurant-list-sticky-header')).toHaveClass(
@@ -84,7 +142,6 @@ describe('HashiPickPage', () => {
     expect(screen.getByTestId('restaurant-list-scroll-content')).toHaveClass(
       'pt-[75px]',
     )
-    expect(screen.getByTestId('restaurant-list')).not.toHaveClass('pt-[123px]')
     expect(
       screen.getByRole('heading', { name: '하시 Pick' }),
     ).toBeInTheDocument()
@@ -94,13 +151,25 @@ describe('HashiPickPage', () => {
     expect(
       screen.getByRole('button', { name: '음식 장르 필터: 음식 장르 선택' }),
     ).toBeInTheDocument()
+
     expect(
-      screen.getAllByRole('button', { name: /히마와리 스시/ }),
-    ).toHaveLength(10)
+      await screen.findAllByRole('button', { name: /히마와리 스시/ }),
+    ).toHaveLength(3)
+    expect(
+      screen.getByRole('button', { name: /히마와리 스시 3/ }).closest('li'),
+    ).toHaveClass('last:border-b-0')
+    expect(screen.getAllByText('4.0')).toHaveLength(3)
+    expect(mockedGetRestaurants).toHaveBeenCalledWith({
+      genre: 'all',
+      size: 10,
+      sort: 'basic',
+      type: 'hashi-pick',
+    })
   })
 
-  it('keeps selected sort unchanged until apply is pressed', () => {
+  it('keeps selected sort unchanged until apply is pressed', async () => {
     renderHashiPickPage()
+    await screen.findByRole('button', { name: /히마와리 스시 1/ })
 
     fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 기본순' }))
     fireEvent.click(screen.getByRole('button', { name: '인기순' }))
@@ -109,9 +178,7 @@ describe('HashiPickPage', () => {
     expect(
       screen.getByRole('button', { name: '정렬 필터: 기본순' }),
     ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: '정렬 필터: 인기순' }),
-    ).not.toBeInTheDocument()
+    expect(mockedGetRestaurants).toHaveBeenCalledTimes(1)
 
     fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 기본순' }))
     fireEvent.click(screen.getByRole('button', { name: '별점순' }))
@@ -120,31 +187,45 @@ describe('HashiPickPage', () => {
     expect(
       screen.getByRole('button', { name: '정렬 필터: 별점순' }),
     ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(mockedGetRestaurants).toHaveBeenLastCalledWith({
+        genre: 'all',
+        size: 10,
+        sort: 'rating',
+        type: 'hashi-pick',
+      })
+    })
   })
 
-  it('resets category to default and closes the bottom sheet when reset is pressed', () => {
+  it('normalizes category filter when apply is pressed', async () => {
     renderHashiPickPage()
+    await screen.findByRole('button', { name: /히마와리 스시 1/ })
 
     fireEvent.click(
       screen.getByRole('button', { name: '음식 장르 필터: 음식 장르 선택' }),
     )
-    fireEvent.click(screen.getByRole('button', { name: '면류' }))
-    fireEvent.click(screen.getByRole('button', { name: '초기화' }))
+    fireEvent.click(screen.getByRole('button', { name: '덮밥류' }))
+    fireEvent.click(screen.getByRole('button', { name: '적용' }))
 
     expect(
-      screen.getByRole('button', {
-        name: '음식 장르 필터: 음식 장르 선택',
-      }),
+      screen.getByRole('button', { name: '음식 장르 필터: 덮밥류' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('dialog', { name: '음식 장르 선택' })).toHaveClass(
-      'animate-bottom-sheet-panel-out',
-    )
+    await waitFor(() => {
+      expect(mockedGetRestaurants).toHaveBeenLastCalledWith({
+        genre: 'rice-bowl',
+        size: 10,
+        sort: 'basic',
+        type: 'hashi-pick',
+      })
+    })
   })
 
-  it('navigates to restaurant detail when a card is pressed', () => {
+  it('navigates to restaurant detail when a card is pressed', async () => {
     renderHashiPickPage()
 
-    fireEvent.click(screen.getAllByRole('button', { name: /히마와리 스시/ })[0])
+    fireEvent.click(
+      await screen.findByRole('button', { name: /히마와리 스시 1/ }),
+    )
 
     expect(screen.getByTestId('location-path')).toHaveTextContent(
       '/restaurants/1',
@@ -159,37 +240,94 @@ describe('HashiPickPage', () => {
     expect(screen.getByTestId('location-path')).toHaveTextContent(ROUTES.home)
   })
 
-  it('renders five fallback image slots that follow the parent content width', () => {
-    renderHashiPickPage()
-    const imageList = screen.getAllByTestId('restaurant-image-list')[0]
+  it('renders secondary color skeletons while the first page is loading', () => {
+    mockedGetRestaurants.mockReturnValueOnce(new Promise(() => {}))
 
-    expect(screen.queryAllByRole('img')).toHaveLength(0)
-    expect(imageList).toHaveClass('w-full', 'overflow-x-auto')
-    expect(imageList).not.toHaveClass('max-w-[353px]')
+    renderHashiPickPage()
+
+    const skeletonItems = screen.getAllByTestId('restaurant-list-skeleton-item')
+
+    expect(skeletonItems).toHaveLength(3)
+    expect(skeletonItems[2]).toHaveClass('last:border-b-0')
     expect(
-      within(imageList).getAllByTestId('restaurant-image-placeholder'),
-    ).toHaveLength(5)
+      skeletonItems[0]?.querySelector('.bg-secondary-200'),
+    ).toBeInTheDocument()
+    expect(
+      skeletonItems[0]?.querySelector('.bg-cool-gray-100'),
+    ).not.toBeInTheDocument()
   })
 
-  it('loads restaurants in 10 item chunks when the bottom sentinel enters the viewport', () => {
+  it('renders only image urls returned by the server', async () => {
+    mockedGetRestaurants.mockResolvedValueOnce(
+      createRestaurantsResult({
+        count: 1,
+        imageUrls: [
+          'https://example.com/restaurant-1.jpg',
+          'https://example.com/restaurant-2.jpg',
+          'https://example.com/restaurant-3.jpg',
+        ],
+      }),
+    )
+
+    renderHashiPickPage()
+    await screen.findByRole('button', { name: /히마와리 스시 1/ })
+    const imageList = screen.getAllByTestId('restaurant-image-list')[0]
+
+    expect(imageList).toHaveClass('w-full', 'overflow-x-auto')
+    expect(imageList).not.toHaveClass('max-w-[353px]')
+    expect(screen.getAllByRole('img')).toHaveLength(3)
+    expect(screen.queryByTestId('restaurant-image-placeholder')).toBeNull()
+  })
+
+  it('renders one default image when no image is returned by the server', async () => {
+    mockedGetRestaurants.mockResolvedValueOnce(
+      createRestaurantsResult({
+        count: 1,
+        imageUrls: [],
+      }),
+    )
+
+    renderHashiPickPage()
+    await screen.findByRole('button', { name: /히마와리 스시 1/ })
+
+    expect(screen.queryAllByRole('img')).toHaveLength(0)
+    expect(screen.getAllByTestId('restaurant-image-placeholder')).toHaveLength(
+      1,
+    )
+  })
+
+  it('fetches next page when the bottom sentinel enters the viewport', async () => {
+    mockedGetRestaurants
+      .mockResolvedValueOnce(
+        createRestaurantsResult({
+          count: 10,
+          hasNext: true,
+          nextCursor: 'c-10',
+        }),
+      )
+      .mockResolvedValueOnce(createRestaurantsResult({ count: 2, startId: 11 }))
     const { triggerIntersect } = mockIntersectionObserver()
 
     renderHashiPickPage()
 
     expect(
-      screen.getAllByRole('button', { name: /히마와리 스시/ }),
+      await screen.findAllByRole('button', { name: /히마와리 스시/ }),
     ).toHaveLength(10)
+    await screen.findByTestId('restaurant-list-load-more')
 
     triggerIntersect()
 
+    await waitFor(() => {
+      expect(mockedGetRestaurants).toHaveBeenLastCalledWith({
+        cursor: 'c-10',
+        genre: 'all',
+        size: 10,
+        sort: 'basic',
+        type: 'hashi-pick',
+      })
+    })
     expect(
-      screen.getAllByRole('button', { name: /히마와리 스시/ }),
-    ).toHaveLength(20)
-
-    triggerIntersect()
-
-    expect(
-      screen.getAllByRole('button', { name: /히마와리 스시/ }),
-    ).toHaveLength(25)
+      await screen.findAllByRole('button', { name: /히마와리 스시/ }),
+    ).toHaveLength(12)
   })
 })

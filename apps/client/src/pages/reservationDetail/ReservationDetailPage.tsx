@@ -7,6 +7,8 @@ import { ReservationNoticeSection } from '@/pages/reservationDetail/components/R
 import { ReservationProgressSection } from '@/pages/reservationDetail/components/ReservationProgressSection'
 import { ReservationReceiptInfoCard } from '@/pages/reservationDetail/components/ReservationReceiptInfoCard'
 import { useReservationDetailPage } from '@/pages/reservationDetail/hooks/useReservationDetailPage'
+import { NotFoundPage } from '@/pages/notFound'
+import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { cn } from '@/shared/utils'
 
 const actionBarSafeSpaceClassName =
@@ -14,17 +16,32 @@ const actionBarSafeSpaceClassName =
 
 export const ReservationDetailPage = () => {
   const {
+    viewModel,
+    error,
+    isInvalidReservationId,
+    isLoading,
+    isNotFound,
+    isCancelingReservation,
     reservationNotices,
-    reservationProgressSteps,
-    reservationReceiptInfoItems,
-    reservationRestaurant,
     isCancelDialogOpen,
     handleBack,
     handleCancelDialogOpenChange,
     handleCancelReservation,
     handleConfirmCancelPress,
-    handleContact,
+    handleHome,
   } = useReservationDetailPage()
+
+  if (isInvalidReservationId || isNotFound) {
+    return <NotFoundPage />
+  }
+
+  if (error) {
+    throw error
+  }
+
+  if (isLoading || !viewModel) {
+    return <LoadingScreen />
+  }
 
   return (
     <section
@@ -45,23 +62,24 @@ export const ReservationDetailPage = () => {
       />
       <div className="px-6">
         <ReservationProgressSection
-          requestedDate="2026.6.21"
+          requestedDate={viewModel.requestedDate}
           requestedLabel="예약 신청"
-          restaurant={reservationRestaurant}
-          steps={reservationProgressSteps}
+          restaurant={viewModel.reservationRestaurant}
+          steps={viewModel.reservationProgressSteps}
         />
         <ReservationReceiptInfoCard
-          items={reservationReceiptInfoItems}
+          items={viewModel.reservationReceiptInfoItems}
           title="예약 접수 정보"
         />
       </div>
       <ReservationNoticeSection notices={reservationNotices} />
       <ReservationDetailActionBar
         onCancel={handleCancelReservation}
-        onContact={handleContact}
+        onHome={handleHome}
       />
       <ReservationCancelDialog
         open={isCancelDialogOpen}
+        isConfirming={isCancelingReservation}
         onConfirmCancelPress={handleConfirmCancelPress}
         onOpenChange={handleCancelDialogOpenChange}
       />

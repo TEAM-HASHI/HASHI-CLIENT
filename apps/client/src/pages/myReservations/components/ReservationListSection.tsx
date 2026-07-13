@@ -1,4 +1,6 @@
 import { Empty } from '@/shared/components/empty'
+import type { Ref } from 'react'
+
 import { ReservationCardsByStatus } from '@/pages/myReservations/components/ReservationCardsByStatus'
 import { ReservationListSummary } from '@/pages/myReservations/components/ReservationListSummary'
 import type { ReservationStatusFilterValue } from '@/pages/myReservations/constants/reservationStatus'
@@ -11,6 +13,9 @@ type ReservationListSectionProps = {
   selectedStatus: ReservationStatusFilterValue
   reservations: MyReservation[]
   totalCount: number
+  hasNextPage: boolean
+  isLoading: boolean
+  loadMoreRef: Ref<HTMLDivElement>
   onCancelPress: (reservationId: string) => void
   onContactPress: (reservationId: string) => void
   onDetailPress: (reservationId: string) => void
@@ -22,6 +27,9 @@ export const ReservationListSection = ({
   selectedStatus,
   reservations,
   totalCount,
+  hasNextPage,
+  isLoading,
+  loadMoreRef,
   onCancelPress,
   onContactPress,
   onDetailPress,
@@ -33,7 +41,11 @@ export const ReservationListSection = ({
   return (
     <section className="flex min-h-0 flex-1 flex-col">
       <ReservationListSummary totalCount={totalCount} sortLabel="최신순" />
-      {hasReservations ? (
+      {isLoading ? (
+        <p className="typo-body-6 text-cool-gray-600 py-10 text-center">
+          예약 정보를 불러오는 중
+        </p>
+      ) : hasReservations ? (
         <div className="mb-2 flex flex-col gap-4">
           <ReservationCardsByStatus
             reservations={reservations}
@@ -43,6 +55,13 @@ export const ReservationListSection = ({
             onDetailPress={onDetailPress}
             onReviewPress={onReviewPress}
           />
+          {hasNextPage ? (
+            <div
+              ref={loadMoreRef}
+              aria-hidden="true"
+              data-testid="my-reservations-load-more"
+            />
+          ) : null}
         </div>
       ) : (
         <Empty

@@ -2,7 +2,7 @@ export type HomeBanner = {
   id: string
   imageUrl: string
   imageAlt: string
-  instagramUrl: string
+  instagramUrl: string | null
 }
 
 export type HomeQuickLinkId =
@@ -21,6 +21,6 @@ export type HotSnsRestaurant = {
   restaurantId: string
   name: string
   summary: string
-  imageUrl: string
+  imageUrl?: string
   imageAlt: string
 }

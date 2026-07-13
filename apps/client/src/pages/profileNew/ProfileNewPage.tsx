@@ -7,7 +7,12 @@ import { ProfileNewBottomBar } from '@/pages/profileNew/components/ProfileNewBot
 import { useProfileNewPage } from '@/pages/profileNew/hooks/useProfileNewPage'
 
 export const ProfileNewPage = () => {
-  const { form, formId, handleBackClick, handleSubmit } = useProfileNewPage()
+  const { boundaryError, form, formId, handleBackClick, handleSubmit } =
+    useProfileNewPage()
+
+  if (boundaryError) {
+    throw boundaryError
+  }
 
   return (
     <div className="min-h-dvh bg-white pb-32">
@@ -29,13 +34,17 @@ export const ProfileNewPage = () => {
 
       <form className="px-6 pt-[75px]" id={formId} onSubmit={handleSubmit}>
         <ProfileImageSection
+          disabled={form.submit.isSubmitting}
           errorMessage={form.profileImage.errorMessage}
           onImageChange={form.profileImage.onChange}
           onImageDelete={form.profileImage.onDelete}
           previewUrl={form.profileImage.previewUrl}
         />
 
-        <ProfileFields fields={form.fields} />
+        <ProfileFields
+          disabled={form.submit.isSubmitting}
+          fields={form.fields}
+        />
 
         {form.formError ? (
           <p className="typo-body-5 text-primary-500 mt-4" role="alert">

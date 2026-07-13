@@ -1,0 +1,62 @@
+name: Vercel Admin Production Deployment
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/vercel-admin-production.yml'
+      - 'apps/admin/**'
+      - 'configs/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'vercel.admin.json'
+
+concurrency:
+  group: vercel-admin-production-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-admin-production:
+    runs-on: ubuntu-latest
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_ADMIN_PROJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint Admin
+        run: pnpm --filter @hashi/admin lint
+
+      - name: Format Check
+        run: pnpm format:check
+
+      - name: Typecheck Admin
+        run: pnpm --filter @hashi/admin typecheck
+
+      - name: Pull Admin Vercel Environment
+        run: pnpm exec vercel pull --yes --environment=production --local-config=vercel.admin.json --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Admin Vercel Output
+        run: pnpm exec vercel build --prod --local-config=vercel.admin.json --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Admin Production
+        run: pnpm exec vercel deploy --prebuilt --prod --local-config=vercel.admin.json --token=${{ secrets.VERCEL_TOKEN }}

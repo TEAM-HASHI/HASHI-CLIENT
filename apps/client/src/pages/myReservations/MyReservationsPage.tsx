@@ -10,6 +10,11 @@ export const MyReservationsPage = () => {
     selectedStatus,
     reservations,
     totalCount,
+    error,
+    isLoading,
+    hasNextPage,
+    isCancelingReservation,
+    loadMoreRef,
     isCancelDialogOpen,
     handleStatusChange,
     handleCancelPress,
@@ -21,6 +26,10 @@ export const MyReservationsPage = () => {
     handleReviewPress,
   } = useMyReservationsPage()
 
+  if (error) {
+    throw error
+  }
+
   return (
     <section className="app-mobile-bottom-nav-content flex flex-col">
       <div className="app-mobile-fixed-top z-fixed shadow-header bg-white px-5 pt-[calc(32px+var(--safe-area-top,0px))]">
@@ -30,11 +39,14 @@ export const MyReservationsPage = () => {
           onStatusChange={handleStatusChange}
         />
       </div>
-      <div className="px-5 pt-[calc(132px+var(--safe-area-top,0px))]">
+      <div className="flex flex-1 flex-col px-5 pt-[calc(132px+var(--safe-area-top,0px))]">
         <ReservationListSection
           reservations={reservations}
           selectedStatus={selectedStatus}
           totalCount={totalCount}
+          hasNextPage={hasNextPage}
+          isLoading={isLoading}
+          loadMoreRef={loadMoreRef}
           onCancelPress={handleCancelPress}
           onContactPress={handleContactPress}
           onDetailPress={handleDetailPress}
@@ -44,6 +56,7 @@ export const MyReservationsPage = () => {
       </div>
       <ReservationCancelDialog
         open={isCancelDialogOpen}
+        isConfirming={isCancelingReservation}
         onConfirmCancelPress={handleConfirmCancelPress}
         onOpenChange={handleCancelDialogOpenChange}
       />

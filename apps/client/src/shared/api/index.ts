@@ -1,6 +1,35 @@
-export { ApiError, isApiError } from './apiError'
+export {
+  ApiError,
+  HttpStatusError,
+  checkHasHttpStatus,
+  checkIsAuthRequiredError,
+  checkIsNotFoundError,
+  checkIsRetryableStatusError,
+  isApiError,
+  isHttpStatusError,
+} from './apiError'
+export {
+  ERROR_CATALOG,
+  checkIsKnownApiErrorCode,
+  getCommonErrorCatalogEntryByStatus,
+  getErrorCatalogEntry,
+  type ErrorCatalogEntry,
+  type KnownApiErrorCode,
+} from './errorCatalog'
+export {
+  DEFAULT_ERROR_MESSAGE,
+  NETWORK_ERROR_MESSAGE,
+  TIMEOUT_ERROR_MESSAGE,
+  getErrorPresentation,
+  type ErrorPresentation,
+} from './errorPresentation'
+export { getApiAccessToken } from './accessToken'
 export { apiClient } from './apiClient'
-export { request } from './request'
+export { request, requestSuccessResponse } from './request'
+export {
+  uploadFileToPresignedUrl,
+  type PresignedUrlUploadTarget,
+} from './uploadFileToPresignedUrl'
 export {
   isErrorResponse,
   type ApiResponse,

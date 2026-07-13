@@ -22,31 +22,34 @@
 ## Redirect Policy
 
 - 비회원이 `authOnly` 페이지에 접근하면 `/login-required`로 이동합니다.
+- 신규 회원 onboarding session은 `/profile/new`에 한해 `AuthOnlyRoute`를 통과할 수 있습니다.
+- 인증 완료 회원이 onboarding 전용 `/profile/new`에 접근하면 `/`로 이동합니다.
 - 회원이 `guestOnly` 페이지인 `/login-required`에 접근하면 `/`로 이동합니다.
 - 존재하지 않는 URL은 `*` route에서 404 페이지를 렌더링합니다.
 - 로그인 유도 바텀시트는 route page가 아니며, `public` 페이지 안에서 로그인 필요한 기능을 비회원이 실행할 때 렌더링합니다.
 
 ## Auth Status
 
-- 현재 `useAuthStatus`는 실제 인증 연동 전 임시 hook입니다.
-- 실제 인증 연동 전까지 기본값은 `unauthenticated`로 두어 route guard 기본 동작을 확인합니다.
-- 회원 전용 화면을 확인해야 할 때는 임시로 값을 바꿀 수 있지만, 머지 전에는 반드시 기본값으로 되돌립니다.
-- 추후 OAuth/API 인증 흐름이 연결되면 `useAuthStatus` 내부 구현을 실제 로그인 상태 기준으로 교체합니다.
+- 현재 `useAuthStatus`는 OAuth callback에서 설정한 in-memory auth session을 기준으로 합니다.
+- `authenticated`는 accessToken이 메모리에 있는 상태입니다.
+- `onboarding`은 신규 회원 callback 이후 onboardingToken HttpOnly Cookie가 설정되었다고 보고 `/profile/new` 진입만 허용하는 상태입니다.
+- accessToken, refreshToken, onboardingToken을 localStorage에 저장하지 않습니다.
 
 ## Public Routes
 
-| Page                 | Path                                       | Notes                                             |
-| -------------------- | ------------------------------------------ | ------------------------------------------------- |
-| 홈 페이지            | `/`                                        | 첫 진입 페이지입니다.                             |
-| 검색 페이지          | `/search`                                  |                                                   |
-| 오늘의 식당 페이지   | `/restaurants/today`                       | 매장 정보, 메뉴, 리뷰 탭을 가집니다.              |
-| 식당 상세 페이지     | `/restaurants/:restaurantId`               | 매장 정보, 메뉴, 리뷰 탭을 가집니다.              |
-| 메뉴 상세 페이지     | `/restaurants/:restaurantId/menus/:menuId` | 식당 메뉴 카드에서 진입하는 메뉴 상세 화면입니다. |
-| hashi 픽 페이지      | `/restaurants/hashi-pick`                  |                                                   |
-| 인기 맛집 페이지     | `/restaurants/popular`                     |                                                   |
-| 지도 페이지          | `/map`                                     | 준비중 페이지를 렌더링합니다.                     |
-| 매거진 리스트 페이지 | `/magazines`                               | 유지 여부 논의 중입니다.                          |
-| 매거진 상세 페이지   | `/magazines/:magazineId`                   | 유지 여부 논의 중입니다.                          |
+| Page                  | Path                                       | Notes                                                              |
+| --------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| 홈 페이지             | `/`                                        | 첫 진입 페이지입니다.                                              |
+| 검색 페이지           | `/search`                                  |                                                                    |
+| 오늘의 식당 페이지    | `/restaurants/today`                       | 매장 정보, 메뉴, 리뷰 탭을 가집니다.                               |
+| 식당 상세 페이지      | `/restaurants/:restaurantId`               | 매장 정보, 메뉴, 리뷰 탭을 가집니다.                               |
+| 메뉴 상세 페이지      | `/restaurants/:restaurantId/menus/:menuId` | 식당 메뉴 카드에서 진입하는 메뉴 상세 화면입니다.                  |
+| hashi 픽 페이지       | `/restaurants/hashi-pick`                  |                                                                    |
+| 인기 맛집 페이지      | `/restaurants/popular`                     |                                                                    |
+| 지도 페이지           | `/map`                                     | 준비중 페이지를 렌더링합니다.                                      |
+| 매거진 리스트 페이지  | `/magazines`                               | 유지 여부 논의 중입니다.                                           |
+| 매거진 상세 페이지    | `/magazines/:magazineId`                   | 유지 여부 논의 중입니다.                                           |
+| 카카오 OAuth callback | `/oauth/callback/kakao`                    | 카카오 인가 code/state 처리 후 기존/신규 회원 흐름으로 분기합니다. |
 
 ## Auth Only Routes
 
@@ -58,7 +61,7 @@
 | 리뷰 수정 페이지   | `/reviews/:reviewId/edit`                     |                                                                                                              |
 | 저장 페이지        | `/saved`                                      | 준비중 페이지를 렌더링합니다.                                                                                |
 | 마이 페이지        | `/mypage`                                     |                                                                                                              |
-| 프로필 생성 페이지 | `/profile/new`                                |                                                                                                              |
+| 프로필 생성 페이지 | `/profile/new`                                | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                 |
 | 탈퇴 페이지        | `/withdrawal`                                 | 유지 여부 논의 중입니다.                                                                                     |
 | 예약 페이지        | `/restaurants/:restaurantId/reservations/new` |                                                                                                              |
 | 어디든 예약 페이지 | `/reservations/anywhere`                      |                                                                                                              |
@@ -71,9 +74,9 @@
 로그인 유도 바텀시트는 route page가 아니라 `AuthGateBottomSheet`로 처리합니다.
 페이지 접근 자체는 허용하지만 내부 기능에 로그인이 필요한 경우에 사용합니다.
 
-| UI                   | Route | Notes                                                                                                   |
-| -------------------- | ----- | ------------------------------------------------------------------------------------------------------- |
-| 로그인 유도 바텀시트 | 없음  | 비로그인 사용자가 `public` 페이지 안에서 예약하기, 저장하기 같은 로그인 필요 기능을 누를 때 표시합니다. |
+| UI                   | Route | Notes                                                                                                                                    |
+| -------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 로그인 유도 바텀시트 | 없음  | 비로그인 사용자가 `public` 페이지 안에서 예약하기, 저장하기 같은 로그인 필요 기능을 누를 때 표시하고 Kakao OAuth 시작 액션을 연결합니다. |
 
 ## Guest Only Routes
 

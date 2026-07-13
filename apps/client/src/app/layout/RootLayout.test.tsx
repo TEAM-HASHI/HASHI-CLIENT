@@ -1,11 +1,28 @@
 import '@testing-library/jest-dom/vitest'
 
 import { cleanup, render, screen } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RootLayout } from '@/app/layout/RootLayout'
 
-const { mockToastRegion } = vi.hoisted(() => ({
+const { mockAsyncBoundary, mockToastRegion } = vi.hoisted(() => ({
+  mockAsyncBoundary: vi.fn(
+    ({
+      children,
+      resetKeys,
+    }: {
+      children: ReactNode
+      resetKeys?: unknown[]
+    }) => (
+      <div
+        data-testid="async-boundary"
+        data-reset-key={String(resetKeys?.[0] ?? '')}
+      >
+        {children}
+      </div>
+    ),
+  ),
   mockToastRegion: vi.fn(({ className }: { className?: string }) => (
     <div data-testid="toast-region" data-class-name={className} />
   )),
@@ -21,6 +38,10 @@ vi.mock('@hashi/hds-ui', () => ({
   ToastRegion: mockToastRegion,
 }))
 
+vi.mock('@/app/providers/AsyncBoundary', () => ({
+  default: mockAsyncBoundary,
+}))
+
 vi.mock('react-router-dom', () => ({
   Outlet: () => <div data-testid="route-outlet" />,
   useLocation: () => mockLocationStore,
@@ -34,6 +55,7 @@ describe('RootLayout', () => {
   afterEach(() => {
     cleanup()
     vi.unstubAllGlobals()
+    mockAsyncBoundary.mockClear()
     mockToastRegion.mockClear()
     mockScrollTo.mockClear()
     mockLocationStore.pathname = '/'
@@ -48,6 +70,17 @@ describe('RootLayout', () => {
     )
   })
 
+  it('keeps route content inside AsyncBoundary and ToastRegion outside it', () => {
+    render(<RootLayout />)
+
+    const boundary = screen.getByTestId('async-boundary')
+    const outlet = screen.getByTestId('route-outlet')
+    const toastRegion = screen.getByTestId('toast-region')
+
+    expect(boundary).toContainElement(outlet)
+    expect(boundary).not.toContainElement(toastRegion)
+  })
+
   it('scrolls to the top when the route pathname changes', () => {
     const { rerender } = render(<RootLayout />)
 
@@ -60,5 +93,22 @@ describe('RootLayout', () => {
       left: 0,
       behavior: 'auto',
     })
+  })
+
+  it('uses the current pathname as the AsyncBoundary reset key', () => {
+    const { rerender } = render(<RootLayout />)
+
+    expect(screen.getByTestId('async-boundary')).toHaveAttribute(
+      'data-reset-key',
+      '/',
+    )
+
+    mockLocationStore.pathname = '/restaurants/restaurant-1'
+    rerender(<RootLayout />)
+
+    expect(screen.getByTestId('async-boundary')).toHaveAttribute(
+      'data-reset-key',
+      '/restaurants/restaurant-1',
+    )
   })
 })

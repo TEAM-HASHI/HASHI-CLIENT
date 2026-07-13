@@ -14,6 +14,10 @@ vi.mock('@/shared/hooks/useAuthStatus', () => ({
   }),
 }))
 
+vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
+  getMagazineBanners: vi.fn(async () => ({ banners: [] })),
+}))
+
 vi.mock('@/pages/mypage', () => ({
   default: () => <main>마이페이지 화면</main>,
 }))
@@ -31,6 +35,18 @@ vi.mock(
 )
 
 vi.mock(
+  '@/pages/hashiPick',
+  () =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          default: () => <main>하시픽 화면</main>,
+        })
+      }, 200)
+    }),
+)
+
+vi.mock(
   '@/pages/myReviews',
   () =>
     new Promise((resolve) => {
@@ -42,10 +58,33 @@ vi.mock(
     }),
 )
 
+const createSignalCompatibleRequest = (NativeRequest: typeof Request) =>
+  function SignalCompatibleRequest(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ) {
+    try {
+      return new NativeRequest(input, init)
+    } catch (error) {
+      if (
+        error instanceof TypeError &&
+        error.message.includes('Expected signal')
+      ) {
+        const nextInit = { ...init }
+        delete nextInit.signal
+
+        return new NativeRequest(input, nextInit)
+      }
+
+      throw error
+    }
+  } as unknown as typeof Request
+
 describe('route lazy fallback', () => {
   afterEach(() => {
     cleanup()
     vi.useRealTimers()
+    vi.unstubAllGlobals()
     isAuthenticated = false
   })
 
@@ -89,8 +128,31 @@ describe('route lazy fallback', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
+  it('does not show LoadingScreen for restaurant list routes that render page skeletons', async () => {
+    vi.useFakeTimers()
+
+    const router = createMemoryRouter(appRoutes, {
+      initialEntries: ['/restaurants/hashi-pick'],
+    })
+
+    render(<RouterProvider router={router} />)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(150)
+    })
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(850)
+    })
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
   it('renders the next page as soon as the chunk resolves when the fallback is not shown during an AuthOnly boundary navigation', async () => {
     vi.useFakeTimers()
+    vi.stubGlobal('Request', createSignalCompatibleRequest(Request))
     isAuthenticated = true
 
     const router = createMemoryRouter(appRoutes, {

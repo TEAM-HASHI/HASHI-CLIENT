@@ -1,10 +1,43 @@
 import '@testing-library/jest-dom/vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { HomePage } from '@/pages/home/HomePage'
+
+const { mockGetHotSnsRestaurants } = vi.hoisted(() => ({
+  mockGetHotSnsRestaurants: vi.fn(),
+}))
+const { mockStartKakaoOAuth } = vi.hoisted(() => ({
+  mockStartKakaoOAuth: vi.fn(),
+}))
+
+vi.mock('@/features/auth/hooks/useKakaoOAuthStart', () => ({
+  useKakaoOAuthStart: () => ({
+    startKakaoOAuth: mockStartKakaoOAuth,
+  }),
+}))
+
+vi.mock('@/shared/hooks', () => ({
+  useAuthStatus: () => ({
+    isAuthenticated: false,
+    status: 'unauthenticated',
+  }),
+}))
+
+const { mockGetMagazineBanners } = vi.hoisted(() => ({
+  mockGetMagazineBanners: vi.fn(),
+}))
+
+vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
+  getMagazineBanners: mockGetMagazineBanners,
+}))
+
+vi.mock('@/pages/home/api/getHotSnsRestaurants', () => ({
+  getHotSnsRestaurants: mockGetHotSnsRestaurants,
+}))
 
 const LocationProbe = () => {
   const location = useLocation()
@@ -13,22 +46,64 @@ const LocationProbe = () => {
 }
 
 const renderHomePage = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        throwOnError: false,
+      },
+    },
+  })
+
   return render(
-    <MemoryRouter initialEntries={[ROUTES.home]}>
-      <HomePage />
-      <LocationProbe />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[ROUTES.home]}>
+        <HomePage />
+        <LocationProbe />
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 
 describe('HomePage', () => {
+  beforeEach(() => {
+    mockGetMagazineBanners.mockResolvedValue({
+      banners: [
+        {
+          magazineId: 1,
+          title: '도쿄 미식 큐레이션 배너',
+          bannerImageUrl: 'https://example.com/home-banner.jpg',
+          instagramRedirectUrl:
+            'https://www.instagram.com/hashi_tokyo_curation/',
+        },
+      ],
+    })
+    mockGetHotSnsRestaurants.mockResolvedValue([
+      {
+        imageAlt: '돈카츠 후쿠마루 도쿄역 야에스점 대표 이미지',
+        imageUrl: 'https://example.com/tonkatsu.jpg',
+        name: '돈카츠 후쿠마루 도쿄역 야에스점',
+        restaurantId: '101',
+        summary: 'SNS에서 핫한 돈카츠',
+      },
+      {
+        imageAlt: '숯불 규카츠 미야비 긴자 본점 대표 이미지',
+        imageUrl: 'https://example.com/gyukatsu.jpg',
+        name: '숯불 규카츠 미야비 긴자 본점',
+        restaurantId: '102',
+        summary: 'SNS에서 핫한 규카츠',
+      },
+    ])
+  })
+
   afterEach(() => {
     cleanup()
+    vi.clearAllMocks()
     window.sessionStorage.clear()
     document.body.style.overflow = ''
   })
 
-  it('renders the home landing content and primary navigation links', () => {
+  it('renders the home landing content and primary navigation links', async () => {
     renderHomePage()
 
     const logo = screen.getByRole('img', { name: 'Hashi' })
@@ -45,8 +120,13 @@ describe('HomePage', () => {
       'pb-4',
     )
     expect(
-      screen.getByRole('region', { name: '맛집 큐레이션 배너' }),
-    ).toBeInTheDocument()
+      await screen.findByRole('region', { name: '맛집 큐레이션 배너' }),
+    ).toHaveClass('mt-2.5')
+    expect(
+      screen
+        .getByRole('region', { name: '맛집 큐레이션 배너' })
+        .querySelector('[data-hds-carousel-viewport]'),
+    ).toHaveClass('aspect-[353/160]')
     expect(
       screen.getByRole('link', { name: '도쿄 미식 큐레이션 배너' }),
     ).toHaveAttribute('href', 'https://www.instagram.com/hashi_tokyo_curation/')
@@ -71,6 +151,29 @@ describe('HomePage', () => {
     )
   })
 
+  it('renders API banner images even when title or Instagram URL is missing', async () => {
+    mockGetMagazineBanners.mockResolvedValue({
+      banners: [
+        {
+          magazineId: 1,
+          bannerImageUrl: 'https://example.com/home-banner-without-link.jpg',
+        },
+      ],
+    })
+
+    renderHomePage()
+
+    expect(
+      await screen.findByRole('region', { name: '맛집 큐레이션 배너' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: '맛집 큐레이션 배너' }),
+    ).toHaveAttribute('src', 'https://example.com/home-banner-without-link.jpg')
+    expect(
+      screen.queryByRole('link', { name: '맛집 큐레이션 배너' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('moves to anywhere reservation only when the CTA button is clicked', () => {
     renderHomePage()
 
@@ -79,6 +182,16 @@ describe('HomePage', () => {
     expect(screen.getByTestId('location-pathname')).toHaveTextContent(
       ROUTES.anywhereReservation,
     )
+  })
+
+  it('starts Kakao OAuth from the login bottom sheet with the home path', () => {
+    renderHomePage()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '카카오로 1초 만에 시작하기' }),
+    )
+
+    expect(mockStartKakaoOAuth).toHaveBeenCalledWith(ROUTES.home)
   })
 
   it('moves to search page when the search entry is clicked', () => {
@@ -95,15 +208,44 @@ describe('HomePage', () => {
     )
   })
 
-  it('links SNS hot restaurants to restaurant detail pages', () => {
+  it('links SNS hot restaurants to restaurant detail pages', async () => {
     renderHomePage()
 
     expect(
-      screen.getByRole('link', { name: /돈카츠 후쿠마루 도쿄역 야에스점/ }),
-    ).toHaveAttribute('href', '/restaurants/tonkatsu-fukumaru-yaesu')
+      await screen.findByRole('link', {
+        name: /돈카츠 후쿠마루 도쿄역 야에스점/,
+      }),
+    ).toHaveAttribute('href', '/restaurants/101')
     expect(
       screen.getByRole('link', { name: /숯불 규카츠 미야비 긴자 본점/ }),
-    ).toHaveAttribute('href', '/restaurants/gyukatsu-miyabi-ginza')
+    ).toHaveAttribute('href', '/restaurants/102')
+  })
+
+  it('shows DefaultImage when an SNS hot restaurant image request fails', async () => {
+    renderHomePage()
+
+    const image = await screen.findByRole('img', {
+      name: '돈카츠 후쿠마루 도쿄역 야에스점 대표 이미지',
+    })
+
+    fireEvent.error(image)
+
+    expect(image).not.toBeInTheDocument()
+    expect(
+      screen.getByLabelText('돈카츠 후쿠마루 도쿄역 야에스점 대표 이미지'),
+    ).toHaveClass('bg-warm-gray-50')
+  })
+
+  it('hides the SNS hot restaurant section when the API returns no restaurants', async () => {
+    mockGetHotSnsRestaurants.mockResolvedValue([])
+
+    renderHomePage()
+
+    await screen.findByRole('region', { name: '맛집 큐레이션 배너' })
+
+    expect(
+      screen.queryByRole('region', { name: 'SNS에서 핫한 일본 식당' }),
+    ).not.toBeInTheDocument()
   })
 
   it('shows the auth gate only once in the same browser session', () => {

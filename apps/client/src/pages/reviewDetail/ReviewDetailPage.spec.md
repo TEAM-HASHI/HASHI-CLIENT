@@ -15,6 +15,9 @@
 - guard: `AuthOnlyRoute`
 - lazy loading: `lazyPages.reviewDetail`
 - bottom navigation: 없음
+- route param validation:
+  - `reviewId`는 0보다 큰 10진 정수 문자열만 허용한다.
+  - 지수, 16진수, 소수, 0, 음수, 일반 문자열은 API를 호출하지 않고 목록 복귀 액션을 표시한다.
 
 ## Requirements
 
@@ -35,27 +38,54 @@
   - 이미지가 없으면 이미지 영역을 렌더링하지 않는다.
 - 리뷰 작성 시 선택한 키워드를 최소 1개, 최대 3개까지 표시한다.
   - 키워드 label/icon은 `features/review/constants`의 `REVIEW_KEYWORDS`를 기준으로 표시한다.
+  - API가 한글 문구로 반환한 키워드는 알려진 review keyword ID로 변환하고, 알 수 없는 문구는 표시하지 않는다.
 - 하단에는 fixed action bar를 보여준다.
   - `삭제하기`: 삭제 확인 모달을 연다.
   - `수정하기`: MVP 제외 기능이며, 공통 `ComingSoonDialog`를 연다.
 - 삭제 확인 모달은 HDS `Dialog`를 사용한다.
   - `취소하기`를 누르면 모달만 닫힌다.
-  - `삭제하기`를 누르면 모달을 닫고 `ROUTES.myReviews`로 이동한다.
+  - `삭제하기`를 누르면 `DELETE /api/v1/reviews/{reviewId}`를 호출한다.
+  - 삭제 중에는 확인 버튼을 비활성화하고 `삭제 중`을 표시한다.
+  - 삭제 성공 시 모달을 닫고 `ROUTES.myReviews`로 이동한다.
+  - 삭제 실패 시 공통 mutation error toast를 표시하고 모달과 상세 내용을 유지한다.
 - 수정 준비중 안내 모달은 app shared `ComingSoonDialog`를 사용한다.
   - `확인`을 누르면 모달만 닫힌다.
   - route 이동이나 API 호출은 발생하지 않는다.
 
-## Data
+## Data Dependencies
 
-- 현재 퍼블리싱 범위에서는 page-local mock 데이터로 리뷰 상세를 표시한다.
-- `reviewId` route param으로 mock 리뷰를 찾고, 없는 경우 퍼블리싱 확인을 위해 기본 mock 리뷰를 표시한다.
-- API 연동 전에는 리뷰 상세 query의 not found 응답을 404 또는 에러 상태로 처리할지 확정한다.
-- API 연동 시 리뷰 상세 query, 리뷰 삭제 mutation, 삭제 성공/실패 toast를 hook 내부에서 교체한다.
+### Query
+
+- query: `GET /api/v1/reviews/me/{reviewId}`
+- mode: `useQuery`
+- enabled condition:
+  - route param이 양의 정수일 때만 실행한다.
+- loading state:
+  - 헤더를 유지하고 `리뷰 정보를 불러오는 중입니다.`를 표시한다.
+- error state:
+  - 404, network/API 오류는 로컬 오류 상태로 처리하고 `다시 시도`로 동일 query를 refetch한다.
+  - 잘못된 route param은 API를 호출하지 않고 `마이 리뷰로 돌아가기`를 표시한다.
+- response mapping:
+  - 방문일, 작성일, 인원수는 기존 상세 UI 형식으로 변환한다.
+  - `imageUrls`는 상세 이미지 props로 변환한다.
+  - 한글 `keywords`는 `ReviewKeywordId`로 변환한다.
+
+### Mutation
+
+- mutation: `DELETE /api/v1/reviews/{reviewId}`
+- owner: `features/review`
+- success:
+  - 해당 review detail cache를 제거한다.
+  - 작성한 리뷰 목록과 방문 완료 예약 목록을 invalidate한다.
+  - `ROUTES.myReviews`로 이동한다.
+- error:
+  - 공통 mutation error toast 정책을 사용한다.
+  - 삭제 확인 모달과 기존 상세 내용을 유지한다.
 
 ## State And Structure
 
 - `ReviewDetailPage`는 route page로서 layout composition과 hook 연결만 담당한다.
-- `useReviewDetailPage`는 route param, mock 조회, delete/edit modal open state, navigation handler를 관리한다.
+- `useReviewDetailPage`는 route param 검증, detail query 조합, delete/edit modal open state, navigation handler를 관리한다.
 - 리뷰 상세에서만 쓰이는 본문/이미지/액션바/모달 UI는 page-local component로 둔다.
 - 리뷰 작성/상세/수정 흐름에서도 사용하는 `ReviewHeader`, 예약 요약 UI, 키워드 상수, 사진 제한 상수는 `features/review`에서 재사용한다.
 - page-local component에는 review feature에서 재사용 가능한 header wrapper를 중복 구현하지 않는다.
@@ -73,16 +103,18 @@
 
 ## Verification
 
-- `corepack pnpm --filter @hashi/client test -- ReviewDetailPage`
-- `corepack pnpm --filter @hashi/client lint`
-- `corepack pnpm --filter @hashi/client typecheck`
-- `corepack pnpm --filter @hashi/client build`
+- [x] `pnpm --filter @hashi/client test`
+- [x] `pnpm --filter @hashi/client lint`
+- [x] `pnpm --filter @hashi/client typecheck`
+- [x] `pnpm --filter @hashi/client build`
 - 수동 확인:
-  - `/reviews/review-1` 직접 진입
+  - 실제 존재하는 정수 ID로 `/reviews/5` 직접 진입
+  - `/reviews/1e2`, `/reviews/0`, `/reviews/not-a-number`에서 API 미호출 및 목록 복귀 액션 확인
   - 뒤로가기 버튼 클릭 시 `/my-reviews` 이동
   - 긴 리뷰 본문 `더보기` 클릭 시 펼침
   - `삭제하기` 클릭 시 확인 모달 노출
   - 삭제 모달의 `취소하기` 클릭 시 닫힘
-  - 삭제 모달의 `삭제하기` 클릭 시 `/my-reviews` 이동
+  - 삭제 모달의 `삭제하기` 클릭 시 DELETE 성공 후 `/my-reviews` 이동
+  - DELETE 실패 시 모달과 상세 내용 유지
   - `수정하기` 클릭 시 준비중 안내 모달 노출
   - 준비중 안내 모달의 `확인` 클릭 시 닫힘

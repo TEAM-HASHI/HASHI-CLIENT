@@ -128,6 +128,9 @@ const ReservationDetailPage = lazyRoute(
   () => import('@/pages/reservationDetail'),
 )
 const LoginRequiredPage = lazyRoute(() => import('@/pages/loginRequired'))
+const KakaoOAuthCallbackPage = lazyRoute(
+  () => import('@/pages/kakaoOAuthCallback'),
+)
 const NotFoundPage = lazyRoute(() => import('@/pages/notFound'))
 
 const lazyPage = (Page: ReturnType<typeof lazy>) => {
@@ -136,6 +139,10 @@ const lazyPage = (Page: ReturnType<typeof lazy>) => {
 
 export const withLazyFallback = (element: ReactNode) => {
   return createElement(RouteLoadingBoundary, null, element)
+}
+
+export const withSilentLazyFallback = (element: ReactNode) => {
+  return createElement(Suspense, { fallback: null }, element)
 }
 
 export const lazyPages = {
@@ -161,5 +168,6 @@ export const lazyPages = {
   myReservations: () => lazyPage(MyReservationsPage),
   reservationDetail: () => lazyPage(ReservationDetailPage),
   loginRequired: () => lazyPage(LoginRequiredPage),
+  kakaoOAuthCallback: () => lazyPage(KakaoOAuthCallbackPage),
   notFound: () => lazyPage(NotFoundPage),
 }

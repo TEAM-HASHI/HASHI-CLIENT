@@ -1,30 +1,36 @@
+import { showToast } from '@hashi/hds-ui'
 import { QueryClient } from '@tanstack/react-query'
-import { isHTTPError, isNetworkError, isTimeoutError } from 'ky'
 
-const MAX_QUERY_RETRY_COUNT = 1
+import { getErrorPresentation } from '@/shared/api/errorPresentation'
+import {
+  checkShouldRetryQuery,
+  checkShouldThrowQueryError,
+} from '@/shared/api/errorPolicy'
+import { captureError } from '@/shared/lib/sentry'
 
-const checkShouldRetryQuery = (failureCount: number, error: Error) => {
-  if (failureCount >= MAX_QUERY_RETRY_COUNT) {
-    return false
-  }
+const handleMutationError = (error: Error) => {
+  captureError(error)
 
-  if (isHTTPError(error)) {
-    return error.response.status >= 500
-  }
-
-  return isNetworkError(error) || isTimeoutError(error)
+  const { message } = getErrorPresentation(error)
+  showToast({ children: message })
 }
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: 10 * 60 * 1_000,
-      refetchOnWindowFocus: false,
-      retry: checkShouldRetryQuery,
-      staleTime: 30_000,
+export const createQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        gcTime: 10 * 60 * 1_000,
+        refetchOnWindowFocus: false,
+        retry: checkShouldRetryQuery,
+        staleTime: 30_000,
+        throwOnError: checkShouldThrowQueryError,
+      },
+      mutations: {
+        onError: handleMutationError,
+        retry: false,
+        throwOnError: false,
+      },
     },
-    mutations: {
-      retry: false,
-    },
-  },
-})
+  })
+
+export const queryClient = createQueryClient()

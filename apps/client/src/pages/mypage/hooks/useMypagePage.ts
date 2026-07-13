@@ -1,21 +1,54 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { useMyPointBalanceQuery } from '@/features/point'
+import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
+import { useMyProfileSummaryQuery } from '@/features/user'
 import {
   createMypagePrimaryMenuItems,
   mypageMenuSections,
 } from '@/pages/mypage/constants/mypageMenu'
-import { mypageSummaryMock } from '@/pages/mypage/mocks/mypage.mock'
-import type { MypageMenuAction } from '@/pages/mypage/types'
+import type { MypageMenuAction, MypageSummary } from '@/pages/mypage/types'
+
+const DEFAULT_MYPAGE_SUMMARY: MypageSummary = {
+  nickname: '하시',
+  profileImageUrl: null,
+  availablePoint: 0,
+  myReviewCount: 0,
+}
 
 export const useMypagePage = () => {
   const navigate = useNavigate()
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
+  const myReviewCountQuery = useMyReviewCountQuery()
+  const pointBalanceQuery = useMyPointBalanceQuery()
+  const profileSummaryQuery = useMyProfileSummaryQuery()
+  const queryError =
+    profileSummaryQuery.error ??
+    pointBalanceQuery.error ??
+    myReviewCountQuery.error
 
-  const summary = mypageSummaryMock
+  if (queryError) {
+    throw queryError
+  }
+
+  const isLoading =
+    profileSummaryQuery.isPending ||
+    pointBalanceQuery.isPending ||
+    myReviewCountQuery.isPending
+
+  const summary = {
+    ...DEFAULT_MYPAGE_SUMMARY,
+    nickname:
+      profileSummaryQuery.data?.nickname ?? DEFAULT_MYPAGE_SUMMARY.nickname,
+    profileImageUrl:
+      profileSummaryQuery.data?.profileImageUrl ??
+      DEFAULT_MYPAGE_SUMMARY.profileImageUrl,
+    availablePoint: pointBalanceQuery.data?.availablePoint ?? 0,
+    myReviewCount: myReviewCountQuery.data?.myReviewCount ?? 0,
+  }
   const primaryMenuItems = createMypagePrimaryMenuItems({
     myReviewCount: summary.myReviewCount,
-    savedRestaurantCount: summary.savedRestaurantCount,
   })
 
   const handleComingSoonPress = () => {
@@ -40,6 +73,7 @@ export const useMypagePage = () => {
 
   return {
     isComingSoonOpen,
+    isLoading,
     menuSections: mypageMenuSections,
     primaryMenuItems,
     setIsComingSoonOpen,
