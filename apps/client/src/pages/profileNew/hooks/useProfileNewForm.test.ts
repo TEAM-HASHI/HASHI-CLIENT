@@ -89,7 +89,29 @@ describe('useProfileNewForm', () => {
     )
   })
 
-  it('resets selected profile image without marking server image deletion in create flow', () => {
+  it('rejects unsupported image MIME types without creating a preview URL', () => {
+    const createObjectUrl = vi.fn(() => 'blob:gif-preview')
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: createObjectUrl,
+    })
+    const { result } = renderHook(() => useProfileNewForm())
+    const gifFile = new File(['profile'], 'profile.gif', {
+      type: 'image/gif',
+    })
+
+    act(() => {
+      result.current.profileImage.onChange(gifFile)
+    })
+
+    expect(createObjectUrl).not.toHaveBeenCalled()
+    expect(result.current.profileImage.previewUrl).toBeUndefined()
+    expect(result.current.profileImage.errorMessage).toBe(
+      '이미지 파일만 등록해주세요.',
+    )
+  })
+
+  it('resets selected profile image without adding a deletion flag to the create draft', () => {
     vi.stubGlobal('URL', {
       ...URL,
       createObjectURL: vi.fn(() => 'blob:profile-preview'),
@@ -116,10 +138,8 @@ describe('useProfileNewForm', () => {
       profileDraft = result.current.submit.createProfileDraft()
     })
 
-    expect(profileDraft).toMatchObject({
-      profileImageFile: undefined,
-      isProfileImageDeleted: false,
-    })
+    expect(profileDraft).toMatchObject({ profileImageFile: undefined })
+    expect(profileDraft).not.toHaveProperty('isProfileImageDeleted')
   })
 
   it('does not keep submitting state after creating a local profile draft', () => {
@@ -132,6 +152,25 @@ describe('useProfileNewForm', () => {
 
     expect(result.current.submit.canSubmit).toBe(true)
     expect(result.current.submit.isSubmitting).toBe(false)
+  })
+
+  it('uses external submitting state to block draft creation', () => {
+    const { result } = renderHook(() =>
+      useProfileNewForm({ isSubmitting: true }),
+    )
+    fillRequiredFields(result)
+
+    let profileDraft: ReturnType<
+      typeof result.current.submit.createProfileDraft
+    >
+
+    act(() => {
+      profileDraft = result.current.submit.createProfileDraft()
+    })
+
+    expect(result.current.submit.canSubmit).toBe(false)
+    expect(result.current.submit.isSubmitting).toBe(true)
+    expect(profileDraft).toBeUndefined()
   })
 
   it('creates a normalized profile draft from valid form values', () => {
@@ -160,5 +199,29 @@ describe('useProfileNewForm', () => {
       englishName: 'Hashi',
       email: 'hashi@example.com',
     })
+  })
+
+  it('does not block submit with the old duplicated nickname mock list', () => {
+    const { result } = renderHook(() => useProfileNewForm())
+
+    act(() => {
+      result.current.fields.nickname.onValueChange('중복')
+      result.current.fields.birthDate.onValueChange('2026/07/08')
+      result.current.fields.phoneNumber.onValueChange('010-1234-5678')
+      result.current.fields.email.onValueChange('hashi@example.com')
+    })
+
+    expect(result.current.fields.nickname.errorMessage).toBe('')
+    expect(result.current.submit.canSubmit).toBe(true)
+
+    let profileDraft: ReturnType<
+      typeof result.current.submit.createProfileDraft
+    >
+
+    act(() => {
+      profileDraft = result.current.submit.createProfileDraft()
+    })
+
+    expect(profileDraft).toMatchObject({ nickname: '중복' })
   })
 })

@@ -27,6 +27,10 @@ export { getApiAccessToken } from './accessToken'
 export { apiClient } from './apiClient'
 export { request, requestSuccessResponse } from './request'
 export {
+  uploadFileToPresignedUrl,
+  type PresignedUrlUploadTarget,
+} from './uploadFileToPresignedUrl'
+export {
   isErrorResponse,
   type ApiResponse,
   type ErrorResponse,

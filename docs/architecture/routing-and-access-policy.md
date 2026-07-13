@@ -23,6 +23,7 @@
 
 - 비회원이 `authOnly` 페이지에 접근하면 `/login-required`로 이동합니다.
 - 신규 회원 onboarding session은 `/profile/new`에 한해 `AuthOnlyRoute`를 통과할 수 있습니다.
+- 인증 완료 회원이 onboarding 전용 `/profile/new`에 접근하면 `/`로 이동합니다.
 - 회원이 `guestOnly` 페이지인 `/login-required`에 접근하면 `/`로 이동합니다.
 - 존재하지 않는 URL은 `*` route에서 404 페이지를 렌더링합니다.
 - 로그인 유도 바텀시트는 route page가 아니며, `public` 페이지 안에서 로그인 필요한 기능을 비회원이 실행할 때 렌더링합니다.
@@ -60,7 +61,7 @@
 | 리뷰 수정 페이지   | `/reviews/:reviewId/edit`                     |                                                                                                              |
 | 저장 페이지        | `/saved`                                      | 준비중 페이지를 렌더링합니다.                                                                                |
 | 마이 페이지        | `/mypage`                                     |                                                                                                              |
-| 프로필 생성 페이지 | `/profile/new`                                | 신규 회원 onboarding session이면 접근할 수 있습니다.                                                         |
+| 프로필 생성 페이지 | `/profile/new`                                | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                 |
 | 탈퇴 페이지        | `/withdrawal`                                 | 유지 여부 논의 중입니다.                                                                                     |
 | 예약 페이지        | `/restaurants/:restaurantId/reservations/new` |                                                                                                              |
 | 어디든 예약 페이지 | `/reservations/anywhere`                      |                                                                                                              |
