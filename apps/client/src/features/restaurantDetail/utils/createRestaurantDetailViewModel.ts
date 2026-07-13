@@ -152,15 +152,17 @@ export const createRestaurantMenusViewModel = (
 
 const createReviews = (reviews: ReviewSummaryResponse[]) =>
   reviews.flatMap((review) => {
-    if (review.reviewId === undefined || !review.writerNickname) {
+    const reviewerName = review.reviewerNickname ?? review.writerNickname
+
+    if (review.reviewId === undefined || !reviewerName) {
       return []
     }
 
     return {
       id: String(review.reviewId),
-      reviewerName: review.writerNickname,
+      reviewerName,
       reviewerProfileImageUrl:
-        review.writerProfileImageUrl ?? review.profileImageUrl,
+        review.reviewerProfileImageUrl ?? review.profileImageUrl,
       rating: review.rating ?? 0,
       date: formatReviewDate(review.createdAt),
       content: review.content ?? '',

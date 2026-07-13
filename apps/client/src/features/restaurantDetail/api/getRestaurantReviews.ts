@@ -10,6 +10,7 @@ export type ReviewSummaryResponse =
     imageCount?: number
     previewImageUrls?: string[]
     profileImageUrl?: string
+    writerNickname?: string
     writerProfileImageUrl?: string
   }
 

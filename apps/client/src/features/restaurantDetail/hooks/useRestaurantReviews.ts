@@ -17,7 +17,7 @@ export const useRestaurantReviews = (reviews: RestaurantReview[]) => {
     }
 
     return [...reviews].sort((firstReview, secondReview) =>
-      selectedSort === 'highRating'
+      selectedSort === 'rating-high'
         ? secondReview.rating - firstReview.rating
         : firstReview.rating - secondReview.rating,
     )
