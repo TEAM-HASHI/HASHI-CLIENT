@@ -117,6 +117,7 @@ Jira: HASHI-77
   - `initialPageParam` is `null`; the endpoint helper omits `cursor` for the first page.
   - `getNextPageParam` returns `nextCursor` only when `hasNext === true`; otherwise it returns `undefined`.
   - Fetch the next page through a bottom sentinel when `hasNextPage` is true and no next-page request is already pending.
+    영 - If fetched pages have no usable normalized items but `hasNextPage` is still true, request the next page until a usable item appears or the last page is reached.
 
 #### Type Mapping
 
@@ -145,6 +146,7 @@ Jira: HASHI-77
 - empty:
   - if `banners` is empty or all banner items are unusable, do not render the hero banner section.
   - if all magazine pages are empty, show `MagazineEmptyState` with `아직 추천 매거진이 없어요.`
+  - if no usable list item is rendered yet but `hasNextPage` is true, do not show the empty state until the next page fetch resolves.
 - error:
   - expected `4xx` stays local to the page/query state.
   - `5xx`, network, and timeout errors follow the global QueryClient `throwOnError` policy and may be caught by `AsyncBoundary`.

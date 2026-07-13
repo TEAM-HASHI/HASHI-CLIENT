@@ -89,6 +89,18 @@ export const useMagazinesPage = () => {
   }, [magazinesQuery.data?.pages])
 
   useEffect(() => {
+    if (normalizedRecommendedMagazines.length > 0 || !canFetchNextPage) {
+      return
+    }
+
+    void magazinesQuery.fetchNextPage()
+  }, [
+    canFetchNextPage,
+    magazinesQuery.fetchNextPage,
+    normalizedRecommendedMagazines.length,
+  ])
+
+  useEffect(() => {
     if (!canFetchNextPage || typeof IntersectionObserver === 'undefined') {
       return
     }

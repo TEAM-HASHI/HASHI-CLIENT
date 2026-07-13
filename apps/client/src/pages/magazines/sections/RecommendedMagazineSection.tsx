@@ -40,6 +40,11 @@ export const RecommendedMagazineSection = ({
   magazines,
   onRetry,
 }: Props) => {
+  const shouldRenderList =
+    magazines.length > 0 || hasNextPage || isFetchingNextPage
+  const shouldRenderEmptyState =
+    magazines.length === 0 && !hasNextPage && !isFetchingNextPage
+
   if (isLoading) {
     return (
       <section aria-label="추천 매거진 목록" className="pt-5">
@@ -69,7 +74,7 @@ export const RecommendedMagazineSection = ({
 
   return (
     <section aria-label="추천 매거진 목록" className="pt-5">
-      {magazines.length > 0 ? (
+      {shouldRenderList ? (
         <ul className="flex flex-col gap-5 px-5">
           {magazines.map((magazine) => (
             <MagazineListItem key={magazine.id} magazine={magazine} />
@@ -84,9 +89,8 @@ export const RecommendedMagazineSection = ({
           )}
           {isFetchingNextPage ? renderSkeletonItems().slice(0, 1) : null}
         </ul>
-      ) : (
-        <MagazineEmptyState />
-      )}
+      ) : null}
+      {shouldRenderEmptyState ? <MagazineEmptyState /> : null}
     </section>
   )
 }

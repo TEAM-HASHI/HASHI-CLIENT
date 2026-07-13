@@ -1,10 +1,14 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
 import { appRoutes } from '@/app/router/routes'
+
+vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
+  getMagazineBanners: vi.fn(async () => ({ banners: [] })),
+}))
 
 const renderRoute = (initialEntry: string) => {
   const router = createMemoryRouter(appRoutes, {

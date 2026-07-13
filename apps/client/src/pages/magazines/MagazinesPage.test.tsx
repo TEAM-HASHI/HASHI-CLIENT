@@ -5,6 +5,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
   within,
 } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -246,5 +247,48 @@ describe('MagazinesPage', () => {
       'font-medium',
       'text-warm-gray-300',
     )
+  })
+
+  it('keeps the load-more sentinel when the current page has only filtered-out items and another page remains', async () => {
+    mockGetMagazines
+      .mockResolvedValueOnce({
+        hasNext: true,
+        nextCursor: 200,
+        magazines: [
+          {
+            magazineId: 201,
+            title: '',
+            bannerImageUrl: 'https://example.com/magazine-201.jpg',
+            instagramRedirectUrl:
+              'https://www.instagram.com/hashi.magazine/201',
+            createdAt: '2026-07-10T00:00:00.000Z',
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        hasNext: false,
+        magazines: [
+          {
+            magazineId: 202,
+            title: '다음 페이지에서 찾은 추천 매거진',
+            bannerImageUrl: 'https://example.com/magazine-202.jpg',
+            instagramRedirectUrl:
+              'https://www.instagram.com/hashi.magazine/202',
+            createdAt: '2026-07-09T00:00:00.000Z',
+          },
+        ],
+      })
+
+    renderMagazinesPage()
+
+    await screen.findByRole('heading', {
+      name: '다음 페이지에서 찾은 추천 매거진',
+    })
+    await waitFor(() => {
+      expect(mockGetMagazines).toHaveBeenLastCalledWith({
+        cursor: 200,
+        size: 10,
+      })
+    })
   })
 })
