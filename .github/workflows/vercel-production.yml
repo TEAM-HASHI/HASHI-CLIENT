@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '.github/workflows/vercel-production.yml'
+      - 'apps/client/**'
+      - 'configs/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'vercel.json'
 
 concurrency:
   group: vercel-production-${{ github.ref }}

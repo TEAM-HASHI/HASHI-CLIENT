@@ -121,6 +121,10 @@
 
 기본 `vercel.json`은 client 배포용입니다. Admin은 별도 Vercel project에서 `vercel.admin.json`을 사용합니다.
 
+GitHub Actions는 client와 admin 배포 workflow를 분리합니다. Admin workflow는
+`VERCEL_ADMIN_PROJECT_ID` repository secret으로 Admin Vercel project를 선택하고,
+`vercel.admin.json`을 명시적으로 사용합니다.
+
 ```bash
 pnpm exec vercel build --local-config vercel.admin.json
 pnpm exec vercel deploy --prebuilt --local-config vercel.admin.json
