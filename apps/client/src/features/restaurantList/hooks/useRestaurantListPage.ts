@@ -1,19 +1,27 @@
-import { useState } from 'react'
-import { generatePath, useNavigate } from 'react-router-dom'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import {
   CATEGORY_OPTIONS,
   DEFAULT_CATEGORY_OPTION,
-  RESTAURANT_LIST_PAGE_SIZE,
 } from '@/features/restaurantList/constants'
-import { useInfiniteRestaurantList } from '@/features/restaurantList/hooks/useInfiniteRestaurantList'
-import type { FilterOption, Restaurant } from '@/features/restaurantList/types'
+import { restaurantsInfiniteQueryOptions } from '@/features/restaurantList/queries/useRestaurantsInfiniteQuery'
+import type {
+  FilterOption,
+  RestaurantListCurationType,
+} from '@/features/restaurantList/types'
+import {
+  createRestaurantListRequestParams,
+  mapRestaurantSummaryToRestaurant,
+} from '@/features/restaurantList/utils'
+import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 type ActiveBottomSheet = 'sort' | 'category' | null
 
 type UseRestaurantListPageParams = {
-  restaurants: Restaurant[]
+  restaurantType: RestaurantListCurationType
   sortOptions: FilterOption[]
 }
 
@@ -21,8 +29,15 @@ const getOptionByValue = (options: FilterOption[], value: string) => {
   return options.find((option) => option.value === value)
 }
 
+const getRestaurantDetailPath = (restaurantId: string) => {
+  return ROUTES.restaurantDetail.replace(
+    ':restaurantId',
+    encodeURIComponent(restaurantId),
+  )
+}
+
 export const useRestaurantListPage = ({
-  restaurants,
+  restaurantType,
   sortOptions,
 }: UseRestaurantListPageParams) => {
   const navigate = useNavigate()
@@ -35,14 +50,34 @@ export const useRestaurantListPage = ({
     DEFAULT_CATEGORY_OPTION,
   )
   const [draftCategory, setDraftCategory] = useState(DEFAULT_CATEGORY_OPTION)
-  const {
-    hasMoreItems: hasMoreRestaurants,
-    loadMoreRef,
-    visibleItems: visibleRestaurants,
-  } = useInfiniteRestaurantList({
-    items: restaurants,
-    pageSize: RESTAURANT_LIST_PAGE_SIZE,
+
+  const requestParams = useMemo(
+    () =>
+      createRestaurantListRequestParams({
+        category: selectedCategory,
+        sort: selectedSort,
+        type: restaurantType,
+      }),
+    [restaurantType, selectedCategory, selectedSort],
+  )
+  const restaurantsQuery = useInfiniteQuery({
+    ...restaurantsInfiniteQueryOptions(requestParams),
+    throwOnError: false,
   })
+  const loadMoreRef = useInfiniteScrollTrigger<HTMLLIElement>({
+    enabled: Boolean(restaurantsQuery.hasNextPage),
+    isLoading: restaurantsQuery.isFetchingNextPage,
+    onIntersect: restaurantsQuery.fetchNextPage,
+  })
+  const visibleRestaurants =
+    restaurantsQuery.data?.pages.flatMap((page) =>
+      page.restaurants.flatMap((restaurant) => {
+        const mappedRestaurant = mapRestaurantSummaryToRestaurant(restaurant)
+
+        return mappedRestaurant ? [mappedRestaurant] : []
+      }),
+    ) ?? []
+  const hasMoreRestaurants = Boolean(restaurantsQuery.hasNextPage)
 
   const categoryLabel =
     selectedCategory.value === DEFAULT_CATEGORY_OPTION.value
@@ -104,7 +139,11 @@ export const useRestaurantListPage = ({
   }
 
   const handleClickRestaurant = (restaurantId: string) => {
-    navigate(generatePath(ROUTES.restaurantDetail, { restaurantId }))
+    navigate(getRestaurantDetailPath(restaurantId))
+  }
+
+  const handleRetry = () => {
+    void restaurantsQuery.refetch()
   }
 
   return {
@@ -113,6 +152,9 @@ export const useRestaurantListPage = ({
     draftCategory,
     draftSort,
     hasMoreRestaurants,
+    isFetchingNextPage: restaurantsQuery.isFetchingNextPage,
+    isLoading: restaurantsQuery.isLoading,
+    isError: restaurantsQuery.isError,
     loadMoreRef,
     selectedSort,
     visibleRestaurants,
@@ -125,6 +167,7 @@ export const useRestaurantListPage = ({
     handleOpenSortSheet,
     handleResetCategory,
     handleResetSort,
+    handleRetry,
     handleSelectCategory,
     handleSelectSort,
   }

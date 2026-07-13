@@ -1,5 +1,4 @@
 import {
-  MOCK_RESTAURANTS,
   POPULAR_RESTAURANTS_SORT_OPTIONS,
   RestaurantListPage,
 } from '@/features/restaurantList'
@@ -7,7 +6,7 @@ import {
 export const PopularRestaurantsPage = () => {
   return (
     <RestaurantListPage
-      restaurants={MOCK_RESTAURANTS}
+      restaurantType="popular"
       sortOptions={POPULAR_RESTAURANTS_SORT_OPTIONS}
       title="인기 맛집"
     />

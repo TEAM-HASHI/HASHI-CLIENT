@@ -35,6 +35,18 @@ vi.mock(
 )
 
 vi.mock(
+  '@/pages/hashiPick',
+  () =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          default: () => <main>하시픽 화면</main>,
+        })
+      }, 200)
+    }),
+)
+
+vi.mock(
   '@/pages/myReviews',
   () =>
     new Promise((resolve) => {
@@ -113,6 +125,28 @@ describe('route lazy fallback', () => {
     })
 
     expect(screen.getByText('로그인 필요 페이지')).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('does not show LoadingScreen for restaurant list routes that render page skeletons', async () => {
+    vi.useFakeTimers()
+
+    const router = createMemoryRouter(appRoutes, {
+      initialEntries: ['/restaurants/hashi-pick'],
+    })
+
+    render(<RouterProvider router={router} />)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(150)
+    })
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(850)
+    })
+
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 

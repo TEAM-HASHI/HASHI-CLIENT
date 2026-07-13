@@ -141,6 +141,10 @@ export const withLazyFallback = (element: ReactNode) => {
   return createElement(RouteLoadingBoundary, null, element)
 }
 
+export const withSilentLazyFallback = (element: ReactNode) => {
+  return createElement(Suspense, { fallback: null }, element)
+}
+
 export const lazyPages = {
   comingSoon: () => lazyPage(ComingSoonPage),
   search: () => lazyPage(SearchPage),

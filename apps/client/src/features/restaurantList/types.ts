@@ -3,6 +3,8 @@ export type FilterOption = {
   value: string
 }
 
+export type RestaurantListCurationType = 'hashi-pick' | 'popular'
+
 export type Restaurant = {
   id: string
   name: string
