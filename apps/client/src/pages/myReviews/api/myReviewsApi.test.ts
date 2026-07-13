@@ -23,4 +23,15 @@ describe('myReviewsApi', () => {
       searchParams: { cursor: 11, size: 20 },
     })
   })
+
+  it('omits the cursor from the first page request', async () => {
+    mockRequest.mockResolvedValue({ content: [], hasNext: false })
+
+    await getMyReviews({ size: 20 })
+
+    const searchParams = mockRequest.mock.calls[0]?.[1]?.searchParams
+
+    expect(searchParams).toEqual({ size: 20 })
+    expect(searchParams).not.toHaveProperty('cursor')
+  })
 })

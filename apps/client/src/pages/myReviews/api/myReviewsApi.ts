@@ -22,7 +22,10 @@ export const getMyReviews = async ({
   size,
 }: MyReviewsPageParams): Promise<MyReviewsData> => {
   const data = await request<MyReviewsData>('api/v1/reviews/me', {
-    searchParams: { cursor, size },
+    searchParams: {
+      ...(cursor !== undefined && { cursor }),
+      size,
+    },
   })
 
   return requireData(data, 'GET /api/v1/reviews/me')
