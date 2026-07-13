@@ -98,4 +98,38 @@ describe('requestKakaoLogin', () => {
       'Authorization header is missing.',
     )
   })
+
+  it('throws when success response omits registered flag', async () => {
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        body: {
+          success: true,
+          code: 'AUTH-200',
+          message: '로그인에 성공했습니다',
+          data: {},
+        },
+      }) as never,
+    )
+
+    await expect(requestKakaoLogin('kakao-code')).rejects.toThrow(
+      'Invalid API response',
+    )
+  })
+
+  it('throws when success response omits data', async () => {
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        body: {
+          success: true,
+          code: 'AUTH-200',
+          message: '로그인에 성공했습니다',
+          data: null,
+        },
+      }) as never,
+    )
+
+    await expect(requestKakaoLogin('kakao-code')).rejects.toThrow(
+      'Invalid API response',
+    )
+  })
 })

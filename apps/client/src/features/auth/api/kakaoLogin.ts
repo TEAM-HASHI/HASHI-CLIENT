@@ -53,7 +53,11 @@ export const requestKakaoLogin = async (
     throw new HttpStatusError(httpResponse.status)
   }
 
-  const registered = response.data?.registered === true
+  const registered = response.data?.registered
+
+  if (typeof registered !== 'boolean') {
+    throw new Error('Invalid API response')
+  }
 
   if (!registered) {
     return {

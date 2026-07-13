@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {
@@ -44,6 +44,24 @@ describe('useAuthStatus', () => {
       isAuthenticated: false,
       isOnboarding: true,
       status: 'onboarding',
+    })
+  })
+
+  it('updates when auth session changes after render', () => {
+    setAccessToken('access-token')
+
+    const { result } = renderHook(() => useAuthStatus())
+
+    expect(result.current.status).toBe('authenticated')
+
+    act(() => {
+      clearAuthSession()
+    })
+
+    expect(result.current).toEqual({
+      isAuthenticated: false,
+      isOnboarding: false,
+      status: 'unauthenticated',
     })
   })
 })

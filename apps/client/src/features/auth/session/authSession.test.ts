@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   clearAuthSession,
@@ -6,6 +6,7 @@ import {
   getAuthSessionStatus,
   setAccessToken,
   setOnboardingSession,
+  subscribeAuthSession,
 } from '@/features/auth/session/authSession'
 
 describe('authSession', () => {
@@ -30,5 +31,21 @@ describe('authSession', () => {
 
     expect(getAccessToken()).toBeUndefined()
     expect(getAuthSessionStatus()).toBe('onboarding')
+  })
+
+  it('notifies subscribers when auth session changes', () => {
+    const listener = vi.fn()
+    const unsubscribe = subscribeAuthSession(listener)
+
+    setAccessToken('access-token')
+    setOnboardingSession()
+    clearAuthSession()
+
+    expect(listener).toHaveBeenCalledTimes(3)
+
+    unsubscribe()
+    setAccessToken('new-access-token')
+
+    expect(listener).toHaveBeenCalledTimes(3)
   })
 })

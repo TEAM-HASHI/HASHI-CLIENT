@@ -1,5 +1,8 @@
+import { useSyncExternalStore } from 'react'
+
 import {
   getAuthSessionStatus,
+  subscribeAuthSession,
   type AuthSessionStatus,
 } from '@/features/auth/session/authSession'
 
@@ -10,7 +13,11 @@ export const useAuthStatus = (): {
   isOnboarding: boolean
   status: AuthStatus
 } => {
-  const status = getAuthSessionStatus()
+  const status = useSyncExternalStore(
+    subscribeAuthSession,
+    getAuthSessionStatus,
+    getAuthSessionStatus,
+  )
 
   return {
     isAuthenticated: status === 'authenticated',

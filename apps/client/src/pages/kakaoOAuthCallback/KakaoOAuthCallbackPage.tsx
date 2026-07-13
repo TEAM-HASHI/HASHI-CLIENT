@@ -5,6 +5,7 @@ import { ROUTES } from '@/app/router/path'
 import { getAuthMe } from '@/features/auth/api/getAuthMe'
 import { requestKakaoLogin } from '@/features/auth/api/kakaoLogin'
 import {
+  clearAuthSession,
   setAccessToken,
   setOnboardingSession,
 } from '@/features/auth/session/authSession'
@@ -59,10 +60,11 @@ export const KakaoOAuthCallbackPage = () => {
           throw new Error('Authorization header is missing.')
         }
 
-        setAccessToken(loginResult.accessToken)
         await getAuthMe(loginResult.accessToken)
+        setAccessToken(loginResult.accessToken)
         navigate(oauthState.redirectTo ?? ROUTES.home, { replace: true })
       } catch {
+        clearAuthSession()
         navigate(ROUTES.loginRequired, { replace: true })
       }
     }

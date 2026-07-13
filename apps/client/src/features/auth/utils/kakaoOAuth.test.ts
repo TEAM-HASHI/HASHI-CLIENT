@@ -65,14 +65,14 @@ describe('kakaoOAuth utilities', () => {
   })
 
   it('returns false when sessionStorage cannot persist OAuth state', () => {
-    const setItemSpy = vi
-      .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(() => {
+    const unavailableStorage = {
+      setItem: () => {
         throw new Error('sessionStorage unavailable')
-      })
+      },
+    } satisfies Pick<Storage, 'setItem'>
 
-    expect(saveKakaoOAuthState(createKakaoOAuthState())).toBe(false)
-
-    setItemSpy.mockRestore()
+    expect(
+      saveKakaoOAuthState(createKakaoOAuthState(), unavailableStorage),
+    ).toBe(false)
   })
 })

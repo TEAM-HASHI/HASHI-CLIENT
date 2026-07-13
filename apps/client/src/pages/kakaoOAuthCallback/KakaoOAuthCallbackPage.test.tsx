@@ -7,6 +7,7 @@ import { ROUTES } from '@/app/router/path'
 import { getAuthMe } from '@/features/auth/api/getAuthMe'
 import { requestKakaoLogin } from '@/features/auth/api/kakaoLogin'
 import {
+  clearAuthSession,
   setAccessToken,
   setOnboardingSession,
 } from '@/features/auth/session/authSession'
@@ -41,6 +42,7 @@ vi.mock('@/features/auth/api/kakaoLogin', () => ({
 }))
 
 vi.mock('@/features/auth/session/authSession', () => ({
+  clearAuthSession: vi.fn(),
   setAccessToken: vi.fn(),
   setOnboardingSession: vi.fn(),
 }))
@@ -52,6 +54,7 @@ vi.mock('@/features/auth/utils/kakaoOAuth', () => ({
 const mockedConsumeKakaoOAuthState = vi.mocked(consumeKakaoOAuthState)
 const mockedRequestKakaoLogin = vi.mocked(requestKakaoLogin)
 const mockedGetAuthMe = vi.mocked(getAuthMe)
+const mockedClearAuthSession = vi.mocked(clearAuthSession)
 const mockedSetAccessToken = vi.mocked(setAccessToken)
 const mockedSetOnboardingSession = vi.mocked(setOnboardingSession)
 
@@ -112,9 +115,26 @@ describe('KakaoOAuthCallbackPage', () => {
     })
     expect(mockedRequestKakaoLogin).toHaveBeenCalledWith('kakao-code')
     expect(mockedGetAuthMe).toHaveBeenCalledWith('access-token')
+    expect(mockedGetAuthMe.mock.invocationCallOrder[0]).toBeLessThan(
+      mockedSetAccessToken.mock.invocationCallOrder[0],
+    )
     expect(mockNavigate).toHaveBeenCalledWith('/my-reservations', {
       replace: true,
     })
+  })
+
+  it('clears session and redirects when auth subject check fails', async () => {
+    mockedGetAuthMe.mockRejectedValue(new Error('Invalid auth subject.'))
+
+    render(<KakaoOAuthCallbackPage />)
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(ROUTES.loginRequired, {
+        replace: true,
+      })
+    })
+    expect(mockedSetAccessToken).not.toHaveBeenCalled()
+    expect(mockedClearAuthSession).toHaveBeenCalled()
   })
 
   it('starts onboarding session and redirects new user to profile creation', async () => {
