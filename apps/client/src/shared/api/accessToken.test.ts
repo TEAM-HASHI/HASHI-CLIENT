@@ -14,6 +14,7 @@ describe('API access token', () => {
   afterEach(() => {
     clearApiAccessToken()
     window.localStorage.clear()
+    vi.restoreAllMocks()
     vi.unstubAllEnvs()
   })
 
@@ -48,5 +49,14 @@ describe('API access token', () => {
     vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', '')
 
     expect(getApiAccessToken()).toBeNull()
+  })
+
+  it('uses the development fallback when stored token access fails', () => {
+    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', 'development-token')
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('storage unavailable')
+    })
+
+    expect(getApiAccessToken()).toBe('development-token')
   })
 })

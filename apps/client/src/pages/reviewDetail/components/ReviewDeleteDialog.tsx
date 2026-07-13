@@ -2,12 +2,14 @@ import { OrderCancelIcon } from '@hashi/hds-icons'
 import { Button, Dialog } from '@hashi/hds-ui'
 
 interface ReviewDeleteDialogProps {
+  isPending?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirmDeleteClick: () => void
 }
 
 export const ReviewDeleteDialog = ({
+  isPending = false,
   open,
   onOpenChange,
   onConfirmDeleteClick,
@@ -37,12 +39,13 @@ export const ReviewDeleteDialog = ({
             취소하기
           </Button>
           <Button
+            disabled={isPending}
             onClick={onConfirmDeleteClick}
             size="sm"
             variant="primary"
             width="full"
           >
-            삭제하기
+            {isPending ? '삭제 중' : '삭제하기'}
           </Button>
         </Dialog.Footer>
       </Dialog.Content>

@@ -7,16 +7,18 @@ import { ReviewImagePlaceholder } from '@/pages/myReviews/components/ReviewImage
 import type { WrittenReview } from '@/pages/myReviews/types/myReview'
 
 interface WrittenReviewCardProps {
+  isDeleting: boolean
   isMenuOpen: boolean
   review: WrittenReview
   onCloseMenu: () => void
-  onDelete: () => void
+  onDelete: () => Promise<void>
   onEdit: () => void
   onOpenDetail: () => void
   onToggleMenu: () => void
 }
 
 export const WrittenReviewCard = ({
+  isDeleting,
   isMenuOpen,
   review,
   onCloseMenu,
@@ -69,9 +71,13 @@ export const WrittenReviewCard = ({
     setIsDeleteDialogOpen(true)
   }
 
-  const handleConfirmDelete = () => {
-    onDelete()
-    setIsDeleteDialogOpen(false)
+  const handleConfirmDelete = async () => {
+    try {
+      await onDelete()
+      setIsDeleteDialogOpen(false)
+    } catch {
+      // The mutation's shared error policy presents the failure to the user.
+    }
   }
 
   return (
@@ -82,7 +88,7 @@ export const WrittenReviewCard = ({
         onClick={onOpenDetail}
         type="button"
       >
-        <ReviewImagePlaceholder />
+        <ReviewImagePlaceholder src={review.thumbnailUrl} />
         <div className="min-w-0 flex-1">
           <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2 min-w-0 flex-1">
             {review.restaurantName}
@@ -121,7 +127,10 @@ export const WrittenReviewCard = ({
         open={isDeleteDialogOpen}
         type="alertdialog"
       >
-        <ReviewDeleteConfirmDialog onDelete={handleConfirmDelete} />
+        <ReviewDeleteConfirmDialog
+          isPending={isDeleting}
+          onDelete={handleConfirmDelete}
+        />
       </Dialog.Root>
     </article>
   )

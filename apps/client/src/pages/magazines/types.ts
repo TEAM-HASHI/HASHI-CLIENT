@@ -2,7 +2,6 @@ export interface MagazineHeroBanner {
   id: string
   imageUrl: string
   instagramUrl: string | null
-  displayOrder: number
   accessibilityLabel: string
 }
 

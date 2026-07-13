@@ -2,12 +2,12 @@ import { Button } from '@hashi/hds-ui'
 
 export type ReservationDetailActionBarProps = {
   onCancel: () => void
-  onContact: () => void
+  onHome: () => void
 }
 
 export const ReservationDetailActionBar = ({
   onCancel,
-  onContact,
+  onHome,
 }: ReservationDetailActionBarProps) => {
   return (
     <div className="app-mobile-fixed-bottom z-fixed bg-white px-6 pt-4.25 pb-[calc(20px+var(--safe-area-bottom,0px))]">
@@ -15,8 +15,8 @@ export const ReservationDetailActionBar = ({
         <Button onClick={onCancel} size="md" variant="neutral" width="full">
           예약 취소하기
         </Button>
-        <Button onClick={onContact} size="md" variant="primary" width="full">
-          문의하기
+        <Button onClick={onHome} size="md" variant="primary" width="full">
+          홈으로 돌아가기
         </Button>
       </div>
     </div>

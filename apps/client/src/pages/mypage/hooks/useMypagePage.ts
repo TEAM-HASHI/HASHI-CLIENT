@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
 import { useMyPointBalanceQuery } from '@/features/point'
-import { getMyReviewCount } from '@/pages/mypage/api/getMyReviewCount'
+import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
 import { getMypageProfileSummary } from '@/pages/mypage/api/getMypageProfileSummary'
 import {
   createMypagePrimaryMenuItems,
@@ -21,10 +21,7 @@ const DEFAULT_MYPAGE_SUMMARY: MypageSummary = {
 export const useMypagePage = () => {
   const navigate = useNavigate()
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
-  const myReviewCountQuery = useQuery({
-    queryFn: getMyReviewCount,
-    queryKey: ['mypage', 'myReviewCount'],
-  })
+  const myReviewCountQuery = useMyReviewCountQuery()
   const pointBalanceQuery = useMyPointBalanceQuery()
   const profileSummaryQuery = useQuery({
     queryFn: getMypageProfileSummary,
