@@ -38,7 +38,7 @@ export const useMyReservationsInfiniteQuery = ({
         : myReservationsQueryKeys.infiniteList(status),
     queryFn: ({ pageParam }) => {
       if (status === null) {
-        throw new Error('my reservations status is required')
+        throw new Error('내 예약 조회 상태가 null일 수 없습니다.')
       }
 
       return getMyReservations({

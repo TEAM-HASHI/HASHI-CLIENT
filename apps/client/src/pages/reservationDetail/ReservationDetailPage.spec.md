@@ -90,7 +90,7 @@
 - success handling:
   - 예약 취소 성공 toast를 표시합니다.
   - toast 문구는 예약 취소 API 성공 응답의 `message`를 사용합니다.
-  - 예약 취소 확인 후 예약 정보 페이지의 진행 중 상태(`/my-reservations?status=IN_PROGRESS`)로 이동합니다.
+  - 예약 취소 확인 후 예약 정보 페이지의 예약 취소 상태(`/my-reservations?status=CANCELED`)로 이동합니다.
 - failure handling:
   - 공통 mutation error handler를 통해 실패 toast를 표시합니다.
   - 예약 정보 페이지로 이동하지 않습니다.
@@ -105,7 +105,7 @@
 6. 사용자가 뒤로가기 버튼을 누르면 이전 페이지로 이동합니다.
 7. 사용자가 예약 취소 버튼을 누르면 예약 취소 확인 모달이 열립니다.
 8. 사용자가 모달에서 취소하기를 누르면 예약 취소 API를 호출합니다.
-9. 예약 취소에 성공하면 서버 응답 `message`로 성공 toast를 표시하고 예약 정보 페이지의 진행 중 상태로 이동합니다.
+9. 예약 취소에 성공하면 서버 응답 `message`로 성공 toast를 표시하고 예약 정보 페이지의 예약 취소 상태로 이동합니다.
 10. 예약 취소에 실패하면 실패 toast를 표시하고 현재 페이지에 머무릅니다.
 11. 사용자가 홈 버튼을 누르면 홈(`/`)으로 이동합니다.
 
@@ -189,10 +189,12 @@ ReservationDetailPage
 - page-local hook:
   - `useReservationDetailPage`
   - `useReservationDetailQuery`
-  - `useCancelReservationMutation`
 - page-local api:
   - `getReservationDetail`
-  - `cancelReservation`
+- feature hook:
+  - `features/reservation/useCancelReservationMutation`
+- feature api:
+  - `features/reservation/cancelReservation`
 - page-local util:
   - `createReservationDetailViewModel`
   - `reservationDetailPolicy`

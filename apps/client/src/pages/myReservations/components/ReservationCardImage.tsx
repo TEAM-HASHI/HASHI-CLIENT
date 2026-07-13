@@ -1,3 +1,6 @@
+import { useState } from 'react'
+
+import { DefaultImage } from '@/shared/components/defaultImage'
 import { cn } from '@/shared/utils'
 
 type ReservationCardImageProps = {
@@ -13,32 +16,32 @@ export const ReservationCardImage = ({
   disabled = false,
   className,
 }: ReservationCardImageProps) => {
-  if (imageUrl) {
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
+  const shouldShowImage = imageUrl && failedImageUrl !== imageUrl
+
+  if (shouldShowImage) {
     return (
       <img
         alt={restaurantName}
         className={cn('size-16 shrink-0 rounded-[5px] object-cover', className)}
+        onError={() => {
+          setFailedImageUrl(imageUrl)
+        }}
         src={imageUrl}
       />
     )
   }
-  // TODO: 추후 Default Image로 수정 예정
+
   return (
-    <div
+    <DefaultImage
       aria-label={`${restaurantName} 이미지`}
       className={cn(
-        'bg-secondary-200 flex size-16 shrink-0 items-center justify-center rounded-[5px]',
+        'size-16 shrink-0 rounded-[5px]',
+        disabled && 'opacity-60',
         className,
       )}
+      logoSize="sm"
       role="img"
-    >
-      <span
-        className={
-          disabled ? 'typo-header-3 text-white/60' : 'typo-header-3 text-white'
-        }
-      >
-        H
-      </span>
-    </div>
+    />
   )
 }
