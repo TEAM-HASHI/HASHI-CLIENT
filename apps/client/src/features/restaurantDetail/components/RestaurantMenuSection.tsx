@@ -95,7 +95,12 @@ export const RestaurantMenuSection = ({
         )
       })}
       {hasMoreMenus && loadMoreRef ? (
-        <div ref={loadMoreRef} aria-hidden="true" className="h-1" />
+        <div
+          ref={loadMoreRef}
+          aria-hidden="true"
+          className="h-1"
+          data-testid="restaurant-menu-load-more"
+        />
       ) : null}
     </section>
   )

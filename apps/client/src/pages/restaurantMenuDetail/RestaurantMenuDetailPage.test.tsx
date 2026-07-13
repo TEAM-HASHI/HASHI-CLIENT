@@ -43,6 +43,39 @@ const { mockClipboardWriteText } = vi.hoisted(() => ({
   mockClipboardWriteText: vi.fn(),
 }))
 
+const mockIntersectionObserver = () => {
+  let handleIntersection: IntersectionObserverCallback | null = null
+  const observe = vi.fn()
+  const disconnect = vi.fn()
+  const IntersectionObserverMock = vi.fn(
+    (callback: IntersectionObserverCallback) => {
+      handleIntersection = callback
+
+      return {
+        root: null,
+        rootMargin: '',
+        thresholds: [],
+        observe,
+        unobserve: vi.fn(),
+        disconnect,
+        takeRecords: vi.fn(() => []),
+      } satisfies IntersectionObserver
+    },
+  )
+
+  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
+
+  return {
+    observe,
+    triggerIntersect: () => {
+      handleIntersection?.(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      )
+    },
+  }
+}
+
 vi.mock('react-router-dom', async () => {
   const actual =
     await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
@@ -60,12 +93,20 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
-vi.mock('@/shared/hooks', () => ({
-  useAuthStatus: () => ({
-    isAuthenticated: mockAuthStore.isAuthenticated,
-    status: mockAuthStore.isAuthenticated ? 'authenticated' : 'unauthenticated',
-  }),
-}))
+vi.mock('@/shared/hooks', async () => {
+  const actual =
+    await vi.importActual<typeof import('@/shared/hooks')>('@/shared/hooks')
+
+  return {
+    ...actual,
+    useAuthStatus: () => ({
+      isAuthenticated: mockAuthStore.isAuthenticated,
+      status: mockAuthStore.isAuthenticated
+        ? 'authenticated'
+        : 'unauthenticated',
+    }),
+  }
+})
 
 vi.mock('@/features/auth/hooks/useKakaoOAuthStart', () => ({
   useKakaoOAuthStart: () => ({
@@ -215,6 +256,52 @@ describe('RestaurantMenuDetailPage', () => {
     expect(
       screen.queryByRole('button', { name: '다시 추천 받기' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('loads the next other menu page when the bottom sentinel enters the viewport', async () => {
+    const { observe, triggerIntersect } = mockIntersectionObserver()
+
+    mockedGetRestaurantMenus
+      .mockResolvedValueOnce({
+        ...restaurantMenus,
+        nextCursor: 102,
+        hasNext: true,
+      })
+      .mockResolvedValueOnce({
+        menus: [
+          {
+            menuId: 103,
+            name: '탄탄멘',
+            description: '매콤한 탄탄멘',
+            imageUrl: 'https://example.com/tantan.webp',
+            currency: 'JPY',
+            price: 1_300,
+            main: false,
+          },
+        ],
+        nextCursor: undefined,
+        hasNext: false,
+      })
+
+    renderPage()
+
+    const loadMore = await screen.findByTestId('restaurant-menu-load-more')
+
+    await waitFor(() => {
+      expect(observe).toHaveBeenCalledWith(loadMore)
+    })
+
+    triggerIntersect()
+
+    await waitFor(() => {
+      expect(mockedGetRestaurantMenus).toHaveBeenCalledWith({
+        restaurantId: 10,
+        excludeMenuId: 100,
+        cursor: 102,
+        size: 10,
+      })
+    })
+    expect(await screen.findByRole('button', { name: /탄탄멘/ })).toBeTruthy()
   })
 
   it('navigates to another menu detail when another menu is pressed', async () => {

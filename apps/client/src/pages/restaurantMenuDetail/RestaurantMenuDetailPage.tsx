@@ -20,6 +20,8 @@ export const RestaurantMenuDetailPage = () => {
     isComingSoonOpen,
     isLoading,
     isNotFound,
+    hasMoreOtherMenus,
+    otherMenuLoadMoreRef,
     otherMenusForDisplay,
     otherMenuTotalCount,
     restaurant,
@@ -79,6 +81,8 @@ export const RestaurantMenuDetailPage = () => {
       <RestaurantSelectedMenuSection menu={selectedMenu} />
 
       <RestaurantOtherMenuSection
+        hasMoreMenus={hasMoreOtherMenus}
+        loadMoreRef={otherMenuLoadMoreRef}
         menus={otherMenusForDisplay}
         onPressMenuItem={onPressMenuItem}
         totalCount={otherMenuTotalCount}

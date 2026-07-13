@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -24,7 +24,7 @@ import {
   navigateBackOrReplace,
 } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import { checkIsNotFoundError } from '@/shared/api'
-import { useAuthStatus } from '@/shared/hooks'
+import { useAuthStatus, useIntersectionObserver } from '@/shared/hooks'
 
 const MENU_DETAIL_OTHER_MENU_PAGE_SIZE = 10
 
@@ -65,6 +65,18 @@ export const useRestaurantMenuDetailPage = () => {
       parsedMenuId ?? undefined,
     ),
     enabled: hasValidParams,
+  })
+  const canFetchNextOtherMenuPage =
+    menusQuery.hasNextPage && !menusQuery.isFetchingNextPage
+  const { fetchNextPage: fetchNextOtherMenuPage } = menusQuery
+  const handleIntersectOtherMenu = useCallback(() => {
+    if (canFetchNextOtherMenuPage) {
+      return fetchNextOtherMenuPage()
+    }
+  }, [canFetchNextOtherMenuPage, fetchNextOtherMenuPage])
+  const otherMenuLoadMoreRef = useIntersectionObserver<HTMLDivElement>({
+    enabled: canFetchNextOtherMenuPage,
+    onIntersect: handleIntersectOtherMenu,
   })
   const selectedMenu = createRestaurantMenuViewModel(menuQuery.data ?? null)
   const menus = useMemo(
@@ -161,8 +173,10 @@ export const useRestaurantMenuDetailPage = () => {
     isComingSoonOpen,
     isLoading,
     isNotFound,
+    hasMoreOtherMenus: menusQuery.hasNextPage,
     otherMenus: menus,
     otherMenusForDisplay: menus,
+    otherMenuLoadMoreRef,
     otherMenuTotalCount,
     restaurant,
     selectedMenu,
