@@ -1,0 +1,55 @@
+import { infiniteQueryOptions, useInfiniteQuery } from '@tanstack/react-query'
+
+import {
+  getMyReservations,
+  type MyReservationsApiStatus,
+} from '@/pages/myReservations/api/getMyReservations'
+import { myReservationsQueryKeys } from '@/pages/myReservations/queries/myReservationsQueryKeys'
+
+const MY_RESERVATIONS_PAGE_SIZE = 10
+
+type UseMyReservationsInfiniteQueryParams = {
+  status: MyReservationsApiStatus | null
+}
+
+export const myReservationsInfiniteQueryOptions = (
+  status: MyReservationsApiStatus,
+) =>
+  infiniteQueryOptions({
+    queryKey: myReservationsQueryKeys.infiniteList(status),
+    queryFn: ({ pageParam }) =>
+      getMyReservations({
+        cursor: pageParam,
+        size: MY_RESERVATIONS_PAGE_SIZE,
+        status,
+      }),
+    initialPageParam: null as number | null,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined,
+  })
+
+export const useMyReservationsInfiniteQuery = ({
+  status,
+}: UseMyReservationsInfiniteQueryParams) => {
+  return useInfiniteQuery({
+    queryKey:
+      status === null
+        ? myReservationsQueryKeys.disabled()
+        : myReservationsQueryKeys.infiniteList(status),
+    queryFn: ({ pageParam }) => {
+      if (status === null) {
+        throw new Error('my reservations status is required')
+      }
+
+      return getMyReservations({
+        cursor: pageParam,
+        size: MY_RESERVATIONS_PAGE_SIZE,
+        status,
+      })
+    },
+    enabled: status !== null,
+    initialPageParam: null as number | null,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined,
+  })
+}

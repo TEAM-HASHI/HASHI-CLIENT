@@ -56,10 +56,15 @@ apps/client/src/pages/myReservations/
 │   └── CanceledReservationCard.tsx
 ├── hooks/
 │   └── useMyReservationsPage.ts
+├── api/
+│   └── getMyReservations.ts
+├── queries/
+│   ├── myReservationsQueryKeys.ts
+│   └── useMyReservationsInfiniteQuery.ts
+├── utils/
+│   └── createMyReservationViewModel.ts
 ├── constants/
 │   └── reservationStatus.ts
-├── mocks/
-│   └── myReservations.mock.ts
 ├── types.ts
 └── index.ts
 ```
@@ -90,10 +95,14 @@ apps/client/src/pages/myReservations/
   - 현재 구현은 page-local `ReservationCardImage`의 임시 fallback을 사용합니다.
   - `DefaultImage`가 머지되면 `ReservationCardImage` 내부 fallback을 `DefaultImage`로 교체합니다.
 - [ ] 각 상태별 카드 UI를 분리합니다.
+- [ ] `진행 중`, `방문 예정`, `예약 취소` 탭은 `GET /api/v1/reservations/me` API로 조회합니다.
+- [ ] `방문 완료` 탭은 `GET /api/v1/reviews/visited-reservations` API로 조회합니다.
+- [ ] `진행 중` 카드의 `상세보기` 클릭 시 `reservationId`를 route params로 넣어 예약 상세 페이지로 이동합니다.
+- [ ] 페이지 상단 사용자명은 `GET /api/v1/users/me/profile-summary` 결과의 `nickname`을 사용합니다.
 
 ## Status Filter
 
-예약 상태 값은 서버에서 아래 네 가지 값으로 내려줍니다.
+화면 필터 값은 아래 네 가지로 관리합니다.
 
 ```ts
 type ReservationStatusFilter =
@@ -114,7 +123,18 @@ const reservationStatusLabels = {
 }
 ```
 
-필터 chip 목록과 label은 클라이언트에서 UI 상수로 관리하되, 예약 카드의 상태와 카드 타입 분기는 서버 응답의 `status` 값을 기준으로 처리합니다.
+필터 chip 목록과 label은 클라이언트에서 UI 상수로 관리합니다. 서버 예약 상태는 `reservationStatus`로 내려오므로 화면 카드 타입에 맞게 변환해서 사용합니다.
+
+## API Integration Scope
+
+이번 연동 범위:
+
+- `진행 중`: `GET /api/v1/reservations/me?status=IN_PROGRESS`
+- `방문 예정`: `GET /api/v1/reservations/me?status=UPCOMING`
+- `방문 완료`: `GET /api/v1/reviews/visited-reservations?reviewStatus=all`
+- `예약 취소`: `GET /api/v1/reservations/me?status=CANCELED`
+
+방문 완료 탭은 리뷰 데이터와 연결되어 있어 `/api/v1/reservations/me`가 아니라 별도 방문 완료 예약 API를 사용합니다. `VISITED`는 `/api/v1/reservations/me`의 status query로 전달하지 않습니다.
 
 ## UI By Status
 
@@ -217,26 +237,83 @@ const reservationStatusLabels = {
 
 ### Query
 
-예약 목록 조회 API는 상태별로 호출합니다.
-
-예상 API:
+사용자 프로필 요약 API:
 
 ```txt
-GET /api/v1/reservations/me?status={status}&sort=LATEST&size=10&cursor={cursor}
+GET /api/v1/users/me/profile-summary
+```
+
+- `features/user`의 `useMyProfileSummaryQuery`를 사용합니다.
+- `nickname`을 페이지 제목의 `{userName}`으로 표시합니다.
+- `profileImageUrl`은 현재 예약 정보 페이지 UI에서 표시하지 않습니다.
+
+예약 목록 조회 API는 상태별로 호출합니다.
+
+API:
+
+```txt
+GET /api/v1/reservations/me?status={status}&size=10&cursor={cursor}
 ```
 
 요청 params:
 
 ```ts
 {
-  status: 'IN_PROGRESS' | 'UPCOMING' | 'VISITED' | 'CANCELED'
-  sort: 'LATEST'
-  size: 10
-  cursor?: string
+  status?: 'IN_PROGRESS' | 'UPCOMING' | 'CANCELED'
+  cursor?: number
+  size?: number
 }
 ```
 
-응답 예상 shape:
+응답 envelope:
+
+```ts
+type MyReservationsApiResponse = {
+  success?: boolean
+  code?: string
+  message?: string
+  data?: ReservationListResponse | null
+}
+```
+
+응답 data:
+
+```ts
+type ReservationListResponse = {
+  reservations?: ReservationResponse[]
+  totalCount?: number
+  nextCursor?: number
+  hasNext?: boolean
+}
+```
+
+예약 item:
+
+```ts
+type ReservationResponse = {
+  reservationId?: number
+  reservationType?: 'STANDARD' | 'ANYWHERE'
+  reserverName?: string
+  restaurantId?: number
+  restaurantName?: string
+  restaurantImageUrl?: string
+  restaurantAddress?: string
+  reservedAt?: string
+  adultCount?: number
+  teenCount?: number
+  childCount?: number
+  requestNote?: string
+  reservationStatus?:
+    | 'REQUESTED'
+    | 'CONTACTING'
+    | 'CONFIRMED'
+    | 'VISITED'
+    | 'CANCELED'
+  confirmDDay?: number
+}
+```
+
+서버 응답은 화면 타입으로 변환해서 사용합니다.
 
 ```ts
 type MyReservation = {
@@ -246,21 +323,43 @@ type MyReservation = {
   restaurantImageUrl?: string | null
   visitDateTime: string
   guestSummary: string
-  // 서버에서 내려주는 예약 상태입니다.
   status: ReservationStatusFilter
 }
 ```
+
+서버 상태와 화면 탭 매핑:
+
+```ts
+const reservationStatusMap = {
+  REQUESTED: 'IN_PROGRESS',
+  CONTACTING: 'IN_PROGRESS',
+  CONFIRMED: 'UPCOMING',
+  CANCELED: 'CANCELED',
+} as const
+```
+
+`VISITED`는 `/api/v1/reservations/me` 응답 상태가 아니라 `GET /api/v1/reviews/visited-reservations` 응답을 화면 타입으로 변환해 사용합니다.
 
 진행 중 상태 추가 필드:
 
 ```ts
 type InProgressReservation = MyReservation & {
   requestedAt: string
-  expectedConfirmedDate: string
   progressStep: 'RECEIVED' | 'CONTACTING' | 'CONFIRMED'
   remainingDays: number
 }
 ```
+
+진행 중 카드의 `progressStep` 매핑:
+
+```ts
+const inProgressStepMap = {
+  REQUESTED: 'RECEIVED',
+  CONTACTING: 'CONTACTING',
+} as const
+```
+
+`CONFIRMED`는 방문 예정 탭의 `UPCOMING` 카드로 렌더링합니다.
 
 방문 완료 상태 추가 필드:
 
@@ -273,12 +372,12 @@ type VisitedReservation = MyReservation & {
 }
 ```
 
-방문 완료 상태에서는 예약 목록 응답에 리뷰 상태를 함께 포함합니다.
+방문 완료 상태에서는 별도 방문 완료 예약 API 응답에 리뷰 상태를 함께 포함합니다.
 
 - `hasReview: false`: 리뷰 작성 전 UI를 보여줍니다.
 - `hasReview: true`: 리뷰 작성 완료 UI를 보여줍니다.
 - 작성된 리뷰가 있으면 `reviewId`, `rating`, `earnedPoint`를 함께 내려줍니다.
-- 리뷰 작성 전에는 `restaurantId`로 리뷰 작성 페이지에 이동합니다.
+- 리뷰 작성 전에는 `restaurantId`와 `reservationId`로 리뷰 작성 페이지에 이동합니다.
 - 리뷰 작성 후에는 `reviewId`로 리뷰 상세 페이지에 이동합니다.
 
 pagination:
@@ -286,10 +385,13 @@ pagination:
 ```ts
 type MyReservationsResponse = {
   items: MyReservation[]
-  totalCount: number
-  nextCursor?: string | null
+  totalCount: number // 서버 totalCount 기준으로 표시합니다.
+  nextCursor?: number
+  hasNext: boolean
 }
 ```
+
+`GET /api/v1/reservations/me`의 OpenAPI generated type에 `totalCount` 반영이 늦을 수 있으므로, 클라이언트 wrapper 타입에서 `totalCount?: number`를 확장해 사용합니다. 서버가 값을 내려주는 상태에서는 `총 N건`이 무한스크롤로 로드된 현재 item 개수가 아니라 각 상태의 전체 개수로 고정되어야 합니다.
 
 ### Infinite Scroll
 
@@ -305,7 +407,7 @@ type MyReservationsResponse = {
 
 방문 예정 카드에서 취소하기를 누르면 취소 확인 모달을 띄웁니다.
 
-예상 API:
+API:
 
 ```txt
 POST /api/v1/reservations/{reservationId}/cancel
@@ -316,12 +418,12 @@ POST /api/v1/reservations/{reservationId}/cancel
 - 현재 `방문 예정` 리스트에서 해당 예약을 제거하거나 refetch합니다.
 - `예약 취소` chip으로 이동하지는 않습니다.
 - 취소 성공 toast를 보여줍니다.
-- toast 컴포넌트 디자인이 확정되지 않았으므로, toast 컴포넌트가 준비된 뒤 적용합니다.
+- toast 문구는 예약 취소 API 성공 응답의 `message`를 사용합니다.
 
 실패 시:
 
 - 취소 실패 toast를 보여줍니다.
-- toast 컴포넌트 디자인이 확정되지 않았으므로, toast 컴포넌트가 준비된 뒤 적용합니다.
+- 실패 toast는 공통 mutation error handler를 따릅니다.
 
 ## State
 
@@ -338,6 +440,7 @@ URL state:
 
 server state:
 
+- 사용자 프로필 요약
 - selected status별 예약 목록
 - total count
 - next cursor
@@ -410,6 +513,20 @@ page-local components:
 - `VisitedReservationCard`
 - `CanceledReservationCard`
 
+api:
+
+- `getMyReservations`
+
+feature api/hooks:
+
+- `features/user/useMyProfileSummaryQuery`
+- `features/reservation/useCancelReservationMutation`
+
+queries:
+
+- `myReservationsQueryKeys`
+- `useMyReservationsInfiniteQuery`
+
 hooks:
 
 - `useMyReservationsPage`
@@ -417,10 +534,6 @@ hooks:
 constants:
 
 - `reservationStatus`
-
-mocks:
-
-- `myReservations.mock`
 
 types:
 
@@ -493,8 +606,9 @@ types:
 
 초기 조회 실패:
 
-- 리스트 영역에 error fallback을 표시합니다.
-- 재시도 버튼을 제공합니다.
+- mock data로 fallback하지 않습니다.
+- API 실패를 실제 데이터처럼 보이지 않게 처리합니다.
+- ErrorBoundary 정책을 따르거나 페이지 레벨 에러 상태를 명시적으로 렌더링합니다.
 
 다음 페이지 조회 실패:
 
@@ -508,7 +622,8 @@ types:
 진행 중:
 
 - 문의하기: Hashi 카카오톡 문의하기로 연결
-- 상세보기: `/reservations/:reservationId`
+- 상세보기: `reservationId`를 route params로 넣어 예약 상세 페이지로 이동
+  - 예: `/reservations/29`
 
 방문 예정:
 
@@ -528,8 +643,8 @@ types:
 
 - 필터 chip은 항상 하나만 선택됩니다.
 - URL query의 `status`는 `ReservationStatusFilterValue`에 포함된 값만 유효합니다.
-- 서버에서 내려준 `status` 값으로 카드 타입을 분기합니다.
-- 서버에서 정의되지 않은 status 값이 내려오면 해당 item은 렌더링하지 않거나 error reporting 대상에 포함합니다.
+- 서버에서 내려준 `reservationStatus` 값을 화면 status로 변환한 뒤 카드 타입을 분기합니다.
+- 서버에서 정의되지 않은 `reservationStatus` 값이 내려오면 해당 item은 렌더링하지 않거나 error reporting 대상에 포함합니다.
 - 무한스크롤 요청 중복을 막습니다.
 - `reservationId`가 없는 카드 액션은 실행하지 않습니다.
 - 리뷰 작성 전 이동에는 `restaurantId`가 필요합니다.
@@ -550,6 +665,12 @@ types:
 
 - `pnpm --filter @hashi/client typecheck`
 - `pnpm --filter @hashi/client lint`
+- `GET /api/v1/reservations/me` 요청에 선택된 status가 query params로 전달되는지 확인
+- `GET /api/v1/users/me/profile-summary` 결과의 닉네임이 페이지 제목에 표시되는지 확인
+- `IN_PROGRESS`, `UPCOMING`, `CANCELED` 탭에서 `/api/v1/reservations/me`를 호출하는지 확인
+- `VISITED` 탭에서 `/api/v1/reviews/visited-reservations`를 호출하고 `/api/v1/reservations/me`를 호출하지 않는지 확인
+- 서버 `reservationStatus`가 화면 카드 타입으로 올바르게 매핑되는지 확인
+- 진행 중 카드의 상세보기 클릭 시 `reservationId`가 포함된 예약 상세 페이지로 이동하는지 확인
 - chip 변경 시 status별 리스트가 바뀌는지 확인
 - chip 변경 시 리스트 스크롤 위치가 맨 위로 이동하는지 확인
 - chip 변경 시 URL query가 갱신되는지 확인
@@ -557,7 +678,7 @@ types:
 - 무한스크롤 sentinel 노출 시 다음 페이지 요청이 발생하는지 확인
 - nextCursor가 없을 때 추가 요청이 발생하지 않는지 확인
 - 방문 예정 카드에서 취소 확인 모달이 열리는지 확인
-- 취소 성공 후 toast가 호출되는지 확인
+- 취소 성공 후 서버 응답 `message`로 toast가 호출되는지 확인
 - 취소 실패 후 toast가 호출되는지 확인
 - 방문 완료 카드에서 리뷰 작성 전/후 UI가 다르게 보이는지 확인
 - 방문 완료 카드에서 리뷰 작성 전 별점 클릭 시 리뷰 작성 페이지로 이동하는지 확인
@@ -567,5 +688,4 @@ types:
 
 ## Open Questions
 
-- toast 컴포넌트 디자인과 공통 사용 API가 확정되면 취소 성공/실패 안내에 적용해야 합니다.
 - `DefaultImage`가 머지되면 `ReservationCardImage`의 임시 fallback을 교체해야 합니다.
