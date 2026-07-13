@@ -1767,7 +1767,7 @@ export interface components {
             adultCount?: number;
             /** Format: int32 */
             childCount?: number;
-            writerNickname?: string;
+            reviewerNickname?: string;
             /** Format: int32 */
             rating?: number;
             content?: string;

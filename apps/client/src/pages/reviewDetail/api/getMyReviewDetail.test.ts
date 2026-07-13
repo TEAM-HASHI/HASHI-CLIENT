@@ -13,9 +13,15 @@ describe('getMyReviewDetail', () => {
   })
 
   it('requests the signed-in user review by ID', async () => {
-    mockRequest.mockResolvedValue({ reviewId: 5 })
+    mockRequest.mockResolvedValue({
+      reviewId: 5,
+      reviewerNickname: '하시유저',
+    })
 
-    await getMyReviewDetail(5)
+    await expect(getMyReviewDetail(5)).resolves.toEqual({
+      reviewId: 5,
+      reviewerNickname: '하시유저',
+    })
 
     expect(mockRequest).toHaveBeenCalledWith('api/v1/reviews/me/5')
   })
