@@ -11,6 +11,10 @@ describe('ListEmptyState', () => {
     expect(screen.getByText('메뉴 리스트를 준비중이에요.')).toBeInTheDocument()
     expect(
       screen.getByText('메뉴 리스트를 준비중이에요.').parentElement,
-    ).toHaveClass('min-h-[320px]', 'items-center', 'justify-center')
+    ).toHaveClass('min-h-[220px]', 'items-center', 'justify-center')
+    expect(screen.getByText('메뉴 리스트를 준비중이에요.')).toHaveClass(
+      'typo-body-5',
+      'text-warm-gray-300',
+    )
   })
 })
