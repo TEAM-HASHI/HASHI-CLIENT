@@ -1,4 +1,3 @@
-import type { SyntheticEvent } from 'react'
 import { useState } from 'react'
 
 import {
@@ -26,21 +25,12 @@ export const useReviewForm = () => {
     checkIsValidReviewText(reviewText) &&
     checkIsValidReviewPhotoFiles(photoFiles)
 
-  const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    if (!canSubmitReview) {
-      return
-    }
-  }
-
   return {
     canSubmitReview,
     handlePhotoFilesChange: setPhotoFiles,
     handleRatingChange: setRating,
     handleReviewTextChange: setReviewText,
     handleSelectedKeywordIdsChange: setSelectedKeywordIds,
-    handleSubmit,
     maxReviewTextLength: REVIEW_TEXT_MAX_LENGTH,
     photoFiles,
     rating,

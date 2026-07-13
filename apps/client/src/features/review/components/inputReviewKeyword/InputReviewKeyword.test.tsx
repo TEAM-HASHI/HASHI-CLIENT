@@ -10,6 +10,27 @@ afterEach(() => {
 })
 
 describe('InputReviewKeyword', () => {
+  it('renders keyword options supplied by the review context API', () => {
+    render(
+      <InputReviewKeyword
+        keywordOptions={[
+          { id: 'FOOD_IS_DELICIOUS', label: '음식이 정말 맛있어요' },
+          { id: 'STAFF_IS_KIND', label: '직원분이 친절해요' },
+        ]}
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: '음식이 정말 맛있어요' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '직원분이 친절해요' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: '향신료가 강하지 않아요' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('renders the keyword prompt and all review keyword badges', () => {
     render(<InputReviewKeyword />)
 

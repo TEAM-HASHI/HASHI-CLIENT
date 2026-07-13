@@ -4,7 +4,7 @@
 
 `InputReviewMain`은 리뷰 작성/수정 흐름에서 사진 첨부 입력과 리뷰 본문 textarea를 묶어 보여주는 review feature 전용 입력 컴포넌트입니다.
 
-이 컴포넌트는 사진 첨부 영역 조합, 리뷰 본문 입력, 글자 수 표시, 리뷰 본문 helper text 표시, 입력 callback 호출을 담당합니다. 사진 선택 트리거, 사진 장당 5MB 초과 파일 거절, 사진 최대 10장 초과 파일 거절, 사진 오류 메시지, 사진 미리보기 object URL 관리는 page-local 하위 컴포넌트와 hook으로 분리합니다. 사진 업로드, form submit, API mutation, 저장 버튼 활성화 판단은 호출부가 소유합니다.
+이 컴포넌트는 사진 첨부 영역 조합, 리뷰 본문 입력, 글자 수 표시, 리뷰 본문 helper text 표시, 입력 callback 호출을 담당합니다. 사진 선택 트리거, 지원하지 않는 MIME 타입 거절, 사진 장당 5MB 초과 파일 거절, 사진 최대 10장 초과 파일 거절, 사진 오류 메시지, 사진 미리보기 object URL 관리는 page-local 하위 컴포넌트와 hook으로 분리합니다. 사진 업로드, form submit, API mutation, 저장 버튼 활성화 판단은 호출부가 소유합니다.
 
 ## Component Type
 
@@ -47,8 +47,9 @@
 - [x] 안내 문구 `(첨부 사진 장당 5MB, 최대 10장)`를 표시합니다.
 - [x] 사진 첨부 트리거는 `CameraIcon`과 `사진을 첨부해 주세요. (선택)` 문구를 표시합니다.
 - [x] 사진 첨부 트리거를 누르면 숨겨진 file input을 엽니다.
-- [x] file input은 `accept="image/*"`와 `multiple`을 가집니다.
-- [x] file input이 변경되면 장당 5MB 이하 파일만 기존 `photoFiles` 뒤에 이어 `onPhotoFilesChange`에 전달합니다.
+- [x] file input은 `accept="image/jpeg,image/png,image/webp"`와 `multiple`을 가집니다.
+- [x] file input이 변경되면 JPEG, PNG, WEBP이면서 장당 5MB 이하인 파일만 기존 `photoFiles` 뒤에 이어 `onPhotoFilesChange`에 전달합니다.
+- [x] 지원하지 않는 MIME 타입은 `photoFiles`에 추가하지 않고 `JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.`를 표시합니다.
 - [x] 장당 5MB를 초과한 파일은 `photoFiles`에 추가하지 않고 `사진은 장당 5MB 이하로 첨부해주세요.`를 표시합니다.
 - [x] 선택된 사진이 10장이 되면 사진 추가 버튼과 숨겨진 file input을 비활성화합니다.
 - [x] 남은 사진 슬롯보다 많은 파일을 선택하면 최대 10장까지만 `photoFiles`에 추가하고 `사진은 최대 10장까지 첨부할 수 있어요.`를 표시합니다.
@@ -137,29 +138,30 @@ InputReviewMain
 ## State
 
 - local state: generated id, textarea blur 여부를 사용합니다.
-- photo uploader local state: file input ref, photo object URL 목록, 사진 용량/개수 오류 메시지를 사용합니다.
+- photo uploader local state: file input ref, photo object URL 목록, 사진 형식/용량/개수 오류 메시지를 사용합니다.
 - derived state: `hasReviewTextBlurred || value.length > 0`, `value.length < 10`, `value.length > maxLength`
 - controlled state: `value`
 - uncontrolled state: 없음
 - loading state: 없음
-- error state: 사진 장당 5MB 초과 오류 메시지, 사진 최대 10장 초과 오류 메시지
+- error state: 지원하지 않는 사진 형식 오류 메시지, 사진 장당 5MB 초과 오류 메시지, 사진 최대 10장 초과 오류 메시지
 - disabled state: `disabled`
 
 ## Behavior
 
 1. 컴포넌트가 렌더링되면 사진 첨부 트리거와 textarea를 표시합니다.
 2. 사용자가 사진 첨부 트리거를 누르면 숨겨진 file input click을 실행합니다.
-3. 사용자가 파일을 선택하면 5MB 이하 파일 중 남은 사진 슬롯 수만큼만 `onPhotoFilesChange?.([...photoFiles, ...nextFiles])`로 전달합니다.
-4. 5MB를 초과한 파일이 있으면 해당 파일은 거절하고 `사진은 장당 5MB 이하로 첨부해주세요.`를 표시합니다.
-5. 남은 사진 슬롯보다 많은 파일을 선택하면 초과 파일은 거절하고 `사진은 최대 10장까지 첨부할 수 있어요.`를 표시합니다.
-6. 선택된 사진이 10장이면 사진 추가 버튼과 file input은 비활성화됩니다.
-7. 선택된 `photoFiles`가 있으면 사진 추가 버튼과 이미지 미리보기를 `overflow-x-auto` 가로 스크롤 목록으로 표시합니다.
-8. 이미지 미리보기의 삭제 버튼을 누르면 사진 오류 메시지를 초기화하고, 해당 file index를 제외한 다음 `photoFiles` 배열을 `onPhotoFilesChange`에 전달합니다.
-9. 사용자가 textarea를 변경하면 HDS `Textarea`가 `maxLength` 기준으로 제한한 다음 `onValueChange?.(nextValue)`를 호출합니다.
-10. 입력하지 않은 빈 상태에서는 helper text를 `10자 이상`으로 표시합니다.
-11. textarea가 blur되었거나 본문이 입력된 뒤 `value.length < 10`이면 helper text는 `10자 이상 작성해주세요.`입니다.
-12. 호출부에서 전달한 `value.length > maxLength`이면 helper text는 `글자 수 제한을 초과했어요.`입니다.
-13. `disabled=true`이면 사진 첨부 트리거, 이미지 삭제 버튼, textarea는 입력을 받지 않습니다.
+3. 사용자가 파일을 선택하면 JPEG, PNG, WEBP이면서 5MB 이하인 파일 중 남은 사진 슬롯 수만큼만 `onPhotoFilesChange?.([...photoFiles, ...nextFiles])`로 전달합니다.
+4. 지원하지 않는 MIME 타입이 있으면 해당 파일은 거절하고 `JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.`를 표시합니다.
+5. 5MB를 초과한 파일이 있으면 해당 파일은 거절하고 `사진은 장당 5MB 이하로 첨부해주세요.`를 표시합니다.
+6. 남은 사진 슬롯보다 많은 파일을 선택하면 초과 파일은 거절하고 `사진은 최대 10장까지 첨부할 수 있어요.`를 표시합니다.
+7. 선택된 사진이 10장이면 사진 추가 버튼과 file input은 비활성화됩니다.
+8. 선택된 `photoFiles`가 있으면 사진 추가 버튼과 이미지 미리보기를 `overflow-x-auto` 가로 스크롤 목록으로 표시합니다.
+9. 이미지 미리보기의 삭제 버튼을 누르면 사진 오류 메시지를 초기화하고, 해당 file index를 제외한 다음 `photoFiles` 배열을 `onPhotoFilesChange`에 전달합니다.
+10. 사용자가 textarea를 변경하면 HDS `Textarea`가 `maxLength` 기준으로 제한한 다음 `onValueChange?.(nextValue)`를 호출합니다.
+11. 입력하지 않은 빈 상태에서는 helper text를 `10자 이상`으로 표시합니다.
+12. textarea가 blur되었거나 본문이 입력된 뒤 `value.length < 10`이면 helper text는 `10자 이상 작성해주세요.`입니다.
+13. 호출부에서 전달한 `value.length > maxLength`이면 helper text는 `글자 수 제한을 초과했어요.`입니다.
+14. `disabled=true`이면 사진 첨부 트리거, 이미지 삭제 버튼, textarea는 입력을 받지 않습니다.
 
 ## Validation
 
@@ -167,6 +169,7 @@ InputReviewMain
 - 리뷰 본문 최대 글자 수 초과 입력은 HDS `Textarea`의 `maxLength` 입력 제한으로 먼저 막습니다.
 - 이미 초과된 controlled value가 전달된 경우의 최대 글자 수 초과 helper text는 컴포넌트가 표시합니다.
 - submit 가능 여부는 호출부가 처리합니다.
+- 사진 MIME 타입 검증은 컴포넌트가 처리하고, JPEG, PNG, WEBP가 아닌 파일은 호출부 상태로 전달하지 않습니다.
 - 사진 장당 5MB 검증은 컴포넌트가 처리하고, 초과 파일은 호출부 상태로 전달하지 않습니다.
 - 사진 최대 10장 추가 제한은 컴포넌트가 처리하고, 초과 파일은 호출부 상태로 전달하지 않습니다.
 - 사진 최대 10장 저장 가능 여부 검증은 호출부가 처리합니다.
@@ -174,6 +177,7 @@ InputReviewMain
 
 ## Error Handling
 
+- JPEG, PNG, WEBP가 아닌 사진 파일은 추가하지 않고 사진 영역에 오류 메시지를 표시합니다.
 - 장당 5MB를 초과한 사진 파일은 추가하지 않고 사진 영역에 오류 메시지를 표시합니다.
 - 최대 10장을 초과한 사진 파일은 추가하지 않고 사진 영역에 오류 메시지를 표시합니다.
 - 선택된 사진을 삭제하면 조건이 해소된 뒤 stale error가 남지 않도록 사진 오류 메시지를 초기화합니다.

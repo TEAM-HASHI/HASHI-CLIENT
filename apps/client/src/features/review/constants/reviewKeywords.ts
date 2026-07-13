@@ -12,17 +12,7 @@ import {
 } from '@hashi/hds-icons'
 import type { ComponentType, SVGProps } from 'react'
 
-export type ReviewKeywordId =
-  | 'delicious'
-  | 'mildSpice'
-  | 'solo'
-  | 'kind'
-  | 'spaciousStore'
-  | 'cleanStore'
-  | 'fast'
-  | 'photo'
-  | 'value'
-  | 'conversation'
+export type ReviewKeywordId = string
 
 export interface ReviewKeywordOption {
   id: ReviewKeywordId
