@@ -10,6 +10,15 @@ import { HomePage } from '@/pages/home/HomePage'
 const { mockGetHotSnsRestaurants } = vi.hoisted(() => ({
   mockGetHotSnsRestaurants: vi.fn(),
 }))
+const { mockStartKakaoOAuth } = vi.hoisted(() => ({
+  mockStartKakaoOAuth: vi.fn(),
+}))
+
+vi.mock('@/features/auth/hooks/useKakaoOAuthStart', () => ({
+  useKakaoOAuthStart: () => ({
+    startKakaoOAuth: mockStartKakaoOAuth,
+  }),
+}))
 
 vi.mock('@/shared/hooks', () => ({
   useAuthStatus: () => ({
@@ -173,6 +182,16 @@ describe('HomePage', () => {
     expect(screen.getByTestId('location-pathname')).toHaveTextContent(
       ROUTES.anywhereReservation,
     )
+  })
+
+  it('starts Kakao OAuth from the login bottom sheet with the home path', () => {
+    renderHomePage()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '카카오로 1초 만에 시작하기' }),
+    )
+
+    expect(mockStartKakaoOAuth).toHaveBeenCalledWith(ROUTES.home)
   })
 
   it('moves to search page when the search entry is clicked', () => {

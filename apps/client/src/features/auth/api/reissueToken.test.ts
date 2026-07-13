@@ -73,6 +73,24 @@ describe('requestTokenReissue', () => {
     )
   })
 
+  it('throws when successful reissue uses a non-Bearer Authorization header', async () => {
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        authorization: 'Basic reissued-access-token',
+        body: {
+          success: true,
+          code: 'AUTH-202',
+          message: '토큰이 재발급되었습니다',
+          data: null,
+        },
+      }) as never,
+    )
+
+    await expect(requestTokenReissue()).rejects.toThrow(
+      'Authorization header is missing.',
+    )
+  })
+
   it('throws ApiError when reissue returns an error response', async () => {
     mockedApiClient.mockResolvedValue(
       createHttpResponse({

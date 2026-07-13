@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  clearApiAccessToken,
-  getApiAccessToken,
-  setApiAccessToken,
-} from '@/shared/api/accessToken'
+import { getApiAccessToken } from '@/shared/api/accessToken'
 
 describe('API access token', () => {
   beforeEach(() => {
@@ -12,31 +8,16 @@ describe('API access token', () => {
   })
 
   afterEach(() => {
-    clearApiAccessToken()
     window.localStorage.clear()
     vi.restoreAllMocks()
     vi.unstubAllEnvs()
   })
 
-  it('returns the stored token before the development fallback', () => {
+  it('ignores persisted tokens and returns only the development fallback', () => {
     vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', 'development-token')
     window.localStorage.setItem('accessToken', 'stored-token')
 
-    expect(getApiAccessToken()).toBe('stored-token')
-  })
-
-  it('persists the token for authenticated API requests', () => {
-    setApiAccessToken('stored-token')
-
-    expect(window.localStorage.getItem('accessToken')).toBe('stored-token')
-  })
-
-  it('removes the persisted token when authentication is cleared', () => {
-    window.localStorage.setItem('accessToken', 'stored-token')
-
-    clearApiAccessToken()
-
-    expect(window.localStorage.getItem('accessToken')).toBeNull()
+    expect(getApiAccessToken()).toBe('development-token')
   })
 
   it('returns the local development token when no stored token exists', () => {
@@ -49,14 +30,5 @@ describe('API access token', () => {
     vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', '')
 
     expect(getApiAccessToken()).toBeNull()
-  })
-
-  it('uses the development fallback when stored token access fails', () => {
-    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', 'development-token')
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('storage unavailable')
-    })
-
-    expect(getApiAccessToken()).toBe('development-token')
   })
 })

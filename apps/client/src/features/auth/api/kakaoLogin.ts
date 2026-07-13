@@ -2,6 +2,7 @@ import type { components } from '@/shared/api/generated/openapi'
 import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
 import { isErrorResponse, type ApiResponse } from '@/shared/api/types'
+import { extractBearerToken } from '@/features/auth/utils/extractBearerToken'
 
 type KakaoLoginRequest = components['schemas']['KakaoLoginRequest']
 type KakaoLoginData = components['schemas']['KakaoLoginResponse']
@@ -13,16 +14,6 @@ export interface KakaoLoginResult {
 
 const KAKAO_LOGIN_PATH = 'api/v1/auth/kakao/login'
 const AUTHORIZATION_HEADER_MISSING_MESSAGE = 'Authorization header is missing.'
-
-const extractAccessToken = (headers: Headers) => {
-  const authorizationHeader = headers.get('Authorization')
-
-  if (!authorizationHeader) {
-    return undefined
-  }
-
-  return authorizationHeader.replace(/^Bearer\s+/i, '').trim() || undefined
-}
 
 export const requestKakaoLogin = async (
   code: string,
@@ -66,7 +57,7 @@ export const requestKakaoLogin = async (
     }
   }
 
-  const accessToken = extractAccessToken(httpResponse.headers)
+  const accessToken = extractBearerToken(httpResponse.headers)
 
   if (!accessToken) {
     throw new Error(AUTHORIZATION_HEADER_MISSING_MESSAGE)

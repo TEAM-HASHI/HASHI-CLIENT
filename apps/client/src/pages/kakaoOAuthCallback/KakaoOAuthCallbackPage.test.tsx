@@ -137,6 +137,23 @@ describe('KakaoOAuthCallbackPage', () => {
     expect(mockedClearAuthSession).toHaveBeenCalled()
   })
 
+  it('rejects a non-user auth subject response', async () => {
+    mockedGetAuthMe.mockResolvedValue({
+      subjectId: 1,
+      role: 'ADMIN',
+    })
+
+    render(<KakaoOAuthCallbackPage />)
+
+    await waitFor(() => {
+      expect(mockedClearAuthSession).toHaveBeenCalled()
+    })
+    expect(mockedSetAccessToken).not.toHaveBeenCalled()
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.loginRequired, {
+      replace: true,
+    })
+  })
+
   it('starts onboarding session and redirects new user to profile creation', async () => {
     mockedConsumeKakaoOAuthState.mockReturnValue({
       state: 'state-123',

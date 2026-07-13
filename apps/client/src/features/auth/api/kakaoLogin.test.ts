@@ -99,6 +99,26 @@ describe('requestKakaoLogin', () => {
     )
   })
 
+  it('throws when an existing user response uses a non-Bearer Authorization header', async () => {
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        authorization: 'Basic access-token',
+        body: {
+          success: true,
+          code: 'AUTH-200',
+          message: '로그인에 성공했습니다',
+          data: {
+            registered: true,
+          },
+        },
+      }) as never,
+    )
+
+    await expect(requestKakaoLogin('kakao-code')).rejects.toThrow(
+      'Authorization header is missing.',
+    )
+  })
+
   it('throws when success response omits registered flag', async () => {
     mockedApiClient.mockResolvedValue(
       createHttpResponse({

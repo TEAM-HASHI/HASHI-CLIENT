@@ -120,16 +120,27 @@ export const buildKakaoAuthorizeUrl = (state: string) => {
 
 export const saveKakaoOAuthState = (
   oauthState: KakaoOAuthState,
-  storage: Pick<Storage, 'setItem'> | undefined = typeof window === 'undefined'
-    ? undefined
-    : window.sessionStorage,
+  storage?: Pick<Storage, 'setItem'>,
 ) => {
-  if (!storage) {
+  let targetStorage = storage
+
+  if (!targetStorage && typeof window !== 'undefined') {
+    try {
+      targetStorage = window.sessionStorage
+    } catch {
+      return false
+    }
+  }
+
+  if (!targetStorage) {
     return false
   }
 
   try {
-    storage.setItem(KAKAO_OAUTH_STATE_STORAGE_KEY, JSON.stringify(oauthState))
+    targetStorage.setItem(
+      KAKAO_OAUTH_STATE_STORAGE_KEY,
+      JSON.stringify(oauthState),
+    )
 
     return true
   } catch {

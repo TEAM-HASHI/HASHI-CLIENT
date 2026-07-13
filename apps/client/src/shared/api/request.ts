@@ -6,7 +6,12 @@ import {
   getAccessToken,
   setAccessToken,
 } from '@/features/auth/session/authSession'
-import { ApiError, HttpStatusError } from '@/shared/api/apiError'
+import {
+  ApiError,
+  HttpStatusError,
+  checkIsAuthRequiredError,
+} from '@/shared/api/apiError'
+import { getApiAccessToken } from '@/shared/api/accessToken'
 import { apiClient } from '@/shared/api/apiClient'
 import { isErrorResponse, isSuccessResponse } from '@/shared/api/types'
 import type { SuccessResponse } from '@/shared/api/types'
@@ -50,7 +55,7 @@ const createHeaders = (headersInit: Options['headers']) => {
 }
 
 const getRequestOptions = (options?: Options): Options | undefined => {
-  const accessToken = getAccessToken()
+  const accessToken = getAccessToken() ?? getApiAccessToken()
 
   if (!accessToken) {
     return options
@@ -83,7 +88,7 @@ const parseResponseBody = async (httpResponse: Response): Promise<unknown> => {
 const isAuthPath = (path: string) => path.startsWith('api/v1/auth/')
 
 const shouldTryTokenReissue = (path: string, cause: unknown) =>
-  cause instanceof ApiError && cause.status === 401 && !isAuthPath(path)
+  checkIsAuthRequiredError(cause) && !isAuthPath(path)
 
 const reissueAccessToken = async () => {
   if (!tokenReissuePromise) {

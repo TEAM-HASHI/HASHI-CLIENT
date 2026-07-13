@@ -75,4 +75,16 @@ describe('kakaoOAuth utilities', () => {
       saveKakaoOAuthState(createKakaoOAuthState(), unavailableStorage),
     ).toBe(false)
   })
+
+  it('returns false when accessing sessionStorage itself throws', () => {
+    const sessionStorageGetter = vi
+      .spyOn(window, 'sessionStorage', 'get')
+      .mockImplementation(() => {
+        throw new DOMException('Blocked', 'SecurityError')
+      })
+
+    expect(saveKakaoOAuthState(createKakaoOAuthState())).toBe(false)
+
+    sessionStorageGetter.mockRestore()
+  })
 })

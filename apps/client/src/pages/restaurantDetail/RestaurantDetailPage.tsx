@@ -3,6 +3,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
+import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
+import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import {
   MOCK_RESTAURANT_DETAIL,
   RestaurantDetailTemplate,
@@ -23,6 +25,7 @@ export const RestaurantDetailPage = () => {
   const location = useLocation()
   const { restaurantId } = useParams()
   const { isAuthenticated } = useAuthStatus()
+  const { startKakaoOAuth } = useKakaoOAuthStart()
   const initialTab = getRestaurantDetailTabState(location.state).activeTab
   const [activeTab, setActiveTab] = useState<RestaurantDetailTab>(
     initialTab ?? 'info',
@@ -117,7 +120,7 @@ export const RestaurantDetailPage = () => {
         variant="detail"
       />
       <AuthGateBottomSheet
-        onKakaoPress={() => undefined}
+        onKakaoPress={() => startKakaoOAuth(getPathFromLocation(location))}
         onOpenChange={setIsAuthGateOpen}
         open={isAuthGateOpen}
       />

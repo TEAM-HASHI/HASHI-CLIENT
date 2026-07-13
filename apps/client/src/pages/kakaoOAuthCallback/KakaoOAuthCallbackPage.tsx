@@ -60,7 +60,12 @@ export const KakaoOAuthCallbackPage = () => {
           throw new Error('Authorization header is missing.')
         }
 
-        await getAuthMe(loginResult.accessToken)
+        const authMe = await getAuthMe(loginResult.accessToken)
+
+        if (authMe.role !== 'USER') {
+          throw new Error('Invalid user session.')
+        }
+
         setAccessToken(loginResult.accessToken)
         navigate(oauthState.redirectTo ?? ROUTES.home, { replace: true })
       } catch {

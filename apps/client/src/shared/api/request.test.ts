@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
@@ -57,8 +57,14 @@ const validationErrorResponse: ErrorResponse = {
 
 describe('request', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    mockedApiClient.mockReset()
+    mockedRequestTokenReissue.mockReset()
+    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', '')
     clearAuthSession()
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
   })
 
   it('returns data when success response includes data', async () => {
@@ -283,6 +289,29 @@ describe('request', () => {
     )
   })
 
+  it('injects the development access token when memory session is empty', async () => {
+    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', 'development-token')
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: true,
+        status: 200,
+        body: {
+          success: true,
+          code: 'SUCCESS',
+          message: 'ok',
+          data: null,
+        },
+      }) as never,
+    )
+
+    await request('users/me')
+
+    const [, options] = mockedApiClient.mock.calls[0]
+    expect((options?.headers as Headers).get('Authorization')).toBe(
+      'Bearer development-token',
+    )
+  })
+
   it('does not overwrite explicit Authorization header', async () => {
     setAccessToken('stored-access-token')
     mockedApiClient.mockResolvedValue(
@@ -360,6 +389,37 @@ describe('request', () => {
     expect((retryOptions?.headers as Headers).get('Authorization')).toBe(
       'Bearer fresh-access-token',
     )
+  })
+
+  it('reissues token when a 401 response has no JSON body', async () => {
+    mockedApiClient
+      .mockResolvedValueOnce(
+        createHttpResponse({
+          ok: false,
+          status: 401,
+          jsonError: new SyntaxError('empty response'),
+        }) as never,
+      )
+      .mockResolvedValueOnce(
+        createHttpResponse({
+          ok: true,
+          status: 200,
+          body: {
+            success: true,
+            code: 'SUCCESS',
+            message: 'ok',
+            data: { id: 1 },
+          },
+        }) as never,
+      )
+    mockedRequestTokenReissue.mockResolvedValue({
+      accessToken: 'fresh-access-token',
+    })
+
+    await expect(request<{ id: number }>('restaurants/me')).resolves.toEqual({
+      id: 1,
+    })
+    expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
   })
 
   it('clears session and throws original auth error when token reissue fails', async () => {
