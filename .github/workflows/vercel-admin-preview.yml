@@ -1,33 +1,33 @@
-name: Vercel Preview Deployment
+name: Vercel Admin Preview Deployment
 
 on:
   pull_request:
     paths:
-      - '.github/workflows/vercel-preview.yml'
-      - 'apps/client/**'
+      - '.github/workflows/vercel-admin-preview.yml'
+      - 'apps/admin/**'
       - 'configs/**'
       - 'packages/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'turbo.json'
-      - 'vercel.json'
+      - 'vercel.admin.json'
   push:
     branches:
       - develop
     paths:
-      - '.github/workflows/vercel-preview.yml'
-      - 'apps/client/**'
+      - '.github/workflows/vercel-admin-preview.yml'
+      - 'apps/admin/**'
       - 'configs/**'
       - 'packages/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
       - 'turbo.json'
-      - 'vercel.json'
+      - 'vercel.admin.json'
 
 concurrency:
-  group: vercel-preview-${{ github.event.pull_request.number || github.ref }}
+  group: vercel-admin-preview-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -35,16 +35,12 @@ permissions:
   pull-requests: write
 
 jobs:
-  deploy-preview:
+  deploy-admin-preview:
     runs-on: ubuntu-latest
 
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-      VERCEL_GIT_COMMIT_SHA: ${{ github.sha }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_ADMIN_PROJECT_ID }}
 
     steps:
       - name: Checkout
@@ -62,19 +58,19 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Pull Vercel Environment
-        run: pnpm exec vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Pull Admin Vercel Environment
+        run: pnpm exec vercel pull --yes --environment=preview --local-config=vercel.admin.json --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Build Vercel Output
-        run: pnpm exec vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build Admin Vercel Output
+        run: pnpm exec vercel build --local-config=vercel.admin.json --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Deploy Preview
+      - name: Deploy Admin Preview
         id: deploy
         run: |
-          url=$(pnpm exec vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(pnpm exec vercel deploy --prebuilt --local-config=vercel.admin.json --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
-      - name: Comment Preview URL
+      - name: Comment Admin Preview URL
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
@@ -83,5 +79,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 Client Preview deployed: ${{ steps.deploy.outputs.url }}`,
+              body: `🚀 Admin Preview deployed: ${{ steps.deploy.outputs.url }}`,
             })
