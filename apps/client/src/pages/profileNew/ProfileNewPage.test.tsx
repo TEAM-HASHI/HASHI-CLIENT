@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest'
+import { QueryClientProvider } from '@tanstack/react-query'
 import {
   cleanup,
   fireEvent,
@@ -15,6 +16,7 @@ import { uploadProfileImage } from '@/pages/profileNew/api/uploadProfileImage'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 import profileEmptyImage from '@/shared/assets/images/profile-empty.svg'
+import { createQueryClient } from '@/shared/lib/queryClient'
 
 import { ProfileNewPage } from '@/pages/profileNew/ProfileNewPage'
 
@@ -44,6 +46,14 @@ vi.mock('@/pages/profileNew/api/uploadProfileImage', () => ({
 
 const mockedRequestOnboarding = vi.mocked(requestOnboarding)
 const mockedUploadProfileImage = vi.mocked(uploadProfileImage)
+
+const renderProfileNewPage = (ui = <ProfileNewPage />) => {
+  const queryClient = createQueryClient()
+
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  )
+}
 
 const fillValidProfileForm = () => {
   fireEvent.change(screen.getByLabelText('닉네임'), {
@@ -91,14 +101,14 @@ describe('ProfileNewPage', () => {
   })
 
   it('keeps the complete CTA disabled before required values are valid', () => {
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     expect(screen.getByRole('heading', { name: '프로필 생성' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '완료' })).toBeDisabled()
   })
 
   it('fixes the header wrapper inside the mobile app frame with the shared utility', () => {
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     const backButton = screen.getByRole('button', { name: '뒤로가기' })
     const header = backButton.closest('header')
@@ -113,7 +123,7 @@ describe('ProfileNewPage', () => {
   })
 
   it('shows the default profile image before and after deleting profile image', () => {
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     const profileImage = screen.getByRole('img', { name: '프로필 이미지' })
 
@@ -134,7 +144,7 @@ describe('ProfileNewPage', () => {
       createObjectURL: createObjectUrl,
     })
     const inputClick = vi.spyOn(HTMLInputElement.prototype, 'click')
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fireEvent.click(screen.getByRole('button', { name: '프로필 이미지 수정' }))
 
@@ -161,7 +171,7 @@ describe('ProfileNewPage', () => {
       ...URL,
       createObjectURL: createObjectUrl,
     })
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     const oversizedImageFile = new File(
       [new Uint8Array(5 * 1024 * 1024 + 1)],
@@ -186,7 +196,7 @@ describe('ProfileNewPage', () => {
 
   it('does not block submit with the old duplicated nickname mock list', async () => {
     mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fireEvent.change(screen.getByLabelText('닉네임'), {
       target: { value: '중복' },
@@ -217,7 +227,7 @@ describe('ProfileNewPage', () => {
 
   it('enables submit after required values are valid and navigates home after onboarding succeeds', async () => {
     mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fillValidProfileForm()
 
@@ -249,7 +259,7 @@ describe('ProfileNewPage', () => {
     })
     mockedUploadProfileImage.mockResolvedValue('users/15/profile/profile.png')
     mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fillValidProfileForm()
     fireEvent.change(screen.getByLabelText('프로필 이미지 파일 선택'), {
@@ -273,7 +283,7 @@ describe('ProfileNewPage', () => {
     mockedRequestOnboarding.mockRejectedValue(
       createErrorResponse('USER-001', 409, '중복된 닉네임입니다'),
     )
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fillValidProfileForm()
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
@@ -292,7 +302,7 @@ describe('ProfileNewPage', () => {
         },
       ]),
     )
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fillValidProfileForm()
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
@@ -309,7 +319,7 @@ describe('ProfileNewPage', () => {
     mockedRequestOnboarding.mockRejectedValue(
       createErrorResponse('USER-004', 409, '이미 사용 중인 가입 정보입니다'),
     )
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fillValidProfileForm()
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
@@ -325,7 +335,7 @@ describe('ProfileNewPage', () => {
     mockedRequestOnboarding.mockRejectedValue(
       createErrorResponse('COMMON-401', 401, '인증이 필요합니다'),
     )
-    render(
+    renderProfileNewPage(
       <ErrorBoundary fallback={<p role="alert">boundary error</p>}>
         <ProfileNewPage />
       </ErrorBoundary>,
@@ -344,7 +354,7 @@ describe('ProfileNewPage', () => {
           // Keep the request pending to verify duplicate prevention.
         }),
     )
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fillValidProfileForm()
     const submitButton = screen.getByRole('button', { name: '완료' })
@@ -352,13 +362,15 @@ describe('ProfileNewPage', () => {
     fireEvent.click(submitButton)
     fireEvent.click(submitButton)
 
-    expect(mockedRequestOnboarding).toHaveBeenCalledTimes(1)
+    await waitFor(() => {
+      expect(mockedRequestOnboarding).toHaveBeenCalledTimes(1)
+    })
   })
 
   it('navigates to an allowed redirectTo path after onboarding succeeds', async () => {
     mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
     mockSearchParams.set('redirectTo', '/restaurants/1/reviews/new')
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fillValidProfileForm()
 
@@ -375,7 +387,7 @@ describe('ProfileNewPage', () => {
       'redirectTo',
       '/restaurants/1/reviews/new?reservationId=1#review-form',
     )
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fillValidProfileForm()
 
@@ -391,7 +403,7 @@ describe('ProfileNewPage', () => {
   it('ignores unsupported internal redirectTo paths after onboarding succeeds', async () => {
     mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
     mockSearchParams.set('redirectTo', ROUTES.withdrawal)
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fillValidProfileForm()
 
@@ -405,7 +417,7 @@ describe('ProfileNewPage', () => {
   it('ignores external redirectTo URLs after onboarding succeeds', async () => {
     mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
     mockSearchParams.set('redirectTo', 'https://example.com/reviews/new')
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fillValidProfileForm()
 
@@ -417,7 +429,7 @@ describe('ProfileNewPage', () => {
   })
 
   it('formats birth date and phone number while typing', () => {
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fireEvent.change(screen.getByLabelText('생년월일'), {
       target: { value: '20260708' },
@@ -431,7 +443,7 @@ describe('ProfileNewPage', () => {
   })
 
   it('moves back to the previous history entry from the header action', () => {
-    render(<ProfileNewPage />)
+    renderProfileNewPage()
 
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 

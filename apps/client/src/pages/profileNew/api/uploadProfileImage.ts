@@ -1,8 +1,10 @@
 import type { components } from '@/shared/api/generated/openapi'
+import { uploadFileToPresignedUrl } from '@/pages/reviewNew/api/uploadFileToPresignedUrl'
 import { request } from '@/shared/api/request'
 
 type IssuePresignedUrlsBody = components['schemas']['IssuePresignedUrlsRequest']
 type PresignedUrlsData = components['schemas']['PresignedUrlsResponse']
+type PresignedUrlData = components['schemas']['PresignedUrlResponse']
 
 const PROFILE_IMAGE_UPLOAD_USAGE = 'profile'
 const SUPPORTED_PROFILE_IMAGE_MIME_TYPES = new Set([
@@ -10,6 +12,12 @@ const SUPPORTED_PROFILE_IMAGE_MIME_TYPES = new Set([
   'image/png',
   'image/webp',
 ])
+
+const checkIsValidProfileImageUploadTarget = (
+  target: PresignedUrlData | undefined,
+): target is PresignedUrlData & { uploadUrl: string; fileKey: string } => {
+  return Boolean(target?.uploadUrl && target.fileKey)
+}
 
 export const uploadProfileImage = async (file: File): Promise<string> => {
   if (!SUPPORTED_PROFILE_IMAGE_MIME_TYPES.has(file.type)) {
@@ -31,19 +39,16 @@ export const uploadProfileImage = async (file: File): Promise<string> => {
   )
   const presignedUrl = presignedUrls?.uploads?.[0]
 
-  if (!presignedUrl?.uploadUrl || !presignedUrl.fileKey) {
+  if (!checkIsValidProfileImageUploadTarget(presignedUrl)) {
     throw new Error('프로필 이미지 업로드 응답이 올바르지 않습니다.')
   }
 
-  const response = await fetch(presignedUrl.uploadUrl, {
-    method: presignedUrl.uploadMethod ?? 'PUT',
-    headers: { 'Content-Type': file.type },
-    body: file,
+  await uploadFileToPresignedUrl(file, {
+    ...presignedUrl,
+    uploadUrl: presignedUrl.uploadUrl,
+    fileKey: presignedUrl.fileKey,
+    uploadMethod: presignedUrl.uploadMethod ?? 'PUT',
   })
-
-  if (!response.ok) {
-    throw new Error('프로필 이미지 업로드에 실패했습니다.')
-  }
 
   return presignedUrl.fileKey
 }

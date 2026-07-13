@@ -1,11 +1,15 @@
+import { useMutation } from '@tanstack/react-query'
 import type { SyntheticEvent } from 'react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { matchPath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { requestOnboarding } from '@/pages/profileNew/api/requestOnboarding'
 import { uploadProfileImage } from '@/pages/profileNew/api/uploadProfileImage'
-import { useProfileNewForm } from '@/pages/profileNew/hooks/useProfileNewForm'
+import {
+  type ProfileDraft,
+  useProfileNewForm,
+} from '@/pages/profileNew/hooks/useProfileNewForm'
 import { createOnboardingRequestBody } from '@/pages/profileNew/utils/profileNewForm'
 import { isApiError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
@@ -70,12 +74,20 @@ const getDuplicatedFieldName = (code: string) => {
   return undefined
 }
 
+export const submitProfileNew = async (profileDraft: ProfileDraft) => {
+  const profileImageKey = profileDraft.profileImageFile
+    ? await uploadProfileImage(profileDraft.profileImageFile)
+    : undefined
+
+  return requestOnboarding(
+    createOnboardingRequestBody(profileDraft, profileImageKey),
+  )
+}
+
 export const useProfileNewPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const form = useProfileNewForm()
   const [boundaryError, setBoundaryError] = useState<unknown>()
-  const isSubmitInFlightRef = useRef(false)
 
   const handleBackClick = () => {
     navigate(-1)
@@ -131,12 +143,23 @@ export const useProfileNewPage = () => {
     return false
   }
 
+  const profileNewMutation = useMutation({
+    mutationFn: submitProfileNew,
+    onSuccess: () => {
+      navigate(getAllowedRedirectPath(searchParams.get('redirectTo')))
+    },
+    onError: (error) => {
+      if (!handleLocalOnboardingError(error)) {
+        setBoundaryError(error)
+      }
+    },
+  })
+  const form = useProfileNewForm({
+    isSubmitting: profileNewMutation.isPending,
+  })
+
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
-
-    if (isSubmitInFlightRef.current) {
-      return
-    }
 
     const profileDraft = form.submit.createProfileDraft()
 
@@ -144,27 +167,7 @@ export const useProfileNewPage = () => {
       return
     }
 
-    isSubmitInFlightRef.current = true
-    form.submit.setSubmitting(true)
-
-    try {
-      const profileImageKey = profileDraft.profileImageFile
-        ? await uploadProfileImage(profileDraft.profileImageFile)
-        : undefined
-
-      await requestOnboarding(
-        createOnboardingRequestBody(profileDraft, profileImageKey),
-      )
-
-      navigate(getAllowedRedirectPath(searchParams.get('redirectTo')))
-    } catch (error) {
-      if (!handleLocalOnboardingError(error)) {
-        setBoundaryError(error)
-      }
-    } finally {
-      isSubmitInFlightRef.current = false
-      form.submit.setSubmitting(false)
-    }
+    await profileNewMutation.mutateAsync(profileDraft).catch(() => undefined)
   }
 
   return {

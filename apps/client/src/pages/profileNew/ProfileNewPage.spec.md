@@ -118,6 +118,7 @@ Jira: HASHI-120
   - credentials: `include`
   - request usage: `profile`
   - response `uploadUrl`로 S3 `PUT` 업로드
+  - S3 업로드 실행은 `apps/client/src/pages/reviewNew/api/uploadFileToPresignedUrl.ts`의 presigned URL uploader를 재사용한다.
   - response `fileKey`를 온보딩 API의 `profileImageKey`로 전달
 - request data:
   - `nickname`: trimmed string
@@ -362,10 +363,10 @@ ProfileNewPage
 ## Implementation Notes
 
 - `ProfileNewPage`는 화면 섹션 조합만 담당한다.
-- `useProfileNewPage`는 navigation, search param, form submit 연결을 담당한다.
+- `useProfileNewPage`는 navigation, search param, TanStack Query mutation 기반 form submit 연결을 담당한다.
 - form state, formatting, validation, submit draft 생성은 `useProfileNewForm`에서 소유한다.
-- `useProfileNewForm`은 form 값, formatting, validation, 서버 field error, submitting 상태를 소유한다.
-- `useProfileNewPage`는 submit orchestration, profile image upload, onboarding API 호출, error mapping, navigation을 소유한다.
+- `useProfileNewForm`은 form 값, formatting, validation, 서버 field error를 소유하고, submitting 상태는 mutation `isPending`을 주입받아 CTA 상태 계산에 사용한다.
+- `useProfileNewPage`는 `useMutation`의 `mutateAsync`, `isPending`, `onSuccess`, `onError`로 submit orchestration, error mapping, navigation을 소유한다.
 - `requestOnboarding`과 `uploadProfileImage`는 React, route, UI state를 알지 않는다.
 - `signup_token`은 HttpOnly cookie이므로 프론트 코드에서 읽거나 저장하지 않는다.
 - 온보딩 API 요청에 Authorization header를 임의로 추가하지 않는다.

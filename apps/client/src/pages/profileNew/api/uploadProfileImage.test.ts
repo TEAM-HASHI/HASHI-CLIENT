@@ -1,23 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { uploadProfileImage } from '@/pages/profileNew/api/uploadProfileImage'
+import { uploadFileToPresignedUrl } from '@/pages/reviewNew/api/uploadFileToPresignedUrl'
 import { request } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({
   request: vi.fn(),
 }))
 
+vi.mock('@/pages/reviewNew/api/uploadFileToPresignedUrl', () => ({
+  uploadFileToPresignedUrl: vi.fn(),
+}))
+
 const mockedRequest = vi.mocked(request)
-const mockedFetch = vi.fn()
+const mockedUploadFileToPresignedUrl = vi.mocked(uploadFileToPresignedUrl)
 
 describe('uploadProfileImage', () => {
   beforeEach(() => {
     mockedRequest.mockReset()
-    mockedFetch.mockReset()
-    vi.stubGlobal('fetch', mockedFetch)
+    mockedUploadFileToPresignedUrl.mockReset()
   })
 
-  it('issues a profile presigned URL and uploads the image with its MIME type', async () => {
+  it('issues a profile presigned URL and uploads the image with the shared presigned URL uploader', async () => {
     const file = new File([new Uint8Array(1024)], 'profile.webp', {
       type: 'image/webp',
     })
@@ -33,7 +37,7 @@ describe('uploadProfileImage', () => {
         },
       ],
     })
-    mockedFetch.mockResolvedValue({ ok: true })
+    mockedUploadFileToPresignedUrl.mockResolvedValue(undefined)
 
     await expect(uploadProfileImage(file)).resolves.toEqual(
       'users/15/profile/profile.webp',
@@ -49,14 +53,13 @@ describe('uploadProfileImage', () => {
         },
       },
     )
-    expect(mockedFetch).toHaveBeenCalledWith(
-      'https://upload.example/profile.webp',
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'image/webp' },
-        body: file,
-      },
-    )
+    expect(mockedUploadFileToPresignedUrl).toHaveBeenCalledWith(file, {
+      uploadUrl: 'https://upload.example/profile.webp',
+      fileKey: 'users/15/profile/profile.webp',
+      fileUrl: 'https://cdn.example/profile.webp',
+      expiresInSeconds: 300,
+      uploadMethod: 'PUT',
+    })
   })
 
   it('rejects when presigned URL response does not include an upload URL and file key', async () => {
@@ -67,11 +70,12 @@ describe('uploadProfileImage', () => {
     await expect(uploadProfileImage(file)).rejects.toThrow(
       '프로필 이미지 업로드 응답이 올바르지 않습니다.',
     )
-    expect(mockedFetch).not.toHaveBeenCalled()
+    expect(mockedUploadFileToPresignedUrl).not.toHaveBeenCalled()
   })
 
-  it('rejects when object storage upload fails', async () => {
+  it('rejects when the shared presigned URL uploader fails', async () => {
     const file = new File(['profile'], 'profile.png', { type: 'image/png' })
+    const uploadError = new Error('temporary upload failure')
 
     mockedRequest.mockResolvedValue({
       uploads: [
@@ -82,11 +86,9 @@ describe('uploadProfileImage', () => {
         },
       ],
     })
-    mockedFetch.mockResolvedValue({ ok: false })
+    mockedUploadFileToPresignedUrl.mockRejectedValue(uploadError)
 
-    await expect(uploadProfileImage(file)).rejects.toThrow(
-      '프로필 이미지 업로드에 실패했습니다.',
-    )
+    await expect(uploadProfileImage(file)).rejects.toThrow(uploadError)
   })
 
   it('rejects unsupported profile image MIME types before issuing a presigned URL', async () => {
@@ -96,6 +98,6 @@ describe('uploadProfileImage', () => {
       '지원하지 않는 프로필 이미지 형식입니다.',
     )
     expect(mockedRequest).not.toHaveBeenCalled()
-    expect(mockedFetch).not.toHaveBeenCalled()
+    expect(mockedUploadFileToPresignedUrl).not.toHaveBeenCalled()
   })
 })

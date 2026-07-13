@@ -19,6 +19,10 @@ export interface ProfileDraft {
   email: string
 }
 
+interface UseProfileNewFormOptions {
+  isSubmitting?: boolean
+}
+
 const PROFILE_IMAGE_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
 const PROFILE_IMAGE_INVALID_FILE_TYPE_ERROR_MESSAGE =
   '이미지 파일만 등록해주세요.'
@@ -30,7 +34,9 @@ const SUPPORTED_PROFILE_IMAGE_MIME_TYPES = new Set([
   'image/webp',
 ])
 
-export const useProfileNewForm = () => {
+export const useProfileNewForm = ({
+  isSubmitting = false,
+}: UseProfileNewFormOptions = {}) => {
   const [profileImageFile, setProfileImageFile] = useState<File>()
   const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<string>()
   const profileImagePreviewUrlRef = useRef<string | undefined>(undefined)
@@ -45,7 +51,6 @@ export const useProfileNewForm = () => {
     () => new Set(),
   )
   const [hasSubmitAttempted, setHasSubmitAttempted] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [serverFieldErrors, setServerFieldErrors] = useState<
     Partial<Record<'nickname' | 'birthDate' | 'phoneNumber' | 'email', string>>
   >({})
@@ -270,7 +275,6 @@ export const useProfileNewForm = () => {
       createProfileDraft,
       setFieldError: handleFieldServerError,
       setFormError,
-      setSubmitting: setIsSubmitting,
     },
   }
 }

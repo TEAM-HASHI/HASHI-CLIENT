@@ -156,6 +156,25 @@ describe('useProfileNewForm', () => {
     expect(result.current.submit.isSubmitting).toBe(false)
   })
 
+  it('uses external submitting state to block draft creation', () => {
+    const { result } = renderHook(() =>
+      useProfileNewForm({ isSubmitting: true }),
+    )
+    fillRequiredFields(result)
+
+    let profileDraft: ReturnType<
+      typeof result.current.submit.createProfileDraft
+    >
+
+    act(() => {
+      profileDraft = result.current.submit.createProfileDraft()
+    })
+
+    expect(result.current.submit.canSubmit).toBe(false)
+    expect(result.current.submit.isSubmitting).toBe(true)
+    expect(profileDraft).toBeUndefined()
+  })
+
   it('creates a normalized profile draft from valid form values', () => {
     const { result } = renderHook(() => useProfileNewForm())
 
