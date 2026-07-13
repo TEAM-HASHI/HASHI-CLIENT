@@ -1,4 +1,5 @@
 import type { RestaurantMenuResponse } from '@/features/restaurantDetail/api/getRestaurantMenus'
+import type { RestaurantMenuDetailResponse } from '@/features/restaurantDetail/api/getRestaurantMenu'
 import type { ReviewSummaryResponse } from '@/features/restaurantDetail/api/getRestaurantReviews'
 import type { RestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
 import type { RestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
@@ -149,6 +150,10 @@ export const createRestaurantMenusViewModel = (
       imageUrl: menu.imageUrl,
     }
   })
+
+export const createRestaurantMenuViewModel = (
+  menu: RestaurantMenuDetailResponse | null,
+) => createRestaurantMenusViewModel(menu ? [menu] : [])[0] ?? null
 
 const createReviews = (reviews: ReviewSummaryResponse[]) =>
   reviews.flatMap((review) => {

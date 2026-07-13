@@ -6,6 +6,7 @@ import {
 
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'
 import { getRestaurantMain } from '@/features/restaurantDetail/api/getRestaurantMain'
+import { getRestaurantMenu } from '@/features/restaurantDetail/api/getRestaurantMenu'
 import {
   getRestaurantMenus,
   type RestaurantMenuListData,
@@ -49,9 +50,19 @@ export const restaurantStoreInformationQueryOptions = (restaurantId: number) =>
     queryKey: restaurantDetailQueryKeys.storeInformation(restaurantId),
   })
 
+export const restaurantMenuQueryOptions = (
+  restaurantId: number,
+  menuId: number,
+) =>
+  queryOptions({
+    queryFn: () => getRestaurantMenu({ restaurantId, menuId }),
+    queryKey: restaurantDetailQueryKeys.menu(restaurantId, menuId),
+  })
+
 export const restaurantMenusInfiniteQueryOptions = (
   restaurantId: number,
   size: number,
+  excludeMenuId?: number,
 ) =>
   infiniteQueryOptions<
     RestaurantMenuListData,
@@ -61,8 +72,17 @@ export const restaurantMenusInfiniteQueryOptions = (
     number | undefined
   >({
     queryFn: ({ pageParam }) =>
-      getRestaurantMenus({ restaurantId, cursor: pageParam, size }),
-    queryKey: restaurantDetailQueryKeys.menus(restaurantId, size),
+      getRestaurantMenus({
+        restaurantId,
+        cursor: pageParam,
+        excludeMenuId,
+        size,
+      }),
+    queryKey: restaurantDetailQueryKeys.menus(
+      restaurantId,
+      size,
+      excludeMenuId,
+    ),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) =>
       lastPage.hasNext ? lastPage.nextCursor : undefined,

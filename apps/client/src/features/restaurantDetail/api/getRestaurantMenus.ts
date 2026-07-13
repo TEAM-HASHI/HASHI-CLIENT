@@ -14,15 +14,21 @@ export interface RestaurantMenuListData {
 
 interface GetRestaurantMenusParams {
   restaurantId: number
+  excludeMenuId?: number
   cursor?: number
   size: number
 }
 
 const createRestaurantMenusSearchParams = ({
   cursor,
+  excludeMenuId,
   size,
-}: Pick<GetRestaurantMenusParams, 'cursor' | 'size'>) => {
+}: Pick<GetRestaurantMenusParams, 'cursor' | 'excludeMenuId' | 'size'>) => {
   const params = new URLSearchParams({ size: String(size) })
+
+  if (excludeMenuId !== undefined) {
+    params.set('excludeMenuId', String(excludeMenuId))
+  }
 
   if (cursor !== undefined) {
     params.set('cursor', String(cursor))
@@ -34,9 +40,14 @@ const createRestaurantMenusSearchParams = ({
 export const getRestaurantMenus = async ({
   restaurantId,
   cursor,
+  excludeMenuId,
   size,
 }: GetRestaurantMenusParams): Promise<RestaurantMenuListData> => {
-  const searchParams = createRestaurantMenusSearchParams({ cursor, size })
+  const searchParams = createRestaurantMenusSearchParams({
+    cursor,
+    excludeMenuId,
+    size,
+  })
   const response = await request<RestaurantMenuListResponse>(
     `/api/v1/restaurants/${restaurantId}/menus?${searchParams}`,
   )

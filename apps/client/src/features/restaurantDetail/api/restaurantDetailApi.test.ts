@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { request } from '@/shared/api/request'
 
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
+import { getRestaurantMenu } from '@/features/restaurantDetail/api/getRestaurantMenu'
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
 import { getRestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
@@ -94,6 +95,45 @@ describe('restaurant detail API', () => {
     })
     expect(mockedRequest).toHaveBeenCalledWith(
       '/api/v1/restaurants/10/menus?size=10&cursor=5',
+    )
+  })
+
+  it('gets restaurant menus excluding selected menu', async () => {
+    mockedRequest.mockResolvedValue({
+      content: [],
+      nextCursor: undefined,
+      hasNext: false,
+    })
+
+    await getRestaurantMenus({
+      restaurantId: 10,
+      excludeMenuId: 100,
+      size: 10,
+    })
+
+    expect(mockedRequest).toHaveBeenCalledWith(
+      '/api/v1/restaurants/10/menus?size=10&excludeMenuId=100',
+    )
+  })
+
+  it('gets restaurant menu detail', async () => {
+    mockedRequest.mockResolvedValue({
+      menuId: 100,
+      name: '시오라멘',
+      currency: 'JPY',
+      price: 1_000,
+    })
+
+    await expect(
+      getRestaurantMenu({ restaurantId: 10, menuId: 100 }),
+    ).resolves.toEqual({
+      menuId: 100,
+      name: '시오라멘',
+      currency: 'JPY',
+      price: 1_000,
+    })
+    expect(mockedRequest).toHaveBeenCalledWith(
+      '/api/v1/restaurants/10/menus/100',
     )
   })
 

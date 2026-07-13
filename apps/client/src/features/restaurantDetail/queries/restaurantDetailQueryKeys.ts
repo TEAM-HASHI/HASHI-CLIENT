@@ -20,11 +20,17 @@ export const restaurantDetailQueryKeys = {
       ...restaurantDetailQueryKeys.detail(restaurantId),
       'storeInformation',
     ] as const,
-  menus: (restaurantId: number, size: number) =>
+  menus: (restaurantId: number, size: number, excludeMenuId?: number) =>
     [
       ...restaurantDetailQueryKeys.detail(restaurantId),
       'menus',
-      { size },
+      { excludeMenuId, size },
+    ] as const,
+  menu: (restaurantId: number, menuId: number) =>
+    [
+      ...restaurantDetailQueryKeys.detail(restaurantId),
+      'menus',
+      menuId,
     ] as const,
   reviews: (restaurantId: number, size: number, sort: ReviewSortValue) =>
     [
