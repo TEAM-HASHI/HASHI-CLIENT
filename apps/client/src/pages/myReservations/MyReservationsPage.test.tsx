@@ -2,7 +2,6 @@ import '@testing-library/jest-dom/vitest'
 
 import { QueryClientProvider } from '@tanstack/react-query'
 import {
-  act,
   cleanup,
   fireEvent,
   render,
@@ -20,6 +19,7 @@ import { useMyProfileSummaryQuery } from '@/features/user'
 import { getMyReservations } from '@/features/reservation/api/getMyReservations'
 import { MyReservationsPage } from '@/pages/myReservations/MyReservationsPage'
 import { createQueryClient } from '@/shared/lib/queryClient'
+import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
 const { mockShowToast } = vi.hoisted(() => ({
   mockShowToast: vi.fn(),
@@ -82,41 +82,6 @@ const renderMyReservationsPage = (
       </MemoryRouter>
     </QueryClientProvider>,
   )
-}
-
-const mockIntersectionObserver = () => {
-  let triggerIntersect = () => {}
-
-  const IntersectionObserverMock = vi.fn(
-    (callback: IntersectionObserverCallback) => {
-      triggerIntersect = () => {
-        callback(
-          [{ isIntersecting: true } as IntersectionObserverEntry],
-          {} as IntersectionObserver,
-        )
-      }
-
-      return {
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-        disconnect: vi.fn(),
-        root: null,
-        rootMargin: '',
-        thresholds: [],
-        takeRecords: vi.fn(() => []),
-      }
-    },
-  )
-
-  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
-
-  return {
-    triggerIntersect: () => {
-      act(() => {
-        triggerIntersect()
-      })
-    },
-  }
 }
 
 describe('MyReservationsPage', () => {

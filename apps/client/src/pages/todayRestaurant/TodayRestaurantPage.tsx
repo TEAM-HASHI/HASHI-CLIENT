@@ -35,7 +35,7 @@ import { NotFoundPage } from '@/pages/notFound'
 import { checkIsNotFoundError } from '@/shared/api'
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
-import { useAuthStatus, useIntersectionObserver } from '@/shared/hooks'
+import { useAuthStatus, useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const TODAY_RESTAURANT_MENU_PAGE_SIZE = 10
 
@@ -116,12 +116,14 @@ export const TodayRestaurantPage = () => {
       return fetchNextReviewPage()
     }
   }, [canFetchNextReviewPage, fetchNextReviewPage])
-  const menuLoadMoreRef = useIntersectionObserver<HTMLDivElement>({
+  const menuLoadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled: activeTab === 'menu' && canFetchNextMenuPage,
+    isLoading: menusQuery.isFetchingNextPage,
     onIntersect: handleIntersectMenu,
   })
-  const reviewLoadMoreRef = useIntersectionObserver<HTMLDivElement>({
+  const reviewLoadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled: activeTab === 'review' && canFetchNextReviewPage,
+    isLoading: reviewsQuery.isFetchingNextPage,
     onIntersect: handleIntersectReview,
   })
   const requestError =

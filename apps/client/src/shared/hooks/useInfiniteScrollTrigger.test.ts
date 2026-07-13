@@ -1,43 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { useIntersectionObserver } from '@/shared/hooks/useIntersectionObserver'
+import { useInfiniteScrollTrigger } from '@/shared/hooks/useInfiniteScrollTrigger'
+import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
-const mockIntersectionObserver = () => {
-  let handleIntersection: IntersectionObserverCallback | null = null
-  const observe = vi.fn()
-  const disconnect = vi.fn()
-  const IntersectionObserverMock = vi.fn(
-    (callback: IntersectionObserverCallback) => {
-      handleIntersection = callback
-
-      return {
-        root: null,
-        rootMargin: '',
-        thresholds: [],
-        observe,
-        unobserve: vi.fn(),
-        disconnect,
-        takeRecords: vi.fn(() => []),
-      } satisfies IntersectionObserver
-    },
-  )
-
-  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
-
-  return {
-    disconnect,
-    observe,
-    triggerIntersect: () => {
-      handleIntersection?.(
-        [{ isIntersecting: true } as IntersectionObserverEntry],
-        {} as IntersectionObserver,
-      )
-    },
-  }
-}
-
-describe('useIntersectionObserver', () => {
+describe('useInfiniteScrollTrigger', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
@@ -48,7 +15,7 @@ describe('useIntersectionObserver', () => {
     const target = document.createElement('div')
 
     const { result } = renderHook(() =>
-      useIntersectionObserver<HTMLDivElement>({
+      useInfiniteScrollTrigger<HTMLDivElement>({
         enabled: true,
         onIntersect,
       }),
@@ -60,9 +27,7 @@ describe('useIntersectionObserver', () => {
 
     expect(observe).toHaveBeenCalledWith(target)
 
-    act(() => {
-      triggerIntersect()
-    })
+    triggerIntersect()
 
     expect(onIntersect).toHaveBeenCalledTimes(1)
   })
@@ -71,11 +36,30 @@ describe('useIntersectionObserver', () => {
     const { observe } = mockIntersectionObserver()
 
     renderHook(() =>
-      useIntersectionObserver<HTMLDivElement>({
+      useInfiniteScrollTrigger<HTMLDivElement>({
         enabled: false,
         onIntersect: vi.fn(),
       }),
     )
+
+    expect(observe).not.toHaveBeenCalled()
+  })
+
+  it('does not call onIntersect while loading', () => {
+    const { observe } = mockIntersectionObserver()
+    const target = document.createElement('div')
+
+    const { result } = renderHook(() =>
+      useInfiniteScrollTrigger<HTMLDivElement>({
+        enabled: true,
+        isLoading: true,
+        onIntersect: vi.fn(),
+      }),
+    )
+
+    act(() => {
+      result.current(target)
+    })
 
     expect(observe).not.toHaveBeenCalled()
   })
@@ -92,7 +76,7 @@ describe('useIntersectionObserver', () => {
     )
 
     const { result } = renderHook(() =>
-      useIntersectionObserver<HTMLDivElement>({
+      useInfiniteScrollTrigger<HTMLDivElement>({
         enabled: true,
         onIntersect,
       }),
@@ -102,10 +86,8 @@ describe('useIntersectionObserver', () => {
       result.current(target)
     })
 
-    act(() => {
-      triggerIntersect()
-      triggerIntersect()
-    })
+    triggerIntersect()
+    triggerIntersect()
 
     expect(onIntersect).toHaveBeenCalledTimes(1)
 

@@ -33,7 +33,7 @@ import { createRestaurantDetailViewModel } from '@/features/restaurantDetail/uti
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { checkIsNotFoundError } from '@/shared/api'
-import { useAuthStatus, useIntersectionObserver } from '@/shared/hooks'
+import { useAuthStatus, useInfiniteScrollTrigger } from '@/shared/hooks'
 import { NotFoundPage } from '@/pages/notFound'
 
 const RESTAURANT_DETAIL_MENU_PAGE_SIZE = 10
@@ -108,12 +108,14 @@ const RestaurantDetailContent = ({
       return fetchNextReviewPage()
     }
   }, [canFetchNextReviewPage, fetchNextReviewPage])
-  const menuLoadMoreRef = useIntersectionObserver<HTMLDivElement>({
+  const menuLoadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled: activeTab === 'menu' && canFetchNextMenuPage,
+    isLoading: menusQuery.isFetchingNextPage,
     onIntersect: handleIntersectMenu,
   })
-  const reviewLoadMoreRef = useIntersectionObserver<HTMLDivElement>({
+  const reviewLoadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled: activeTab === 'review' && canFetchNextReviewPage,
+    isLoading: reviewsQuery.isFetchingNextPage,
     onIntersect: handleIntersectReview,
   })
 

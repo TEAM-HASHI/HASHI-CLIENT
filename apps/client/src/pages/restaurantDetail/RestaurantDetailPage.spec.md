@@ -48,7 +48,7 @@
 - [ ] 리뷰 이미지 클릭 시 선택한 리뷰 이미지 목록과 선택 index를 이미지 뷰어에 전달합니다.
 - [ ] route state `activeTab`이 있으면 해당 탭을 초기 선택 상태로 표시합니다.
 - [ ] 직접 진입 상태에서 뒤로가기를 누르면 `ROUTES.home`으로 replace 이동합니다.
-- [ ] 메뉴 목록과 리뷰 목록은 커서 기반 무한스크롤로 조회하고, 리스트 하단 sentinel 감지는 공통 `useIntersectionObserver` 훅을 사용합니다.
+- [ ] 메뉴 목록과 리뷰 목록은 커서 기반 무한스크롤로 조회하고, 리스트 하단 sentinel 감지는 공통 `useInfiniteScrollTrigger` 훅을 사용합니다.
 - [ ] 모바일 폭에서 horizontal overflow가 없어야 합니다.
 
 ## Data Dependencies
@@ -93,7 +93,7 @@
 - refetch condition: route param `restaurantId` 변경
 - pagination:
   - `getNextPageParam`: `hasNext`가 true이면 `nextCursor`
-  - next page trigger: 공통 `useIntersectionObserver` sentinel intersect
+  - next page trigger: 공통 `useInfiniteScrollTrigger` sentinel intersect
 
 - query: restaurant reviews infinite
 - requested endpoint: `GET /api/v1/restaurants/{restaurantId}/reviews`
@@ -108,7 +108,7 @@
 - refetch condition: route param `restaurantId` 또는 sort 변경
 - pagination:
   - `getNextPageParam`: `hasNext`가 true이면 `nextCursor`
-  - next page trigger: 공통 `useIntersectionObserver` sentinel intersect
+  - next page trigger: 공통 `useInfiniteScrollTrigger` sentinel intersect
 
 ### Mutation
 
@@ -192,7 +192,7 @@ RestaurantDetailPage
   - restaurant reviews list query, endpoint confirmation required
   - restaurant detail view model mapper
 - shared hook:
-  - `useIntersectionObserver`
+  - `useInfiniteScrollTrigger`
 - icon:
   - `BackIcon`, `HeartBlankIcon`, `LocationIcon`, `ClockIcon`, `MoneyIcon`, `PencilIcon`, `CloseSmallIcon`
 
@@ -217,7 +217,7 @@ RestaurantDetailPage
 - `TodayRestaurantPage`와 `RestaurantDetailPage`는 같은 상세 템플릿을 사용하므로 API 함수, query hook, 응답-to-UI mapper는 `features/restaurantDetail`에 둡니다.
 - route param `restaurantId`는 숫자로 변환/검증한 뒤 query key와 request path에 사용합니다. 유효하지 않은 값이면 서버 요청 전에 page error fallback으로 보냅니다.
 - 찜 기능은 MVP 제외입니다. 저장 API/저장 상태 query는 만들지 않고 UI count만 `0`으로 고정합니다.
-- 메뉴/리뷰 무한스크롤은 직접 `IntersectionObserver`를 page에 구현하지 않고, 공통 `useIntersectionObserver` 훅으로 sentinel ref와 intersect 상태를 받아 다음 페이지 요청을 트리거합니다.
+- 메뉴/리뷰 무한스크롤은 직접 `IntersectionObserver`를 page에 구현하지 않고, 공통 `useInfiniteScrollTrigger` 훅으로 sentinel ref와 intersect 상태를 받아 다음 페이지 요청을 트리거합니다.
 
 ## Styling
 

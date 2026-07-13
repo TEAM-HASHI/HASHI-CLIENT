@@ -1,20 +1,29 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface UseInfiniteScrollTriggerParams {
   enabled: boolean
-  isLoading: boolean
+  isLoading?: boolean
+  root?: Element | Document | null
   rootMargin?: string
+  threshold?: number | number[]
   onIntersect: () => Promise<unknown> | void
 }
 
 export const useInfiniteScrollTrigger = <TElement extends Element>({
   enabled,
-  isLoading,
+  isLoading = false,
+  root = null,
   rootMargin = '160px 0px',
+  threshold = 0,
   onIntersect,
 }: UseInfiniteScrollTriggerParams) => {
-  const targetRef = useRef<TElement | null>(null)
+  const [target, setTarget] = useState<TElement | null>(null)
+  const onIntersectRef = useRef(onIntersect)
   const isLockedRef = useRef(false)
+
+  useEffect(() => {
+    onIntersectRef.current = onIntersect
+  }, [onIntersect])
 
   useEffect(() => {
     if (!isLoading) {
@@ -27,8 +36,6 @@ export const useInfiniteScrollTrigger = <TElement extends Element>({
       return
     }
 
-    const target = targetRef.current
-
     if (!target) {
       return
     }
@@ -40,14 +47,14 @@ export const useInfiniteScrollTrigger = <TElement extends Element>({
         }
 
         isLockedRef.current = true
-        void Promise.resolve(onIntersect()).finally(() => {
+        void Promise.resolve(onIntersectRef.current()).finally(() => {
           isLockedRef.current = false
         })
       },
       {
-        root: null,
+        root,
         rootMargin,
-        threshold: 0,
+        threshold,
       },
     )
 
@@ -56,7 +63,9 @@ export const useInfiniteScrollTrigger = <TElement extends Element>({
     return () => {
       observer.disconnect()
     }
-  }, [enabled, isLoading, onIntersect, rootMargin])
+  }, [enabled, isLoading, root, rootMargin, target, threshold])
 
-  return targetRef
+  return useCallback((node: TElement | null) => {
+    setTarget(node)
+  }, [])
 }
