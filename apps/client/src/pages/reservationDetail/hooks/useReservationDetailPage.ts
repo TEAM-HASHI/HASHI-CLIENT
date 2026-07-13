@@ -4,8 +4,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { useCancelReservationMutation } from '@/features/reservation'
-import { syncCanceledReservationCache } from '@/pages/myReservations/queries/syncCanceledReservationCache'
+import {
+  syncCanceledReservationCache,
+  useCancelReservationMutation,
+} from '@/features/reservation'
 import { reservationNotices } from '@/pages/reservationDetail/constants/reservationNotice'
 import {
   reservationDetailQueryKey,

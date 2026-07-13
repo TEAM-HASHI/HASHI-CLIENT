@@ -1,5 +1,5 @@
+import type { ReservationResponse } from '@/features/reservation'
 import type { VisitedReservation as VisitedReservationResponse } from '@/features/review/api/getVisitedReservations'
-import type { ReservationResponse } from '@/pages/myReservations/api/getMyReservations'
 import type { MyReservation } from '@/pages/myReservations/types'
 import { formatDotDateTime } from '@/shared/utils'
 

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMyReservations } from '@/pages/myReservations/api/getMyReservations'
+import { getMyReservations } from '@/features/reservation/api/getMyReservations'
 import { request } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({

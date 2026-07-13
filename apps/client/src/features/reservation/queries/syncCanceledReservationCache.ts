@@ -3,9 +3,9 @@ import type { InfiniteData, QueryClient } from '@tanstack/react-query'
 import type {
   ReservationListResponse,
   ReservationResponse,
-} from '@/pages/myReservations/api/getMyReservations'
-import { myReservationsQueryKeys } from '@/pages/myReservations/queries/myReservationsQueryKeys'
-import { myReservationsInfiniteQueryOptions } from '@/pages/myReservations/queries/useMyReservationsInfiniteQuery'
+} from '@/features/reservation/api/getMyReservations'
+import { myReservationsQueryKeys } from '@/features/reservation/queries/myReservationsQueryKeys'
+import { myReservationsInfiniteQueryOptions } from '@/features/reservation/queries/useMyReservationsInfiniteQuery'
 
 const removeReservationFromUpcomingCache = (
   queryData: InfiniteData<ReservationListResponse> | undefined,

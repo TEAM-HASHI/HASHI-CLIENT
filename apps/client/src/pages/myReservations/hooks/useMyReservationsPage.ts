@@ -4,17 +4,19 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { useCancelReservationMutation } from '@/features/reservation'
+import {
+  type MyReservationsApiStatus,
+  syncCanceledReservationCache,
+  useCancelReservationMutation,
+  useMyReservationsInfiniteQuery,
+} from '@/features/reservation'
 import { useVisitedReservationsInfiniteQuery } from '@/features/review/queries/visitedReservations'
 import { useMyProfileSummaryQuery } from '@/features/user'
-import type { MyReservationsApiStatus } from '@/pages/myReservations/api/getMyReservations'
 import {
   checkIsReservationStatusFilterValue,
   DEFAULT_RESERVATION_STATUS,
   type ReservationStatusFilterValue,
 } from '@/pages/myReservations/constants/reservationStatus'
-import { useMyReservationsInfiniteQuery } from '@/pages/myReservations/queries/useMyReservationsInfiniteQuery'
-import { syncCanceledReservationCache } from '@/pages/myReservations/queries/syncCanceledReservationCache'
 import type {
   MyReservation,
   VisitedReservation,

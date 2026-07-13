@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
 import { cancelReservation } from '@/features/reservation/api/cancelReservation'
-import { getMyReservations } from '@/pages/myReservations/api/getMyReservations'
+import { getMyReservations } from '@/features/reservation/api/getMyReservations'
 import { getReservationDetail } from '@/pages/reservationDetail/api/getReservationDetail'
 import { ReservationDetailPage } from '@/pages/reservationDetail/ReservationDetailPage'
 import { reservationDetailQueryKey } from '@/pages/reservationDetail/hooks/useReservationDetailQuery'
@@ -48,7 +48,7 @@ vi.mock('@/features/reservation/api/cancelReservation', () => ({
   cancelReservation: vi.fn(),
 }))
 
-vi.mock('@/pages/myReservations/api/getMyReservations', () => ({
+vi.mock('@/features/reservation/api/getMyReservations', () => ({
   getMyReservations: vi.fn(),
 }))
 

@@ -17,7 +17,7 @@ import { ROUTES } from '@/app/router/path'
 import { cancelReservation } from '@/features/reservation/api/cancelReservation'
 import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
 import { useMyProfileSummaryQuery } from '@/features/user'
-import { getMyReservations } from '@/pages/myReservations/api/getMyReservations'
+import { getMyReservations } from '@/features/reservation/api/getMyReservations'
 import { MyReservationsPage } from '@/pages/myReservations/MyReservationsPage'
 import { createQueryClient } from '@/shared/lib/queryClient'
 
@@ -25,7 +25,7 @@ const { mockShowToast } = vi.hoisted(() => ({
   mockShowToast: vi.fn(),
 }))
 
-vi.mock('@/pages/myReservations/api/getMyReservations', () => ({
+vi.mock('@/features/reservation/api/getMyReservations', () => ({
   getMyReservations: vi.fn(),
 }))
 

@@ -1,4 +1,4 @@
-import type { MyReservationsApiStatus } from '@/pages/myReservations/api/getMyReservations'
+import type { MyReservationsApiStatus } from '@/features/reservation/api/getMyReservations'
 
 export const myReservationsQueryKeys = {
   all: ['myReservations'] as const,

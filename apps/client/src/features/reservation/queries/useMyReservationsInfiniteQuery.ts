@@ -3,8 +3,8 @@ import { infiniteQueryOptions, useInfiniteQuery } from '@tanstack/react-query'
 import {
   getMyReservations,
   type MyReservationsApiStatus,
-} from '@/pages/myReservations/api/getMyReservations'
-import { myReservationsQueryKeys } from '@/pages/myReservations/queries/myReservationsQueryKeys'
+} from '@/features/reservation/api/getMyReservations'
+import { myReservationsQueryKeys } from '@/features/reservation/queries/myReservationsQueryKeys'
 
 const MY_RESERVATIONS_PAGE_SIZE = 10
 
