@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -87,6 +88,41 @@ const renderPage = () => {
   )
 }
 
+const mockIntersectionObserver = () => {
+  let triggerIntersect = () => {}
+
+  const IntersectionObserverMock = vi.fn(
+    (callback: IntersectionObserverCallback) => {
+      triggerIntersect = () => {
+        callback(
+          [{ isIntersecting: true } as IntersectionObserverEntry],
+          {} as IntersectionObserver,
+        )
+      }
+
+      return {
+        observe: vi.fn(),
+        unobserve: vi.fn(),
+        disconnect: vi.fn(),
+        root: null,
+        rootMargin: '',
+        thresholds: [],
+        takeRecords: vi.fn(() => []),
+      }
+    },
+  )
+
+  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
+
+  return {
+    triggerIntersect: () => {
+      act(() => {
+        triggerIntersect()
+      })
+    },
+  }
+}
+
 describe('MyReviewsPage', () => {
   beforeEach(() => {
     vi.mocked(getVisitedReservations).mockResolvedValue({
@@ -124,6 +160,33 @@ describe('MyReviewsPage', () => {
       screen.getByText((_, element) => element?.textContent === '총 2건'),
     ).toBeVisible()
     expect(screen.getAllByRole('button', { name: '리뷰 작성' })).toHaveLength(2)
+  })
+
+  it('does not request the same next writable review page twice when the sentinel intersects repeatedly', async () => {
+    const { triggerIntersect } = mockIntersectionObserver()
+
+    vi.mocked(getVisitedReservations)
+      .mockResolvedValueOnce({
+        content: [writableReservations[0]],
+        hasNext: true,
+        nextCursor: 20,
+        totalCount: 2,
+      })
+      .mockResolvedValueOnce({
+        content: [writableReservations[1]],
+        hasNext: false,
+        totalCount: 2,
+      })
+
+    renderPage()
+
+    expect(await screen.findByText('아키토리 라멘')).toBeVisible()
+
+    triggerIntersect()
+    triggerIntersect()
+
+    expect(await screen.findByText('하시 스시')).toBeVisible()
+    expect(getVisitedReservations).toHaveBeenCalledTimes(2)
   })
 
   it('navigates to review new with restaurant and reservation IDs', async () => {

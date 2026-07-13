@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { DefaultImage } from '@/shared/components/defaultImage'
 
 export type ReservationRestaurantSummaryProps = {
@@ -15,6 +17,10 @@ export const ReservationRestaurantSummary = ({
   requestedLabel,
   restaurant,
 }: ReservationRestaurantSummaryProps) => {
+  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null)
+  const shouldShowImage =
+    restaurant.imageSrc && failedImageSrc !== restaurant.imageSrc
+
   return (
     <>
       <h2 className="typo-body-3 mb-4">
@@ -23,16 +29,21 @@ export const ReservationRestaurantSummary = ({
       </h2>
 
       <div className="mb-6 flex gap-3">
-        {restaurant.imageSrc ? (
+        {shouldShowImage ? (
           <img
-            alt=""
+            alt={restaurant.name}
             className="size-17 shrink-0 rounded-[5px] object-cover"
+            onError={() => {
+              setFailedImageSrc(restaurant.imageSrc ?? null)
+            }}
             src={restaurant.imageSrc}
           />
         ) : (
           <DefaultImage
+            aria-label={`${restaurant.name} 이미지`}
             className="size-17 shrink-0 rounded-[5px]"
             logoSize="sm"
+            role="img"
           />
         )}
 

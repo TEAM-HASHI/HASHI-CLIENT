@@ -1,50 +1,52 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMypageProfileSummary } from '@/pages/mypage/api/getMypageProfileSummary'
+import { getMyProfileSummary } from '@/features/user/api/getMyProfileSummary'
 import { request } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({
   request: vi.fn(),
 }))
 
-const mockRequest = vi.mocked(request)
+const mockedRequest = vi.mocked(request)
 
-describe('getMypageProfileSummary', () => {
+describe('getMyProfileSummary', () => {
   beforeEach(() => {
-    mockRequest.mockReset()
+    mockedRequest.mockReset()
   })
 
   it('maps current user profile summary', async () => {
-    mockRequest.mockResolvedValue({
+    mockedRequest.mockResolvedValue({
       nickname: '테스트유저',
       profileImageUrl: 'https://example.com/profile.png',
     })
 
-    await expect(getMypageProfileSummary()).resolves.toEqual({
+    await expect(getMyProfileSummary()).resolves.toEqual({
       nickname: '테스트유저',
       profileImageUrl: 'https://example.com/profile.png',
     })
-    expect(mockRequest).toHaveBeenCalledWith('/api/v1/users/me/profile-summary')
+    expect(mockedRequest).toHaveBeenCalledWith(
+      '/api/v1/users/me/profile-summary',
+    )
   })
 
   it('normalizes missing profile image to null', async () => {
-    mockRequest.mockResolvedValue({
+    mockedRequest.mockResolvedValue({
       nickname: '테스트유저',
     })
 
-    await expect(getMypageProfileSummary()).resolves.toEqual({
+    await expect(getMyProfileSummary()).resolves.toEqual({
       nickname: '테스트유저',
       profileImageUrl: null,
     })
   })
 
   it('throws when nickname is missing from a successful response', async () => {
-    mockRequest.mockResolvedValue({
+    mockedRequest.mockResolvedValue({
       profileImageUrl: 'https://example.com/profile.png',
     })
 
-    await expect(getMypageProfileSummary()).rejects.toThrow(
-      'Missing mypage profile nickname',
+    await expect(getMyProfileSummary()).rejects.toThrow(
+      'Missing my profile nickname',
     )
   })
 })

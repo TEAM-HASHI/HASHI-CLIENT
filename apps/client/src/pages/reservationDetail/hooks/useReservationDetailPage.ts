@@ -4,9 +4,11 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { DEFAULT_RESERVATION_STATUS } from '@/pages/myReservations/constants/reservationStatus'
+import {
+  syncCanceledReservationCache,
+  useCancelReservationMutation,
+} from '@/features/reservation'
 import { reservationNotices } from '@/pages/reservationDetail/constants/reservationNotice'
-import { useCancelReservationMutation } from '@/pages/reservationDetail/hooks/useCancelReservationMutation'
 import {
   reservationDetailQueryKey,
   useReservationDetailQuery,
@@ -75,10 +77,14 @@ export const useReservationDetailPage = () => {
         queryKey,
         refetchType: 'inactive',
       })
+      await syncCanceledReservationCache(
+        queryClient,
+        canceledReservation.reservation,
+      )
 
       showToast({ children: canceledReservation.message })
       setIsCancelDialogOpen(false)
-      navigate(`${ROUTES.myReservations}?status=${DEFAULT_RESERVATION_STATUS}`)
+      navigate(`${ROUTES.myReservations}?status=CANCELED`)
     } catch {
       // 실패 toast는 공통 mutation error handler에서 처리합니다.
     } finally {

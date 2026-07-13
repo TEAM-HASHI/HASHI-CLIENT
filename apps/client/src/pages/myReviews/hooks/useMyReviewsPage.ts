@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { generatePath, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -14,6 +14,7 @@ import {
   toWritableReview,
   toWrittenReview,
 } from '@/pages/myReviews/utils/myReviewViewModel'
+import { useIntersectionObserver } from '@/shared/hooks'
 
 export const useMyReviewsPage = () => {
   const navigate = useNavigate()
@@ -23,9 +24,9 @@ export const useMyReviewsPage = () => {
   const [openedMenuReviewId, setOpenedMenuReviewId] = useState<string | null>(
     null,
   )
+  const isLoadMoreLockedRef = useRef(false)
   const [isEditComingSoonDialogOpen, setIsEditComingSoonDialogOpen] =
     useState(false)
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
   const isWritableTab = activeTab === MY_REVIEW_TAB_ITEMS.writable.value
   const writableQuery = useVisitedReservationsInfiniteQuery(
     { reviewStatus: 'unreviewed', size: 20 },
@@ -68,32 +69,23 @@ export const useMyReviewsPage = () => {
 
   const activeQuery = isWritableTab ? writableQuery : writtenQuery
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = activeQuery
+  const loadMoreRef = useIntersectionObserver<HTMLDivElement>({
+    enabled: hasNextPage && !isFetchingNextPage,
+    onIntersect: () => {
+      if (isLoadMoreLockedRef.current || !hasNextPage || isFetchingNextPage) {
+        return
+      }
 
-  useEffect(() => {
-    const target = loadMoreRef.current
+      isLoadMoreLockedRef.current = true
 
-    if (
-      !target ||
-      !hasNextPage ||
-      isFetchingNextPage ||
-      typeof IntersectionObserver === 'undefined'
-    ) {
-      return
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          void fetchNextPage()
-        }
-      },
-      { rootMargin: '160px 0px', threshold: 0 },
-    )
-
-    observer.observe(target)
-
-    return () => observer.disconnect()
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+      void fetchNextPage()
+        .catch(() => {})
+        .finally(() => {
+          isLoadMoreLockedRef.current = false
+        })
+    },
+    rootMargin: '160px 0px',
+  })
 
   const handleBack = () => {
     navigate(ROUTES.mypage)

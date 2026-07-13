@@ -52,7 +52,7 @@ export const InProgressReservationCard = ({
               {reservation.restaurantName}
             </h2>
             <p className="typo-body-6 text-cool-gray-600">
-              {reservation.requestedAt}
+              {reservation.reservedAt}
             </p>
           </div>
         </div>

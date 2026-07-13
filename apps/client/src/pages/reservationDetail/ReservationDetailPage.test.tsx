@@ -12,8 +12,8 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
-import { DEFAULT_RESERVATION_STATUS } from '@/pages/myReservations/constants/reservationStatus'
-import { cancelReservation } from '@/pages/reservationDetail/api/cancelReservation'
+import { cancelReservation } from '@/features/reservation/api/cancelReservation'
+import { getMyReservations } from '@/features/reservation/api/getMyReservations'
 import { getReservationDetail } from '@/pages/reservationDetail/api/getReservationDetail'
 import { ReservationDetailPage } from '@/pages/reservationDetail/ReservationDetailPage'
 import { reservationDetailQueryKey } from '@/pages/reservationDetail/hooks/useReservationDetailQuery'
@@ -44,8 +44,12 @@ vi.mock('@/pages/reservationDetail/api/getReservationDetail', () => ({
   getReservationDetail: vi.fn(),
 }))
 
-vi.mock('@/pages/reservationDetail/api/cancelReservation', () => ({
+vi.mock('@/features/reservation/api/cancelReservation', () => ({
   cancelReservation: vi.fn(),
+}))
+
+vi.mock('@/features/reservation/api/getMyReservations', () => ({
+  getMyReservations: vi.fn(),
 }))
 
 vi.mock('@hashi/hds-ui', async (importOriginal) => {
@@ -59,6 +63,7 @@ vi.mock('@hashi/hds-ui', async (importOriginal) => {
 
 const mockedGetReservationDetail = vi.mocked(getReservationDetail)
 const mockedCancelReservation = vi.mocked(cancelReservation)
+const mockedGetMyReservations = vi.mocked(getMyReservations)
 
 const reservationDetailFixture = {
   reservationId: 12,
@@ -128,6 +133,16 @@ describe('ReservationDetailPage', () => {
         ...reservationDetailFixture,
         reservationStatus: 'CANCELED',
       },
+    })
+    mockedGetMyReservations.mockResolvedValue({
+      reservations: [
+        {
+          ...reservationDetailFixture,
+          reservationStatus: 'CANCELED',
+        },
+      ],
+      hasNext: false,
+      totalCount: 1,
     })
   })
 
@@ -199,7 +214,7 @@ describe('ReservationDetailPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('cancels the reservation and moves to the in-progress reservation list after confirming cancellation', async () => {
+  it('cancels the reservation and moves to the canceled reservation list after confirming cancellation', async () => {
     const { queryClient } = renderReservationDetailPage()
 
     fireEvent.click(
@@ -215,7 +230,7 @@ describe('ReservationDetailPage', () => {
         children: '예약 취소 요청이 완료되었습니다',
       })
       expect(mockNavigate).toHaveBeenCalledWith(
-        `${ROUTES.myReservations}?status=${DEFAULT_RESERVATION_STATUS}`,
+        `${ROUTES.myReservations}?status=CANCELED`,
       )
       expect(queryClient.getQueryData(reservationDetailQueryKey(12))).toEqual({
         ...reservationDetailFixture,
@@ -271,7 +286,7 @@ describe('ReservationDetailPage', () => {
       })
     })
     expect(mockNavigate).not.toHaveBeenCalledWith(
-      `${ROUTES.myReservations}?status=${DEFAULT_RESERVATION_STATUS}`,
+      `${ROUTES.myReservations}?status=CANCELED`,
     )
   })
 
@@ -321,7 +336,7 @@ describe('ReservationDetailPage', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        `${ROUTES.myReservations}?status=${DEFAULT_RESERVATION_STATUS}`,
+        `${ROUTES.myReservations}?status=CANCELED`,
       )
     })
   })

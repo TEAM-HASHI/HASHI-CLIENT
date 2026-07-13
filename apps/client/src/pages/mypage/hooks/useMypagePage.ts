@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
 import { useMyPointBalanceQuery } from '@/features/point'
 import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
-import { getMypageProfileSummary } from '@/pages/mypage/api/getMypageProfileSummary'
+import { useMyProfileSummaryQuery } from '@/features/user'
 import {
   createMypagePrimaryMenuItems,
   mypageMenuSections,
@@ -23,10 +22,7 @@ export const useMypagePage = () => {
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
   const myReviewCountQuery = useMyReviewCountQuery()
   const pointBalanceQuery = useMyPointBalanceQuery()
-  const profileSummaryQuery = useQuery({
-    queryFn: getMypageProfileSummary,
-    queryKey: ['mypage', 'profileSummary'],
-  })
+  const profileSummaryQuery = useMyProfileSummaryQuery()
   const queryError =
     profileSummaryQuery.error ??
     pointBalanceQuery.error ??

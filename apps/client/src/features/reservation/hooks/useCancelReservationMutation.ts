@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 
-import { cancelReservation } from '@/pages/reservationDetail/api/cancelReservation'
+import { cancelReservation } from '@/features/reservation/api/cancelReservation'
 
 export const useCancelReservationMutation = () => {
   return useMutation({

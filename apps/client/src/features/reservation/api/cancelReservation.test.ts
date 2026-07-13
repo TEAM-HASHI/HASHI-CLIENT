@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { cancelReservation } from '@/pages/reservationDetail/api/cancelReservation'
+import { cancelReservation } from '@/features/reservation/api/cancelReservation'
 import { requestSuccessResponse } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({
@@ -10,23 +10,25 @@ vi.mock('@/shared/api/request', () => ({
 const mockedRequestSuccessResponse = vi.mocked(requestSuccessResponse)
 
 describe('cancelReservation', () => {
-  it('requests reservation cancellation by reservation id', async () => {
-    const canceledReservation = {
-      reservationId: 12,
-      reservationStatus: 'CANCELED',
-    }
+  it('requests reservation cancellation by reservation id and returns the server message', async () => {
     const cancelReservationResponse = {
-      success: true,
+      success: true as const,
       code: 'COMMON-200',
-      message: '예약이 취소되었습니다',
-      data: canceledReservation,
-    } as const
+      message: '예약 취소 요청이 완료되었습니다',
+      data: {
+        reservationId: 12,
+        reservationStatus: 'CANCELED',
+      },
+    }
 
     mockedRequestSuccessResponse.mockResolvedValue(cancelReservationResponse)
 
     await expect(cancelReservation(12)).resolves.toEqual({
-      message: cancelReservationResponse.message,
-      reservation: canceledReservation,
+      message: '예약 취소 요청이 완료되었습니다',
+      reservation: {
+        reservationId: 12,
+        reservationStatus: 'CANCELED',
+      },
     })
     expect(mockedRequestSuccessResponse).toHaveBeenCalledWith(
       'api/v1/reservations/12/cancel',
@@ -38,7 +40,7 @@ describe('cancelReservation', () => {
     mockedRequestSuccessResponse.mockResolvedValue({
       success: true,
       code: 'COMMON-200',
-      message: '예약이 취소되었습니다',
+      message: '예약 취소 요청이 완료되었습니다',
       data: null,
     })
 
