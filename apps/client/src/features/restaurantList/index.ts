@@ -11,3 +11,15 @@ export { useInfiniteRestaurantList } from './hooks'
 export { useRestaurantListPage } from './hooks'
 export { RestaurantCard, RestaurantFilterBar } from './components'
 export type { FilterOption, Restaurant } from './types'
+export { getRestaurants } from './api/getRestaurants'
+export type {
+  GetRestaurantsParams,
+  RestaurantListResponse,
+  RestaurantsResult,
+  RestaurantSummaryResponse,
+} from './api/getRestaurants'
+export { restaurantListQueryKeys } from './queries/restaurantListQueryKeys'
+export {
+  restaurantsInfiniteQueryOptions,
+  useRestaurantsInfiniteQuery,
+} from './queries/useRestaurantsInfiniteQuery'

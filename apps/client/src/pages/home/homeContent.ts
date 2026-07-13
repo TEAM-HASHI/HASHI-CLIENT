@@ -21,6 +21,6 @@ export type HotSnsRestaurant = {
   restaurantId: string
   name: string
   summary: string
-  imageUrl: string
+  imageUrl?: string
   imageAlt: string
 }

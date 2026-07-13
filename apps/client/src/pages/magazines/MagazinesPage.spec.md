@@ -117,7 +117,8 @@ Jira: HASHI-77
   - `initialPageParam` is `null`; the endpoint helper omits `cursor` for the first page.
   - `getNextPageParam` returns `nextCursor` only when `hasNext === true`; otherwise it returns `undefined`.
   - Fetch the next page through a bottom sentinel when `hasNextPage` is true and no next-page request is already pending.
-    영 - If fetched pages have no usable normalized items but `hasNextPage` is still true, request the next page until a usable item appears or the last page is reached.
+  - Use the shared infinite-scroll trigger hook so repeated observer callbacks in the same render cycle do not request the same next page twice.
+  - If fetched pages have no usable normalized items but `hasNextPage` is still true, request the next page until a usable item appears or the last page is reached.
 
 #### Type Mapping
 
@@ -129,7 +130,7 @@ Jira: HASHI-77
 | `MagazineBannerResponse.instagramRedirectUrl`  | banner external link             | optional                   | validate through `normalizeInstagramUrl`; invalid value becomes `null`                        |
 | `MagazineSummaryResponse.magazineId`           | list item `id`, React key        | optional in generated type | convert to string; item is unusable if missing                                                |
 | `MagazineSummaryResponse.title`                | list item title/link name        | optional                   | item is unusable if missing                                                                   |
-| `MagazineSummaryResponse.bannerImageUrl`       | list item thumbnail `src`        | optional                   | item is unusable if missing                                                                   |
+| `MagazineSummaryResponse.thumbnailImageUrl`    | list item thumbnail `src`        | optional                   | item is unusable if missing                                                                   |
 | `MagazineSummaryResponse.instagramRedirectUrl` | list item external link          | optional                   | validate through `normalizeInstagramUrl`; invalid value becomes `null`                        |
 | `MagazineSummaryResponse.createdAt`            | published date                   | optional, `date-time`      | use the server date part and format as `YYYY. MM.DD.`; item is unusable if missing or invalid |
 | `MagazineListResponse.nextCursor`              | next page cursor                 | optional                   | pass as next page param only when `hasNext` is true                                           |
@@ -162,7 +163,7 @@ Jira: HASHI-77
 
 - Use `size: 10` for `/api/v1/magazines`.
 - Auto-fetch additional pages with an IntersectionObserver bottom sentinel.
-- Drop list items that miss `magazineId`, `title`, `bannerImageUrl`, or valid `createdAt`.
+- Drop list items that miss `magazineId`, `title`, `thumbnailImageUrl`, or valid `createdAt`.
 - Drop banner items that miss `magazineId` or `bannerImageUrl`; use `매거진 배너` when `title` is missing.
 - Treat non-Instagram or malformed `instagramRedirectUrl` as `null`; render the item without native link navigation instead of crashing.
 - Keep banner/list failures local to the section for expected `4xx`; shared QueryClient/AsyncBoundary handles `5xx`, network, timeout, and unexpected errors.
@@ -245,10 +246,12 @@ MagazinesPage
   - `MagazineEmptyState`
 - page-local hook:
   - `useMagazinesPage`
+- shared hook:
+  - `useInfiniteScrollTrigger`
 - page-local mock:
   - none
 - page-local util:
-  - `formatMagazinePublishedDate` if API/mock stores dates as ISO strings and UI needs server-date-based `YYYY. MM.DD.` format
+  - `formatMagazinePublishedDate` formats API `createdAt` date strings as `YYYY. MM.DD.`
 - icon:
   - `BackIcon`
 
@@ -370,8 +373,8 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
 - scroll area:
   - whole page scrolls vertically.
 - empty/loading/error layout:
-  - MVP: empty only for list.
-  - future API: hook returns loading/error states and page-local sections render skeleton/error UI.
+  - list empty state is rendered by `RecommendedMagazineSection`.
+  - loading/error states come from TanStack Query and page-local sections render section-level states.
 
 ## Accessibility
 

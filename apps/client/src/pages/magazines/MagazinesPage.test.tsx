@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -66,14 +67,14 @@ const magazinesResponse = {
       magazineId: 101,
       title:
         '[청와대 셰프가 추천하는 도쿄 스시 맛집 8선] 제목은 여기까지 좌랄랄랄라라라 넘으면...',
-      bannerImageUrl: 'https://example.com/magazine-101.jpg',
+      thumbnailImageUrl: 'https://example.com/magazine-101.jpg',
       instagramRedirectUrl: 'https://www.instagram.com/hashi.magazine/101',
       createdAt: '2026-07-12T00:00:00.000Z',
     },
     {
       magazineId: 102,
       title: '청와대 셰프가 추천하는 도쿄 스시 맛집 8선입니다.',
-      bannerImageUrl: 'https://example.com/magazine-102.jpg',
+      thumbnailImageUrl: 'https://example.com/magazine-102.jpg',
       instagramRedirectUrl: 'https://www.instagram.com/hashi.magazine/102',
       createdAt: '2026-07-11T00:00:00.000Z',
     },
@@ -95,6 +96,34 @@ const renderMagazinesPage = () => {
       <MagazinesPage />
     </QueryClientProvider>,
   )
+}
+
+const mockIntersectionObserver = () => {
+  const handleIntersections: IntersectionObserverCallback[] = []
+  const IntersectionObserverMock = vi.fn(
+    (callback: IntersectionObserverCallback) => {
+      handleIntersections.push(callback)
+
+      return {
+        observe: vi.fn(),
+        disconnect: vi.fn(),
+      } satisfies Partial<IntersectionObserver>
+    },
+  )
+
+  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
+
+  return {
+    IntersectionObserverMock,
+    triggerIntersect: () => {
+      handleIntersections.forEach((handleIntersection) => {
+        handleIntersection(
+          [{ isIntersecting: true } as IntersectionObserverEntry],
+          {} as IntersectionObserver,
+        )
+      })
+    },
+  }
 }
 
 describe('MagazinesPage', () => {
@@ -258,7 +287,7 @@ describe('MagazinesPage', () => {
           {
             magazineId: 201,
             title: '',
-            bannerImageUrl: 'https://example.com/magazine-201.jpg',
+            thumbnailImageUrl: 'https://example.com/magazine-201.jpg',
             instagramRedirectUrl:
               'https://www.instagram.com/hashi.magazine/201',
             createdAt: '2026-07-10T00:00:00.000Z',
@@ -271,7 +300,7 @@ describe('MagazinesPage', () => {
           {
             magazineId: 202,
             title: '다음 페이지에서 찾은 추천 매거진',
-            bannerImageUrl: 'https://example.com/magazine-202.jpg',
+            thumbnailImageUrl: 'https://example.com/magazine-202.jpg',
             instagramRedirectUrl:
               'https://www.instagram.com/hashi.magazine/202',
             createdAt: '2026-07-09T00:00:00.000Z',
@@ -289,6 +318,70 @@ describe('MagazinesPage', () => {
         cursor: 200,
         size: 10,
       })
+    })
+  })
+
+  it('does not request the same next magazine page twice when the sentinel intersects repeatedly in one render cycle', async () => {
+    const { IntersectionObserverMock, triggerIntersect } =
+      mockIntersectionObserver()
+
+    mockGetMagazines
+      .mockResolvedValueOnce({
+        hasNext: true,
+        nextCursor: 300,
+        magazines: [
+          {
+            magazineId: 301,
+            title: '첫 페이지 추천 매거진',
+            thumbnailImageUrl: 'https://example.com/magazine-301.jpg',
+            instagramRedirectUrl:
+              'https://www.instagram.com/hashi.magazine/301',
+            createdAt: '2026-07-10T00:00:00.000Z',
+          },
+        ],
+      })
+      .mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            window.setTimeout(() => {
+              resolve({
+                hasNext: false,
+                magazines: [
+                  {
+                    magazineId: 302,
+                    title: '다음 페이지 추천 매거진',
+                    thumbnailImageUrl: 'https://example.com/magazine-302.jpg',
+                    instagramRedirectUrl:
+                      'https://www.instagram.com/hashi.magazine/302',
+                    createdAt: '2026-07-09T00:00:00.000Z',
+                  },
+                ],
+              })
+            }, 10)
+          }),
+      )
+
+    renderMagazinesPage()
+
+    await screen.findByRole('heading', { name: '첫 페이지 추천 매거진' })
+    await waitFor(() => {
+      expect(IntersectionObserverMock).toHaveBeenCalled()
+    })
+    await waitFor(() => {
+      expect(mockGetMagazines).toHaveBeenCalledTimes(1)
+    })
+
+    await act(async () => {
+      triggerIntersect()
+      triggerIntersect()
+    })
+
+    await waitFor(() => {
+      expect(mockGetMagazines).toHaveBeenCalledTimes(2)
+    })
+    expect(mockGetMagazines).toHaveBeenNthCalledWith(2, {
+      cursor: 300,
+      size: 10,
     })
   })
 })

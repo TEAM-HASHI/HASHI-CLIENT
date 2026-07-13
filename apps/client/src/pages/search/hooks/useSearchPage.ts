@@ -7,9 +7,11 @@ import {
   sortOptions,
 } from '@/pages/search/constants/searchFilters'
 import { useRecentSearchKeywords } from '@/pages/search/hooks/useRecentSearchKeywords'
-import { useSearchRestaurantsQuery } from '@/pages/search/hooks/useSearchRestaurantsQuery'
-import { recommendedSearchKeywords } from '@/pages/search/mocks/searchContent.mock'
+import { useSearchKeywordRecommendationsQuery } from '@/pages/search/queries/useSearchKeywordRecommendationsQuery'
+import { useSearchRestaurantsInfiniteQuery } from '@/pages/search/queries/useSearchRestaurantsInfiniteQuery'
 import type { FoodCategoryValue, SearchSortValue } from '@/pages/search/types'
+import { mapSearchRestaurant } from '@/pages/search/utils/mapSearchRestaurant'
+import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const DEFAULT_SORT_VALUE = 'default' satisfies SearchSortValue
 const DEFAULT_FOOD_CATEGORY_VALUE = 'all' satisfies FoodCategoryValue
@@ -55,8 +57,28 @@ export const useSearchPage = () => {
     }
   }, [foodCategoryValue, sortValue, submittedKeyword])
 
-  const searchRestaurantsQuery = useSearchRestaurantsQuery(searchParams)
-  const restaurants = searchRestaurantsQuery.data ?? []
+  const searchRestaurantsQuery = useSearchRestaurantsInfiniteQuery(searchParams)
+  const searchKeywordRecommendationsQuery =
+    useSearchKeywordRecommendationsQuery({ enabled: searchParams === null })
+  const {
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch: refetchSearchRestaurants,
+  } = searchRestaurantsQuery
+  const loadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
+    enabled: Boolean(hasNextPage),
+    isLoading: isFetchingNextPage,
+    onIntersect: fetchNextPage,
+  })
+  const restaurants =
+    searchRestaurantsQuery.data?.pages.flatMap((page) =>
+      page.restaurants.flatMap((restaurant) => {
+        const searchRestaurant = mapSearchRestaurant(restaurant)
+
+        return searchRestaurant ? [searchRestaurant] : []
+      }),
+    ) ?? []
   const isSearchIdle = searchParams === null
   const sortLabel = getOptionLabel(sortOptions, sortValue)
   const foodCategoryLabel =
@@ -136,7 +158,7 @@ export const useSearchPage = () => {
   }
 
   const handleSearchRetry = () => {
-    void searchRestaurantsQuery.refetch()
+    void refetchSearchRestaurants()
   }
 
   return {
@@ -155,10 +177,12 @@ export const useSearchPage = () => {
       onSelect: handleFoodCategorySelect,
     },
     keyword,
+    loadMoreRef,
     recentSearchKeywords,
-    recommendedSearchKeywords,
+    recommendedSearchKeywords: searchKeywordRecommendationsQuery.data ?? [],
     restaurants,
     searchInputRef,
+    searchKeywordRecommendationsQuery,
     searchRestaurantsQuery,
     sortSheet: {
       open: isSortSheetOpen,
