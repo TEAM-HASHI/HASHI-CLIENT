@@ -20,11 +20,13 @@ interface RestaurantReviewSectionProps {
   reviewCount: number
   reviews: RestaurantReview[]
   hasMoreReviews: boolean
+  isReviewListError?: boolean
   isReviewListLoading: boolean
   loadMoreRef: Ref<HTMLDivElement>
   selectedSort: ReviewSortValue
   onPressReviewImage: (reviewId: string, imageIndex: number) => void
   onPressWriteReview: () => void
+  onRetryReviewList?: () => void
   onSelectSort: (sort: ReviewSortValue) => void
 }
 
@@ -70,11 +72,13 @@ export const RestaurantReviewSection = ({
   reviewCount,
   reviews,
   hasMoreReviews,
+  isReviewListError = false,
   isReviewListLoading,
   loadMoreRef,
   selectedSort,
   onPressReviewImage,
   onPressWriteReview,
+  onRetryReviewList,
   onSelectSort,
 }: RestaurantReviewSectionProps) => {
   return (
@@ -151,6 +155,22 @@ export const RestaurantReviewSection = ({
         <div className={REVIEW_CONTENT_WIDTH_CLASS_NAME}>
           {isReviewListLoading ? (
             <RestaurantReviewListSkeleton />
+          ) : isReviewListError ? (
+            <div className="flex min-h-[240px] flex-col items-center justify-center gap-4 text-center">
+              <p className="typo-body-4 text-primary-200">
+                리뷰를 불러오지 못했어요.
+              </p>
+              {onRetryReviewList ? (
+                <Button
+                  className="bg-cool-gray-600 typo-body-5 h-10 w-full max-w-[240px]"
+                  onClick={onRetryReviewList}
+                  size="sm"
+                  variant="primary"
+                >
+                  리뷰 다시 불러오기
+                </Button>
+              ) : null}
+            </div>
           ) : (
             reviews.map((review) => (
               <article

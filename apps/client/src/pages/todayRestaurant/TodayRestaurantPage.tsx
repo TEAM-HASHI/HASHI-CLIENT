@@ -108,12 +108,12 @@ export const TodayRestaurantPage = () => {
   const { fetchNextPage: fetchNextReviewPage } = reviewsQuery
   const handleIntersectMenu = useCallback(() => {
     if (canFetchNextMenuPage) {
-      void fetchNextMenuPage()
+      return fetchNextMenuPage()
     }
   }, [canFetchNextMenuPage, fetchNextMenuPage])
   const handleIntersectReview = useCallback(() => {
     if (canFetchNextReviewPage) {
-      void fetchNextReviewPage()
+      return fetchNextReviewPage()
     }
   }, [canFetchNextReviewPage, fetchNextReviewPage])
   const menuLoadMoreRef = useIntersectionObserver<HTMLDivElement>({
@@ -127,10 +127,12 @@ export const TodayRestaurantPage = () => {
   const requestError =
     randomRecommendationQuery.error ??
     recommendAgainMutation.error ??
-    storeInformationQuery.error ??
-    menusQuery.error ??
-    reviewsQuery.error
+    storeInformationQuery.error
   const storeInformation = storeInformationQuery.data
+  const menuPages = menusQuery.data?.pages ?? []
+  const reviewPages = reviewsQuery.data?.pages ?? []
+  const isMenuListError = menusQuery.isError && menuPages.length === 0
+  const isReviewListError = reviewsQuery.isError && reviewPages.length === 0
 
   if (requestError) {
     if (checkIsNotFoundError(requestError)) {
@@ -149,9 +151,7 @@ export const TodayRestaurantPage = () => {
     return <LoadingScreen />
   }
 
-  const menuPages = menusQuery.data?.pages ?? []
   const menus = menuPages.flatMap((page: RestaurantMenuListData) => page.menus)
-  const reviewPages = reviewsQuery.data?.pages ?? []
   const reviews = reviewPages.flatMap(
     (page: RestaurantReviewListData) => page.reviews,
   )
@@ -236,6 +236,8 @@ export const TodayRestaurantPage = () => {
         activeTab={activeTab}
         hasMoreMenus={menusQuery.hasNextPage}
         hasMoreReviews={reviewsQuery.hasNextPage}
+        isMenuListError={isMenuListError}
+        isReviewListError={isReviewListError}
         isReviewImageViewerOpen={isReviewImageViewerOpen}
         isReviewListLoading={reviewsQuery.isPending}
         isReviewUnavailableModalOpen={isReviewUnavailableModalOpen}
@@ -249,6 +251,8 @@ export const TodayRestaurantPage = () => {
         onPressReservation={handlePressReservation}
         onPressReviewImage={handlePressReviewImage}
         onPressWriteReview={handlePressWriteReview}
+        onRetryMenuList={() => void menusQuery.refetch()}
+        onRetryReviewList={() => void reviewsQuery.refetch()}
         onSelectReviewSort={handleSelectReviewSort}
         onTabChange={setActiveTab}
         restaurant={restaurant}

@@ -329,6 +329,23 @@ describe('RestaurantDetailPage', () => {
     ).toBeInTheDocument()
   })
 
+  it('keeps restaurant detail visible and renders menu error state when menu request fails', async () => {
+    mockedGetRestaurantMenus.mockRejectedValue(new Error('menu error'))
+
+    renderPage()
+
+    expect(await screen.findByText('하시 스시')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('tab', { name: '메뉴' }))
+
+    expect(
+      screen.getByText('메뉴 정보를 불러오지 못했어요.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '메뉴 다시 불러오기' }),
+    ).toBeTruthy()
+  })
+
   it('renders review content and opens review image viewer', async () => {
     renderPage()
 

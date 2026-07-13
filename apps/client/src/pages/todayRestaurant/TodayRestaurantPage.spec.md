@@ -104,14 +104,12 @@
   - next page trigger: 공통 `useIntersectionObserver` sentinel intersect
 
 - query: restaurant reviews infinite
-- requested endpoint: `GET /api/v1/reviews/context`
-- generated OpenAPI note:
-  - 현재 생성 타입 기준 `GET /api/v1/reviews/context`는 `reservationId` query를 받는 리뷰 작성 화면 컨텍스트 API입니다.
-  - 식당 상세 리뷰 목록에는 `GET /api/v1/restaurants/{restaurantId}/reviews`가 커서 페이지네이션 응답(`content`, `nextCursor`, `hasNext`, `reviewCount`)을 제공합니다.
-  - 구현 전 백엔드/Swagger 기준으로 리뷰 목록 endpoint를 확정해야 합니다.
-- enabled condition: today restaurant id exists and review tab has been requested
+- requested endpoint: `GET /api/v1/restaurants/{restaurantId}/reviews`
+- response data:
+  - `averageRating`, `reviewCount`, `content`, `nextCursor`, `hasNext`
+- enabled condition: today restaurant id exists
 - request params:
-  - confirmed list endpoint 기준: path `restaurantId`, query `sort`, `cursor`, `size`
+  - path `restaurantId`, query `sort`, `cursor`, `size`
 - loading state: 리뷰 탭 첫 페이지 skeleton
 - error state: 리뷰 영역 error fallback
 - empty state: 리뷰가 없으면 empty state

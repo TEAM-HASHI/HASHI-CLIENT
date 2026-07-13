@@ -1,4 +1,4 @@
-import { Badge } from '@hashi/hds-ui'
+import { Badge, Button } from '@hashi/hds-ui'
 import type { Ref } from 'react'
 
 import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
@@ -7,16 +7,43 @@ import type { RestaurantMenu } from '@/features/restaurantDetail/types/restauran
 interface RestaurantMenuSectionProps {
   menus: RestaurantMenu[]
   hasMoreMenus?: boolean
+  isMenuListError?: boolean
   loadMoreRef?: Ref<HTMLDivElement>
   onPressMenuItem: (menuId: string) => void
+  onRetryMenuList?: () => void
 }
 
 export const RestaurantMenuSection = ({
   menus,
   hasMoreMenus = false,
+  isMenuListError = false,
   loadMoreRef,
   onPressMenuItem,
+  onRetryMenuList,
 }: RestaurantMenuSectionProps) => {
+  if (isMenuListError) {
+    return (
+      <section
+        aria-label="메뉴 목록"
+        className="flex min-h-[240px] flex-col items-center justify-center gap-4 px-5 text-center"
+      >
+        <p className="typo-body-4 text-primary-200">
+          메뉴 정보를 불러오지 못했어요.
+        </p>
+        {onRetryMenuList ? (
+          <Button
+            className="bg-cool-gray-600 typo-body-5 h-10 w-full max-w-[240px]"
+            onClick={onRetryMenuList}
+            size="sm"
+            variant="primary"
+          >
+            메뉴 다시 불러오기
+          </Button>
+        ) : null}
+      </section>
+    )
+  }
+
   return (
     <section aria-label="메뉴 목록" className="px-5">
       {menus.map((menu) => {

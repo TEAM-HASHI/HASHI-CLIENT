@@ -41,6 +41,8 @@ interface RestaurantDetailTemplateProps {
   restaurant: RestaurantDetail
   hasMoreMenus: boolean
   hasMoreReviews: boolean
+  isMenuListError: boolean
+  isReviewListError: boolean
   isReviewListLoading: boolean
   menuLoadMoreRef: Ref<HTMLDivElement>
   reviewLoadMoreRef: Ref<HTMLDivElement>
@@ -55,6 +57,8 @@ interface RestaurantDetailTemplateProps {
   onPressReservation: () => void
   onPressReviewImage: (reviewId: string, imageIndex: number) => void
   onPressWriteReview: () => void
+  onRetryMenuList: () => void
+  onRetryReviewList: () => void
   onSelectReviewSort: (sort: ReviewSortValue) => void
   onTabChange: (tab: RestaurantDetailTab) => void
   onCloseReviewImageViewer: () => void
@@ -70,6 +74,8 @@ export const RestaurantDetailTemplate = ({
   restaurant,
   hasMoreMenus,
   hasMoreReviews,
+  isMenuListError,
+  isReviewListError,
   isReviewListLoading,
   menuLoadMoreRef,
   reviewLoadMoreRef,
@@ -84,6 +90,8 @@ export const RestaurantDetailTemplate = ({
   onPressReservation,
   onPressReviewImage,
   onPressWriteReview,
+  onRetryMenuList,
+  onRetryReviewList,
   onSelectReviewSort,
   onTabChange,
   onCloseReviewImageViewer,
@@ -239,16 +247,20 @@ export const RestaurantDetailTemplate = ({
       ) : activeTab === 'menu' ? (
         <RestaurantMenuSection
           hasMoreMenus={hasMoreMenus}
+          isMenuListError={isMenuListError}
           loadMoreRef={menuLoadMoreRef}
           menus={restaurant.menus}
           onPressMenuItem={onPressMenuItem}
+          onRetryMenuList={onRetryMenuList}
         />
       ) : (
         <RestaurantReviewSection
           hasMoreReviews={hasMoreReviews}
+          isReviewListError={isReviewListError}
           isReviewListLoading={isReviewListLoading}
           loadMoreRef={reviewLoadMoreRef}
           onPressReviewImage={onPressReviewImage}
+          onRetryReviewList={onRetryReviewList}
           onPressWriteReview={onPressWriteReview}
           onSelectSort={onSelectReviewSort}
           rating={restaurant.rating}
