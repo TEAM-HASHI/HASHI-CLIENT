@@ -24,11 +24,27 @@ describe('getMyPointBalance', () => {
     expect(mockRequest).toHaveBeenCalledWith('/api/v1/points/me')
   })
 
-  it('falls back to 0 when point balance is empty', async () => {
-    mockRequest.mockResolvedValue(null)
+  it('accepts 0 when the user has no point history', async () => {
+    mockRequest.mockResolvedValue({ balance: 0 })
 
     await expect(getMyPointBalance()).resolves.toEqual({
       availablePoint: 0,
     })
+  })
+
+  it('throws when response data is missing', async () => {
+    mockRequest.mockResolvedValue(null)
+
+    await expect(getMyPointBalance()).rejects.toThrow(
+      '포인트 잔액 응답에 유효한 balance가 없습니다.',
+    )
+  })
+
+  it('throws when balance is missing', async () => {
+    mockRequest.mockResolvedValue({})
+
+    await expect(getMyPointBalance()).rejects.toThrow(
+      '포인트 잔액 응답에 유효한 balance가 없습니다.',
+    )
   })
 })

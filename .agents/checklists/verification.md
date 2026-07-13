@@ -50,7 +50,7 @@ pnpm --filter @hashi/client build
 Manual verification:
 
 - query key factory is used instead of inline query keys.
-- mutation invalidation covers stale list/detail/infinite queries.
+- mutation cache synchronization uses `setQueryData`, invalidation, or both according to response completeness and UI flow.
 - loading, error, empty, disabled, and success states are connected.
 - page spec `Data Dependencies` matches the implementation.
 

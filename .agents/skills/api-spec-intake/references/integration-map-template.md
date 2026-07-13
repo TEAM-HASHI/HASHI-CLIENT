@@ -27,9 +27,9 @@ Use this shape in the working notes or target page spec. Keep it concise and imp
 
 ## Mutations
 
-| Action | Endpoint    | Body | Success UI | Error UI | Invalidate  |
-| ------ | ----------- | ---- | ---------- | -------- | ----------- |
-|        | `POST /...` |      |            |          | list/detail |
+| Action | Endpoint    | Body | Response completeness | Success UI | Error UI | Cache synchronization        |
+| ------ | ----------- | ---- | --------------------- | ---------- | -------- | ---------------------------- |
+|        | `POST /...` |      | complete/partial      |            |          | set detail / invalidate list |
 
 ## Type Mapping
 
@@ -50,4 +50,4 @@ Use this shape in the working notes or target page spec. Keep it concise and imp
 
 ## Completion Rule
 
-The map is complete only when every query and mutation has an endpoint, UI state behavior, and invalidation decision.
+The map is complete only when every query and mutation has an endpoint, UI state behavior, and cache synchronization decision.

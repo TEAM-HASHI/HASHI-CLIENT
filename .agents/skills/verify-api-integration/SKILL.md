@@ -1,13 +1,13 @@
 ---
 name: verify-api-integration
-description: Use after HASHI client API query, mutation, Swagger integration, TanStack Query, query key, invalidation, or server-state UI changes to audit correctness before PR or review.
+description: Use after HASHI client API query, mutation, Swagger integration, TanStack Query, query key, cache synchronization, or server-state UI changes to audit correctness before PR or review.
 ---
 
 # Verify API Integration
 
 ## Purpose
 
-Audit HASHI client API integration for data-layer boundaries, query key correctness, mutation invalidation, UI state coverage, and docs sync.
+Audit HASHI client API integration for data-layer boundaries, query key correctness, mutation cache synchronization, UI state coverage, and docs sync.
 
 ## Related Files
 
@@ -53,7 +53,11 @@ git diff --name-only origin/develop...HEAD 2>/dev/null || true
    - infinite query uses explicit `initialPageParam` and documented `getNextPageParam`
 6. Check mutations:
    - mutation hooks use documented request variables
-   - success invalidates affected list/detail/infinite prefixes
+   - complete latest entity responses use `setQueryData` when the same detail must update immediately
+   - partial responses and affected list/detail/infinite/count prefixes are invalidated
+   - detail-only invalidation uses `exact: true` when the detail key has child keys
+   - all cache operations use query key factory outputs
+   - ordinary mutation success does not use `resetQueries` or `removeQueries`
    - optimistic updates exist only with explicit rollback requirements
 7. Check UI states:
    - loading, error, empty, disabled, and success states are mapped to existing UI
@@ -98,7 +102,7 @@ Status: PASS | FAIL
 - Endpoint boundary: PASS/FAIL
 - Query keys: PASS/FAIL
 - Query mode: PASS/FAIL
-- Mutation invalidation: PASS/FAIL
+- Mutation cache synchronization: PASS/FAIL
 - UI states: PASS/FAIL
 - Test isolation: PASS/FAIL
 - Docs sync: PASS/FAIL

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 type ApiClientOptions = {
   hooks?: {
@@ -28,8 +28,13 @@ describe('apiClient', () => {
   beforeEach(() => {
     vi.resetModules()
     vi.stubEnv('VITE_API_BASE_URL', 'https://api.hashi.test')
+    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', '')
     mockKyCreate.mockClear()
     window.localStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
   })
 
   it('attaches localStorage accessToken as a Bearer token', async () => {
@@ -56,5 +61,29 @@ describe('apiClient', () => {
     options?.hooks?.beforeRequest?.[0]?.({ request })
 
     expect(request.headers.has('Authorization')).toBe(false)
+  })
+
+  it('uses the local development token when no stored token exists', async () => {
+    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', 'development-token')
+    const options = await getApiClientOptions()
+    const request = new Request('https://api.hashi.test/api/v1/reservations')
+
+    options?.hooks?.beforeRequest?.[0]?.({ request })
+
+    expect(request.headers.get('Authorization')).toBe(
+      'Bearer development-token',
+    )
+  })
+
+  it('does not overwrite an explicitly provided Authorization header', async () => {
+    window.localStorage.setItem('accessToken', 'stored-token')
+    const options = await getApiClientOptions()
+    const request = new Request('https://api.hashi.test/api/v1/reservations', {
+      headers: { Authorization: 'Bearer explicit-token' },
+    })
+
+    options?.hooks?.beforeRequest?.[0]?.({ request })
+
+    expect(request.headers.get('Authorization')).toBe('Bearer explicit-token')
   })
 })

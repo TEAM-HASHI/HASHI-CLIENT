@@ -7,6 +7,7 @@ import { ROUTES } from '@/app/router/path'
 import {
   GuestCounter,
   ReservationBottomBar,
+  ReservationRequestNoteField,
   ReservationTimeSelector,
   ReservationUnderlineTextField,
 } from '@/features/reservation/components'
@@ -132,11 +133,8 @@ export const AnywhereReservationPage = () => {
             />
           </section>
 
-          <ReservationUnderlineTextField
-            label="요청사항 (선택)"
-            name="requestNote"
+          <ReservationRequestNoteField
             onValueChange={fields.requestNote.onValueChange}
-            placeholder="요청사항을 작성해주세요."
             value={fields.requestNote.value}
           />
         </form>
