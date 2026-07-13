@@ -47,7 +47,7 @@
 - [x] 식당 이미지는 서버가 내려준 이미지만 가로 스크롤 리스트로 표시하고 부족한 슬롯을 `DefaultImage`로 채우지 않습니다.
 - [x] 서버 이미지(`imageUrls`, fallback `thumbnailUrl`)가 하나도 없으면 공통 `DefaultImage`를 1개만 표시합니다.
 - [x] 기존 shared 식당 목록 조회 API(`getRestaurants`, `restaurantsInfiniteQueryOptions`)를 사용해 `GET /api/v1/restaurants` 응답을 커서 기반 무한스크롤로 렌더링합니다.
-- [x] 현재 page의 `MOCK_RESTAURANTS` prop 주입은 production render path에서 제거했습니다.
+- [x] 현재 page의 정적 restaurant fixture prop 주입은 production render path에서 제거했습니다.
 - [x] fixed header는 `z-fixed` 토큰을 사용하고, 스크롤 콘텐츠는 fixed header 높이만큼 top padding을 둡니다.
 
 ## Data Dependencies
@@ -75,11 +75,11 @@
 ### Current Implementation
 
 - 식당 목록 조회 endpoint 함수, query key factory, infinite query options는 `features/restaurantList`에 이미 구현되어 있습니다.
-- `HashiPickPage`는 `restaurantType="hashi-pick"`을 `RestaurantListPage`에 넘기고, `MOCK_RESTAURANTS`를 production render path에서 사용하지 않습니다.
-- `RestaurantListPage`와 `useRestaurantListPage`는 `restaurants` prop과 `useInfiniteRestaurantList` local slice가 아니라 TanStack Query server state와 `useInfiniteScrollTrigger`를 사용합니다.
+- `HashiPickPage`는 `restaurantType="hashi-pick"`을 `RestaurantListPage`에 넘기고, 정적 restaurant fixture를 production render path에서 사용하지 않습니다.
+- `RestaurantListPage`와 `useRestaurantListPage`는 `restaurants` prop과 local slice가 아니라 TanStack Query server state와 `useInfiniteScrollTrigger`를 사용합니다.
 - 이 API 연동은 기존 shared 식당 목록 API를 새로 만들지 않고, 하시 Pick route UI가 기존 query options를 소비하도록 연결합니다.
 - 검색 화면과 같은 `restaurantsInfiniteQueryOptions` 패턴을 사용하되, 검색어 `keyword` 대신 하시 Pick 목록 유형 `type`을 고정해서 보냅니다.
-- 서버 기반 무한스크롤은 검색/매거진 화면 관례처럼 `useInfiniteScrollTrigger`로 sentinel intersect 시 `fetchNextPage`를 호출합니다. 기존 `useInfiniteRestaurantList` local slicing은 mock fixture 전용 경로에만 남기거나 제거합니다.
+- 서버 기반 무한스크롤은 검색/매거진 화면 관례처럼 `useInfiniteScrollTrigger`로 sentinel intersect 시 `fetchNextPage`를 호출합니다. 기존 local slicing mock 경로는 제거합니다.
 
 ### API Integration Map
 

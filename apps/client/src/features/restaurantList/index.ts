@@ -6,8 +6,6 @@ export {
   RESTAURANT_LIST_PAGE_SIZE,
 } from './constants'
 export { RestaurantListPage } from './RestaurantListPage'
-export { MOCK_RESTAURANTS } from './mocks'
-export { useInfiniteRestaurantList } from './hooks'
 export { useRestaurantListPage } from './hooks'
 export { RestaurantCard, RestaurantFilterBar } from './components'
 export type {
