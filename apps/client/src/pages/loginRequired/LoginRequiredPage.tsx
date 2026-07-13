@@ -1,7 +1,15 @@
+import { useLocation } from 'react-router-dom'
+
+import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
+import { getRedirectToFromLocationState } from '@/features/auth/utils/authRedirect'
 import { KakaoStartButton } from '@/shared/components/kakaoStartButton'
 import loginRequiredImage from '@/shared/assets/images/login-required.webp'
 
 export const LoginRequiredPage = () => {
+  const location = useLocation()
+  const { startKakaoOAuth } = useKakaoOAuthStart()
+  const redirectTo = getRedirectToFromLocationState(location.state)
+
   return (
     <section className="app-mobile-bottom-nav-content flex flex-col items-center justify-center px-5 text-center">
       <img
@@ -23,7 +31,7 @@ export const LoginRequiredPage = () => {
       <KakaoStartButton
         className="w-85"
         onPress={() => {
-          // TODO: 카카오 OAuth 플로우 연결
+          startKakaoOAuth(redirectTo)
         }}
       >
         카카오로 1초 만에 시작하기

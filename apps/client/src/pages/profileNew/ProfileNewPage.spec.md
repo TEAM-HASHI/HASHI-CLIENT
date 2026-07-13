@@ -4,8 +4,9 @@ Jira: HASHI-76
 
 ## Purpose
 
-- 카카오 간편 로그인 후 추가 정보가 필요한 신규 회원이 프로필 정보를 입력하고 온보딩을 완료할 수 있게 한다.
+- 카카오 간편 로그인 후 추가 정보가 필요한 신규 회원이 프로필 정보를 입력할 수 있게 한다.
 - 이번 범위는 API 연동 없이 프로필 생성 화면 UI, page-local form 상태, 입력값 formatting, field validation, CTA 활성/비활성, 제출 후 다음 화면 이동까지 포함한다.
+- HASHI-112 Kakao OAuth 범위에서는 신규 회원을 이 화면으로 보내는 것까지만 담당하며, 온보딩 완료 API 호출은 별도 온보딩 API 연동 작업에서 처리한다.
 - 연락처 인증은 MVP 범위에서 제외하고, 연락처 값 입력과 숫자 normalization만 처리한다.
 
 ## Route
@@ -28,6 +29,7 @@ Jira: HASHI-76
   - no
 - redirect:
   - unauthenticated: `ROUTES.loginRequired`
+  - onboarding session: 접근 허용
   - authenticated guest: none
 - auth status:
   - uses `useAuthStatus`: no, guard owns auth status
@@ -130,9 +132,9 @@ Jira: HASHI-76
 
 ## User Flow
 
-1. 사용자가 카카오 간편 로그인 후 `/profile/new`에 진입합니다.
+1. 사용자가 카카오 간편 로그인 후 신규 회원으로 판정되면 `/profile/new`에 진입합니다.
 2. 비회원이면 `AuthOnlyRoute`에 의해 `ROUTES.loginRequired`로 이동합니다.
-3. 회원이면 프로필 생성 페이지를 렌더링합니다.
+3. onboarding session 또는 회원이면 프로필 생성 페이지를 렌더링합니다.
 4. 사용자는 프로필 이미지를 선택하거나 기본 이미지를 유지합니다.
 5. 사용자는 닉네임, 생년월일, 연락처, 이메일을 입력하고 필요하면 영문 이름을 입력합니다.
 6. page-local hook이 입력값, formatting 값, validation, submit 가능 여부를 계산합니다.
@@ -311,6 +313,7 @@ ProfileNewPage
   - `navigate(-1)`
 - auth redirect:
   - unauthenticated users redirect to `ROUTES.loginRequired` through `AuthOnlyRoute`
+  - new users with onboarding session can access `/profile/new`
 
 ## Styling
 
@@ -345,6 +348,7 @@ ProfileNewPage
 - form state, formatting, validation, submit draft 생성은 `useProfileNewForm`에서 소유한다.
 - API 연동 전 임시 데이터는 `mocks/profileNew.mock.ts`에 둔다.
 - API 연동 전이므로 `useProfileNewForm`은 로컬 draft 생성까지만 담당하고 서버 요청은 실행하지 않는다.
+- HASHI-112 범위에서는 `POST /api/v1/users/onboarding`을 호출하지 않는다.
 - API 연동 전 local draft 생성은 submitting 상태를 유지하지 않는다.
 - 하단 CTA는 기존 예약 페이지처럼 `form` attribute와 `PROFILE_NEW_FORM_ID`를 연결해 submit한다.
 - `redirectTo`는 리뷰 작성/예약 플로우 복귀에 필요한 내부 route만 허용한다.
