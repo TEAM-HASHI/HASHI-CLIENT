@@ -42,6 +42,7 @@ describe('uploadProfileImage', () => {
       'api/v1/uploads/presigned-urls',
       {
         method: 'post',
+        credentials: 'include',
         json: {
           usage: 'profile',
           files: [{ contentType: 'image/webp', fileSize: 1024 }],
@@ -86,5 +87,15 @@ describe('uploadProfileImage', () => {
     await expect(uploadProfileImage(file)).rejects.toThrow(
       '프로필 이미지 업로드에 실패했습니다.',
     )
+  })
+
+  it('rejects unsupported profile image MIME types before issuing a presigned URL', async () => {
+    const file = new File(['profile'], 'profile.gif', { type: 'image/gif' })
+
+    await expect(uploadProfileImage(file)).rejects.toThrow(
+      '지원하지 않는 프로필 이미지 형식입니다.',
+    )
+    expect(mockedRequest).not.toHaveBeenCalled()
+    expect(mockedFetch).not.toHaveBeenCalled()
   })
 })

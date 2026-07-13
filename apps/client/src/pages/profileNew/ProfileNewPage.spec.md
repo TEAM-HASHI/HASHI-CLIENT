@@ -53,15 +53,16 @@ Jira: HASHI-120
 - [ ] 기본 프로필 이미지는 `apps/client/src/shared/assets/images/profile-empty.svg`를 사용한다.
 - [ ] 프로필 이미지 수정 버튼은 이미지 파일 선택을 연다.
 - [ ] 사용자가 이미지를 선택하면 원형 preview로 표시한다.
-- [ ] 이미지가 아닌 파일은 등록하지 않고 `이미지 파일만 등록해주세요.` 오류 문구를 표시한다.
+- [ ] 프로필 이미지는 `image/jpeg`, `image/png`, `image/webp` MIME 타입만 허용한다.
+- [ ] 허용되지 않는 파일은 등록하지 않고 `이미지 파일만 등록해주세요.` 오류 문구를 표시한다.
 - [ ] 5MB를 초과하는 프로필 이미지는 등록하지 않고 `5MB 이하의 이미지만 등록해주세요.` 오류 문구를 표시한다.
 - [ ] `프로필 삭제` 버튼은 선택한 이미지를 제거하고 기본 프로필 이미지 상태로 되돌린다.
 - [ ] 신규 프로필 생성 화면에서 `프로필 삭제`는 선택 파일 reset만 의미하며, 서버 이미지 삭제 의도를 draft에 담지 않는다.
 - [ ] 프로필 이미지는 90px 원형으로 노출하고, 수정 아이콘은 `button_edit` 성격의 25px 아이콘을 사용한다.
 - [ ] 프로필 이미지와 `프로필 삭제` 텍스트 사이 간격은 16px이고, 텍스트는 `Body3 / primary-200`을 사용한다.
 - [ ] 닉네임 입력 필드를 보여준다.
-- [ ] 닉네임은 필수값이며, 한 글자 입력할 때마다 실시간으로 중복 여부를 검증한다.
-- [ ] 닉네임이 중복이면 필드 아래에 `중복된 네이밍입니다.`를 `Body3 / error` 문구로 표시한다.
+- [ ] 닉네임은 필수값이며 local mock 기반 중복 차단은 하지 않는다.
+- [ ] 닉네임 중복 서버 응답이 오면 필드 아래에 `중복된 네이밍입니다.`를 `Body3 / error` 문구로 표시한다.
 - [ ] 생년월일 입력 필드를 보여준다.
 - [ ] 생년월일은 필수값이며, 숫자 8자리를 `YYYYMMDD` 원본 값으로 관리한다.
 - [ ] 생년월일은 사용자가 입력하는 동안 `YYYY/MM/DD` 형태로 표시한다.
@@ -109,10 +110,12 @@ Jira: HASHI-120
   - `POST /api/v1/users/onboarding`
   - endpoint function: `apps/client/src/pages/profileNew/api/requestOnboarding.ts`
   - auth: `signup_token` HttpOnly cookie
+  - credentials: `include`
   - accessToken, localStorage, sessionStorage, memory token을 직접 사용하지 않는다.
 - profile image upload:
   - endpoint function: `apps/client/src/pages/profileNew/api/uploadProfileImage.ts`
   - `POST /api/v1/uploads/presigned-urls`
+  - credentials: `include`
   - request usage: `profile`
   - response `uploadUrl`로 S3 `PUT` 업로드
   - response `fileKey`를 온보딩 API의 `profileImageKey`로 전달
@@ -125,7 +128,7 @@ Jira: HASHI-120
   - `profileImageKey`: optional, presigned URL 업로드 완료 후 받은 S3 object key
 - submit enabled condition:
   - 닉네임 `trim()` 결과가 1글자 이상
-  - 닉네임 중복 확인이 성공 상태 또는 API 연동 전 local validation 통과 상태
+  - 닉네임 필수값 local validation 통과 상태
   - 생년월일이 숫자 8자리 실제 날짜
   - 연락처가 지원하는 전화번호 길이와 숫자 형식
   - 이메일이 이메일 형식
@@ -200,9 +203,10 @@ Jira: HASHI-120
 ## Validation
 
 - `nickname`
-  - rule: `trim()` 결과가 1글자 이상, 중복 확인 통과
+  - rule: `trim()` 결과가 1글자 이상
   - trigger: 입력값 변경 시마다 실시간 검증
-  - error message: `중복된 네이밍입니다.`
+  - 중복 닉네임은 local mock으로 제출을 막지 않고 온보딩 API의 `USER-001` field error를 표시한다.
+  - error message: 서버 중복 응답 시 `중복된 네이밍입니다.`
 - `birthDate`
   - rule: 숫자 8자리, 실제 날짜, 과거 날짜, submit 시 `yyyy-MM-dd`로 변환 가능
   - error message: `생년월일을 정확히 입력해주세요.`
@@ -271,8 +275,6 @@ ProfileNewPage
 - page-local hook:
   - `useProfileNewPage`
   - `useProfileNewForm`
-- page-local mock:
-  - `profileNew.mock.ts`
 - page-local utils:
   - `formatBirthDateInput`
   - `formatPhoneNumberInput`
@@ -299,7 +301,7 @@ ProfileNewPage
   - 파일 선택을 취소하면 기존 이미지 상태를 유지한다.
   - 이미지가 아닌 파일은 선택해도 preview로 반영하지 않고, 프로필 이미지 영역 근처에 오류를 표시한다.
   - 5MB를 초과하는 이미지는 선택해도 preview로 반영하지 않고, 프로필 이미지 영역 근처에 오류를 표시한다.
-  - `accept="image/*"`는 브라우저 선택 UI 힌트로만 사용하고, handler에서 `file.type.startsWith('image/')`를 별도로 검증한다.
+  - `accept="image/*"`는 브라우저 선택 UI 힌트로만 사용하고, handler에서 `image/jpeg`, `image/png`, `image/webp` allowlist를 별도로 검증한다.
   - `redirectTo`에 query string 또는 hash가 붙어도 허용 여부는 `pathname` 기준으로 판단한다.
   - `redirectTo`가 외부 URL이거나 허용되지 않은 내부 경로이면 무시하고 `ROUTES.home`으로 이동한다.
 - user-facing message:
@@ -362,12 +364,12 @@ ProfileNewPage
 - `ProfileNewPage`는 화면 섹션 조합만 담당한다.
 - `useProfileNewPage`는 navigation, search param, form submit 연결을 담당한다.
 - form state, formatting, validation, submit draft 생성은 `useProfileNewForm`에서 소유한다.
-- API 연동 전 임시 데이터는 `mocks/profileNew.mock.ts`에 둔다.
 - `useProfileNewForm`은 form 값, formatting, validation, 서버 field error, submitting 상태를 소유한다.
 - `useProfileNewPage`는 submit orchestration, profile image upload, onboarding API 호출, error mapping, navigation을 소유한다.
 - `requestOnboarding`과 `uploadProfileImage`는 React, route, UI state를 알지 않는다.
 - `signup_token`은 HttpOnly cookie이므로 프론트 코드에서 읽거나 저장하지 않는다.
 - 온보딩 API 요청에 Authorization header를 임의로 추가하지 않는다.
+- 온보딩 API와 presigned URL 발급 요청은 `credentials: 'include'`를 명시한다.
 - presigned URL의 `uploadUrl`은 S3 업로드에만 사용하고, 온보딩 API에는 `fileKey`만 `profileImageKey`로 보낸다.
 - 하단 CTA는 기존 예약 페이지처럼 `form` attribute와 `PROFILE_NEW_FORM_ID`를 연결해 submit한다.
 - `redirectTo`는 리뷰 작성/예약 플로우 복귀에 필요한 내부 route만 허용한다.

@@ -28,6 +28,7 @@ describe('requestOnboarding', () => {
     await expect(requestOnboarding(body)).resolves.toEqual({ userId: 15 })
     expect(mockedRequest).toHaveBeenCalledWith('api/v1/users/onboarding', {
       method: 'post',
+      credentials: 'include',
       json: body,
     })
   })

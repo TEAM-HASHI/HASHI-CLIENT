@@ -72,11 +72,7 @@ export const checkIsValidBirthDate = (value: string) => {
 export const checkIsValidPhoneNumber = (value: string) => {
   const digits = normalizeDigits(value)
 
-  if (digits.startsWith('02')) {
-    return digits.length === 9 || digits.length === 10
-  }
-
-  return digits.length === 10 || digits.length === 11
+  return /^0\d{9,10}$/.test(digits)
 }
 
 export const checkIsValidEmail = (value: string) => {

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { duplicatedNicknames } from '@/pages/profileNew/mocks/profileNew.mock'
 import {
   checkIsValidBirthDate,
   checkIsValidEmail,
@@ -20,12 +19,16 @@ export interface ProfileDraft {
   email: string
 }
 
-const DUPLICATED_NICKNAMES = new Set(duplicatedNicknames)
 const PROFILE_IMAGE_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
 const PROFILE_IMAGE_INVALID_FILE_TYPE_ERROR_MESSAGE =
   '이미지 파일만 등록해주세요.'
 const PROFILE_IMAGE_MAX_FILE_SIZE_ERROR_MESSAGE =
   '5MB 이하의 이미지만 등록해주세요.'
+const SUPPORTED_PROFILE_IMAGE_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+])
 
 export const useProfileNewForm = () => {
   const [profileImageFile, setProfileImageFile] = useState<File>()
@@ -54,8 +57,7 @@ export const useProfileNewForm = () => {
   const trimmedEmail = email.trim()
   const trimmedEnglishName = englishName.trim()
 
-  const isNicknameDuplicated = DUPLICATED_NICKNAMES.has(trimmedNickname)
-  const isNicknameValid = trimmedNickname.length > 0 && !isNicknameDuplicated
+  const isNicknameValid = trimmedNickname.length > 0
   const isBirthDateValid = checkIsValidBirthDate(normalizedBirthDate)
   const isPhoneNumberValid = checkIsValidPhoneNumber(normalizedPhoneNumber)
   const isEmailValid = checkIsValidEmail(trimmedEmail)
@@ -72,9 +74,7 @@ export const useProfileNewForm = () => {
 
   const fieldErrors = useMemo(
     () => ({
-      nickname: isNicknameDuplicated
-        ? '중복된 네이밍입니다.'
-        : (serverFieldErrors.nickname ?? ''),
+      nickname: serverFieldErrors.nickname ?? '',
       birthDate:
         serverFieldErrors.birthDate ??
         (normalizedBirthDate.length > 0 &&
@@ -101,7 +101,6 @@ export const useProfileNewForm = () => {
       hasSubmitAttempted,
       isBirthDateValid,
       isEmailValid,
-      isNicknameDuplicated,
       isPhoneNumberValid,
       normalizedBirthDate.length,
       normalizedPhoneNumber.length,
@@ -149,7 +148,7 @@ export const useProfileNewForm = () => {
   }, [])
 
   const handleProfileImageChange = (file: File) => {
-    if (!file.type.startsWith('image/')) {
+    if (!SUPPORTED_PROFILE_IMAGE_MIME_TYPES.has(file.type)) {
       setProfileImageErrorMessage(PROFILE_IMAGE_INVALID_FILE_TYPE_ERROR_MESSAGE)
       return
     }

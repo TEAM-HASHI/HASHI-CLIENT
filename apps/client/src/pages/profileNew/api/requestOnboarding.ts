@@ -11,6 +11,7 @@ export const requestOnboarding = async (body: OnboardingRequestBody) => {
     'api/v1/users/onboarding',
     {
       method: 'post',
+      credentials: 'include',
       json: body,
     },
   )

@@ -5,8 +5,17 @@ type IssuePresignedUrlsBody = components['schemas']['IssuePresignedUrlsRequest']
 type PresignedUrlsData = components['schemas']['PresignedUrlsResponse']
 
 const PROFILE_IMAGE_UPLOAD_USAGE = 'profile'
+const SUPPORTED_PROFILE_IMAGE_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+])
 
 export const uploadProfileImage = async (file: File): Promise<string> => {
+  if (!SUPPORTED_PROFILE_IMAGE_MIME_TYPES.has(file.type)) {
+    throw new Error('지원하지 않는 프로필 이미지 형식입니다.')
+  }
+
   const body = {
     usage: PROFILE_IMAGE_UPLOAD_USAGE,
     files: [{ contentType: file.type, fileSize: file.size }],
@@ -16,6 +25,7 @@ export const uploadProfileImage = async (file: File): Promise<string> => {
     'api/v1/uploads/presigned-urls',
     {
       method: 'post',
+      credentials: 'include',
       json: body,
     },
   )

@@ -184,17 +184,35 @@ describe('ProfileNewPage', () => {
     )
   })
 
-  it('shows duplicated nickname error in real time while typing', () => {
+  it('does not block submit with the old duplicated nickname mock list', async () => {
+    mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
     render(<ProfileNewPage />)
 
     fireEvent.change(screen.getByLabelText('닉네임'), {
       target: { value: '중복' },
     })
+    fireEvent.change(screen.getByLabelText('생년월일'), {
+      target: { value: '19980512' },
+    })
+    fireEvent.change(screen.getByLabelText('연락처'), {
+      target: { value: '01012345678' },
+    })
+    fireEvent.change(screen.getByLabelText('이메일'), {
+      target: { value: 'hashi@example.com' },
+    })
 
-    const errorMessage = screen.getByText('중복된 네이밍입니다.')
+    expect(screen.queryByText('중복된 네이밍입니다.')).not.toBeInTheDocument()
 
-    expect(errorMessage).toHaveTextContent('중복된 네이밍입니다.')
-    expect(errorMessage).toHaveClass('typo-body-3', 'text-error', 'mt-3')
+    fireEvent.click(screen.getByRole('button', { name: '완료' }))
+
+    await waitFor(() => {
+      expect(mockedRequestOnboarding).toHaveBeenCalledWith({
+        nickname: '중복',
+        birthDate: '1998-05-12',
+        phone: '01012345678',
+        email: 'hashi@example.com',
+      })
+    })
   })
 
   it('enables submit after required values are valid and navigates home after onboarding succeeds', async () => {

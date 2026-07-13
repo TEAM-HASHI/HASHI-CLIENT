@@ -89,6 +89,28 @@ describe('useProfileNewForm', () => {
     )
   })
 
+  it('rejects unsupported image MIME types without creating a preview URL', () => {
+    const createObjectUrl = vi.fn(() => 'blob:gif-preview')
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: createObjectUrl,
+    })
+    const { result } = renderHook(() => useProfileNewForm())
+    const gifFile = new File(['profile'], 'profile.gif', {
+      type: 'image/gif',
+    })
+
+    act(() => {
+      result.current.profileImage.onChange(gifFile)
+    })
+
+    expect(createObjectUrl).not.toHaveBeenCalled()
+    expect(result.current.profileImage.previewUrl).toBeUndefined()
+    expect(result.current.profileImage.errorMessage).toBe(
+      '이미지 파일만 등록해주세요.',
+    )
+  })
+
   it('resets selected profile image without marking server image deletion in create flow', () => {
     vi.stubGlobal('URL', {
       ...URL,
@@ -160,5 +182,29 @@ describe('useProfileNewForm', () => {
       englishName: 'Hashi',
       email: 'hashi@example.com',
     })
+  })
+
+  it('does not block submit with the old duplicated nickname mock list', () => {
+    const { result } = renderHook(() => useProfileNewForm())
+
+    act(() => {
+      result.current.fields.nickname.onValueChange('중복')
+      result.current.fields.birthDate.onValueChange('2026/07/08')
+      result.current.fields.phoneNumber.onValueChange('010-1234-5678')
+      result.current.fields.email.onValueChange('hashi@example.com')
+    })
+
+    expect(result.current.fields.nickname.errorMessage).toBe('')
+    expect(result.current.submit.canSubmit).toBe(true)
+
+    let profileDraft: ReturnType<
+      typeof result.current.submit.createProfileDraft
+    >
+
+    act(() => {
+      profileDraft = result.current.submit.createProfileDraft()
+    })
+
+    expect(profileDraft).toMatchObject({ nickname: '중복' })
   })
 })

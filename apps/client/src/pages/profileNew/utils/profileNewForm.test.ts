@@ -30,6 +30,8 @@ describe('profileNewForm utils', () => {
     expect(formatPhoneNumberInput('01012345678')).toBe('010-1234-5678')
     expect(formatPhoneNumberInput('0212345678')).toBe('02-1234-5678')
     expect(checkIsValidPhoneNumber('01012345678')).toBe(true)
+    expect(checkIsValidPhoneNumber('02-123-4567')).toBe(false)
+    expect(checkIsValidPhoneNumber('1234567890')).toBe(false)
     expect(checkIsValidPhoneNumber('12345')).toBe(false)
   })
 
