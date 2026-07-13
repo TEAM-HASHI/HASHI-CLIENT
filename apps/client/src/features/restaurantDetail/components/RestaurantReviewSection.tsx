@@ -12,6 +12,7 @@ import {
   type ReviewSortValue,
 } from '@/features/restaurantDetail/constants/restaurantReview'
 import type { RestaurantReview } from '@/features/restaurantDetail/types/restaurantDetail'
+import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { cn } from '@/shared/utils'
 
 interface RestaurantReviewSectionProps {
@@ -171,6 +172,8 @@ export const RestaurantReviewSection = ({
                 </Button>
               ) : null}
             </div>
+          ) : reviews.length === 0 ? (
+            <ListEmptyState description="리뷰 리스트를 준비중이에요." />
           ) : (
             reviews.map((review) => (
               <article

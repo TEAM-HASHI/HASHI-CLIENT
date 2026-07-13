@@ -132,6 +132,16 @@ describe('RestaurantReviewSection', () => {
     ).toBeGreaterThan(0)
   })
 
+  it('renders empty state when reviews are empty', () => {
+    renderReviewSection({
+      reviewCount: 0,
+      reviews: [],
+    })
+
+    expect(screen.getByText('리뷰 리스트를 준비중이에요.')).toBeInTheDocument()
+    expect(screen.queryByTestId('restaurant-review-load-more')).toBeNull()
+  })
+
   it('renders default image when review image fails to load', () => {
     renderReviewSection({
       reviews: [

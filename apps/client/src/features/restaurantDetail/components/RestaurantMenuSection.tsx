@@ -3,6 +3,7 @@ import type { Ref } from 'react'
 
 import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
 import type { RestaurantMenu } from '@/features/restaurantDetail/types/restaurantDetail'
+import { ListEmptyState } from '@/shared/components/listEmptyState'
 
 interface RestaurantMenuSectionProps {
   menus: RestaurantMenu[]
@@ -40,6 +41,14 @@ export const RestaurantMenuSection = ({
             메뉴 다시 불러오기
           </Button>
         ) : null}
+      </section>
+    )
+  }
+
+  if (menus.length === 0) {
+    return (
+      <section aria-label="메뉴 목록" className="px-5">
+        <ListEmptyState description="메뉴 리스트를 준비중이에요." />
       </section>
     )
   }
