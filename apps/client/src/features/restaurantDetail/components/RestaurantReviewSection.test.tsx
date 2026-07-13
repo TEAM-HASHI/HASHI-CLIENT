@@ -1,9 +1,12 @@
 import '@testing-library/jest-dom/vitest'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { createRef } from 'react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { RestaurantReviewSection } from '@/features/restaurantDetail/components/RestaurantReviewSection'
+import { REVIEW_KEYWORDS } from '@/features/review/constants/reviewKeywords'
 import type { RestaurantReview } from '@/features/restaurantDetail/types/restaurantDetail'
+import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 
 const createReviews = (count: number): RestaurantReview[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -17,96 +20,207 @@ const createReviews = (count: number): RestaurantReview[] =>
     keywords: ['친절해요', '음식이 빨리 나와요', '가성비가 좋아요'],
   }))
 
+const renderReviewSection = ({
+  hasMoreReviews = false,
+  isReviewListLoading = false,
+  onSelectSort = vi.fn(),
+  reviewCount = 10,
+  reviews = createReviews(1),
+  selectedSort = 'latest',
+}: {
+  hasMoreReviews?: boolean
+  isReviewListLoading?: boolean
+  onSelectSort?: (sort: ReviewSortValue) => void
+  reviewCount?: number
+  reviews?: RestaurantReview[]
+  selectedSort?: ReviewSortValue
+} = {}) =>
+  render(
+    <RestaurantReviewSection
+      hasMoreReviews={hasMoreReviews}
+      isReviewListLoading={isReviewListLoading}
+      loadMoreRef={createRef<HTMLDivElement>()}
+      onPressReviewImage={vi.fn()}
+      onPressWriteReview={vi.fn()}
+      onSelectSort={onSelectSort}
+      rating={3.8}
+      restaurantName="야키니쿠 리키마루"
+      reviewCount={reviewCount}
+      reviews={reviews}
+      selectedSort={selectedSort}
+    />,
+  )
+
 describe('RestaurantReviewSection', () => {
-  let handleIntersection: IntersectionObserverCallback
-  const observe = vi.fn()
-  const disconnect = vi.fn()
-
-  beforeEach(() => {
-    observe.mockClear()
-    disconnect.mockClear()
-
-    vi.stubGlobal(
-      'IntersectionObserver',
-      vi.fn((callback: IntersectionObserverCallback) => {
-        handleIntersection = callback
-
-        return {
-          disconnect,
-          observe,
-          root: null,
-          rootMargin: '',
-          thresholds: [],
-          takeRecords: () => [],
-          unobserve: vi.fn(),
-        } satisfies IntersectionObserver
-      }),
-    )
-  })
-
   afterEach(() => {
     cleanup()
-    vi.unstubAllGlobals()
   })
 
-  it('renders reviews in 10 item pages and resets when sort changes', () => {
-    render(
-      <RestaurantReviewSection
-        onPressReviewImage={vi.fn()}
-        onPressWriteReview={vi.fn()}
-        rating={3.8}
-        restaurantName="야키니쿠 리키마루"
-        reviewCount={256}
-        reviews={createReviews(25)}
-      />,
-    )
+  it('renders server-provided reviews and delegates sort changes', () => {
+    const handleSelectSort = vi.fn()
 
-    expect(screen.getAllByText('혁줌마')).toHaveLength(10)
-    expect(screen.getByText('야키니쿠 리키마루')).toBeInTheDocument()
-    expect(observe).toHaveBeenCalled()
-
-    act(() => {
-      handleIntersection(
-        [{ isIntersecting: true } as IntersectionObserverEntry],
-        {} as IntersectionObserver,
-      )
+    renderReviewSection({
+      hasMoreReviews: true,
+      onSelectSort: handleSelectSort,
+      reviewCount: 25,
+      reviews: createReviews(25),
     })
 
-    expect(screen.getAllByText('혁줌마')).toHaveLength(20)
+    expect(screen.getAllByText('혁줌마')).toHaveLength(25)
+    expect(screen.getByText('야키니쿠 리키마루')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: '높은 평점 순' }))
 
-    expect(screen.getAllByText('혁줌마')).toHaveLength(10)
-    expect(screen.getAllByRole('img', { name: '평점 5점' })).toHaveLength(5)
+    expect(handleSelectSort).toHaveBeenCalledWith('rating-high')
   })
 
-  it('does not render a load-more sentinel when there are 10 or fewer reviews', () => {
-    render(
+  it('renders a load-more sentinel only when more reviews exist', () => {
+    const { rerender } = render(
       <RestaurantReviewSection
+        hasMoreReviews={false}
+        isReviewListLoading={false}
+        loadMoreRef={createRef<HTMLDivElement>()}
         onPressReviewImage={vi.fn()}
         onPressWriteReview={vi.fn()}
+        onSelectSort={vi.fn()}
         rating={3.8}
         restaurantName="야키니쿠 리키마루"
         reviewCount={10}
         reviews={createReviews(10)}
+        selectedSort="latest"
       />,
     )
 
     expect(screen.getAllByText('혁줌마')).toHaveLength(10)
-    expect(observe).not.toHaveBeenCalled()
-  })
+    expect(screen.queryByTestId('restaurant-review-load-more')).toBeNull()
 
-  it('styles compact review ratings from the app layer', () => {
-    render(
+    rerender(
       <RestaurantReviewSection
+        hasMoreReviews
+        isReviewListLoading={false}
+        loadMoreRef={createRef<HTMLDivElement>()}
         onPressReviewImage={vi.fn()}
         onPressWriteReview={vi.fn()}
+        onSelectSort={vi.fn()}
         rating={3.8}
         restaurantName="야키니쿠 리키마루"
         reviewCount={10}
-        reviews={createReviews(1)}
+        reviews={createReviews(10)}
+        selectedSort="latest"
       />,
     )
+
+    expect(
+      screen.getByTestId('restaurant-review-load-more'),
+    ).toBeInTheDocument()
+  })
+
+  it('renders only review list skeleton while review list is loading', () => {
+    const { container } = renderReviewSection({
+      isReviewListLoading: true,
+      reviews: createReviews(10),
+    })
+
+    expect(
+      screen.getByRole('status', { name: '리뷰 목록 로딩 중' }),
+    ).toBeTruthy()
+    expect(screen.queryByText('혁줌마')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('restaurant-review-load-more')).toBeNull()
+    expect(screen.getByRole('button', { name: '최신순' })).toBeInTheDocument()
+    expect(
+      container.querySelectorAll('.bg-secondary-200').length,
+    ).toBeGreaterThan(0)
+  })
+
+  it('renders empty state when reviews are empty', () => {
+    renderReviewSection({
+      reviewCount: 0,
+      reviews: [],
+    })
+
+    expect(screen.getByText('리뷰 리스트를 준비중이에요.')).toBeInTheDocument()
+    expect(screen.queryByTestId('restaurant-review-load-more')).toBeNull()
+  })
+
+  it('renders default image when review image fails to load', () => {
+    renderReviewSection({
+      reviews: [
+        {
+          ...createReviews(1)[0],
+          images: ['https://example.com/review.webp'],
+        },
+      ],
+    })
+
+    expect(screen.queryByTestId('restaurant-review-default-image')).toBeNull()
+
+    const reviewImage = screen
+      .getByRole('button', { name: '리뷰 이미지 1' })
+      .querySelector('img')
+    expect(reviewImage).toBeInTheDocument()
+
+    fireEvent.error(reviewImage as HTMLImageElement)
+
+    expect(
+      screen.getByTestId('restaurant-review-default-image'),
+    ).toBeInTheDocument()
+  })
+
+  it('renders default image when reviewer profile image is empty', () => {
+    renderReviewSection()
+
+    expect(
+      screen.getByTestId('restaurant-review-profile-default-image'),
+    ).toBeInTheDocument()
+  })
+
+  it('renders default image when reviewer profile image fails to load', () => {
+    renderReviewSection({
+      reviews: [
+        {
+          ...createReviews(1)[0],
+          reviewerProfileImageUrl: 'https://example.com/profile.webp',
+        },
+      ],
+    })
+
+    expect(
+      screen.queryByTestId('restaurant-review-profile-default-image'),
+    ).toBeNull()
+
+    const profileImage = screen
+      .getByText('혁줌마')
+      .parentElement?.querySelector('img')
+    expect(profileImage).toBeInTheDocument()
+
+    fireEvent.error(profileImage as HTMLImageElement)
+
+    expect(
+      screen.getByTestId('restaurant-review-profile-default-image'),
+    ).toBeInTheDocument()
+  })
+
+  it('renders icons for every supported review keyword', () => {
+    const { container } = renderReviewSection({
+      reviews: [
+        {
+          ...createReviews(1)[0],
+          keywords: REVIEW_KEYWORDS.map((keyword) => keyword.label),
+        },
+      ],
+    })
+
+    const keywordList = screen.getByText(REVIEW_KEYWORDS[0].label).parentElement
+      ?.parentElement
+
+    expect(keywordList?.querySelectorAll('svg')).toHaveLength(
+      REVIEW_KEYWORDS.length,
+    )
+    expect(container).toBeTruthy()
+  })
+
+  it('styles compact review ratings from the app layer', () => {
+    renderReviewSection()
 
     expect(screen.getAllByRole('img', { name: '평점 3.8점' })[0]).toHaveClass(
       '[&&]:gap-0',
@@ -116,16 +230,7 @@ describe('RestaurantReviewSection', () => {
   })
 
   it('styles the review write icon from the app layer', () => {
-    render(
-      <RestaurantReviewSection
-        onPressReviewImage={vi.fn()}
-        onPressWriteReview={vi.fn()}
-        rating={3.8}
-        restaurantName="야키니쿠 리키마루"
-        reviewCount={10}
-        reviews={createReviews(1)}
-      />,
-    )
+    renderReviewSection()
 
     expect(
       screen
@@ -139,16 +244,7 @@ describe('RestaurantReviewSection', () => {
   })
 
   it('uses cool gray 600 for the write-review CTA background', () => {
-    render(
-      <RestaurantReviewSection
-        onPressReviewImage={vi.fn()}
-        onPressWriteReview={vi.fn()}
-        rating={3.8}
-        restaurantName="야키니쿠 리키마루"
-        reviewCount={10}
-        reviews={createReviews(1)}
-      />,
-    )
+    renderReviewSection()
 
     expect(screen.getByRole('button', { name: '리뷰 작성하기' })).toHaveClass(
       'bg-cool-gray-600',
@@ -156,16 +252,7 @@ describe('RestaurantReviewSection', () => {
   })
 
   it('keeps the review list 16px below the write-review CTA', () => {
-    render(
-      <RestaurantReviewSection
-        onPressReviewImage={vi.fn()}
-        onPressWriteReview={vi.fn()}
-        rating={3.8}
-        restaurantName="야키니쿠 리키마루"
-        reviewCount={10}
-        reviews={createReviews(1)}
-      />,
-    )
+    renderReviewSection()
 
     const reviewListWrapper = screen.getByRole('heading', {
       name: '리뷰 10',
@@ -175,16 +262,7 @@ describe('RestaurantReviewSection', () => {
   })
 
   it('keeps the write-review button inset 16px from the CTA sides', () => {
-    render(
-      <RestaurantReviewSection
-        onPressReviewImage={vi.fn()}
-        onPressWriteReview={vi.fn()}
-        rating={3.8}
-        restaurantName="야키니쿠 리키마루"
-        reviewCount={10}
-        reviews={createReviews(1)}
-      />,
-    )
+    renderReviewSection()
 
     const reviewButtonContent = screen.getByText('리뷰 작성하기').parentElement
     const reviewCta = reviewButtonContent?.parentElement?.parentElement

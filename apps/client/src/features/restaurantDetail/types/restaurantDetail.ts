@@ -15,6 +15,7 @@ export interface RestaurantMenu {
 export interface RestaurantReview {
   id: string
   reviewerName: string
+  reviewerProfileImageUrl?: string
   rating: number
   date: string
   content: string
@@ -31,9 +32,7 @@ export interface RestaurantDetail {
   likeCount: string
   summary: string
   address: string
-  visitDateLabel: string
-  openTime: string
-  closeTime: string
+  businessHoursSummary: string
   deposit: string
   detailDescription: string
   lastOrderTime: string

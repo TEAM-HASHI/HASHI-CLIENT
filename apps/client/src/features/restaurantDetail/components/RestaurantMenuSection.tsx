@@ -1,17 +1,58 @@
-import { Badge } from '@hashi/hds-ui'
+import { Badge, Button } from '@hashi/hds-ui'
+import type { Ref } from 'react'
 
+import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
 import type { RestaurantMenu } from '@/features/restaurantDetail/types/restaurantDetail'
-import { DefaultImage } from '@/shared/components/defaultImage'
+import { ListEmptyState } from '@/shared/components/listEmptyState'
 
 interface RestaurantMenuSectionProps {
   menus: RestaurantMenu[]
+  hasMoreMenus?: boolean
+  isMenuListError?: boolean
+  loadMoreRef?: Ref<HTMLDivElement>
   onPressMenuItem: (menuId: string) => void
+  onRetryMenuList?: () => void
 }
 
 export const RestaurantMenuSection = ({
   menus,
+  hasMoreMenus = false,
+  isMenuListError = false,
+  loadMoreRef,
   onPressMenuItem,
+  onRetryMenuList,
 }: RestaurantMenuSectionProps) => {
+  if (isMenuListError) {
+    return (
+      <section
+        aria-label="메뉴 목록"
+        className="flex min-h-[240px] flex-col items-center justify-center gap-4 px-5 text-center"
+      >
+        <p className="typo-body-4 text-primary-200">
+          메뉴 정보를 불러오지 못했어요.
+        </p>
+        {onRetryMenuList ? (
+          <Button
+            className="bg-cool-gray-600 typo-body-5 h-10 w-full max-w-[240px]"
+            onClick={onRetryMenuList}
+            size="sm"
+            variant="primary"
+          >
+            메뉴 다시 불러오기
+          </Button>
+        ) : null}
+      </section>
+    )
+  }
+
+  if (menus.length === 0) {
+    return (
+      <section aria-label="메뉴 목록" className="px-5">
+        <ListEmptyState description="메뉴 리스트를 준비중이에요." />
+      </section>
+    )
+  }
+
   return (
     <section aria-label="메뉴 목록" className="px-5">
       {menus.map((menu) => {
@@ -44,22 +85,23 @@ export const RestaurantMenuSection = ({
                 <span className="font-semibold">{menu.price}</span>
               </span>
             </span>
-            {menu.imageUrl ? (
-              <img
-                alt=""
-                className="size-[100px] shrink-0 rounded-[5px] object-cover"
-                src={menu.imageUrl}
-              />
-            ) : (
-              <DefaultImage
-                aria-hidden="true"
-                className="size-[100px] shrink-0 rounded-[5px]"
-                logoSize="sm"
-              />
-            )}
+            <RestaurantImage
+              className="size-[100px] shrink-0 rounded-[5px] object-cover"
+              defaultImageTestId="restaurant-menu-default-image"
+              logoSize="sm"
+              src={menu.imageUrl}
+            />
           </button>
         )
       })}
+      {hasMoreMenus && loadMoreRef ? (
+        <div
+          ref={loadMoreRef}
+          aria-hidden="true"
+          className="h-1"
+          data-testid="restaurant-menu-load-more"
+        />
+      ) : null}
     </section>
   )
 }

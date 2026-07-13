@@ -1,14 +1,20 @@
+import type { Ref } from 'react'
+
 import { RestaurantMenuSection } from '@/features/restaurantDetail/components/RestaurantMenuSection'
 import type { RestaurantMenu } from '@/features/restaurantDetail/types/restaurantDetail'
 
 interface RestaurantOtherMenuSectionProps {
   menus: RestaurantMenu[]
+  hasMoreMenus: boolean
+  loadMoreRef: Ref<HTMLDivElement>
   totalCount: number
   onPressMenuItem: (menuId: string) => void
 }
 
 export const RestaurantOtherMenuSection = ({
   menus,
+  hasMoreMenus,
+  loadMoreRef,
   totalCount,
   onPressMenuItem,
 }: RestaurantOtherMenuSectionProps) => {
@@ -22,6 +28,8 @@ export const RestaurantOtherMenuSection = ({
       </h2>
       <div className="mt-2">
         <RestaurantMenuSection
+          hasMoreMenus={hasMoreMenus}
+          loadMoreRef={loadMoreRef}
           menus={menus}
           onPressMenuItem={onPressMenuItem}
         />

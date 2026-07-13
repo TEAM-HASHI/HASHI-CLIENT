@@ -1,13 +1,18 @@
-import { FastIcon, MoneyIcon, PencilIcon, SmileIcon } from '@hashi/hds-icons'
+import { PencilIcon } from '@hashi/hds-icons'
 import { Badge, Button, Chip, CollapsibleText, StarRating } from '@hashi/hds-ui'
+import type { Ref } from 'react'
 
+import { REVIEW_KEYWORDS } from '@/features/review/constants/reviewKeywords'
 import graphicBillUrl from '@/features/restaurantDetail/assets/graphic-bill.svg'
+import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
+import { RestaurantReviewListSkeleton } from '@/features/restaurantDetail/components/RestaurantReviewListSkeleton'
 import {
   RATING_DISTRIBUTION,
   REVIEW_SORT_OPTIONS,
+  type ReviewSortValue,
 } from '@/features/restaurantDetail/constants/restaurantReview'
-import { useRestaurantReviews } from '@/features/restaurantDetail/hooks/useRestaurantReviews'
 import type { RestaurantReview } from '@/features/restaurantDetail/types/restaurantDetail'
+import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { cn } from '@/shared/utils'
 
 interface RestaurantReviewSectionProps {
@@ -15,15 +20,20 @@ interface RestaurantReviewSectionProps {
   restaurantName: string
   reviewCount: number
   reviews: RestaurantReview[]
+  hasMoreReviews: boolean
+  isReviewListError?: boolean
+  isReviewListLoading: boolean
+  loadMoreRef: Ref<HTMLDivElement>
+  selectedSort: ReviewSortValue
   onPressReviewImage: (reviewId: string, imageIndex: number) => void
   onPressWriteReview: () => void
+  onRetryReviewList?: () => void
+  onSelectSort: (sort: ReviewSortValue) => void
 }
 
-const REVIEW_KEYWORD_ICON = {
-  친절해요: <SmileIcon className="size-6" />,
-  '음식이 빨리 나와요': <FastIcon className="size-6" />,
-  '가성비가 좋아요': <MoneyIcon className="size-6" />,
-}
+const REVIEW_KEYWORD_BY_LABEL = new Map(
+  REVIEW_KEYWORDS.map((keyword) => [keyword.label, keyword]),
+)
 
 const REVIEW_CONTENT_WIDTH_CLASS_NAME = 'mx-5'
 const HORIZONTAL_SCROLL_CLASS_NAME =
@@ -62,17 +72,16 @@ export const RestaurantReviewSection = ({
   restaurantName,
   reviewCount,
   reviews,
+  hasMoreReviews,
+  isReviewListError = false,
+  isReviewListLoading,
+  loadMoreRef,
+  selectedSort,
   onPressReviewImage,
   onPressWriteReview,
+  onRetryReviewList,
+  onSelectSort,
 }: RestaurantReviewSectionProps) => {
-  const {
-    hasMoreReviews,
-    loadMoreRef,
-    selectedSort,
-    visibleReviews,
-    onSelectSort,
-  } = useRestaurantReviews(reviews)
-
   return (
     <section aria-label="리뷰" className="pb-8">
       <div className="relative h-[171px]">
@@ -145,81 +154,114 @@ export const RestaurantReviewSection = ({
         </div>
 
         <div className={REVIEW_CONTENT_WIDTH_CLASS_NAME}>
-          {visibleReviews.map((review) => (
-            <article
-              className="border-warm-gray-100 flex flex-col gap-4 overflow-hidden border-b pt-5 pb-7"
-              key={review.id}
-            >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    aria-hidden="true"
-                    className="bg-primary-100 size-10 shrink-0 rounded-full"
+          {isReviewListLoading ? (
+            <RestaurantReviewListSkeleton />
+          ) : isReviewListError ? (
+            <div className="flex min-h-[240px] flex-col items-center justify-center gap-4 text-center">
+              <p className="typo-body-4 text-primary-200">
+                리뷰를 불러오지 못했어요.
+              </p>
+              {onRetryReviewList ? (
+                <Button
+                  className="bg-cool-gray-600 typo-body-5 h-10 w-full max-w-[240px]"
+                  onClick={onRetryReviewList}
+                  size="sm"
+                  variant="primary"
+                >
+                  리뷰 다시 불러오기
+                </Button>
+              ) : null}
+            </div>
+          ) : reviews.length === 0 ? (
+            <ListEmptyState description="리뷰 리스트를 준비중이에요." />
+          ) : (
+            reviews.map((review) => (
+              <article
+                className="border-warm-gray-100 flex flex-col gap-4 overflow-hidden border-b pt-5 pb-7 last:border-b-0 last:pb-0"
+                key={review.id}
+              >
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <RestaurantImage
+                      className="size-10 shrink-0 rounded-full object-cover"
+                      defaultImageTestId="restaurant-review-profile-default-image"
+                      logoSize="sm"
+                      src={review.reviewerProfileImageUrl}
+                    />
+                    <h3 className="typo-sub-header-2 text-primary-200">
+                      {review.reviewerName}
+                    </h3>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <StarRating
+                      className={REVIEW_STAR_RATING_CLASS_NAME}
+                      size="sm"
+                      value={review.rating}
+                    />
+                    <time className="typo-body-6 text-cool-gray-600">
+                      {review.date}
+                    </time>
+                  </div>
+                  <CollapsibleText
+                    className="[&_p]:typo-long-body-1 [&_p]:text-primary-200 [&_button]:text-cool-gray-600"
+                    text={review.content}
                   />
-                  <h3 className="typo-sub-header-2 text-primary-200">
-                    {review.reviewerName}
-                  </h3>
                 </div>
-                <div className="flex items-center justify-between">
-                  <StarRating
-                    className={REVIEW_STAR_RATING_CLASS_NAME}
-                    size="sm"
-                    value={review.rating}
-                  />
-                  <time className="typo-body-6 text-cool-gray-600">
-                    {review.date}
-                  </time>
-                </div>
-                <CollapsibleText
-                  className="[&_p]:typo-long-body-1 [&_p]:text-primary-200 [&_button]:text-cool-gray-600"
-                  text={review.content}
-                />
-              </div>
 
-              <div className={cn('w-full', HORIZONTAL_SCROLL_CLASS_NAME)}>
-                {review.images.map((imageUrl, index) => {
-                  const handleClick = () => {
-                    onPressReviewImage(review.id, index)
-                  }
+                <div className={cn('w-full', HORIZONTAL_SCROLL_CLASS_NAME)}>
+                  {review.images.map((imageUrl, index) => {
+                    const handleClick = () => {
+                      onPressReviewImage(review.id, index)
+                    }
 
-                  return (
-                    <button
-                      aria-label={`리뷰 이미지 ${index + 1}`}
-                      className="bg-primary-100 size-[135px] shrink-0 overflow-hidden"
-                      key={`${review.id}-${index}`}
-                      onClick={handleClick}
-                      type="button"
-                    >
-                      {imageUrl ? (
-                        <img
-                          alt=""
+                    return (
+                      <button
+                        aria-label={`리뷰 이미지 ${index + 1}`}
+                        className="bg-primary-100 size-[135px] shrink-0 overflow-hidden"
+                        key={`${review.id}-${index}`}
+                        onClick={handleClick}
+                        type="button"
+                      >
+                        <RestaurantImage
                           className="size-full object-cover"
+                          defaultImageTestId="restaurant-review-default-image"
+                          logoSize="md"
                           src={imageUrl}
                         />
-                      ) : null}
-                    </button>
-                  )
-                })}
-              </div>
+                      </button>
+                    )
+                  })}
+                </div>
 
-              <div className={HORIZONTAL_SCROLL_CLASS_NAME}>
-                {review.keywords.map((keyword) => (
-                  <Badge
-                    className="border-warm-gray-100 rounded-[5px] px-2.5 py-1"
-                    icon={
-                      REVIEW_KEYWORD_ICON[
-                        keyword as keyof typeof REVIEW_KEYWORD_ICON
-                      ]
-                    }
-                    key={keyword}
-                    label={keyword}
-                  />
-                ))}
-              </div>
-            </article>
-          ))}
-          {hasMoreReviews ? (
-            <div ref={loadMoreRef} aria-hidden="true" className="h-1" />
+                <div className={HORIZONTAL_SCROLL_CLASS_NAME}>
+                  {review.keywords.map((keyword) => {
+                    const keywordOption = REVIEW_KEYWORD_BY_LABEL.get(keyword)
+                    const KeywordIcon = keywordOption?.Icon
+
+                    return (
+                      <Badge
+                        className="border-warm-gray-100 rounded-[5px] px-2.5 py-1"
+                        icon={
+                          KeywordIcon ? (
+                            <KeywordIcon className="size-6" />
+                          ) : undefined
+                        }
+                        key={keyword}
+                        label={keywordOption?.label ?? keyword}
+                      />
+                    )
+                  })}
+                </div>
+              </article>
+            ))
+          )}
+          {!isReviewListLoading && hasMoreReviews ? (
+            <div
+              ref={loadMoreRef}
+              aria-hidden="true"
+              className="h-1"
+              data-testid="restaurant-review-load-more"
+            />
           ) : null}
         </div>
       </div>

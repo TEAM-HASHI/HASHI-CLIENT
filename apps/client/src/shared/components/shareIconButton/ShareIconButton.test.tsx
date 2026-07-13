@@ -10,10 +10,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ShareIconButton } from '@/shared/components/shareIconButton'
 
-const { mockClipboardWriteText, mockShowToast } = vi.hoisted(() => ({
-  mockClipboardWriteText: vi.fn(),
-  mockShowToast: vi.fn(),
-}))
+const { mockClipboardWriteText, mockShowToast, mockToastQueueClear } =
+  vi.hoisted(() => ({
+    mockClipboardWriteText: vi.fn(),
+    mockShowToast: vi.fn(),
+    mockToastQueueClear: vi.fn(),
+  }))
 
 vi.mock('@hashi/hds-ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@hashi/hds-ui')>()
@@ -21,6 +23,10 @@ vi.mock('@hashi/hds-ui', async (importOriginal) => {
   return {
     ...actual,
     showToast: mockShowToast,
+    toastQueue: {
+      ...actual.toastQueue,
+      clear: mockToastQueueClear,
+    },
   }
 })
 
@@ -38,6 +44,7 @@ describe('ShareIconButton', () => {
     cleanup()
     mockClipboardWriteText.mockClear()
     mockShowToast.mockClear()
+    mockToastQueueClear.mockClear()
   })
 
   it('copies the current page link when pressed', () => {
@@ -64,6 +71,7 @@ describe('ShareIconButton', () => {
     fireEvent.click(screen.getByRole('button', { name: '공유하기' }))
 
     await waitFor(() => {
+      expect(mockToastQueueClear).toHaveBeenCalled()
       expect(mockShowToast).toHaveBeenCalledWith(
         expect.objectContaining({
           children: '링크가 복사 되었어요.',
