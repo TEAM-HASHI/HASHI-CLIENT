@@ -30,8 +30,8 @@
 
 ## Upload Boundary
 
-1. `POST /api/v1/uploads/presigned-urls`에 `usage`, `contentType`, `fileSize`를 전송합니다.
-2. 응답의 `uploadUrl`로 동일한 `Content-Type`과 file body를 `PUT`합니다.
+1. `POST /api/v1/uploads/presigned-urls`에 `usage`, `files`(1~10개의 `contentType`, `fileSize`)를 전송합니다.
+2. 응답의 `uploads` 항목별 `uploadUrl`로 동일한 `Content-Type`과 file body를 `PUT`합니다.
 3. 성공한 `fileKey`만 admin create/update body에 포함합니다.
 4. JPEG/PNG/WebP, 최대 5MB를 API 호출 전에 검증합니다.
 5. 실패 파일은 재시도/제거할 수 있고 pending/failed count를 form validation에 전달합니다.
@@ -45,12 +45,13 @@
 - update scalar는 dirty field만 전송하고 빈 문자열로 clear하지 않습니다.
 - collection은 전체 교체 toggle이 켜진 경우에만 body에 포함합니다.
 - 기존 CDN URL을 storage key로 변환하지 않습니다.
+- create/update 응답의 soft delete 상태는 `deleted` 필드를 사용합니다.
 
 ## Magazine Write Rules
 
-- create는 title, uploaded bannerKey, http(s) Instagram URL을 요구합니다.
-- update는 dirty title/URL과 새로 업로드된 banner만 전송합니다.
-- title 150자, banner key 500자, URL 255자 제한을 backend contract에 맞춥니다.
+- create는 title, uploaded bannerKey/thumbnailKey, http(s) Instagram URL을 요구합니다.
+- update는 dirty title/URL과 새로 업로드된 banner/thumbnail만 전송합니다.
+- title 150자, image key 500자, URL 255자 제한을 backend contract에 맞춥니다.
 
 ## Data Boundaries
 

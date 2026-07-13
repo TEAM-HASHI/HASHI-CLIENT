@@ -56,8 +56,8 @@
 ### UX and Contract
 
 - 공개 매거진 table은 배너, 제목, Instagram URL, 등록일을 표시합니다.
-- drawer는 `title`, 실제 업로드로 얻은 `bannerKey`, `instagramRedirectUrl`만 전송합니다.
-- 수정 시 title/URL은 dirty field만, banner는 새 이미지 업로드가 성공했을 때만 전송합니다.
+- drawer는 `title`, 실제 업로드로 얻은 `bannerKey`, `thumbnailKey`, `instagramRedirectUrl`만 전송합니다.
+- 수정 시 title/URL은 dirty field만, banner/thumbnail은 각 새 이미지 업로드가 성공했을 때만 전송합니다.
 - 공개 목록에 없는 매거진은 numeric ID로 직접 수정·삭제할 수 있습니다.
 - region, series, genre, card news 같은 미지원 field는 제공하지 않습니다.
 

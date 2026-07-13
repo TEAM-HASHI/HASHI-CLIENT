@@ -82,6 +82,7 @@ describe('MagazinesPage', () => {
 
     expect(screen.getByRole('dialog')).toBeVisible()
     expect(screen.getByLabelText('배너 이미지 선택')).toBeInTheDocument()
+    expect(screen.getByLabelText('썸네일 이미지 선택')).toBeInTheDocument()
     expect(screen.queryByLabelText('배너 이미지 key')).not.toBeInTheDocument()
   })
 

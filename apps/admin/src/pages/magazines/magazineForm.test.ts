@@ -13,18 +13,28 @@ const uploadedBanner = {
   contentType: 'image/webp',
 }
 
+const uploadedThumbnail = {
+  fileKey: 'magazines/tokyo-thumbnail.webp',
+  fileUrl: 'https://cdn.example/tokyo-thumbnail.webp',
+  fileName: 'tokyo-thumbnail.webp',
+  contentType: 'image/webp',
+}
+
 describe('magazineForm', () => {
-  it('serializes exactly the three create fields', () => {
+  it('serializes the banner and thumbnail keys for create', () => {
     expect(
       toCreateMagazineBody({
         title: '도쿄의 밤',
         banner: uploadedBanner,
+        thumbnail: uploadedThumbnail,
         existingBannerUrl: null,
+        existingThumbnailUrl: null,
         instagramRedirectUrl: 'https://instagram.com/p/hashi',
       }),
     ).toEqual({
       title: '도쿄의 밤',
       bannerKey: 'magazines/tokyo.webp',
+      thumbnailKey: 'magazines/tokyo-thumbnail.webp',
       instagramRedirectUrl: 'https://instagram.com/p/hashi',
     })
   })
@@ -38,14 +48,24 @@ describe('magazineForm', () => {
     })
   })
 
-  it('requires a valid http URL and uploaded banner for create', () => {
+  it('requires a valid http URL, uploaded banner, and uploaded thumbnail for create', () => {
     const form = createMagazineForm()
     form.title = '도쿄의 밤'
     form.instagramRedirectUrl = 'javascript:alert(1)'
 
     expect(validateMagazineForm(form, 'create', new Set())).toMatchObject({
       banner: expect.any(String),
+      thumbnail: expect.any(String),
       instagramRedirectUrl: expect.any(String),
+    })
+  })
+
+  it('serializes a newly uploaded thumbnail for update', () => {
+    const form = createMagazineForm()
+    form.thumbnail = uploadedThumbnail
+
+    expect(toUpdateMagazineBody(form, new Set())).toEqual({
+      thumbnailKey: 'magazines/tokyo-thumbnail.webp',
     })
   })
 })

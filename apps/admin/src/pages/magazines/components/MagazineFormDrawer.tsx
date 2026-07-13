@@ -32,10 +32,10 @@ export const MagazineFormDrawer = ({
 }) => {
   const [form, setForm] = useState(createMagazineForm)
   const [dirtyFields, setDirtyFields] = useState<MagazineDirtyFields>(new Set())
-  const [uploadStatus, setUploadStatus] = useState<AdminImageUploadStatus>({
-    pendingCount: 0,
-    failedCount: 0,
-  })
+  const [bannerUploadStatus, setBannerUploadStatus] =
+    useState<AdminImageUploadStatus>({ pendingCount: 0, failedCount: 0 })
+  const [thumbnailUploadStatus, setThumbnailUploadStatus] =
+    useState<AdminImageUploadStatus>({ pendingCount: 0, failedCount: 0 })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const createMutation = useCreateMagazineMutation()
   const updateMutation = useUpdateMagazineMutation()
@@ -46,7 +46,8 @@ export const MagazineFormDrawer = ({
     if (!open) return
     setForm(item ? createMagazineFormFromItem(item) : createMagazineForm())
     setDirtyFields(new Set())
-    setUploadStatus({ pendingCount: 0, failedCount: 0 })
+    setBannerUploadStatus({ pendingCount: 0, failedCount: 0 })
+    setThumbnailUploadStatus({ pendingCount: 0, failedCount: 0 })
     setErrors({})
     createMutation.reset()
     updateMutation.reset()
@@ -60,8 +61,13 @@ export const MagazineFormDrawer = ({
 
   const submit = () => {
     const nextErrors = validateMagazineForm(form, mode, dirtyFields)
-    if (uploadStatus.pendingCount || uploadStatus.failedCount) {
-      nextErrors.upload = '업로드 중이거나 실패한 배너를 확인해주세요.'
+    if (
+      bannerUploadStatus.pendingCount ||
+      bannerUploadStatus.failedCount ||
+      thumbnailUploadStatus.pendingCount ||
+      thumbnailUploadStatus.failedCount
+    ) {
+      nextErrors.upload = '업로드 중이거나 실패한 이미지를 확인해주세요.'
     }
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return
@@ -88,7 +94,7 @@ export const MagazineFormDrawer = ({
       title={
         mode === 'create' ? '매거진 등록' : `매거진 수정 #${magazineId ?? ''}`
       }
-      description="배너 이미지를 직접 업로드하고 Instagram 이동 주소를 연결합니다."
+      description="배너와 썸네일 이미지를 업로드하고 Instagram 이동 주소를 연결합니다."
       onClose={onClose}
       footer={
         <>
@@ -150,11 +156,33 @@ export const MagazineFormDrawer = ({
           onChange={(images) =>
             setForm((current) => ({ ...current, banner: images[0] ?? null }))
           }
-          onStatusChange={setUploadStatus}
+          onStatusChange={setBannerUploadStatus}
+        />
+        {form.existingThumbnailUrl && !form.thumbnail ? (
+          <div>
+            <p className="text-cool-gray-500 mb-2 text-xs">현재 썸네일</p>
+            <img
+              src={form.existingThumbnailUrl}
+              alt="현재 매거진 썸네일"
+              className="w-full rounded-lg object-cover"
+            />
+          </div>
+        ) : null}
+        <AdminImageUploader
+          label={mode === 'create' ? '썸네일 이미지 선택' : '새 썸네일로 교체'}
+          usage="magazine"
+          value={form.thumbnail ? [form.thumbnail] : []}
+          onChange={(images) =>
+            setForm((current) => ({
+              ...current,
+              thumbnail: images[0] ?? null,
+            }))
+          }
+          onStatusChange={setThumbnailUploadStatus}
         />
         {mode === 'update' ? (
           <p className="text-cool-gray-500 text-xs">
-            새 배너를 업로드하지 않으면 기존 배너가 유지됩니다.
+            새 이미지를 업로드하지 않으면 기존 배너와 썸네일이 유지됩니다.
           </p>
         ) : null}
       </div>
