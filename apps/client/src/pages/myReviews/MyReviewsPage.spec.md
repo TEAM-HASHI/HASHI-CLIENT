@@ -49,8 +49,7 @@ Jira: HASHI-83, HASHI-114
 - [x] 삭제 성공 후 작성 가능 예약 목록과 작성한 리뷰 목록을 갱신한다.
 - [x] 목록은 서버의 `nextCursor`, `hasNext`를 사용해 하단 진입 시 다음 페이지를 불러온다.
 - [x] 활성 탭의 초기 로딩, 오류와 재시도, empty 상태를 표시한다.
-- [x] 목록이 비어 있으면 empty graphic slot, 안내 문구, `일본 맛집 추천받기` 버튼을 보여준다.
-- [x] empty graphic은 추후 shared graphic component가 준비되면 `MyReviewEmptyState.graphic`으로 주입한다.
+- [x] 목록이 비어 있으면 shared `Empty`의 공통 이미지, 안내 문구, `일본 맛집 추천받기` 버튼을 보여준다.
 - [x] empty CTA를 누르면 오늘의 식당 페이지로 이동한다.
 
 ## Data Dependencies
@@ -132,7 +131,7 @@ MyReviewsPage
   Header
   MyReviewTabs
   MyReviewsErrorState
-  MyReviewEmptyState
+  Empty
   MyReviewTotalCount
   ReviewWritableCard
   WrittenReviewCard
@@ -155,8 +154,8 @@ MyReviewsPage
 - app shared component:
   - `ComingSoonDialog`
   - `DefaultImage`
+  - `Empty`
 - page-local component:
-  - `MyReviewEmptyState`
   - `MyReviewTabs`
   - `MyReviewTotalCount`
   - `ReviewImagePlaceholder`

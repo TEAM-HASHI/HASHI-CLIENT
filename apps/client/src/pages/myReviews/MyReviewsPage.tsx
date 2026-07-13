@@ -1,7 +1,6 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
 
-import { MyReviewEmptyState } from '@/pages/myReviews/components/MyReviewEmptyState'
 import { MyReviewTabs } from '@/pages/myReviews/components/MyReviewTabs'
 import { MyReviewTotalCount } from '@/pages/myReviews/components/MyReviewTotalCount'
 import { MyReviewsErrorState } from '@/pages/myReviews/components/MyReviewsErrorState'
@@ -9,6 +8,7 @@ import { ReviewWritableCard } from '@/pages/myReviews/components/ReviewWritableC
 import { WrittenReviewCard } from '@/pages/myReviews/components/WrittenReviewCard'
 import { useMyReviewsPage } from '@/pages/myReviews/hooks/useMyReviewsPage'
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
+import { Empty } from '@/shared/components/empty'
 
 export const MyReviewsPage = () => {
   const {
@@ -66,13 +66,15 @@ export const MyReviewsPage = () => {
       ) : isError ? (
         <MyReviewsErrorState onRetry={handleRetry} />
       ) : isEmpty ? (
-        <MyReviewEmptyState
-          message={
+        <Empty
+          actionLabel="일본 맛집 추천받기"
+          className="min-h-[calc(100dvh-115px)] min-w-0 overflow-x-hidden px-5 pb-20"
+          description={
             isWritableTab
               ? '최근 방문한 맛집이 없어요.'
               : '작성한 리뷰가 없어요.'
           }
-          onClick={handleNavigateToTodayRestaurant}
+          onAction={handleNavigateToTodayRestaurant}
         />
       ) : (
         <main className="min-w-0 px-5">

@@ -15,6 +15,7 @@ import { getMyReviewCount } from '@/features/review/api/getMyReviewCount'
 import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
 import { getMyReviews } from '@/pages/myReviews/api/myReviewsApi'
 import { MyReviewsPage } from '@/pages/myReviews/MyReviewsPage'
+import emptyImage from '@/shared/assets/images/empty.webp'
 
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -173,7 +174,7 @@ describe('MyReviewsPage', () => {
     vi.mocked(getMyReviewCount)
       .mockResolvedValueOnce({ myReviewCount: 1 })
       .mockResolvedValue({ myReviewCount: 0 })
-    renderPage()
+    const { container } = renderPage()
 
     fireEvent.click(await screen.findByRole('tab', { name: '작성한 리뷰 1' }))
     fireEvent.click((await screen.findAllByLabelText(/리뷰 메뉴 열기/))[0])
@@ -184,6 +185,12 @@ describe('MyReviewsPage', () => {
       expect(deleteReview).toHaveBeenCalledWith(31, expect.anything()),
     )
     expect(await screen.findByText('작성한 리뷰가 없어요.')).toBeVisible()
+    expect(
+      container.querySelector(`img[src="${emptyImage}"]`),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '일본 맛집 추천받기' }),
+    ).toBeVisible()
     expect(screen.getByRole('tab', { name: '작성한 리뷰 0' })).toBeVisible()
   })
 
