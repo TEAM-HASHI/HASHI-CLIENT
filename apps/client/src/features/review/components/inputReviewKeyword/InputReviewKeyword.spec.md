@@ -39,7 +39,8 @@
 - 키워드 id와 option type은 `apps/client/src/features/review/constants/reviewKeywords.ts`에서 export합니다.
 - `keywordOptions`가 없으면 기존 `REVIEW_KEYWORDS`를 기본값으로 사용합니다.
 - context API의 키워드 선택지를 주입하면 API `code`를 id로, `label`을 화면 문구로 사용합니다.
-- API 선택지는 icon 없이 렌더링할 수 있습니다.
+- 알려진 API keyword code는 `features/review/constants`의 HDS icon과 매핑합니다.
+- 아직 등록되지 않은 API keyword code는 icon 없이도 안전하게 렌더링합니다.
 - 호출부가 소유하는 책임: 선택 state 보관, form validation, 저장 가능 여부, API mutation.
 - 컴포넌트가 소유하지 않는 책임: 서버 데이터 shape, route params, 리뷰 저장/수정 요청, validation 문구 표시.
 

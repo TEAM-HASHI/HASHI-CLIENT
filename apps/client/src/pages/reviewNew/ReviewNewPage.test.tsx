@@ -119,9 +119,17 @@ describe('ReviewNewPage', () => {
     expect(await screen.findByText('하시 식당')).toBeInTheDocument()
     expect(screen.getByText('2026. 6. 28 19:00 방문')).toBeInTheDocument()
     expect(screen.getByText('어른 2명 · 청소년 1명')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: '직원분이 친절해요' }),
-    ).toBeInTheDocument()
+    const deliciousKeyword = screen.getByRole('button', {
+      name: '음식이 맛있어요',
+    })
+    const kindKeyword = screen.getByRole('button', {
+      name: '직원분이 친절해요',
+    })
+
+    expect(deliciousKeyword).toBeInTheDocument()
+    expect(deliciousKeyword.querySelector('svg')).not.toBeNull()
+    expect(kindKeyword).toBeInTheDocument()
+    expect(kindKeyword.querySelector('svg')).not.toBeNull()
     expect(getReviewContextMock).toHaveBeenCalledWith(23)
   })
 

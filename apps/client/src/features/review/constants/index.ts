@@ -11,6 +11,6 @@ export {
   REVIEW_TEXT_MAX_LENGTH,
   REVIEW_TEXT_MIN_LENGTH,
 } from './reviewInputRules'
-export { REVIEW_KEYWORDS } from './reviewKeywords'
+export { getReviewKeywordIconByCode, REVIEW_KEYWORDS } from './reviewKeywords'
 export type { ReviewKeywordId, ReviewKeywordOption } from './reviewKeywords'
 export { REVIEW_RATING_VALUES } from './reviewRatings'

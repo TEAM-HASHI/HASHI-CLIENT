@@ -23,6 +23,7 @@
 - `reservationId`가 없거나 양의 10진 정수 문자열이 아니면 API를 호출하지 않고 잘못된 진입 상태를 표시한다.
 - context 응답의 식당명, 썸네일, 방문 일시, 방문 인원으로 예약 요약을 표시한다.
 - context 응답의 `reviewKeywordOptions`를 키워드 선택지로 사용하고 선택된 `code`를 form 상태에 보관한다.
+- 알려진 keyword `code`는 review feature의 HDS icon과 매핑해 키워드 chip에 표시한다.
 - context 조회 중에는 로딩 상태를, 조회 실패 또는 빈 응답에는 오류 상태를 표시한다.
 - `reviewable`이 `true`인 예약만 리뷰를 제출할 수 있다.
 - 사진 파일은 `image/jpeg`, `image/png`, `image/webp`만 허용하고 제출 전까지 원본 `File[]` 상태로 보관한다.
