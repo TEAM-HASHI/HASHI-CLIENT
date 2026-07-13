@@ -53,7 +53,7 @@ describe('InputReviewMain', () => {
     ).toHaveClass('h-[130px]', 'w-full', 'max-w-full', 'rounded-[10px]')
     expect(screen.getByLabelText('리뷰 사진 첨부')).toHaveAttribute(
       'accept',
-      'image/*',
+      'image/jpeg,image/png,image/webp',
     )
     expect(screen.getByLabelText('리뷰 사진 첨부')).toHaveAttribute('multiple')
 
@@ -138,6 +138,28 @@ describe('InputReviewMain', () => {
     expect(handlePhotoFilesChange).toHaveBeenCalledWith([validImageFile])
     expect(
       screen.getByText('사진은 장당 5MB 이하로 첨부해주세요.'),
+    ).toHaveClass('text-primary-400')
+  })
+
+  it('rejects unsupported photo MIME types and keeps supported files', () => {
+    const handlePhotoFilesChange = vi.fn()
+    const supportedImageFile = new File(['image'], 'review.webp', {
+      type: 'image/webp',
+    })
+    const unsupportedImageFile = new File(['image'], 'review.gif', {
+      type: 'image/gif',
+    })
+
+    render(<InputReviewMain onPhotoFilesChange={handlePhotoFilesChange} />)
+
+    fireEvent.change(screen.getByLabelText('리뷰 사진 첨부'), {
+      target: { files: [supportedImageFile, unsupportedImageFile] },
+    })
+
+    expect(handlePhotoFilesChange).toHaveBeenCalledTimes(1)
+    expect(handlePhotoFilesChange).toHaveBeenCalledWith([supportedImageFile])
+    expect(
+      screen.getByText('JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.'),
     ).toHaveClass('text-primary-400')
   })
 

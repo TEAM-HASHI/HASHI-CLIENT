@@ -39,7 +39,7 @@ describe('ReviewPhotoUploader', () => {
     expect(trigger).toHaveClass('w-full', 'max-w-full', 'rounded-[10px]')
     expect(screen.getByLabelText('리뷰 사진 첨부')).toHaveAttribute(
       'accept',
-      'image/*',
+      'image/jpeg,image/png,image/webp',
     )
     expect(screen.getByLabelText('리뷰 사진 첨부')).toHaveAttribute('multiple')
 

@@ -12,23 +12,31 @@ import {
 } from '@hashi/hds-icons'
 import type { ComponentType, SVGProps } from 'react'
 
-export type ReviewKeywordId =
-  | 'delicious'
-  | 'mildSpice'
-  | 'solo'
-  | 'kind'
-  | 'spaciousStore'
-  | 'cleanStore'
-  | 'fast'
-  | 'photo'
-  | 'value'
-  | 'conversation'
+export type ReviewKeywordId = string
 
 export interface ReviewKeywordOption {
   id: ReviewKeywordId
   label: string
   Icon: ComponentType<SVGProps<SVGSVGElement>>
 }
+
+type ReviewKeywordIcon = ReviewKeywordOption['Icon']
+
+const reviewKeywordIconByCode = new Map<string, ReviewKeywordIcon>([
+  ['FOOD_IS_DELICIOUS', DeliciousIcon],
+  ['MILD_SEASONING', LeafIcon],
+  ['STAFF_IS_KIND', SmileIcon],
+  ['TRADITIONAL_ATMOSPHERE', SoloIcon],
+  ['SPACIOUS_INTERIOR', PeopleIcon],
+  ['CLEAN_INTERIOR', CleanIcon],
+  ['FAST_SERVICE', FastIcon],
+  ['PHOTO_FRIENDLY', CameraIcon],
+  ['GOOD_VALUE', MoneyIcon],
+  ['GOOD_FOR_CONVERSATION', TalkIcon],
+])
+
+export const getReviewKeywordIconByCode = (code: string) =>
+  reviewKeywordIconByCode.get(code)
 
 export const REVIEW_KEYWORDS: ReviewKeywordOption[] = [
   { id: 'delicious', label: '음식이 맛있어요', Icon: DeliciousIcon },
