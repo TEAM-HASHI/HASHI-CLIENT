@@ -94,8 +94,8 @@ export interface paths {
     get?: never
     put?: never
     /**
-     * 매거진 등록 — bannerKey는 presigned URL로 업로드를 마친 S3 키.
-     * @description 매거진 등록 — bannerKey는 presigned URL로 업로드를 마친 S3 키.
+     * 매거진 등록 — bannerKey·thumbnailKey는 presigned URL로 업로드를 마친 S3 키.
+     * @description 매거진 등록 — bannerKey·thumbnailKey는 presigned URL로 업로드를 마친 S3 키.
      */
     post: operations['create_1']
     delete?: never
@@ -413,7 +413,7 @@ export interface components {
       priceCurrency?: string
       minPrice?: number
       maxPrice?: number
-      active?: boolean
+      deleted?: boolean
       imageUrls?: string[]
       menus?: components['schemas']['AdminRestaurantMenuResponse'][]
       hashtags?: string[]
@@ -486,7 +486,7 @@ export interface components {
       message?: string
       data?: components['schemas']['AdminReservationResponse']
     }
-    /** @description 어드민 매거진 등록 요청. bannerKey는 presigned URL로 업로드 완료된 S3 object key다. */
+    /** @description 어드민 매거진 등록 요청. bannerKey·thumbnailKey는 presigned URL로 업로드 완료된 S3 object key다. */
     CreateMagazineRequest: {
       /**
        * @description 매거진 제목
@@ -499,17 +499,23 @@ export interface components {
        */
       bannerKey: string
       /**
+       * @description 썸네일 이미지 S3 key(업로드 완료본)
+       * @example magazines/a1b2c3-thumbnail.jpg
+       */
+      thumbnailKey: string
+      /**
        * @description 배너 탭 시 이동할 인스타그램 URL
        * @example https://www.instagram.com/p/abc123/
        */
       instagramRedirectUrl: string
     }
-    /** @description 어드민 매거진 단건 응답(등록·수정 결과). bannerImageUrl은 저장된 키를 변환한 조회 URL이다. */
+    /** @description 어드민 매거진 단건 응답(등록·수정 결과). bannerImageUrl·thumbnailImageUrl은 저장된 키를 변환한 조회 URL이다. */
     AdminMagazineResponse: {
       /** Format: int64 */
       magazineId?: number
       title?: string
       bannerImageUrl?: string
+      thumbnailImageUrl?: string
       instagramRedirectUrl?: string
       /** Format: date-time */
       createdAt?: string
@@ -618,6 +624,11 @@ export interface components {
        * @example magazines/a1b2c3-new-banner.jpg
        */
       bannerKey?: string
+      /**
+       * @description 새 썸네일 이미지 S3 key(선택, 보내면 교체)
+       * @example magazines/a1b2c3-new-thumbnail.jpg
+       */
+      thumbnailKey?: string
       /**
        * @description 인스타그램 URL(선택)
        * @example https://www.instagram.com/p/def456/

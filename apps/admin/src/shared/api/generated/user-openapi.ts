@@ -34,10 +34,10 @@ export interface paths {
     get?: never
     put?: never
     /**
-     * 업로드용 presigned URL 발급 — 발급받은 URL로 파일을 PUT한 뒤, 응답의 key를 등록 API에 전달한다.
-     * @description 업로드용 presigned URL 발급 — 발급받은 URL로 파일을 PUT한 뒤, 응답의 key를 등록 API에 전달한다.
+     * 업로드용 presigned URL 벌크 발급 — 각 URL로 파일을 PUT한 뒤, 응답의 key를 등록 API에 전달한다.
+     * @description 업로드용 presigned URL 벌크 발급 — 각 URL로 파일을 PUT한 뒤, 응답의 key를 등록 API에 전달한다.
      */
-    post: operations['issuePresignedUrl']
+    post: operations['issuePresignedUrls']
     delete?: never
     options?: never
     head?: never
@@ -118,6 +118,28 @@ export interface paths {
      * @description 어디든 예약 생성 — 미등록 식당의 식당명·주소를 직접 입력. amount 규칙은 일반 예약과 동일.
      */
     post: operations['createAnywhere']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/dev/dummies': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * 더미 시나리오 생성 — 호출 1번에 식당 1곳·회원 10명·방문 완료 예약 10건·리뷰 10건을 넣는다.
+     * @description 더미 시나리오 생성 — 호출 1번에 식당 1곳·회원 10명·방문 완료 예약 10건·리뷰 10건을 넣는다.
+     *      공개 경로라 토큰 없이 호출할 수 있고, 응답의 sampleUser.accessToken을 Authorize에 붙이면
+     *      해당 더미 회원으로 예약·리뷰 API를 곧장 시험할 수 있다.
+     */
+    post: operations['createDummies']
     delete?: never
     options?: never
     head?: never
@@ -400,6 +422,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/restaurants/{restaurantId}/reviews/images': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getRestaurantReviewImages']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/restaurants/{restaurantId}/menus': {
     parameters: {
       query?: never
@@ -600,6 +638,28 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/dev/data': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * DB 데이터 초기화 — 스키마·마이그레이션 이력·어드민 계정은 보존하고 나머지 모든 테이블을 비운다
+     *      (AUTO_INCREMENT도 1로 리셋).
+     * @description DB 데이터 초기화 — 스키마·마이그레이션 이력·어드민 계정은 보존하고 나머지 모든 테이블을 비운다
+     *      (AUTO_INCREMENT도 1로 리셋). 초기화 후 더미 시나리오를 다시 넣어 깨끗한 상태에서 시험할 수 있다.
+     */
+    delete: operations['clearData']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -650,13 +710,7 @@ export interface components {
       message?: string
       data?: components['schemas']['OnboardingResponse']
     }
-    /** @description presigned URL 발급 요청. */
-    IssuePresignedUrlRequest: {
-      /**
-       * @description 업로드 용도: profile / review / restaurant / restaurant-menu / magazine
-       * @example profile
-       */
-      usage: string
+    FileRequest: {
       /**
        * @description 파일 Content-Type
        * @example image/jpeg
@@ -664,10 +718,20 @@ export interface components {
       contentType: string
       /**
        * Format: int64
-       * @description 파일 크기(byte, 최대 5MB)
-       * @example 204800
+       * @description 파일 크기(byte, 파일당 최대 5MB)
+       * @example 1048576
        */
       fileSize: number
+    }
+    /** @description presigned URL 벌크 발급 요청. 한 요청의 파일은 모두 같은 업로드 용도를 사용한다. */
+    IssuePresignedUrlsRequest: {
+      /**
+       * @description 업로드 용도: profile / review / restaurant / restaurant-menu / magazine
+       * @example review
+       */
+      usage: string
+      /** @description 업로드할 파일 목록(1~10개) */
+      files: components['schemas']['FileRequest'][]
     }
     PresignedUrlResponse: {
       uploadUrl?: string
@@ -677,12 +741,15 @@ export interface components {
       expiresInSeconds?: number
       uploadMethod?: string
     }
+    PresignedUrlsResponse: {
+      uploads?: components['schemas']['PresignedUrlResponse'][]
+    }
     /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
-    SuccessResponsePresignedUrlResponse: {
+    SuccessResponsePresignedUrlsResponse: {
       success?: boolean
       code?: string
       message?: string
-      data?: components['schemas']['PresignedUrlResponse']
+      data?: components['schemas']['PresignedUrlsResponse']
     }
     /** @description 리뷰 작성 요청. 작성자는 인증 컨텍스트에서 확인하므로 요청에 포함하지 않는다. */
     CreateReviewRequest: {
@@ -714,7 +781,7 @@ export interface components {
       /**
        * @description 리뷰 이미지 S3 key 목록(선택, 최대 10개)
        * @example [
-       *       "reviews/a1b2c3-1.jpg"
+       *       "uploads/reviews/a1b2c3-1.jpg"
        *     ]
        */
       imageFileKeys?: string[]
@@ -748,7 +815,7 @@ export interface components {
       /**
        * Format: date-time
        * @description 예약 일시(미래 시각)
-       * @example 2026-08-01T19:00:00
+       * @example 2030-08-01T19:00:00
        */
       reservedAt: string
       /**
@@ -848,7 +915,7 @@ export interface components {
       /**
        * Format: date-time
        * @description 예약 일시(미래 시각)
-       * @example 2026-08-01T19:00:00
+       * @example 2030-08-01T19:00:00
        */
       reservedAt: string
       /**
@@ -886,6 +953,31 @@ export interface components {
        * @example 4000
        */
       amount: number
+    }
+    /**
+     * @description 더미 시나리오 생성 결과 — 생성된 각 도메인의 식별자 목록과, 바로 쓸 수 있는 대표 더미 유저 토큰.
+     *      sampleUser의 accessToken을 Authorize에 붙이면 그 유저의 예약·리뷰 조회가 곧장 동작한다.
+     */
+    DummyScenarioResponse: {
+      /** Format: int64 */
+      restaurantId?: number
+      userIds?: number[]
+      reservationIds?: number[]
+      reviewIds?: number[]
+      sampleUser?: components['schemas']['SampleUser']
+    }
+    /** @description 대표 더미 유저 — 생성된 첫 번째 유저와 그 명의의 USER 액세스 토큰. */
+    SampleUser: {
+      /** Format: int64 */
+      userId?: number
+      accessToken?: string
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseDummyScenarioResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['DummyScenarioResponse']
     }
     /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
     SuccessResponseVoid: {
@@ -1014,7 +1106,8 @@ export interface components {
       teenCount?: number
       /** Format: int32 */
       childCount?: number
-      reviewed?: boolean
+      /** @enum {string} */
+      reviewStatus?: 'UNREVIEWED' | 'REVIEWED' | 'DELETED'
       reviewable?: boolean
       /** @enum {string} */
       reviewUnavailableReason?:
@@ -1051,7 +1144,6 @@ export interface components {
       rating?: number
       content?: string
       keywords?: string[]
-      imageUrls?: string[]
       /** Format: date-time */
       createdAt?: string
     }
@@ -1153,6 +1245,7 @@ export interface components {
       foodCategory?: string
       summary?: string
       hashtags?: string[]
+      todayBusinessHour?: components['schemas']['TodayBusinessHourResponse']
     }
     /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
     SuccessResponseRestaurantListResponse: {
@@ -1160,6 +1253,13 @@ export interface components {
       code?: string
       message?: string
       data?: components['schemas']['RestaurantListResponse']
+    }
+    TodayBusinessHourResponse: {
+      date?: string
+      dayOfWeek?: string
+      openTime?: string
+      closeTime?: string
+      closed?: boolean
     }
     RestaurantMainResponse: {
       /** Format: int64 */
@@ -1246,7 +1346,9 @@ export interface components {
       rating?: number
       content?: string
       keywords?: string[]
-      imageUrls?: string[]
+      previewImageUrls?: string[]
+      /** Format: int32 */
+      imageCount?: number
       /** Format: date-time */
       createdAt?: string
     }
@@ -1256,6 +1358,26 @@ export interface components {
       code?: string
       message?: string
       data?: components['schemas']['RestaurantReviewResponse']
+    }
+    RestaurantReviewImageListResponse: {
+      content?: components['schemas']['RestaurantReviewImageResponse'][]
+      /** Format: int64 */
+      nextCursor?: number
+      hasNext?: boolean
+    }
+    RestaurantReviewImageResponse: {
+      /** Format: int64 */
+      imageId?: number
+      /** Format: int64 */
+      reviewId?: number
+      imageUrl?: string
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseRestaurantReviewImageListResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['RestaurantReviewImageListResponse']
     }
     RestaurantMenuListResponse: {
       content?: components['schemas']['RestaurantMenuResponse'][]
@@ -1352,9 +1474,12 @@ export interface components {
     /**
      * @description 내 예약 목록 응답(커서 페이지네이션). nextCursor는 다음 페이지 요청에 그대로 전달하며,
      *      hasNext가 false면 마지막 페이지라 nextCursor는 null이다.
+     *      totalCount는 커서와 무관하게 필터 조건에 맞는 전체 건수다.
      */
     ReservationListResponse: {
       reservations?: components['schemas']['ReservationResponse'][]
+      /** Format: int64 */
+      totalCount?: number
       /** Format: int64 */
       nextCursor?: number
       hasNext?: boolean
@@ -1396,6 +1521,7 @@ export interface components {
       magazineId?: number
       title?: string
       bannerImageUrl?: string
+      thumbnailImageUrl?: string
       instagramRedirectUrl?: string
       /** Format: date-time */
       createdAt?: string
@@ -1440,6 +1566,19 @@ export interface components {
       code?: string
       message?: string
       data?: components['schemas']['AuthMeResponse']
+    }
+    /** @description DB 데이터 초기화 결과 — 비운 테이블 목록. */
+    ClearDataResponse: {
+      /** Format: int32 */
+      clearedTableCount?: number
+      clearedTables?: string[]
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseClearDataResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['ClearDataResponse']
     }
   }
   responses: never
@@ -1511,7 +1650,7 @@ export interface operations {
       }
     }
   }
-  issuePresignedUrl: {
+  issuePresignedUrls: {
     parameters: {
       query?: never
       header?: never
@@ -1520,7 +1659,7 @@ export interface operations {
     }
     requestBody: {
       content: {
-        'application/json': components['schemas']['IssuePresignedUrlRequest']
+        'application/json': components['schemas']['IssuePresignedUrlsRequest']
       }
     }
     responses: {
@@ -1530,7 +1669,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          '*/*': components['schemas']['SuccessResponsePresignedUrlResponse']
+          '*/*': components['schemas']['SuccessResponsePresignedUrlsResponse']
           'application/json': unknown
         }
       }
@@ -1755,6 +1894,27 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  createDummies: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 생성에 성공했습니다 */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseDummyScenarioResponse']
           'application/json': unknown
         }
       }
@@ -2236,15 +2396,6 @@ export interface operations {
           'application/json': unknown
         }
       }
-      /** @description 에러 응답 */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': unknown
-        }
-      }
     }
   }
   getRestaurantSummary: {
@@ -2270,15 +2421,6 @@ export interface operations {
       }
       /** @description 에러 응답 */
       400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': unknown
-        }
-      }
-      /** @description 에러 응답 */
-      401: {
         headers: {
           [name: string]: unknown
         }
@@ -2320,15 +2462,6 @@ export interface operations {
       }
       /** @description 에러 응답 */
       400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': unknown
-        }
-      }
-      /** @description 에러 응답 */
-      401: {
         headers: {
           [name: string]: unknown
         }
@@ -2382,7 +2515,42 @@ export interface operations {
         }
       }
       /** @description 에러 응답 */
-      401: {
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  getRestaurantReviewImages: {
+    parameters: {
+      query?: {
+        cursor?: number
+        size?: number
+      }
+      header?: never
+      path: {
+        restaurantId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseRestaurantReviewImageListResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
         headers: {
           [name: string]: unknown
         }
@@ -2435,15 +2603,6 @@ export interface operations {
         }
       }
       /** @description 에러 응답 */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': unknown
-        }
-      }
-      /** @description 에러 응답 */
       404: {
         headers: {
           [name: string]: unknown
@@ -2485,15 +2644,6 @@ export interface operations {
           'application/json': unknown
         }
       }
-      /** @description 에러 응답 */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': unknown
-        }
-      }
     }
   }
   getSearchKeywordRecommendations: {
@@ -2519,15 +2669,6 @@ export interface operations {
       }
       /** @description 에러 응답 */
       400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': unknown
-        }
-      }
-      /** @description 에러 응답 */
-      401: {
         headers: {
           [name: string]: unknown
         }
@@ -2664,15 +2805,6 @@ export interface operations {
           'application/json': unknown
         }
       }
-      /** @description 에러 응답 */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': unknown
-        }
-      }
     }
   }
   getBanners: {
@@ -2691,15 +2823,6 @@ export interface operations {
         }
         content: {
           '*/*': components['schemas']['SuccessResponseMagazineBannerListResponse']
-          'application/json': unknown
-        }
-      }
-      /** @description 에러 응답 */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
           'application/json': unknown
         }
       }
@@ -2771,6 +2894,27 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  clearData: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseClearDataResponse']
           'application/json': unknown
         }
       }

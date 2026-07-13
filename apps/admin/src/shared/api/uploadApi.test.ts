@@ -21,9 +21,15 @@ describe('uploadApi', () => {
       type: 'image/webp',
     })
     requestMock.mockResolvedValue({
-      uploadUrl: 'https://upload.example/image',
-      fileKey: 'restaurant/image.webp',
-      fileUrl: 'https://cdn.example/image.webp',
+      uploads: [
+        {
+          uploadUrl: 'https://upload.example/image',
+          fileKey: 'restaurant/image.webp',
+          fileUrl: 'https://cdn.example/image.webp',
+          expiresInSeconds: 300,
+          uploadMethod: 'PUT',
+        },
+      ],
     })
     fetchMock.mockResolvedValue({ ok: true })
 
@@ -38,8 +44,7 @@ describe('uploadApi', () => {
       method: 'post',
       json: {
         usage: 'restaurant',
-        contentType: 'image/webp',
-        fileSize: 1024,
+        files: [{ contentType: 'image/webp', fileSize: 1024 }],
       },
     })
     expect(fetchMock).toHaveBeenCalledWith('https://upload.example/image', {
@@ -52,9 +57,15 @@ describe('uploadApi', () => {
   it('rejects when object storage returns a non-2xx response', async () => {
     const file = new File(['image'], 'image.png', { type: 'image/png' })
     requestMock.mockResolvedValue({
-      uploadUrl: 'https://upload.example/image',
-      fileKey: 'restaurant/image.png',
-      fileUrl: 'https://cdn.example/image.png',
+      uploads: [
+        {
+          uploadUrl: 'https://upload.example/image',
+          fileKey: 'restaurant/image.png',
+          fileUrl: 'https://cdn.example/image.png',
+          expiresInSeconds: 300,
+          uploadMethod: 'PUT',
+        },
+      ],
     })
     fetchMock.mockResolvedValue({ ok: false })
 
