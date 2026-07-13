@@ -13,6 +13,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ROUTES } from '@/app/router/path'
 import { requestOnboarding } from '@/pages/profileNew/api/requestOnboarding'
 import { uploadProfileImage } from '@/pages/profileNew/api/uploadProfileImage'
+import {
+  clearAuthSession,
+  getAccessToken,
+  getAuthSessionStatus,
+} from '@/features/auth/session/authSession'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 import profileEmptyImage from '@/shared/assets/images/profile-empty.svg'
@@ -98,6 +103,7 @@ describe('ProfileNewPage', () => {
     mockSearchParams.delete('redirectTo')
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
+    clearAuthSession()
   })
 
   it('keeps the complete CTA disabled before required values are valid', () => {
@@ -195,7 +201,10 @@ describe('ProfileNewPage', () => {
   })
 
   it('does not block submit with the old duplicated nickname mock list', async () => {
-    mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
+    mockedRequestOnboarding.mockResolvedValue({
+      userId: 15,
+      accessToken: 'onboarding-access-token',
+    })
     renderProfileNewPage()
 
     fireEvent.change(screen.getByLabelText('닉네임'), {
@@ -226,7 +235,10 @@ describe('ProfileNewPage', () => {
   })
 
   it('enables submit after required values are valid and navigates home after onboarding succeeds', async () => {
-    mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
+    mockedRequestOnboarding.mockResolvedValue({
+      userId: 15,
+      accessToken: 'onboarding-access-token',
+    })
     renderProfileNewPage()
 
     fillValidProfileForm()
@@ -246,6 +258,8 @@ describe('ProfileNewPage', () => {
       })
       expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home)
     })
+    expect(getAccessToken()).toBe('onboarding-access-token')
+    expect(getAuthSessionStatus()).toBe('authenticated')
   })
 
   it('uploads the selected profile image and sends the file key in onboarding body', async () => {
@@ -258,7 +272,10 @@ describe('ProfileNewPage', () => {
       type: 'image/png',
     })
     mockedUploadProfileImage.mockResolvedValue('users/15/profile/profile.png')
-    mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
+    mockedRequestOnboarding.mockResolvedValue({
+      userId: 15,
+      accessToken: 'onboarding-access-token',
+    })
     renderProfileNewPage()
 
     fillValidProfileForm()
@@ -368,7 +385,10 @@ describe('ProfileNewPage', () => {
   })
 
   it('navigates to an allowed redirectTo path after onboarding succeeds', async () => {
-    mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
+    mockedRequestOnboarding.mockResolvedValue({
+      userId: 15,
+      accessToken: 'onboarding-access-token',
+    })
     mockSearchParams.set('redirectTo', '/restaurants/1/reviews/new')
     renderProfileNewPage()
 
@@ -382,7 +402,10 @@ describe('ProfileNewPage', () => {
   })
 
   it('preserves search and hash on an allowed redirectTo path after onboarding succeeds', async () => {
-    mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
+    mockedRequestOnboarding.mockResolvedValue({
+      userId: 15,
+      accessToken: 'onboarding-access-token',
+    })
     mockSearchParams.set(
       'redirectTo',
       '/restaurants/1/reviews/new?reservationId=1#review-form',
@@ -401,7 +424,10 @@ describe('ProfileNewPage', () => {
   })
 
   it('ignores unsupported internal redirectTo paths after onboarding succeeds', async () => {
-    mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
+    mockedRequestOnboarding.mockResolvedValue({
+      userId: 15,
+      accessToken: 'onboarding-access-token',
+    })
     mockSearchParams.set('redirectTo', ROUTES.withdrawal)
     renderProfileNewPage()
 
@@ -415,7 +441,10 @@ describe('ProfileNewPage', () => {
   })
 
   it('ignores external redirectTo URLs after onboarding succeeds', async () => {
-    mockedRequestOnboarding.mockResolvedValue({ userId: 15 })
+    mockedRequestOnboarding.mockResolvedValue({
+      userId: 15,
+      accessToken: 'onboarding-access-token',
+    })
     mockSearchParams.set('redirectTo', 'https://example.com/reviews/new')
     renderProfileNewPage()
 

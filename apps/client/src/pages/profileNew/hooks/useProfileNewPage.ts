@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { matchPath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { setAccessToken } from '@/features/auth/session/authSession'
 import { requestOnboarding } from '@/pages/profileNew/api/requestOnboarding'
 import { uploadProfileImage } from '@/pages/profileNew/api/uploadProfileImage'
 import {
@@ -145,7 +146,8 @@ export const useProfileNewPage = () => {
 
   const profileNewMutation = useMutation({
     mutationFn: submitProfileNew,
-    onSuccess: () => {
+    onSuccess: ({ accessToken }) => {
+      setAccessToken(accessToken)
       navigate(getAllowedRedirectPath(searchParams.get('redirectTo')))
     },
     onError: (error) => {
