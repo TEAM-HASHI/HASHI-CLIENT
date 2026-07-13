@@ -458,6 +458,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/restaurants/{restaurantId}/menus/{menuId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 식당 메뉴 상세 조회.
+         * @description 식당 메뉴 상세 조회.
+         */
+        get: operations["getRestaurantMenu"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/restaurants/search-suggestions": {
         parameters: {
             query?: never;
@@ -1412,6 +1432,26 @@ export interface components {
             code?: string;
             message?: string;
             data?: components["schemas"]["RestaurantMenuListResponse"];
+        };
+        RestaurantMenuDetailResponse: {
+            /** Format: int64 */
+            menuId?: number;
+            name?: string;
+            description?: string;
+            imageUrl?: string;
+            currency?: string;
+            /** Format: int64 */
+            price?: number;
+            main?: boolean;
+            /** Format: int64 */
+            otherMenuCount?: number;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseRestaurantMenuDetailResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["RestaurantMenuDetailResponse"];
         };
         RestaurantSearchSuggestionResponse: {
             suggestions?: components["schemas"]["Suggestion"][];
@@ -2577,6 +2617,7 @@ export interface operations {
     getRestaurantMenus: {
         parameters: {
             query?: {
+                excludeMenuId?: number;
                 cursor?: number;
                 size?: number;
             };
@@ -2595,6 +2636,48 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SuccessResponseRestaurantMenuListResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    getRestaurantMenu: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                restaurantId: number;
+                menuId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseRestaurantMenuDetailResponse"];
                     "application/json": unknown;
                 };
             };
