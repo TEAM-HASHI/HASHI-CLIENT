@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { showToast } from '@hashi/hds-ui'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -59,6 +59,8 @@ export const useMyReservationsPage = () => {
     null,
   )
   const isCancelRequestLockedRef = useRef(false)
+  const isLoadMoreLockedRef = useRef(false)
+  const lastNextPageErrorUpdatedAtRef = useRef(0)
   const apiStatus = getMyReservationsApiStatus(selectedStatus)
   const profileSummaryQuery = useMyProfileSummaryQuery()
   const cancelReservationMutation = useCancelReservationMutation()
@@ -98,18 +100,58 @@ export const useMyReservationsPage = () => {
 
   const activeReservationsQuery =
     selectedStatus === 'VISITED' ? visitedReservationsQuery : reservationsQuery
+  const activeInitialLoadError =
+    activeReservationsQuery.isError &&
+    reservations.length === 0 &&
+    !activeReservationsQuery.isPending
+      ? activeReservationsQuery.error
+      : null
   const totalCount =
     selectedStatus === 'VISITED'
       ? (visitedReservationsQuery.data?.pages[0]?.totalCount ??
         reservations.length)
       : (reservationsQuery.data?.pages[0]?.totalCount ?? reservations.length)
 
+  useEffect(() => {
+    if (
+      !activeReservationsQuery.isFetchNextPageError ||
+      !activeReservationsQuery.error ||
+      activeReservationsQuery.errorUpdatedAt ===
+        lastNextPageErrorUpdatedAtRef.current
+    ) {
+      return
+    }
+
+    lastNextPageErrorUpdatedAtRef.current =
+      activeReservationsQuery.errorUpdatedAt
+    showToast({ children: '예약 정보를 더 불러오지 못했습니다.' })
+  }, [
+    activeReservationsQuery.error,
+    activeReservationsQuery.errorUpdatedAt,
+    activeReservationsQuery.isFetchNextPageError,
+  ])
+
   const loadMoreRef = useIntersectionObserver<HTMLDivElement>({
     enabled:
       activeReservationsQuery.hasNextPage &&
       !activeReservationsQuery.isFetchingNextPage,
     onIntersect: () => {
-      void activeReservationsQuery.fetchNextPage()
+      if (
+        isLoadMoreLockedRef.current ||
+        !activeReservationsQuery.hasNextPage ||
+        activeReservationsQuery.isFetchingNextPage
+      ) {
+        return
+      }
+
+      isLoadMoreLockedRef.current = true
+
+      void activeReservationsQuery
+        .fetchNextPage()
+        .catch(() => {})
+        .finally(() => {
+          isLoadMoreLockedRef.current = false
+        })
     },
   })
 
@@ -127,7 +169,11 @@ export const useMyReservationsPage = () => {
   }
 
   const handleCancelDialogOpenChange = (open: boolean) => {
-    if (!open && !cancelReservationMutation.isPending) {
+    if (
+      !open &&
+      !isCancelRequestLockedRef.current &&
+      !cancelReservationMutation.isPending
+    ) {
       setCancelReservationId(null)
     }
   }
@@ -178,6 +224,10 @@ export const useMyReservationsPage = () => {
       return
     }
 
+    if (!reservation.isReviewable || !reservation.restaurantId) {
+      return
+    }
+
     const pathname = ROUTES.reviewNew.replace(
       ':restaurantId',
       reservation.restaurantId,
@@ -198,11 +248,7 @@ export const useMyReservationsPage = () => {
     selectedStatus,
     reservations,
     totalCount,
-    error:
-      profileSummaryQuery.error ??
-      (selectedStatus === 'VISITED'
-        ? visitedReservationsQuery.error
-        : reservationsQuery.error),
+    error: profileSummaryQuery.error ?? activeInitialLoadError,
     isLoading: activeReservationsQuery.isPending,
     hasNextPage: activeReservationsQuery.hasNextPage,
     isCancelingReservation: cancelReservationMutation.isPending,

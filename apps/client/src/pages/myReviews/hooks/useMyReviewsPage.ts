@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { generatePath, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -24,6 +24,7 @@ export const useMyReviewsPage = () => {
   const [openedMenuReviewId, setOpenedMenuReviewId] = useState<string | null>(
     null,
   )
+  const isLoadMoreLockedRef = useRef(false)
   const [isEditComingSoonDialogOpen, setIsEditComingSoonDialogOpen] =
     useState(false)
   const isWritableTab = activeTab === MY_REVIEW_TAB_ITEMS.writable.value
@@ -71,7 +72,17 @@ export const useMyReviewsPage = () => {
   const loadMoreRef = useIntersectionObserver<HTMLDivElement>({
     enabled: hasNextPage && !isFetchingNextPage,
     onIntersect: () => {
+      if (isLoadMoreLockedRef.current || !hasNextPage || isFetchingNextPage) {
+        return
+      }
+
+      isLoadMoreLockedRef.current = true
+
       void fetchNextPage()
+        .catch(() => {})
+        .finally(() => {
+          isLoadMoreLockedRef.current = false
+        })
     },
     rootMargin: '160px 0px',
   })

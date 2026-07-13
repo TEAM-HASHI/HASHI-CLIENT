@@ -46,6 +46,9 @@ export const VisitedReservationCard = ({
   reservation,
   onReviewPress,
 }: VisitedReservationCardProps) => {
+  const canWriteReview =
+    reservation.isReviewable && reservation.restaurantId !== null
+
   return (
     <article className="border-warm-gray-50 border-b pb-2.5 last:border-0">
       <div className="flex gap-3">
@@ -91,13 +94,22 @@ export const VisitedReservationCard = ({
       ) : (
         <button
           className="border-secondary-200 mt-4 flex w-full flex-col items-center border-t pt-1.5"
+          disabled={!canWriteReview}
           onClick={() => onReviewPress(reservation)}
           type="button"
         >
-          <RatingStars gapClassName="gap-2.5" sizeClassName="size-7.25" />
-          <span className="typo-body-7 text-cool-gray-700 mt-0.5">
-            이 맛집 어떠셨나요?
-          </span>
+          {canWriteReview ? (
+            <>
+              <RatingStars gapClassName="gap-2.5" sizeClassName="size-7.25" />
+              <span className="typo-body-7 text-cool-gray-700 mt-0.5">
+                이 맛집 어떠셨나요?
+              </span>
+            </>
+          ) : (
+            <span className="typo-body-7 text-warm-gray-300 py-3.5">
+              리뷰 작성이 어려운 예약이에요
+            </span>
+          )}
         </button>
       )}
     </article>

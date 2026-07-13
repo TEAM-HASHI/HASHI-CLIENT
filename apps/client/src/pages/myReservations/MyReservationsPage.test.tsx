@@ -247,6 +247,87 @@ describe('MyReservationsPage', () => {
     })
   })
 
+  it('does not request the same next reservation page twice when the sentinel intersects repeatedly', async () => {
+    const { triggerIntersect } = mockIntersectionObserver()
+
+    mockedGetMyReservations
+      .mockResolvedValueOnce({
+        reservations: [
+          {
+            reservationId: 12,
+            restaurantId: 34,
+            restaurantName: '스시 하시',
+            reservedAt: '2026-07-20T18:30:00',
+            adultCount: 2,
+            reservationStatus: 'REQUESTED',
+            confirmDDay: 3,
+          },
+        ],
+        nextCursor: 20,
+        hasNext: true,
+        totalCount: 2,
+      })
+      .mockResolvedValueOnce({
+        reservations: [
+          {
+            reservationId: 13,
+            restaurantId: 35,
+            restaurantName: '라멘 하시',
+            reservedAt: '2026-07-21T12:00:00',
+            adultCount: 1,
+            reservationStatus: 'CONTACTING',
+            confirmDDay: 2,
+          },
+        ],
+        hasNext: false,
+        totalCount: 2,
+      })
+
+    renderMyReservationsPage()
+
+    expect(await screen.findByText('스시 하시')).toBeInTheDocument()
+
+    triggerIntersect()
+    triggerIntersect()
+
+    expect(await screen.findByText('라멘 하시')).toBeInTheDocument()
+    expect(mockedGetMyReservations).toHaveBeenCalledTimes(2)
+  })
+
+  it('keeps rendered reservations when loading the next page fails', async () => {
+    const { triggerIntersect } = mockIntersectionObserver()
+
+    mockedGetMyReservations
+      .mockResolvedValueOnce({
+        reservations: [
+          {
+            reservationId: 12,
+            restaurantId: 34,
+            restaurantName: '스시 하시',
+            reservedAt: '2026-07-20T18:30:00',
+            adultCount: 2,
+            reservationStatus: 'REQUESTED',
+            confirmDDay: 3,
+          },
+        ],
+        nextCursor: 20,
+        hasNext: true,
+        totalCount: 2,
+      })
+      .mockRejectedValueOnce(new Error('next page failed'))
+
+    renderMyReservationsPage()
+
+    expect(await screen.findByText('스시 하시')).toBeInTheDocument()
+
+    triggerIntersect()
+
+    await waitFor(() => {
+      expect(mockedGetMyReservations).toHaveBeenCalledTimes(2)
+    })
+    expect(screen.getByText('스시 하시')).toBeInTheDocument()
+  })
+
   it('renders visited reservations from the visited reservations API', async () => {
     renderMyReservationsPage(`${ROUTES.myReservations}?status=VISITED`)
 
@@ -317,6 +398,31 @@ describe('MyReservationsPage', () => {
     )
   })
 
+  it('keeps unreviewable visited reservations without a restaurant id and disables review navigation', async () => {
+    mockedGetVisitedReservations.mockResolvedValue({
+      content: [
+        {
+          reservationId: 32,
+          restaurantId: undefined,
+          restaurantName: '어디든 예약',
+          visitedAt: '2026-07-11T18:30:00',
+          adultCount: 1,
+          reviewable: false,
+          reviewUnavailableReason: 'UNSUPPORTED_RESERVATION_TYPE',
+        },
+      ],
+      hasNext: false,
+      totalCount: 1,
+    })
+
+    renderMyReservationsPage(`${ROUTES.myReservations}?status=VISITED`)
+
+    expect(await screen.findByText('어디든 예약')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '리뷰 작성이 어려운 예약이에요' }),
+    ).toBeDisabled()
+  })
+
   it('navigates to reservation detail with reservation id when detail is pressed', async () => {
     renderMyReservationsPage()
 
@@ -381,6 +487,55 @@ describe('MyReservationsPage', () => {
         size: 10,
         status: 'CANCELED',
       })
+    })
+  })
+
+  it('keeps the cancel dialog open when the close button is pressed immediately after confirm', async () => {
+    let resolveCancel: (
+      value: Awaited<ReturnType<typeof cancelReservation>>,
+    ) => void
+    const cancelPromise = new Promise<
+      Awaited<ReturnType<typeof cancelReservation>>
+    >((resolve) => {
+      resolveCancel = resolve
+    })
+
+    mockedCancelReservation.mockReturnValue(cancelPromise)
+    mockedGetMyReservations.mockResolvedValue({
+      reservations: [
+        {
+          reservationId: 21,
+          restaurantId: 34,
+          restaurantName: '스시 하시',
+          reservedAt: '2026-07-20T18:30:00',
+          adultCount: 2,
+          reservationStatus: 'CONFIRMED',
+        },
+      ],
+      hasNext: false,
+      totalCount: 1,
+    })
+
+    renderMyReservationsPage(`${ROUTES.myReservations}?status=UPCOMING`)
+
+    fireEvent.click(await screen.findByRole('button', { name: '취소하기' }))
+    const dialog = screen.getByRole('alertdialog')
+
+    fireEvent.click(within(dialog).getByRole('button', { name: '취소하기' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: '닫기' }))
+
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+
+    resolveCancel!({
+      message: '예약 취소 요청이 완료되었습니다',
+      reservation: {
+        reservationId: 21,
+        restaurantId: 34,
+        restaurantName: '스시 하시',
+        reservedAt: '2026-07-20T18:30:00',
+        adultCount: 2,
+        reservationStatus: 'CANCELED',
+      },
     })
   })
 })

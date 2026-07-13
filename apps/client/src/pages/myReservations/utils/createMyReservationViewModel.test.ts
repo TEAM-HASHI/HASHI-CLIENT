@@ -28,7 +28,7 @@ describe('createMyReservationViewModel', () => {
       visitDateTime: '2026.7.20. 18:30 방문',
       guestSummary: '어른 2명, 청소년 1명',
       status: 'IN_PROGRESS',
-      requestedAt: '2026.7.20 예약 신청',
+      reservedAt: '2026.7.20 방문 예정',
       remainingDays: 3,
       progressStep: 'RECEIVED',
     })
@@ -89,6 +89,36 @@ describe('createMyReservationViewModel', () => {
       reviewId: '51',
       rating: 4,
       earnedPoint: 300,
+      isReviewable: true,
+      reviewUnavailableReason: null,
+    })
+  })
+
+  it('keeps unreviewable visited reservations even when restaurant id is missing', () => {
+    expect(
+      createMyVisitedReservationViewModel({
+        reservationId: 32,
+        restaurantId: undefined,
+        restaurantName: '어디든 예약',
+        visitedAt: '2026-07-10T18:30:00',
+        adultCount: 2,
+        reviewable: false,
+        reviewUnavailableReason: 'UNSUPPORTED_RESERVATION_TYPE',
+      }),
+    ).toEqual({
+      reservationId: '32',
+      restaurantId: null,
+      restaurantName: '어디든 예약',
+      restaurantImageUrl: null,
+      visitDateTime: '2026.7.10. 18:30 방문',
+      guestSummary: '어른 2명',
+      status: 'VISITED',
+      hasReview: false,
+      reviewId: null,
+      rating: null,
+      earnedPoint: null,
+      isReviewable: false,
+      reviewUnavailableReason: 'UNSUPPORTED_RESERVATION_TYPE',
     })
   })
 })

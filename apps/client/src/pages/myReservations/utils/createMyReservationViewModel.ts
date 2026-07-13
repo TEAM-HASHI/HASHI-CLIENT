@@ -92,7 +92,7 @@ export const createMyReservationViewModel = (
     return {
       ...baseReservation,
       status: 'IN_PROGRESS',
-      requestedAt: formatReservationDate(reservation.reservedAt, '예약 신청'),
+      reservedAt: formatReservationDate(reservation.reservedAt, '방문 예정'),
       remainingDays: reservation.confirmDDay ?? 0,
       progressStep: 'RECEIVED',
     }
@@ -102,7 +102,7 @@ export const createMyReservationViewModel = (
     return {
       ...baseReservation,
       status: 'IN_PROGRESS',
-      requestedAt: formatReservationDate(reservation.reservedAt, '예약 신청'),
+      reservedAt: formatReservationDate(reservation.reservedAt, '방문 예정'),
       remainingDays: reservation.confirmDDay ?? 0,
       progressStep: 'CONTACTING',
     }
@@ -132,28 +132,32 @@ export const createMyReservationViewModel = (
 export const createMyVisitedReservationViewModel = (
   reservation: VisitedReservationResponse,
 ): MyReservation | null => {
-  if (
-    !reservation.reservationId ||
-    !reservation.restaurantId ||
-    !reservation.restaurantName
-  ) {
+  if (!reservation.reservationId || !reservation.restaurantName) {
     return null
   }
 
+  const hasReview =
+    reservation.reviewId !== undefined && reservation.reviewId !== null
+
   return {
     reservationId: String(reservation.reservationId),
-    restaurantId: String(reservation.restaurantId),
+    restaurantId:
+      reservation.restaurantId === undefined ||
+      reservation.restaurantId === null
+        ? null
+        : String(reservation.restaurantId),
     restaurantName: reservation.restaurantName,
     restaurantImageUrl: reservation.restaurantThumbnailUrl ?? null,
     visitDateTime: formatReservationDateTime(reservation.visitedAt, '방문'),
     guestSummary: formatPeopleCount(reservation),
     status: 'VISITED',
-    hasReview:
-      reservation.reviewId !== undefined && reservation.reviewId !== null,
+    hasReview,
+    isReviewable: hasReview || (reservation.reviewable ?? true),
     reviewId:
       reservation.reviewId === undefined || reservation.reviewId === null
         ? null
         : String(reservation.reviewId),
+    reviewUnavailableReason: reservation.reviewUnavailableReason ?? null,
     rating: reservation.rating ?? null,
     earnedPoint: reservation.earnedPoint ?? null,
   }

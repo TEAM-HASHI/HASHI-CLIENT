@@ -26,6 +26,7 @@ export const myReservationsInfiniteQueryOptions = (
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) =>
       lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined,
+    throwOnError: false,
   })
 
 export const useMyReservationsInfiniteQuery = ({
@@ -51,5 +52,6 @@ export const useMyReservationsInfiniteQuery = ({
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) =>
       lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined,
+    throwOnError: false,
   })
 }
