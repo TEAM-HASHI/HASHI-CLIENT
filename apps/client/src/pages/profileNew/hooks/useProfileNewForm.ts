@@ -42,6 +42,10 @@ export const useProfileNewForm = () => {
     () => new Set(),
   )
   const [hasSubmitAttempted, setHasSubmitAttempted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [serverFieldErrors, setServerFieldErrors] = useState<
+    Partial<Record<'nickname' | 'birthDate' | 'phoneNumber' | 'email', string>>
+  >({})
   const [formError, setFormError] = useState('')
 
   const normalizedBirthDate = normalizeDigits(birthDate).slice(0, 8)
@@ -56,7 +60,11 @@ export const useProfileNewForm = () => {
   const isPhoneNumberValid = checkIsValidPhoneNumber(normalizedPhoneNumber)
   const isEmailValid = checkIsValidEmail(trimmedEmail)
   const canSubmit =
-    isNicknameValid && isBirthDateValid && isPhoneNumberValid && isEmailValid
+    isNicknameValid &&
+    isBirthDateValid &&
+    isPhoneNumberValid &&
+    isEmailValid &&
+    !isSubmitting
 
   const checkShouldShowError = (fieldName: string) => {
     return hasSubmitAttempted || touchedFields.has(fieldName)
@@ -64,25 +72,30 @@ export const useProfileNewForm = () => {
 
   const fieldErrors = useMemo(
     () => ({
-      nickname: isNicknameDuplicated ? '중복된 네이밍입니다.' : '',
+      nickname: isNicknameDuplicated
+        ? '중복된 네이밍입니다.'
+        : (serverFieldErrors.nickname ?? ''),
       birthDate:
-        normalizedBirthDate.length > 0 &&
+        serverFieldErrors.birthDate ??
+        (normalizedBirthDate.length > 0 &&
         !isBirthDateValid &&
         checkShouldShowError('birthDate')
           ? '생년월일을 정확히 입력해주세요.'
-          : '',
+          : ''),
       phoneNumber:
-        normalizedPhoneNumber.length > 0 &&
+        serverFieldErrors.phoneNumber ??
+        (normalizedPhoneNumber.length > 0 &&
         !isPhoneNumberValid &&
         checkShouldShowError('phoneNumber')
           ? '연락처를 정확히 입력해주세요.'
-          : '',
+          : ''),
       email:
-        trimmedEmail.length > 0 &&
+        serverFieldErrors.email ??
+        (trimmedEmail.length > 0 &&
         !isEmailValid &&
         checkShouldShowError('email')
           ? '이메일을 정확히 입력해주세요.'
-          : '',
+          : ''),
     }),
     [
       hasSubmitAttempted,
@@ -92,6 +105,10 @@ export const useProfileNewForm = () => {
       isPhoneNumberValid,
       normalizedBirthDate.length,
       normalizedPhoneNumber.length,
+      serverFieldErrors.birthDate,
+      serverFieldErrors.email,
+      serverFieldErrors.nickname,
+      serverFieldErrors.phoneNumber,
       touchedFields,
       trimmedEmail.length,
     ],
@@ -102,6 +119,20 @@ export const useProfileNewForm = () => {
       const nextTouchedFields = new Set(currentTouchedFields)
       nextTouchedFields.add(fieldName)
       return nextTouchedFields
+    })
+  }
+
+  const clearServerFieldError = (
+    fieldName: 'nickname' | 'birthDate' | 'phoneNumber' | 'email',
+  ) => {
+    setServerFieldErrors((currentServerFieldErrors) => {
+      if (!currentServerFieldErrors[fieldName]) {
+        return currentServerFieldErrors
+      }
+
+      const nextServerFieldErrors = { ...currentServerFieldErrors }
+      delete nextServerFieldErrors[fieldName]
+      return nextServerFieldErrors
     })
   }
 
@@ -156,6 +187,7 @@ export const useProfileNewForm = () => {
 
   const createProfileDraft = (): ProfileDraft | undefined => {
     setHasSubmitAttempted(true)
+    setServerFieldErrors({})
     setFormError('')
 
     if (!canSubmit) {
@@ -173,6 +205,16 @@ export const useProfileNewForm = () => {
     }
   }
 
+  const handleFieldServerError = (
+    fieldName: 'nickname' | 'birthDate' | 'phoneNumber' | 'email',
+    message: string,
+  ) => {
+    setServerFieldErrors((currentServerFieldErrors) => ({
+      ...currentServerFieldErrors,
+      [fieldName]: message,
+    }))
+  }
+
   return {
     profileImage: {
       previewUrl: profileImagePreviewUrl,
@@ -183,13 +225,17 @@ export const useProfileNewForm = () => {
     fields: {
       nickname: {
         value: nickname,
-        onValueChange: setNickname,
+        onValueChange: (value: string) => {
+          clearServerFieldError('nickname')
+          setNickname(value)
+        },
         onBlur: () => markFieldTouched('nickname'),
         errorMessage: fieldErrors.nickname,
       },
       birthDate: {
         value: formatBirthDateInput(normalizedBirthDate),
         onValueChange: (value: string) => {
+          clearServerFieldError('birthDate')
           setBirthDate(normalizeDigits(value).slice(0, 8))
         },
         onBlur: () => markFieldTouched('birthDate'),
@@ -198,6 +244,7 @@ export const useProfileNewForm = () => {
       phoneNumber: {
         value: formatPhoneNumberInput(normalizedPhoneNumber),
         onValueChange: (value: string) => {
+          clearServerFieldError('phoneNumber')
           setPhoneNumber(normalizeDigits(value).slice(0, 11))
         },
         onBlur: () => markFieldTouched('phoneNumber'),
@@ -209,7 +256,10 @@ export const useProfileNewForm = () => {
       },
       email: {
         value: email,
-        onValueChange: setEmail,
+        onValueChange: (value: string) => {
+          clearServerFieldError('email')
+          setEmail(value)
+        },
         onBlur: () => markFieldTouched('email'),
         errorMessage: fieldErrors.email,
       },
@@ -217,8 +267,11 @@ export const useProfileNewForm = () => {
     formError,
     submit: {
       canSubmit,
-      isSubmitting: false,
+      isSubmitting,
       createProfileDraft,
+      setFieldError: handleFieldServerError,
+      setFormError,
+      setSubmitting: setIsSubmitting,
     },
   }
 }

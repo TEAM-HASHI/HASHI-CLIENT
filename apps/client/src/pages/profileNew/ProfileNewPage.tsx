@@ -7,7 +7,12 @@ import { ProfileNewBottomBar } from '@/pages/profileNew/components/ProfileNewBot
 import { useProfileNewPage } from '@/pages/profileNew/hooks/useProfileNewPage'
 
 export const ProfileNewPage = () => {
-  const { form, formId, handleBackClick, handleSubmit } = useProfileNewPage()
+  const { boundaryError, form, formId, handleBackClick, handleSubmit } =
+    useProfileNewPage()
+
+  if (boundaryError) {
+    throw boundaryError
+  }
 
   return (
     <div className="min-h-dvh bg-white pb-32">
