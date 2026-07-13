@@ -17,7 +17,7 @@ export const MagazineListItem = ({ magazine }: Props) => {
       </div>
       <img
         alt=""
-        className="h-[108px] w-[164px] rounded-[5px] object-cover"
+        className="aspect-[353/160] w-[164px] rounded-[5px] object-cover"
         src={magazine.imageUrl}
       />
     </>
@@ -27,7 +27,7 @@ export const MagazineListItem = ({ magazine }: Props) => {
     <li className="border-warm-gray-50 border-b last:border-b-0">
       {magazine.instagramUrl ? (
         <a
-          className="grid grid-cols-[1fr_164px] gap-4 py-3.5"
+          className="grid grid-cols-[1fr_164px] gap-[21px] pt-5 pb-2"
           href={magazine.instagramUrl}
           rel="noreferrer"
           target="_blank"
@@ -37,7 +37,7 @@ export const MagazineListItem = ({ magazine }: Props) => {
       ) : (
         <div
           aria-disabled="true"
-          className="grid grid-cols-[1fr_164px] gap-4 py-3.5 opacity-60"
+          className="grid grid-cols-[1fr_164px] gap-[21px] pt-5 pb-2 opacity-60"
         >
           {content}
         </div>

@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { useMagazineBannersQuery } from '@/features/magazine/hooks/useMagazineBannersQuery'
+import { normalizeInstagramUrl } from '@/features/magazine/utils/normalizeInstagramUrl'
 import { useAuthStatus } from '@/shared/hooks'
+import type { HomeBanner } from '@/pages/home/homeContent'
 
 import {
-  mockHomeBanners,
   mockHotSnsRestaurants,
   mockQuickLinks,
 } from '@/pages/home/mocks/homeContent.mock'
@@ -49,6 +51,27 @@ export const useHomePage = () => {
     getShouldOpenAuthGate(isAuthenticated),
   )
   const navigate = useNavigate()
+  const magazineBannersQuery = useMagazineBannersQuery()
+
+  const homeBanners = useMemo<HomeBanner[]>(() => {
+    return (magazineBannersQuery.data?.banners ?? []).flatMap((banner) => {
+      const { bannerImageUrl, magazineId, title } = banner
+      const instagramUrl = normalizeInstagramUrl(
+        banner.instagramRedirectUrl ?? '',
+      )
+
+      if (magazineId === undefined || !bannerImageUrl) {
+        return []
+      }
+
+      return {
+        id: String(magazineId),
+        imageUrl: bannerImageUrl,
+        imageAlt: title || '맛집 큐레이션 배너',
+        instagramUrl,
+      }
+    })
+  }, [magazineBannersQuery.data?.banners])
 
   useEffect(() => {
     if (!isAuthenticated && isAuthGateOpen) {
@@ -70,7 +93,12 @@ export const useHomePage = () => {
     },
     getRestaurantDetailPath,
     handleAnywhereReservationPress,
-    homeBanners: mockHomeBanners,
+    homeBanners,
+    homeBannersState: {
+      isError: magazineBannersQuery.isError,
+      isLoading: magazineBannersQuery.isLoading,
+      onRetry: magazineBannersQuery.refetch,
+    },
     hotSnsRestaurants: mockHotSnsRestaurants,
     quickLinks: mockQuickLinks,
     searchPath: ROUTES.search,

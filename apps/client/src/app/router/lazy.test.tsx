@@ -14,6 +14,10 @@ vi.mock('@/shared/hooks/useAuthStatus', () => ({
   }),
 }))
 
+vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
+  getMagazineBanners: vi.fn(async () => ({ banners: [] })),
+}))
+
 vi.mock('@/pages/mypage', () => ({
   default: () => <main>마이페이지 화면</main>,
 }))
