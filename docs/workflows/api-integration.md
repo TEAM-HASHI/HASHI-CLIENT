@@ -49,7 +49,7 @@ OPENAPI_SCHEMA_URL=http://localhost:8080/v3/api-docs pnpm gen:api-types
    - endpoint, method, params, request body, response shape를 추출합니다.
    - query, infinite query, mutation을 분류합니다.
    - UI loading, error, empty, disabled, success 상태를 매핑합니다.
-   - query key, enabled 조건, invalidation 후보를 정리합니다.
+   - query key, enabled 조건, mutation cache synchronization 후보를 정리합니다.
    - 누락 정보가 있으면 구현 전에 질문합니다.
 
 2. `api-integrator`
@@ -58,11 +58,12 @@ OPENAPI_SCHEMA_URL=http://localhost:8080/v3/api-docs pnpm gen:api-types
    - endpoint 함수와 request/response type을 작성합니다.
    - query key factory를 작성합니다.
    - `queryOptions`, `mutationOptions`, query/mutation hook을 작성합니다.
+   - mutation 응답과 이동 흐름에 따라 `setQueryData`, invalidation, 또는 혼합 방식을 선택합니다.
    - 기존 퍼블리싱 UI 상태에 server state와 API error state를 연결합니다.
    - page spec의 `Data Dependencies`와 `Verification`을 갱신합니다.
 
 3. `verify-api-integration`
-   - endpoint boundary, query key, query mode, invalidation, UI state, docs sync를 확인합니다.
+   - endpoint boundary, query key, query mode, cache synchronization, UI state, docs sync를 확인합니다.
    - 필요한 client lint, typecheck, test, build를 실행합니다.
 
 ## Placement
@@ -118,7 +119,10 @@ Admin console API boundary는 `apps/admin/src/shared/api`에서 같은 원칙을
 - Swagger/API spec과 TypeScript 타입이 설명 가능한 수준으로 일치합니다.
 - query key factory가 있고 inline query key가 없습니다.
 - response를 바꾸는 params가 query key에 포함됩니다.
-- mutation 성공 후 stale한 list/detail/infinite query가 invalidated 됩니다.
+- 완전한 최신 객체를 같은 상세 화면에 즉시 반영할 때는 `setQueryData`를 사용합니다.
+- 이동 후 조회, 일부 응답, 목록 순서·개수·집계 변경은 관련 query prefix를 invalidation합니다.
+- 상세 cache와 목록 cache가 함께 바뀌면 `setQueryData`와 invalidation을 혼합합니다.
+- detail만 invalidation하고 하위 key는 유지해야 하면 `exact: true`를 사용합니다.
 - loading, error, empty, disabled, success 상태가 UI에 연결됩니다.
 - API error는 `ApiError`/`HttpStatusError`의 `status`, 서버 `code`, `fieldErrors` 중 필요한 기준으로 분류됩니다.
 - validation, auth, not found, conflict, upload error는 자동 retry나 전역 boundary로 올리지 않고 page/form/local UI에서 처리합니다.

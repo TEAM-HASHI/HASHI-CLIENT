@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -9,6 +9,7 @@ import type {
   MagazineHeroBanner,
   RecommendedMagazine,
 } from '@/pages/magazines/types'
+import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const MAGAZINE_LIST_PAGE_SIZE = 10
 
@@ -28,13 +29,17 @@ const formatMagazinePublishedDate = (createdAt: string) => {
 
 export const useMagazinesPage = () => {
   const navigate = useNavigate()
-  const loadMoreRef = useRef<HTMLLIElement | null>(null)
   const magazineBannersQuery = useMagazineBannersQuery()
   const magazinesQuery = useMagazinesInfiniteQuery({
     size: MAGAZINE_LIST_PAGE_SIZE,
   })
   const canFetchNextPage =
     magazinesQuery.hasNextPage && !magazinesQuery.isFetchingNextPage
+  const loadMoreRef = useInfiniteScrollTrigger<HTMLLIElement>({
+    enabled: Boolean(magazinesQuery.hasNextPage),
+    isLoading: magazinesQuery.isFetchingNextPage,
+    onIntersect: magazinesQuery.fetchNextPage,
+  })
 
   const heroBanners = useMemo<MagazineHeroBanner[]>(() => {
     return (magazineBannersQuery.data?.banners ?? []).flatMap((banner) => {
@@ -58,12 +63,12 @@ export const useMagazinesPage = () => {
   const normalizedRecommendedMagazines = useMemo<RecommendedMagazine[]>(() => {
     return (magazinesQuery.data?.pages ?? []).flatMap((page) =>
       (page.magazines ?? []).flatMap((magazine) => {
-        const { bannerImageUrl, createdAt, magazineId, title } = magazine
+        const { createdAt, magazineId, thumbnailImageUrl, title } = magazine
 
         if (
           magazineId === undefined ||
           !title ||
-          !bannerImageUrl ||
+          !thumbnailImageUrl ||
           !createdAt
         ) {
           return []
@@ -78,7 +83,7 @@ export const useMagazinesPage = () => {
         return {
           id: String(magazineId),
           title,
-          imageUrl: bannerImageUrl,
+          imageUrl: thumbnailImageUrl,
           publishedDate,
           instagramUrl: normalizeInstagramUrl(
             magazine.instagramRedirectUrl ?? '',
@@ -99,37 +104,6 @@ export const useMagazinesPage = () => {
     magazinesQuery.fetchNextPage,
     normalizedRecommendedMagazines.length,
   ])
-
-  useEffect(() => {
-    if (!canFetchNextPage || typeof IntersectionObserver === 'undefined') {
-      return
-    }
-
-    const target = loadMoreRef.current
-
-    if (!target) {
-      return
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          void magazinesQuery.fetchNextPage()
-        }
-      },
-      {
-        root: null,
-        rootMargin: '160px 0px',
-        threshold: 0,
-      },
-    )
-
-    observer.observe(target)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [canFetchNextPage, magazinesQuery.fetchNextPage])
 
   const hasHeroBanners = heroBanners.length > 0
   const hasRecommendedMagazines = normalizedRecommendedMagazines.length > 0

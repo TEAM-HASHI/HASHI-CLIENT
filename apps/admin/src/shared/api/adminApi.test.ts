@@ -3,7 +3,10 @@ import { magazineApi } from '@/shared/api/magazineApi'
 import { request } from '@/shared/api/request'
 import { reservationApi } from '@/shared/api/reservationApi'
 import { restaurantApi } from '@/shared/api/restaurantApi'
-import type { CreateRestaurantBody } from '@/shared/api/restaurantApi'
+import type {
+  AdminRestaurantData,
+  CreateRestaurantBody,
+} from '@/shared/api/restaurantApi'
 
 vi.mock('@/shared/api/request', () => ({
   request: vi.fn(),
@@ -74,8 +77,16 @@ describe('admin API contract', () => {
         { dayOfWeek: 'SUNDAY', closed: true },
       ],
     } satisfies CreateRestaurantBody
+    const response = {
+      restaurantId: 2,
+      name: body.name,
+      deleted: false,
+    } satisfies AdminRestaurantData
+    requestMock.mockResolvedValue(response)
 
-    await restaurantApi.createRestaurant(body)
+    await expect(restaurantApi.createRestaurant(body)).resolves.toEqual(
+      response,
+    )
 
     expect(requestMock).toHaveBeenCalledWith('/api/v1/admin/restaurants', {
       json: body,
@@ -85,8 +96,16 @@ describe('admin API contract', () => {
 
   it('updates a restaurant by numeric ID', async () => {
     const body = { name: 'Updated Hashi Sushi' }
+    const response = {
+      restaurantId: 2,
+      name: body.name,
+      deleted: false,
+    } satisfies AdminRestaurantData
+    requestMock.mockResolvedValue(response)
 
-    await restaurantApi.updateRestaurant(2, body)
+    await expect(restaurantApi.updateRestaurant(2, body)).resolves.toEqual(
+      response,
+    )
 
     expect(requestMock).toHaveBeenCalledWith('/api/v1/admin/restaurants/2', {
       json: body,
@@ -155,6 +174,7 @@ describe('admin API contract', () => {
     const body = {
       title: 'Tokyo Night',
       bannerKey: 'magazines/tokyo.webp',
+      thumbnailKey: 'magazines/tokyo-thumbnail.webp',
       instagramRedirectUrl: 'https://instagram.com/p/hashi',
     }
 

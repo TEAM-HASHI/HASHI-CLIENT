@@ -7,6 +7,7 @@ interface ReservationConfirmDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
+  isConfirming: boolean
   guestName: string
   guestText: string
   restaurantAddress: string
@@ -48,14 +49,23 @@ export const ReservationConfirmDialog = ({
   open,
   onOpenChange,
   onConfirm,
+  isConfirming,
   guestName,
   guestText,
   restaurantAddress,
   visitDateTime,
   finalPaymentAmount,
 }: ReservationConfirmDialogProps) => {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && isConfirming) {
+      return
+    }
+
+    onOpenChange(nextOpen)
+  }
+
   return (
-    <Dialog.Root onOpenChange={onOpenChange} open={open} type="alertdialog">
+    <Dialog.Root onOpenChange={handleOpenChange} open={open} type="alertdialog">
       <Dialog.Content className="w-[319px] p-0">
         <Dialog.Header className="bg-cool-gray-50 w-full gap-2 px-[18px] pt-[25px] pb-[21px]">
           <Dialog.Icon className="size-[27px] rounded-full bg-black text-white">
@@ -103,11 +113,13 @@ export const ReservationConfirmDialog = ({
         <Dialog.Footer className="mt-[22px] gap-3 px-4 pb-[17px]">
           <Dialog.Close
             className={`${actionButtonClassName} bg-secondary-200 text-black`}
+            isDisabled={isConfirming}
           >
             취소
           </Dialog.Close>
           <Button
             className="typo-sub-header-2 h-[46px]"
+            disabled={isConfirming}
             onClick={onConfirm}
             size="lg"
             width="full"

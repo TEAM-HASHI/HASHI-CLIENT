@@ -10,25 +10,44 @@ import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
 import { cn } from '@/shared/utils'
 
 export const SearchPage = () => {
-  const searchPage = useSearchPage()
-  const isSearchIdle = searchPage.status.isSearchIdle
+  const {
+    filterLabels,
+    foodCategorySheet,
+    keyword,
+    loadMoreRef,
+    recentSearchKeywords,
+    recommendedSearchKeywords,
+    restaurants,
+    searchInputRef,
+    searchRestaurantsQuery,
+    sortSheet,
+    status,
+    onBackClick,
+    onFoodCategoryFilterClick,
+    onKeywordChange,
+    onKeywordSelect,
+    onSearchRetry,
+    onSearchSubmit,
+    onSortFilterClick,
+  } = useSearchPage()
+  const isSearchIdle = status.isSearchIdle
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <div className="app-mobile-fixed-top z-fixed bg-white">
         <SearchHeader
-          inputRef={searchPage.searchInputRef}
-          keyword={searchPage.keyword}
-          onBackClick={searchPage.onBackClick}
-          onKeywordChange={searchPage.onKeywordChange}
-          onSearchSubmit={searchPage.onSearchSubmit}
+          inputRef={searchInputRef}
+          keyword={keyword}
+          onBackClick={onBackClick}
+          onKeywordChange={onKeywordChange}
+          onSearchSubmit={onSearchSubmit}
         />
         {!isSearchIdle && (
           <SearchFilterBar
-            categoryLabel={searchPage.filterLabels.foodCategory}
-            onCategoryClick={searchPage.onFoodCategoryFilterClick}
-            onSortClick={searchPage.onSortFilterClick}
-            sortLabel={searchPage.filterLabels.sort}
+            categoryLabel={filterLabels.foodCategory}
+            onCategoryClick={onFoodCategoryFilterClick}
+            onSortClick={onSortFilterClick}
+            sortLabel={filterLabels.sort}
           />
         )}
       </div>
@@ -40,26 +59,32 @@ export const SearchPage = () => {
       >
         {isSearchIdle ? (
           <SearchIdlePanel
-            recentSearchKeywords={searchPage.recentSearchKeywords}
-            recommendedSearchKeywords={searchPage.recommendedSearchKeywords}
-            onKeywordSelect={searchPage.onKeywordSelect}
+            recentSearchKeywords={recentSearchKeywords}
+            recommendedSearchKeywords={recommendedSearchKeywords}
+            onKeywordSelect={onKeywordSelect}
           />
         ) : (
           <>
-            {searchPage.searchRestaurantsQuery.isLoading ? (
+            {searchRestaurantsQuery.isLoading ? (
               <SearchResultSkeleton />
-            ) : searchPage.searchRestaurantsQuery.isError ? (
-              <SearchErrorState onRetry={searchPage.onSearchRetry} />
-            ) : searchPage.restaurants.length > 0 ? (
-              <RestaurantResultList restaurants={searchPage.restaurants} />
+            ) : searchRestaurantsQuery.isError ? (
+              <SearchErrorState onRetry={onSearchRetry} />
+            ) : restaurants.length > 0 ? (
+              <>
+                <RestaurantResultList restaurants={restaurants} />
+                <div ref={loadMoreRef} aria-hidden="true" />
+                {searchRestaurantsQuery.isFetchingNextPage && (
+                  <SearchResultSkeleton />
+                )}
+              </>
             ) : (
               <SearchEmptyState />
             )}
           </>
         )}
       </div>
-      <FilterBottomSheet {...searchPage.sortSheet} />
-      <FilterBottomSheet {...searchPage.foodCategorySheet} />
+      <FilterBottomSheet {...sortSheet} />
+      <FilterBottomSheet {...foodCategorySheet} />
     </div>
   )
 }

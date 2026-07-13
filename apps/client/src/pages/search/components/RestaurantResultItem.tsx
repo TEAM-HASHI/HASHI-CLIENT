@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import type { SearchRestaurant } from '@/pages/search/types'
-import { DefaultImage } from '@/shared/components/defaultImage'
+import { ImageWithDefaultFallback } from '@/shared/components/defaultImage'
 
 interface RestaurantResultItemProps {
   restaurant: SearchRestaurant
@@ -25,19 +25,11 @@ export const RestaurantResultItem = ({
         className="flex gap-3"
         to={createRestaurantDetailPath(restaurant.id)}
       >
-        {restaurant.imageUrl ? (
-          <img
-            alt=""
-            className="h-[92px] w-[92px] shrink-0 rounded-[5px] object-cover"
-            src={restaurant.imageUrl}
-          />
-        ) : (
-          <DefaultImage
-            aria-hidden="true"
-            className="h-[92px] w-[92px] shrink-0 rounded-[5px]"
-            logoSize="sm"
-          />
-        )}
+        <ImageWithDefaultFallback
+          alt=""
+          className="h-[92px] w-[92px] shrink-0 rounded-[5px] object-cover"
+          src={restaurant.imageUrl}
+        />
         <div className="min-w-0 flex-1 self-center">
           <h3 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2">
             {restaurant.name}

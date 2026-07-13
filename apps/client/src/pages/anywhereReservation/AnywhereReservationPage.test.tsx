@@ -39,6 +39,18 @@ describe('AnywhereReservationPage', () => {
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
   })
 
+  it('renders the shared 1000-character request note textarea', () => {
+    render(<AnywhereReservationPage />)
+
+    const requestNoteField = screen.getByRole('textbox', {
+      name: '요청사항 (선택)',
+    })
+
+    expect(requestNoteField.tagName).toBe('TEXTAREA')
+    expect(requestNoteField).toHaveAttribute('maxlength', '1000')
+    expect(screen.getByText('/1000')).toBeInTheDocument()
+  })
+
   it('keeps time selection disabled until a valid date is selected', () => {
     render(<AnywhereReservationPage />)
 
@@ -130,6 +142,9 @@ describe('AnywhereReservationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '어른 인원 늘리기' }))
     fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
     fireEvent.click(screen.getByRole('button', { name: '11:30' }))
+    fireEvent.change(screen.getByRole('textbox', { name: '요청사항 (선택)' }), {
+      target: { value: '조용한 자리 부탁드립니다' },
+    })
 
     const submitButton = screen.getByRole('button', { name: '다음' })
 
@@ -152,7 +167,7 @@ describe('AnywhereReservationPage', () => {
         },
         date: '2026-06-02',
         time: '11:30',
-        requestNote: '',
+        requestNote: '조용한 자리 부탁드립니다',
       },
     })
   })

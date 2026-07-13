@@ -26,6 +26,8 @@ Jira: HASHI-86
   - 식당 주소
   - 예약자명
   - 요청사항(선택)
+- 요청사항은 HDS 박스형 textarea로 표시하고 최대 1000자까지만 허용한다.
+- 요청사항 아래에 현재 글자 수를 `0/1000` 형식으로 표시한다.
 - 인원은 어른/청소년/어린이 카운터로 입력한다.
 - 날짜는 Calendar로 선택한다.
 - 오늘 및 오늘 이전 날짜는 선택할 수 없다.
@@ -100,11 +102,13 @@ interface AnywhereReservationDraft {
   - `Header`
   - `IconButton`
   - `Calendar`
+  - `Textarea` (`ReservationRequestNoteField` 내부)
 - HDS icon:
   - `BackIcon`
 - feature component:
   - `GuestCounter`
   - `ReservationUnderlineTextField`
+  - `ReservationRequestNoteField`
   - `ReservationTimeSelector`
   - `ReservationBottomBar`
 - page-local hook:
@@ -112,6 +116,8 @@ interface AnywhereReservationDraft {
 
 ## Verification
 
+- 요청사항을 1000자까지만 입력할 수 있고 글자 수 counter가 표시된다.
+- 입력한 요청사항이 어디든 예약 draft에 포함된다.
 - 초기 CTA는 disabled 상태다.
 - 필수 입력값을 모두 채우면 CTA가 enabled 상태가 된다.
 - 오늘 및 오늘 이전 날짜는 선택할 수 없다.

@@ -1,6 +1,6 @@
 ---
 name: api-integrator
-description: Use when implementing HASHI client API integration from Swagger, API specs, or an API Integration Map, including ky endpoint functions, TanStack Query hooks, query keys, mutations, invalidation, loading, error, empty, and infinite list behavior.
+description: Use when implementing HASHI client API integration from Swagger, API specs, or an API Integration Map, including ky endpoint functions, TanStack Query hooks, query keys, mutations, cache synchronization, loading, error, empty, and infinite list behavior.
 ---
 
 # API Integrator
@@ -29,7 +29,7 @@ Use this after `api-spec-intake` when API docs are available or when the API Int
 5. Add query key factories before writing query hooks.
 6. Add `queryOptions`, `useSuspenseQuery`, `useQuery`, `useInfiniteQuery`, or mutation hooks based on `references/query-mode-decision.md`.
 7. Wire existing UI states without changing unrelated layout or copy.
-8. Add mutation invalidation with query key factories.
+8. Add mutation cache synchronization with query key factories. Choose `setQueryData`, invalidation, or both from `references/mutation-invalidation.md`.
 9. Update the target `*.spec.md` `Data Dependencies` and `Verification` sections when behavior changes.
 10. Add or update tests without depending on real API base URLs or local env values.
 11. Run focused client verification.
@@ -40,7 +40,7 @@ Use this after `api-spec-intake` when API docs are available or when the API Int
 - Query hook choice: `references/query-mode-decision.md`
 - Query keys: `references/query-key-factory.md`
 - Query options: `references/query-options.md`
-- Mutations and invalidation: `references/mutation-invalidation.md`
+- Mutation cache synchronization: `references/mutation-invalidation.md`
 - Infinite queries: `references/infinite-query.md`
 - UI states: `references/ui-state-mapping.md`
 

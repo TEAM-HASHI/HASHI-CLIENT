@@ -16,8 +16,9 @@ interface ReservationRequestDraftBase {
 export type RestaurantReservationRequestDraft = ReservationRequestDraftBase & {
   source?: 'restaurant'
   restaurantId: string
-  restaurantAddress?: string
-  restaurantImageUrl?: string | null
+  restaurantAddress: string
+  restaurantImageUrl: string | null
+  reservationFee: number
 }
 
 export type AnywhereReservationRequestDraft = ReservationRequestDraftBase & {
@@ -30,21 +31,6 @@ export type AnywhereReservationRequestDraft = ReservationRequestDraftBase & {
 export type ReservationRequestDraft =
   | RestaurantReservationRequestDraft
   | AnywhereReservationRequestDraft
-
-const FALLBACK_RESERVATION_DRAFT: RestaurantReservationRequestDraft = {
-  source: 'restaurant',
-  restaurantId: 'default',
-  restaurantName: '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
-  guestName: '김하시',
-  guests: {
-    adult: 2,
-    teen: 0,
-    child: 0,
-  },
-  date: '2026-06-01',
-  time: '11:00',
-  requestNote: '',
-}
 
 const checkIsRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
@@ -78,24 +64,28 @@ const checkHasReservationRequestBaseFields = (
   )
 }
 
-const checkIsOptionalString = (value: unknown) => {
-  return value === undefined || typeof value === 'string'
-}
-
-const checkIsOptionalNullableString = (value: unknown) => {
-  return value === undefined || value === null || typeof value === 'string'
+const checkIsNullableString = (value: unknown) => {
+  return value === null || typeof value === 'string'
 }
 
 const checkIsRestaurantReservationRequestDraft = (
   value: unknown,
 ): value is RestaurantReservationRequestDraft => {
+  const restaurantId = checkIsRecord(value)
+    ? Number(value.restaurantId)
+    : Number.NaN
+
   return (
     checkIsRecord(value) &&
     (value.source === undefined || value.source === 'restaurant') &&
     typeof value.restaurantId === 'string' &&
+    Number.isSafeInteger(restaurantId) &&
+    restaurantId > 0 &&
     checkHasReservationRequestBaseFields(value) &&
-    checkIsOptionalString(value.restaurantAddress) &&
-    checkIsOptionalNullableString(value.restaurantImageUrl)
+    typeof value.restaurantAddress === 'string' &&
+    checkIsNullableString(value.restaurantImageUrl) &&
+    checkIsNumber(value.reservationFee) &&
+    value.reservationFee >= 0
   )
 }
 
@@ -128,5 +118,5 @@ export const useReservationRequestDraft = () => {
     return location.state
   }
 
-  return FALLBACK_RESERVATION_DRAFT
+  return null
 }

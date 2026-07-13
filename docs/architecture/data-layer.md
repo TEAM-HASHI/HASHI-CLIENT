@@ -55,6 +55,7 @@ apps/admin/src/shared/api/
 ```
 
 - base URL, timeout, retry, header, 인증 토큰 주입 지점은 한 곳에서 조립합니다.
+- client 액세스 토큰은 `localStorage`의 `accessToken`을 우선 사용하고, 로컬 개발에서만 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있습니다.
 - endpoint 함수는 `request` 같은 low-level helper를 사용합니다.
 - endpoint 함수는 React, TanStack Query, route, UI state를 알면 안 됩니다.
 - 인증, refresh, retry 정책은 실제 요구사항 없이 미리 복잡하게 만들지 않습니다.
@@ -103,8 +104,8 @@ OPENAPI_SCHEMA_URL=http://localhost:8080/v3/api-docs pnpm gen:api-types
 ```
 
 1. `api-spec-intake`로 endpoint와 UI 상태를 API Integration Map으로 정리합니다.
-2. `api-integrator`로 endpoint, type, query key, query/mutation hook, invalidation을 구현합니다.
-3. `verify-api-integration`으로 query key, query mode, invalidation, UI state, docs sync를 점검합니다.
+2. `api-integrator`로 endpoint, type, query key, query/mutation hook, cache synchronization을 구현합니다.
+3. `verify-api-integration`으로 query key, query mode, cache synchronization, UI state, docs sync를 점검합니다.
 
 상세 절차는 `docs/workflows/api-integration.md`와 `.agents/recipes/api-integration.md`를 따릅니다.
 
@@ -183,8 +184,13 @@ export const restaurantQueryKeys = {
 ## Mutation Rules
 
 - mutation endpoint 함수는 서버 write만 수행합니다.
-- mutation hook은 `useQueryClient`로 성공 후 invalidation을 명시합니다.
-- invalidation은 query key factory로만 수행합니다.
+- mutation hook은 `useQueryClient`로 성공 후 cache synchronization을 명시합니다.
+- mutation이 완전한 최신 객체를 반환하고 같은 상세 화면에 즉시 반영해야 하면 `setQueryData`를 사용합니다.
+- 저장 후 다른 화면으로 이동하거나, 응답이 일부 필드만 반환하거나, 목록 순서·개수·집계처럼 서버 계산 결과가 바뀌면 `invalidateQueries`를 사용합니다.
+- 상세 즉시 반영과 목록 갱신이 모두 필요하면 상세 `setQueryData`와 목록 prefix invalidation을 함께 사용합니다.
+- route가 바뀌어도 cache는 유지됩니다. 이동 후 최신 조회는 remount 자체가 아니라 invalidation으로 query가 stale해졌기 때문에 발생합니다.
+- detail key가 하위 resource key의 prefix일 때 상세만 invalidation하려면 `exact: true`를 사용합니다.
+- cache 접근은 query key factory로만 수행하며, 일반적인 mutation 성공 처리에 `resetQueries`나 `removeQueries`를 사용하지 않습니다.
 - optimistic update는 API 스펙이나 제품 요구사항이 명시할 때만 추가합니다.
 - field-level error는 문서화된 error code나 response field를 기준으로 매핑합니다.
 

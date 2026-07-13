@@ -28,6 +28,7 @@ Ask before coding when a missing value changes behavior or file structure.
 ## Mutation
 
 - Success response does not state whether list/detail data changes.
+- Success response does not state whether the returned entity is complete and current enough for `setQueryData`.
 - Error codes are needed for field-level messages but not documented.
 - Optimistic update is requested without a rollback rule.
 
