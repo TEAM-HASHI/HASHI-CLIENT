@@ -44,9 +44,7 @@ export const uploadProfileImage = async (file: File): Promise<string> => {
   }
 
   await uploadFileToPresignedUrl(file, {
-    ...presignedUrl,
     uploadUrl: presignedUrl.uploadUrl,
-    fileKey: presignedUrl.fileKey,
     uploadMethod: presignedUrl.uploadMethod ?? 'PUT',
   })
 

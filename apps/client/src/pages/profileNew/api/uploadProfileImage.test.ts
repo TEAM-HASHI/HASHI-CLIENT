@@ -55,9 +55,6 @@ describe('uploadProfileImage', () => {
     )
     expect(mockedUploadFileToPresignedUrl).toHaveBeenCalledWith(file, {
       uploadUrl: 'https://upload.example/profile.webp',
-      fileKey: 'users/15/profile/profile.webp',
-      fileUrl: 'https://cdn.example/profile.webp',
-      expiresInSeconds: 300,
       uploadMethod: 'PUT',
     })
   })
