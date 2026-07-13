@@ -1,7 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { myPointBalanceQueryOptions } from '@/features/point/queries/pointQueryOptions'
+
+vi.mock('@/features/point/api/getMyPointBalance', () => ({
+  getMyPointBalance: vi.fn(),
+}))
 
 describe('myPointBalanceQueryOptions', () => {
   it('creates point keys from the domain factory', () => {

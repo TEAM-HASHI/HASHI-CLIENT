@@ -4,7 +4,7 @@ import { useSuspenseQueries } from '@tanstack/react-query'
 import {
   restaurantMainQueryOptions,
   restaurantStoreInformationQueryOptions,
-} from '@/features/restaurantDetail'
+} from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
 
 const RESERVATION_INTERVAL_MINUTES = 30
 

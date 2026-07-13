@@ -11,7 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
-import { pointQueryKeys } from '@/features/point'
+import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { createReservation } from '@/pages/reservationRequest/api/createReservation'
 import { ReservationRequestPage } from '@/pages/reservationRequest/ReservationRequestPage'
 
@@ -35,6 +35,10 @@ vi.mock('react-router-dom', async () => {
 
 vi.mock('@/pages/reservationRequest/api/createReservation', () => ({
   createReservation: vi.fn(),
+}))
+
+vi.mock('@/features/point/api/getMyPointBalance', () => ({
+  getMyPointBalance: vi.fn().mockResolvedValue({ availablePoint: 7_000 }),
 }))
 
 const mockedCreateReservation = vi.mocked(createReservation)
@@ -239,7 +243,7 @@ describe('ReservationRequestPage', () => {
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
-  it('disables the confirm action while reservation creation is pending', async () => {
+  it('prevents duplicate requests from immediate repeated confirmation', async () => {
     mockedCreateReservation.mockImplementation(
       () => new Promise(() => undefined),
     )
@@ -251,12 +255,35 @@ describe('ReservationRequestPage', () => {
       screen.getByRole('alertdialog', { name: '예약을 진행할까요?' }),
     ).getByRole('button', { name: '예약' })
     fireEvent.click(confirmButton)
+    fireEvent.click(confirmButton)
+
+    await waitFor(() => {
+      expect(mockedCreateReservation).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('keeps the confirm dialog locked while reservation creation is pending', async () => {
+    mockedCreateReservation.mockImplementation(
+      () => new Promise(() => undefined),
+    )
+    renderPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
+
+    const dialog = screen.getByRole('alertdialog', {
+      name: '예약을 진행할까요?',
+    })
+    const confirmButton = within(dialog).getByRole('button', { name: '예약' })
+    const cancelButton = within(dialog).getByRole('button', { name: '취소' })
+    fireEvent.click(confirmButton)
 
     await waitFor(() => {
       expect(confirmButton).toBeDisabled()
+      expect(cancelButton).toBeDisabled()
     })
-    fireEvent.click(confirmButton)
-    expect(mockedCreateReservation).toHaveBeenCalledTimes(1)
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(dialog).toBeInTheDocument()
   })
 
   it('moves back to the previous history entry from the header action', () => {

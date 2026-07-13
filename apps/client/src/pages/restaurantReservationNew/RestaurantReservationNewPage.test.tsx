@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
-import { restaurantDetailQueryKeys } from '@/features/restaurantDetail'
+import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
 
 import { RestaurantReservationNewPage } from '@/pages/restaurantReservationNew/RestaurantReservationNewPage'
 
@@ -22,6 +22,17 @@ vi.mock('react-router-dom', async () => {
     useParams: () => ({ restaurantId: '10' }),
   }
 })
+
+vi.mock('@/features/restaurantDetail/api/getRestaurantMain', () => ({
+  getRestaurantMain: vi.fn(),
+}))
+
+vi.mock(
+  '@/features/restaurantDetail/api/getRestaurantStoreInformation',
+  () => ({
+    getRestaurantStoreInformation: vi.fn(),
+  }),
+)
 
 const restaurantMain = {
   restaurantId: 10,

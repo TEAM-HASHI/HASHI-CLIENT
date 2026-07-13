@@ -1,10 +1,21 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
 import {
   restaurantMainQueryOptions,
   restaurantStoreInformationQueryOptions,
 } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
+
+vi.mock('@/features/restaurantDetail/api/getRestaurantMain', () => ({
+  getRestaurantMain: vi.fn(),
+}))
+
+vi.mock(
+  '@/features/restaurantDetail/api/getRestaurantStoreInformation',
+  () => ({
+    getRestaurantStoreInformation: vi.fn(),
+  }),
+)
 
 describe('restaurantDetailQueryOptions', () => {
   it('creates hierarchical restaurant detail prefixes', () => {

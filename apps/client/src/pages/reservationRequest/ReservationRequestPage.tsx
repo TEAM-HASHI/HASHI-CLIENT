@@ -1,11 +1,11 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { generatePath, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { myPointBalanceQueryOptions } from '@/features/point'
+import { myPointBalanceQueryOptions } from '@/features/point/queries/pointQueryOptions'
 import { ReservationConfirmDialog } from '@/pages/reservationRequest/components/ReservationConfirmDialog'
 import { ReservationNoticeSection } from '@/pages/reservationRequest/components/ReservationNoticeSection'
 import { ReservationPointSection } from '@/pages/reservationRequest/components/ReservationPointSection'
@@ -28,6 +28,7 @@ const ReservationRequestContent = ({
 }: ReservationRequestContentProps) => {
   const navigate = useNavigate()
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const isRequestLockedRef = useRef(false)
   const { data: pointBalance } = useSuspenseQuery(myPointBalanceQueryOptions)
   const createReservationMutation = useCreateReservationMutation()
   const paymentAmount =
@@ -57,10 +58,11 @@ const ReservationRequestContent = ({
   }
 
   const handleConfirmClick = () => {
-    if (createReservationMutation.isPending) {
+    if (isRequestLockedRef.current || createReservationMutation.isPending) {
       return
     }
 
+    isRequestLockedRef.current = true
     createReservationMutation.mutate(
       {
         draft: reservationDraft,
@@ -74,6 +76,9 @@ const ReservationRequestContent = ({
               reservationId: String(reservationId),
             }),
           )
+        },
+        onSettled: () => {
+          isRequestLockedRef.current = false
         },
       },
     )

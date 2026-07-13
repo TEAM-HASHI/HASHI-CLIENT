@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { PropsWithChildren } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { pointQueryKeys } from '@/features/point'
+import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { createReservation } from '@/pages/reservationRequest/api/createReservation'
 import { useCreateReservationMutation } from '@/pages/reservationRequest/hooks/useCreateReservationMutation'
 
