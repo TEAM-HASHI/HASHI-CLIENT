@@ -1,13 +1,23 @@
 import '@testing-library/jest-dom/vitest'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
 import { appRoutes } from '@/app/router/routes'
+import { createQueryClient } from '@/shared/lib/queryClient'
 
 vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
   getMagazineBanners: vi.fn(async () => ({ banners: [] })),
+}))
+
+vi.mock('@/features/restaurantList/api/getRestaurants', () => ({
+  getRestaurants: vi.fn(async () => ({
+    hasNext: false,
+    nextCursor: undefined,
+    restaurants: [],
+  })),
 }))
 
 const collectRoutePaths = (routes: typeof appRoutes): string[] => {
@@ -21,8 +31,13 @@ const renderRoute = (initialEntry: string) => {
   const router = createMemoryRouter(appRoutes, {
     initialEntries: [initialEntry],
   })
+  const queryClient = createQueryClient()
 
-  return render(<RouterProvider router={router} />)
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  )
 }
 
 describe('appRoutes', () => {

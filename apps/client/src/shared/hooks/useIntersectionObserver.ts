@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 type UseIntersectionObserverParams = {
   enabled: boolean
-  onIntersect: () => void
+  onIntersect: () => void | Promise<unknown>
   root?: Element | Document | null
   rootMargin?: string
   threshold?: number | number[]
@@ -17,6 +17,7 @@ export const useIntersectionObserver = <TElement extends Element>({
 }: UseIntersectionObserverParams) => {
   const [target, setTarget] = useState<TElement | null>(null)
   const onIntersectRef = useRef(onIntersect)
+  const isIntersectingRef = useRef(false)
 
   useEffect(() => {
     onIntersectRef.current = onIntersect
@@ -33,7 +34,15 @@ export const useIntersectionObserver = <TElement extends Element>({
           return
         }
 
-        onIntersectRef.current()
+        if (isIntersectingRef.current) {
+          return
+        }
+
+        isIntersectingRef.current = true
+
+        Promise.resolve(onIntersectRef.current()).finally(() => {
+          isIntersectingRef.current = false
+        })
       },
       {
         root,

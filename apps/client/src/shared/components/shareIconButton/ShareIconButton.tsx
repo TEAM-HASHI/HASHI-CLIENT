@@ -1,5 +1,5 @@
 import { LinkIcon, ShareIcon } from '@hashi/hds-icons'
-import { IconButton, showToast } from '@hashi/hds-ui'
+import { IconButton, showToast, toastQueue } from '@hashi/hds-ui'
 
 import { copyCurrentUrlToClipboard, copyUrlToClipboard } from '@/shared/utils'
 
@@ -17,6 +17,7 @@ export const ShareIconButton = ({ shareUrl }: ShareIconButtonProps) => {
       return
     }
 
+    toastQueue.clear()
     showToast({
       icon: <LinkIcon className="size-6" />,
       children: '링크가 복사 되었어요.',

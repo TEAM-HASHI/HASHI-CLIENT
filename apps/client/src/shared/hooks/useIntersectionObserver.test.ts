@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { useIntersectionObserver } from '@/shared/hooks/useIntersectionObserver'
@@ -78,5 +78,41 @@ describe('useIntersectionObserver', () => {
     )
 
     expect(observe).not.toHaveBeenCalled()
+  })
+
+  it('does not call onIntersect again while the previous async callback is pending', async () => {
+    const { triggerIntersect } = mockIntersectionObserver()
+    const target = document.createElement('div')
+    let resolveIntersect: () => void = () => {}
+    const onIntersect = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveIntersect = resolve
+        }),
+    )
+
+    const { result } = renderHook(() =>
+      useIntersectionObserver<HTMLDivElement>({
+        enabled: true,
+        onIntersect,
+      }),
+    )
+
+    act(() => {
+      result.current(target)
+    })
+
+    act(() => {
+      triggerIntersect()
+      triggerIntersect()
+    })
+
+    expect(onIntersect).toHaveBeenCalledTimes(1)
+
+    resolveIntersect()
+
+    await waitFor(() => {
+      expect(onIntersect).toHaveBeenCalledTimes(1)
+    })
   })
 })
