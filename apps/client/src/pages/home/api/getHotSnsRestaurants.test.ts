@@ -19,6 +19,10 @@ describe('getHotSnsRestaurants', () => {
     mockGetRestaurants.mockResolvedValue({
       restaurants: [
         {
+          name: '식별자 없는 식당',
+          summary: '상세 링크를 만들 수 없는 식당',
+        },
+        {
           restaurantId: 3,
           name: '규카츠 하시',
           thumbnailUrl: 'https://example.com/gyukatsu.jpg',

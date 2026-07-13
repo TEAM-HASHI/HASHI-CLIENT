@@ -6,7 +6,7 @@ const { mockRequest } = vi.hoisted(() => ({
   mockRequest: vi.fn(),
 }))
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@/shared/api/request', () => ({
   request: mockRequest,
 }))
 
@@ -35,7 +35,7 @@ describe('getRestaurants', () => {
       getRestaurants({
         genre: 'all',
         keyword: '스시',
-        size: 20,
+        size: 10,
       }),
     ).resolves.toEqual({
       restaurants: [
@@ -57,7 +57,7 @@ describe('getRestaurants', () => {
       searchParams: {
         genre: 'all',
         keyword: '스시',
-        size: 20,
+        size: 10,
       },
     })
   })

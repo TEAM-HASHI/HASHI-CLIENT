@@ -4,7 +4,7 @@ import { type GetRestaurantsParams } from '@/features/restaurantList/api/getRest
 import { restaurantsInfiniteQueryOptions } from '@/features/restaurantList/queries/useRestaurantsInfiniteQuery'
 import type { SearchRestaurantsParams } from '@/pages/search/types'
 
-const SEARCH_RESTAURANTS_PAGE_SIZE = 20
+const SEARCH_RESTAURANTS_PAGE_SIZE = 10
 
 const apiGenreByCategory = {
   all: 'all',

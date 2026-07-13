@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import type { HotSnsRestaurant } from '@/pages/home/homeContent'
-import { DefaultImage } from '@/shared/components/defaultImage'
+import { ImageWithDefaultFallback } from '@/shared/components/defaultImage'
 
 interface HotSnsRestaurantSectionProps {
   getRestaurantDetailPath: (restaurantId: string) => string
@@ -29,19 +29,11 @@ export const HotSnsRestaurantSection = ({
                 className="grid grid-cols-[60px_minmax(0,1fr)] gap-4"
                 to={getRestaurantDetailPath(restaurantId)}
               >
-                {imageUrl ? (
-                  <img
-                    alt={imageAlt}
-                    className="size-[60px] rounded-[5px] object-cover"
-                    src={imageUrl}
-                  />
-                ) : (
-                  <DefaultImage
-                    aria-label={imageAlt}
-                    className="size-[60px] rounded-[5px]"
-                    logoSize="sm"
-                  />
-                )}
+                <ImageWithDefaultFallback
+                  alt={imageAlt}
+                  className="size-[60px] rounded-[5px] object-cover"
+                  src={imageUrl}
+                />
                 <span className="flex min-w-0 flex-col justify-center gap-1.5">
                   <span className="typo-sub-header-3 text-primary-200 truncate">
                     {name}

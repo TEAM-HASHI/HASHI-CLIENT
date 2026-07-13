@@ -12,14 +12,18 @@ const mapHotSnsRestaurant = ({
   restaurantId,
   summary,
   thumbnailUrl,
-}: RestaurantSummaryResponse): HotSnsRestaurant => {
+}: RestaurantSummaryResponse): HotSnsRestaurant | null => {
+  if (restaurantId === undefined) {
+    return null
+  }
+
   const restaurantName = name ?? '이름 없는 식당'
 
   return {
     imageAlt: `${restaurantName} 대표 이미지`,
     imageUrl: thumbnailUrl ?? undefined,
     name: restaurantName,
-    restaurantId: String(restaurantId ?? restaurantName),
+    restaurantId: String(restaurantId),
     summary: summary ?? genre ?? '',
   }
 }
@@ -30,5 +34,9 @@ export const getHotSnsRestaurants = async () => {
     type: 'sns-hot',
   })
 
-  return restaurants.map(mapHotSnsRestaurant)
+  return restaurants.flatMap((restaurant) => {
+    const hotSnsRestaurant = mapHotSnsRestaurant(restaurant)
+
+    return hotSnsRestaurant ? [hotSnsRestaurant] : []
+  })
 }

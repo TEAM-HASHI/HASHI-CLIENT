@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -135,6 +136,7 @@ const searchRestaurantFixtures: SearchRestaurant[] = [
     businessHours: '6/19 (금) 12:00~22:00',
     category: 'sushiSashimi',
     id: 'sushi-haru-1',
+    imageUrl: 'https://example.com/sushi-haru.jpg',
     keywords: ['스시', '사시미'],
     name: '스시 하루',
     popularity: 91,
@@ -146,11 +148,24 @@ const searchRestaurantFixtures: SearchRestaurant[] = [
 const convertSearchRestaurantFixtureToSummary = (
   restaurant: SearchRestaurant,
 ) => {
+  const fixtureIndex = searchRestaurantFixtures.findIndex(
+    ({ id }) => id === restaurant.id,
+  )
+
   return {
+    restaurantId: fixtureIndex + 1,
     name: restaurant.name,
     rating: restaurant.rating,
     genre: restaurant.category,
+    thumbnailUrl: restaurant.imageUrl,
     hashtags: [restaurant.tag],
+    todayBusinessHour: {
+      date: '2026-06-19',
+      dayOfWeek: 'FRIDAY',
+      openTime: restaurant.businessHours.match(/\d{2}:\d{2}/)?.[0],
+      closeTime: restaurant.businessHours.match(/~(\d{2}:\d{2})/)?.[1],
+      closed: false,
+    },
   }
 }
 
@@ -171,6 +186,7 @@ const mockIntersectionObserver = () => {
   vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
   return {
+    IntersectionObserverMock,
     triggerIntersect: () => {
       handleIntersection(
         [{ isIntersecting: true } as IntersectionObserverEntry],
@@ -315,6 +331,46 @@ describe('SearchPage', () => {
     expect(window.localStorage.getItem('hashi:search:recent-keywords')).toBe(
       JSON.stringify(['아끼소바']),
     )
+    expect(mockGetSearchKeywordRecommendations).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not request recommended keywords after search results are shown', async () => {
+    const user = userEvent.setup()
+
+    renderSearchPage()
+
+    await user.type(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+      '아끼소바',
+    )
+    await user.keyboard('{Enter}')
+
+    expect(
+      await screen.findByText(
+        '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
+      ),
+    ).toBeInTheDocument()
+    expect(mockGetSearchKeywordRecommendations).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows DefaultImage when a search result image request fails', async () => {
+    const user = userEvent.setup()
+
+    renderSearchPage()
+
+    await user.type(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+      '스시',
+    )
+    await user.keyboard('{Enter}')
+
+    const image = await screen.findByRole('presentation')
+    fireEvent.error(image)
+
+    expect(image).not.toBeInTheDocument()
+    expect(
+      screen.getAllByRole('listitem')[0].querySelector('.bg-warm-gray-50'),
+    ).toBeInTheDocument()
   })
 
   it('locks background scroll while a filter bottom sheet is open', async () => {
@@ -459,7 +515,7 @@ describe('SearchPage', () => {
       expect(mockGetRestaurants).toHaveBeenCalledWith({
         genre: 'all',
         keyword: '스시',
-        size: 20,
+        size: 10,
       })
     })
 
@@ -471,7 +527,7 @@ describe('SearchPage', () => {
       expect(mockGetRestaurants).toHaveBeenCalledWith({
         genre: 'all',
         keyword: '스시',
-        size: 20,
+        size: 10,
         sort: 'rating',
       })
     })
@@ -496,13 +552,14 @@ describe('SearchPage', () => {
       expect(mockGetRestaurants).toHaveBeenCalledWith({
         genre: 'sushi',
         keyword: '스시',
-        size: 20,
+        size: 10,
       })
     })
   })
 
   it('fetches the next restaurant page when the bottom sentinel enters the viewport', async () => {
-    const { triggerIntersect } = mockIntersectionObserver()
+    const { IntersectionObserverMock, triggerIntersect } =
+      mockIntersectionObserver()
     const user = userEvent.setup()
 
     mockGetRestaurants
@@ -531,6 +588,9 @@ describe('SearchPage', () => {
     expect(
       await screen.findByText(searchRestaurantFixtures[0].name),
     ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(IntersectionObserverMock).toHaveBeenCalled()
+    })
 
     triggerIntersect()
 
@@ -539,7 +599,7 @@ describe('SearchPage', () => {
         cursor: 'next-search-cursor',
         genre: 'all',
         keyword: '아끼소바',
-        size: 20,
+        size: 10,
       })
     })
     expect(
@@ -548,7 +608,8 @@ describe('SearchPage', () => {
   })
 
   it('does not request the same next restaurant page twice when the sentinel intersects repeatedly in one render cycle', async () => {
-    const { triggerIntersect } = mockIntersectionObserver()
+    const { IntersectionObserverMock, triggerIntersect } =
+      mockIntersectionObserver()
     const user = userEvent.setup()
 
     mockGetRestaurants
@@ -586,6 +647,9 @@ describe('SearchPage', () => {
     expect(
       await screen.findByText(searchRestaurantFixtures[0].name),
     ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(IntersectionObserverMock).toHaveBeenCalled()
+    })
 
     triggerIntersect()
     triggerIntersect()
@@ -597,7 +661,7 @@ describe('SearchPage', () => {
       cursor: 'next-search-cursor',
       genre: 'all',
       keyword: '아끼소바',
-      size: 20,
+      size: 10,
     })
   })
 })

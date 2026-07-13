@@ -87,8 +87,9 @@
 - [x] HDS `BottomSheet`의 기본 접근성 계약에 따라 overlay click과 Escape key 닫기는 허용합니다.
 - [x] 식당 리스트에는 식당 사진, 식당명, 별점, 음식 종류 태그, 영업시간 영역을 보여줍니다.
 - [x] 현재 식당 목록 API의 `summary`는 식당 소개 문구이므로 영업시간으로 매핑하지 않습니다.
-- [x] 식당 목록 API에 영업시간 필드가 없으면 시간 영역에는 `영업시간 확인 필요`를 표시합니다.
-- [x] 식당 이미지가 없으면 임시 placeholder 대신 공통 `DefaultImage` fallback을 사용합니다.
+- [x] 식당 목록 API의 `todayBusinessHour`를 시간 영역에 표시합니다.
+- [x] `todayBusinessHour`가 없거나 영업시간 정보가 불완전하면 시간 영역에는 `영업시간 확인 필요`를 표시합니다.
+- [x] 식당 이미지가 없거나 이미지 로드에 실패하면 임시 placeholder 대신 공통 `DefaultImage` fallback을 사용합니다.
 - [x] 검색 결과가 없으면 결과 리스트 대신 empty state를 보여줍니다.
 - [x] empty state에서도 검색어와 적용된 필터값은 유지합니다.
 - [x] 좁은 viewport에서 긴 식당명은 최대 2줄까지 보여주고 카드 레이아웃을 깨지 않습니다.
@@ -160,6 +161,7 @@ export const searchRestaurantQueryKeys = {
 - response envelope는 `request<TData>()`가 벗겨낸 `data`를 반환합니다.
 - `data`가 `null`이거나 optional response field가 누락될 수 있으므로 endpoint 또는 mapper에서 화면이 소비할 기본값을 정합니다.
 - 검색 결과용 `RestaurantSummaryResponse` -> `SearchRestaurant` 변환은 page-local `apps/client/src/pages/search/utils/mapSearchRestaurant.ts`가 담당합니다.
+- 검색 결과의 영업시간 영역은 `RestaurantSummaryResponse.todayBusinessHour`를 사용합니다.
 
 ### Query Hooks
 
@@ -169,6 +171,7 @@ export const searchRestaurantQueryKeys = {
   - `useSuspenseQuery`는 사용하지 않습니다. 검색어/필터 local state가 fetch 여부를 결정하고, 결과 영역만 local loading/error UI를 가져야 하기 때문입니다.
 - 추천 검색어:
   - 현재 구현은 `useSearchKeywordRecommendationsQuery`에서 `GET /api/v1/restaurants/search-keyword-recommendations`를 `useQuery`로 호출합니다.
+  - 검색 전 idle panel에서만 필요한 데이터이므로 검색 결과 화면에서는 query를 비활성화합니다.
   - 실패 시 page 전체를 ErrorBoundary로 올리지 않고 검색 전 추천 키워드 영역만 빈 상태로 유지합니다.
 
 ### Query
@@ -179,9 +182,10 @@ export const searchRestaurantQueryKeys = {
   - 검색 전 상태에서는 식당 검색 query를 실행하지 않습니다.
   - 검색 제출 또는 최근/추천 검색어 탭 이후 조회합니다.
   - trim 처리한 검색어가 비어 있으면 조회하지 않고 검색 전 상태를 유지합니다.
+  - 추천 검색어 query는 검색 전 idle panel에서만 실행합니다.
 - request params:
   - UI `keyword` -> API `keyword`
-  - UI `category` -> API `genre`
+  - UI 필터명은 음식 장르/foodCategory 계열 값이지만 현재 백엔드 스펙의 장르 필터는 `genre` 파라미터이므로 UI `category`를 API `genre`로 매핑합니다.
     - `all` -> `all`
     - `sushiSashimi` -> `sushi`
     - `noodle` -> `noodle`
@@ -194,7 +198,7 @@ export const searchRestaurantQueryKeys = {
   - `default` 정렬은 dev API에서 `RESTAURANT-002`를 반환하므로 API `sort`를 생략합니다.
   - `popular`, `rating` 정렬은 API `sort`에 그대로 보냅니다.
   - 검색 페이지는 API `type`을 보내지 않습니다.
-  - API `size`는 현재 첫 목록 조회 기준 `20`을 보냅니다.
+  - API `size`는 프로젝트 목록 관습에 맞춰 `10`을 보냅니다.
   - API `cursor`는 첫 페이지에는 보내지 않고, 다음 페이지 조회 시 이전 응답의 `nextCursor`를 보냅니다.
 - loading state:
   - 상단 검색/필터 영역은 유지합니다.
@@ -455,6 +459,7 @@ SearchPage
   - 추천 검색어 query option/hook을 담당합니다.
 - `apps/client/src/pages/search/utils/mapSearchRestaurant.ts`
   - 공통 식당 목록 응답의 `RestaurantSummaryResponse`를 검색 결과 item view model로 변환합니다.
+  - 상세 이동에 필요한 `restaurantId`가 없으면 잘못된 `/restaurants/:restaurantId` 경로를 만들지 않도록 해당 항목을 검색 결과에서 제외합니다.
 
 ### Optional Page-Local Files
 
@@ -465,7 +470,7 @@ SearchPage
 
 - 새 HDS component는 추가하지 않습니다.
 - 새 HDS icon은 추가하지 않습니다.
-- 새 app shared component는 추가하지 않습니다.
+- 검색 전용 app shared component는 추가하지 않습니다. 이미지 로드 실패 fallback은 기존 shared `DefaultImage` 계열의 `ImageWithDefaultFallback`을 사용합니다.
 - 검색 결과 식당 카드가 다른 페이지에서도 반복된다는 근거가 생기기 전까지 `shared/components`로 승격하지 않습니다.
 - `Header`, `StarRating`, `Badge`, `BottomNavigation`을 검색 페이지 요구사항에 맞추기 위해 수정하지 않습니다.
 
@@ -481,16 +486,16 @@ SearchPage
 - validation error:
   - 이번 범위에서는 검색어 validation error를 노출하지 않습니다.
 - exceptional case:
-  - 식당 이미지가 없으면 공통 `DefaultImage` fallback을 사용합니다.
+  - 식당 이미지가 없거나 이미지 로드에 실패하면 공통 `DefaultImage` fallback을 사용합니다.
   - API `summary`는 식당 소개 문구이므로 영업시간으로 사용하지 않습니다.
-  - 식당 목록 API에 영업시간 필드가 없으면 `영업시간 확인 필요`를 표시합니다.
+  - `todayBusinessHour`가 없거나 영업시간 정보가 불완전하면 `영업시간 확인 필요`를 표시합니다.
   - 별점, 태그가 없을 때 숨김 또는 대체 문구는 추가 확인 후 구현합니다.
 - user-facing message:
   - empty: `검색된 식당이 없습니다.`
   - API error: `검색 결과를 불러오지 못했습니다.`
 - retry or fallback:
   - API error state에서 재시도 버튼 또는 검색 재제출로 refetch합니다.
-  - 추천 검색어 API error fallback 정책은 추가 확인 후 spec을 확정합니다.
+  - 추천 검색어 API error는 검색 전 영역에서 빈 목록 fallback으로 처리합니다.
 
 ## Navigation
 
@@ -547,7 +552,7 @@ SearchPage
   - list item 사이 간격은 `30px`입니다.
   - 결과 리스트 하단 padding은 `30px`입니다.
   - 식당 이미지는 `92px * 92px`, radius `5px`입니다.
-  - 식당 이미지가 없으면 `DefaultImage`를 같은 크기와 radius로 렌더링합니다.
+  - 식당 이미지가 없거나 이미지 로드에 실패하면 `DefaultImage`를 같은 크기와 radius로 렌더링합니다.
   - 이미지와 내용 사이 간격은 `12px`입니다.
   - 오른쪽 내용 영역은 이미지 높이 기준 vertical center로 정렬합니다.
   - title은 `typo-sub-header-2 text-cool-gray-900`이며 최대 2줄입니다.

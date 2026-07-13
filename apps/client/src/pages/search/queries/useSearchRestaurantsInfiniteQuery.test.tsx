@@ -102,7 +102,7 @@ describe('useSearchRestaurantsInfiniteQuery', () => {
     expect(mockGetRestaurants).toHaveBeenCalledWith({
       genre: 'all',
       keyword: '스시',
-      size: 20,
+      size: 10,
     })
   })
 
@@ -130,7 +130,7 @@ describe('useSearchRestaurantsInfiniteQuery', () => {
     expect(mockGetRestaurants).toHaveBeenCalledWith({
       genre: 'sushi',
       keyword: '스시',
-      size: 20,
+      size: 10,
       sort: 'rating',
     })
   })

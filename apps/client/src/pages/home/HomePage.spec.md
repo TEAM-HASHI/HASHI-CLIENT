@@ -53,7 +53,7 @@
   - `apps/client/src/pages/home/components/QuickMenuItem.tsx`
 - page-local hook:
   - `apps/client/src/pages/home/hooks/useHomePage.ts`
-- page-local mock:
+- page-local static content:
   - `apps/client/src/pages/home/mocks/homeContent.mock.ts`
 - route registration:
   - `apps/client/src/app/router/path.ts`
@@ -114,7 +114,7 @@ export const HomeLogo = () => {
 - [x] 메인 배너 섹션 타이틀 `맛집 큐레이션을 둘러보세요!`를 노출합니다.
 - [x] 메인 배너는 여러 장 carousel로 노출합니다.
 - [x] 메인 배너는 매거진 상단 배너, 매거진 리스트 썸네일과 같은 `353:160` 이미지 비율을 사용합니다.
-- [ ] 메인 배너 데이터는 최종적으로 서버에서 받은 이미지와 인스타그램 이동 대상 정보로 구성합니다.
+- [x] 메인 배너 데이터는 서버에서 받은 이미지와 인스타그램 이동 대상 정보로 구성합니다.
 - [x] 퀵 버튼 4개를 노출합니다.
   - 하시 PICK: `ROUTES.hashiPickRestaurants`
   - 인기 맛집: `ROUTES.popularRestaurants`
@@ -135,14 +135,13 @@ export const HomeLogo = () => {
   - 메인 배너 API는 `GET /api/v1/magazines/banners`를 사용하며, 매거진 리스트 페이지와 공유하므로 `features/magazine`의 magazine banner query를 사용합니다.
   - `useHomePage` 내부의 `homeBanners`는 shared magazine banner query로 조합합니다.
   - home hot SNS restaurants query
-  - 메인 배너와 퀵 링크는 아직 page-local 정적 데이터로 유지합니다.
+  - 퀵 링크는 page-local 정적 데이터로 유지합니다.
   - query/mutation 코드는 HDS나 아이콘 패키지에 넣지 않습니다.
 - enabled condition:
   - 메인 배너 API: 홈 진입 즉시
   - hot SNS API: 홈 진입 즉시
 - request params:
   - 메인 배너 API: `GET /api/v1/magazines/banners`, params 없음
-  - API 연동 후: SNS 맛집 개수, 지역 또는 언어 필터가 생기면 명시합니다.
   - `type`: `sns-hot`
   - `size`: `5`
 - response shape:
@@ -160,6 +159,7 @@ export const HomeLogo = () => {
   - `name` -> list title
   - `summary` fallback `genre` -> list summary
   - `thumbnailUrl` -> image
+  - 상세 이동에 필요한 `restaurantId`가 없으면 잘못된 `/restaurants/:restaurantId` 경로를 만들지 않도록 해당 항목을 SNS 맛집 리스트에서 제외합니다.
 - data owner:
   - `GET /api/v1/restaurants` endpoint는 `apps/client/src/features/restaurantList/api/getRestaurants.ts`의 공통 함수가 소유합니다.
   - 홈은 `apps/client/src/pages/home/api/getHotSnsRestaurants.ts`에서 `type=sns-hot`, `size=5` params를 전달하고, SNS 리스트 view model로 변환합니다.
@@ -213,8 +213,8 @@ export const HomeLogo = () => {
 - URL state:
   - 없음
 - server state:
-    - 메인 배너: `features/magazine`의 magazine banner query state
-    - SNS 맛집 리스트: 홈 전용 query state
+  - 메인 배너: `features/magazine`의 magazine banner query state
+  - SNS 맛집 리스트: 홈 전용 query state
 - derived state:
   - 로그인 상태와 세션 노출 여부를 반영한 `AuthGateBottomSheet` 표시 여부
 
@@ -296,8 +296,6 @@ BottomNavigationLayout
   - `HomeCurationSection`
 - Assets:
   - 최종 배너 이미지는 서버 응답의 `bannerImageUrl`을 사용합니다.
-  - API 전까지는 page-local mock 데이터와 임시 이미지 asset을 사용할 수 있습니다.
-  - 임시 이미지 asset은 홈 전용이면 `apps/client/src/pages/home/assets/`, 여러 화면에서 재사용하면 `apps/client/src/shared/assets/`에 둡니다.
   - 임시 체크보드 placeholder를 최종 구현처럼 남기지 않습니다.
 - Data:
   - 최종 서버 응답은 `GET /api/v1/magazines/banners`의 `MagazineBannerResponse`를 사용합니다.
@@ -308,7 +306,7 @@ BottomNavigationLayout
   - 외부 링크이므로 React Router `Link`가 아니라 `<a>`를 사용합니다.
   - 유효한 `instagramUrl`이 있으면 클릭 영역 전체가 하나의 링크로 동작합니다.
   - 유효한 `instagramUrl`이 없으면 배너 이미지는 노출하되 클릭 가능한 링크로 렌더링하지 않습니다.
-  - carousel은 여러 장을 지원하고, 단일 mock 데이터만 있을 때도 구조는 `Carousel` 기반으로 유지합니다.
+  - carousel은 여러 장을 지원하고, 단일 배너 데이터만 있을 때도 구조는 `Carousel` 기반으로 유지합니다.
 
 ### 3. Quick buttons
 
@@ -360,7 +358,7 @@ BottomNavigationLayout
 
 - Reuse:
   - 현재 재사용 가능한 식당 리스트/카드 컴포넌트는 확인되지 않았습니다.
-  - 이미지 렌더링은 일반 `img`를 사용합니다.
+  - 이미지 렌더링은 `ImageWithDefaultFallback`을 사용해 URL 누락과 이미지 로드 실패 모두 공통 `DefaultImage` fallback으로 처리합니다.
 - Do not create:
   - 초기부터 `shared/components/RestaurantCard`
   - HDS 식당 카드
@@ -372,7 +370,7 @@ BottomNavigationLayout
     - `restaurantId`
     - `name`
     - `summary`
-    - `imageUrl` 또는 mock 단계의 `imageSrc`
+    - `imageUrl`
     - `imageAlt`
   - 이동 대상은 식당 상세로 통일합니다.
   - `ROUTES.restaurantDetail`에 `restaurantId`를 주입하는 page-local path helper가 필요합니다.
@@ -424,7 +422,7 @@ BottomNavigationLayout
   - `AnywhereReservationCta`
   - `HotSnsRestaurantSection`
   - `useHomePage`
-  - `mocks/homeContent.mock.ts`
+  - `mocks/homeContent.mock.ts`의 퀵 링크 정적 데이터
 - 새로 만들지 않을 것:
   - HDS `HomeBanner`
   - HDS `RestaurantCard`
@@ -478,8 +476,8 @@ BottomNavigationLayout
   - 홈 본문만 세로 스크롤됩니다.
   - fixed bottom navigation과 마지막 리스트 항목이 겹치지 않아야 합니다.
 - empty/loading/error layout:
-  - MVP 정적 데이터에서는 없음
-  - API 연동 후 섹션별 fallback을 추가합니다.
+  - 메인 배너 API loading/error/empty는 `HomeCurationSection`에서 섹션 단위로 처리합니다.
+  - SNS 맛집 API 응답이 비어 있거나 사용할 수 있는 항목이 없으면 `HotSnsRestaurantSection`을 렌더링하지 않습니다.
 
 ## Accessibility
 
@@ -495,12 +493,13 @@ BottomNavigationLayout
 ## Error Handling
 
 - API error:
-  - MVP 정적 데이터에서는 없음
-  - API 연동 후 섹션 단위 fallback을 사용합니다.
+  - 메인 배너 API는 섹션 단위 loading/error/retry UI를 사용합니다.
+  - SNS 맛집 API는 전체 페이지를 막지 않고 빈 섹션 fallback으로 처리합니다.
 - validation error:
   - 없음
 - exceptional case:
   - 이미지 로드 실패 시 레이아웃이 깨지지 않도록 고정 크기/비율과 배경색을 유지합니다.
+  - SNS 맛집 이미지는 URL이 없거나 이미지 요청이 403/404/CORS 등으로 실패하면 공통 `DefaultImage`를 렌더링합니다.
   - route target이 확정되지 않은 콘텐츠는 클릭 가능한 UI로 노출하지 않습니다.
 - user-facing message:
   - 홈 전체 error message는 만들지 않습니다.
@@ -511,14 +510,13 @@ BottomNavigationLayout
 ## Implementation Notes
 
 - `HomePage.tsx`는 page-local section 컴포넌트 조합과 auth gate 렌더링에 집중합니다.
-- SNS 맛집 정적 mock 데이터는 `apps/client/src/pages/home/mocks/homeContent.mock.ts`에 둡니다.
+- 퀵 링크 정적 데이터는 `apps/client/src/pages/home/mocks/homeContent.mock.ts`에 둡니다.
 - 홈 데이터 반환, 검색 path, 어디든 예약 이동, 식당 상세 path 생성, 로그인 유도 바텀시트 상태는 `apps/client/src/pages/home/hooks/useHomePage.ts`가 담당합니다.
 - 메인 배너 query는 `features/magazine`의 shared magazine banner query를 사용하고, `useHomePage`는 홈 화면에 필요한 view model로 조합합니다.
 - SNS 맛집 query는 `useHomePage` 내부에서 `useHotSnsRestaurantsQuery`로 조회합니다.
 - `GET /api/v1/restaurants` endpoint 자체는 `features/restaurantList`의 공통 API 함수를 재사용합니다.
 - 여러 페이지에서 같은 홈 콘텐츠 API를 재사용하게 될 때만 feature/shared 승격을 검토합니다.
 - route path 조합이 필요하면 문자열 직접 조합을 흩뿌리지 말고 page-local helper를 둡니다.
-- API 전 임시 식당 이미지 asset이 필요하면 page-local assets에 두고, API 전환 시 제거합니다.
 - 로고는 새 SVG asset으로 추가하고 Vite asset import로 사용합니다.
 
 ## Verification

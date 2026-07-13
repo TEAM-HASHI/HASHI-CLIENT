@@ -49,17 +49,67 @@ const getRestaurantTag = (restaurant: RestaurantSummaryResponse) => {
   return restaurant.hashtags?.[0] ?? restaurant.genre ?? restaurant.area ?? ''
 }
 
+const dayOfWeekLabelMap: Record<string, string> = {
+  FRIDAY: '금',
+  MONDAY: '월',
+  SATURDAY: '토',
+  SUNDAY: '일',
+  THURSDAY: '목',
+  TUESDAY: '화',
+  WEDNESDAY: '수',
+}
+
+const getDateLabel = ({
+  date,
+  dayOfWeek,
+}: NonNullable<RestaurantSummaryResponse['todayBusinessHour']>) => {
+  const [, month, day] = date?.split('-') ?? []
+  const dayOfWeekLabel = dayOfWeek ? dayOfWeekLabelMap[dayOfWeek] : undefined
+
+  if (month && day && dayOfWeekLabel) {
+    return `${Number(month)}/${Number(day)} (${dayOfWeekLabel})`
+  }
+
+  return undefined
+}
+
+const getRestaurantBusinessHours = ({
+  todayBusinessHour,
+}: RestaurantSummaryResponse) => {
+  if (!todayBusinessHour) {
+    return '영업시간 확인 필요'
+  }
+
+  const dateLabel = getDateLabel(todayBusinessHour)
+
+  if (todayBusinessHour.closed) {
+    return dateLabel ? `${dateLabel} 휴무` : '휴무'
+  }
+
+  if (todayBusinessHour.openTime && todayBusinessHour.closeTime) {
+    const timeLabel = `${todayBusinessHour.openTime}~${todayBusinessHour.closeTime}`
+
+    return dateLabel ? `${dateLabel} ${timeLabel}` : timeLabel
+  }
+
+  return '영업시간 확인 필요'
+}
+
 export const mapSearchRestaurant = (
   restaurant: RestaurantSummaryResponse,
-): SearchRestaurant => {
+): SearchRestaurant | null => {
+  if (restaurant.restaurantId === undefined) {
+    return null
+  }
+
   const name = restaurant.name ?? '이름 없는 식당'
   const genre = restaurant.genre ?? ''
   const tag = getRestaurantTag(restaurant)
 
   return {
-    businessHours: '영업시간 확인 필요',
+    businessHours: getRestaurantBusinessHours(restaurant),
     category: getRestaurantCategory(restaurant.genre),
-    id: String(restaurant.restaurantId ?? name),
+    id: String(restaurant.restaurantId),
     imageUrl: restaurant.thumbnailUrl ?? undefined,
     keywords: [
       name,

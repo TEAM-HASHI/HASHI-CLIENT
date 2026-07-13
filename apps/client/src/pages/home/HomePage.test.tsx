@@ -69,6 +69,22 @@ describe('HomePage', () => {
         },
       ],
     })
+    mockGetHotSnsRestaurants.mockResolvedValue([
+      {
+        imageAlt: '돈카츠 후쿠마루 도쿄역 야에스점 대표 이미지',
+        imageUrl: 'https://example.com/tonkatsu.jpg',
+        name: '돈카츠 후쿠마루 도쿄역 야에스점',
+        restaurantId: '101',
+        summary: 'SNS에서 핫한 돈카츠',
+      },
+      {
+        imageAlt: '숯불 규카츠 미야비 긴자 본점 대표 이미지',
+        imageUrl: 'https://example.com/gyukatsu.jpg',
+        name: '숯불 규카츠 미야비 긴자 본점',
+        restaurantId: '102',
+        summary: 'SNS에서 핫한 규카츠',
+      },
+    ])
   })
 
   afterEach(() => {
@@ -180,10 +196,25 @@ describe('HomePage', () => {
       await screen.findByRole('link', {
         name: /돈카츠 후쿠마루 도쿄역 야에스점/,
       }),
-    ).toHaveAttribute('href', '/restaurants/tonkatsu-fukumaru-yaesu')
+    ).toHaveAttribute('href', '/restaurants/101')
     expect(
       screen.getByRole('link', { name: /숯불 규카츠 미야비 긴자 본점/ }),
-    ).toHaveAttribute('href', '/restaurants/gyukatsu-miyabi-ginza')
+    ).toHaveAttribute('href', '/restaurants/102')
+  })
+
+  it('shows DefaultImage when an SNS hot restaurant image request fails', async () => {
+    renderHomePage()
+
+    const image = await screen.findByRole('img', {
+      name: '돈카츠 후쿠마루 도쿄역 야에스점 대표 이미지',
+    })
+
+    fireEvent.error(image)
+
+    expect(image).not.toBeInTheDocument()
+    expect(
+      screen.getByLabelText('돈카츠 후쿠마루 도쿄역 야에스점 대표 이미지'),
+    ).toHaveClass('bg-warm-gray-50')
   })
 
   it('hides the SNS hot restaurant section when the API returns no restaurants', async () => {

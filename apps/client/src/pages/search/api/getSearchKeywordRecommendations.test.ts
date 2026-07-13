@@ -6,7 +6,7 @@ const { mockRequest } = vi.hoisted(() => ({
   mockRequest: vi.fn(),
 }))
 
-vi.mock('@/shared/api', () => ({
+vi.mock('@/shared/api/request', () => ({
   request: mockRequest,
 }))
 

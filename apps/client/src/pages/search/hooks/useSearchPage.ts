@@ -11,6 +11,7 @@ import { useSearchKeywordRecommendationsQuery } from '@/pages/search/queries/use
 import { useSearchRestaurantsInfiniteQuery } from '@/pages/search/queries/useSearchRestaurantsInfiniteQuery'
 import type { FoodCategoryValue, SearchSortValue } from '@/pages/search/types'
 import { mapSearchRestaurant } from '@/pages/search/utils/mapSearchRestaurant'
+import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const DEFAULT_SORT_VALUE = 'default' satisfies SearchSortValue
 const DEFAULT_FOOD_CATEGORY_VALUE = 'all' satisfies FoodCategoryValue
@@ -26,8 +27,6 @@ export const useSearchPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const loadMoreRef = useRef<HTMLDivElement | null>(null)
-  const isFetchNextPageLockedRef = useRef(false)
   const [keyword, setKeyword] = useState('')
   const [submittedKeyword, setSubmittedKeyword] = useState('')
   const [sortValue, setSortValue] =
@@ -60,16 +59,25 @@ export const useSearchPage = () => {
 
   const searchRestaurantsQuery = useSearchRestaurantsInfiniteQuery(searchParams)
   const searchKeywordRecommendationsQuery =
-    useSearchKeywordRecommendationsQuery()
+    useSearchKeywordRecommendationsQuery({ enabled: searchParams === null })
   const {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     refetch: refetchSearchRestaurants,
   } = searchRestaurantsQuery
+  const loadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
+    enabled: Boolean(hasNextPage),
+    isLoading: isFetchingNextPage,
+    onIntersect: fetchNextPage,
+  })
   const restaurants =
     searchRestaurantsQuery.data?.pages.flatMap((page) =>
-      page.restaurants.map(mapSearchRestaurant),
+      page.restaurants.flatMap((restaurant) => {
+        const searchRestaurant = mapSearchRestaurant(restaurant)
+
+        return searchRestaurant ? [searchRestaurant] : []
+      }),
     ) ?? []
   const isSearchIdle = searchParams === null
   const sortLabel = getOptionLabel(sortOptions, sortValue)
@@ -81,54 +89,6 @@ export const useSearchPage = () => {
   useEffect(() => {
     searchInputRef.current?.focus()
   }, [])
-
-  useEffect(() => {
-    if (!isFetchingNextPage) {
-      isFetchNextPageLockedRef.current = false
-    }
-  }, [isFetchingNextPage])
-
-  useEffect(() => {
-    const target = loadMoreRef.current
-
-    if (
-      !target ||
-      !hasNextPage ||
-      isFetchingNextPage ||
-      typeof IntersectionObserver === 'undefined'
-    ) {
-      return
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (
-          !entry?.isIntersecting ||
-          !hasNextPage ||
-          isFetchingNextPage ||
-          isFetchNextPageLockedRef.current
-        ) {
-          return
-        }
-
-        isFetchNextPageLockedRef.current = true
-        void fetchNextPage().finally(() => {
-          isFetchNextPageLockedRef.current = false
-        })
-      },
-      {
-        root: null,
-        rootMargin: '160px 0px',
-        threshold: 0,
-      },
-    )
-
-    observer.observe(target)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
   const submitSearch = (nextKeyword = keyword) => {
     const normalizedKeyword = nextKeyword.trim()
