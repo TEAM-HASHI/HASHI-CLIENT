@@ -63,6 +63,10 @@ export const appRoutes: RouteObject[] = [
         element: withLazyFallback(lazyPages.magazineDetail()),
       },
       {
+        path: ROUTES.kakaoOAuthCallback,
+        element: withLazyFallback(lazyPages.kakaoOAuthCallback()),
+      },
+      {
         element: withLazyFallback(createElement(AuthOnlyRoute)),
         children: [
           {

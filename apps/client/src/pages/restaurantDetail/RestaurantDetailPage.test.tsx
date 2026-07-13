@@ -13,6 +13,9 @@ import { RestaurantDetailPage } from '@/pages/restaurantDetail/RestaurantDetailP
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
 }))
+const { mockStartKakaoOAuth } = vi.hoisted(() => ({
+  mockStartKakaoOAuth: vi.fn(),
+}))
 const { mockLocationStore } = vi.hoisted(() => ({
   mockLocationStore: {
     state: undefined as { activeTab?: string } | undefined,
@@ -41,7 +44,12 @@ vi.mock('react-router-dom', async () => {
 
   return {
     ...actual,
-    useLocation: () => ({ state: mockLocationStore.state }),
+    useLocation: () => ({
+      hash: '',
+      pathname: '/restaurants/default',
+      search: '',
+      state: mockLocationStore.state,
+    }),
     useNavigate: () => mockNavigate,
     useParams: () => ({ restaurantId: 'default' }),
   }
@@ -51,6 +59,12 @@ vi.mock('@/shared/hooks', () => ({
   useAuthStatus: () => ({
     isAuthenticated: mockAuthStore.isAuthenticated,
     status: mockAuthStore.isAuthenticated ? 'authenticated' : 'unauthenticated',
+  }),
+}))
+
+vi.mock('@/features/auth/hooks/useKakaoOAuthStart', () => ({
+  useKakaoOAuthStart: () => ({
+    startKakaoOAuth: mockStartKakaoOAuth,
   }),
 }))
 
@@ -168,6 +182,17 @@ describe('RestaurantDetailPage', () => {
     expect(mockNavigate).not.toHaveBeenCalledWith(
       '/restaurants/default/reservations/new',
     )
+  })
+
+  it('starts Kakao OAuth from the login bottom sheet with the detail path', () => {
+    render(<RestaurantDetailPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '예약하기' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: '카카오로 1초 만에 시작하기' }),
+    )
+
+    expect(mockStartKakaoOAuth).toHaveBeenCalledWith('/restaurants/default')
   })
 
   it('navigates to reservation page for authenticated reservation action', () => {

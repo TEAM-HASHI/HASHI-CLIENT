@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
+import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import { useMagazineBannersQuery } from '@/features/magazine/hooks/useMagazineBannersQuery'
 import { normalizeInstagramUrl } from '@/features/magazine/utils/normalizeInstagramUrl'
 import { useAuthStatus } from '@/shared/hooks'
@@ -45,11 +47,13 @@ const getRestaurantDetailPath = (restaurantId: string) => {
 
 export const useHomePage = () => {
   const { isAuthenticated } = useAuthStatus()
+  const { startKakaoOAuth } = useKakaoOAuthStart()
   const hotSnsRestaurantsQuery = useHotSnsRestaurantsQuery()
   const [isAuthGateOpen, setIsAuthGateOpen] = useState(() =>
     getShouldOpenAuthGate(isAuthenticated),
   )
   const navigate = useNavigate()
+  const location = useLocation()
   const magazineBannersQuery = useMagazineBannersQuery()
 
   const homeBanners = useMemo<HomeBanner[]>(() => {
@@ -85,9 +89,7 @@ export const useHomePage = () => {
   return {
     authGate: {
       open: !isAuthenticated && isAuthGateOpen,
-      onKakaoPress: () => {
-        // TODO: connect Kakao OAuth flow.
-      },
+      onKakaoPress: () => startKakaoOAuth(getPathFromLocation(location)),
       onOpenChange: setIsAuthGateOpen,
     },
     getRestaurantDetailPath,

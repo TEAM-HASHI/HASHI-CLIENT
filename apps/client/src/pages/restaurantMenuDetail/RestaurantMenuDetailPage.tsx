@@ -23,6 +23,7 @@ export const RestaurantMenuDetailPage = () => {
     onAuthGateOpenChange,
     onComingSoonOpenChange,
     onPressBack,
+    onPressKakao,
     onPressLike,
     onPressMenuItem,
     onPressReservation,
@@ -80,7 +81,7 @@ export const RestaurantMenuDetailPage = () => {
         variant="detail"
       />
       <AuthGateBottomSheet
-        onKakaoPress={() => undefined}
+        onKakaoPress={onPressKakao}
         onOpenChange={onAuthGateOpenChange}
         open={isAuthGateOpen}
       />

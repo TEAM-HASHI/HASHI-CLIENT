@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
+import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import { MOCK_RESTAURANT_DETAIL } from '@/features/restaurantDetail/mocks/restaurantDetail.mock'
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
 import {
@@ -19,6 +21,7 @@ export const useRestaurantMenuDetailPage = () => {
   const location = useLocation()
   const { menuId, restaurantId } = useParams()
   const { isAuthenticated } = useAuthStatus()
+  const { startKakaoOAuth } = useKakaoOAuthStart()
   const [isAuthGateOpen, setIsAuthGateOpen] = useState(false)
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
   const currentRestaurantId = restaurantId ?? MOCK_RESTAURANT_DETAIL.id
@@ -142,6 +145,7 @@ export const useRestaurantMenuDetailPage = () => {
     onAuthGateOpenChange: setIsAuthGateOpen,
     onComingSoonOpenChange: setIsComingSoonOpen,
     onPressBack: handlePressBack,
+    onPressKakao: () => startKakaoOAuth(getPathFromLocation(location)),
     onPressLike: handlePressLike,
     onPressMenuItem: handlePressMenuItem,
     onPressReservation: handlePressReservation,

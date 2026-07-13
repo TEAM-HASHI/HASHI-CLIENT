@@ -1,10 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-type ApiClientOptions = {
-  hooks?: {
-    beforeRequest?: Array<(state: { request: Request }) => void>
-  }
-}
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { mockKyCreate } = vi.hoisted(() => ({
   mockKyCreate: vi.fn(() => vi.fn()),
@@ -19,7 +13,16 @@ vi.mock('ky', () => ({
 const getApiClientOptions = async () => {
   await import('@/shared/api/apiClient')
 
-  const calls = mockKyCreate.mock.calls as unknown as Array<[ApiClientOptions]>
+  const calls = mockKyCreate.mock.calls as unknown as Array<
+    [
+      {
+        baseUrl: string
+        timeout: number
+        retry: number
+        throwHttpErrors: boolean
+      },
+    ]
+  >
 
   return calls[0]?.[0]
 }
@@ -28,62 +31,17 @@ describe('apiClient', () => {
   beforeEach(() => {
     vi.resetModules()
     vi.stubEnv('VITE_API_BASE_URL', 'https://api.hashi.test')
-    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', '')
     mockKyCreate.mockClear()
-    window.localStorage.clear()
   })
 
-  afterEach(() => {
-    vi.unstubAllEnvs()
-  })
-
-  it('attaches localStorage accessToken as a Bearer token', async () => {
-    window.localStorage.setItem('accessToken', 'test-access-token')
-
+  it('creates ky client with common API options', async () => {
     const options = await getApiClientOptions()
-    const request = new Request(
-      'https://api.hashi.test/api/v1/reviews/me/count',
-    )
 
-    options?.hooks?.beforeRequest?.[0]?.({ request })
-
-    expect(request.headers.get('Authorization')).toBe(
-      'Bearer test-access-token',
-    )
-  })
-
-  it('does not attach Authorization when accessToken is empty', async () => {
-    const options = await getApiClientOptions()
-    const request = new Request(
-      'https://api.hashi.test/api/v1/reviews/me/count',
-    )
-
-    options?.hooks?.beforeRequest?.[0]?.({ request })
-
-    expect(request.headers.has('Authorization')).toBe(false)
-  })
-
-  it('uses the local development token when no stored token exists', async () => {
-    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', 'development-token')
-    const options = await getApiClientOptions()
-    const request = new Request('https://api.hashi.test/api/v1/reservations')
-
-    options?.hooks?.beforeRequest?.[0]?.({ request })
-
-    expect(request.headers.get('Authorization')).toBe(
-      'Bearer development-token',
-    )
-  })
-
-  it('does not overwrite an explicitly provided Authorization header', async () => {
-    window.localStorage.setItem('accessToken', 'stored-token')
-    const options = await getApiClientOptions()
-    const request = new Request('https://api.hashi.test/api/v1/reservations', {
-      headers: { Authorization: 'Bearer explicit-token' },
+    expect(options).toEqual({
+      baseUrl: 'https://api.hashi.test',
+      timeout: 10_000,
+      retry: 0,
+      throwHttpErrors: false,
     })
-
-    options?.hooks?.beforeRequest?.[0]?.({ request })
-
-    expect(request.headers.get('Authorization')).toBe('Bearer explicit-token')
   })
 })

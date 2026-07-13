@@ -91,7 +91,7 @@ POST /api/v1/reservations/anywhere
 - 생성 성공 시 `pointQueryKeys.myBalance()`를 무효화한 뒤 예약 상세 화면으로 이동한다.
 - 예약 상세/목록 API query는 아직 없으므로 speculative cache key나 cache write를 추가하지 않는다.
 
-공통 API 클라이언트는 `localStorage`의 `accessToken`을 우선 사용한다. 로그인 연동 전 로컬 개발에서는 ignored `.env.local`의 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있으며 운영 빌드에서는 이 fallback을 사용하지 않는다.
+공통 request는 로그인 후 메모리에 저장된 `accessToken`을 우선 사용한다. 로컬 개발에서는 ignored `.env.local`의 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있으며 운영 빌드에서는 이 fallback을 사용하지 않는다.
 
 ## Requirements
 

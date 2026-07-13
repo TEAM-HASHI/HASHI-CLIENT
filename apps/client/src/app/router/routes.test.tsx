@@ -10,6 +10,13 @@ vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
   getMagazineBanners: vi.fn(async () => ({ banners: [] })),
 }))
 
+const collectRoutePaths = (routes: typeof appRoutes): string[] => {
+  return routes.flatMap((route) => [
+    ...(route.path ? [route.path] : []),
+    ...(route.children ? collectRoutePaths(route.children) : []),
+  ])
+}
+
 const renderRoute = (initialEntry: string) => {
   const router = createMemoryRouter(appRoutes, {
     initialEntries: [initialEntry],
@@ -44,5 +51,9 @@ describe('appRoutes', () => {
     expect(
       screen.queryByRole('heading', { name: '404 페이지' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('registers Kakao OAuth callback as an app route', () => {
+    expect(collectRoutePaths(appRoutes)).toContain(ROUTES.kakaoOAuthCallback)
   })
 })

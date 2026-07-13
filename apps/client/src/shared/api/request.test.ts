@@ -1,15 +1,26 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
 import { request, requestSuccessResponse } from '@/shared/api/request'
 import type { ErrorResponse } from '@/shared/api/types'
+import { requestTokenReissue } from '@/features/auth/api/reissueToken'
+import {
+  clearAuthSession,
+  getAccessToken,
+  setAccessToken,
+} from '@/features/auth/session/authSession'
 
 vi.mock('@/shared/api/apiClient', () => ({
   apiClient: vi.fn(),
 }))
 
+vi.mock('@/features/auth/api/reissueToken', () => ({
+  requestTokenReissue: vi.fn(),
+}))
+
 const mockedApiClient = vi.mocked(apiClient)
+const mockedRequestTokenReissue = vi.mocked(requestTokenReissue)
 
 const createHttpResponse = ({
   ok,
@@ -46,7 +57,14 @@ const validationErrorResponse: ErrorResponse = {
 
 describe('request', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    mockedApiClient.mockReset()
+    mockedRequestTokenReissue.mockReset()
+    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', '')
+    clearAuthSession()
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
   })
 
   it('returns data when success response includes data', async () => {
@@ -237,5 +255,278 @@ describe('request', () => {
     await request('/users')
 
     expect(mockedApiClient).toHaveBeenCalledWith('users', undefined)
+  })
+
+  it('injects stored access token as bearer Authorization header', async () => {
+    setAccessToken('stored-access-token')
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: true,
+        status: 200,
+        body: {
+          success: true,
+          code: 'SUCCESS',
+          message: 'ok',
+          data: null,
+        },
+      }) as never,
+    )
+
+    await request('users/me', {
+      credentials: 'include',
+    })
+
+    expect(mockedApiClient).toHaveBeenCalledWith(
+      'users/me',
+      expect.objectContaining({
+        credentials: 'include',
+        headers: expect.any(Headers),
+      }),
+    )
+    const [, options] = mockedApiClient.mock.calls[0]
+    expect((options?.headers as Headers).get('Authorization')).toBe(
+      'Bearer stored-access-token',
+    )
+  })
+
+  it('injects the development access token when memory session is empty', async () => {
+    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', 'development-token')
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: true,
+        status: 200,
+        body: {
+          success: true,
+          code: 'SUCCESS',
+          message: 'ok',
+          data: null,
+        },
+      }) as never,
+    )
+
+    await request('users/me')
+
+    const [, options] = mockedApiClient.mock.calls[0]
+    expect((options?.headers as Headers).get('Authorization')).toBe(
+      'Bearer development-token',
+    )
+  })
+
+  it('does not overwrite explicit Authorization header', async () => {
+    setAccessToken('stored-access-token')
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: true,
+        status: 200,
+        body: {
+          success: true,
+          code: 'SUCCESS',
+          message: 'ok',
+          data: null,
+        },
+      }) as never,
+    )
+
+    await request('admin/me', {
+      headers: {
+        Authorization: 'Bearer explicit-token',
+      },
+    })
+
+    expect(mockedApiClient).toHaveBeenCalledWith(
+      'admin/me',
+      expect.objectContaining({
+        headers: expect.any(Headers),
+      }),
+    )
+    const [, options] = mockedApiClient.mock.calls[0]
+    expect((options?.headers as Headers).get('Authorization')).toBe(
+      'Bearer explicit-token',
+    )
+  })
+
+  it('reissues token on auth 401 and retries the original request once', async () => {
+    mockedApiClient
+      .mockResolvedValueOnce(
+        createHttpResponse({
+          ok: false,
+          status: 401,
+          body: {
+            success: false,
+            code: 'AUTH-002',
+            message: '만료된 토큰입니다',
+            data: null,
+            timestamp: '2026-07-12T19:36:51.713886635',
+            path: '/api/v1/restaurants/me',
+          },
+        }) as never,
+      )
+      .mockResolvedValueOnce(
+        createHttpResponse({
+          ok: true,
+          status: 200,
+          body: {
+            success: true,
+            code: 'SUCCESS',
+            message: 'ok',
+            data: { id: 1 },
+          },
+        }) as never,
+      )
+    mockedRequestTokenReissue.mockResolvedValue({
+      accessToken: 'fresh-access-token',
+    })
+
+    await expect(request<{ id: number }>('restaurants/me')).resolves.toEqual({
+      id: 1,
+    })
+
+    expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
+    expect(getAccessToken()).toBe('fresh-access-token')
+    expect(mockedApiClient).toHaveBeenCalledTimes(2)
+
+    const [, retryOptions] = mockedApiClient.mock.calls[1]
+    expect((retryOptions?.headers as Headers).get('Authorization')).toBe(
+      'Bearer fresh-access-token',
+    )
+  })
+
+  it('reissues token when a 401 response has no JSON body', async () => {
+    mockedApiClient
+      .mockResolvedValueOnce(
+        createHttpResponse({
+          ok: false,
+          status: 401,
+          jsonError: new SyntaxError('empty response'),
+        }) as never,
+      )
+      .mockResolvedValueOnce(
+        createHttpResponse({
+          ok: true,
+          status: 200,
+          body: {
+            success: true,
+            code: 'SUCCESS',
+            message: 'ok',
+            data: { id: 1 },
+          },
+        }) as never,
+      )
+    mockedRequestTokenReissue.mockResolvedValue({
+      accessToken: 'fresh-access-token',
+    })
+
+    await expect(request<{ id: number }>('restaurants/me')).resolves.toEqual({
+      id: 1,
+    })
+    expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
+  })
+
+  it('clears session and throws original auth error when token reissue fails', async () => {
+    setAccessToken('expired-access-token')
+    mockedApiClient.mockResolvedValueOnce(
+      createHttpResponse({
+        ok: false,
+        status: 401,
+        body: {
+          success: false,
+          code: 'AUTH-002',
+          message: '만료된 토큰입니다',
+          data: null,
+          timestamp: '2026-07-12T19:36:51.713886635',
+          path: '/api/v1/restaurants/me',
+        },
+      }) as never,
+    )
+    mockedRequestTokenReissue.mockRejectedValue(
+      new Error('Refresh token expired.'),
+    )
+
+    await expect(request('restaurants/me')).rejects.toMatchObject({
+      name: 'ApiError',
+      code: 'AUTH-002',
+    })
+
+    expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
+    expect(getAccessToken()).toBeUndefined()
+  })
+
+  it('does not reissue for auth endpoints to avoid retry loops', async () => {
+    mockedApiClient.mockResolvedValueOnce(
+      createHttpResponse({
+        ok: false,
+        status: 401,
+        body: {
+          success: false,
+          code: 'AUTH-003',
+          message: '리프레시 토큰이 존재하지 않습니다',
+          data: null,
+          timestamp: '2026-07-12T19:36:51.713886635',
+          path: '/api/v1/auth/reissue',
+        },
+      }) as never,
+    )
+
+    await expect(request('api/v1/auth/reissue')).rejects.toMatchObject({
+      name: 'ApiError',
+      code: 'AUTH-003',
+    })
+
+    expect(mockedRequestTokenReissue).not.toHaveBeenCalled()
+  })
+
+  it('shares one token reissue request across concurrent auth 401 responses', async () => {
+    const authErrorResponse = createHttpResponse({
+      ok: false,
+      status: 401,
+      body: {
+        success: false,
+        code: 'AUTH-002',
+        message: '만료된 토큰입니다',
+        data: null,
+        timestamp: '2026-07-12T19:36:51.713886635',
+        path: '/api/v1/restaurants/me',
+      },
+    }) as never
+    mockedApiClient
+      .mockResolvedValueOnce(authErrorResponse)
+      .mockResolvedValueOnce(authErrorResponse)
+      .mockResolvedValueOnce(
+        createHttpResponse({
+          ok: true,
+          status: 200,
+          body: {
+            success: true,
+            code: 'SUCCESS',
+            message: 'ok',
+            data: { id: 1 },
+          },
+        }) as never,
+      )
+      .mockResolvedValueOnce(
+        createHttpResponse({
+          ok: true,
+          status: 200,
+          body: {
+            success: true,
+            code: 'SUCCESS',
+            message: 'ok',
+            data: { id: 2 },
+          },
+        }) as never,
+      )
+    mockedRequestTokenReissue.mockResolvedValue({
+      accessToken: 'shared-access-token',
+    })
+
+    await expect(
+      Promise.all([
+        request<{ id: number }>('restaurants/1'),
+        request<{ id: number }>('restaurants/2'),
+      ]),
+    ).resolves.toEqual([{ id: 1 }, { id: 2 }])
+
+    expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
+    expect(mockedApiClient).toHaveBeenCalledTimes(4)
   })
 })
