@@ -6,7 +6,8 @@ import {
   MoneySmallIcon,
   StarFillIcon,
 } from '@hashi/hds-icons'
-import { Header, IconButton, showToast } from '@hashi/hds-ui'
+import { Header, IconButton, showToast, toastQueue } from '@hashi/hds-ui'
+import type { Ref } from 'react'
 import { useCallback } from 'react'
 
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
@@ -27,6 +28,7 @@ import type {
   RestaurantDetailTab,
   RestaurantDetailVariant,
 } from '@/features/restaurantDetail/types/restaurantDetail'
+import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 import { ShareIconButton } from '@/shared/components/shareIconButton'
 import { cn, copyTextToClipboard } from '@/shared/utils'
 
@@ -37,6 +39,12 @@ interface RestaurantDetailTemplateProps {
   isReviewImageViewerOpen: boolean
   isReviewUnavailableModalOpen: boolean
   restaurant: RestaurantDetail
+  hasMoreMenus: boolean
+  hasMoreReviews: boolean
+  isReviewListLoading: boolean
+  menuLoadMoreRef: Ref<HTMLDivElement>
+  reviewLoadMoreRef: Ref<HTMLDivElement>
+  selectedReviewSort: ReviewSortValue
   shareUrl?: string
   title: string
   variant: RestaurantDetailVariant
@@ -47,6 +55,7 @@ interface RestaurantDetailTemplateProps {
   onPressReservation: () => void
   onPressReviewImage: (reviewId: string, imageIndex: number) => void
   onPressWriteReview: () => void
+  onSelectReviewSort: (sort: ReviewSortValue) => void
   onTabChange: (tab: RestaurantDetailTab) => void
   onCloseReviewImageViewer: () => void
   onCloseReviewUnavailableModal: () => void
@@ -59,6 +68,12 @@ export const RestaurantDetailTemplate = ({
   isReviewImageViewerOpen,
   isReviewUnavailableModalOpen,
   restaurant,
+  hasMoreMenus,
+  hasMoreReviews,
+  isReviewListLoading,
+  menuLoadMoreRef,
+  reviewLoadMoreRef,
+  selectedReviewSort,
   shareUrl,
   title,
   variant,
@@ -69,6 +84,7 @@ export const RestaurantDetailTemplate = ({
   onPressReservation,
   onPressReviewImage,
   onPressWriteReview,
+  onSelectReviewSort,
   onTabChange,
   onCloseReviewImageViewer,
   onCloseReviewUnavailableModal,
@@ -108,6 +124,7 @@ export const RestaurantDetailTemplate = ({
       return
     }
 
+    toastQueue.clear()
     showToast({ children: '식당명이 복사되었어요' })
   }
 
@@ -180,10 +197,7 @@ export const RestaurantDetailTemplate = ({
           <div className="flex items-center gap-2">
             <dt className="sr-only">영업시간</dt>
             <ClockSmallIcon aria-hidden="true" className="size-4 shrink-0" />
-            <dd>
-              {restaurant.visitDateLabel} {restaurant.openTime} ~{' '}
-              {restaurant.closeTime}
-            </dd>
+            <dd>{restaurant.businessHoursSummary}</dd>
           </div>
           <div className="flex items-center gap-2">
             <dt className="sr-only">예약금</dt>
@@ -224,17 +238,24 @@ export const RestaurantDetailTemplate = ({
         <RestaurantInfoSection restaurant={restaurant} />
       ) : activeTab === 'menu' ? (
         <RestaurantMenuSection
+          hasMoreMenus={hasMoreMenus}
+          loadMoreRef={menuLoadMoreRef}
           menus={restaurant.menus}
           onPressMenuItem={onPressMenuItem}
         />
       ) : (
         <RestaurantReviewSection
+          hasMoreReviews={hasMoreReviews}
+          isReviewListLoading={isReviewListLoading}
+          loadMoreRef={reviewLoadMoreRef}
           onPressReviewImage={onPressReviewImage}
           onPressWriteReview={onPressWriteReview}
+          onSelectSort={onSelectReviewSort}
           rating={restaurant.rating}
           restaurantName={restaurant.name}
           reviewCount={restaurant.reviewCount}
           reviews={restaurant.reviews}
+          selectedSort={selectedReviewSort}
         />
       )}
 

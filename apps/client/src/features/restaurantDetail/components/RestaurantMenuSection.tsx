@@ -1,15 +1,20 @@
 import { Badge } from '@hashi/hds-ui'
+import type { Ref } from 'react'
 
+import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
 import type { RestaurantMenu } from '@/features/restaurantDetail/types/restaurantDetail'
-import { DefaultImage } from '@/shared/components/defaultImage'
 
 interface RestaurantMenuSectionProps {
   menus: RestaurantMenu[]
+  hasMoreMenus?: boolean
+  loadMoreRef?: Ref<HTMLDivElement>
   onPressMenuItem: (menuId: string) => void
 }
 
 export const RestaurantMenuSection = ({
   menus,
+  hasMoreMenus = false,
+  loadMoreRef,
   onPressMenuItem,
 }: RestaurantMenuSectionProps) => {
   return (
@@ -44,22 +49,18 @@ export const RestaurantMenuSection = ({
                 <span className="font-semibold">{menu.price}</span>
               </span>
             </span>
-            {menu.imageUrl ? (
-              <img
-                alt=""
-                className="size-[100px] shrink-0 rounded-[5px] object-cover"
-                src={menu.imageUrl}
-              />
-            ) : (
-              <DefaultImage
-                aria-hidden="true"
-                className="size-[100px] shrink-0 rounded-[5px]"
-                logoSize="sm"
-              />
-            )}
+            <RestaurantImage
+              className="size-[100px] shrink-0 rounded-[5px] object-cover"
+              defaultImageTestId="restaurant-menu-default-image"
+              logoSize="sm"
+              src={menu.imageUrl}
+            />
           </button>
         )
       })}
+      {hasMoreMenus && loadMoreRef ? (
+        <div ref={loadMoreRef} aria-hidden="true" className="h-1" />
+      ) : null}
     </section>
   )
 }

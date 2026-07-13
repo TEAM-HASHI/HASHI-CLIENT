@@ -31,9 +31,6 @@ export const RestaurantInfoSection = ({
         >
           영업 시간
         </h2>
-        <p className="typo-body-5 text-primary-200 mt-3">
-          영업 중 · {restaurant.lastOrderTime}에 라스트오더
-        </p>
         <dl className="typo-body-5 text-primary-200 mt-4 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1">
           {restaurant.businessHours.map(({ day, hours }) => (
             <div className="contents" key={day}>

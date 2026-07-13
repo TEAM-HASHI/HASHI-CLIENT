@@ -1,5 +1,7 @@
 import { Carousel } from '@hashi/hds-ui'
 
+import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
+
 interface RestaurantDetailHeroProps {
   imageUrls: string[]
 }
@@ -7,7 +9,7 @@ interface RestaurantDetailHeroProps {
 export const RestaurantDetailHero = ({
   imageUrls,
 }: RestaurantDetailHeroProps) => {
-  const slideCount = Math.max(imageUrls.length, 5)
+  const slideCount = imageUrls.length > 0 ? imageUrls.length : 1
 
   return (
     <Carousel.Root
@@ -24,13 +26,12 @@ export const RestaurantDetailHero = ({
                 aria-label={`식당 이미지 ${index + 1}`}
                 key={imageUrl ?? `restaurant-image-placeholder-${index}`}
               >
-                {imageUrl ? (
-                  <img
-                    alt=""
-                    className="size-full object-cover"
-                    src={imageUrl}
-                  />
-                ) : null}
+                <RestaurantImage
+                  className="size-full object-cover"
+                  defaultImageTestId="restaurant-detail-hero-default-image"
+                  logoSize="lg"
+                  src={imageUrl}
+                />
               </Carousel.Item>
             )
           })}
