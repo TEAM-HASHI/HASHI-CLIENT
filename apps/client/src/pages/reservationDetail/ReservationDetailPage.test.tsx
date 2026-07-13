@@ -16,6 +16,7 @@ import { DEFAULT_RESERVATION_STATUS } from '@/pages/myReservations/constants/res
 import { cancelReservation } from '@/pages/reservationDetail/api/cancelReservation'
 import { getReservationDetail } from '@/pages/reservationDetail/api/getReservationDetail'
 import { ReservationDetailPage } from '@/pages/reservationDetail/ReservationDetailPage'
+import { reservationDetailQueryKey } from '@/pages/reservationDetail/hooks/useReservationDetailQuery'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 import { createQueryClient } from '@/shared/lib/queryClient'
@@ -99,11 +100,13 @@ const alreadyCanceledResponse: ErrorResponse = {
 const renderReservationDetailPage = () => {
   const queryClient = createQueryClient()
 
-  return render(
+  const renderResult = render(
     <QueryClientProvider client={queryClient}>
       <ReservationDetailPage />
     </QueryClientProvider>,
   )
+
+  return { queryClient, ...renderResult }
 }
 
 describe('ReservationDetailPage', () => {
@@ -197,7 +200,7 @@ describe('ReservationDetailPage', () => {
   })
 
   it('cancels the reservation and moves to the in-progress reservation list after confirming cancellation', async () => {
-    renderReservationDetailPage()
+    const { queryClient } = renderReservationDetailPage()
 
     fireEvent.click(
       await screen.findByRole('button', { name: '예약 취소하기' }),
@@ -214,6 +217,37 @@ describe('ReservationDetailPage', () => {
       expect(mockNavigate).toHaveBeenCalledWith(
         `${ROUTES.myReservations}?status=${DEFAULT_RESERVATION_STATUS}`,
       )
+      expect(queryClient.getQueryData(reservationDetailQueryKey(12))).toEqual({
+        ...reservationDetailFixture,
+        reservationStatus: 'CANCELED',
+      })
+    })
+  })
+
+  it('prevents duplicate cancel requests when the confirm cancel button is clicked twice immediately', async () => {
+    mockedCancelReservation.mockImplementation(
+      () =>
+        new Promise(() => {
+          // Keep the request pending to verify synchronous duplicate prevention.
+        }),
+    )
+
+    renderReservationDetailPage()
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: '예약 취소하기' }),
+    )
+
+    const dialog = screen.getByRole('alertdialog')
+    const confirmCancelButton = within(dialog).getByRole('button', {
+      name: '취소하기',
+    })
+
+    fireEvent.click(confirmCancelButton)
+    fireEvent.click(confirmCancelButton)
+
+    await waitFor(() => {
+      expect(mockedCancelReservation).toHaveBeenCalledTimes(1)
     })
   })
 
