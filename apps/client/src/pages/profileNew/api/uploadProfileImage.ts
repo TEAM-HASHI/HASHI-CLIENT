@@ -1,3 +1,4 @@
+import { checkIsSupportedProfileImageMimeType } from '@/pages/profileNew/constants/profileImage'
 import type { components } from '@/shared/api/generated/openapi'
 import { request } from '@/shared/api/request'
 import { uploadFileToPresignedUrl } from '@/shared/api/uploadFileToPresignedUrl'
@@ -7,11 +8,6 @@ type PresignedUrlsData = components['schemas']['PresignedUrlsResponse']
 type PresignedUrlData = components['schemas']['PresignedUrlResponse']
 
 const PROFILE_IMAGE_UPLOAD_USAGE = 'profile'
-const SUPPORTED_PROFILE_IMAGE_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-])
 
 const checkIsValidProfileImageUploadTarget = (
   target: PresignedUrlData | undefined,
@@ -19,11 +15,7 @@ const checkIsValidProfileImageUploadTarget = (
   return Boolean(target?.uploadUrl && target.fileKey)
 }
 
-export const uploadProfileImage = async (file: File): Promise<string> => {
-  if (!SUPPORTED_PROFILE_IMAGE_MIME_TYPES.has(file.type)) {
-    throw new Error('지원하지 않는 프로필 이미지 형식입니다.')
-  }
-
+const issueProfileImageUploadTarget = async (file: File) => {
   const body = {
     usage: PROFILE_IMAGE_UPLOAD_USAGE,
     files: [{ contentType: file.type, fileSize: file.size }],
@@ -43,10 +35,33 @@ export const uploadProfileImage = async (file: File): Promise<string> => {
     throw new Error('프로필 이미지 업로드 응답이 올바르지 않습니다.')
   }
 
-  await uploadFileToPresignedUrl(file, {
-    uploadUrl: presignedUrl.uploadUrl,
-    uploadMethod: presignedUrl.uploadMethod ?? 'PUT',
-  })
+  return presignedUrl
+}
 
-  return presignedUrl.fileKey
+const uploadProfileImageToTarget = async (
+  file: File,
+  target: PresignedUrlData & { uploadUrl: string; fileKey: string },
+) => {
+  await uploadFileToPresignedUrl(file, {
+    uploadUrl: target.uploadUrl,
+    uploadMethod: target.uploadMethod ?? 'PUT',
+  })
+}
+
+export const uploadProfileImage = async (file: File): Promise<string> => {
+  if (!checkIsSupportedProfileImageMimeType(file.type)) {
+    throw new Error('지원하지 않는 프로필 이미지 형식입니다.')
+  }
+
+  const firstTarget = await issueProfileImageUploadTarget(file)
+
+  try {
+    await uploadProfileImageToTarget(file, firstTarget)
+    return firstTarget.fileKey
+  } catch {
+    const retryTarget = await issueProfileImageUploadTarget(file)
+
+    await uploadProfileImageToTarget(file, retryTarget)
+    return retryTarget.fileKey
+  }
 }

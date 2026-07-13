@@ -88,6 +88,42 @@ describe('uploadProfileImage', () => {
     await expect(uploadProfileImage(file)).rejects.toThrow(uploadError)
   })
 
+  it('reissues a presigned URL and retries once when the first S3 upload fails', async () => {
+    const file = new File(['profile'], 'profile.png', { type: 'image/png' })
+
+    mockedRequest
+      .mockResolvedValueOnce({
+        uploads: [
+          {
+            uploadUrl: 'https://upload.example/first-profile.png',
+            fileKey: 'users/15/profile/first-profile.png',
+            uploadMethod: 'PUT',
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        uploads: [
+          {
+            uploadUrl: 'https://upload.example/retry-profile.png',
+            fileKey: 'users/15/profile/retry-profile.png',
+            uploadMethod: 'PUT',
+          },
+        ],
+      })
+    mockedUploadFileToPresignedUrl
+      .mockRejectedValueOnce(new Error('temporary upload failure'))
+      .mockResolvedValueOnce(undefined)
+
+    await expect(uploadProfileImage(file)).resolves.toBe(
+      'users/15/profile/retry-profile.png',
+    )
+    expect(mockedRequest).toHaveBeenCalledTimes(2)
+    expect(mockedUploadFileToPresignedUrl).toHaveBeenNthCalledWith(2, file, {
+      uploadUrl: 'https://upload.example/retry-profile.png',
+      uploadMethod: 'PUT',
+    })
+  })
+
   it('rejects unsupported profile image MIME types before issuing a presigned URL', async () => {
     const file = new File(['profile'], 'profile.gif', { type: 'image/gif' })
 
