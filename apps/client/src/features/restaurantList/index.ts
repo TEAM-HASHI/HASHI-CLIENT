@@ -10,7 +10,11 @@ export { MOCK_RESTAURANTS } from './mocks'
 export { useInfiniteRestaurantList } from './hooks'
 export { useRestaurantListPage } from './hooks'
 export { RestaurantCard, RestaurantFilterBar } from './components'
-export type { FilterOption, Restaurant } from './types'
+export type {
+  FilterOption,
+  Restaurant,
+  RestaurantListCurationType,
+} from './types'
 export { getRestaurants } from './api/getRestaurants'
 export type {
   GetRestaurantsParams,

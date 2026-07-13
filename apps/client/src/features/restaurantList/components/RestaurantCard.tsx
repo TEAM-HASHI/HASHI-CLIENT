@@ -12,6 +12,8 @@ export const RestaurantCard = ({
   restaurant,
   onClick,
 }: RestaurantCardProps) => {
+  const ratingLabel = restaurant.rating.toFixed(1)
+
   const handleClickRestaurant = () => {
     onClick(restaurant.id)
   }
@@ -31,7 +33,7 @@ export const RestaurantCard = ({
             aria-hidden="true"
             className="text-primary-400 size-4.5 shrink-0"
           />
-          <span className="typo-body-3 ml-px">{restaurant.rating}</span>
+          <span className="typo-body-3 ml-px">{ratingLabel}</span>
           <span className="typo-body-7 ml-1.25">
             {restaurant.region} · {restaurant.category}
           </span>
