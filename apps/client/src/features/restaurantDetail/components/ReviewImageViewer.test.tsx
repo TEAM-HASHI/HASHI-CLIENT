@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ReviewImageViewer } from '@/features/restaurantDetail/components/ReviewImageViewer'
@@ -7,6 +7,9 @@ import { ReviewImageViewer } from '@/features/restaurantDetail/components/Review
 describe('ReviewImageViewer', () => {
   afterEach(() => {
     cleanup()
+    document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.documentElement.style.overflow = ''
   })
 
   it('does not render when closed', () => {
@@ -74,5 +77,54 @@ describe('ReviewImageViewer', () => {
       'h-1',
       'w-3',
     )
+  })
+
+  it('renders default image when viewer image fails to load', () => {
+    render(
+      <ReviewImageViewer
+        imageUrls={['/review-1.jpg']}
+        onClose={vi.fn()}
+        open
+      />,
+    )
+
+    expect(screen.queryByTestId('review-image-viewer-default-image')).toBeNull()
+
+    const viewerImage = screen
+      .getByTestId('review-image-viewer-image')
+      .querySelector('img')
+    expect(viewerImage).toBeInTheDocument()
+
+    fireEvent.error(viewerImage as HTMLImageElement)
+
+    expect(
+      screen.getByTestId('review-image-viewer-default-image'),
+    ).toBeInTheDocument()
+  })
+
+  it('locks background scroll while viewer is open and restores it when closed', () => {
+    const { rerender } = render(
+      <ReviewImageViewer
+        imageUrls={['/review-1.jpg']}
+        onClose={vi.fn()}
+        open
+      />,
+    )
+
+    expect(document.body.style.overflow).toBe('hidden')
+    expect(document.body.style.position).toBe('fixed')
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    rerender(
+      <ReviewImageViewer
+        imageUrls={['/review-1.jpg']}
+        onClose={vi.fn()}
+        open={false}
+      />,
+    )
+
+    expect(document.body.style.overflow).toBe('')
+    expect(document.body.style.position).toBe('')
+    expect(document.documentElement.style.overflow).toBe('')
   })
 })
