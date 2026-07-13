@@ -38,8 +38,6 @@ Jira: HASHI-106
 apps/client/src/pages/mypage/
 ├── MypagePage.tsx
 ├── MypagePage.spec.md
-├── api/
-│   └── getMypageProfileSummary.ts
 ├── components/
 │   ├── MypageProfile.tsx
 │   ├── MypagePointSummary.tsx
@@ -63,6 +61,13 @@ apps/client/src/features/point/
 ├── hooks/
 │   └── useMyPointBalanceQuery.ts
 └── index.ts
+
+apps/client/src/features/user/
+├── api/
+│   └── getMyProfileSummary.ts
+├── hooks/
+│   └── useMyProfileSummaryQuery.ts
+└── index.ts
 ```
 
 설계 기준:
@@ -72,6 +77,7 @@ apps/client/src/features/point/
 - `request<T>()`는 성공 응답의 `data`가 비어 있을 수 있으므로 endpoint 함수에서 UI view type으로 정규화합니다.
 - 마이페이지에서만 사용하는 endpoint 함수와 query key는 `pages/mypage` 내부에 둡니다.
 - 다른 페이지에서도 재사용되는 포인트 잔액 조회는 `features/point`에서 관리합니다.
+- 다른 페이지에서도 재사용되는 사용자 프로필 요약 조회는 `features/user`에서 관리합니다.
 - API 연동 전후 테스트 fixture가 필요하면 해당 테스트 파일 안에서 endpoint별 mock으로 둡니다.
 
 ## Requirements
@@ -456,7 +462,7 @@ page-local components:
 
 page-local api:
 
-- `getMypageProfileSummary`
+- 없음
 
 hooks:
 
@@ -468,6 +474,8 @@ feature api:
 - `features/point/hooks/useMyPointBalanceQuery`
 - `features/review/api/getMyReviewCount`
 - `features/review/queries/useMyReviewCountQuery`
+- `features/user/api/getMyProfileSummary`
+- `features/user/hooks/useMyProfileSummaryQuery`
 
 constants:
 
