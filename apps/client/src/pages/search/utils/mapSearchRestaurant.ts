@@ -49,15 +49,7 @@ const getRestaurantTag = (restaurant: RestaurantSummaryResponse) => {
   return restaurant.hashtags?.[0] ?? restaurant.genre ?? restaurant.area ?? ''
 }
 
-const getRestaurantBusinessHours = ({ summary }: RestaurantSummaryResponse) => {
-  if (summary) {
-    return summary
-  }
-
-  return '영업시간 확인 필요'
-}
-
-export const mapSearchRestaurantSummary = (
+export const mapSearchRestaurant = (
   restaurant: RestaurantSummaryResponse,
 ): SearchRestaurant => {
   const name = restaurant.name ?? '이름 없는 식당'
@@ -65,7 +57,7 @@ export const mapSearchRestaurantSummary = (
   const tag = getRestaurantTag(restaurant)
 
   return {
-    businessHours: getRestaurantBusinessHours(restaurant),
+    businessHours: '영업시간 확인 필요',
     category: getRestaurantCategory(restaurant.genre),
     id: String(restaurant.restaurantId ?? name),
     imageUrl: restaurant.thumbnailUrl ?? undefined,

@@ -10,7 +10,7 @@ import { useRecentSearchKeywords } from '@/pages/search/hooks/useRecentSearchKey
 import { useSearchKeywordRecommendationsQuery } from '@/pages/search/queries/useSearchKeywordRecommendationsQuery'
 import { useSearchRestaurantsInfiniteQuery } from '@/pages/search/queries/useSearchRestaurantsInfiniteQuery'
 import type { FoodCategoryValue, SearchSortValue } from '@/pages/search/types'
-import { mapSearchRestaurantSummary } from '@/pages/search/utils/mapSearchRestaurantSummary'
+import { mapSearchRestaurant } from '@/pages/search/utils/mapSearchRestaurant'
 
 const DEFAULT_SORT_VALUE = 'default' satisfies SearchSortValue
 const DEFAULT_FOOD_CATEGORY_VALUE = 'all' satisfies FoodCategoryValue
@@ -27,6 +27,7 @@ export const useSearchPage = () => {
   const navigate = useNavigate()
   const searchInputRef = useRef<HTMLInputElement>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const isFetchNextPageLockedRef = useRef(false)
   const [keyword, setKeyword] = useState('')
   const [submittedKeyword, setSubmittedKeyword] = useState('')
   const [sortValue, setSortValue] =
@@ -68,7 +69,7 @@ export const useSearchPage = () => {
   } = searchRestaurantsQuery
   const restaurants =
     searchRestaurantsQuery.data?.pages.flatMap((page) =>
-      page.restaurants.map(mapSearchRestaurantSummary),
+      page.restaurants.map(mapSearchRestaurant),
     ) ?? []
   const isSearchIdle = searchParams === null
   const sortLabel = getOptionLabel(sortOptions, sortValue)
@@ -80,6 +81,12 @@ export const useSearchPage = () => {
   useEffect(() => {
     searchInputRef.current?.focus()
   }, [])
+
+  useEffect(() => {
+    if (!isFetchingNextPage) {
+      isFetchNextPageLockedRef.current = false
+    }
+  }, [isFetchingNextPage])
 
   useEffect(() => {
     const target = loadMoreRef.current
@@ -95,11 +102,19 @@ export const useSearchPage = () => {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry?.isIntersecting || !hasNextPage || isFetchingNextPage) {
+        if (
+          !entry?.isIntersecting ||
+          !hasNextPage ||
+          isFetchingNextPage ||
+          isFetchNextPageLockedRef.current
+        ) {
           return
         }
 
-        void fetchNextPage()
+        isFetchNextPageLockedRef.current = true
+        void fetchNextPage().finally(() => {
+          isFetchNextPageLockedRef.current = false
+        })
       },
       {
         root: null,

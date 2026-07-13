@@ -85,7 +85,9 @@
 - [x] 바텀시트의 `초기화` 버튼은 해당 필터를 기본값으로 적용하고 바텀시트를 닫습니다.
 - [x] 화면에 노출되는 닫기 컨트롤은 바텀시트의 `X` 버튼입니다.
 - [x] HDS `BottomSheet`의 기본 접근성 계약에 따라 overlay click과 Escape key 닫기는 허용합니다.
-- [x] 식당 리스트에는 식당 사진, 식당명, 별점, 음식 종류 태그, 당일 영업시간을 보여줍니다.
+- [x] 식당 리스트에는 식당 사진, 식당명, 별점, 음식 종류 태그, 영업시간 영역을 보여줍니다.
+- [x] 현재 식당 목록 API의 `summary`는 식당 소개 문구이므로 영업시간으로 매핑하지 않습니다.
+- [x] 식당 목록 API에 영업시간 필드가 없으면 시간 영역에는 `영업시간 확인 필요`를 표시합니다.
 - [x] 식당 이미지가 없으면 임시 placeholder 대신 공통 `DefaultImage` fallback을 사용합니다.
 - [x] 검색 결과가 없으면 결과 리스트 대신 empty state를 보여줍니다.
 - [x] empty state에서도 검색어와 적용된 필터값은 유지합니다.
@@ -157,7 +159,7 @@ export const searchRestaurantQueryKeys = {
 - base URL, timeout, retry, HTTP error normalization은 `apps/client/src/shared/api`의 기존 설정을 사용합니다.
 - response envelope는 `request<TData>()`가 벗겨낸 `data`를 반환합니다.
 - `data`가 `null`이거나 optional response field가 누락될 수 있으므로 endpoint 또는 mapper에서 화면이 소비할 기본값을 정합니다.
-- 검색 결과용 `RestaurantSummaryResponse` -> `SearchRestaurant` 변환은 page-local `apps/client/src/pages/search/utils/mapSearchRestaurantSummary.ts`가 담당합니다.
+- 검색 결과용 `RestaurantSummaryResponse` -> `SearchRestaurant` 변환은 page-local `apps/client/src/pages/search/utils/mapSearchRestaurant.ts`가 담당합니다.
 
 ### Query Hooks
 
@@ -451,13 +453,11 @@ SearchPage
   - 검색 화면의 필터 값을 공통 식당 목록 API params로 변환하고, local error policy를 적용합니다.
 - `apps/client/src/pages/search/queries/useSearchKeywordRecommendationsQuery.ts`
   - 추천 검색어 query option/hook을 담당합니다.
-- `apps/client/src/pages/search/utils/mapSearchRestaurantSummary.ts`
+- `apps/client/src/pages/search/utils/mapSearchRestaurant.ts`
   - 공통 식당 목록 응답의 `RestaurantSummaryResponse`를 검색 결과 item view model로 변환합니다.
 
 ### Optional Page-Local Files
 
-- `apps/client/src/pages/search/utils/mapSearchRestaurant.ts`
-  - API response optional field와 UI fallback mapping이 길어지면 pure helper로 분리합니다.
 - `apps/client/src/pages/search/utils/searchRestaurantParams.ts`
   - sort/genre/type mapping이 길어지면 pure helper로 분리합니다.
 
@@ -482,7 +482,9 @@ SearchPage
   - 이번 범위에서는 검색어 validation error를 노출하지 않습니다.
 - exceptional case:
   - 식당 이미지가 없으면 공통 `DefaultImage` fallback을 사용합니다.
-  - 별점, 태그, 영업시간이 없을 때 숨김 또는 대체 문구는 추가 확인 후 구현합니다.
+  - API `summary`는 식당 소개 문구이므로 영업시간으로 사용하지 않습니다.
+  - 식당 목록 API에 영업시간 필드가 없으면 `영업시간 확인 필요`를 표시합니다.
+  - 별점, 태그가 없을 때 숨김 또는 대체 문구는 추가 확인 후 구현합니다.
 - user-facing message:
   - empty: `검색된 식당이 없습니다.`
   - API error: `검색 결과를 불러오지 못했습니다.`

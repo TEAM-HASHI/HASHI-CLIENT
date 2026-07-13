@@ -150,7 +150,6 @@ const convertSearchRestaurantFixtureToSummary = (
     name: restaurant.name,
     rating: restaurant.rating,
     genre: restaurant.category,
-    summary: restaurant.businessHours,
     hashtags: [restaurant.tag],
   }
 }
@@ -546,5 +545,59 @@ describe('SearchPage', () => {
     expect(
       await screen.findByText(searchRestaurantFixtures[1].name),
     ).toBeInTheDocument()
+  })
+
+  it('does not request the same next restaurant page twice when the sentinel intersects repeatedly in one render cycle', async () => {
+    const { triggerIntersect } = mockIntersectionObserver()
+    const user = userEvent.setup()
+
+    mockGetRestaurants
+      .mockResolvedValueOnce({
+        hasNext: true,
+        nextCursor: 'next-search-cursor',
+        restaurants: [
+          convertSearchRestaurantFixtureToSummary(searchRestaurantFixtures[0]),
+        ],
+      })
+      .mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            window.setTimeout(() => {
+              resolve({
+                hasNext: false,
+                restaurants: [
+                  convertSearchRestaurantFixtureToSummary(
+                    searchRestaurantFixtures[1],
+                  ),
+                ],
+              })
+            }, 10)
+          }),
+      )
+
+    renderSearchPage()
+
+    await user.type(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+      '아끼소바',
+    )
+    await user.keyboard('{Enter}')
+
+    expect(
+      await screen.findByText(searchRestaurantFixtures[0].name),
+    ).toBeInTheDocument()
+
+    triggerIntersect()
+    triggerIntersect()
+
+    await waitFor(() => {
+      expect(mockGetRestaurants).toHaveBeenCalledTimes(2)
+    })
+    expect(mockGetRestaurants).toHaveBeenNthCalledWith(2, {
+      cursor: 'next-search-cursor',
+      genre: 'all',
+      keyword: '아끼소바',
+      size: 20,
+    })
   })
 })
