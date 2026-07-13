@@ -3,9 +3,11 @@ import { Avatar, IconButton } from '@hashi/hds-ui'
 import { type ChangeEvent, useRef } from 'react'
 
 import { FieldError } from '@/pages/profileNew/components/FieldError'
+import { PROFILE_IMAGE_ACCEPT } from '@/pages/profileNew/constants/profileImage'
 import profileEmptyImage from '@/shared/assets/images/profile-empty.svg'
 
 interface ProfileImageSectionProps {
+  disabled?: boolean
   previewUrl?: string
   errorMessage?: string
   onImageChange: (file: File) => void
@@ -13,6 +15,7 @@ interface ProfileImageSectionProps {
 }
 
 export const ProfileImageSection = ({
+  disabled = false,
   previewUrl,
   errorMessage,
   onImageChange,
@@ -50,6 +53,7 @@ export const ProfileImageSection = ({
         <IconButton
           aria-label="프로필 이미지 수정"
           className="absolute right-[-4px] bottom-0 size-10 rounded-full bg-white shadow-sm"
+          disabled={disabled}
           onClick={handleImageButtonClick}
           size="md"
         >
@@ -60,13 +64,15 @@ export const ProfileImageSection = ({
         ref={fileInputRef}
         aria-label="프로필 이미지 파일 선택"
         aria-describedby={errorMessage ? 'profile-image-file-error' : undefined}
-        accept="image/*"
+        accept={PROFILE_IMAGE_ACCEPT}
         className="hidden"
+        disabled={disabled}
         onChange={handleFileChange}
         type="file"
       />
       <button
-        className="typo-body-3 text-primary-200 mt-4"
+        className="typo-body-3 text-primary-200 mt-4 disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={disabled}
         onClick={onImageDelete}
         type="button"
       >

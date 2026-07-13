@@ -6,11 +6,14 @@ import { useAuthStatus } from '@/shared/hooks'
 export const AuthOnlyRoute = () => {
   const location = useLocation()
   const { isAuthenticated, isOnboarding } = useAuthStatus()
-  const canAccessOnboardingRoute =
-    isOnboarding &&
-    Boolean(
-      matchPath({ path: ROUTES.profileNew, end: true }, location.pathname),
-    )
+  const isOnboardingRoute = Boolean(
+    matchPath({ path: ROUTES.profileNew, end: true }, location.pathname),
+  )
+  const canAccessOnboardingRoute = isOnboarding && isOnboardingRoute
+
+  if (isAuthenticated && isOnboardingRoute) {
+    return <Navigate replace to={ROUTES.home} />
+  }
 
   if (!isAuthenticated && !canAccessOnboardingRoute) {
     return (

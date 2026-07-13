@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
+  checkIsSupportedProfileImageMimeType,
+  PROFILE_IMAGE_MAX_FILE_SIZE_BYTES,
+} from '@/pages/profileNew/constants/profileImage'
+import {
   checkIsValidBirthDate,
   checkIsValidEmail,
   checkIsValidPhoneNumber,
@@ -11,7 +15,6 @@ import {
 
 export interface ProfileDraft {
   profileImageFile?: File
-  isProfileImageDeleted: boolean
   nickname: string
   birthDate: string
   phoneNumber: string
@@ -23,16 +26,17 @@ interface UseProfileNewFormOptions {
   isSubmitting?: boolean
 }
 
-const PROFILE_IMAGE_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
+type ProfileFieldName =
+  | 'nickname'
+  | 'birthDate'
+  | 'phoneNumber'
+  | 'englishName'
+  | 'email'
+
 const PROFILE_IMAGE_INVALID_FILE_TYPE_ERROR_MESSAGE =
   '이미지 파일만 등록해주세요.'
 const PROFILE_IMAGE_MAX_FILE_SIZE_ERROR_MESSAGE =
   '5MB 이하의 이미지만 등록해주세요.'
-const SUPPORTED_PROFILE_IMAGE_MIME_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-])
 
 export const useProfileNewForm = ({
   isSubmitting = false,
@@ -41,7 +45,6 @@ export const useProfileNewForm = ({
   const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<string>()
   const profileImagePreviewUrlRef = useRef<string | undefined>(undefined)
   const [profileImageErrorMessage, setProfileImageErrorMessage] = useState('')
-  const [isProfileImageDeleted, setIsProfileImageDeleted] = useState(false)
   const [nickname, setNickname] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -52,7 +55,7 @@ export const useProfileNewForm = ({
   )
   const [hasSubmitAttempted, setHasSubmitAttempted] = useState(false)
   const [serverFieldErrors, setServerFieldErrors] = useState<
-    Partial<Record<'nickname' | 'birthDate' | 'phoneNumber' | 'email', string>>
+    Partial<Record<ProfileFieldName, string>>
   >({})
   const [formError, setFormError] = useState('')
 
@@ -94,6 +97,7 @@ export const useProfileNewForm = ({
         checkShouldShowError('phoneNumber')
           ? '연락처를 정확히 입력해주세요.'
           : ''),
+      englishName: serverFieldErrors.englishName ?? '',
       email:
         serverFieldErrors.email ??
         (trimmedEmail.length > 0 &&
@@ -111,6 +115,7 @@ export const useProfileNewForm = ({
       normalizedPhoneNumber.length,
       serverFieldErrors.birthDate,
       serverFieldErrors.email,
+      serverFieldErrors.englishName,
       serverFieldErrors.nickname,
       serverFieldErrors.phoneNumber,
       touchedFields,
@@ -126,9 +131,7 @@ export const useProfileNewForm = ({
     })
   }
 
-  const clearServerFieldError = (
-    fieldName: 'nickname' | 'birthDate' | 'phoneNumber' | 'email',
-  ) => {
+  const clearServerFieldError = (fieldName: ProfileFieldName) => {
     setServerFieldErrors((currentServerFieldErrors) => {
       if (!currentServerFieldErrors[fieldName]) {
         return currentServerFieldErrors
@@ -153,7 +156,7 @@ export const useProfileNewForm = ({
   }, [])
 
   const handleProfileImageChange = (file: File) => {
-    if (!SUPPORTED_PROFILE_IMAGE_MIME_TYPES.has(file.type)) {
+    if (!checkIsSupportedProfileImageMimeType(file.type)) {
       setProfileImageErrorMessage(PROFILE_IMAGE_INVALID_FILE_TYPE_ERROR_MESSAGE)
       return
     }
@@ -164,7 +167,6 @@ export const useProfileNewForm = ({
     }
 
     setProfileImageFile(file)
-    setIsProfileImageDeleted(false)
     setProfileImageErrorMessage('')
 
     if (typeof URL.createObjectURL === 'function') {
@@ -179,7 +181,6 @@ export const useProfileNewForm = ({
     setProfileImageFile(undefined)
     revokeProfileImagePreviewUrl()
     setProfileImagePreviewUrl(undefined)
-    setIsProfileImageDeleted(false)
     setProfileImageErrorMessage('')
   }
 
@@ -200,7 +201,6 @@ export const useProfileNewForm = ({
 
     return {
       profileImageFile,
-      isProfileImageDeleted,
       nickname: trimmedNickname,
       birthDate: normalizedBirthDate,
       phoneNumber: normalizedPhoneNumber,
@@ -210,7 +210,7 @@ export const useProfileNewForm = ({
   }
 
   const handleFieldServerError = (
-    fieldName: 'nickname' | 'birthDate' | 'phoneNumber' | 'email',
+    fieldName: ProfileFieldName,
     message: string,
   ) => {
     setServerFieldErrors((currentServerFieldErrors) => ({
@@ -256,7 +256,11 @@ export const useProfileNewForm = ({
       },
       englishName: {
         value: englishName,
-        onValueChange: setEnglishName,
+        onValueChange: (value: string) => {
+          clearServerFieldError('englishName')
+          setEnglishName(value)
+        },
+        errorMessage: fieldErrors.englishName,
       },
       email: {
         value: email,

@@ -34,13 +34,17 @@ export const ProfileNewPage = () => {
 
       <form className="px-6 pt-[75px]" id={formId} onSubmit={handleSubmit}>
         <ProfileImageSection
+          disabled={form.submit.isSubmitting}
           errorMessage={form.profileImage.errorMessage}
           onImageChange={form.profileImage.onChange}
           onImageDelete={form.profileImage.onDelete}
           previewUrl={form.profileImage.previewUrl}
         />
 
-        <ProfileFields fields={form.fields} />
+        <ProfileFields
+          disabled={form.submit.isSubmitting}
+          fields={form.fields}
+        />
 
         {form.formError ? (
           <p className="typo-body-5 text-primary-500 mt-4" role="alert">

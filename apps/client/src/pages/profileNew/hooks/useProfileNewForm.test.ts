@@ -111,7 +111,7 @@ describe('useProfileNewForm', () => {
     )
   })
 
-  it('resets selected profile image without marking server image deletion in create flow', () => {
+  it('resets selected profile image without adding a deletion flag to the create draft', () => {
     vi.stubGlobal('URL', {
       ...URL,
       createObjectURL: vi.fn(() => 'blob:profile-preview'),
@@ -138,10 +138,8 @@ describe('useProfileNewForm', () => {
       profileDraft = result.current.submit.createProfileDraft()
     })
 
-    expect(profileDraft).toMatchObject({
-      profileImageFile: undefined,
-      isProfileImageDeleted: false,
-    })
+    expect(profileDraft).toMatchObject({ profileImageFile: undefined })
+    expect(profileDraft).not.toHaveProperty('isProfileImageDeleted')
   })
 
   it('does not keep submitting state after creating a local profile draft', () => {

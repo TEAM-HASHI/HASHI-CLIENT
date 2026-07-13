@@ -7,7 +7,6 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react'
-import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
@@ -17,6 +16,7 @@ import {
   clearAuthSession,
   getAccessToken,
   getAuthSessionStatus,
+  setOnboardingSession,
 } from '@/features/auth/session/authSession'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
@@ -113,6 +113,15 @@ describe('ProfileNewPage', () => {
     expect(screen.getByRole('button', { name: '완료' })).toBeDisabled()
   })
 
+  it('limits the optional English name to the Swagger maximum length', () => {
+    renderProfileNewPage()
+
+    expect(screen.getByLabelText('영문 이름 (선택)')).toHaveAttribute(
+      'maxLength',
+      '20',
+    )
+  })
+
   it('fixes the header wrapper inside the mobile app frame with the shared utility', () => {
     renderProfileNewPage()
 
@@ -155,6 +164,11 @@ describe('ProfileNewPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '프로필 이미지 수정' }))
 
     expect(inputClick).toHaveBeenCalled()
+
+    expect(screen.getByLabelText('프로필 이미지 파일 선택')).toHaveAttribute(
+      'accept',
+      'image/jpeg,image/png,image/webp',
+    )
 
     const imageFile = new File(['profile'], 'profile.png', {
       type: 'image/png',
@@ -296,6 +310,40 @@ describe('ProfileNewPage', () => {
     })
   })
 
+  it('reuses the uploaded profile image key when onboarding validation is retried with the same file', async () => {
+    const imageFile = new File(['profile'], 'profile.png', {
+      type: 'image/png',
+    })
+    mockedUploadProfileImage.mockResolvedValue('users/15/profile/profile.png')
+    mockedRequestOnboarding
+      .mockRejectedValueOnce(
+        createErrorResponse('USER-001', 409, '중복된 닉네임입니다'),
+      )
+      .mockResolvedValueOnce({
+        userId: 15,
+        accessToken: 'onboarding-access-token',
+      })
+    renderProfileNewPage()
+
+    fillValidProfileForm()
+    fireEvent.change(screen.getByLabelText('프로필 이미지 파일 선택'), {
+      target: { files: [imageFile] },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '완료' }))
+
+    expect(await screen.findByText('중복된 닉네임입니다')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('닉네임'), {
+      target: { value: '새하시' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '완료' }))
+
+    await waitFor(() => {
+      expect(mockedRequestOnboarding).toHaveBeenCalledTimes(2)
+    })
+    expect(mockedUploadProfileImage).toHaveBeenCalledTimes(1)
+  })
+
   it('shows nickname field error when onboarding API responds with USER-001', async () => {
     mockedRequestOnboarding.mockRejectedValue(
       createErrorResponse('USER-001', 409, '중복된 닉네임입니다'),
@@ -332,6 +380,34 @@ describe('ProfileNewPage', () => {
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
+  it('shows the nameEng validation reason under the English name field', async () => {
+    mockedRequestOnboarding.mockRejectedValue(
+      createErrorResponse('COMMON-400', 400, '잘못된 요청입니다', [
+        {
+          field: 'nameEng',
+          rejectedValue: 'HASHI ENGLISH NAME OVER LIMIT',
+          reason: '영문 이름은 20자 이하로 입력해주세요',
+        },
+      ]),
+    )
+    renderProfileNewPage()
+
+    fillValidProfileForm()
+    fireEvent.change(screen.getByLabelText('영문 이름 (선택)'), {
+      target: { value: 'HASHI' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '완료' }))
+
+    expect(
+      await screen.findByText('영문 이름은 20자 이하로 입력해주세요'),
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText('영문 이름 (선택)')).toHaveAttribute(
+      'aria-describedby',
+      'profile-english-name-error',
+    )
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
   it('shows a form error when onboarding API responds with USER-004', async () => {
     mockedRequestOnboarding.mockRejectedValue(
       createErrorResponse('USER-004', 409, '이미 사용 중인 가입 정보입니다'),
@@ -347,22 +423,29 @@ describe('ProfileNewPage', () => {
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
-  it('throws onboarding auth errors to the route error boundary', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined)
-    mockedRequestOnboarding.mockRejectedValue(
-      createErrorResponse('COMMON-401', 401, '인증이 필요합니다'),
-    )
-    renderProfileNewPage(
-      <ErrorBoundary fallback={<p role="alert">boundary error</p>}>
-        <ProfileNewPage />
-      </ErrorBoundary>,
-    )
+  it.each([
+    ['COMMON-401', 401, '인증이 필요합니다'],
+    ['COMMON-403', 403, '권한이 없습니다'],
+  ])(
+    'clears onboarding session and redirects to login-required for %s',
+    async (code, status, message) => {
+      setOnboardingSession()
+      mockedRequestOnboarding.mockRejectedValue(
+        createErrorResponse(code, status, message),
+      )
+      renderProfileNewPage()
 
-    fillValidProfileForm()
-    fireEvent.click(screen.getByRole('button', { name: '완료' }))
+      fillValidProfileForm()
+      fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('boundary error')
-  })
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith(ROUTES.loginRequired, {
+          replace: true,
+        })
+      })
+      expect(getAuthSessionStatus()).toBe('unauthenticated')
+    },
+  )
 
   it('prevents duplicate onboarding requests while submit is pending', async () => {
     mockedRequestOnboarding.mockImplementation(
@@ -382,6 +465,34 @@ describe('ProfileNewPage', () => {
     await waitFor(() => {
       expect(mockedRequestOnboarding).toHaveBeenCalledTimes(1)
     })
+  })
+
+  it('disables profile fields and image actions while submit is pending', async () => {
+    mockedRequestOnboarding.mockImplementation(
+      () =>
+        new Promise(() => {
+          // Keep the request pending while asserting the locked form state.
+        }),
+    )
+    renderProfileNewPage()
+
+    fillValidProfileForm()
+    fireEvent.click(screen.getByRole('button', { name: '완료' }))
+
+    await waitFor(() => {
+      expect(mockedRequestOnboarding).toHaveBeenCalledTimes(1)
+    })
+
+    expect(screen.getByLabelText('닉네임')).toBeDisabled()
+    expect(screen.getByLabelText('생년월일')).toBeDisabled()
+    expect(screen.getByLabelText('연락처')).toBeDisabled()
+    expect(screen.getByLabelText('영문 이름 (선택)')).toBeDisabled()
+    expect(screen.getByLabelText('이메일')).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: '프로필 이미지 수정' }),
+    ).toBeDisabled()
+    expect(screen.getByRole('button', { name: '프로필 삭제' })).toBeDisabled()
+    expect(screen.getByLabelText('프로필 이미지 파일 선택')).toBeDisabled()
   })
 
   it('navigates to an allowed redirectTo path after onboarding succeeds', async () => {

@@ -1,10 +1,13 @@
 import { useMutation } from '@tanstack/react-query'
 import type { SyntheticEvent } from 'react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { matchPath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { setAccessToken } from '@/features/auth/session/authSession'
+import {
+  clearAuthSession,
+  setAccessToken,
+} from '@/features/auth/session/authSession'
 import { requestOnboarding } from '@/pages/profileNew/api/requestOnboarding'
 import { uploadProfileImage } from '@/pages/profileNew/api/uploadProfileImage'
 import {
@@ -12,7 +15,7 @@ import {
   useProfileNewForm,
 } from '@/pages/profileNew/hooks/useProfileNewForm'
 import { createOnboardingRequestBody } from '@/pages/profileNew/utils/profileNewForm'
-import { isApiError } from '@/shared/api/apiError'
+import { checkHasHttpStatus, isApiError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import type { FieldError } from '@/shared/api/types'
 
@@ -31,6 +34,7 @@ const ONBOARDING_ERROR_FIELD_MAP = {
   nickname: 'nickname',
   birthDate: 'birthDate',
   phone: 'phoneNumber',
+  nameEng: 'englishName',
   email: 'email',
 } as const
 
@@ -75,20 +79,13 @@ const getDuplicatedFieldName = (code: string) => {
   return undefined
 }
 
-export const submitProfileNew = async (profileDraft: ProfileDraft) => {
-  const profileImageKey = profileDraft.profileImageFile
-    ? await uploadProfileImage(profileDraft.profileImageFile)
-    : undefined
-
-  return requestOnboarding(
-    createOnboardingRequestBody(profileDraft, profileImageKey),
-  )
-}
-
 export const useProfileNewPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [boundaryError, setBoundaryError] = useState<unknown>()
+  const uploadedProfileImageRef = useRef<
+    { file: File; fileKey: string } | undefined
+  >(undefined)
 
   const handleBackClick = () => {
     navigate(-1)
@@ -145,12 +142,42 @@ export const useProfileNewPage = () => {
   }
 
   const profileNewMutation = useMutation({
-    mutationFn: submitProfileNew,
+    mutationFn: async (profileDraft: ProfileDraft) => {
+      const profileImageFile = profileDraft.profileImageFile
+      let profileImageKey: string | undefined
+
+      if (profileImageFile) {
+        const cachedProfileImage = uploadedProfileImageRef.current
+
+        if (cachedProfileImage?.file === profileImageFile) {
+          profileImageKey = cachedProfileImage.fileKey
+        } else {
+          profileImageKey = await uploadProfileImage(profileImageFile)
+          uploadedProfileImageRef.current = {
+            file: profileImageFile,
+            fileKey: profileImageKey,
+          }
+        }
+      }
+
+      return requestOnboarding(
+        createOnboardingRequestBody(profileDraft, profileImageKey),
+      )
+    },
     onSuccess: ({ accessToken }) => {
       setAccessToken(accessToken)
       navigate(getAllowedRedirectPath(searchParams.get('redirectTo')))
     },
     onError: (error) => {
+      if (
+        checkHasHttpStatus(error) &&
+        (error.status === 401 || error.status === 403)
+      ) {
+        clearAuthSession()
+        navigate(ROUTES.loginRequired, { replace: true })
+        return
+      }
+
       if (!handleLocalOnboardingError(error)) {
         setBoundaryError(error)
       }
