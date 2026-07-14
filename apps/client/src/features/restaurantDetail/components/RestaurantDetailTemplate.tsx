@@ -8,7 +8,7 @@ import {
 } from '@hashi/hds-icons'
 import { Header, IconButton, showToast, toastQueue } from '@hashi/hds-ui'
 import type { Ref } from 'react'
-import { useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
 import { RestaurantDetailHero } from '@/features/restaurantDetail/components/RestaurantDetailHero'
@@ -48,6 +48,7 @@ interface RestaurantDetailTemplateProps {
   reviewLoadMoreRef: Ref<HTMLDivElement>
   selectedReviewSort: ReviewSortValue
   shareUrl?: string
+  shouldScrollToInitialTab?: boolean
   title: string
   variant: RestaurantDetailVariant
   onPressBack: () => void
@@ -81,6 +82,7 @@ export const RestaurantDetailTemplate = ({
   reviewLoadMoreRef,
   selectedReviewSort,
   shareUrl,
+  shouldScrollToInitialTab = false,
   title,
   variant,
   onPressBack,
@@ -98,6 +100,7 @@ export const RestaurantDetailTemplate = ({
   onCloseReviewUnavailableModal,
 }: RestaurantDetailTemplateProps) => {
   const { isTabBarFixed, markerRef } = useRestaurantDetailTabBarFixed()
+  const hasScrolledToInitialTabRef = useRef(false)
 
   const scrollToTabBarTop = useCallback(() => {
     const marker = markerRef.current
@@ -124,6 +127,19 @@ export const RestaurantDetailTemplate = ({
 
     requestAnimationFrame(scrollToTabBarTop)
   }
+
+  useEffect(() => {
+    if (
+      hasScrolledToInitialTabRef.current ||
+      !shouldScrollToInitialTab ||
+      activeTab === 'info'
+    ) {
+      return
+    }
+
+    hasScrolledToInitialTabRef.current = true
+    requestAnimationFrame(scrollToTabBarTop)
+  }, [activeTab, scrollToTabBarTop, shouldScrollToInitialTab])
 
   const handlePressCopyRestaurantName = async () => {
     const isCopied = await copyTextToClipboard(restaurant.name)
@@ -267,6 +283,7 @@ export const RestaurantDetailTemplate = ({
           onPressWriteReview={onPressWriteReview}
           onSelectSort={onSelectReviewSort}
           rating={restaurant.rating}
+          ratingDistribution={restaurant.ratingDistribution}
           restaurantName={restaurant.name}
           reviewCount={restaurant.reviewCount}
           reviews={restaurant.reviews}

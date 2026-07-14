@@ -12,6 +12,6 @@ export const REVIEW_SORT_OPTIONS = [
 }[]
 
 export const REVIEW_PAGE_SIZE = 10
-export const RATING_DISTRIBUTION = [5, 4, 3, 2, 1]
+export const RATING_DISTRIBUTION = [5, 4, 3, 2, 1] as const
 
 export type ReviewKeywordIconMap = Record<string, ReactNode>

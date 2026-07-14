@@ -184,6 +184,13 @@ const restaurantReviews = {
   restaurantId: 10,
   averageRating: 4.5,
   reviewCount: 1,
+  ratingDistribution: {
+    five: 1,
+    four: 0,
+    three: 0,
+    two: 0,
+    one: 0,
+  },
   reviews: [
     {
       reviewId: 200,
@@ -357,6 +364,7 @@ describe('RestaurantDetailPage', () => {
 
     expect(screen.getByText('하시유저')).toBeInTheDocument()
     expect(screen.getByText('정말 맛있습니다.')).toBeInTheDocument()
+    expect(screen.getByLabelText('5점 리뷰 1개')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '리뷰 이미지 1' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '최신순' })).toHaveAttribute(
       'aria-pressed',
@@ -467,6 +475,32 @@ describe('RestaurantDetailPage', () => {
       'aria-selected',
       'true',
     )
+  })
+
+  it('smoothly scrolls to the tab position when entering with an initial menu or review tab', async () => {
+    mockLocationStore.state = { activeTab: 'review' }
+
+    renderPage()
+
+    await screen.findByRole('tab', { name: /리뷰/ })
+
+    expect(mockScrollTo).toHaveBeenCalledWith({
+      top: expect.any(Number),
+      behavior: 'smooth',
+    })
+  })
+
+  it('does not run the initial tab scroll again after changing tabs manually', async () => {
+    mockLocationStore.state = { activeTab: 'review' }
+
+    renderPage()
+
+    await screen.findByRole('tab', { name: /리뷰/ })
+    expect(mockScrollTo).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByRole('tab', { name: '메뉴' }))
+
+    expect(mockScrollTo).toHaveBeenCalledTimes(2)
   })
 
   it('opens login bottom sheet for unauthenticated reservation action', async () => {

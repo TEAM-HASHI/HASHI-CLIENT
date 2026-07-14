@@ -108,8 +108,9 @@ export const useRestaurantDetailContent = ({
           storeInformation,
           menus,
           reviews,
-          averageRating: firstReviewPage?.averageRating ?? 0,
-          reviewCount: firstReviewPage?.reviewCount ?? 0,
+          averageRating: firstReviewPage?.averageRating,
+          reviewCount: firstReviewPage?.reviewCount,
+          ratingDistribution: firstReviewPage?.ratingDistribution,
         })
       : null
 
