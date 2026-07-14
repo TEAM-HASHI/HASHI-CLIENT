@@ -477,6 +477,19 @@ describe('RestaurantDetailPage', () => {
     )
   })
 
+  it('smoothly scrolls to the tab position when entering with an initial menu or review tab', async () => {
+    mockLocationStore.state = { activeTab: 'review' }
+
+    renderPage()
+
+    await screen.findByRole('tab', { name: /리뷰/ })
+
+    expect(mockScrollTo).toHaveBeenCalledWith({
+      top: expect.any(Number),
+      behavior: 'smooth',
+    })
+  })
+
   it('opens login bottom sheet for unauthenticated reservation action', async () => {
     renderPage()
 
