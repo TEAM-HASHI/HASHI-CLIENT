@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { useInfiniteScrollTrigger } from '@/shared/hooks/useInfiniteScrollTrigger'
@@ -91,12 +91,9 @@ describe('useInfiniteScrollTrigger', () => {
 
     expect(onIntersect).toHaveBeenCalledTimes(1)
 
-    act(() => {
+    await act(async () => {
       resolveIntersect()
-    })
-
-    await waitFor(() => {
-      expect(onIntersect).toHaveBeenCalledTimes(1)
+      await Promise.resolve()
     })
 
     triggerIntersect()
