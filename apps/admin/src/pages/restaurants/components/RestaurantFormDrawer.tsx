@@ -584,17 +584,9 @@ const MenuAndExposureStep = ({
   const hashtags = (
     <Field
       label="해시태그"
-      value={form.hashtags.join(', ')}
+      value={form.hashtags}
       placeholder="쉼표로 구분"
-      onChange={(value) =>
-        setForm((current) => ({
-          ...current,
-          hashtags: value
-            .split(',')
-            .map((item) => item.trim())
-            .filter(Boolean),
-        }))
-      }
+      onChange={(hashtags) => setForm((current) => ({ ...current, hashtags }))}
     />
   )
   const curations = (

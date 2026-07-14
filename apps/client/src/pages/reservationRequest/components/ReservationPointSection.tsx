@@ -45,13 +45,21 @@ export const ReservationPointSection = ({
         </div>
 
         <div className="mt-[12.512px] flex h-[46px] gap-2.5">
-          <input
-            aria-label="사용 포인트"
-            className="border-warm-gray-100 typo-sub-header-2 text-primary-200 placeholder:text-warm-gray-300 h-[46px] min-w-0 flex-1 rounded-[5px] border bg-white px-4 text-right outline-none focus-visible:border-black"
-            inputMode="numeric"
-            onChange={handlePointInputChange}
-            value={formatWon(usedPoint, { useGrouping: false })}
-          />
+          <div className="relative min-w-0 flex-1">
+            <input
+              aria-label="사용 포인트"
+              className="border-warm-gray-100 typo-sub-header-2 text-primary-200 placeholder:text-warm-gray-300 h-[46px] w-full rounded-[5px] border bg-white pr-8 pl-4 text-right outline-none focus-visible:border-black"
+              inputMode="numeric"
+              onChange={handlePointInputChange}
+              value={usedPoint}
+            />
+            <span
+              aria-hidden="true"
+              className="typo-sub-header-2 text-primary-200 pointer-events-none absolute top-1/2 right-4 -translate-y-1/2"
+            >
+              원
+            </span>
+          </div>
           <Button
             className="typo-body-6 h-[46px] w-[94px] px-0"
             onClick={onUseAllPointsClick}

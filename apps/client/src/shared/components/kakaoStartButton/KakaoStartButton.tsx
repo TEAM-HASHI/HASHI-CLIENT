@@ -17,14 +17,11 @@ export const KakaoStartButton = ({
   return (
     <Button
       className={cn(
-        'typo-sub-header-1 bg-point-200 enabled:active:bg-point-200 relative h-14.5 rounded-full text-black enabled:active:opacity-80',
+        'typo-sub-header-3 bg-point-200 enabled:active:bg-point-200 relative h-12 w-[268px] gap-3 rounded-full text-black enabled:active:opacity-80',
         className,
       )}
-      leftIcon={
-        <KakaoIcon className="absolute top-1/2 left-4.75 size-6 -translate-y-1/2" />
-      }
+      leftIcon={<KakaoIcon className="h-5 w-[21px]" />}
       onClick={onPress}
-      width="full"
     >
       {children}
     </Button>

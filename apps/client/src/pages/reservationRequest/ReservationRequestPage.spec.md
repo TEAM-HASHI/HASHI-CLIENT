@@ -120,11 +120,13 @@ POST /api/v1/reservations/anywhere
 
 식당 주소는 `location.state.restaurantAddress`를 표시한다. 일반 예약은 식당 요약 API 값, 어디든 예약은 사용자가 입력한 값을 이전 단계에서 전달한다.
 
+예약 정보 영역과 예약 확인 모달의 식당 주소는 라벨을 제외한 남은 가로폭을 사용한다. 공간이 부족할 때만 전체 내용을 보존한 채 자연스럽게 줄바꿈하며 말줄임표로 생략하지 않는다.
+
 식당 이미지는 다음 우선순위로 표시한다.
 
-1. `restaurantImageUrl`이 있으면 해당 이미지 표시
+1. `restaurantImageUrl`이 있고 로드에 성공하면 해당 이미지 표시
 2. 어디든 예약(`source: 'anywhere'`)에서 넘어왔고 이미지가 없으면 Figma `2-a` placeholder 표시
-3. 일반 예약에서 이미지가 없으면 shared `DefaultImage` 표시
+3. 일반 예약에서 이미지가 없거나 이미지 로드에 실패하면 shared `DefaultImage` 표시
 
 ### 포인트
 
@@ -136,6 +138,8 @@ POST /api/v1/reservations/anywhere
 - 최대 사용 가능 포인트는 `min(availablePoint, paymentAmount)`다.
 - 한도 초과 입력 시 입력값을 즉시 최대 사용 가능 포인트로 보정한다.
 - `전액사용` 클릭 시 최대 사용 가능 포인트를 적용한다.
+- `전액사용` 적용 후에도 입력값을 지우거나 줄여 사용 포인트를 다시 수정할 수 있다.
+- 입력 DOM 값은 숫자만 유지하고 `원` 접미사는 별도 시각 요소로 표시한다.
 - `전액사용` 버튼 typography는 `typo-body-6`을 사용한다.
 - 남은 포인트는 `availablePoint - usedPoint`다.
 - 최종 결제 금액은 `paymentAmount - usedPoint`이며 0원 미만으로 내려가지 않는다.
@@ -191,7 +195,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
   - `HashiPointMarkIcon`
   - `HashiPlaceholderIcon`
 - Shared:
-  - `DefaultImage`
+  - `ImageWithDefaultFallback` (`DefaultImage` fallback 포함)
 - Page-local:
   - `ReservationRequestInfoSection`
   - `ReservationPointSection`
@@ -218,6 +222,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - 숫자가 아닌 포인트 입력은 제거된다.
 - 포인트 입력이 최대 사용 가능 금액을 넘으면 즉시 보정된다.
 - `전액사용` 클릭 시 최대 사용 가능 포인트가 적용된다.
+- `전액사용` 클릭 후 포인트 입력값을 다시 수정할 수 있다.
 - 최종 결제 금액과 남은 포인트가 갱신된다.
 - `예약 요청` 클릭 시 확인 모달이 열린다.
 - `취소` 클릭 시 확인 모달이 닫힌다.

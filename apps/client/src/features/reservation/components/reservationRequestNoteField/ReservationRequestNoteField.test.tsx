@@ -19,7 +19,7 @@ describe('ReservationRequestNoteField', () => {
     expect(screen.getByText('/1000')).toBeInTheDocument()
   })
 
-  it('uses a thin HASHI point-color border instead of the HDS focus outline', () => {
+  it('uses the default gray border and a black focus border', () => {
     render(<ReservationRequestNoteField onValueChange={vi.fn()} value="" />)
 
     const requestNoteField = screen.getByRole('textbox', {
@@ -27,13 +27,14 @@ describe('ReservationRequestNoteField', () => {
     })
 
     expect(requestNoteField).toHaveClass(
-      'focus-visible:border-primary-400',
+      'border-warm-gray-100',
+      'focus-visible:border-black',
       'focus-visible:outline-0',
     )
     expect(requestNoteField).not.toHaveClass(
-      'focus-visible:border-cool-gray-500',
+      'border-black',
+      'focus-visible:border-primary-400',
     )
-    expect(requestNoteField).not.toHaveClass('focus-visible:outline-2')
   })
 
   it('passes the next request note to the controlled change callback', () => {

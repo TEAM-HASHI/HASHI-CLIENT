@@ -43,7 +43,7 @@ Jira: HASHI-78
 
 - [x] 상단에 `예약하기` 제목과 뒤로가기 버튼을 모바일 프레임 상단에 고정해 보여준다.
 - [x] 뒤로가기 버튼은 `navigate(-1)`을 실행한다.
-- [x] 식당 이미지 영역과 식당명을 보여준다.
+- [x] 식당 이미지 영역과 식당명을 보여주고, 이미지 URL이 없거나 로드에 실패하면 검은색 `HashiPlaceholderIcon`을 표시한다.
 - [x] 예약자명 입력 필드를 보여준다.
 - [x] 인원 선택은 어른, 청소년, 어린이 카운터를 보여준다.
 - [x] 인원 수는 0명 아래로 내려가지 않는다.
@@ -172,6 +172,7 @@ RestaurantReservationNewPage
   - `ReservationRestaurantSummary`
 - icon:
   - `BackIcon`
+  - `HashiPlaceholderIcon`
 
 ## Error Handling
 
