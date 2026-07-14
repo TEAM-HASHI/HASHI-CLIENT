@@ -205,7 +205,7 @@ describe('ReservationRequestPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('creates the reservation and navigates with the response reservation id', async () => {
+  it('creates the reservation and replaces the request page with the detail page', async () => {
     renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
@@ -222,6 +222,7 @@ describe('ReservationRequestPage', () => {
         usedPoint: 0,
       })
       expect(mockNavigate).toHaveBeenCalledWith('/reservations/31', {
+        replace: true,
         state: { fromReservationRequest: true },
       })
     })
