@@ -21,13 +21,19 @@ import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 import { createQueryClient } from '@/shared/lib/queryClient'
 
-const { mockNavigate, mockReservationParams, mockShowToast } = vi.hoisted(
-  () => ({
-    mockNavigate: vi.fn(),
-    mockReservationParams: { reservationId: '12' },
-    mockShowToast: vi.fn(),
-  }),
-)
+const {
+  mockLocationState,
+  mockNavigate,
+  mockReservationParams,
+  mockShowToast,
+} = vi.hoisted(() => ({
+  mockLocationState: {
+    current: null as unknown,
+  },
+  mockNavigate: vi.fn(),
+  mockReservationParams: { reservationId: '12' },
+  mockShowToast: vi.fn(),
+}))
 
 vi.mock('react-router-dom', async () => {
   const actual =
@@ -35,6 +41,12 @@ vi.mock('react-router-dom', async () => {
 
   return {
     ...actual,
+    useLocation: () => ({
+      hash: '',
+      pathname: `/reservations/${mockReservationParams.reservationId}`,
+      search: '',
+      state: mockLocationState.current,
+    }),
     useNavigate: () => mockNavigate,
     useParams: () => mockReservationParams,
   }
@@ -121,6 +133,7 @@ describe('ReservationDetailPage', () => {
     vi.unstubAllGlobals()
     vi.unstubAllEnvs()
     vi.restoreAllMocks()
+    mockLocationState.current = null
     mockNavigate.mockClear()
     mockShowToast.mockClear()
   })
@@ -351,6 +364,59 @@ describe('ReservationDetailPage', () => {
     )
 
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home)
+  })
+
+  it('moves back when the back button is pressed from a normal entry', async () => {
+    renderReservationDetailPage()
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: '이전 페이지로 이동' }),
+    )
+
+    expect(mockNavigate).toHaveBeenCalledWith(-1)
+  })
+
+  it('hides the back button when entered after reservation request', async () => {
+    mockLocationState.current = { fromReservationRequest: true }
+
+    renderReservationDetailPage()
+
+    await screen.findByText('예약 상세')
+
+    expect(
+      screen.queryByRole('button', {
+        name: '이전 페이지로 이동',
+      }),
+    ).not.toBeInTheDocument()
+    expect(mockNavigate).not.toHaveBeenCalledWith(-1)
+  })
+
+  it('does not hide the back button for malformed entry state', async () => {
+    mockLocationState.current = { fromReservationRequest: false }
+
+    renderReservationDetailPage()
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: '이전 페이지로 이동',
+      }),
+    )
+
+    expect(mockNavigate).toHaveBeenCalledWith(-1)
+  })
+
+  it('does not hide the back button for unrelated entry state', async () => {
+    mockLocationState.current = { source: 'myReservations' }
+
+    renderReservationDetailPage()
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: '이전 페이지로 이동',
+      }),
+    )
+
+    expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 
   it('shows only the date for the received reservation step time', async () => {

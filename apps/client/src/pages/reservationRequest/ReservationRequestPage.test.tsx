@@ -221,7 +221,9 @@ describe('ReservationRequestPage', () => {
         draft: reservationDraft,
         usedPoint: 0,
       })
-      expect(mockNavigate).toHaveBeenCalledWith('/reservations/31')
+      expect(mockNavigate).toHaveBeenCalledWith('/reservations/31', {
+        state: { fromReservationRequest: true },
+      })
     })
   })
 

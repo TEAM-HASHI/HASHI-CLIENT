@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { showToast } from '@hashi/hds-ui'
 import { useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import {
@@ -20,8 +20,24 @@ import {
 } from '@/pages/reservationDetail/utils/reservationDetailPolicy'
 import { checkIsNotFoundError } from '@/shared/api/apiError'
 
+type ReservationDetailLocationState = {
+  fromReservationRequest?: boolean
+}
+
+const checkIsReservationRequestEntryState = (
+  state: unknown,
+): state is ReservationDetailLocationState => {
+  return (
+    typeof state === 'object' &&
+    state !== null &&
+    'fromReservationRequest' in state &&
+    (state as ReservationDetailLocationState).fromReservationRequest === true
+  )
+}
+
 export const useReservationDetailPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
   const params = useParams<{ reservationId: string }>()
   const reservationId = parseReservationId(params.reservationId)
@@ -36,8 +52,13 @@ export const useReservationDetailPage = () => {
   const viewModel = reservationDetail
     ? createReservationDetailViewModel(reservationDetail)
     : null
+  const isBackHidden = checkIsReservationRequestEntryState(location.state)
 
   const handleBack = () => {
+    if (isBackHidden) {
+      return
+    }
+
     navigate(-1)
   }
 
@@ -102,6 +123,7 @@ export const useReservationDetailPage = () => {
     isInvalidReservationId: reservationId === null,
     isLoading: reservationDetailQuery.isPending,
     isCancelingReservation: cancelReservationMutation.isPending,
+    isBackHidden,
     isNotFound:
       isBlockedReservationStatus ||
       checkIsNotFoundError(reservationDetailQuery.error),
