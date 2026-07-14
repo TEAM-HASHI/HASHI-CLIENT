@@ -58,7 +58,12 @@ const mockedUseMyProfileSummaryQuery = vi.mocked(useMyProfileSummaryQuery)
 const LocationPath = () => {
   const location = useLocation()
 
-  return <div data-testid="location-path">{location.pathname}</div>
+  return (
+    <>
+      <div data-testid="location-path">{location.pathname}</div>
+      <div data-testid="location-state">{JSON.stringify(location.state)}</div>
+    </>
+  )
 }
 
 const renderMyReservationsPage = (
@@ -343,6 +348,11 @@ describe('MyReservationsPage', () => {
       await screen.findByRole('button', { name: /리뷰 작성 완료/ }),
     )
     expect(screen.getByTestId('location-path')).toHaveTextContent('/reviews/51')
+    expect(screen.getByTestId('location-state')).toHaveTextContent(
+      JSON.stringify({
+        returnTo: `${ROUTES.myReservations}?status=VISITED`,
+      }),
+    )
   })
 
   it('navigates from unreviewed visited reservations to review new', async () => {
