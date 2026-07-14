@@ -98,13 +98,14 @@
 - query: restaurant reviews infinite
 - requested endpoint: `GET /api/v1/restaurants/{restaurantId}/reviews`
 - response data:
-  - `averageRating`, `reviewCount`, `content`, `nextCursor`, `hasNext`
+  - `averageRating`, `reviewCount`, `ratingDistribution`, `content`, `nextCursor`, `hasNext`
 - enabled condition: route param `restaurantId` is valid number
 - request params:
   - path `restaurantId`, query `sort`, `cursor`, `size`
 - loading state: 리뷰 목록 조회 또는 정렬 변경 중에는 리뷰 목록 영역에만 `RestaurantReviewListSkeleton` 표시
 - error state: 리뷰 영역 error fallback
 - empty state: 리뷰가 없으면 shared `ListEmptyState`로 `리뷰 리스트를 준비중이에요.` 문구 표시
+- rating distribution: API `ratingDistribution`의 `five`, `four`, `three`, `two`, `one` count를 `reviewCount` 기준 비율로 변환해 별점 막대 너비에 반영
 - refetch condition: route param `restaurantId` 또는 sort 변경
 - pagination:
   - `getNextPageParam`: `hasNext`가 true이면 `nextCursor`

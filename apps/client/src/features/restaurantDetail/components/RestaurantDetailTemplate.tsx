@@ -264,6 +264,7 @@ export const RestaurantDetailTemplate = ({
           onPressWriteReview={onPressWriteReview}
           onSelectSort={onSelectReviewSort}
           rating={restaurant.rating}
+          ratingDistribution={restaurant.ratingDistribution}
           restaurantName={restaurant.name}
           reviewCount={restaurant.reviewCount}
           reviews={restaurant.reviews}

@@ -184,6 +184,13 @@ const restaurantReviews = {
   restaurantId: 10,
   averageRating: 4.5,
   reviewCount: 1,
+  ratingDistribution: {
+    five: 1,
+    four: 0,
+    three: 0,
+    two: 0,
+    one: 0,
+  },
   reviews: [
     {
       reviewId: 200,
@@ -357,6 +364,7 @@ describe('RestaurantDetailPage', () => {
 
     expect(screen.getByText('하시유저')).toBeInTheDocument()
     expect(screen.getByText('정말 맛있습니다.')).toBeInTheDocument()
+    expect(screen.getByLabelText('5점 리뷰 1개')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '리뷰 이미지 1' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '최신순' })).toHaveAttribute(
       'aria-pressed',
