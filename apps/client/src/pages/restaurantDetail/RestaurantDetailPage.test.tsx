@@ -518,9 +518,7 @@ describe('RestaurantDetailPage', () => {
     renderPage()
 
     fireEvent.click(await screen.findByRole('button', { name: '예약하기' }))
-    fireEvent.click(
-      screen.getByRole('button', { name: '카카오로 1초 만에 시작하기' }),
-    )
+    fireEvent.click(screen.getByRole('button', { name: '카카오로 로그인하기' }))
 
     expect(mockStartKakaoOAuth).toHaveBeenCalledWith('/restaurants/default')
   })

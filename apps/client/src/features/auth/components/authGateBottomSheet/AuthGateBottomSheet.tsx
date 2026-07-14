@@ -23,26 +23,26 @@ export const AuthGateBottomSheet = ({
       showCloseButton={false}
       showHandle={false}
     >
-      <div className="pb-4.5">
-        <p className="mt-5.5 text-black">
-          <span className="typo-body-1 block leading-[1.45] font-normal">
+      <div className="relative h-[387px]" data-testid="auth-gate-content">
+        <p className="absolute top-[33px] left-[5px] w-[344px] text-black">
+          <span className="typo-body-1 block leading-[29px] font-normal">
             간편하게 로그인하고
           </span>
-          <span className="typo-header-3 block leading-[1.45]">
+          <span className="typo-header-3 block leading-[1.5]">
             Hashi와 일본 미식 여행을 완성해보세요!
           </span>
         </p>
-        <div className="flex justify-center pt-8.75 pb-6.5">
-          <img
-            alt=""
-            aria-hidden="true"
-            width={200}
-            className="h-auto"
-            src={loginImage}
-          />
-        </div>
-        <KakaoStartButton onPress={onKakaoPress}>
-          카카오로 1초 만에 시작하기
+        <img
+          alt=""
+          aria-hidden="true"
+          className="absolute top-[114px] left-[72px] h-[172px] w-[201px]"
+          src={loginImage}
+        />
+        <KakaoStartButton
+          className="absolute top-[311px] left-1/2 -translate-x-1/2"
+          onPress={onKakaoPress}
+        >
+          카카오로 로그인하기
         </KakaoStartButton>
       </div>
     </BottomSheet>

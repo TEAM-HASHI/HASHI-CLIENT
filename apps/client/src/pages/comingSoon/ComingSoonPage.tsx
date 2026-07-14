@@ -8,23 +8,23 @@ export const ComingSoonPage = () => {
 
   return (
     <section className="app-mobile-bottom-nav-content flex flex-col items-center justify-center text-center">
-      <img
-        alt=""
-        aria-hidden="true"
-        className="mb-[22.5px] h-auto w-33.75"
-        src={emptyImage}
-      />
-      <div>
-        <h1 className="typo-header-3 text-cool-gray-900 mb-2">
+      <div className="flex translate-y-[43px] flex-col items-center">
+        <img
+          alt=""
+          aria-hidden="true"
+          className="mb-[25px] h-19 w-[101px]"
+          src={emptyImage}
+        />
+        <h1 className="typo-sub-header-1 text-cool-gray-900 mb-2">
           서비스를 준비하고 있어요.
         </h1>
-        <p className="typo-body-5 text-cool-gray-500 mb-5 leading-[1.4]">
+        <p className="typo-body-8 text-cool-gray-500 mb-7 leading-[1.2]">
           더 편한 Hashi 이용을 위해
           <br />
           현재 기능을 준비하고 있어요.
         </p>
         <Button
-          className="typo-sub-header-2 w-59.25"
+          className="typo-sub-header-3 w-[185px]"
           onClick={() => navigate(ROUTES.home)}
           size="md"
           type="button"
