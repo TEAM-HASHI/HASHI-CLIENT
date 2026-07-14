@@ -68,8 +68,13 @@ export const RestaurantMenuDetailPage = () => {
               <BackIcon className="size-6" />
             </IconButton>
           }
+          className="h-[75px]"
           rightAction={<ShareIconButton shareUrl={shareUrl} />}
-          title={restaurant.name}
+          title={
+            <span className="block truncate whitespace-nowrap">
+              {restaurant.name}
+            </span>
+          }
           variant="largeTitle"
         />
       </div>

@@ -75,6 +75,7 @@ const ReservationRequestContent = ({
             generatePath(ROUTES.reservationDetail, {
               reservationId: String(reservationId),
             }),
+            { replace: true, state: { fromReservationRequest: true } },
           )
         },
         onSettled: () => {

@@ -25,19 +25,30 @@ describe('AuthGateBottomSheet', () => {
       screen.getByText('Hashi와 일본 미식 여행을 완성해보세요!'),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: '카카오로 1초 만에 시작하기' }),
+      screen.getByRole('button', { name: '카카오로 로그인하기' }),
     ).toBeInTheDocument()
+    expect(screen.getByTestId('auth-gate-content')).toHaveClass(
+      'relative',
+      'h-[387px]',
+    )
+    expect(screen.getByText('간편하게 로그인하고')).toHaveClass(
+      'typo-body-1',
+      'leading-[29px]',
+    )
+    expect(
+      screen.getByText('Hashi와 일본 미식 여행을 완성해보세요!'),
+    ).toHaveClass('typo-header-3', 'leading-[1.5]')
     expect(screen.getByRole('presentation', { hidden: true })).toHaveAttribute(
       'src',
       loginImage,
     )
-    expect(screen.getByRole('presentation', { hidden: true })).toHaveAttribute(
-      'width',
-      '200',
-    )
     expect(screen.getByRole('presentation', { hidden: true })).toHaveClass(
-      'h-auto',
+      'h-[172px]',
+      'w-[201px]',
     )
+    expect(
+      screen.getByRole('button', { name: '카카오로 로그인하기' }),
+    ).toHaveClass('h-12', 'w-[268px]')
   })
 
   it('keeps kakao brand color for active feedback', () => {
@@ -50,7 +61,7 @@ describe('AuthGateBottomSheet', () => {
     )
 
     const kakaoButton = screen.getByRole('button', {
-      name: '카카오로 1초 만에 시작하기',
+      name: '카카오로 로그인하기',
     })
 
     expect(kakaoButton).toHaveClass('bg-point-200')
@@ -70,9 +81,7 @@ describe('AuthGateBottomSheet', () => {
       />,
     )
 
-    fireEvent.click(
-      screen.getByRole('button', { name: '카카오로 1초 만에 시작하기' }),
-    )
+    fireEvent.click(screen.getByRole('button', { name: '카카오로 로그인하기' }))
 
     expect(handleKakaoPress).toHaveBeenCalled()
   })

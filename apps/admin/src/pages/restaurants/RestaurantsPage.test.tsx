@@ -31,6 +31,26 @@ const mutation = (mutate = vi.fn()) => ({
   error: null,
 })
 
+const restaurantPrefill = {
+  restaurantId: 12,
+  name: '하시 스시',
+  localName: 'ハシ寿司',
+  summary: '현지 스시 전문점',
+  description: '제철 생선을 사용합니다.',
+  address: '東京都渋谷区1-1-1',
+  area: '시부야',
+  genre: 'sushi',
+  foodCategory: 'sushi',
+  priceCurrency: 'JPY',
+  minPrice: 3_000,
+  maxPrice: 8_000,
+  images: [],
+  menus: [],
+  hashtags: ['기존태그'],
+  curationTypes: [],
+  businessHours: [],
+}
+
 describe('RestaurantsPage', () => {
   beforeEach(() => {
     deleteMock.mockReset()
@@ -101,6 +121,32 @@ describe('RestaurantsPage', () => {
     expect(
       screen.getAllByRole('button', { name: /장르|음식 카테고리/ }).length,
     ).toBeGreaterThan(0)
+  })
+
+  it('keeps comma-separated hashtags visible while editing', async () => {
+    const user = userEvent.setup()
+    vi.mocked(useRestaurantPrefillQuery).mockReturnValue({
+      isLoading: false,
+      isError: false,
+      isSuccess: true,
+      data: restaurantPrefill,
+    } as unknown as ReturnType<typeof useRestaurantPrefillQuery>)
+
+    render(<RestaurantsPage />)
+
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    await user.click(
+      screen.getByRole('checkbox', { name: /해시태그 전체 교체/ }),
+    )
+
+    const hashtagInput = screen.getByRole('textbox', { name: '해시태그' })
+    await user.clear(hashtagInput)
+    await user.type(hashtagInput, '스시, 현지인맛집')
+
+    expect(hashtagInput).toHaveValue('스시, 현지인맛집')
   })
 
   it('supports soft delete by direct numeric ID', async () => {

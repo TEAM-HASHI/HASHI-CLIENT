@@ -7,6 +7,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -107,6 +108,25 @@ describe('ReservationRequestPage', () => {
     expect(screen.getByText('7,000원')).toBeInTheDocument()
   })
 
+  it('shows the default image when the restaurant image fails to load', () => {
+    renderPage()
+
+    const restaurantImageName =
+      '야키니쿠 리키마루 이케부쿠로 히가시구치 텐 식당 이미지'
+    const restaurantImage = screen.getByRole('img', {
+      name: restaurantImageName,
+    })
+
+    fireEvent.error(restaurantImage)
+
+    expect(
+      screen.queryByRole('img', { name: restaurantImageName }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByLabelText(restaurantImageName)).toHaveClass(
+      'bg-warm-gray-100',
+    )
+  })
+
   it('returns home when reservation draft state is missing', async () => {
     mockLocationState.current = undefined
 
@@ -159,7 +179,7 @@ describe('ReservationRequestPage', () => {
       target: { value: 'abc9000원' },
     })
 
-    expect(pointInput).toHaveValue('5000원')
+    expect(pointInput).toHaveValue('5000')
     expect(screen.getByText('2,000원')).toBeInTheDocument()
     expect(screen.getByText('0원')).toBeInTheDocument()
   })
@@ -175,9 +195,47 @@ describe('ReservationRequestPage', () => {
 
     fireEvent.click(useAllPointsButton)
 
-    expect(screen.getByLabelText('사용 포인트')).toHaveValue('5000원')
+    expect(screen.getByLabelText('사용 포인트')).toHaveValue('5000')
     expect(screen.getByText('2,000원')).toBeInTheDocument()
     expect(screen.getByText('0원')).toBeInTheDocument()
+  })
+
+  it('allows editing the point input after use-all is applied', async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    const pointInput = screen.getByLabelText('사용 포인트')
+
+    await user.click(screen.getByRole('button', { name: '전액사용' }))
+    await user.click(pointInput)
+    await user.keyboard('{Backspace}')
+
+    expect(pointInput).toHaveValue('500')
+    expect(screen.getByText('6,500원')).toBeInTheDocument()
+    expect(screen.getByText('4500원')).toBeInTheDocument()
+  })
+
+  it('lets long restaurant addresses use the remaining width', () => {
+    const longRestaurantAddress = '도쿄도 지요다구 진보초 2-3-1'
+    mockLocationState.current = {
+      ...reservationDraft,
+      restaurantAddress: longRestaurantAddress,
+    }
+    renderPage()
+
+    const pageAddress = screen.getByText(longRestaurantAddress)
+
+    expect(pageAddress).toHaveClass('min-w-0', 'flex-1', 'text-pretty')
+    expect(pageAddress).not.toHaveClass('max-w-[149px]')
+
+    fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
+
+    const dialogAddress = within(
+      screen.getByRole('alertdialog', { name: '예약을 진행할까요?' }),
+    ).getByText(longRestaurantAddress)
+
+    expect(dialogAddress).toHaveClass('min-w-0', 'flex-1', 'text-pretty')
+    expect(dialogAddress).not.toHaveClass('max-w-[150px]')
   })
 
   it('opens and closes the reservation confirm dialog', () => {
@@ -205,7 +263,7 @@ describe('ReservationRequestPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('creates the reservation and navigates with the response reservation id', async () => {
+  it('creates the reservation and replaces the request page with the detail page', async () => {
     renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
@@ -221,7 +279,10 @@ describe('ReservationRequestPage', () => {
         draft: reservationDraft,
         usedPoint: 0,
       })
-      expect(mockNavigate).toHaveBeenCalledWith('/reservations/31')
+      expect(mockNavigate).toHaveBeenCalledWith('/reservations/31', {
+        replace: true,
+        state: { fromReservationRequest: true },
+      })
     })
   })
 

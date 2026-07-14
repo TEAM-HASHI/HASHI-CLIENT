@@ -21,6 +21,7 @@ export const ReservationDetailPage = () => {
     isInvalidReservationId,
     isLoading,
     isNotFound,
+    isBackHidden,
     isCancelingReservation,
     reservationNotices,
     isCancelDialogOpen,
@@ -49,13 +50,15 @@ export const ReservationDetailPage = () => {
     >
       <Header
         leftAction={
-          <IconButton
-            aria-label="이전 페이지로 이동"
-            onClick={handleBack}
-            size="xs"
-          >
-            <BackIcon className="size-6" />
-          </IconButton>
+          isBackHidden ? undefined : (
+            <IconButton
+              aria-label="이전 페이지로 이동"
+              onClick={handleBack}
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          )
         }
         title="예약 상세"
         className="app-mobile-fixed-top z-fixed fixed"

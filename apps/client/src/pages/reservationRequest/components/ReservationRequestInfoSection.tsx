@@ -1,6 +1,6 @@
 import { HashiPlaceholderIcon } from '@hashi/hds-icons'
 
-import { DefaultImage } from '@/shared/components/defaultImage'
+import { ImageWithDefaultFallback } from '@/shared/components/defaultImage'
 
 interface ReservationRequestInfoSectionProps {
   restaurantName: string
@@ -27,7 +27,7 @@ const ReservationInfoRow = ({
       <dd
         className={
           multiline
-            ? 'typo-body-6 text-cool-gray-900 max-w-[149px] text-right leading-[1.36] break-keep'
+            ? 'typo-body-6 text-cool-gray-900 min-w-0 flex-1 text-right leading-[1.36] text-pretty break-keep'
             : 'typo-body-6 text-cool-gray-900 text-right leading-[1.36] whitespace-nowrap'
         }
       >
@@ -50,22 +50,18 @@ export const ReservationRequestInfoSection = ({
     <section aria-label="예약 정보 확인" className="pt-6.5">
       <div className="px-5 pb-[45px]">
         <div className="flex items-center gap-[9px] pl-[3.5px]">
-          {restaurantImageUrl ? (
-            <img
-              alt={`${restaurantName} 식당 이미지`}
-              className="size-[60px] shrink-0 rounded-[5px] object-cover"
-              src={restaurantImageUrl}
-            />
-          ) : isAnywhereReservation ? (
+          {isAnywhereReservation && !restaurantImageUrl ? (
             <HashiPlaceholderIcon
               aria-label="어디든 예약 식당 기본 이미지"
               className="size-15 shrink-0"
               role="img"
             />
           ) : (
-            <DefaultImage
-              className="size-15 shrink-0 rounded-[5px]"
-              logoSize="sm"
+            <ImageWithDefaultFallback
+              alt={`${restaurantName} 식당 이미지`}
+              className="size-15 shrink-0 rounded-[5px] object-cover"
+              fallbackLogoSize="sm"
+              src={restaurantImageUrl ?? undefined}
             />
           )}
           <p className="typo-sub-header-1 text-primary-200 line-clamp-2 min-w-0 flex-1 break-keep">

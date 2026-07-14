@@ -9,7 +9,10 @@ describe('ReviewImageViewer', () => {
     cleanup()
     document.body.style.overflow = ''
     document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
     document.documentElement.style.overflow = ''
+    vi.unstubAllGlobals()
   })
 
   it('does not render when closed', () => {
@@ -103,6 +106,11 @@ describe('ReviewImageViewer', () => {
   })
 
   it('locks background scroll while viewer is open and restores it when closed', () => {
+    const mockScrollTo = vi.fn()
+
+    vi.stubGlobal('scrollY', 240)
+    vi.stubGlobal('scrollTo', mockScrollTo)
+
     const { rerender } = render(
       <ReviewImageViewer
         imageUrls={['/review-1.jpg']}
@@ -113,6 +121,8 @@ describe('ReviewImageViewer', () => {
 
     expect(document.body.style.overflow).toBe('hidden')
     expect(document.body.style.position).toBe('fixed')
+    expect(document.body.style.top).toBe('-240px')
+    expect(document.body.style.width).toBe('100%')
     expect(document.documentElement.style.overflow).toBe('hidden')
 
     rerender(
@@ -125,6 +135,12 @@ describe('ReviewImageViewer', () => {
 
     expect(document.body.style.overflow).toBe('')
     expect(document.body.style.position).toBe('')
+    expect(document.body.style.top).toBe('')
+    expect(document.body.style.width).toBe('')
     expect(document.documentElement.style.overflow).toBe('')
+    expect(mockScrollTo).toHaveBeenCalledWith({
+      top: 240,
+      behavior: 'auto',
+    })
   })
 })

@@ -113,7 +113,7 @@ export const HomeLogo = () => {
 - [x] Hashi 로고와 검색 진입 영역, 검색바 아래 여백은 홈 본문 스크롤과 무관하게 상단에 고정합니다.
 - [x] 메인 배너 섹션 타이틀 `맛집 큐레이션을 둘러보세요!`를 노출합니다.
 - [x] 메인 배너는 여러 장 carousel로 노출합니다.
-- [x] 메인 배너는 매거진 상단 배너, 매거진 리스트 썸네일과 같은 `353:160` 이미지 비율을 사용합니다.
+- [x] 메인 배너는 매거진 상단 대표 배너와 같은 `353:160` 이미지 비율을 사용합니다.
 - [x] 메인 배너 데이터는 서버에서 받은 이미지와 인스타그램 이동 대상 정보로 구성합니다.
 - [x] 퀵 버튼 4개를 노출합니다.
   - 하시 PICK: `ROUTES.hashiPickRestaurants`
@@ -164,8 +164,8 @@ export const HomeLogo = () => {
   - `GET /api/v1/restaurants` endpoint는 `apps/client/src/features/restaurantList/api/getRestaurants.ts`의 공통 함수가 소유합니다.
   - 홈은 `apps/client/src/pages/home/api/getHotSnsRestaurants.ts`에서 `type=sns-hot`, `size=5` params를 전달하고, SNS 리스트 view model로 변환합니다.
 - loading state:
-  - 메인 배너 API: 배너 비율을 유지하는 skeleton을 사용합니다.
-  - API 응답 전에는 SNS 리스트 섹션을 빈 상태로 유지합니다.
+  - 메인 배너 API: 배너 비율을 유지하는 `secondary-200` skeleton을 사용합니다.
+  - SNS 맛집 API: 리스트 아이템 구조를 유지하는 `secondary-200` skeleton을 사용합니다.
 - error state:
   - 전체 페이지 실패로 막지 않고 빈 SNS 리스트를 유지합니다.
   - route-level ErrorBoundary로 throw하지 않습니다.
@@ -469,7 +469,7 @@ BottomNavigationLayout
   - `--app-mobile-max-width: 430px` 안에서 자연스럽게 확장됩니다.
 - fixed area:
   - Hashi 로고와 검색 진입 영역은 `app-mobile-fixed-top z-fixed bg-white` wrapper 안에서 고정합니다.
-  - 검색바 아래 `16px` 여백까지 fixed wrapper에 포함해 스크롤 콘텐츠가 검색바 바로 아래로 비치지 않게 합니다.
+  - 검색바 아래 `20px` 여백까지 fixed wrapper에 포함해 스크롤 콘텐츠가 검색바 바로 아래로 비치지 않게 합니다.
   - 고정 상단 영역이 본문을 덮지 않도록 본문은 상단 영역 높이만큼 padding을 확보합니다.
   - 하단 네비게이션은 `BottomNavigationLayout`의 `app-mobile-fixed-bottom`이 담당합니다.
 - scroll area:
@@ -477,6 +477,7 @@ BottomNavigationLayout
   - fixed bottom navigation과 마지막 리스트 항목이 겹치지 않아야 합니다.
 - empty/loading/error layout:
   - 메인 배너 API loading/error/empty는 `HomeCurationSection`에서 섹션 단위로 처리합니다.
+  - SNS 맛집 API loading은 `HotSnsRestaurantSection`에서 섹션 단위 skeleton으로 처리합니다.
   - SNS 맛집 API 응답이 비어 있거나 사용할 수 있는 항목이 없으면 `HotSnsRestaurantSection`을 렌더링하지 않습니다.
 
 ## Accessibility

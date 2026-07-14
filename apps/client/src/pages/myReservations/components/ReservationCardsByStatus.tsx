@@ -56,6 +56,7 @@ export const ReservationCardsByStatus = ({
           reservation={reservation}
           onCancelPress={onCancelPress}
           onContactPress={onContactPress}
+          onDetailPress={onDetailPress}
         />
       ),
     )

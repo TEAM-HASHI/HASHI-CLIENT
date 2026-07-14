@@ -220,14 +220,23 @@ describe('RestaurantMenuDetailPage', () => {
       screen.getByTestId('restaurant-menu-detail-fixed-header'),
     ).toHaveClass('fixed', 'top-0', 'max-w-[var(--app-mobile-max-width,100%)]')
     expect(
+      screen
+        .getByTestId('restaurant-menu-detail-fixed-header')
+        .querySelector('header'),
+    ).toHaveClass('h-[75px]')
+    expect(
       screen.getByTestId('restaurant-menu-detail-tab-fixed-container'),
     ).toHaveClass('fixed', 'max-w-[var(--app-mobile-max-width,100%)]')
     expect(
       screen.getByTestId('restaurant-menu-detail-tab-fixed-container'),
-    ).toHaveStyle({ top: '97px' })
+    ).toHaveStyle({ top: '75px' })
     expect(
       screen.getByTestId('restaurant-menu-detail-fixed-spacer'),
-    ).toHaveStyle({ height: '147px' })
+    ).toHaveStyle({ height: '125px' })
+    expect(screen.getByText('하시 스시')).toHaveClass(
+      'truncate',
+      'whitespace-nowrap',
+    )
     expect(screen.queryByRole('main')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '시오라멘' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: '다른 메뉴 2' })).toBeTruthy()
@@ -392,9 +401,7 @@ describe('RestaurantMenuDetailPage', () => {
     renderPage()
 
     fireEvent.click(await screen.findByRole('button', { name: '예약하기' }))
-    fireEvent.click(
-      screen.getByRole('button', { name: '카카오로 1초 만에 시작하기' }),
-    )
+    fireEvent.click(screen.getByRole('button', { name: '카카오로 로그인하기' }))
 
     expect(mockStartKakaoOAuth).toHaveBeenCalledWith(
       '/restaurants/10/menus/100',

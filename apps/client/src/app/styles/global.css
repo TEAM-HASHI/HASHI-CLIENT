@@ -119,6 +119,27 @@
   }
 }
 
+@keyframes restaurant-rating-distribution-fill {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(var(--restaurant-rating-distribution-scale, 0));
+  }
+}
+
+@utility animate-restaurant-rating-distribution {
+  width: 100%;
+  transform: scaleX(var(--restaurant-rating-distribution-scale, 0));
+  transform-origin: left center;
+  animation: restaurant-rating-distribution-fill 0.55s ease-out both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 @utility animate-reservation-progress-dot {
   isolation: isolate;
   position: relative;

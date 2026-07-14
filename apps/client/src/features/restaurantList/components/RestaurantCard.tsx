@@ -25,7 +25,7 @@ export const RestaurantCard = ({
         onClick={handleClickRestaurant}
         type="button"
       >
-        <span className="typo-body-3 text-cool-gray-900 line-clamp-1">
+        <span className="typo-sub-header-2 text-cool-gray-900 line-clamp-1">
           {restaurant.name}
         </span>
         <span className="text-primary-200 mt-1 flex h-5 items-center">

@@ -12,7 +12,7 @@
 - 입력과 붙여넣기는 최대 1000자까지만 허용한다.
 - HDS counter를 사용해 현재 글자 수와 최대 글자 수를 `0/1000` 형태로 표시한다.
 - 예약 화면에서 사용하기에 적합하도록 textarea 최소 높이를 약 140px로 조정한다.
-- 기본 border는 HDS의 `warm-gray-100` 1px을 유지하고, focus 시 `primary-400` 1px border로 변경한다.
+- 기본 border는 `warm-gray-100` 1px, focus border는 검정색 1px로 표시한다.
 - HDS 기본 `cool-gray-500` 2px focus outline은 예약 화면에서 제거한다.
 - API 호출, draft 생성, submit 가능 여부는 담당하지 않는다.
 

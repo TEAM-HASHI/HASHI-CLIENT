@@ -23,7 +23,7 @@
 
 - 상단에는 review feature의 `ReviewHeader`를 재사용해 `리뷰 상세` 타이틀과 뒤로가기 버튼을 보여준다.
 - 상단 고정 배치를 위해 페이지에서 `ReviewHeader`를 fixed wrapper 안에 렌더링한다.
-- 뒤로가기 버튼을 누르면 `ROUTES.myReviews`로 이동한다.
+- 뒤로가기 버튼을 누르면 `ROUTES.myReviews`에 `tab=written` 검색 파라미터를 붙여 이동하고 `작성한 리뷰` 탭을 연다.
 - 식당 정보 영역은 review feature의 `ReviewReservationSummary`를 재사용한다.
   - 식당 썸네일, 식당명, 방문 일시, 방문 인원 정보를 표시한다.
   - 이미지가 없으면 공통 `DefaultImage` fallback을 사용한다.
@@ -38,6 +38,9 @@
   - 이미지가 없으면 이미지 영역을 렌더링하지 않는다.
 - 리뷰 작성 시 선택한 키워드를 최소 1개, 최대 3개까지 표시한다.
   - 키워드 label/icon은 `features/review/constants`의 `REVIEW_KEYWORDS`를 기준으로 표시한다.
+  - 식당 상세 리뷰와 동일한 `ReviewKeywordBadge`를 사용한다.
+  - 키워드 칩은 한 줄로 표시하고 가로 공간이 부족하면 스크롤로 최대 3개를 확인한다.
+  - 가로 스크롤바는 노출하지 않는다.
   - API가 한글 문구로 반환한 키워드는 알려진 review keyword ID로 변환하고, 알 수 없는 문구는 표시하지 않는다.
 - 하단에는 fixed action bar를 보여준다.
   - `삭제하기`: 삭제 확인 모달을 연다.
@@ -46,7 +49,7 @@
   - `취소하기`를 누르면 모달만 닫힌다.
   - `삭제하기`를 누르면 `DELETE /api/v1/reviews/{reviewId}`를 호출한다.
   - 삭제 중에는 확인 버튼을 비활성화하고 `삭제 중`을 표시한다.
-  - 삭제 성공 시 모달을 닫고 `ROUTES.myReviews`로 이동한다.
+  - 삭제 성공 시 모달을 닫고 `ROUTES.myReviews`에 `tab=written` 검색 파라미터를 붙여 이동한다.
   - 삭제 실패 시 공통 mutation error toast를 표시하고 모달과 상세 내용을 유지한다.
 - 수정 준비중 안내 모달은 app shared `ComingSoonDialog`를 사용한다.
   - `확인`을 누르면 모달만 닫힌다.
@@ -77,7 +80,7 @@
 - success:
   - 해당 review detail cache를 제거한다.
   - 작성한 리뷰 목록과 방문 완료 예약 목록을 invalidate한다.
-  - `ROUTES.myReviews`로 이동한다.
+  - `ROUTES.myReviews`에 `tab=written` 검색 파라미터를 붙여 이동한다.
 - error:
   - 공통 mutation error toast 정책을 사용한다.
   - 삭제 확인 모달과 기존 상세 내용을 유지한다.
@@ -110,11 +113,11 @@
 - 수동 확인:
   - 실제 존재하는 정수 ID로 `/reviews/5` 직접 진입
   - `/reviews/1e2`, `/reviews/0`, `/reviews/not-a-number`에서 API 미호출 및 목록 복귀 액션 확인
-  - 뒤로가기 버튼 클릭 시 `/my-reviews` 이동
+  - 뒤로가기 버튼 클릭 시 `/my-reviews?tab=written` 이동
   - 긴 리뷰 본문 `더보기` 클릭 시 펼침
   - `삭제하기` 클릭 시 확인 모달 노출
   - 삭제 모달의 `취소하기` 클릭 시 닫힘
-  - 삭제 모달의 `삭제하기` 클릭 시 DELETE 성공 후 `/my-reviews` 이동
+  - 삭제 모달의 `삭제하기` 클릭 시 DELETE 성공 후 `/my-reviews?tab=written` 이동
   - DELETE 실패 시 모달과 상세 내용 유지
   - `수정하기` 클릭 시 준비중 안내 모달 노출
   - 준비중 안내 모달의 `확인` 클릭 시 닫힘

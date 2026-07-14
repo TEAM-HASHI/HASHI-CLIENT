@@ -143,6 +143,9 @@ const RestaurantDetailContent = ({
         reviewLoadMoreRef={detailContent.reviewLoadMoreRef}
         selectedReviewSort={detailContent.selectedReviewSort}
         shareUrl={getRestaurantDetailPath(restaurant.id)}
+        shouldScrollToInitialTab={
+          initialTab === 'menu' || initialTab === 'review'
+        }
         title="식당 상세 정보"
         variant="detail"
       />

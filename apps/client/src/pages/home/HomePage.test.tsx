@@ -117,8 +117,15 @@ describe('HomePage', () => {
       'app-mobile-fixed-top',
       'z-fixed',
       'bg-white',
-      'pb-4',
+      'pb-5',
     )
+    expect(
+      screen.getByRole('heading', { name: 'Hashi 홈' }).parentElement,
+    ).toHaveClass('pt-[100px]')
+    expect(
+      screen.getByRole('heading', { name: '맛집 큐레이션을 둘러보세요!' })
+        .parentElement,
+    ).toHaveClass('mt-5')
     expect(
       await screen.findByRole('region', { name: '맛집 큐레이션 배너' }),
     ).toHaveClass('mt-2.5')
@@ -149,6 +156,9 @@ describe('HomePage', () => {
       'href',
       ROUTES.todayRestaurant,
     )
+    expect(screen.getByRole('navigation', { name: '주요 기능' })).toHaveClass(
+      'mt-5',
+    )
   })
 
   it('renders API banner images even when title or Instagram URL is missing', async () => {
@@ -174,6 +184,41 @@ describe('HomePage', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('renders secondary color skeletons while home banners and SNS restaurants are loading', () => {
+    mockGetMagazineBanners.mockImplementation(
+      () =>
+        new Promise(() => {
+          // Keep the banner query pending so the curation skeleton remains visible.
+        }),
+    )
+    mockGetHotSnsRestaurants.mockImplementation(
+      () =>
+        new Promise(() => {
+          // Keep the SNS query pending so the list skeleton remains visible.
+        }),
+    )
+
+    renderHomePage()
+
+    expect(screen.getByLabelText('맛집 큐레이션 배너 로딩 중')).toHaveClass(
+      'bg-secondary-200',
+    )
+
+    const snsSection = screen.getByRole('region', {
+      name: 'SNS에서 핫한 일본 식당',
+    })
+    const skeletonItems = screen.getAllByTestId('home-sns-skeleton-item')
+
+    expect(snsSection).toHaveClass('mt-[29px]')
+    expect(skeletonItems).toHaveLength(3)
+    expect(skeletonItems[0]).toHaveClass(
+      'grid-cols-[60px_minmax(0,1fr)]',
+      'gap-4',
+    )
+    expect(skeletonItems[0]?.querySelector('.bg-secondary-200')).toBeTruthy()
+    expect(skeletonItems[0]?.querySelector('.bg-cool-gray-100')).toBeNull()
+  })
+
   it('moves to anywhere reservation only when the CTA button is clicked', () => {
     renderHomePage()
 
@@ -187,9 +232,7 @@ describe('HomePage', () => {
   it('starts Kakao OAuth from the login bottom sheet with the home path', () => {
     renderHomePage()
 
-    fireEvent.click(
-      screen.getByRole('button', { name: '카카오로 1초 만에 시작하기' }),
-    )
+    fireEvent.click(screen.getByRole('button', { name: '카카오로 로그인하기' }))
 
     expect(mockStartKakaoOAuth).toHaveBeenCalledWith(ROUTES.home)
   })
@@ -219,6 +262,22 @@ describe('HomePage', () => {
     expect(
       screen.getByRole('link', { name: /숯불 규카츠 미야비 긴자 본점/ }),
     ).toHaveAttribute('href', '/restaurants/102')
+    expect(
+      screen.getByRole('heading', { name: 'SNS에서 핫한 일본 식당' }),
+    ).toHaveClass('typo-sub-header-1')
+    expect(
+      screen
+        .getByRole('link', { name: /돈카츠 후쿠마루 도쿄역 야에스점/ })
+        .querySelector('span span'),
+    ).toHaveClass('typo-sub-header-2')
+    expect(
+      screen.getByRole('region', { name: 'SNS에서 핫한 일본 식당' }),
+    ).toHaveClass('mt-[29px]')
+    expect(
+      screen
+        .getByRole('region', { name: 'SNS에서 핫한 일본 식당' })
+        .querySelector('ul'),
+    ).toHaveClass('mt-5')
   })
 
   it('shows DefaultImage when an SNS hot restaurant image request fails', async () => {
@@ -233,7 +292,7 @@ describe('HomePage', () => {
     expect(image).not.toBeInTheDocument()
     expect(
       screen.getByLabelText('돈카츠 후쿠마루 도쿄역 야에스점 대표 이미지'),
-    ).toHaveClass('bg-warm-gray-50')
+    ).toHaveClass('bg-warm-gray-100')
   })
 
   it('hides the SNS hot restaurant section when the API returns no restaurants', async () => {

@@ -25,6 +25,7 @@
 - bearer token과 credential cookie를 함께 사용합니다.
 - 예약 목록은 `GET /api/v1/admin/reservations`, 예약자 조회와 상태 변경은 각 admin endpoint를 사용합니다.
 - 예약 목록 query는 상태·page·size를 key에 포함하고 상태 변경 성공 후 목록 prefix를 invalidate합니다.
+- 현재 조회한 페이지와 상태 필터 안에서 같은 식당·같은 분의 취소되지 않은 예약이 2건 이상이면 해당 행에 충돌 경고를 표시합니다.
 
 ## Restaurants
 
@@ -43,6 +44,7 @@
 - 생성 body는 `name`, `localName`, `summary`, `description`, `address`, `area`, `genre`, `foodCategory`, `priceCurrency`, `minPrice`, `maxPrice`, `imageKeys`, `menus`, `hashtags`, `curationTypes`, `businessHours`를 사용합니다.
 - 식당 이미지는 최소 1개이며 첫 이미지가 대표 이미지입니다. 영업시간은 중복 없는 7개 요일을 전송합니다.
 - PATCH scalar는 dirty field만 전송합니다. images, menus, hashtags, curationTypes, businessHours는 `전체 교체`를 명시적으로 켠 경우에만 전송합니다.
+- 해시태그 입력은 쉼표 구분 문자열을 그대로 유지하고, create/update payload 생성 시 trim한 string[]로 변환합니다. 빈 항목은 제외합니다.
 - 공개 목록에 없는 식당은 numeric ID로 직접 수정·비공개 처리할 수 있습니다.
 - delete는 백엔드 soft delete임을 확인 문구에 표시합니다.
 

@@ -27,14 +27,14 @@ export const Empty = ({
       <img
         alt=""
         aria-hidden="true"
-        className="mb-9.5 h-auto w-33.75 shrink-0"
+        className="mb-5 h-19 w-[101px] shrink-0"
         src={emptyImage}
       />
-      <p className="typo-header-3 text-primary-200 leading-normal">
+      <p className="typo-sub-header-1 text-cool-gray-900 leading-normal">
         {description}
       </p>
       <Button
-        className="mt-4 w-59.25"
+        className="typo-sub-header-2 mt-5 w-[185px]"
         onClick={onAction}
         size="md"
         type="button"

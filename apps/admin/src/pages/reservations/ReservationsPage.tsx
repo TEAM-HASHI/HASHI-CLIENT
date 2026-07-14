@@ -18,6 +18,7 @@ import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { Drawer } from '@/shared/components/Drawer'
 import { PageHeader } from '@/shared/components/PageHeader'
 import { StatusBadge } from '@/shared/components/StatusBadge'
+import { getReservationConflictCounts } from '@/pages/reservations/reservationConflicts'
 
 type DocumentedReservationStatus = ChangeReservationStatusBody['status']
 type StatusFilter = 'ALL' | DocumentedReservationStatus
@@ -138,6 +139,7 @@ export const ReservationsPage = () => {
   const reservations = result?.reservations ?? []
   const currentPage = result?.page ?? page
   const totalPages = result?.totalPages ?? 0
+  const conflictCounts = getReservationConflictCounts(reservations)
 
   const handleStatusFilterChange = (status: StatusFilter) => {
     setStatusFilter(status)
@@ -189,70 +191,88 @@ export const ReservationsPage = () => {
             emptyDescription="선택한 상태에 해당하는 예약이 없습니다."
             onRetry={() => void reservationsQuery.refetch()}
           >
-            {reservations.map((reservation) => (
-              <tr key={reservation.id} className="hover:bg-cool-gray-50">
-                <td className="text-cool-gray-700 px-3 py-3 text-sm font-bold">
-                  {formatReservationId(reservation.id)}
-                </td>
-                <td className="text-cool-gray-600 px-3 py-3 text-sm">
-                  <span className="inline-flex items-center gap-1">
-                    <ClockIcon aria-hidden="true" className="size-4" />
-                    {formatDateTime(reservation.reservedAt)}
-                  </span>
-                </td>
-                <td className="text-cool-gray-900 px-3 py-3 text-sm font-bold">
-                  {reservation.reserverName}
-                </td>
-                <td className="px-3 py-3 text-sm">
-                  <span className="text-cool-gray-900 block truncate font-bold">
-                    {reservation.restaurantName}
-                  </span>
-                  <span className="text-cool-gray-500 mt-0.5 block truncate text-xs">
-                    {reservation.restaurantAddress}
-                  </span>
-                </td>
-                <td className="text-cool-gray-700 px-3 py-3 text-sm font-semibold">
-                  <ReservationGuestLabel reservation={reservation} />
-                </td>
-                <td className="text-cool-gray-600 px-3 py-3 text-sm">
-                  {reservationTypeLabel[reservation.reservationType]}
-                </td>
-                <td className="px-3 py-3">
-                  <PaymentStatusBadge status={reservation.paymentStatus} />
-                </td>
-                <td className="text-cool-gray-600 px-3 py-3 text-sm">
-                  {reservation.amount.toLocaleString()}원
-                </td>
-                <td className="px-3 py-3">
-                  <StatusBadge status={reservation.reservationStatus} />
-                </td>
-                <td className="px-3 py-3">
-                  <div className="flex min-w-max flex-nowrap items-center gap-2">
-                    <ActionButton
-                      ariaLabel="예약자 보기"
-                      onClick={() => setUserTargetId(reservation.id)}
-                    >
-                      예약자 보기
-                    </ActionButton>
-                    <ActionButton
-                      ariaLabel="예약 상태 변경"
-                      onClick={() => {
-                        updateStatusMutation.reset()
-                        setNextStatus(
-                          reservation.reservationStatus === 'UNKNOWN'
-                            ? 'REQUESTED'
-                            : reservation.reservationStatus,
-                        )
-                        setStatusTarget(reservation)
-                      }}
-                    >
-                      <PencilIcon aria-hidden="true" className="size-4" />
-                      상태 변경
-                    </ActionButton>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {reservations.map((reservation) => {
+              const conflictCount = conflictCounts.get(reservation.id)
+
+              return (
+                <tr
+                  key={reservation.id}
+                  className={
+                    conflictCount
+                      ? 'bg-red-50 hover:bg-red-100'
+                      : 'hover:bg-cool-gray-50'
+                  }
+                >
+                  <td className="text-cool-gray-700 px-3 py-3 text-sm font-bold">
+                    {formatReservationId(reservation.id)}
+                  </td>
+                  <td className="text-cool-gray-600 px-3 py-3 text-sm">
+                    <div className="flex flex-col items-start gap-1">
+                      <span className="inline-flex items-center gap-1">
+                        <ClockIcon aria-hidden="true" className="size-4" />
+                        {formatDateTime(reservation.reservedAt)}
+                      </span>
+                      {conflictCount ? (
+                        <span className="bg-error/10 text-error inline-flex rounded-full px-2 py-0.5 text-xs font-bold whitespace-nowrap">
+                          동일 시간 {conflictCount}건
+                        </span>
+                      ) : null}
+                    </div>
+                  </td>
+                  <td className="text-cool-gray-900 px-3 py-3 text-sm font-bold">
+                    {reservation.reserverName}
+                  </td>
+                  <td className="px-3 py-3 text-sm">
+                    <span className="text-cool-gray-900 block truncate font-bold">
+                      {reservation.restaurantName}
+                    </span>
+                    <span className="text-cool-gray-500 mt-0.5 block truncate text-xs">
+                      {reservation.restaurantAddress}
+                    </span>
+                  </td>
+                  <td className="text-cool-gray-700 px-3 py-3 text-sm font-semibold">
+                    <ReservationGuestLabel reservation={reservation} />
+                  </td>
+                  <td className="text-cool-gray-600 px-3 py-3 text-sm">
+                    {reservationTypeLabel[reservation.reservationType]}
+                  </td>
+                  <td className="px-3 py-3">
+                    <PaymentStatusBadge status={reservation.paymentStatus} />
+                  </td>
+                  <td className="text-cool-gray-600 px-3 py-3 text-sm">
+                    {reservation.amount.toLocaleString()}원
+                  </td>
+                  <td className="px-3 py-3">
+                    <StatusBadge status={reservation.reservationStatus} />
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="flex min-w-max flex-nowrap items-center gap-2">
+                      <ActionButton
+                        ariaLabel="예약자 보기"
+                        onClick={() => setUserTargetId(reservation.id)}
+                      >
+                        예약자 보기
+                      </ActionButton>
+                      <ActionButton
+                        ariaLabel="예약 상태 변경"
+                        onClick={() => {
+                          updateStatusMutation.reset()
+                          setNextStatus(
+                            reservation.reservationStatus === 'UNKNOWN'
+                              ? 'REQUESTED'
+                              : reservation.reservationStatus,
+                          )
+                          setStatusTarget(reservation)
+                        }}
+                      >
+                        <PencilIcon aria-hidden="true" className="size-4" />
+                        상태 변경
+                      </ActionButton>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
           </AdminTable>
         </div>
 

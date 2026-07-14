@@ -9,7 +9,6 @@ const keywordIdByLabel = new Map<string, ReviewKeywordId>([
   ...REVIEW_KEYWORDS.map(
     ({ id, label }) => [label, id] as [string, ReviewKeywordId],
   ),
-  ['직원분이 친절해요', 'kind'],
 ])
 
 const timeZoneSuffixPattern = /(Z|[+-]\d{2}:\d{2})$/

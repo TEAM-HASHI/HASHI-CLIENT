@@ -46,7 +46,7 @@ export interface RestaurantFormState extends RestaurantScalarFields {
   images: UploadedImage[]
   existingImageUrls: string[]
   menus: RestaurantMenuForm[]
-  hashtags: string[]
+  hashtags: string
   curationTypes: string[]
   businessHours: RestaurantBusinessHourForm[]
 }
@@ -103,7 +103,7 @@ export const createRestaurantForm = (): RestaurantFormState => ({
   images: [],
   existingImageUrls: [],
   menus: [],
-  hashtags: [],
+  hashtags: '',
   curationTypes: [],
   businessHours: createBusinessHours(),
 })
@@ -139,7 +139,7 @@ export const createRestaurantFormFromPrefill = (
       priceAmount: menu.priceAmount == null ? '' : String(menu.priceAmount),
       main: menu.main,
     })),
-    hashtags: view.hashtags,
+    hashtags: view.hashtags.join(', '),
     curationTypes: view.curationTypes,
     businessHours: defaultHours.map((fallback) => {
       const value = hoursByDay.get(fallback.dayOfWeek)
@@ -194,6 +194,12 @@ const serializeMenus = (menus: RestaurantMenuForm[]): MenuBody[] =>
     main: menu.main,
   }))
 
+export const parseRestaurantHashtags = (value: string): string[] =>
+  value
+    .split(',')
+    .map((hashtag) => hashtag.trim())
+    .filter(Boolean)
+
 export const toCreateRestaurantBody = (
   form: RestaurantFormState,
 ): CreateRestaurantBody => ({
@@ -210,7 +216,7 @@ export const toCreateRestaurantBody = (
   maxPrice: parseMoney(form.maxPrice, '최대 가격'),
   imageKeys: form.images.map(({ fileKey }) => fileKey),
   menus: serializeMenus(form.menus),
-  hashtags: form.hashtags.map((hashtag) => hashtag.trim()),
+  hashtags: parseRestaurantHashtags(form.hashtags),
   curationTypes: form.curationTypes,
   businessHours: serializeBusinessHours(form.businessHours),
 })
@@ -240,7 +246,7 @@ export const toUpdateRestaurantBody = (
     body.menus = serializeMenus(form.menus)
   }
   if (replacements.hashtags) {
-    body.hashtags = form.hashtags.map((hashtag) => hashtag.trim())
+    body.hashtags = parseRestaurantHashtags(form.hashtags)
   }
   if (replacements.curationTypes) {
     body.curationTypes = form.curationTypes
@@ -300,6 +306,7 @@ export const validateRestaurantForm = (
   const errors: RestaurantFormErrors = {}
   const needsScalar = (field: keyof RestaurantScalarFields) =>
     mode === 'create' || dirtyFields.has(field)
+  const hashtags = parseRestaurantHashtags(form.hashtags)
 
   const textLimits: Array<[keyof RestaurantScalarFields, number]> = [
     ['name', 100],
@@ -359,10 +366,7 @@ export const validateRestaurantForm = (
   }
   if (
     (mode === 'create' || replacements.hashtags) &&
-    (form.hashtags.length === 0 ||
-      form.hashtags.some(
-        (hashtag) => !hashtag.trim() || hashtag.trim().length > 20,
-      ))
+    (hashtags.length === 0 || hashtags.some((hashtag) => hashtag.length > 20))
   ) {
     errors.hashtags = '해시태그를 1개 이상, 각 20자 이하로 입력해주세요.'
   }

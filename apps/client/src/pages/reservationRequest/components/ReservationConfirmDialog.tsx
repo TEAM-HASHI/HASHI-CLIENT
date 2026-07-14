@@ -35,7 +35,7 @@ const ReservationConfirmRow = ({
       <span
         className={
           multiline
-            ? 'typo-body-6 text-cool-gray-900 max-w-[150px] text-right leading-[1.36] break-keep'
+            ? 'typo-body-6 text-cool-gray-900 min-w-0 flex-1 text-right leading-[1.36] text-pretty break-keep'
             : 'typo-body-6 text-cool-gray-900 text-right leading-[1.36] whitespace-nowrap'
         }
       >
