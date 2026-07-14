@@ -82,6 +82,7 @@ const reservationDetailFixture = {
   requestNote: '창가 자리로 부탁드립니다.',
   receivedAt: '2026-07-12T13:44:00',
   confirmExpectedAt: '2026-07-14T13:44:00',
+  amount: 3500,
 } as const
 
 const notFoundResponse: ErrorResponse = {
@@ -157,6 +158,7 @@ describe('ReservationDetailPage', () => {
     expect(screen.getByText('어른 2명, 청소년 1명')).toBeInTheDocument()
     expect(screen.getByText('도쿄도 주오구 긴자 1-1-1')).toBeInTheDocument()
     expect(screen.getByText('2026.7.20. 18:30')).toBeInTheDocument()
+    expect(screen.getByText('3,500원')).toBeInTheDocument()
     expect(screen.getByText('예정 7월 14일')).toBeInTheDocument()
   })
 

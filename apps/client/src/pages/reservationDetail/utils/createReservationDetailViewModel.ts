@@ -7,8 +7,6 @@ type ReservationStatus = NonNullable<
   ReservationDetailResponse['reservationStatus']
 >
 
-const BASE_RESERVATION_FEE = 4000
-
 const createDate = (value: string | undefined) => {
   if (!value) {
     return null
@@ -64,6 +62,14 @@ const formatPeopleCount = ({
   }
 
   return countItems.map((item) => `${item.label} ${item.count}명`).join(', ')
+}
+
+const formatAmount = (amount: number | undefined) => {
+  if (amount === undefined) {
+    return '-'
+  }
+
+  return `${amount.toLocaleString()}원`
 }
 
 const getStepStatuses = (
@@ -151,7 +157,7 @@ const createReceiptInfoItems = (
   },
   {
     label: '수수료',
-    value: `${BASE_RESERVATION_FEE.toLocaleString()}원`,
+    value: formatAmount(reservationDetail.amount),
   },
 ]
 
