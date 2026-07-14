@@ -8,7 +8,7 @@ import {
 } from '@hashi/hds-icons'
 import { Header, IconButton, showToast, toastQueue } from '@hashi/hds-ui'
 import type { Ref } from 'react'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
 import { RestaurantDetailHero } from '@/features/restaurantDetail/components/RestaurantDetailHero'
@@ -100,6 +100,7 @@ export const RestaurantDetailTemplate = ({
   onCloseReviewUnavailableModal,
 }: RestaurantDetailTemplateProps) => {
   const { isTabBarFixed, markerRef } = useRestaurantDetailTabBarFixed()
+  const hasScrolledToInitialTabRef = useRef(false)
 
   const scrollToTabBarTop = useCallback(() => {
     const marker = markerRef.current
@@ -128,10 +129,15 @@ export const RestaurantDetailTemplate = ({
   }
 
   useEffect(() => {
-    if (!shouldScrollToInitialTab || activeTab === 'info') {
+    if (
+      hasScrolledToInitialTabRef.current ||
+      !shouldScrollToInitialTab ||
+      activeTab === 'info'
+    ) {
       return
     }
 
+    hasScrolledToInitialTabRef.current = true
     requestAnimationFrame(scrollToTabBarTop)
   }, [activeTab, scrollToTabBarTop, shouldScrollToInitialTab])
 

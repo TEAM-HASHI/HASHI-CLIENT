@@ -490,6 +490,19 @@ describe('RestaurantDetailPage', () => {
     })
   })
 
+  it('does not run the initial tab scroll again after changing tabs manually', async () => {
+    mockLocationStore.state = { activeTab: 'review' }
+
+    renderPage()
+
+    await screen.findByRole('tab', { name: /리뷰/ })
+    expect(mockScrollTo).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByRole('tab', { name: '메뉴' }))
+
+    expect(mockScrollTo).toHaveBeenCalledTimes(2)
+  })
+
   it('opens login bottom sheet for unauthenticated reservation action', async () => {
     renderPage()
 
