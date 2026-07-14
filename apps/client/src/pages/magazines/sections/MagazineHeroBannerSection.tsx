@@ -20,7 +20,7 @@ export const MagazineHeroBannerSection = ({
     return (
       <section
         aria-label="대표 매거진 배너 로딩 중"
-        className="bg-cool-gray-100 mx-5 mt-[4px] aspect-[353/160]"
+        className="bg-secondary-200 mx-5 mt-[4px] aspect-[353/160]"
       />
     )
   }
