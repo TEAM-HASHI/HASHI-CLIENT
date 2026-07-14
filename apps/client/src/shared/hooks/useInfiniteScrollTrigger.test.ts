@@ -64,7 +64,7 @@ describe('useInfiniteScrollTrigger', () => {
     expect(observe).not.toHaveBeenCalled()
   })
 
-  it('does not call onIntersect again while the previous async callback is pending', async () => {
+  it('blocks duplicate intersections while pending and unlocks after completion', async () => {
     const { triggerIntersect } = mockIntersectionObserver()
     const target = document.createElement('div')
     let resolveIntersect: () => void = () => {}
@@ -91,10 +91,16 @@ describe('useInfiniteScrollTrigger', () => {
 
     expect(onIntersect).toHaveBeenCalledTimes(1)
 
-    resolveIntersect()
+    act(() => {
+      resolveIntersect()
+    })
 
     await waitFor(() => {
       expect(onIntersect).toHaveBeenCalledTimes(1)
     })
+
+    triggerIntersect()
+
+    expect(onIntersect).toHaveBeenCalledTimes(2)
   })
 })

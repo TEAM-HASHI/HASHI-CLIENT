@@ -8,26 +8,63 @@ interface MockIntersectionObserverOptions {
 export const mockIntersectionObserver = ({
   isIntersecting = true,
 }: MockIntersectionObserverOptions = {}) => {
-  const handleIntersections: IntersectionObserverCallback[] = []
+  const observerRecords: Array<{
+    callback: IntersectionObserverCallback
+    observer: IntersectionObserver
+    targets: Set<Element>
+  }> = []
   const observe = vi.fn()
   const unobserve = vi.fn()
   const disconnect = vi.fn()
   const takeRecords = vi.fn(() => [])
   const IntersectionObserverMock = vi.fn(
-    (callback: IntersectionObserverCallback) => {
-      handleIntersections.push(callback)
-
-      return {
-        root: null,
-        rootMargin: '',
-        thresholds: [],
-        observe,
-        unobserve,
-        disconnect,
+    (
+      callback: IntersectionObserverCallback,
+      options?: IntersectionObserverInit,
+    ) => {
+      const targets = new Set<Element>()
+      const observer = {
+        root: options?.root ?? null,
+        rootMargin: options?.rootMargin ?? '',
+        thresholds:
+          options?.threshold === undefined
+            ? []
+            : Array.isArray(options.threshold)
+              ? options.threshold
+              : [options.threshold],
+        observe: (target: Element) => {
+          observe(target)
+          targets.add(target)
+        },
+        unobserve: (target: Element) => {
+          unobserve(target)
+          targets.delete(target)
+        },
+        disconnect: () => {
+          disconnect()
+          targets.clear()
+        },
         takeRecords,
       } satisfies IntersectionObserver
+
+      observerRecords.push({
+        callback,
+        observer,
+        targets,
+      })
+
+      return observer
     },
   )
+
+  const createEntries = (targets: Set<Element>) =>
+    Array.from(targets).map(
+      (target) =>
+        ({
+          isIntersecting,
+          target,
+        }) as IntersectionObserverEntry,
+    )
 
   vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
 
@@ -35,21 +72,25 @@ export const mockIntersectionObserver = ({
     IntersectionObserverMock,
     disconnect,
     observe,
-    triggerIntersect: (observerIndex = handleIntersections.length - 1) => {
+    triggerIntersect: (observerIndex = observerRecords.length - 1) => {
       act(() => {
-        handleIntersections[observerIndex]?.(
-          [{ isIntersecting } as IntersectionObserverEntry],
-          {} as IntersectionObserver,
-        )
+        const record = observerRecords[observerIndex]
+
+        if (!record || record.targets.size === 0) {
+          return
+        }
+
+        record.callback(createEntries(record.targets), record.observer)
       })
     },
     triggerAllIntersects: () => {
       act(() => {
-        handleIntersections.forEach((handleIntersection) => {
-          handleIntersection(
-            [{ isIntersecting } as IntersectionObserverEntry],
-            {} as IntersectionObserver,
-          )
+        observerRecords.forEach((record) => {
+          if (record.targets.size === 0) {
+            return
+          }
+
+          record.callback(createEntries(record.targets), record.observer)
         })
       })
     },
