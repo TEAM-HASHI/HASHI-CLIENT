@@ -24,7 +24,7 @@ export const AuthGateBottomSheet = ({
       showHandle={false}
     >
       <div className="relative h-[387px]" data-testid="auth-gate-content">
-        <p className="absolute top-[33px] left-[5px] w-[344px] text-black">
+        <p className="absolute inset-x-[5px] top-[33px] text-black">
           <span className="typo-body-1 block leading-[29px] font-normal">
             간편하게 로그인하고
           </span>
@@ -35,7 +35,7 @@ export const AuthGateBottomSheet = ({
         <img
           alt=""
           aria-hidden="true"
-          className="absolute top-[114px] left-[72px] h-[172px] w-[201px]"
+          className="absolute top-[114px] left-1/2 h-[172px] w-[201px] -translate-x-1/2"
           src={loginImage}
         />
         <KakaoStartButton
