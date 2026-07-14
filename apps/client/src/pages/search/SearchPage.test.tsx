@@ -302,7 +302,7 @@ describe('SearchPage', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(10)
     expect(
       screen.getAllByRole('listitem')[0].querySelector('a')?.firstChild,
-    ).toHaveClass('bg-warm-gray-50')
+    ).toHaveClass('bg-warm-gray-100')
     expect(window.localStorage.getItem('hashi:search:recent-keywords')).toBe(
       JSON.stringify(['아끼소바']),
     )
@@ -344,7 +344,7 @@ describe('SearchPage', () => {
 
     expect(image).not.toBeInTheDocument()
     expect(
-      screen.getAllByRole('listitem')[0].querySelector('.bg-warm-gray-50'),
+      screen.getAllByRole('listitem')[0].querySelector('.bg-warm-gray-100'),
     ).toBeInTheDocument()
   })
 

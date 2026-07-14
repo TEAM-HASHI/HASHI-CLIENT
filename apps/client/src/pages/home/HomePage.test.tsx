@@ -294,7 +294,7 @@ describe('HomePage', () => {
     expect(image).not.toBeInTheDocument()
     expect(
       screen.getByLabelText('돈카츠 후쿠마루 도쿄역 야에스점 대표 이미지'),
-    ).toHaveClass('bg-warm-gray-50')
+    ).toHaveClass('bg-warm-gray-100')
   })
 
   it('hides the SNS hot restaurant section when the API returns no restaurants', async () => {

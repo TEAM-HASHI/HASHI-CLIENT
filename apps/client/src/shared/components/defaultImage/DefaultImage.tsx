@@ -26,7 +26,7 @@ export const DefaultImage = ({
   return (
     <div
       className={cn(
-        'bg-warm-gray-50 flex items-center justify-center overflow-hidden',
+        'bg-warm-gray-100 flex items-center justify-center overflow-hidden',
         className,
       )}
       {...props}

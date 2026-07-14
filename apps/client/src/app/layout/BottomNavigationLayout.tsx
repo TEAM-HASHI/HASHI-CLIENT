@@ -32,26 +32,38 @@ const bottomNavigationPath = {
 
 type BottomNavigationValue = (typeof bottomNavigationItems)[number]['value']
 
+type LoginRequiredLocationState = {
+  from?: {
+    pathname?: string
+  }
+}
+
 const getBottomNavigationValue = (
   pathname: string,
+  fallbackPathname?: string,
 ): BottomNavigationValue | undefined => {
-  if (pathname === ROUTES.myReservations) {
+  const targetPathname =
+    pathname === ROUTES.loginRequired && fallbackPathname
+      ? fallbackPathname
+      : pathname
+
+  if (targetPathname === ROUTES.myReservations) {
     return 'myReservations'
   }
 
-  if (pathname === ROUTES.saved) {
+  if (targetPathname === ROUTES.saved) {
     return 'save'
   }
 
-  if (pathname === ROUTES.map) {
+  if (targetPathname === ROUTES.map) {
     return 'map'
   }
 
-  if (pathname === ROUTES.mypage) {
+  if (targetPathname === ROUTES.mypage) {
     return 'mypage'
   }
 
-  if (pathname === ROUTES.home) {
+  if (targetPathname === ROUTES.home) {
     return 'home'
   }
 
@@ -61,6 +73,7 @@ const getBottomNavigationValue = (
 export const BottomNavigationLayout = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const loginRequiredState = location.state as LoginRequiredLocationState | null
 
   return (
     <>
@@ -77,7 +90,10 @@ export const BottomNavigationLayout = () => {
             )
           }
         }}
-        value={getBottomNavigationValue(location.pathname)}
+        value={getBottomNavigationValue(
+          location.pathname,
+          loginRequiredState?.from?.pathname,
+        )}
       />
     </>
   )
