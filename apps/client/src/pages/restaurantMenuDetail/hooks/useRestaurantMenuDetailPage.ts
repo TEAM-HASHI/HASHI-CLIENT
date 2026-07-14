@@ -24,7 +24,7 @@ import {
   navigateBackOrReplace,
 } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import { checkIsNotFoundError } from '@/shared/api'
-import { useAuthStatus, useIntersectionObserver } from '@/shared/hooks'
+import { useAuthStatus, useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const MENU_DETAIL_OTHER_MENU_PAGE_SIZE = 10
 
@@ -74,8 +74,9 @@ export const useRestaurantMenuDetailPage = () => {
       return fetchNextOtherMenuPage()
     }
   }, [canFetchNextOtherMenuPage, fetchNextOtherMenuPage])
-  const otherMenuLoadMoreRef = useIntersectionObserver<HTMLDivElement>({
+  const otherMenuLoadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled: canFetchNextOtherMenuPage,
+    isLoading: menusQuery.isFetchingNextPage,
     onIntersect: handleIntersectOtherMenu,
   })
   const selectedMenu = createRestaurantMenuViewModel(menuQuery.data ?? null)

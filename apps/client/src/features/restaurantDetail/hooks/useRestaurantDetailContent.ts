@@ -15,7 +15,7 @@ import {
 } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
 import { createRestaurantDetailViewModel } from '@/features/restaurantDetail/utils/createRestaurantDetailViewModel'
-import { useIntersectionObserver } from '@/shared/hooks'
+import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 interface UseRestaurantDetailContentParams {
   enabled?: boolean
@@ -82,12 +82,14 @@ export const useRestaurantDetailContent = ({
     }
   }, [canFetchNextReviewPage, fetchNextReviewPage])
 
-  const menuLoadMoreRef = useIntersectionObserver<HTMLDivElement>({
+  const menuLoadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled: activeTab === 'menu' && canFetchNextMenuPage,
+    isLoading: menusQuery.isFetchingNextPage,
     onIntersect: handleIntersectMenu,
   })
-  const reviewLoadMoreRef = useIntersectionObserver<HTMLDivElement>({
+  const reviewLoadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled: activeTab === 'review' && canFetchNextReviewPage,
+    isLoading: reviewsQuery.isFetchingNextPage,
     onIntersect: handleIntersectReview,
   })
 

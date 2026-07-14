@@ -48,7 +48,7 @@
 - [ ] 리뷰 이미지 클릭 시 선택한 리뷰 이미지 목록과 선택 index를 이미지 뷰어에 전달합니다.
 - [ ] route state `activeTab`이 있으면 해당 탭을 초기 선택 상태로 표시합니다.
 - [ ] 직접 진입 상태에서 뒤로가기를 누르면 `ROUTES.home`으로 replace 이동합니다.
-- [ ] 메뉴 목록과 리뷰 목록은 커서 기반 무한스크롤로 조회하고, 리스트 하단 sentinel 감지는 공통 `useIntersectionObserver` 훅을 사용합니다.
+- [ ] 메뉴 목록과 리뷰 목록은 커서 기반 무한스크롤로 조회하고, 리스트 하단 sentinel 감지는 공통 `useInfiniteScrollTrigger` 훅을 사용합니다.
 - [ ] 모바일 폭에서 horizontal overflow가 없어야 합니다.
 
 ## Data Dependencies
@@ -103,7 +103,7 @@
 - refetch condition: restaurantId 변경
 - pagination:
   - `getNextPageParam`: `hasNext`가 true이면 `nextCursor`
-  - next page trigger: 공통 `useIntersectionObserver` sentinel intersect
+  - next page trigger: 공통 `useInfiniteScrollTrigger` sentinel intersect
 
 - query: restaurant reviews infinite
 - requested endpoint: `GET /api/v1/restaurants/{restaurantId}/reviews`
@@ -118,7 +118,7 @@
 - refetch condition: restaurantId 또는 sort 변경
 - pagination:
   - `getNextPageParam`: `hasNext`가 true이면 `nextCursor`
-  - next page trigger: 공통 `useIntersectionObserver` sentinel intersect
+  - next page trigger: 공통 `useInfiniteScrollTrigger` sentinel intersect
 
 ### Mutation
 
@@ -202,7 +202,7 @@ TodayRestaurantPage
   - restaurant reviews list query, endpoint confirmation required
   - restaurant detail view model mapper
 - shared hook:
-  - `useIntersectionObserver`
+  - `useInfiniteScrollTrigger`
 - icon:
   - `BackIcon`, `HeartBlankIcon`, `LocationIcon`, `ClockIcon`, `MoneyIcon`, `PencilIcon`, `CloseSmallIcon`
 

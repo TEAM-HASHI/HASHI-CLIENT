@@ -2,7 +2,7 @@ import { ROUTES } from '@/app/router/path'
 
 import type { HomeQuickLink } from '@/pages/home/homeContent'
 
-export const mockQuickLinks: HomeQuickLink[] = [
+export const HOME_QUICK_LINKS: HomeQuickLink[] = [
   {
     id: 'hashiPick',
     label: '하시 PICK',

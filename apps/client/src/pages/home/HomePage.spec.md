@@ -54,7 +54,7 @@
 - page-local hook:
   - `apps/client/src/pages/home/hooks/useHomePage.ts`
 - page-local static content:
-  - `apps/client/src/pages/home/mocks/homeContent.mock.ts`
+  - `apps/client/src/pages/home/constants/homeQuickLinks.ts`
 - route registration:
   - `apps/client/src/app/router/path.ts`
   - `apps/client/src/app/router/routes.ts`
@@ -422,7 +422,7 @@ BottomNavigationLayout
   - `AnywhereReservationCta`
   - `HotSnsRestaurantSection`
   - `useHomePage`
-  - `mocks/homeContent.mock.ts`의 퀵 링크 정적 데이터
+  - `constants/homeQuickLinks.ts`의 퀵 링크 정적 데이터
 - 새로 만들지 않을 것:
   - HDS `HomeBanner`
   - HDS `RestaurantCard`
@@ -510,7 +510,7 @@ BottomNavigationLayout
 ## Implementation Notes
 
 - `HomePage.tsx`는 page-local section 컴포넌트 조합과 auth gate 렌더링에 집중합니다.
-- 퀵 링크 정적 데이터는 `apps/client/src/pages/home/mocks/homeContent.mock.ts`에 둡니다.
+- 퀵 링크 정적 데이터는 `apps/client/src/pages/home/constants/homeQuickLinks.ts`에 둡니다.
 - 홈 데이터 반환, 검색 path, 어디든 예약 이동, 식당 상세 path 생성, 로그인 유도 바텀시트 상태는 `apps/client/src/pages/home/hooks/useHomePage.ts`가 담당합니다.
 - 메인 배너 query는 `features/magazine`의 shared magazine banner query를 사용하고, `useHomePage`는 홈 화면에 필요한 view model로 조합합니다.
 - SNS 맛집 query는 `useHomePage` 내부에서 `useHotSnsRestaurantsQuery`로 조회합니다.
