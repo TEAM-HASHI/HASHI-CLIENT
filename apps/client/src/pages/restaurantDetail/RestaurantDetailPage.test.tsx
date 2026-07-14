@@ -671,9 +671,12 @@ describe('RestaurantDetailPage', () => {
     expect(mockClipboardWriteText).toHaveBeenCalledWith('하시 스시')
     await waitFor(() => {
       expect(mockToastQueueClear).toHaveBeenCalled()
-      expect(mockShowToast).toHaveBeenCalledWith({
-        children: '식당명이 복사되었어요',
-      })
+      expect(mockShowToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          children: '식당명이 복사되었어요',
+          icon: expect.anything(),
+        }),
+      )
     })
   })
 

@@ -143,7 +143,10 @@ export const RestaurantDetailTemplate = ({
     }
 
     toastQueue.clear()
-    showToast({ children: '식당명이 복사되었어요' })
+    showToast({
+      icon: <CopyIcon className="size-6 text-white" />,
+      children: '식당명이 복사되었어요',
+    })
   }
 
   return (

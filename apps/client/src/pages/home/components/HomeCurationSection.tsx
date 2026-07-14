@@ -17,7 +17,7 @@ export const HomeCurationSection = ({
 }: HomeCurationSectionProps) => {
   if (isLoading) {
     return (
-      <section className="mt-4" aria-labelledby="home-curation-heading">
+      <section className="mt-5" aria-labelledby="home-curation-heading">
         <h2
           className="typo-sub-header-1 text-primary-200"
           id="home-curation-heading"
@@ -26,7 +26,7 @@ export const HomeCurationSection = ({
         </h2>
         <div
           aria-label="맛집 큐레이션 배너 로딩 중"
-          className="bg-cool-gray-100 mt-2.5 aspect-[353/160] w-full rounded-[8px]"
+          className="bg-secondary-200 mt-2.5 aspect-[353/160] w-full rounded-[8px]"
         />
       </section>
     )
@@ -34,7 +34,7 @@ export const HomeCurationSection = ({
 
   if (isError) {
     return (
-      <section className="mt-4" aria-labelledby="home-curation-heading">
+      <section className="mt-5" aria-labelledby="home-curation-heading">
         <h2
           className="typo-sub-header-1 text-primary-200"
           id="home-curation-heading"
@@ -66,7 +66,7 @@ export const HomeCurationSection = ({
   )
 
   return (
-    <section className="mt-4" aria-labelledby="home-curation-heading">
+    <section className="mt-5" aria-labelledby="home-curation-heading">
       <h2
         className="typo-sub-header-1 text-primary-200"
         id="home-curation-heading"
