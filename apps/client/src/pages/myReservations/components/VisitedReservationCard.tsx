@@ -51,14 +51,14 @@ const ReviewAction = ({
       return null
     case 'DELETED':
       return (
-        <p className="typo-body-3 border-warm-gray-100 text-warm-gray-300 mt-4 w-full rounded-[5px] border bg-white py-3.25 text-center">
+        <p className="typo-sub-header-2 border-warm-gray-100 text-warm-gray-300 mt-3.5 w-full rounded-[5px] border bg-white py-2.5 text-center">
           리뷰가 삭제된 예약입니다
         </p>
       )
     case 'WRITTEN':
       return (
         <button
-          className="typo-body-3 border-warm-gray-100 text-cool-gray-600 mt-4 w-full rounded-[5px] border bg-white py-3.25"
+          className="typo-sub-header-2 border-warm-gray-100 text-cool-gray-600 mt-3.5 w-full rounded-[5px] border bg-white py-2.5"
           onClick={() => onReviewPress(reservation)}
           type="button"
         >
@@ -101,7 +101,7 @@ export const VisitedReservationCard = ({
   const hasWrittenReview = reservation.reviewActionState === 'WRITTEN'
 
   return (
-    <article className="border-warm-gray-50 border-b pb-2.5 last:border-0">
+    <article className="border-warm-gray-50 border-b pb-6.25 last:border-0">
       <div className="flex gap-3">
         <ReservationCardImage
           className="size-23"
