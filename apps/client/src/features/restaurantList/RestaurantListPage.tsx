@@ -12,6 +12,7 @@ import type {
   RestaurantListCurationType,
 } from '@/features/restaurantList'
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
+import { ListEmptyState } from '@/shared/components/listEmptyState'
 
 type RestaurantListPageProps = {
   title: string
@@ -157,10 +158,8 @@ export const RestaurantListPage = ({
               </ul>
             ) : null}
             {shouldRenderEmptyState ? (
-              <div className="flex min-h-[360px] items-center justify-center px-5 text-center">
-                <p className="typo-body-4 text-warm-gray-300">
-                  표시할 식당이 없습니다.
-                </p>
+              <div className="px-5">
+                <ListEmptyState description="" />
               </div>
             ) : null}
           </>
