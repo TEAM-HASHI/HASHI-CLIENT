@@ -224,7 +224,10 @@ describe('RestaurantMenuDetailPage', () => {
     ).toHaveClass('fixed', 'max-w-[var(--app-mobile-max-width,100%)]')
     expect(
       screen.getByTestId('restaurant-menu-detail-tab-fixed-container'),
-    ).toHaveStyle({ top: '75px' })
+    ).toHaveStyle({ top: '97px' })
+    expect(
+      screen.getByTestId('restaurant-menu-detail-fixed-spacer'),
+    ).toHaveStyle({ height: '147px' })
     expect(screen.queryByRole('main')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '시오라멘' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: '다른 메뉴 2' })).toBeTruthy()

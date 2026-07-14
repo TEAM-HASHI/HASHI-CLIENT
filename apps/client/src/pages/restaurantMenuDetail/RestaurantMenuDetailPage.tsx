@@ -6,8 +6,8 @@ import { RestaurantBottomBar } from '@/features/restaurantDetail/components/Rest
 import { RestaurantDetailTabs } from '@/features/restaurantDetail/components/RestaurantDetailTabs'
 import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
 import {
-  RESTAURANT_DETAIL_HEADER_HEIGHT,
   RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
+  RESTAURANT_MENU_DETAIL_HEADER_HEIGHT,
 } from '@/features/restaurantDetail/constants/restaurantDetailLayout'
 import { NotFoundPage } from '@/pages/notFound'
 import { RestaurantOtherMenuSection } from '@/pages/restaurantMenuDetail/components/RestaurantOtherMenuSection'
@@ -77,7 +77,7 @@ export const RestaurantMenuDetailPage = () => {
       <div
         className="z-fixed fixed inset-x-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
         data-testid="restaurant-menu-detail-tab-fixed-container"
-        style={{ top: RESTAURANT_DETAIL_HEADER_HEIGHT }}
+        style={{ top: RESTAURANT_MENU_DETAIL_HEADER_HEIGHT }}
       >
         <RestaurantDetailTabs
           activeTab="menu"
@@ -87,9 +87,11 @@ export const RestaurantMenuDetailPage = () => {
       </div>
       <div
         aria-hidden="true"
+        data-testid="restaurant-menu-detail-fixed-spacer"
         style={{
           height:
-            RESTAURANT_DETAIL_HEADER_HEIGHT + RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
+            RESTAURANT_MENU_DETAIL_HEADER_HEIGHT +
+            RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
         }}
       />
 
