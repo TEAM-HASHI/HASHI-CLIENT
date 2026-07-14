@@ -117,8 +117,15 @@ describe('HomePage', () => {
       'app-mobile-fixed-top',
       'z-fixed',
       'bg-white',
-      'pb-4',
+      'pb-5',
     )
+    expect(
+      screen.getByRole('heading', { name: 'Hashi 홈' }).parentElement,
+    ).toHaveClass('pt-[100px]')
+    expect(
+      screen.getByRole('heading', { name: '맛집 큐레이션을 둘러보세요!' })
+        .parentElement,
+    ).toHaveClass('mt-5')
     expect(
       await screen.findByRole('region', { name: '맛집 큐레이션 배너' }),
     ).toHaveClass('mt-2.5')
@@ -148,6 +155,9 @@ describe('HomePage', () => {
     expect(screen.getByRole('link', { name: '오늘의 식당' })).toHaveAttribute(
       'href',
       ROUTES.todayRestaurant,
+    )
+    expect(screen.getByRole('navigation', { name: '주요 기능' })).toHaveClass(
+      'mt-5',
     )
   })
 
@@ -219,6 +229,22 @@ describe('HomePage', () => {
     expect(
       screen.getByRole('link', { name: /숯불 규카츠 미야비 긴자 본점/ }),
     ).toHaveAttribute('href', '/restaurants/102')
+    expect(
+      screen.getByRole('heading', { name: 'SNS에서 핫한 일본 식당' }),
+    ).toHaveClass('typo-sub-header-1')
+    expect(
+      screen
+        .getByRole('link', { name: /돈카츠 후쿠마루 도쿄역 야에스점/ })
+        .querySelector('span span'),
+    ).toHaveClass('typo-sub-header-2')
+    expect(
+      screen.getByRole('region', { name: 'SNS에서 핫한 일본 식당' }),
+    ).toHaveClass('mt-[29px]')
+    expect(
+      screen
+        .getByRole('region', { name: 'SNS에서 핫한 일본 식당' })
+        .querySelector('ul'),
+    ).toHaveClass('mt-5')
   })
 
   it('shows DefaultImage when an SNS hot restaurant image request fails', async () => {

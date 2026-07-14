@@ -47,7 +47,7 @@ Jira: HASHI-77
 - [x] 상단 대표 매거진 배너 영역을 보여준다.
 - [x] 대표 매거진 배너는 이미지와 페이지 인디케이터를 포함한다.
 - [x] 대표 매거진 배너 데이터는 이미지와 인스타 게시글 URL을 포함한다.
-- [x] 대표 매거진 배너와 추천 매거진 썸네일은 홈 메인 배너와 같은 `353:160` 이미지 비율을 사용한다.
+- [x] 대표 매거진 배너는 홈 메인 배너와 같은 `353:160` 이미지 비율을 사용한다.
 - [x] 대표 매거진 배너를 탭하면 해당 매거진의 외부 인스타 게시글로 이동한다.
 - [x] 카테고리 필터는 MVP 범위에서 제외하므로 화면에 렌더링하지 않는다.
 - [x] 추천 매거진 목록은 제목, 이미지, 발행일을 포함한다.
@@ -56,6 +56,7 @@ Jira: HASHI-77
 - [x] 긴 제목은 모바일 폭에서 레이아웃을 깨지 않도록 줄 수를 제한한다.
 - [x] 배너 링크의 접근성 이름은 호출부 데이터에서 제공한다.
 - [x] 추천 매거진 썸네일은 링크 텍스트와 중복되지 않도록 장식 이미지로 처리한다.
+- [x] 매거진 skeleton placeholder 색상은 하시 PICK/인기 맛집 리스트 skeleton과 같은 `secondary-200`을 사용한다.
 
 ## Data Dependencies
 
@@ -353,15 +354,11 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
 - recommendation section:
   - horizontal padding uses `px-5`.
   - large section heading such as `최근 _한 추천 매거진` is not rendered.
-  - list starts `20px` below the hero banner.
-  - list uses `20px` gap between items.
   - list item uses text column and fixed image area.
-  - list item text/image column gap is `21px`.
-  - list item top padding is `20px` and bottom padding is `8px`.
   - list item title uses `typo-body-6 text-black`.
-  - list item image width is `164px`, keeps the shared magazine image ratio `353:160`, and uses radius `5px`.
   - list item date uses `typo-caption-1 font-medium text-warm-gray-300`.
   - list item divider uses `border-b border-warm-gray-50`.
+  - hero banner and list skeleton placeholder blocks use `bg-secondary-200`, matching the shared restaurant list skeleton used by Hashi Pick and Popular Restaurants.
   - image keeps a stable width/aspect ratio so text loading and long copy do not shift layout.
   - title uses line clamp.
   - published date uses muted typography.

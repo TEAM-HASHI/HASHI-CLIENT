@@ -25,7 +25,7 @@ export const HomePage = () => {
         <h1 className="sr-only">Hashi 홈</h1>
         <header
           aria-label="홈 상단 영역"
-          className="app-mobile-fixed-top z-fixed bg-white px-5 pt-[18px] pb-4"
+          className="app-mobile-fixed-top z-fixed bg-white px-5 pt-[18px] pb-5"
         >
           <HomeLogo />
           <HomeSearchEntry to={searchPath} />

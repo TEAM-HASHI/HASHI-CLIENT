@@ -1,5 +1,4 @@
 import { RestaurantResultList } from '@/pages/search/components/RestaurantResultList'
-import { SearchEmptyState } from '@/pages/search/components/SearchEmptyState'
 import { SearchErrorState } from '@/pages/search/components/SearchErrorState'
 import { SearchFilterBar } from '@/pages/search/components/SearchFilterBar'
 import { SearchHeader } from '@/pages/search/components/SearchHeader'
@@ -7,6 +6,7 @@ import { SearchIdlePanel } from '@/pages/search/components/SearchIdlePanel'
 import { SearchResultSkeleton } from '@/pages/search/components/SearchResultSkeleton'
 import { useSearchPage } from '@/pages/search/hooks/useSearchPage'
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
+import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { cn } from '@/shared/utils'
 
 export const SearchPage = () => {
@@ -78,7 +78,10 @@ export const SearchPage = () => {
                 )}
               </>
             ) : (
-              <SearchEmptyState />
+              <ListEmptyState
+                className="min-h-0 flex-1 pb-[122px]"
+                description="검색된 식당이 없습니다."
+              />
             )}
           </>
         )}
