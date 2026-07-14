@@ -58,7 +58,12 @@ const mockedUseMyProfileSummaryQuery = vi.mocked(useMyProfileSummaryQuery)
 const LocationPath = () => {
   const location = useLocation()
 
-  return <div data-testid="location-path">{location.pathname}</div>
+  return (
+    <>
+      <div data-testid="location-path">{location.pathname}</div>
+      <div data-testid="location-state">{JSON.stringify(location.state)}</div>
+    </>
+  )
 }
 
 const renderMyReservationsPage = (
@@ -343,6 +348,11 @@ describe('MyReservationsPage', () => {
       await screen.findByRole('button', { name: /리뷰 작성 완료/ }),
     )
     expect(screen.getByTestId('location-path')).toHaveTextContent('/reviews/51')
+    expect(screen.getByTestId('location-state')).toHaveTextContent(
+      JSON.stringify({
+        returnTo: `${ROUTES.myReservations}?status=VISITED`,
+      }),
+    )
   })
 
   it('navigates from unreviewed visited reservations to review new', async () => {
@@ -439,6 +449,31 @@ describe('MyReservationsPage', () => {
 
     expect(screen.getByTestId('location-path')).toHaveTextContent(
       '/reservations/12',
+    )
+  })
+
+  it('navigates from upcoming reservation card to reservation detail', async () => {
+    mockedGetMyReservations.mockResolvedValue({
+      reservations: [
+        {
+          reservationId: 21,
+          restaurantId: 34,
+          restaurantName: '방문 예정 식당',
+          reservedAt: '2026-07-20T18:30:00',
+          adultCount: 2,
+          reservationStatus: 'CONFIRMED',
+        },
+      ],
+      hasNext: false,
+      totalCount: 1,
+    })
+
+    renderMyReservationsPage(`${ROUTES.myReservations}?status=UPCOMING`)
+
+    fireEvent.click(await screen.findByText('방문 예정 식당'))
+
+    expect(screen.getByTestId('location-path')).toHaveTextContent(
+      '/reservations/21',
     )
   })
 

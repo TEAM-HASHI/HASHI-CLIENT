@@ -4,6 +4,7 @@ import type { PropsWithChildren } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
+import { myReservationsQueryKeys } from '@/features/reservation'
 import { createReservation } from '@/pages/reservationRequest/api/createReservation'
 import { useCreateReservationMutation } from '@/pages/reservationRequest/hooks/useCreateReservationMutation'
 
@@ -57,6 +58,23 @@ describe('useCreateReservationMutation', () => {
 
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: pointQueryKeys.myBalance(),
+    })
+  })
+
+  it('invalidates my reservation lists after a reservation is created', async () => {
+    const queryClient = new QueryClient()
+    const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries')
+    mockedCreateReservation.mockResolvedValue({ reservationId: 31 })
+    const { result } = renderHook(() => useCreateReservationMutation(), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    await act(async () => {
+      await result.current.mutateAsync(createReservationParams)
+    })
+
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: myReservationsQueryKeys.all,
     })
   })
 

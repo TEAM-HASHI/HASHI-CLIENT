@@ -212,7 +212,11 @@ export const useMyReservationsPage = () => {
 
   const handleReviewPress = (reservation: VisitedReservation) => {
     if (reservation.reviewActionState === 'WRITTEN' && reservation.reviewId) {
-      navigate(ROUTES.reviewDetail.replace(':reviewId', reservation.reviewId))
+      navigate(ROUTES.reviewDetail.replace(':reviewId', reservation.reviewId), {
+        state: {
+          returnTo: `${ROUTES.myReservations}?status=VISITED`,
+        },
+      })
       return
     }
 
