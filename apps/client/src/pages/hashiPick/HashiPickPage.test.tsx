@@ -105,6 +105,9 @@ describe('HashiPickPage', () => {
       'bg-white',
     )
     expect(screen.getByTestId('restaurant-list-scroll-content')).toHaveClass(
+      'flex',
+      'flex-1',
+      'flex-col',
       'pt-[75px]',
     )
     expect(

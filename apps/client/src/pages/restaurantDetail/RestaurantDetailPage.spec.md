@@ -41,7 +41,7 @@
 - [ ] 식당 상세 페이지에는 `다시 추천 받기` 버튼이 없습니다.
 - [ ] 메뉴 카드 클릭 시 `ROUTES.restaurantMenuDetail`로 이동합니다.
 - [ ] 공유 클릭 시 `ROUTES.restaurantDetail` 기준 식당 상세 링크를 현재 origin 기준 absolute URL로 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
-- [ ] 식당명 복사 클릭 시 현재 표시 중인 식당명을 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
+- [ ] 식당명 복사 클릭 시 현재 표시 중인 한국어 식당명을 클립보드에 복사하고, 복사 아이콘과 `식당명이 복사되었어요` Toast를 표시합니다.
 - [ ] 비로그인 사용자가 예약하기 또는 좋아요를 누르면 로그인 유도 바텀시트를 표시합니다.
 - [ ] 로그인 사용자가 예약하기를 누르면 `ROUTES.restaurantReservationNew`로 이동합니다.
 - [ ] 리뷰 작성 CTA 클릭 시 비방문자 안내 모달을 열 수 있습니다.
@@ -98,13 +98,14 @@
 - query: restaurant reviews infinite
 - requested endpoint: `GET /api/v1/restaurants/{restaurantId}/reviews`
 - response data:
-  - `averageRating`, `reviewCount`, `content`, `nextCursor`, `hasNext`
+  - `averageRating`, `reviewCount`, `ratingDistribution`, `content`, `nextCursor`, `hasNext`
 - enabled condition: route param `restaurantId` is valid number
 - request params:
   - path `restaurantId`, query `sort`, `cursor`, `size`
 - loading state: 리뷰 목록 조회 또는 정렬 변경 중에는 리뷰 목록 영역에만 `RestaurantReviewListSkeleton` 표시
 - error state: 리뷰 영역 error fallback
-- empty state: 리뷰가 없으면 shared `ListEmptyState`로 `리뷰 리스트를 준비중이에요.` 문구 표시
+- empty state: 리뷰가 없으면 shared `ListEmptyState`로 `작성된 리뷰가 없습니다.` 문구 표시
+- rating distribution: API `ratingDistribution`의 `five`, `four`, `three`, `two`, `one` count를 `reviewCount` 기준 비율로 변환해 별점 막대 너비에 반영
 - refetch condition: route param `restaurantId` 또는 sort 변경
 - pagination:
   - `getNextPageParam`: `hasNext`가 true이면 `nextCursor`

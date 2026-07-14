@@ -24,7 +24,7 @@ export const HomeQuickMenuSection = ({
   quickLinks,
 }: HomeQuickMenuSectionProps) => {
   return (
-    <nav aria-label="주요 기능" className="mt-6">
+    <nav aria-label="주요 기능" className="mt-5">
       <ul className="grid grid-cols-4">
         {quickLinks.map(({ id, label, to }) => (
           <li key={id}>

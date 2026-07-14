@@ -5,6 +5,8 @@ import type { ReviewSortValue } from '@/features/restaurantDetail/constants/rest
 
 type RestaurantReviewResponse =
   components['schemas']['RestaurantReviewResponse']
+export type RatingDistributionResponse =
+  components['schemas']['RatingDistributionResponse']
 export type ReviewSummaryResponse =
   components['schemas']['ReviewSummaryResponse'] & {
     imageCount?: number
@@ -18,6 +20,7 @@ export interface RestaurantReviewListData {
   restaurantId?: number
   averageRating: number
   reviewCount: number
+  ratingDistribution?: RatingDistributionResponse
   reviews: ReviewSummaryResponse[]
   nextCursor?: number
   hasNext: boolean
@@ -66,6 +69,7 @@ export const getRestaurantReviews = async ({
     restaurantId: response?.restaurantId,
     averageRating: response?.averageRating ?? 0,
     reviewCount: response?.reviewCount ?? 0,
+    ratingDistribution: response?.ratingDistribution,
     reviews: response?.content ?? [],
     nextCursor: response?.nextCursor,
     hasNext: response?.hasNext === true,

@@ -4,8 +4,19 @@ import { createRef } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { RestaurantReviewSection } from '@/features/restaurantDetail/components/RestaurantReviewSection'
-import type { RestaurantReview } from '@/features/restaurantDetail/types/restaurantDetail'
+import type {
+  RestaurantRatingDistribution,
+  RestaurantReview,
+} from '@/features/restaurantDetail/types/restaurantDetail'
 import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
+
+const DEFAULT_RATING_DISTRIBUTION: RestaurantRatingDistribution = {
+  five: 8,
+  four: 1,
+  three: 1,
+  two: 0,
+  one: 0,
+}
 
 const createReviews = (count: number): RestaurantReview[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -23,6 +34,7 @@ const renderReviewSection = ({
   hasMoreReviews = false,
   isReviewListLoading = false,
   onSelectSort = vi.fn(),
+  ratingDistribution = DEFAULT_RATING_DISTRIBUTION,
   reviewCount = 10,
   reviews = createReviews(1),
   selectedSort = 'latest',
@@ -30,6 +42,7 @@ const renderReviewSection = ({
   hasMoreReviews?: boolean
   isReviewListLoading?: boolean
   onSelectSort?: (sort: ReviewSortValue) => void
+  ratingDistribution?: RestaurantRatingDistribution
   reviewCount?: number
   reviews?: RestaurantReview[]
   selectedSort?: ReviewSortValue
@@ -43,6 +56,7 @@ const renderReviewSection = ({
       onPressWriteReview={vi.fn()}
       onSelectSort={onSelectSort}
       rating={3.8}
+      ratingDistribution={ratingDistribution}
       restaurantName="야키니쿠 리키마루"
       reviewCount={reviewCount}
       reviews={reviews}
@@ -83,6 +97,7 @@ describe('RestaurantReviewSection', () => {
         onPressWriteReview={vi.fn()}
         onSelectSort={vi.fn()}
         rating={3.8}
+        ratingDistribution={DEFAULT_RATING_DISTRIBUTION}
         restaurantName="야키니쿠 리키마루"
         reviewCount={10}
         reviews={createReviews(10)}
@@ -102,6 +117,7 @@ describe('RestaurantReviewSection', () => {
         onPressWriteReview={vi.fn()}
         onSelectSort={vi.fn()}
         rating={3.8}
+        ratingDistribution={DEFAULT_RATING_DISTRIBUTION}
         restaurantName="야키니쿠 리키마루"
         reviewCount={10}
         reviews={createReviews(10)}
@@ -137,8 +153,38 @@ describe('RestaurantReviewSection', () => {
       reviews: [],
     })
 
-    expect(screen.getByText('리뷰 리스트를 준비중이에요.')).toBeInTheDocument()
+    expect(screen.getByText('작성된 리뷰가 없습니다.')).toBeInTheDocument()
     expect(screen.queryByTestId('restaurant-review-load-more')).toBeNull()
+  })
+
+  it('renders rating distribution bars from server-provided counts', () => {
+    renderReviewSection({
+      reviewCount: 5,
+      ratingDistribution: { five: 4, four: 1, three: 0, two: 0, one: 0 },
+    })
+
+    expect(screen.getByLabelText('5점 리뷰 4개')).toBeInTheDocument()
+    expect(screen.getByLabelText('4점 리뷰 1개')).toBeInTheDocument()
+
+    const fiveStarBar = screen
+      .getByLabelText('5점 리뷰 4개')
+      .querySelector('.bg-primary-400')
+    const fourStarBar = screen
+      .getByLabelText('4점 리뷰 1개')
+      .querySelector('.bg-primary-400')
+    const threeStarBar = screen
+      .getByLabelText('3점 리뷰 0개')
+      .querySelector('.bg-primary-400')
+
+    expect(fiveStarBar).toHaveStyle({
+      '--restaurant-rating-distribution-scale': '0.8',
+    })
+    expect(fourStarBar).toHaveStyle({
+      '--restaurant-rating-distribution-scale': '0.2',
+    })
+    expect(threeStarBar).toHaveStyle({
+      '--restaurant-rating-distribution-scale': '0',
+    })
   })
 
   it('renders default image when review image fails to load', () => {

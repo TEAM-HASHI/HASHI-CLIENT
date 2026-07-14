@@ -232,15 +232,16 @@ describe('MagazinesPage', () => {
     expect(
       screen.queryByRole('heading', { name: '최근 _한 추천 매거진' }),
     ).not.toBeInTheDocument()
-    expect(recommendedSection).toHaveClass('pt-5')
+    expect(recommendedSection).toHaveClass('pt-4')
     expect(firstItem).toHaveClass('border-warm-gray-50')
-    expect(magazineList).toHaveClass('gap-5', 'px-5')
-    expect(firstLink).toHaveClass('gap-[21px]', 'pt-5', 'pb-2')
+    expect(magazineList).toHaveClass('px-5')
+    expect(magazineList).not.toHaveClass('gap-5')
+    expect(firstLink).toHaveClass('gap-[21px]', 'py-4')
     expect(firstTitle).toHaveClass('typo-body-6', 'text-black')
     expect(firstImage).toHaveAttribute('alt', '')
     expect(firstImage).toHaveClass(
-      'aspect-[353/160]',
-      'w-[164px]',
+      'aspect-[156/88]',
+      'w-[156px]',
       'rounded-[5px]',
     )
     expect(firstDate).toHaveClass(
@@ -248,6 +249,44 @@ describe('MagazinesPage', () => {
       'font-medium',
       'text-warm-gray-300',
     )
+  })
+
+  it('uses the shared restaurant list skeleton color for magazine loading placeholders', () => {
+    mockGetMagazineBanners.mockImplementation(
+      () =>
+        new Promise(() => {
+          // Keep the banner query pending so the hero skeleton remains visible.
+        }),
+    )
+    mockGetMagazines.mockImplementation(
+      () =>
+        new Promise(() => {
+          // Keep the list query pending so the skeleton remains visible.
+        }),
+    )
+
+    renderMagazinesPage()
+
+    expect(
+      screen.getByRole('region', { name: '대표 매거진 배너 로딩 중' }),
+    ).toHaveClass('bg-secondary-200')
+    const recommendedSection = screen.getByRole('region', {
+      name: '추천 매거진 목록',
+    })
+    const firstSkeletonItem = within(recommendedSection).getAllByRole(
+      'listitem',
+      {
+        hidden: true,
+      },
+    )[0]
+    const firstSkeletonImage = firstSkeletonItem.querySelector(
+      '.aspect-\\[156\\/88\\]',
+    )
+
+    expect(firstSkeletonItem.querySelector('.bg-secondary-200')).toBeTruthy()
+    expect(firstSkeletonItem.querySelector('.bg-cool-gray-100')).toBeNull()
+    expect(firstSkeletonItem).toHaveClass('grid-cols-[1fr_156px]', 'py-4')
+    expect(firstSkeletonImage).toHaveClass('w-[156px]')
   })
 
   it('keeps the load-more sentinel when the current page has only filtered-out items and another page remains', async () => {

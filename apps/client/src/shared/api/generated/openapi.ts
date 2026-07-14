@@ -134,10 +134,14 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 더미 시나리오 생성 — 호출 1번에 식당 1곳·회원 10명·방문 완료 예약 10건·리뷰 10건을 넣는다.
-         * @description 더미 시나리오 생성 — 호출 1번에 식당 1곳·회원 10명·방문 완료 예약 10건·리뷰 10건을 넣는다.
-         *      공개 경로라 토큰 없이 호출할 수 있고, 응답의 sampleUser.accessToken을 Authorize에 붙이면
-         *      해당 더미 회원으로 예약·리뷰 API를 곧장 시험할 수 있다.
+         * 더미 시나리오 생성 — 호출 1번에 식당 1곳·회원 10명을 넣고, 대표(첫 번째) 회원에게는 예약의
+         *      모든 상태 케이스(진행중·확정·취소·방문 완료 × 리뷰 미작성/작성/삭제 × 등록/어디든)를 1건씩,
+         *      나머지 회원에게는 방문 완료 예약·리뷰를 1건씩 생성한다.
+         * @description 더미 시나리오 생성 — 호출 1번에 식당 1곳·회원 10명을 넣고, 대표(첫 번째) 회원에게는 예약의
+         *      모든 상태 케이스(진행중·확정·취소·방문 완료 × 리뷰 미작성/작성/삭제 × 등록/어디든)를 1건씩,
+         *      나머지 회원에게는 방문 완료 예약·리뷰를 1건씩 생성한다. 공개 경로라 토큰 없이 호출할 수 있고,
+         *      응답의 sampleUser.accessToken을 Authorize에 붙이면 해당 더미 회원으로 예약·리뷰 API를 곧장
+         *      시험할 수 있다(케이스별 예약은 sampleUserReservations 참고).
          */
         post: operations["createDummies"];
         delete?: never;
@@ -991,7 +995,8 @@ export interface components {
         };
         /**
          * @description 더미 시나리오 생성 결과 — 생성된 각 도메인의 식별자 목록과, 바로 쓸 수 있는 대표 더미 유저 토큰.
-         *      sampleUser의 accessToken을 Authorize에 붙이면 그 유저의 예약·리뷰 조회가 곧장 동작한다.
+         *      sampleUser의 accessToken을 Authorize에 붙이면 그 유저의 예약·리뷰 조회가 곧장 동작하고,
+         *      sampleUserReservations로 어떤 예약이 어떤 상태 케이스인지 확인할 수 있다.
          */
         DummyScenarioResponse: {
             /** Format: int64 */
@@ -999,7 +1004,23 @@ export interface components {
             userIds?: number[];
             reservationIds?: number[];
             reviewIds?: number[];
+            sampleUserReservations?: components["schemas"]["SampleReservation"][];
             sampleUser?: components["schemas"]["SampleUser"];
+        };
+        /**
+         * @description 대표 더미 유저 명의로 생성된 예약 1건의 상태 케이스.
+         *      reviewState는 방문 완료된 STANDARD 예약만 UNREVIEWED/REVIEWED/DELETED로 채우고 그 외는 null이다.
+         */
+        SampleReservation: {
+            /** Format: int64 */
+            reservationId?: number;
+            /** @enum {string} */
+            reservationType?: "STANDARD" | "ANYWHERE";
+            /** @enum {string} */
+            reservationStatus?: "REQUESTED" | "CONTACTING" | "CONFIRMED" | "VISITED" | "CANCELED";
+            reviewState?: string;
+            /** Format: int64 */
+            reviewId?: number;
         };
         /** @description 대표 더미 유저 — 생성된 첫 번째 유저와 그 명의의 USER 액세스 토큰. */
         SampleUser: {
@@ -1480,6 +1501,7 @@ export interface components {
         /**
          * @description 예약 상세 응답. 식당 정보는 STANDARD면 실시간 조회 값, ANYWHERE면 저장된 값(일본어명·이미지 null).
          *      receivedAt은 접수(생성) 시각, confirmExpectedAt은 접수 + 2일이다.
+         *      결제 정보는 생성 시점에 확정된 값 — amount = 기본 수수료({@value Reservation#BASE_FEE}) − usedPoint.
          */
         ReservationDetailResponse: {
             /** Format: int64 */
@@ -1508,6 +1530,10 @@ export interface components {
             receivedAt?: string;
             /** Format: date-time */
             confirmExpectedAt?: string;
+            /** Format: int64 */
+            usedPoint?: number;
+            /** Format: int64 */
+            amount?: number;
         };
         /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
         SuccessResponseReservationDetailResponse: {
@@ -2410,7 +2436,6 @@ export interface operations {
             query?: {
                 keyword?: string;
                 genre?: string;
-                foodCategory?: string;
                 sort?: string;
                 type?: string;
                 cursor?: string;

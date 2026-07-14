@@ -141,6 +141,13 @@ describe('restaurant detail API', () => {
     mockedRequest.mockResolvedValue({
       averageRating: 4.5,
       reviewCount: 12,
+      ratingDistribution: {
+        five: 7,
+        four: 3,
+        three: 1,
+        two: 1,
+        one: 0,
+      },
       content: [],
       nextCursor: 30,
       hasNext: true,
@@ -157,6 +164,13 @@ describe('restaurant detail API', () => {
       restaurantId: undefined,
       averageRating: 4.5,
       reviewCount: 12,
+      ratingDistribution: {
+        five: 7,
+        four: 3,
+        three: 1,
+        two: 1,
+        one: 0,
+      },
       reviews: [],
       nextCursor: 30,
       hasNext: true,

@@ -23,12 +23,21 @@ export interface RestaurantReview {
   keywords: string[]
 }
 
+export interface RestaurantRatingDistribution {
+  five: number
+  four: number
+  three: number
+  two: number
+  one: number
+}
+
 export interface RestaurantDetail {
   id: string
   name: string
   localName: string
   rating: number
   reviewCount: number
+  ratingDistribution: RestaurantRatingDistribution
   likeCount: string
   summary: string
   address: string

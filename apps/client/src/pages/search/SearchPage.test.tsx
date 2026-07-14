@@ -15,6 +15,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
 import { SearchPage } from '@/pages/search/SearchPage'
 import type { SearchRestaurant } from '@/pages/search/types'
+import emptyMenuImage from '@/shared/assets/images/empty-menu.webp'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
 const { mockGetRestaurants, mockGetSearchKeywordRecommendations } = vi.hoisted(
@@ -301,7 +302,7 @@ describe('SearchPage', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(10)
     expect(
       screen.getAllByRole('listitem')[0].querySelector('a')?.firstChild,
-    ).toHaveClass('bg-warm-gray-50')
+    ).toHaveClass('bg-warm-gray-100')
     expect(window.localStorage.getItem('hashi:search:recent-keywords')).toBe(
       JSON.stringify(['아끼소바']),
     )
@@ -343,7 +344,7 @@ describe('SearchPage', () => {
 
     expect(image).not.toBeInTheDocument()
     expect(
-      screen.getAllByRole('listitem')[0].querySelector('.bg-warm-gray-50'),
+      screen.getAllByRole('listitem')[0].querySelector('.bg-warm-gray-100'),
     ).toBeInTheDocument()
   })
 
@@ -416,6 +417,14 @@ describe('SearchPage', () => {
     await waitFor(() => {
       expect(screen.getByText('검색된 식당이 없습니다.')).toBeInTheDocument()
     })
+    expect(
+      screen
+        .getByText('검색된 식당이 없습니다.')
+        .parentElement?.querySelector('img'),
+    ).toHaveAttribute('src', emptyMenuImage)
+    expect(
+      screen.getByText('검색된 식당이 없습니다.').parentElement,
+    ).toHaveClass('pb-[122px]')
     expect(screen.getByRole('button', { name: '기본순' })).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: '음식 장르 선택' }),

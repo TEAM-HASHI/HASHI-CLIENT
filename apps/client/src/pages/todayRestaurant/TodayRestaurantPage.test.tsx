@@ -187,6 +187,13 @@ const restaurantReviews = {
   restaurantId: 10,
   averageRating: 3.8,
   reviewCount: 1,
+  ratingDistribution: {
+    five: 0,
+    four: 1,
+    three: 0,
+    two: 0,
+    one: 0,
+  },
   reviews: [
     {
       reviewId: 200,
@@ -333,6 +340,9 @@ describe('TodayRestaurantPage', () => {
     })
 
     fireEvent.click(screen.getByRole('tab', { name: /리뷰/ }))
+
+    expect(screen.getByLabelText('4점 리뷰 1개')).toBeInTheDocument()
+
     fireEvent.click(screen.getByRole('button', { name: '리뷰 작성하기' }))
 
     expect(
@@ -505,9 +515,12 @@ describe('TodayRestaurantPage', () => {
     )
     await waitFor(() => {
       expect(mockToastQueueClear).toHaveBeenCalled()
-      expect(mockShowToast).toHaveBeenCalledWith({
-        children: '식당명이 복사되었어요',
-      })
+      expect(mockShowToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          children: '식당명이 복사되었어요',
+          icon: expect.anything(),
+        }),
+      )
     })
   })
 

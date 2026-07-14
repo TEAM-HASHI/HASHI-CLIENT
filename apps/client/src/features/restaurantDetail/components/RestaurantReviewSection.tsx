@@ -1,6 +1,6 @@
 import { PencilIcon } from '@hashi/hds-icons'
 import { Button, Chip, CollapsibleText, StarRating } from '@hashi/hds-ui'
-import type { Ref } from 'react'
+import type { CSSProperties, Ref } from 'react'
 
 import { ReviewKeywordBadge } from '@/features/review/components'
 import graphicBillUrl from '@/features/restaurantDetail/assets/graphic-bill.svg'
@@ -11,7 +11,10 @@ import {
   REVIEW_SORT_OPTIONS,
   type ReviewSortValue,
 } from '@/features/restaurantDetail/constants/restaurantReview'
-import type { RestaurantReview } from '@/features/restaurantDetail/types/restaurantDetail'
+import type {
+  RestaurantRatingDistribution,
+  RestaurantReview,
+} from '@/features/restaurantDetail/types/restaurantDetail'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { cn } from '@/shared/utils'
 
@@ -19,6 +22,7 @@ interface RestaurantReviewSectionProps {
   rating: number
   restaurantName: string
   reviewCount: number
+  ratingDistribution: RestaurantRatingDistribution
   reviews: RestaurantReview[]
   hasMoreReviews: boolean
   isReviewListError?: boolean
@@ -41,24 +45,66 @@ const REVIEW_WRITE_ICON_CLASS_NAME =
 
 interface RatingDistributionProps {
   className?: string
+  distribution: RestaurantRatingDistribution
+  totalCount: number
 }
 
-const RatingDistribution = ({ className }: RatingDistributionProps) => {
+type RatingDistributionStyle = CSSProperties & {
+  '--restaurant-rating-distribution-scale': string
+}
+
+const RATING_DISTRIBUTION_COUNT_BY_SCORE = {
+  5: 'five',
+  4: 'four',
+  3: 'three',
+  2: 'two',
+  1: 'one',
+} as const satisfies Record<
+  (typeof RATING_DISTRIBUTION)[number],
+  keyof RestaurantRatingDistribution
+>
+
+const getRatingDistributionScale = (count: number, totalCount: number) => {
+  if (totalCount <= 0) {
+    return 0
+  }
+
+  return Math.min(1, Math.max(0, count / totalCount))
+}
+
+const RatingDistribution = ({
+  className,
+  distribution,
+  totalCount,
+}: RatingDistributionProps) => {
   return (
     <div className={cn('flex w-[170px] flex-col', className)}>
-      {RATING_DISTRIBUTION.map((score) => (
-        <div
-          className="flex h-[19px] w-full items-center justify-between"
-          key={score}
-        >
-          <span className="typo-caption-3 text-primary-200 w-3 text-center">
-            {score}
-          </span>
-          <div className="bg-secondary-200 h-[3px] w-[150px] overflow-hidden rounded-full">
-            <div className="bg-primary-400 h-full w-[93px] rounded-full" />
+      {RATING_DISTRIBUTION.map((score) => {
+        const count = distribution[RATING_DISTRIBUTION_COUNT_BY_SCORE[score]]
+        const scale = getRatingDistributionScale(count, totalCount)
+
+        return (
+          <div
+            aria-label={`${score}점 리뷰 ${count}개`}
+            className="flex h-[19px] w-full items-center justify-between"
+            key={score}
+          >
+            <span className="typo-caption-3 text-primary-200 w-3 text-center">
+              {score}
+            </span>
+            <div className="bg-secondary-200 h-[3px] w-[150px] overflow-hidden rounded-full">
+              <div
+                className="animate-restaurant-rating-distribution bg-primary-400 h-full rounded-full"
+                style={
+                  {
+                    '--restaurant-rating-distribution-scale': String(scale),
+                  } as RatingDistributionStyle
+                }
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -67,6 +113,7 @@ export const RestaurantReviewSection = ({
   rating,
   restaurantName,
   reviewCount,
+  ratingDistribution,
   reviews,
   hasMoreReviews,
   isReviewListError = false,
@@ -94,7 +141,11 @@ export const RestaurantReviewSection = ({
             value={rating}
           />
         </div>
-        <RatingDistribution className="absolute top-7 left-[181px]" />
+        <RatingDistribution
+          className="absolute top-7 left-[181px]"
+          distribution={ratingDistribution}
+          totalCount={reviewCount}
+        />
       </div>
 
       <div
@@ -169,7 +220,7 @@ export const RestaurantReviewSection = ({
               ) : null}
             </div>
           ) : reviews.length === 0 ? (
-            <ListEmptyState description="리뷰 리스트를 준비중이에요." />
+            <ListEmptyState description="작성된 리뷰가 없습니다." />
           ) : (
             reviews.map((review) => (
               <article

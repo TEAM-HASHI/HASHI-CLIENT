@@ -1,6 +1,9 @@
 import type { RestaurantMenuResponse } from '@/features/restaurantDetail/api/getRestaurantMenus'
 import type { RestaurantMenuDetailResponse } from '@/features/restaurantDetail/api/getRestaurantMenu'
-import type { ReviewSummaryResponse } from '@/features/restaurantDetail/api/getRestaurantReviews'
+import type {
+  RatingDistributionResponse,
+  ReviewSummaryResponse,
+} from '@/features/restaurantDetail/api/getRestaurantReviews'
 import type { RestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
 import type { RestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import type { RestaurantDetail } from '@/features/restaurantDetail/types/restaurantDetail'
@@ -132,6 +135,16 @@ const formatReviewDate = (createdAt: string | undefined) => {
   return `${year}.${month}.${day}`
 }
 
+const createRatingDistribution = (
+  ratingDistribution: RatingDistributionResponse | undefined,
+): RestaurantDetail['ratingDistribution'] => ({
+  five: ratingDistribution?.five ?? 0,
+  four: ratingDistribution?.four ?? 0,
+  three: ratingDistribution?.three ?? 0,
+  two: ratingDistribution?.two ?? 0,
+  one: ratingDistribution?.one ?? 0,
+})
+
 export const createRestaurantMenusViewModel = (
   menus: RestaurantMenuResponse[],
 ) =>
@@ -181,8 +194,9 @@ interface CreateRestaurantDetailViewModelParams {
   storeInformation: RestaurantStoreInformation
   menus: RestaurantMenuResponse[]
   reviews: ReviewSummaryResponse[]
-  averageRating: number
-  reviewCount: number
+  averageRating?: number
+  reviewCount?: number
+  ratingDistribution?: RatingDistributionResponse
 }
 
 export const createRestaurantDetailViewModel = ({
@@ -192,6 +206,7 @@ export const createRestaurantDetailViewModel = ({
   reviews,
   averageRating,
   reviewCount,
+  ratingDistribution,
 }: CreateRestaurantDetailViewModelParams): RestaurantDetail => {
   const businessHours = storeInformation.businessHours.reduce<
     RestaurantDetail['businessHours']
@@ -209,8 +224,9 @@ export const createRestaurantDetailViewModel = ({
     id: String(summary.restaurantId),
     name: summary.name,
     localName: summary.localName ?? '',
-    rating: averageRating || (summary.rating ?? 0),
-    reviewCount: reviewCount || (summary.reviewCount ?? 0),
+    rating: averageRating ?? summary.rating ?? 0,
+    reviewCount: reviewCount ?? summary.reviewCount ?? 0,
+    ratingDistribution: createRatingDistribution(ratingDistribution),
     likeCount: '0',
     summary: summary.summary ?? '',
     address: summary.address,

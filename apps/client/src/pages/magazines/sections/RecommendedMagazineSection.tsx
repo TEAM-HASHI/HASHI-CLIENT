@@ -18,15 +18,15 @@ const renderSkeletonItems = () => {
   return Array.from({ length: 4 }, (_, index) => (
     <li
       aria-hidden="true"
-      className="border-warm-gray-50 grid grid-cols-[1fr_164px] gap-[21px] border-b pt-5 pb-2 last:border-b-0"
+      className="border-warm-gray-50 grid grid-cols-[1fr_156px] gap-[21px] border-b py-4 last:border-b-0"
       key={index}
     >
       <div className="flex min-w-0 flex-col gap-3">
-        <div className="bg-cool-gray-100 h-5 w-full rounded-[4px]" />
-        <div className="bg-cool-gray-100 h-5 w-4/5 rounded-[4px]" />
-        <div className="bg-cool-gray-100 mt-auto h-4 w-24 rounded-[4px]" />
+        <div className="bg-secondary-200 h-5 w-full rounded-[4px]" />
+        <div className="bg-secondary-200 h-5 w-4/5 rounded-[4px]" />
+        <div className="bg-secondary-200 mt-auto h-4 w-24 rounded-[4px]" />
       </div>
-      <div className="bg-cool-gray-100 aspect-[353/160] w-[164px] rounded-[5px]" />
+      <div className="bg-secondary-200 aspect-[156/88] w-[156px] rounded-[5px]" />
     </li>
   ))
 }
@@ -47,8 +47,8 @@ export const RecommendedMagazineSection = ({
 
   if (isLoading) {
     return (
-      <section aria-label="추천 매거진 목록" className="pt-5">
-        <ul className="flex flex-col gap-5 px-5">{renderSkeletonItems()}</ul>
+      <section aria-label="추천 매거진 목록" className="pt-4">
+        <ul className="flex flex-col px-5">{renderSkeletonItems()}</ul>
       </section>
     )
   }
@@ -73,9 +73,9 @@ export const RecommendedMagazineSection = ({
   }
 
   return (
-    <section aria-label="추천 매거진 목록" className="pt-5">
+    <section aria-label="추천 매거진 목록" className="pt-4">
       {shouldRenderList ? (
-        <ul className="flex flex-col gap-5 px-5">
+        <ul className="flex flex-col px-5">
           {magazines.map((magazine) => (
             <MagazineListItem key={magazine.id} magazine={magazine} />
           ))}
