@@ -96,8 +96,12 @@ describe('ReviewDetailPage', () => {
       name: '선택한 리뷰 키워드',
     })
 
-    expect(keywordList).toHaveClass('flex-wrap')
-    expect(keywordList).not.toHaveClass('overflow-x-auto')
+    expect(keywordList).toHaveClass(
+      'overflow-x-auto',
+      '[scrollbar-width:none]',
+      '[&::-webkit-scrollbar]:hidden',
+    )
+    expect(keywordList).not.toHaveClass('flex-wrap')
     expect(keywordList.querySelectorAll('svg')).toHaveLength(3)
     expect(getMyReviewDetail).toHaveBeenCalledWith(5)
   })
