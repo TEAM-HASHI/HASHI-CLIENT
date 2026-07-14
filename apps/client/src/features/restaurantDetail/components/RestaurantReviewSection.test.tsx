@@ -154,7 +154,7 @@ describe('RestaurantReviewSection', () => {
       reviews: [],
     })
 
-    expect(screen.getByText('리뷰 리스트를 준비중이에요.')).toBeInTheDocument()
+    expect(screen.getByText('작성된 리뷰가 없습니다.')).toBeInTheDocument()
     expect(screen.queryByTestId('restaurant-review-load-more')).toBeNull()
   })
 

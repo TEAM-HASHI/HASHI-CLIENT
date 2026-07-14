@@ -224,7 +224,7 @@ export const RestaurantReviewSection = ({
               ) : null}
             </div>
           ) : reviews.length === 0 ? (
-            <ListEmptyState description="리뷰 리스트를 준비중이에요." />
+            <ListEmptyState description="작성된 리뷰가 없습니다." />
           ) : (
             reviews.map((review) => (
               <article

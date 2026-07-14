@@ -114,7 +114,7 @@
   - path `restaurantId`, query `sort`, `cursor`, `size`
 - loading state: 리뷰 목록 조회 또는 정렬 변경 중에는 리뷰 목록 영역에만 `RestaurantReviewListSkeleton` 표시
 - error state: 리뷰 영역 error fallback
-- empty state: 리뷰가 없으면 shared `ListEmptyState`로 `리뷰 리스트를 준비중이에요.` 문구 표시
+- empty state: 리뷰가 없으면 shared `ListEmptyState`로 `작성된 리뷰가 없습니다.` 문구 표시
 - rating distribution: API `ratingDistribution`의 `five`, `four`, `three`, `two`, `one` count를 `reviewCount` 기준 비율로 변환해 별점 막대 너비에 반영
 - refetch condition: restaurantId 또는 sort 변경
 - pagination:
