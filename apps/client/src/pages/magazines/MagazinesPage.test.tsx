@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
-  act,
   cleanup,
   fireEvent,
   render,
@@ -15,6 +14,7 @@ import { ROUTES } from '@/app/router/path'
 
 import { MagazinesPage } from '@/pages/magazines/MagazinesPage'
 import { normalizeInstagramUrl } from '@/pages/magazines/hooks/useMagazinesPage'
+import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -96,34 +96,6 @@ const renderMagazinesPage = () => {
       <MagazinesPage />
     </QueryClientProvider>,
   )
-}
-
-const mockIntersectionObserver = () => {
-  const handleIntersections: IntersectionObserverCallback[] = []
-  const IntersectionObserverMock = vi.fn(
-    (callback: IntersectionObserverCallback) => {
-      handleIntersections.push(callback)
-
-      return {
-        observe: vi.fn(),
-        disconnect: vi.fn(),
-      } satisfies Partial<IntersectionObserver>
-    },
-  )
-
-  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
-
-  return {
-    IntersectionObserverMock,
-    triggerIntersect: () => {
-      handleIntersections.forEach((handleIntersection) => {
-        handleIntersection(
-          [{ isIntersecting: true } as IntersectionObserverEntry],
-          {} as IntersectionObserver,
-        )
-      })
-    },
-  }
 }
 
 describe('MagazinesPage', () => {
@@ -322,7 +294,7 @@ describe('MagazinesPage', () => {
   })
 
   it('does not request the same next magazine page twice when the sentinel intersects repeatedly in one render cycle', async () => {
-    const { IntersectionObserverMock, triggerIntersect } =
+    const { IntersectionObserverMock, triggerAllIntersects } =
       mockIntersectionObserver()
 
     mockGetMagazines
@@ -371,10 +343,8 @@ describe('MagazinesPage', () => {
       expect(mockGetMagazines).toHaveBeenCalledTimes(1)
     })
 
-    await act(async () => {
-      triggerIntersect()
-      triggerIntersect()
-    })
+    triggerAllIntersects()
+    triggerAllIntersects()
 
     await waitFor(() => {
       expect(mockGetMagazines).toHaveBeenCalledTimes(2)

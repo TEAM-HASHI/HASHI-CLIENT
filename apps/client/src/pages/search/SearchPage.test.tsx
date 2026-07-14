@@ -15,6 +15,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
 import { SearchPage } from '@/pages/search/SearchPage'
 import type { SearchRestaurant } from '@/pages/search/types'
+import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
 const { mockGetRestaurants, mockGetSearchKeywordRecommendations } = vi.hoisted(
   () => ({
@@ -165,33 +166,6 @@ const convertSearchRestaurantFixtureToSummary = (
       openTime: restaurant.businessHours.match(/\d{2}:\d{2}/)?.[0],
       closeTime: restaurant.businessHours.match(/~(\d{2}:\d{2})/)?.[1],
       closed: false,
-    },
-  }
-}
-
-const mockIntersectionObserver = () => {
-  let handleIntersection: IntersectionObserverCallback = () => {}
-  const IntersectionObserverMock = vi.fn(
-    (callback: IntersectionObserverCallback) => {
-      handleIntersection = callback
-
-      return {
-        disconnect: vi.fn(),
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-      } satisfies Partial<IntersectionObserver>
-    },
-  )
-
-  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
-
-  return {
-    IntersectionObserverMock,
-    triggerIntersect: () => {
-      handleIntersection(
-        [{ isIntersecting: true } as IntersectionObserverEntry],
-        {} as IntersectionObserver,
-      )
     },
   }
 }

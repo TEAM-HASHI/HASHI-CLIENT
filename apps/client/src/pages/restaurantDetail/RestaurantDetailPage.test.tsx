@@ -14,6 +14,7 @@ import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaur
 import { getRestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import { RestaurantDetailPage } from '@/pages/restaurantDetail/RestaurantDetailPage'
+import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -224,15 +225,7 @@ describe('RestaurantDetailPage', () => {
     })
     vi.stubGlobal('requestAnimationFrame', mockRequestAnimationFrame)
     vi.stubGlobal('scrollTo', mockScrollTo)
-    vi.stubGlobal(
-      'IntersectionObserver',
-      vi.fn(() => ({
-        disconnect: vi.fn(),
-        observe: vi.fn(),
-        takeRecords: () => [],
-        unobserve: vi.fn(),
-      })),
-    )
+    mockIntersectionObserver()
   })
 
   afterEach(() => {

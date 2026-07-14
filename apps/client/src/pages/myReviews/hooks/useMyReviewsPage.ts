@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { generatePath, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -14,7 +14,7 @@ import {
   toWritableReview,
   toWrittenReview,
 } from '@/pages/myReviews/utils/myReviewViewModel'
-import { useIntersectionObserver } from '@/shared/hooks'
+import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 export const useMyReviewsPage = () => {
   const navigate = useNavigate()
@@ -24,7 +24,6 @@ export const useMyReviewsPage = () => {
   const [openedMenuReviewId, setOpenedMenuReviewId] = useState<string | null>(
     null,
   )
-  const isLoadMoreLockedRef = useRef(false)
   const [isEditComingSoonDialogOpen, setIsEditComingSoonDialogOpen] =
     useState(false)
   const isWritableTab = activeTab === MY_REVIEW_TAB_ITEMS.writable.value
@@ -69,20 +68,15 @@ export const useMyReviewsPage = () => {
 
   const activeQuery = isWritableTab ? writableQuery : writtenQuery
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = activeQuery
-  const loadMoreRef = useIntersectionObserver<HTMLDivElement>({
+  const loadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled: hasNextPage && !isFetchingNextPage,
+    isLoading: isFetchingNextPage,
     onIntersect: () => {
-      if (isLoadMoreLockedRef.current || !hasNextPage || isFetchingNextPage) {
+      if (!hasNextPage || isFetchingNextPage) {
         return
       }
 
-      isLoadMoreLockedRef.current = true
-
-      void fetchNextPage()
-        .catch(() => {})
-        .finally(() => {
-          isLoadMoreLockedRef.current = false
-        })
+      return fetchNextPage().catch(() => {})
     },
     rootMargin: '160px 0px',
   })

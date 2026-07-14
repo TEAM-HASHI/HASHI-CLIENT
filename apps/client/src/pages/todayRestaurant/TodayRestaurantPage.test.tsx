@@ -62,7 +62,7 @@ vi.mock('@/shared/hooks', () => ({
     isAuthenticated: mockAuthStore.isAuthenticated,
     status: mockAuthStore.isAuthenticated ? 'authenticated' : 'unauthenticated',
   }),
-  useIntersectionObserver: () => ({ current: null }),
+  useInfiniteScrollTrigger: () => vi.fn(),
 }))
 
 vi.mock('@/features/auth/hooks/useKakaoOAuthStart', () => ({

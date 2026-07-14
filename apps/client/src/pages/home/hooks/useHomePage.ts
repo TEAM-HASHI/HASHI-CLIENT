@@ -9,7 +9,7 @@ import { normalizeInstagramUrl } from '@/features/magazine/utils/normalizeInstag
 import { useAuthStatus } from '@/shared/hooks'
 import type { HomeBanner } from '@/pages/home/homeContent'
 
-import { mockQuickLinks } from '@/pages/home/mocks/homeContent.mock'
+import { HOME_QUICK_LINKS } from '@/pages/home/constants/homeQuickLinks'
 import { useHotSnsRestaurantsQuery } from '@/pages/home/queries/useHotSnsRestaurantsQuery'
 
 const HOME_AUTH_GATE_SESSION_KEY = 'hashi:home-auth-gate-shown'
@@ -102,7 +102,7 @@ export const useHomePage = () => {
     },
     hotSnsRestaurants: hotSnsRestaurantsQuery.data ?? [],
     hotSnsRestaurantsQuery,
-    quickLinks: mockQuickLinks,
+    quickLinks: HOME_QUICK_LINKS,
     searchPath: ROUTES.search,
   }
 }
