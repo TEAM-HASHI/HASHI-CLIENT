@@ -18,7 +18,7 @@ const renderSkeletonItems = () => {
   return Array.from({ length: 4 }, (_, index) => (
     <li
       aria-hidden="true"
-      className="border-warm-gray-50 grid grid-cols-[1fr_156px] gap-[21px] border-b pt-4 pb-2 last:border-b-0"
+      className="border-warm-gray-50 grid grid-cols-[1fr_156px] gap-[21px] border-b py-4 last:border-b-0"
       key={index}
     >
       <div className="flex min-w-0 flex-col gap-3">

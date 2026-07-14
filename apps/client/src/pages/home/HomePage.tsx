@@ -15,6 +15,7 @@ export const HomePage = () => {
     homeBanners,
     homeBannersState,
     hotSnsRestaurants,
+    hotSnsRestaurantsQuery,
     quickLinks,
     searchPath,
   } = useHomePage()
@@ -44,6 +45,7 @@ export const HomePage = () => {
         />
         <HotSnsRestaurantSection
           getRestaurantDetailPath={getRestaurantDetailPath}
+          isLoading={hotSnsRestaurantsQuery.isLoading}
           restaurants={hotSnsRestaurants}
         />
       </div>

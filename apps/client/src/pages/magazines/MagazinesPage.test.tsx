@@ -236,7 +236,7 @@ describe('MagazinesPage', () => {
     expect(firstItem).toHaveClass('border-warm-gray-50')
     expect(magazineList).toHaveClass('px-5')
     expect(magazineList).not.toHaveClass('gap-5')
-    expect(firstLink).toHaveClass('gap-[21px]', 'pt-4', 'pb-2')
+    expect(firstLink).toHaveClass('gap-[21px]', 'py-4')
     expect(firstTitle).toHaveClass('typo-body-6', 'text-black')
     expect(firstImage).toHaveAttribute('alt', '')
     expect(firstImage).toHaveClass(
@@ -285,7 +285,7 @@ describe('MagazinesPage', () => {
 
     expect(firstSkeletonItem.querySelector('.bg-secondary-200')).toBeTruthy()
     expect(firstSkeletonItem.querySelector('.bg-cool-gray-100')).toBeNull()
-    expect(firstSkeletonItem).toHaveClass('grid-cols-[1fr_156px]', 'pt-4')
+    expect(firstSkeletonItem).toHaveClass('grid-cols-[1fr_156px]', 'py-4')
     expect(firstSkeletonImage).toHaveClass('w-[156px]')
   })
 

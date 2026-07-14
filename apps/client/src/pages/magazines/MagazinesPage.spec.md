@@ -53,6 +53,7 @@ Jira: HASHI-77
 - [x] 추천 매거진 목록은 제목, 이미지, 발행일을 포함한다.
 - [x] 추천 매거진 카드를 탭하면 해당 매거진의 외부 인스타 게시글로 이동한다.
 - [x] 목록 아이템 사이에는 구분선을 보여주되 마지막 아이템에는 불필요한 구분선을 넣지 않는다.
+- [x] 추천 매거진 아이템은 상/하 `16px` padding을 동일하게 사용한다.
 - [x] 긴 제목은 모바일 폭에서 레이아웃을 깨지 않도록 줄 수를 제한한다.
 - [x] 배너 링크의 접근성 이름은 호출부 데이터에서 제공한다.
 - [x] 추천 매거진 썸네일은 링크 텍스트와 중복되지 않도록 장식 이미지로 처리한다.
@@ -355,11 +356,12 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
   - horizontal padding uses `px-5`.
   - large section heading such as `최근 _한 추천 매거진` is not rendered.
   - list item uses text column and fixed image area.
+  - list item vertical padding uses `py-4` so top and bottom are both `16px`.
   - list item title uses `typo-body-6 text-black`.
   - list item date uses `typo-caption-1 font-medium text-warm-gray-300`.
   - list item divider uses `border-b border-warm-gray-50`.
   - hero banner and list skeleton placeholder blocks use `bg-secondary-200`, matching the shared restaurant list skeleton used by Hashi Pick and Popular Restaurants.
-  - image keeps a stable width/aspect ratio so text loading and long copy do not shift layout.
+  - image keeps `w-[156px]` and `aspect-[156/88]` so text loading and long copy do not shift layout.
   - title uses line clamp.
   - published date uses muted typography.
 - responsive:

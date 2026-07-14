@@ -27,7 +27,7 @@ export const MagazineListItem = ({ magazine }: Props) => {
     <li className="border-warm-gray-50 border-b last:border-b-0">
       {magazine.instagramUrl ? (
         <a
-          className="grid grid-cols-[1fr_156px] gap-[21px] pt-4 pb-2"
+          className="grid grid-cols-[1fr_156px] gap-[21px] py-4"
           href={magazine.instagramUrl}
           rel="noreferrer"
           target="_blank"
@@ -37,7 +37,7 @@ export const MagazineListItem = ({ magazine }: Props) => {
       ) : (
         <div
           aria-disabled="true"
-          className="grid grid-cols-[1fr_156px] gap-[21px] pt-4 pb-2 opacity-60"
+          className="grid grid-cols-[1fr_156px] gap-[21px] py-4 opacity-60"
         >
           {content}
         </div>

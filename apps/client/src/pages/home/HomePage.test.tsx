@@ -184,6 +184,41 @@ describe('HomePage', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('renders secondary color skeletons while home banners and SNS restaurants are loading', () => {
+    mockGetMagazineBanners.mockImplementation(
+      () =>
+        new Promise(() => {
+          // Keep the banner query pending so the curation skeleton remains visible.
+        }),
+    )
+    mockGetHotSnsRestaurants.mockImplementation(
+      () =>
+        new Promise(() => {
+          // Keep the SNS query pending so the list skeleton remains visible.
+        }),
+    )
+
+    renderHomePage()
+
+    expect(screen.getByLabelText('맛집 큐레이션 배너 로딩 중')).toHaveClass(
+      'bg-secondary-200',
+    )
+
+    const snsSection = screen.getByRole('region', {
+      name: 'SNS에서 핫한 일본 식당',
+    })
+    const skeletonItems = screen.getAllByTestId('home-sns-skeleton-item')
+
+    expect(snsSection).toHaveClass('mt-[29px]')
+    expect(skeletonItems).toHaveLength(3)
+    expect(skeletonItems[0]).toHaveClass(
+      'grid-cols-[60px_minmax(0,1fr)]',
+      'gap-4',
+    )
+    expect(skeletonItems[0]?.querySelector('.bg-secondary-200')).toBeTruthy()
+    expect(skeletonItems[0]?.querySelector('.bg-cool-gray-100')).toBeNull()
+  })
+
   it('moves to anywhere reservation only when the CTA button is clicked', () => {
     renderHomePage()
 
