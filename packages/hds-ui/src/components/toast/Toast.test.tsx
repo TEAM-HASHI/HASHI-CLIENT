@@ -93,6 +93,23 @@ describe('Toast', () => {
     ).toHaveClass('max-w-none')
   })
 
+  it('does not block clicks behind the toast layer', () => {
+    const queue = createToastQueue()
+    queue.add({ children: '저장되었습니다.' })
+
+    render(<ToastRegion queue={queue} />)
+
+    const region = screen
+      .getByText('저장되었습니다.')
+      .closest('[role="region"]')
+    const toast = screen
+      .getByText('저장되었습니다.')
+      .closest('[role="alert"]')?.parentElement
+
+    expect(region).toHaveClass('pointer-events-none')
+    expect(toast).toHaveClass('pointer-events-none')
+  })
+
   it('uses the default timeout when showing toast through helper', () => {
     const addToast = vi.spyOn(toastQueue, 'add')
 

@@ -5,6 +5,10 @@ import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSh
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
 import { RestaurantDetailTabs } from '@/features/restaurantDetail/components/RestaurantDetailTabs'
 import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
+import {
+  RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
+  RESTAURANT_MENU_DETAIL_HEADER_HEIGHT,
+} from '@/features/restaurantDetail/constants/restaurantDetailLayout'
 import { NotFoundPage } from '@/pages/notFound'
 import { RestaurantOtherMenuSection } from '@/pages/restaurantMenuDetail/components/RestaurantOtherMenuSection'
 import { RestaurantSelectedMenuSection } from '@/pages/restaurantMenuDetail/components/RestaurantSelectedMenuSection'
@@ -54,21 +58,41 @@ export const RestaurantMenuDetailPage = () => {
       className="min-h-dvh bg-white pb-[calc(82px+var(--safe-area-bottom,0px))]"
       data-testid="restaurant-menu-detail-page"
     >
-      <Header
-        leftAction={
-          <IconButton aria-label="뒤로가기" onClick={onPressBack} size="xs">
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        rightAction={<ShareIconButton shareUrl={shareUrl} />}
-        title={restaurant.name}
-        variant="largeTitle"
-      />
+      <div
+        className="z-fixed fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
+        data-testid="restaurant-menu-detail-fixed-header"
+      >
+        <Header
+          leftAction={
+            <IconButton aria-label="뒤로가기" onClick={onPressBack} size="xs">
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          rightAction={<ShareIconButton shareUrl={shareUrl} />}
+          title={restaurant.name}
+          variant="largeTitle"
+        />
+      </div>
 
-      <RestaurantDetailTabs
-        activeTab="menu"
-        onTabChange={onTabChange}
-        reviewCount={restaurant.reviewCount}
+      <div
+        className="z-fixed fixed inset-x-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
+        data-testid="restaurant-menu-detail-tab-fixed-container"
+        style={{ top: RESTAURANT_MENU_DETAIL_HEADER_HEIGHT }}
+      >
+        <RestaurantDetailTabs
+          activeTab="menu"
+          onTabChange={onTabChange}
+          reviewCount={restaurant.reviewCount}
+        />
+      </div>
+      <div
+        aria-hidden="true"
+        data-testid="restaurant-menu-detail-fixed-spacer"
+        style={{
+          height:
+            RESTAURANT_MENU_DETAIL_HEADER_HEIGHT +
+            RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
+        }}
       />
 
       <RestaurantImage

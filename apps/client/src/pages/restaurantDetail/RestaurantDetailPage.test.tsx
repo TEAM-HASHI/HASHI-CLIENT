@@ -13,6 +13,7 @@ import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestauran
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
 import { getRestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
+import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
 import { RestaurantDetailPage } from '@/pages/restaurantDetail/RestaurantDetailPage'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
@@ -117,6 +118,9 @@ vi.mock('@/features/restaurantDetail/api/getRestaurantMenus', () => ({
 vi.mock('@/features/restaurantDetail/api/getRestaurantReviews', () => ({
   getRestaurantReviews: vi.fn(),
 }))
+vi.mock('@/features/review/api/getVisitedReservations', () => ({
+  getVisitedReservations: vi.fn(),
+}))
 
 const mockedGetRestaurantSummary = vi.mocked(getRestaurantSummary)
 const mockedGetRestaurantStoreInformation = vi.mocked(
@@ -124,6 +128,7 @@ const mockedGetRestaurantStoreInformation = vi.mocked(
 )
 const mockedGetRestaurantMenus = vi.mocked(getRestaurantMenus)
 const mockedGetRestaurantReviews = vi.mocked(getRestaurantReviews)
+const mockedGetVisitedReservations = vi.mocked(getVisitedReservations)
 
 const restaurantSummary = {
   restaurantId: 10,
@@ -217,6 +222,11 @@ describe('RestaurantDetailPage', () => {
     )
     mockedGetRestaurantMenus.mockResolvedValue(restaurantMenus)
     mockedGetRestaurantReviews.mockResolvedValue(restaurantReviews)
+    mockedGetVisitedReservations.mockResolvedValue({
+      content: [],
+      hasNext: false,
+      totalCount: 0,
+    })
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: {
@@ -234,6 +244,7 @@ describe('RestaurantDetailPage', () => {
     mockedGetRestaurantStoreInformation.mockReset()
     mockedGetRestaurantMenus.mockReset()
     mockedGetRestaurantReviews.mockReset()
+    mockedGetVisitedReservations.mockReset()
     mockNavigate.mockClear()
     mockClipboardWriteText.mockClear()
     mockShowToast.mockClear()
@@ -513,6 +524,90 @@ describe('RestaurantDetailPage', () => {
     expect(
       screen.getByRole('heading', { name: '서비스를 준비하고 있어요.' }),
     ).toBeTruthy()
+  })
+
+  it('opens login bottom sheet for unauthenticated review write action', async () => {
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
+    fireEvent.click(screen.getByRole('button', { name: '리뷰 작성하기' }))
+
+    expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
+    expect(mockedGetVisitedReservations).not.toHaveBeenCalled()
+  })
+
+  it('navigates to review writing page when a writable visited reservation exists', async () => {
+    mockAuthStore.isAuthenticated = true
+    mockedGetVisitedReservations.mockResolvedValue({
+      content: [
+        {
+          reservationId: 23,
+          restaurantId: 10,
+          reviewable: true,
+        },
+      ],
+      hasNext: false,
+      totalCount: 1,
+    })
+
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
+    fireEvent.click(screen.getByRole('button', { name: '리뷰 작성하기' }))
+
+    await waitFor(() => {
+      expect(mockedGetVisitedReservations).toHaveBeenCalledWith({
+        restaurantId: 10,
+        reviewStatus: 'unreviewed',
+        size: 1,
+      })
+      expect(mockNavigate).toHaveBeenCalledWith(
+        '/restaurants/10/reviews/new?reservationId=23',
+      )
+    })
+  })
+
+  it('opens review unavailable modal when no writable visited reservation exists', async () => {
+    mockAuthStore.isAuthenticated = true
+
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
+    fireEvent.click(screen.getByRole('button', { name: '리뷰 작성하기' }))
+
+    expect(
+      await screen.findByRole('heading', {
+        name: '실제 방문자만 작성할 수 있어요',
+      }),
+    ).toBeTruthy()
+  })
+
+  it('does not navigate to review writing page when writable reservation ids are invalid', async () => {
+    mockAuthStore.isAuthenticated = true
+    mockedGetVisitedReservations.mockResolvedValue({
+      content: [
+        {
+          reservationId: 23,
+          reviewable: true,
+        },
+      ],
+      hasNext: false,
+      totalCount: 1,
+    })
+
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
+    fireEvent.click(screen.getByRole('button', { name: '리뷰 작성하기' }))
+
+    expect(
+      await screen.findByRole('heading', {
+        name: '실제 방문자만 작성할 수 있어요',
+      }),
+    ).toBeTruthy()
+    expect(mockNavigate).not.toHaveBeenCalledWith(
+      expect.stringContaining('/reviews/new'),
+    )
   })
 
   it('smoothly scrolls to the tab position for menu or review and to the top for info', async () => {

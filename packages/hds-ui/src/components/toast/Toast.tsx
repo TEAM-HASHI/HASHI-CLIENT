@@ -58,7 +58,7 @@ export const Toast = ({ className, ...props }: ToastProps) => {
     <AriaToast
       {...props}
       className={cn(
-        'flex h-15 w-full items-center gap-2.75 px-5',
+        'pointer-events-none flex h-15 w-full items-center gap-2.75 px-5',
         'bg-primary-200 rounded-[10px] text-white',
         'transform-gpu',
         props.toast.timeout
@@ -89,7 +89,10 @@ export const ToastRegion = ({
   return (
     <AriaToastRegion
       {...props}
-      className={cn('flex w-full flex-col gap-2 outline-none', className)}
+      className={cn(
+        'pointer-events-none flex w-full flex-col gap-2 outline-none',
+        className,
+      )}
       queue={queue}
     >
       {({ toast }) => <Toast toast={toast} />}
