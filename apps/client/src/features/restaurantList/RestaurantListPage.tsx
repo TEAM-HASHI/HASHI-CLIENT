@@ -87,7 +87,7 @@ export const RestaurantListPage = ({
     visibleRestaurants.length > 0 || hasMoreRestaurants || isFetchingNextPage
 
   return (
-    <div className="min-h-dvh bg-white">
+    <div className="flex min-h-dvh flex-col bg-white">
       <div
         className="app-mobile-fixed-top z-fixed bg-white"
         data-testid="restaurant-list-sticky-header"
@@ -107,7 +107,10 @@ export const RestaurantListPage = ({
         />
       </div>
 
-      <div className="pt-[75px]" data-testid="restaurant-list-scroll-content">
+      <div
+        className="flex flex-1 flex-col pt-[75px]"
+        data-testid="restaurant-list-scroll-content"
+      >
         <RestaurantFilterBar
           categoryLabel={categoryLabel}
           onClickCategory={handleOpenCategorySheet}
@@ -158,8 +161,8 @@ export const RestaurantListPage = ({
               </ul>
             ) : null}
             {shouldRenderEmptyState ? (
-              <div className="px-5">
-                <ListEmptyState description="" />
+              <div className="flex flex-1 items-center justify-center px-5">
+                <ListEmptyState description="검색된 식당이 없습니다." />
               </div>
             ) : null}
           </>
