@@ -4,7 +4,6 @@ import { createRef } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { RestaurantReviewSection } from '@/features/restaurantDetail/components/RestaurantReviewSection'
-import { REVIEW_KEYWORDS } from '@/features/review/constants/reviewKeywords'
 import type { RestaurantReview } from '@/features/restaurantDetail/types/restaurantDetail'
 import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 
@@ -201,20 +200,32 @@ describe('RestaurantReviewSection', () => {
   })
 
   it('renders icons for every supported review keyword', () => {
+    const apiReviewKeywordLabels = [
+      '음식이 맛있어요',
+      '향신료가 강하지 않아요',
+      '직원분이 친절해요',
+      '전통적이에요',
+      '매장이 넓어요',
+      '매장이 청결해요',
+      '음식이 빨리 나와요',
+      '사진이 잘 나와요',
+      '가성비가 좋아요',
+      '대화하기 좋아요',
+    ]
     const { container } = renderReviewSection({
       reviews: [
         {
           ...createReviews(1)[0],
-          keywords: REVIEW_KEYWORDS.map((keyword) => keyword.label),
+          keywords: apiReviewKeywordLabels,
         },
       ],
     })
 
-    const keywordList = screen.getByText(REVIEW_KEYWORDS[0].label).parentElement
-      ?.parentElement
+    const keywordList = screen.getByText(apiReviewKeywordLabels[0])
+      .parentElement?.parentElement
 
     expect(keywordList?.querySelectorAll('svg')).toHaveLength(
-      REVIEW_KEYWORDS.length,
+      apiReviewKeywordLabels.length,
     )
     expect(container).toBeTruthy()
   })

@@ -50,6 +50,11 @@ const reviewDetailResponse = {
   visitedAt: '2026-06-12T18:30:00',
 }
 
+const writtenReviewsLocation = {
+  pathname: ROUTES.myReviews,
+  search: '?tab=written',
+}
+
 const renderPage = () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -85,7 +90,12 @@ describe('ReviewDetailPage', () => {
     expect(screen.getByRole('img', { name: '평점 4점' })).toBeVisible()
     expect(screen.getByText('2026.07.12')).toBeVisible()
     expect(screen.getByText('음식이 맛있어요')).toBeVisible()
-    expect(screen.getByText('친절해요')).toBeVisible()
+    expect(screen.getByText('직원분이 친절해요')).toBeVisible()
+    expect(
+      screen
+        .getByRole('list', { name: '선택한 리뷰 키워드' })
+        .querySelectorAll('svg'),
+    ).toHaveLength(2)
     expect(getMyReviewDetail).toHaveBeenCalledWith(5)
   })
 
@@ -110,7 +120,7 @@ describe('ReviewDetailPage', () => {
     await screen.findByText('아키토리 라멘')
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
-    expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
+    expect(navigateMock).toHaveBeenCalledWith(writtenReviewsLocation)
   })
 
   it('opens the delete confirmation dialog and closes it from cancel', async () => {
@@ -144,7 +154,7 @@ describe('ReviewDetailPage', () => {
     await waitFor(() =>
       expect(deleteReview).toHaveBeenCalledWith(5, expect.anything()),
     )
-    expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
+    expect(navigateMock).toHaveBeenCalledWith(writtenReviewsLocation)
   })
 
   it('keeps the delete dialog open when deletion fails', async () => {
@@ -176,7 +186,7 @@ describe('ReviewDetailPage', () => {
       expect(getMyReviewDetail).not.toHaveBeenCalled()
       expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
       fireEvent.click(backToListButton)
-      expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
+      expect(navigateMock).toHaveBeenCalledWith(writtenReviewsLocation)
     },
   )
 

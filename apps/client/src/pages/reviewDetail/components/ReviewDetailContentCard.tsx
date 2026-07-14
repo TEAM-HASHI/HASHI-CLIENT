@@ -1,7 +1,7 @@
-import { Badge, CollapsibleText, StarRating } from '@hashi/hds-ui'
+import { CollapsibleText, StarRating } from '@hashi/hds-ui'
 
+import { ReviewKeywordBadge } from '@/features/review/components'
 import {
-  REVIEW_KEYWORDS,
   REVIEW_PHOTO_MAX_COUNT,
   type ReviewKeywordId,
 } from '@/features/review/constants'
@@ -15,10 +15,6 @@ interface ReviewDetailContentCardProps {
   keywordIds: ReviewKeywordId[]
 }
 
-const reviewKeywordById = new Map(
-  REVIEW_KEYWORDS.map((keyword) => [keyword.id, keyword]),
-)
-
 export const ReviewDetailContentCard = ({
   rating,
   writtenDate,
@@ -26,9 +22,6 @@ export const ReviewDetailContentCard = ({
   images,
   keywordIds,
 }: ReviewDetailContentCardProps) => {
-  const selectedKeywords = keywordIds
-    .map((keywordId) => reviewKeywordById.get(keywordId))
-    .filter((keyword) => keyword !== undefined)
   const visibleImages = images.slice(0, REVIEW_PHOTO_MAX_COUNT)
 
   return (
@@ -65,18 +58,14 @@ export const ReviewDetailContentCard = ({
         </ul>
       ) : null}
 
-      {selectedKeywords.length > 0 ? (
+      {keywordIds.length > 0 ? (
         <ul
           aria-label="선택한 리뷰 키워드"
           className="flex max-w-full min-w-0 [scrollbar-width:none] gap-2 overflow-x-auto overflow-y-hidden [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
-          {selectedKeywords.map(({ id, label, Icon }) => (
-            <li className="shrink-0" key={id}>
-              <Badge
-                className="rounded-[5px] border"
-                icon={<Icon aria-hidden="true" />}
-                label={label}
-              />
+          {keywordIds.map((keywordId) => (
+            <li className="shrink-0" key={keywordId}>
+              <ReviewKeywordBadge keyword={keywordId} />
             </li>
           ))}
         </ul>

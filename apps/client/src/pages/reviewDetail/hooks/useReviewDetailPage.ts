@@ -16,6 +16,11 @@ const parseReviewId = (value: string | undefined) => {
   return Number.isSafeInteger(reviewId) ? reviewId : null
 }
 
+const WRITTEN_REVIEWS_LOCATION = {
+  pathname: ROUTES.myReviews,
+  search: '?tab=written',
+}
+
 export const useReviewDetailPage = () => {
   const navigate = useNavigate()
   const { reviewId } = useParams()
@@ -34,7 +39,7 @@ export const useReviewDetailPage = () => {
     useState(false)
 
   const handleBackClick = () => {
-    navigate(ROUTES.myReviews)
+    navigate(WRITTEN_REVIEWS_LOCATION)
   }
 
   const handleDeleteClick = () => {
@@ -53,7 +58,7 @@ export const useReviewDetailPage = () => {
     try {
       await deleteReviewMutation.mutateAsync(validReviewId)
       setIsDeleteDialogOpen(false)
-      navigate(ROUTES.myReviews)
+      navigate(WRITTEN_REVIEWS_LOCATION)
     } catch {
       // The shared mutation error policy presents the failure to the user.
     }

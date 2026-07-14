@@ -53,12 +53,11 @@ describe('InputReviewKeyword', () => {
       screen.getByRole('button', { name: '향신료가 강하지 않아요' }),
     ).toHaveAttribute('aria-pressed', 'false')
     expect(
-      screen.getByRole('button', { name: '혼밥하기 좋아요' }),
+      screen.getByRole('button', { name: '전통적이에요' }),
     ).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByRole('button', { name: '친절해요' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    )
+    expect(
+      screen.getByRole('button', { name: '직원분이 친절해요' }),
+    ).toHaveAttribute('aria-pressed', 'false')
     expect(
       screen.getByRole('button', { name: '매장이 넓어요' }),
     ).toHaveAttribute('aria-pressed', 'false')
@@ -90,10 +89,9 @@ describe('InputReviewKeyword', () => {
     expect(
       screen.getByRole('button', { name: '매장이 청결해요' }),
     ).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: '친절해요' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    )
+    expect(
+      screen.getByRole('button', { name: '직원분이 친절해요' }),
+    ).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('adds an unselected keyword when fewer than three keywords are selected', () => {
@@ -106,7 +104,7 @@ describe('InputReviewKeyword', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: '친절해요' }))
+    fireEvent.click(screen.getByRole('button', { name: '직원분이 친절해요' }))
 
     expect(handleSelectedKeywordIdsChange).toHaveBeenCalledTimes(1)
     expect(handleSelectedKeywordIdsChange).toHaveBeenCalledWith([
@@ -144,7 +142,9 @@ describe('InputReviewKeyword', () => {
     const unselectedKeyword = screen.getByRole('button', {
       name: '대화하기 좋아요',
     })
-    const selectedKeyword = screen.getByRole('button', { name: '친절해요' })
+    const selectedKeyword = screen.getByRole('button', {
+      name: '직원분이 친절해요',
+    })
 
     expect(unselectedKeyword).toHaveAttribute('aria-disabled', 'true')
     expect(unselectedKeyword).toHaveClass('cursor-not-allowed', 'opacity-40')

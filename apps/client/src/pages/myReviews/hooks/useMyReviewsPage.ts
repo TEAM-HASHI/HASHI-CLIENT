@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { generatePath, useNavigate } from 'react-router-dom'
+import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useDeleteReviewMutation } from '@/features/review/mutations/useDeleteReviewMutation'
@@ -18,9 +18,11 @@ import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 export const useMyReviewsPage = () => {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<MyReviewTabTypes>(
-    MY_REVIEW_TAB_ITEMS.writable.value,
-  )
+  const [searchParams, setSearchParams] = useSearchParams()
+  const activeTab: MyReviewTabTypes =
+    searchParams.get('tab') === MY_REVIEW_TAB_ITEMS.written.value
+      ? MY_REVIEW_TAB_ITEMS.written.value
+      : MY_REVIEW_TAB_ITEMS.writable.value
   const [openedMenuReviewId, setOpenedMenuReviewId] = useState<string | null>(
     null,
   )
@@ -86,7 +88,10 @@ export const useMyReviewsPage = () => {
   }
 
   const handleChangeTab = (value: MyReviewTabTypes) => {
-    setActiveTab(value)
+    setSearchParams(
+      value === MY_REVIEW_TAB_ITEMS.written.value ? { tab: value } : {},
+      { replace: true },
+    )
     setOpenedMenuReviewId(null)
   }
 

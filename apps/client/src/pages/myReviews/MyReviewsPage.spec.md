@@ -24,6 +24,9 @@ Jira: HASHI-83, HASHI-114
   - no
 - redirect:
   - unauthenticated: `ROUTES.loginRequired`
+- search params:
+  - `tab=written`: `작성한 리뷰` 탭을 초기 활성 탭으로 연다.
+  - 생략하거나 알 수 없는 값은 `리뷰 쓰기` 탭으로 정규화한다.
 
 ## Requirements
 
@@ -104,7 +107,6 @@ Jira: HASHI-83, HASHI-114
 ## State
 
 - local state:
-  - `activeTab`
   - `openedMenuReviewId`
     - owner: `useMyReviewsPage`
   - `isEditComingSoonDialogOpen`
@@ -112,7 +114,9 @@ Jira: HASHI-83, HASHI-114
   - `isDeleteDialogOpen`
     - owner: `WrittenReviewCard`
 - URL state:
-  - none
+  - `tab`: `activeTab`을 파생하며 탭 전환 시 URL을 갱신한다.
+    - `written`: `작성한 리뷰`
+    - 생략 또는 알 수 없는 값: `리뷰 쓰기`
 - server state:
   - 작성 가능 예약 infinite query
   - 작성한 리뷰 infinite query
@@ -173,6 +177,7 @@ MyReviewsPage
 - route params:
   - none
 - search params:
+  - 마이 리뷰 탭: `tab=written`
   - 리뷰 작성 페이지 이동 시 `reservationId`
 - links:
   - 리뷰 작성 CTA: `generatePath(ROUTES.reviewNew, { restaurantId })?reservationId={reservationId}`
