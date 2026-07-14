@@ -61,7 +61,7 @@ export const ReviewDetailContentCard = ({
       {keywordIds.length > 0 ? (
         <ul
           aria-label="선택한 리뷰 키워드"
-          className="flex max-w-full min-w-0 [scrollbar-width:none] gap-2 overflow-x-auto overflow-y-hidden [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className="flex max-w-full min-w-0 flex-wrap gap-2"
         >
           {keywordIds.map((keywordId) => (
             <li className="shrink-0" key={keywordId}>

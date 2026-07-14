@@ -42,7 +42,7 @@ const reviewDetailResponse = {
   content: '정말 맛있습니다. 다음에도 방문하고 싶어요.',
   createdAt: '2026-07-12T13:11:01.19277',
   imageUrls: ['https://cdn.hashi.kr/review-1.jpg'],
-  keywords: ['음식이 맛있어요', '직원분이 친절해요'],
+  keywords: ['음식이 맛있어요', '직원분이 친절해요', '가성비가 좋아요'],
   rating: 4,
   reviewId: 5,
   restaurantName: '아키토리 라멘',
@@ -91,11 +91,14 @@ describe('ReviewDetailPage', () => {
     expect(screen.getByText('2026.07.12')).toBeVisible()
     expect(screen.getByText('음식이 맛있어요')).toBeVisible()
     expect(screen.getByText('직원분이 친절해요')).toBeVisible()
-    expect(
-      screen
-        .getByRole('list', { name: '선택한 리뷰 키워드' })
-        .querySelectorAll('svg'),
-    ).toHaveLength(2)
+    expect(screen.getByText('가성비가 좋아요')).toBeVisible()
+    const keywordList = screen.getByRole('list', {
+      name: '선택한 리뷰 키워드',
+    })
+
+    expect(keywordList).toHaveClass('flex-wrap')
+    expect(keywordList).not.toHaveClass('overflow-x-auto')
+    expect(keywordList.querySelectorAll('svg')).toHaveLength(3)
     expect(getMyReviewDetail).toHaveBeenCalledWith(5)
   })
 

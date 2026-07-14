@@ -39,6 +39,7 @@
 - 리뷰 작성 시 선택한 키워드를 최소 1개, 최대 3개까지 표시한다.
   - 키워드 label/icon은 `features/review/constants`의 `REVIEW_KEYWORDS`를 기준으로 표시한다.
   - 식당 상세 리뷰와 동일한 `ReviewKeywordBadge`를 사용한다.
+  - 키워드 칩은 가로 공간이 부족하면 다음 줄로 감싸 최대 3개를 모두 표시한다.
   - API가 한글 문구로 반환한 키워드는 알려진 review keyword ID로 변환하고, 알 수 없는 문구는 표시하지 않는다.
 - 하단에는 fixed action bar를 보여준다.
   - `삭제하기`: 삭제 확인 모달을 연다.
