@@ -26,7 +26,7 @@ import {
   createMyVisitedReservationViewModel,
 } from '@/pages/myReservations/utils/createMyReservationViewModel'
 import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
-import { useIntersectionObserver } from '@/shared/hooks'
+import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const DEFAULT_USER_NAME = '하시'
 
@@ -59,7 +59,6 @@ export const useMyReservationsPage = () => {
     null,
   )
   const isCancelRequestLockedRef = useRef(false)
-  const isLoadMoreLockedRef = useRef(false)
   const lastNextPageErrorUpdatedAtRef = useRef(0)
   const apiStatus = getMyReservationsApiStatus(selectedStatus)
   const profileSummaryQuery = useMyProfileSummaryQuery()
@@ -131,27 +130,20 @@ export const useMyReservationsPage = () => {
     activeReservationsQuery.isFetchNextPageError,
   ])
 
-  const loadMoreRef = useIntersectionObserver<HTMLDivElement>({
+  const loadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled:
       activeReservationsQuery.hasNextPage &&
       !activeReservationsQuery.isFetchingNextPage,
+    isLoading: activeReservationsQuery.isFetchingNextPage,
     onIntersect: () => {
       if (
-        isLoadMoreLockedRef.current ||
         !activeReservationsQuery.hasNextPage ||
         activeReservationsQuery.isFetchingNextPage
       ) {
         return
       }
 
-      isLoadMoreLockedRef.current = true
-
-      void activeReservationsQuery
-        .fetchNextPage()
-        .catch(() => {})
-        .finally(() => {
-          isLoadMoreLockedRef.current = false
-        })
+      return activeReservationsQuery.fetchNextPage().catch(() => {})
     },
   })
 
@@ -219,12 +211,15 @@ export const useMyReservationsPage = () => {
   }
 
   const handleReviewPress = (reservation: VisitedReservation) => {
-    if (reservation.hasReview && reservation.reviewId) {
+    if (reservation.reviewActionState === 'WRITTEN' && reservation.reviewId) {
       navigate(ROUTES.reviewDetail.replace(':reviewId', reservation.reviewId))
       return
     }
 
-    if (!reservation.isReviewable || !reservation.restaurantId) {
+    if (
+      reservation.reviewActionState !== 'WRITABLE' ||
+      !reservation.restaurantId
+    ) {
       return
     }
 

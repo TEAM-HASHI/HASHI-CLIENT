@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClientProvider } from '@tanstack/react-query'
 import {
-  act,
   cleanup,
   fireEvent,
   render,
@@ -15,6 +14,7 @@ import { ROUTES } from '@/app/router/path'
 import { getRestaurants } from '@/features/restaurantList'
 import { HashiPickPage } from '@/pages/hashiPick/HashiPickPage'
 import { createQueryClient } from '@/shared/lib/queryClient'
+import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
 vi.mock('@/features/restaurantList/api/getRestaurants', () => ({
   getRestaurants: vi.fn(),
@@ -80,41 +80,6 @@ const renderHashiPickPage = () => {
       </MemoryRouter>
     </QueryClientProvider>,
   )
-}
-
-const mockIntersectionObserver = () => {
-  let triggerIntersect = () => {}
-
-  const IntersectionObserverMock = vi.fn(
-    (callback: IntersectionObserverCallback) => {
-      triggerIntersect = () => {
-        callback(
-          [{ isIntersecting: true } as IntersectionObserverEntry],
-          {} as IntersectionObserver,
-        )
-      }
-
-      return {
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-        disconnect: vi.fn(),
-        root: null,
-        rootMargin: '',
-        thresholds: [],
-        takeRecords: vi.fn(() => []),
-      }
-    },
-  )
-
-  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
-
-  return {
-    triggerIntersect: () => {
-      act(() => {
-        triggerIntersect()
-      })
-    },
-  }
 }
 
 describe('HashiPickPage', () => {

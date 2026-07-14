@@ -21,8 +21,16 @@ export type UpcomingReservation = MyReservationBase & {
   status: 'UPCOMING'
 }
 
+export type VisitedReservationReviewActionState =
+  | 'HIDDEN'
+  | 'DELETED'
+  | 'WRITTEN'
+  | 'WRITABLE'
+  | 'UNAVAILABLE'
+
 export type VisitedReservation = MyReservationBase & {
   status: 'VISITED'
+  reviewActionState: VisitedReservationReviewActionState
   hasReview: boolean
   isReviewable: boolean
   reviewId?: string | null

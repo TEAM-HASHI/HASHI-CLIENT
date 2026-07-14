@@ -27,6 +27,16 @@ export const getRestaurantMenuDetailPath = (
 export const getRestaurantReservationNewPath = (restaurantId: string) =>
   ROUTES.restaurantReservationNew.replace(':restaurantId', restaurantId)
 
+export const getRestaurantReviewNewPath = (
+  restaurantId: string,
+  reservationId: string,
+) => {
+  const pathname = ROUTES.reviewNew.replace(':restaurantId', restaurantId)
+  const searchParams = new URLSearchParams({ reservationId })
+
+  return `${pathname}?${searchParams.toString()}`
+}
+
 export const getRestaurantDetailTabState = (
   state: unknown,
 ): RestaurantDetailLocationState => {

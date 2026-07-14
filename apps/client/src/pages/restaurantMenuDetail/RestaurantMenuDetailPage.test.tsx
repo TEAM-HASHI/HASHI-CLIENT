@@ -13,6 +13,7 @@ import { getRestaurantMenu } from '@/features/restaurantDetail/api/getRestaurant
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import { RestaurantMenuDetailPage } from '@/pages/restaurantMenuDetail/RestaurantMenuDetailPage'
+import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -42,39 +43,6 @@ const { mockScrollTo } = vi.hoisted(() => ({
 const { mockClipboardWriteText } = vi.hoisted(() => ({
   mockClipboardWriteText: vi.fn(),
 }))
-
-const mockIntersectionObserver = () => {
-  let handleIntersection: IntersectionObserverCallback | null = null
-  const observe = vi.fn()
-  const disconnect = vi.fn()
-  const IntersectionObserverMock = vi.fn(
-    (callback: IntersectionObserverCallback) => {
-      handleIntersection = callback
-
-      return {
-        root: null,
-        rootMargin: '',
-        thresholds: [],
-        observe,
-        unobserve: vi.fn(),
-        disconnect,
-        takeRecords: vi.fn(() => []),
-      } satisfies IntersectionObserver
-    },
-  )
-
-  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
-
-  return {
-    observe,
-    triggerIntersect: () => {
-      handleIntersection?.(
-        [{ isIntersecting: true } as IntersectionObserverEntry],
-        {} as IntersectionObserver,
-      )
-    },
-  }
-}
 
 vi.mock('react-router-dom', async () => {
   const actual =
@@ -248,6 +216,18 @@ describe('RestaurantMenuDetailPage', () => {
     expect(
       await screen.findByTestId('restaurant-menu-detail-page'),
     ).toHaveClass('pb-[calc(82px+var(--safe-area-bottom,0px))]')
+    expect(
+      screen.getByTestId('restaurant-menu-detail-fixed-header'),
+    ).toHaveClass('fixed', 'top-0', 'max-w-[var(--app-mobile-max-width,100%)]')
+    expect(
+      screen.getByTestId('restaurant-menu-detail-tab-fixed-container'),
+    ).toHaveClass('fixed', 'max-w-[var(--app-mobile-max-width,100%)]')
+    expect(
+      screen.getByTestId('restaurant-menu-detail-tab-fixed-container'),
+    ).toHaveStyle({ top: '97px' })
+    expect(
+      screen.getByTestId('restaurant-menu-detail-fixed-spacer'),
+    ).toHaveStyle({ height: '147px' })
     expect(screen.queryByRole('main')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '시오라멘' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: '다른 메뉴 2' })).toBeTruthy()

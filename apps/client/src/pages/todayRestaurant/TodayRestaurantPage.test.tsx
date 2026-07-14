@@ -13,6 +13,7 @@ import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestauran
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
 import { getRestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
+import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
 import { TodayRestaurantPage } from '@/pages/todayRestaurant/TodayRestaurantPage'
 
 const { mockNavigate } = vi.hoisted(() => ({
@@ -62,7 +63,7 @@ vi.mock('@/shared/hooks', () => ({
     isAuthenticated: mockAuthStore.isAuthenticated,
     status: mockAuthStore.isAuthenticated ? 'authenticated' : 'unauthenticated',
   }),
-  useIntersectionObserver: () => ({ current: null }),
+  useInfiniteScrollTrigger: () => vi.fn(),
 }))
 
 vi.mock('@/features/auth/hooks/useKakaoOAuthStart', () => ({
@@ -102,6 +103,9 @@ vi.mock('@/features/restaurantDetail/api/getRestaurantMenus', () => ({
 vi.mock('@/features/restaurantDetail/api/getRestaurantReviews', () => ({
   getRestaurantReviews: vi.fn(),
 }))
+vi.mock('@/features/review/api/getVisitedReservations', () => ({
+  getVisitedReservations: vi.fn(),
+}))
 
 const mockedGetRandomRestaurantRecommendation = vi.mocked(
   getRandomRestaurantRecommendation,
@@ -111,6 +115,7 @@ const mockedGetRestaurantStoreInformation = vi.mocked(
 )
 const mockedGetRestaurantMenus = vi.mocked(getRestaurantMenus)
 const mockedGetRestaurantReviews = vi.mocked(getRestaurantReviews)
+const mockedGetVisitedReservations = vi.mocked(getVisitedReservations)
 
 const todayRestaurantSummary = {
   restaurantId: 10,
@@ -223,6 +228,11 @@ describe('TodayRestaurantPage', () => {
     )
     mockedGetRestaurantMenus.mockResolvedValue(restaurantMenus)
     mockedGetRestaurantReviews.mockResolvedValue(restaurantReviews)
+    mockedGetVisitedReservations.mockResolvedValue({
+      content: [],
+      hasNext: false,
+      totalCount: 0,
+    })
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: {
@@ -241,6 +251,7 @@ describe('TodayRestaurantPage', () => {
     mockedGetRestaurantStoreInformation.mockReset()
     mockedGetRestaurantMenus.mockReset()
     mockedGetRestaurantReviews.mockReset()
+    mockedGetVisitedReservations.mockReset()
     mockNavigate.mockClear()
     mockClipboardWriteText.mockReset()
     mockShowToast.mockReset()
@@ -303,6 +314,8 @@ describe('TodayRestaurantPage', () => {
   })
 
   it('switches tabs and opens the review unavailable modal from review CTA', async () => {
+    mockAuthStore.isAuthenticated = true
+
     renderTodayRestaurantPage()
 
     fireEvent.click(await screen.findByRole('tab', { name: '메뉴' }))
@@ -323,7 +336,9 @@ describe('TodayRestaurantPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '리뷰 작성하기' }))
 
     expect(
-      screen.getByRole('heading', { name: '실제 방문자만 작성할 수 있어요' }),
+      await screen.findByRole('heading', {
+        name: '실제 방문자만 작성할 수 있어요',
+      }),
     ).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: '확인' }))
@@ -331,6 +346,47 @@ describe('TodayRestaurantPage', () => {
     expect(
       screen.queryByRole('heading', { name: '실제 방문자만 작성할 수 있어요' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('opens login bottom sheet for unauthenticated review write action', async () => {
+    renderTodayRestaurantPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
+    fireEvent.click(screen.getByRole('button', { name: '리뷰 작성하기' }))
+
+    expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
+    expect(mockedGetVisitedReservations).not.toHaveBeenCalled()
+  })
+
+  it('navigates to review writing page when a writable visited reservation exists', async () => {
+    mockAuthStore.isAuthenticated = true
+    mockedGetVisitedReservations.mockResolvedValue({
+      content: [
+        {
+          reservationId: 23,
+          restaurantId: 10,
+          reviewable: true,
+        },
+      ],
+      hasNext: false,
+      totalCount: 1,
+    })
+
+    renderTodayRestaurantPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
+    fireEvent.click(screen.getByRole('button', { name: '리뷰 작성하기' }))
+
+    await waitFor(() => {
+      expect(mockedGetVisitedReservations).toHaveBeenCalledWith({
+        restaurantId: 10,
+        reviewStatus: 'unreviewed',
+        size: 1,
+      })
+      expect(mockNavigate).toHaveBeenCalledWith(
+        '/restaurants/10/reviews/new?reservationId=23',
+      )
+    })
   })
 
   it('uses route state to select the initial active tab', async () => {

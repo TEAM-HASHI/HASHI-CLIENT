@@ -6,6 +6,7 @@ import {
 } from '@/pages/reviewNew/api/createReview'
 import { uploadReviewImages } from '@/pages/reviewNew/api/uploadReviewImages'
 import { reviewNewQueryKeys } from '@/pages/reviewNew/queries/reviewNewQueryKeys'
+import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 
 export interface SubmitReviewVariables extends Omit<
   CreateReviewBody,
@@ -32,10 +33,15 @@ export const useSubmitReviewMutation = () => {
   return useMutation({
     mutationFn: submitReview,
     onSuccess: (_, variables) => {
-      return queryClient.invalidateQueries({
-        queryKey: reviewNewQueryKeys.context(variables.reservationId),
-        refetchType: 'none',
-      })
+      return Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: reviewNewQueryKeys.context(variables.reservationId),
+          refetchType: 'none',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: visitedReservationQueryKeys.all,
+        }),
+      ])
     },
   })
 }

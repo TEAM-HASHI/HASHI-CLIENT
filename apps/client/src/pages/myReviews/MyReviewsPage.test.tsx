@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
-  act,
   cleanup,
   fireEvent,
   render,
@@ -17,6 +16,7 @@ import { getVisitedReservations } from '@/features/review/api/getVisitedReservat
 import { getMyReviews } from '@/pages/myReviews/api/myReviewsApi'
 import { MyReviewsPage } from '@/pages/myReviews/MyReviewsPage'
 import emptyImage from '@/shared/assets/images/empty.webp'
+import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
 const { mockNavigate } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -86,41 +86,6 @@ const renderPage = () => {
       <MyReviewsPage />
     </QueryClientProvider>,
   )
-}
-
-const mockIntersectionObserver = () => {
-  let triggerIntersect = () => {}
-
-  const IntersectionObserverMock = vi.fn(
-    (callback: IntersectionObserverCallback) => {
-      triggerIntersect = () => {
-        callback(
-          [{ isIntersecting: true } as IntersectionObserverEntry],
-          {} as IntersectionObserver,
-        )
-      }
-
-      return {
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-        disconnect: vi.fn(),
-        root: null,
-        rootMargin: '',
-        thresholds: [],
-        takeRecords: vi.fn(() => []),
-      }
-    },
-  )
-
-  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
-
-  return {
-    triggerIntersect: () => {
-      act(() => {
-        triggerIntersect()
-      })
-    },
-  }
 }
 
 describe('MyReviewsPage', () => {

@@ -192,7 +192,8 @@ const reservationStatusLabels = {
 
 ### 3. 방문 완료
 
-방문 완료 예약은 리뷰 작성 여부에 따라 UI가 달라집니다.
+방문 완료 예약은 `reviewStatus`, `reviewable`,
+`reviewUnavailableReason`을 조합한 화면 리뷰 상태에 따라 UI가 달라집니다.
 
 카드에 표시할 공통 정보:
 
@@ -214,7 +215,18 @@ const reservationStatusLabels = {
 - `리뷰 작성 완료! +500P` 버튼 또는 안내 영역
 - `리뷰 작성 완료! +500P` 버튼 클릭 시 해당 리뷰 상세 페이지로 이동합니다.
 
-리뷰 작성 여부는 예약 목록 API에서 함께 내려주는 리뷰 상태 데이터로 판단합니다.
+리뷰 삭제 후:
+
+- `리뷰가 삭제된 예약입니다` 문구를 비활성 상태로 표시합니다.
+- 문구는 버튼이나 링크가 아니며 리뷰 상세 이동과 재작성을 허용하지 않습니다.
+
+리뷰 미지원 예약:
+
+- `reviewUnavailableReason: UNSUPPORTED_RESERVATION_TYPE`인 어디든 예약은
+  카드의 하단 리뷰 영역 전체를 렌더링하지 않습니다.
+- 방문 완료 예약 카드의 식당명, 방문 일시, 인원 정보는 그대로 표시합니다.
+
+리뷰 상태는 방문 완료 목록 API에서 함께 내려주는 리뷰 상태 데이터로 판단합니다.
 
 ### 4. 예약 취소
 
@@ -365,20 +377,44 @@ const inProgressStepMap = {
 
 ```ts
 type VisitedReservation = MyReservation & {
+  reviewActionState:
+    | 'HIDDEN'
+    | 'DELETED'
+    | 'WRITTEN'
+    | 'WRITABLE'
+    | 'UNAVAILABLE'
   hasReview: boolean
+  isReviewable: boolean
   reviewId?: string | null
+  reviewUnavailableReason?:
+    | 'NOT_VISITED'
+    | 'ALREADY_REVIEWED'
+    | 'UNSUPPORTED_RESERVATION_TYPE'
+    | null
   rating?: number | null
   earnedPoint?: number | null
 }
 ```
 
 방문 완료 상태에서는 별도 방문 완료 예약 API 응답에 리뷰 상태를 함께 포함합니다.
+서버 필드 조합은 ViewModel에서 다음 우선순위로 화면 상태로 변환합니다.
 
-- `hasReview: false`: 리뷰 작성 전 UI를 보여줍니다.
-- `hasReview: true`: 리뷰 작성 완료 UI를 보여줍니다.
+1. `UNSUPPORTED_RESERVATION_TYPE` -> `HIDDEN`
+2. `reviewStatus: DELETED` -> `DELETED`
+3. `reviewStatus: REVIEWED`와 `reviewId` 존재 -> `WRITTEN`
+4. `reviewStatus: UNREVIEWED`, `reviewable: true`, `restaurantId` 존재 -> `WRITABLE`
+5. 나머지 조합 -> `UNAVAILABLE`
+
+- `HIDDEN`: 하단 리뷰 영역을 렌더링하지 않습니다.
+- `DELETED`: 삭제 안내만 표시하고 어떤 액션도 제공하지 않습니다.
+- `WRITTEN`: 리뷰 작성 완료 UI를 보여줍니다.
+- `WRITABLE`: 리뷰 작성 전 UI를 보여줍니다.
+- `UNAVAILABLE`: 리뷰 작성 불가 UI를 보여줍니다.
 - 작성된 리뷰가 있으면 `reviewId`, `rating`, `earnedPoint`를 함께 내려줍니다.
 - 리뷰 작성 전에는 `restaurantId`와 `reservationId`로 리뷰 작성 페이지에 이동합니다.
 - 리뷰 작성 후에는 `reviewId`로 리뷰 상세 페이지에 이동합니다.
+- 리뷰 삭제 mutation 성공 시 방문 완료 목록 query를 무효화하고 서버의 최신
+  `reviewStatus`를 다시 조회합니다.
 
 pagination:
 
@@ -634,6 +670,8 @@ types:
 
 - 리뷰 작성 전 별점 클릭: 리뷰 작성 페이지 이동
 - 리뷰 작성 후 `리뷰 작성 완료! +500P` 클릭: 해당 리뷰 상세 페이지 이동
+- 삭제된 리뷰: `리뷰가 삭제된 예약입니다` 비활성 문구만 표시하고 액션 없음
+- 어디든 예약: 하단 리뷰 영역 없음
 
 예약 취소:
 
@@ -649,6 +687,7 @@ types:
 - `reservationId`가 없는 카드 액션은 실행하지 않습니다.
 - 리뷰 작성 전 이동에는 `restaurantId`가 필요합니다.
 - 리뷰 작성 후 리뷰 상세 이동에는 `reviewId`가 필요합니다.
+- `DELETED`, `HIDDEN`, `UNAVAILABLE` 상태에서는 리뷰 이동 액션을 실행하지 않습니다.
 
 ## Accessibility
 
@@ -683,6 +722,10 @@ types:
 - 방문 완료 카드에서 리뷰 작성 전/후 UI가 다르게 보이는지 확인
 - 방문 완료 카드에서 리뷰 작성 전 별점 클릭 시 리뷰 작성 페이지로 이동하는지 확인
 - 방문 완료 카드에서 리뷰 작성 완료 버튼 클릭 시 리뷰 상세 페이지로 이동하는지 확인
+- 어디든 예약의 방문 완료 카드에서 하단 리뷰 영역이 렌더링되지 않는지 확인
+- 삭제된 리뷰에 `리뷰가 삭제된 예약입니다`가 비활성 문구로 표시되는지 확인
+- 삭제된 리뷰에서 상세 이동과 재작성이 발생하지 않는지 확인
+- 리뷰 삭제 성공 시 방문 완료 목록 query가 무효화되는지 확인
 - 예약 취소 상태 카드가 disabled style로 보이는지 확인
 - fixed header/filter 영역과 bottom navigation이 모바일 프레임 안에 유지되는지 확인
 

@@ -1,4 +1,4 @@
-import type { RefObject } from 'react'
+import type { Ref } from 'react'
 
 import { MagazineEmptyState } from '@/pages/magazines/components/MagazineEmptyState'
 import { MagazineListItem } from '@/pages/magazines/components/MagazineListItem'
@@ -9,7 +9,7 @@ interface Props {
   isError: boolean
   isFetchingNextPage: boolean
   isLoading: boolean
-  loadMoreRef: RefObject<HTMLLIElement | null>
+  loadMoreRef: Ref<HTMLLIElement>
   magazines: RecommendedMagazine[]
   onRetry: () => void
 }
