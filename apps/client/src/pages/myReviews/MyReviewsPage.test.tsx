@@ -7,6 +7,7 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
@@ -73,7 +74,7 @@ const writtenReviews = Array.from({ length: 4 }, (_, index) => ({
   visitedAt: '2026-06-22T17:00:00+09:00',
 }))
 
-const renderPage = () => {
+const renderPage = (initialEntry: string = ROUTES.myReviews) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       mutations: { retry: false },
@@ -82,9 +83,11 @@ const renderPage = () => {
   })
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      <MyReviewsPage />
-    </QueryClientProvider>,
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <QueryClientProvider client={queryClient}>
+        <MyReviewsPage />
+      </QueryClientProvider>
+    </MemoryRouter>,
   )
 }
 
@@ -125,6 +128,16 @@ describe('MyReviewsPage', () => {
       screen.getByText((_, element) => element?.textContent === '총 2건'),
     ).toBeVisible()
     expect(screen.getAllByRole('button', { name: '리뷰 작성' })).toHaveLength(2)
+  })
+
+  it('opens the written reviews tab from the tab search parameter', async () => {
+    renderPage(`${ROUTES.myReviews}?tab=written`)
+
+    expect(
+      await screen.findByRole('tab', { name: '작성한 리뷰 4' }),
+    ).toHaveAttribute('aria-selected', 'true')
+    expect(getMyReviews).toHaveBeenCalled()
+    expect(getVisitedReservations).not.toHaveBeenCalled()
   })
 
   it('does not request the same next writable review page twice when the sentinel intersects repeatedly', async () => {

@@ -44,12 +44,17 @@ const reviewDetailResponse = {
   content: '정말 맛있습니다. 다음에도 방문하고 싶어요.',
   createdAt: '2026-07-12T13:11:01.19277',
   imageUrls: ['https://cdn.hashi.kr/review-1.jpg'],
-  keywords: ['음식이 맛있어요', '직원분이 친절해요'],
+  keywords: ['음식이 맛있어요', '직원분이 친절해요', '가성비가 좋아요'],
   rating: 4,
   reviewId: 5,
   restaurantName: '아키토리 라멘',
   restaurantThumbnailUrl: 'https://cdn.hashi.kr/restaurant.jpg',
   visitedAt: '2026-06-12T18:30:00',
+}
+
+const writtenReviewsLocation = {
+  pathname: ROUTES.myReviews,
+  search: '?tab=written',
 }
 
 const renderPage = () => {
@@ -88,7 +93,19 @@ describe('ReviewDetailPage', () => {
     expect(screen.getByRole('img', { name: '평점 4점' })).toBeVisible()
     expect(screen.getByText('2026.07.12')).toBeVisible()
     expect(screen.getByText('음식이 맛있어요')).toBeVisible()
-    expect(screen.getByText('친절해요')).toBeVisible()
+    expect(screen.getByText('직원분이 친절해요')).toBeVisible()
+    expect(screen.getByText('가성비가 좋아요')).toBeVisible()
+    const keywordList = screen.getByRole('list', {
+      name: '선택한 리뷰 키워드',
+    })
+
+    expect(keywordList).toHaveClass(
+      'overflow-x-auto',
+      '[scrollbar-width:none]',
+      '[&::-webkit-scrollbar]:hidden',
+    )
+    expect(keywordList).not.toHaveClass('flex-wrap')
+    expect(keywordList.querySelectorAll('svg')).toHaveLength(3)
     expect(getMyReviewDetail).toHaveBeenCalledWith(5)
   })
 
@@ -113,7 +130,7 @@ describe('ReviewDetailPage', () => {
     await screen.findByText('아키토리 라멘')
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
-    expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
+    expect(navigateMock).toHaveBeenCalledWith(writtenReviewsLocation)
   })
 
   it('moves to the return path when the review detail is opened from visited reservations', async () => {
@@ -161,7 +178,7 @@ describe('ReviewDetailPage', () => {
     await waitFor(() =>
       expect(deleteReview).toHaveBeenCalledWith(5, expect.anything()),
     )
-    expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
+    expect(navigateMock).toHaveBeenCalledWith(writtenReviewsLocation)
   })
 
   it('keeps the delete dialog open when deletion fails', async () => {
@@ -193,7 +210,7 @@ describe('ReviewDetailPage', () => {
       expect(getMyReviewDetail).not.toHaveBeenCalled()
       expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
       fireEvent.click(backToListButton)
-      expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
+      expect(navigateMock).toHaveBeenCalledWith(writtenReviewsLocation)
     },
   )
 

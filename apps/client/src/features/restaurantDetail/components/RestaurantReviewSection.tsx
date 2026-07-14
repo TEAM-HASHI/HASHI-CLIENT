@@ -1,8 +1,8 @@
 import { PencilIcon } from '@hashi/hds-icons'
-import { Badge, Button, Chip, CollapsibleText, StarRating } from '@hashi/hds-ui'
+import { Button, Chip, CollapsibleText, StarRating } from '@hashi/hds-ui'
 import type { CSSProperties, Ref } from 'react'
 
-import { REVIEW_KEYWORDS } from '@/features/review/constants/reviewKeywords'
+import { ReviewKeywordBadge } from '@/features/review/components'
 import graphicBillUrl from '@/features/restaurantDetail/assets/graphic-bill.svg'
 import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
 import { RestaurantReviewListSkeleton } from '@/features/restaurantDetail/components/RestaurantReviewListSkeleton'
@@ -34,10 +34,6 @@ interface RestaurantReviewSectionProps {
   onRetryReviewList?: () => void
   onSelectSort: (sort: ReviewSortValue) => void
 }
-
-const REVIEW_KEYWORD_BY_LABEL = new Map(
-  REVIEW_KEYWORDS.map((keyword) => [keyword.label, keyword]),
-)
 
 const REVIEW_CONTENT_WIDTH_CLASS_NAME = 'mx-5'
 const HORIZONTAL_SCROLL_CLASS_NAME =
@@ -285,23 +281,9 @@ export const RestaurantReviewSection = ({
                 </div>
 
                 <div className={HORIZONTAL_SCROLL_CLASS_NAME}>
-                  {review.keywords.map((keyword) => {
-                    const keywordOption = REVIEW_KEYWORD_BY_LABEL.get(keyword)
-                    const KeywordIcon = keywordOption?.Icon
-
-                    return (
-                      <Badge
-                        className="border-warm-gray-100 rounded-[5px] px-2.5 py-1"
-                        icon={
-                          KeywordIcon ? (
-                            <KeywordIcon className="size-6" />
-                          ) : undefined
-                        }
-                        key={keyword}
-                        label={keywordOption?.label ?? keyword}
-                      />
-                    )
-                  })}
+                  {review.keywords.map((keyword) => (
+                    <ReviewKeywordBadge key={keyword} keyword={keyword} />
+                  ))}
                 </div>
               </article>
             ))

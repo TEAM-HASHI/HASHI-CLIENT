@@ -16,6 +16,11 @@ const parseReviewId = (value: string | undefined) => {
   return Number.isSafeInteger(reviewId) ? reviewId : null
 }
 
+const WRITTEN_REVIEWS_LOCATION = {
+  pathname: ROUTES.myReviews,
+  search: '?tab=written',
+}
+
 const getReviewDetailReturnTo = (state: unknown) => {
   if (typeof state !== 'object' || state === null || !('returnTo' in state)) {
     return undefined
@@ -48,7 +53,7 @@ export const useReviewDetailPage = () => {
     useState(false)
 
   const handleBackClick = () => {
-    navigate(returnTo ?? ROUTES.myReviews)
+    navigate(returnTo ?? WRITTEN_REVIEWS_LOCATION)
   }
 
   const handleDeleteClick = () => {
@@ -67,7 +72,7 @@ export const useReviewDetailPage = () => {
     try {
       await deleteReviewMutation.mutateAsync(validReviewId)
       setIsDeleteDialogOpen(false)
-      navigate(ROUTES.myReviews)
+      navigate(WRITTEN_REVIEWS_LOCATION)
     } catch {
       // 실패 안내는 공통 mutation error policy에서 처리합니다.
     }

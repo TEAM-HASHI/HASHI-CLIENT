@@ -11,7 +11,7 @@ import {
   ReviewReservationSummary,
   ReviewSubmitBar,
 } from '@/features/review/components'
-import { getReviewKeywordIconByCode } from '@/features/review/constants'
+import { getReviewKeywordIcon } from '@/features/review/constants'
 import { useReviewForm } from '@/features/review/hooks'
 import { useSubmitReviewMutation } from '@/pages/reviewNew/mutations/useSubmitReviewMutation'
 import { useReviewContextQuery } from '@/pages/reviewNew/queries/useReviewContextQuery'
@@ -61,7 +61,7 @@ export const ReviewNewPage = () => {
         ?.map(({ code, label }) => ({
           id: code ?? '',
           label: label ?? code ?? '',
-          Icon: code ? getReviewKeywordIconByCode(code) : undefined,
+          Icon: getReviewKeywordIcon({ code, label }),
         }))
         .filter(({ id, label }) => id.length > 0 && label.length > 0) ?? [],
     [reviewContext?.reviewKeywordOptions],

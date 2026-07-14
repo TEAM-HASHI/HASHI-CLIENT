@@ -17,3 +17,6 @@ export { ReviewSubmitBar } from './reviewSubmitBar/ReviewSubmitBar'
 export type { ReviewSubmitBarProps } from './reviewSubmitBar/ReviewSubmitBar'
 
 export { ReviewDeleteConfirmDialog } from './reviewDeleteConfirmDialog/ReviewDeleteConfirmDialog'
+
+export { ReviewKeywordBadge } from './reviewKeywordBadge/ReviewKeywordBadge'
+export type { ReviewKeywordBadgeProps } from './reviewKeywordBadge/ReviewKeywordBadge'

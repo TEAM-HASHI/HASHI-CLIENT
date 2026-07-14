@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { getReviewKeywordIconByCode } from '@/features/review/constants/reviewKeywords'
+import {
+  getReviewKeywordIcon,
+  getReviewKeywordIconByCode,
+} from '@/features/review/constants/reviewKeywords'
 
 const REVIEW_KEYWORD_CODES = [
   'FOOD_IS_DELICIOUS',
@@ -22,5 +25,9 @@ describe('getReviewKeywordIconByCode', () => {
 
   it('returns undefined for an unknown API code', () => {
     expect(getReviewKeywordIconByCode('UNKNOWN_KEYWORD')).toBeUndefined()
+  })
+
+  it('falls back to the canonical API label when a code is unavailable', () => {
+    expect(getReviewKeywordIcon({ label: '직원분이 친절해요' })).toBeDefined()
   })
 })
