@@ -43,7 +43,7 @@ const createValidForm = () => {
       contentType: 'image/webp',
     },
   ]
-  form.hashtags = ['현지인맛집']
+  form.hashtags = '현지인맛집'
   form.curationTypes = ['hashi-pick']
   return form
 }
@@ -125,6 +125,46 @@ describe('restaurant form serializers', () => {
         },
       ]),
     })
+  })
+
+  it('serializes comma-separated hashtags as separate trimmed values', () => {
+    const form = createValidForm()
+    form.hashtags = ' 스시, , 현지인맛집, '
+
+    expect(toCreateRestaurantBody(form).hashtags).toEqual([
+      '스시',
+      '현지인맛집',
+    ])
+    expect(
+      toUpdateRestaurantBody(form, new Set(), {
+        ...replacements,
+        hashtags: true,
+      }).hashtags,
+    ).toEqual(['스시', '현지인맛집'])
+  })
+
+  it('joins prefilled hashtags into the editable input value', () => {
+    const form = createRestaurantFormFromPrefill({
+      restaurantId: 12,
+      name: '하시 식당',
+      localName: 'HASHI',
+      summary: '소개',
+      description: '설명',
+      address: '주소',
+      area: '도쿄',
+      genre: 'sushi',
+      foodCategory: 'sushi',
+      priceCurrency: 'JPY',
+      minPrice: 1_000,
+      maxPrice: 2_000,
+      images: [],
+      menus: [],
+      hashtags: ['스시', '현지인맛집'],
+      curationTypes: [],
+      businessHours: [],
+    })
+
+    expect(form.hashtags).toBe('스시, 현지인맛집')
   })
 
   it('omits unchanged scalars and disabled replacement collections', () => {

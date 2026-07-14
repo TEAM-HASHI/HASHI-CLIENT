@@ -140,6 +140,64 @@ describe('ReservationsPage', () => {
     )
   })
 
+  it('warns on active reservations for the same restaurant in the same minute', () => {
+    useReservationsQueryMock.mockReturnValue({
+      data: {
+        page: 0,
+        reservations: [
+          reservation,
+          {
+            ...reservation,
+            id: 92,
+            reservationStatus: 'CONFIRMED',
+            reservedAt: '2026-07-20T18:30:59',
+            reserverName: '이하시',
+          },
+          {
+            ...reservation,
+            id: 93,
+            reservationStatus: 'CANCELED',
+            reserverName: '박취소',
+          },
+          {
+            ...reservation,
+            id: 94,
+            reserverName: '최다른식당',
+            restaurantId: 8,
+          },
+          {
+            ...reservation,
+            id: 95,
+            reservedAt: '2026-07-20T18:31:00',
+            reserverName: '정다른시간',
+          },
+        ],
+        size: 20,
+        totalCount: 5,
+        totalPages: 1,
+      },
+      isError: false,
+      isFetching: false,
+      isLoading: false,
+      refetch: vi.fn(),
+    } as unknown as ReturnType<typeof useReservationsQuery>)
+
+    render(<ReservationsPage />)
+
+    expect(screen.getAllByText('동일 시간 2건')).toHaveLength(2)
+    expect(screen.getByText('김하시').closest('tr')).toHaveClass('bg-red-50')
+    expect(screen.getByText('이하시').closest('tr')).toHaveClass('bg-red-50')
+    expect(screen.getByText('박취소').closest('tr')).not.toHaveClass(
+      'bg-red-50',
+    )
+    expect(screen.getByText('최다른식당').closest('tr')).not.toHaveClass(
+      'bg-red-50',
+    )
+    expect(screen.getByText('정다른시간').closest('tr')).not.toHaveClass(
+      'bg-red-50',
+    )
+  })
+
   it('wraps guest categories only between complete labels', () => {
     render(<ReservationsPage />)
 

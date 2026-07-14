@@ -30,7 +30,7 @@ export const ReservationRequestNoteField = ({
         name="requestNote"
         onChange={handleChange}
         placeholder="요청사항을 작성해주세요."
-        textareaClassName="min-h-[140px] focus-visible:border-primary-400 focus-visible:outline-0"
+        textareaClassName="min-h-[140px] focus-visible:border-black focus-visible:outline-0"
         value={value}
       />
     </div>
