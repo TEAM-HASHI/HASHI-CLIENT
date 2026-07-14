@@ -211,12 +211,15 @@ export const useMyReservationsPage = () => {
   }
 
   const handleReviewPress = (reservation: VisitedReservation) => {
-    if (reservation.hasReview && reservation.reviewId) {
+    if (reservation.reviewActionState === 'WRITTEN' && reservation.reviewId) {
       navigate(ROUTES.reviewDetail.replace(':reviewId', reservation.reviewId))
       return
     }
 
-    if (!reservation.isReviewable || !reservation.restaurantId) {
+    if (
+      reservation.reviewActionState !== 'WRITABLE' ||
+      !reservation.restaurantId
+    ) {
       return
     }
 

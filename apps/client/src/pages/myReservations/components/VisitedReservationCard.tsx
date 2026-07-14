@@ -42,12 +42,63 @@ const RatingStars = ({
   )
 }
 
+const ReviewAction = ({
+  reservation,
+  onReviewPress,
+}: VisitedReservationCardProps) => {
+  switch (reservation.reviewActionState) {
+    case 'HIDDEN':
+      return null
+    case 'DELETED':
+      return (
+        <p className="typo-body-3 border-warm-gray-100 text-warm-gray-300 mt-4 w-full rounded-[5px] border bg-white py-3.25 text-center">
+          리뷰가 삭제된 예약입니다
+        </p>
+      )
+    case 'WRITTEN':
+      return (
+        <button
+          className="typo-body-3 border-warm-gray-100 text-cool-gray-600 mt-4 w-full rounded-[5px] border bg-white py-3.25"
+          onClick={() => onReviewPress(reservation)}
+          type="button"
+        >
+          리뷰 작성 완료!{' '}
+          <span className="text-primary-400">+{reservation.earnedPoint}P</span>
+        </button>
+      )
+    case 'WRITABLE':
+      return (
+        <button
+          className="border-secondary-200 mt-4 flex w-full flex-col items-center border-t pt-1.5"
+          onClick={() => onReviewPress(reservation)}
+          type="button"
+        >
+          <RatingStars gapClassName="gap-2.5" sizeClassName="size-7.25" />
+          <span className="typo-body-7 text-cool-gray-700 mt-0.5">
+            이 맛집 어떠셨나요?
+          </span>
+        </button>
+      )
+    case 'UNAVAILABLE':
+      return (
+        <button
+          className="border-secondary-200 mt-4 flex w-full flex-col items-center border-t pt-1.5"
+          disabled
+          type="button"
+        >
+          <span className="typo-body-7 text-warm-gray-300 py-3.5">
+            리뷰 작성이 어려운 예약이에요
+          </span>
+        </button>
+      )
+  }
+}
+
 export const VisitedReservationCard = ({
   reservation,
   onReviewPress,
 }: VisitedReservationCardProps) => {
-  const canWriteReview =
-    reservation.isReviewable && reservation.restaurantId !== null
+  const hasWrittenReview = reservation.reviewActionState === 'WRITTEN'
 
   return (
     <article className="border-warm-gray-50 border-b pb-2.5 last:border-0">
@@ -61,7 +112,7 @@ export const VisitedReservationCard = ({
           <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2">
             {reservation.restaurantName}
           </h2>
-          {reservation.hasReview ? (
+          {hasWrittenReview ? (
             <p className="typo-body-7 text-cool-gray-600 mt-2">
               {reservation.visitDateTime} {reservation.guestSummary}
             </p>
@@ -71,7 +122,7 @@ export const VisitedReservationCard = ({
               <p className="mt-0.5">{reservation.guestSummary}</p>
             </div>
           )}
-          {reservation.hasReview ? (
+          {hasWrittenReview ? (
             <div className="mt-1 flex items-center">
               <RatingStars
                 rating={reservation.rating}
@@ -82,36 +133,7 @@ export const VisitedReservationCard = ({
         </div>
       </div>
 
-      {reservation.hasReview ? (
-        <button
-          className="typo-body-3 border-warm-gray-100 text-cool-gray-600 mt-4 w-full rounded-[5px] border bg-white py-3.25"
-          onClick={() => onReviewPress(reservation)}
-          type="button"
-        >
-          리뷰 작성 완료!{' '}
-          <span className="text-primary-400">+{reservation.earnedPoint}P</span>
-        </button>
-      ) : (
-        <button
-          className="border-secondary-200 mt-4 flex w-full flex-col items-center border-t pt-1.5"
-          disabled={!canWriteReview}
-          onClick={() => onReviewPress(reservation)}
-          type="button"
-        >
-          {canWriteReview ? (
-            <>
-              <RatingStars gapClassName="gap-2.5" sizeClassName="size-7.25" />
-              <span className="typo-body-7 text-cool-gray-700 mt-0.5">
-                이 맛집 어떠셨나요?
-              </span>
-            </>
-          ) : (
-            <span className="typo-body-7 text-warm-gray-300 py-3.5">
-              리뷰 작성이 어려운 예약이에요
-            </span>
-          )}
-        </button>
-      )}
+      <ReviewAction reservation={reservation} onReviewPress={onReviewPress} />
     </article>
   )
 }
