@@ -71,7 +71,12 @@ const renderMyReservationsPage = (
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route
-            element={<MyReservationsPage />}
+            element={
+              <>
+                <MyReservationsPage />
+                <LocationPath />
+              </>
+            }
             path={ROUTES.myReservations}
           />
           <Route element={<LocationPath />} path={ROUTES.reservationDetail} />
@@ -163,6 +168,7 @@ describe('MyReservationsPage', () => {
           restaurantThumbnailUrl: 'https://example.com/visited.png',
           visitedAt: '2026-07-10T18:30:00',
           adultCount: 2,
+          reviewStatus: 'REVIEWED',
           reviewId: 51,
           rating: 4,
           earnedPoint: 300,
@@ -356,6 +362,7 @@ describe('MyReservationsPage', () => {
           restaurantName: '작성 완료 식당',
           visitedAt: '2026-07-10T18:30:00',
           adultCount: 2,
+          reviewStatus: 'REVIEWED',
           reviewId: 51,
           rating: 4,
           earnedPoint: 300,
@@ -382,6 +389,8 @@ describe('MyReservationsPage', () => {
           restaurantName: '작성 예정 식당',
           visitedAt: '2026-07-11T18:30:00',
           adultCount: 1,
+          reviewStatus: 'UNREVIEWED',
+          reviewable: true,
         },
       ],
       hasNext: false,
@@ -407,6 +416,7 @@ describe('MyReservationsPage', () => {
           restaurantName: '어디든 예약',
           visitedAt: '2026-07-11T18:30:00',
           adultCount: 1,
+          reviewStatus: 'UNREVIEWED',
           reviewable: false,
           reviewUnavailableReason: 'UNSUPPORTED_RESERVATION_TYPE',
         },
@@ -419,8 +429,42 @@ describe('MyReservationsPage', () => {
 
     expect(await screen.findByText('어디든 예약')).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: '리뷰 작성이 어려운 예약이에요' }),
-    ).toBeDisabled()
+      screen.queryByText('리뷰 작성이 어려운 예약이에요'),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText('이 맛집 어떠셨나요?')).not.toBeInTheDocument()
+    expect(screen.queryByText('리뷰 작성 완료!')).not.toBeInTheDocument()
+  })
+
+  it('renders deleted reviews as a non-interactive status', async () => {
+    mockedGetVisitedReservations.mockResolvedValue({
+      content: [
+        {
+          reservationId: 33,
+          restaurantId: 43,
+          restaurantName: '삭제된 리뷰 식당',
+          visitedAt: '2026-07-11T18:30:00',
+          adultCount: 1,
+          reviewStatus: 'DELETED',
+          reviewable: false,
+        },
+      ],
+      hasNext: false,
+      totalCount: 1,
+    })
+
+    renderMyReservationsPage(`${ROUTES.myReservations}?status=VISITED`)
+
+    const deletedReviewStatus =
+      await screen.findByText('리뷰가 삭제된 예약입니다')
+
+    expect(deletedReviewStatus).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: '리뷰가 삭제된 예약입니다' }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(deletedReviewStatus)
+    expect(screen.getByTestId('location-path')).toHaveTextContent(
+      ROUTES.myReservations,
+    )
   })
 
   it('navigates to reservation detail with reservation id when detail is pressed', async () => {

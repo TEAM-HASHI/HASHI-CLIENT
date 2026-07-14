@@ -1,6 +1,9 @@
 import type { ReservationResponse } from '@/features/reservation'
 import type { VisitedReservation as VisitedReservationResponse } from '@/features/review/api/getVisitedReservations'
-import type { MyReservation } from '@/pages/myReservations/types'
+import type {
+  MyReservation,
+  VisitedReservationReviewActionState,
+} from '@/pages/myReservations/types'
 import { formatDotDateTime } from '@/shared/utils'
 
 const createDate = (value: string | undefined) => {
@@ -136,8 +139,8 @@ export const createMyVisitedReservationViewModel = (
     return null
   }
 
-  const hasReview =
-    reservation.reviewId !== undefined && reservation.reviewId !== null
+  const reviewActionState = getVisitedReservationReviewActionState(reservation)
+  const hasReview = reviewActionState === 'WRITTEN'
 
   return {
     reservationId: String(reservation.reservationId),
@@ -151,8 +154,9 @@ export const createMyVisitedReservationViewModel = (
     visitDateTime: formatReservationDateTime(reservation.visitedAt, '방문'),
     guestSummary: formatPeopleCount(reservation),
     status: 'VISITED',
+    reviewActionState,
     hasReview,
-    isReviewable: hasReview || (reservation.reviewable ?? true),
+    isReviewable: reviewActionState === 'WRITABLE',
     reviewId:
       reservation.reviewId === undefined || reservation.reviewId === null
         ? null
@@ -161,4 +165,41 @@ export const createMyVisitedReservationViewModel = (
     rating: reservation.rating ?? null,
     earnedPoint: reservation.earnedPoint ?? null,
   }
+}
+
+const getVisitedReservationReviewActionState = (
+  reservation: VisitedReservationResponse,
+): VisitedReservationReviewActionState => {
+  if (reservation.reviewUnavailableReason === 'UNSUPPORTED_RESERVATION_TYPE') {
+    return 'HIDDEN'
+  }
+
+  if (reservation.reviewStatus === 'DELETED') {
+    return 'DELETED'
+  }
+
+  const normalizedReviewStatus =
+    reservation.reviewStatus ??
+    (reservation.reviewId !== undefined && reservation.reviewId !== null
+      ? 'REVIEWED'
+      : 'UNREVIEWED')
+
+  if (
+    normalizedReviewStatus === 'REVIEWED' &&
+    reservation.reviewId !== undefined &&
+    reservation.reviewId !== null
+  ) {
+    return 'WRITTEN'
+  }
+
+  if (
+    normalizedReviewStatus === 'UNREVIEWED' &&
+    reservation.reviewable !== false &&
+    reservation.restaurantId !== undefined &&
+    reservation.restaurantId !== null
+  ) {
+    return 'WRITABLE'
+  }
+
+  return 'UNAVAILABLE'
 }

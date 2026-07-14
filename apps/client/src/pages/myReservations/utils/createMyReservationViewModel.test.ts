@@ -73,6 +73,7 @@ describe('createMyReservationViewModel', () => {
         restaurantThumbnailUrl: 'https://example.com/visited.png',
         visitedAt: '2026-07-10T18:30:00',
         adultCount: 2,
+        reviewStatus: 'REVIEWED',
         reviewId: 51,
         rating: 4,
         earnedPoint: 300,
@@ -86,10 +87,11 @@ describe('createMyReservationViewModel', () => {
       guestSummary: '어른 2명',
       status: 'VISITED',
       hasReview: true,
+      reviewActionState: 'WRITTEN',
       reviewId: '51',
       rating: 4,
       earnedPoint: 300,
-      isReviewable: true,
+      isReviewable: false,
       reviewUnavailableReason: null,
     })
   })
@@ -102,6 +104,7 @@ describe('createMyReservationViewModel', () => {
         restaurantName: '어디든 예약',
         visitedAt: '2026-07-10T18:30:00',
         adultCount: 2,
+        reviewStatus: 'UNREVIEWED',
         reviewable: false,
         reviewUnavailableReason: 'UNSUPPORTED_RESERVATION_TYPE',
       }),
@@ -114,11 +117,66 @@ describe('createMyReservationViewModel', () => {
       guestSummary: '어른 2명',
       status: 'VISITED',
       hasReview: false,
+      reviewActionState: 'HIDDEN',
       reviewId: null,
       rating: null,
       earnedPoint: null,
       isReviewable: false,
       reviewUnavailableReason: 'UNSUPPORTED_RESERVATION_TYPE',
+    })
+  })
+
+  it('maps deleted reviews to a non-interactive deleted state', () => {
+    expect(
+      createMyVisitedReservationViewModel({
+        reservationId: 33,
+        restaurantId: 43,
+        restaurantName: '삭제된 리뷰 식당',
+        visitedAt: '2026-07-10T18:30:00',
+        adultCount: 1,
+        reviewStatus: 'DELETED',
+        reviewable: false,
+      }),
+    ).toMatchObject({
+      hasReview: false,
+      isReviewable: false,
+      reviewActionState: 'DELETED',
+    })
+  })
+
+  it('maps unreviewed reviewable reservations to a writable state', () => {
+    expect(
+      createMyVisitedReservationViewModel({
+        reservationId: 34,
+        restaurantId: 44,
+        restaurantName: '리뷰 작성 가능 식당',
+        visitedAt: '2026-07-10T18:30:00',
+        adultCount: 1,
+        reviewStatus: 'UNREVIEWED',
+        reviewable: true,
+      }),
+    ).toMatchObject({
+      hasReview: false,
+      isReviewable: true,
+      reviewActionState: 'WRITABLE',
+    })
+  })
+
+  it('maps invalid writable combinations to an unavailable state', () => {
+    expect(
+      createMyVisitedReservationViewModel({
+        reservationId: 35,
+        restaurantId: undefined,
+        restaurantName: '식당 정보 없는 예약',
+        visitedAt: '2026-07-10T18:30:00',
+        adultCount: 1,
+        reviewStatus: 'UNREVIEWED',
+        reviewable: true,
+      }),
+    ).toMatchObject({
+      hasReview: false,
+      isReviewable: false,
+      reviewActionState: 'UNAVAILABLE',
     })
   })
 })
