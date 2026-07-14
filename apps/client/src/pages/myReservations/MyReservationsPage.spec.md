@@ -214,6 +214,8 @@ const reservationStatusLabels = {
 - 작성한 별점
 - `리뷰 작성 완료! +500P` 버튼 또는 안내 영역
 - `리뷰 작성 완료! +500P` 버튼 클릭 시 해당 리뷰 상세 페이지로 이동합니다.
+- 방문 완료 탭에서 리뷰 상세 페이지로 이동한 경우, 리뷰 상세 상단 뒤로가기 클릭 시
+  `/my-reservations?status=VISITED`로 돌아옵니다.
 
 리뷰 삭제 후:
 
@@ -663,6 +665,7 @@ types:
 
 방문 예정:
 
+- 카드 본문 클릭: `reservationId`를 route params로 넣어 예약 상세 페이지로 이동
 - 취소하기: 취소 확인 모달 open
 - 문의하기: Hashi 카카오톡 문의하기로 연결
 
@@ -710,6 +713,7 @@ types:
 - `VISITED` 탭에서 `/api/v1/reviews/visited-reservations`를 호출하고 `/api/v1/reservations/me`를 호출하지 않는지 확인
 - 서버 `reservationStatus`가 화면 카드 타입으로 올바르게 매핑되는지 확인
 - 진행 중 카드의 상세보기 클릭 시 `reservationId`가 포함된 예약 상세 페이지로 이동하는지 확인
+- 방문 예정 카드의 본문 클릭 시 `reservationId`가 포함된 예약 상세 페이지로 이동하는지 확인
 - chip 변경 시 status별 리스트가 바뀌는지 확인
 - chip 변경 시 리스트 스크롤 위치가 맨 위로 이동하는지 확인
 - chip 변경 시 URL query가 갱신되는지 확인

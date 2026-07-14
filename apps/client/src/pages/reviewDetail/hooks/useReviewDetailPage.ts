@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useDeleteReviewMutation } from '@/features/review/mutations/useDeleteReviewMutation'
@@ -16,10 +16,24 @@ const parseReviewId = (value: string | undefined) => {
   return Number.isSafeInteger(reviewId) ? reviewId : null
 }
 
+const getReviewDetailReturnTo = (state: unknown) => {
+  if (typeof state !== 'object' || state === null || !('returnTo' in state)) {
+    return undefined
+  }
+
+  const returnTo = (state as { returnTo?: unknown }).returnTo
+
+  return typeof returnTo === 'string' && returnTo.startsWith('/')
+    ? returnTo
+    : undefined
+}
+
 export const useReviewDetailPage = () => {
+  const location = useLocation()
   const navigate = useNavigate()
   const { reviewId } = useParams()
   const validReviewId = parseReviewId(reviewId)
+  const returnTo = getReviewDetailReturnTo(location.state)
   const reviewDetailQuery = useReviewDetailQuery(validReviewId)
   const deleteReviewMutation = useDeleteReviewMutation()
   const reviewDetail = useMemo(
@@ -34,7 +48,7 @@ export const useReviewDetailPage = () => {
     useState(false)
 
   const handleBackClick = () => {
-    navigate(ROUTES.myReviews)
+    navigate(returnTo ?? ROUTES.myReviews)
   }
 
   const handleDeleteClick = () => {
@@ -55,7 +69,7 @@ export const useReviewDetailPage = () => {
       setIsDeleteDialogOpen(false)
       navigate(ROUTES.myReviews)
     } catch {
-      // The shared mutation error policy presents the failure to the user.
+      // 실패 안내는 공통 mutation error policy에서 처리합니다.
     }
   }
 

@@ -18,12 +18,14 @@ import { getMyReviewDetail } from '@/pages/reviewDetail/api/getMyReviewDetail'
 import { ReviewDetailContentCard } from '@/pages/reviewDetail/components/ReviewDetailContentCard'
 import { ReviewDetailPage } from '@/pages/reviewDetail/ReviewDetailPage'
 
-const { navigateMock, reviewIdParam } = vi.hoisted(() => ({
+const { locationState, navigateMock, reviewIdParam } = vi.hoisted(() => ({
+  locationState: { current: null as unknown },
   navigateMock: vi.fn(),
   reviewIdParam: { current: '5' },
 }))
 
 vi.mock('react-router-dom', () => ({
+  useLocation: () => ({ state: locationState.current }),
   useNavigate: () => navigateMock,
   useParams: () => ({ reviewId: reviewIdParam.current }),
 }))
@@ -63,6 +65,7 @@ const renderPage = () => {
 }
 
 beforeEach(() => {
+  locationState.current = null
   reviewIdParam.current = '5'
   vi.mocked(deleteReview).mockResolvedValue(null)
   vi.mocked(getMyReviewDetail).mockResolvedValue(reviewDetailResponse)
@@ -111,6 +114,20 @@ describe('ReviewDetailPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
     expect(navigateMock).toHaveBeenCalledWith(ROUTES.myReviews)
+  })
+
+  it('moves to the return path when the review detail is opened from visited reservations', async () => {
+    locationState.current = {
+      returnTo: `${ROUTES.myReservations}?status=VISITED`,
+    }
+    renderPage()
+
+    await screen.findByText('아키토리 라멘')
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      `${ROUTES.myReservations}?status=VISITED`,
+    )
   })
 
   it('opens the delete confirmation dialog and closes it from cancel', async () => {

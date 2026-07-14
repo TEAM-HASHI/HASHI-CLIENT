@@ -7,16 +7,22 @@ type UpcomingReservationCardProps = {
   reservation: UpcomingReservation
   onCancelPress: (reservationId: string) => void
   onContactPress: (reservationId: string) => void
+  onDetailPress: (reservationId: string) => void
 }
 
 export const UpcomingReservationCard = ({
   reservation,
   onCancelPress,
   onContactPress,
+  onDetailPress,
 }: UpcomingReservationCardProps) => {
   return (
     <article className="border-secondary-200 border-b pb-4 last:border-b-0 last:pb-0">
-      <div className="flex gap-3">
+      <button
+        className="flex w-full gap-3 text-left"
+        onClick={() => onDetailPress(reservation.reservationId)}
+        type="button"
+      >
         <ReservationCardImage
           className="size-23"
           imageUrl={reservation.restaurantImageUrl}
@@ -33,7 +39,7 @@ export const UpcomingReservationCard = ({
             {reservation.guestSummary}
           </p>
         </div>
-      </div>
+      </button>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Button

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
+import { myReservationsQueryKeys } from '@/features/reservation'
 import { createReservation } from '@/pages/reservationRequest/api/createReservation'
 
 export const useCreateReservationMutation = () => {
@@ -8,9 +9,13 @@ export const useCreateReservationMutation = () => {
 
   return useMutation({
     mutationFn: createReservation,
-    onSuccess: () =>
+    onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: pointQueryKeys.myBalance(),
-      }),
+      })
+      queryClient.invalidateQueries({
+        queryKey: myReservationsQueryKeys.all,
+      })
+    },
   })
 }
