@@ -88,7 +88,7 @@ POST /api/v1/reservations/anywhere
 - 성공 응답에 `reservationId`가 없으면 실패로 처리한다.
 - 생성 응답은 `reservationId`만 보장하고 최신 포인트 잔액이나 완전한 예약 상세 객체를 제공하지 않는다.
 - 같은 화면에 즉시 반영할 완전한 객체가 없고 성공 후 상세 화면으로 이동하므로 `setQueryData`는 사용하지 않는다.
-- 생성 성공 시 `pointQueryKeys.myBalance()`를 무효화한 뒤 예약 상세 화면으로 이동한다.
+- 생성 성공 시 `pointQueryKeys.myBalance()`를 무효화한 뒤 예약 상세 화면으로 이동한다. 예약 요청 직후 상세 진입임을 구분할 수 있도록 `{ fromReservationRequest: true }` route state를 함께 전달한다.
 - 예약 상세/목록 API query는 아직 없으므로 speculative cache key나 cache write를 추가하지 않는다.
 
 공통 request는 로그인 후 메모리에 저장된 `accessToken`을 우선 사용한다. 로컬 개발에서는 ignored `.env.local`의 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있으며 운영 빌드에서는 이 fallback을 사용하지 않는다.
@@ -159,7 +159,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - `예약` 클릭 시 draft 종류에 맞는 예약 생성 mutation을 실행한다.
 - mutation 진행 중에는 `예약`, `취소` 버튼을 비활성화하고 모달 닫기를 막는다.
 - mutation 상태가 다시 렌더링되기 전에도 동기 잠금으로 중복 예약 생성을 막는다.
-- 성공 시 모달을 닫고 `/reservations/{reservationId}`로 이동한다.
+- 성공 시 모달을 닫고 `/reservations/{reservationId}`로 `{ fromReservationRequest: true }` state와 함께 이동한다.
 - 실패 시 공통 mutation 오류 토스트를 표시하고 모달을 유지한다.
 - 모달 하단의 `취소`, `예약` 버튼 typography는 `typo-sub-header-2`를 사용한다.
 
@@ -228,7 +228,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - 포인트 조회 응답이 보유 포인트와 최대 사용 가능 포인트 계산에 반영된다.
 - 일반 예약은 식당 요약 응답의 `reservationFee`를 결제 기준으로 사용한다.
 - 예약 생성 성공 시 포인트 잔액 query가 무효화된다.
-- 예약 생성 성공 시 응답의 `reservationId` 상세 화면으로 이동한다.
+- 예약 생성 성공 시 응답의 `reservationId` 상세 화면으로 이동하고, 상세 화면에서 뒤로가기를 비활성화할 수 있도록 `{ fromReservationRequest: true }` state를 전달한다.
 - 예약 생성 실패 시 모달을 유지한다.
 - 예약 생성 중 확인 버튼이 비활성화된다.
 

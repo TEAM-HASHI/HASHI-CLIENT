@@ -38,20 +38,20 @@ export const ReservationCancelDialog = ({
           </div>
         </Dialog.Header>
         <Dialog.Footer>
-          <button
+          <Dialog.Close
             className={secondaryActionClassName}
+            isDisabled={isConfirming}
+          >
+            닫기
+          </Dialog.Close>
+          <button
+            className={primaryActionClassName}
             disabled={isConfirming}
             onClick={onConfirmCancelPress}
             type="button"
           >
             취소하기
           </button>
-          <Dialog.Close
-            className={primaryActionClassName}
-            isDisabled={isConfirming}
-          >
-            닫기
-          </Dialog.Close>
         </Dialog.Footer>
       </Dialog.Content>
     </Dialog.Root>
