@@ -7,8 +7,7 @@ import { alias, plugins as basePlugins } from './vite.shared'
 const release =
   process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || 'local'
 const shouldUploadSourceMaps = Boolean(
-  process.env.SENTRY_AUTH_TOKEN &&
-  (process.env.VERCEL === '1' || process.env.CI === 'true'),
+  process.env.SENTRY_AUTH_TOKEN && process.env.VERCEL_ENV === 'production',
 )
 
 const getManualChunk = (id: string) => {

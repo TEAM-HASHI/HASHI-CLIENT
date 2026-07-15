@@ -80,6 +80,7 @@
 - 홈, 하시 PICK, 인기 맛집, 매거진 목록, 검증된 식당 상세 경로는 배포 빌드에서 실제 API 데이터를 포함한 HTML로 프리렌더링합니다.
 - 그 밖의 경로는 `__spa-fallback.html`을 사용하는 SPA로 제공하며, 개인·인증·검색·임시 페이지는 검색 색인 대상에서 제외합니다.
 - 프리렌더 HTML과 sitemap은 배포 빌드 시점의 snapshot입니다. API 데이터나 공개 식당이 바뀌면 재배포해야 SEO 산출물이 갱신됩니다.
+- Sentry source map은 `VERCEL_ENV=production`에서만 업로드하며, 설정된 token, org, project가 맞지 않으면 운영 빌드를 실패시킵니다. Preview 빌드는 source map을 업로드하지 않습니다.
 
 ## Related Docs
 
