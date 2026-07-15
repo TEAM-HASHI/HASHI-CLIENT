@@ -10,6 +10,7 @@ export default tseslint.config(
   {
     ignores: [
       '**/.turbo/**',
+      '**/.react-router/**',
       '**/dist/**',
       '**/node_modules/**',
       '**/playwright-report/**',
@@ -88,6 +89,18 @@ export default tseslint.config(
     files: ['**/*.{test,spec}.{ts,tsx}', '**/e2e/**'],
     rules: {
       'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    files: ['apps/client/src/root.tsx', 'apps/client/src/app/routes/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    files: ['apps/client/src/routes.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
     },
   },
   ...pluginQuery.configs['flat/recommended'],

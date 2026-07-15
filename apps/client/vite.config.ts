@@ -1,3 +1,4 @@
+import { reactRouter } from '@react-router/dev/vite'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -49,6 +50,7 @@ export default defineConfig({
     alias,
   },
   plugins: [
+    reactRouter(),
     ...basePlugins,
     VitePWA({
       registerType: 'autoUpdate',

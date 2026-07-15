@@ -53,6 +53,7 @@ describe('AuthSessionRestoreGate', () => {
     mockedRequestTokenReissue.mockResolvedValue({
       accessToken: 'restored-access-token',
     })
+    window.history.pushState({}, '', ROUTES.mypage)
 
     render(
       <AuthSessionRestoreGate>
@@ -108,28 +109,37 @@ describe('AuthSessionRestoreGate', () => {
     expect(getAuthSessionStatus()).toBe('onboarding')
   })
 
-  it('renders public restaurant list routes while auth restore runs in the background', async () => {
-    mockedRequestTokenReissue.mockResolvedValue({
-      accessToken: 'restored-access-token',
-    })
-    window.history.pushState({}, '', ROUTES.hashiPickRestaurants)
+  it.each([
+    ['홈', ROUTES.home],
+    ['하시픽', ROUTES.hashiPickRestaurants],
+    ['인기 맛집', ROUTES.popularRestaurants],
+    ['매거진', ROUTES.magazines],
+    ['식당 상세', '/restaurants/123'],
+  ])(
+    'renders the %s public route while auth restore runs in the background',
+    async (_, publicPath) => {
+      mockedRequestTokenReissue.mockResolvedValue({
+        accessToken: 'restored-access-token',
+      })
+      window.history.pushState({}, '', publicPath)
 
-    render(
-      <AuthSessionRestoreGate>
-        <div>하시픽 화면</div>
-      </AuthSessionRestoreGate>,
-    )
+      render(
+        <AuthSessionRestoreGate>
+          <div>공개 화면</div>
+        </AuthSessionRestoreGate>,
+      )
 
-    expect(screen.getByText('하시픽 화면')).toBeInTheDocument()
-    expect(
-      screen.queryByText('로그인 상태를 확인하고 있어요'),
-    ).not.toBeInTheDocument()
+      expect(screen.getByText('공개 화면')).toBeInTheDocument()
+      expect(
+        screen.queryByText('로그인 상태를 확인하고 있어요'),
+      ).not.toBeInTheDocument()
 
-    await waitFor(() => {
-      expect(getAccessToken()).toBe('restored-access-token')
-    })
-    expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
-  })
+      await waitFor(() => {
+        expect(getAccessToken()).toBe('restored-access-token')
+      })
+      expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
+    },
+  )
 
   it('does not authenticate an admin session in the user client', async () => {
     mockedRequestTokenReissue.mockResolvedValue({

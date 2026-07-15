@@ -19,16 +19,23 @@ interface AuthSessionRestoreGateProps {
 let authSessionRestorePromise: Promise<void> | undefined
 
 const AUTH_RESTORE_NON_BLOCKING_PATHS = new Set<string>([
+  ROUTES.home,
   ROUTES.hashiPickRestaurants,
   ROUTES.popularRestaurants,
+  ROUTES.magazines,
 ])
+
+const RESTAURANT_DETAIL_PATH_PATTERN = /^\/restaurants\/[1-9]\d*$/
 
 const getShouldRenderDuringAuthRestore = () => {
   if (typeof window === 'undefined') {
-    return false
+    return true
   }
 
-  return AUTH_RESTORE_NON_BLOCKING_PATHS.has(window.location.pathname)
+  return (
+    AUTH_RESTORE_NON_BLOCKING_PATHS.has(window.location.pathname) ||
+    RESTAURANT_DETAIL_PATH_PATTERN.test(window.location.pathname)
+  )
 }
 
 const restoreUserSession = async (accessToken: string) => {

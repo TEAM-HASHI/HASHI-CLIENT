@@ -16,6 +16,7 @@
   "include": [
     "vite.config.ts",
     "vite.shared.ts",
+    "react-router.config.ts",
     "vitest.config.ts",
     "playwright.config.ts",
     "test/setup.ts"
