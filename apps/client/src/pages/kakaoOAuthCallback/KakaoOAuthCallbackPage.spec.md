@@ -12,15 +12,15 @@ Jira: HASHI-112
 - path constant:
   - `ROUTES.kakaoOAuthCallback`
 - route owner:
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
 - layout:
   - `RootLayout`
 - access type:
   - public
 - guard:
   - none
-- lazy loading:
-  - `lazyPages.kakaoOAuthCallback`
+- route module:
+  - `apps/client/src/app/routes/kakao-oauth-callback.tsx`
 - bottom navigation:
   - no
 - redirect:
@@ -36,8 +36,8 @@ Jira: HASHI-112
   - `apps/client/src/pages/kakaoOAuthCallback/KakaoOAuthCallbackPage.spec.md`
 - route registration:
   - `apps/client/src/app/router/path.ts`
-  - `apps/client/src/app/router/lazy.ts`
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
+  - `apps/client/src/app/routes/kakao-oauth-callback.tsx`
 
 ## Requirements
 

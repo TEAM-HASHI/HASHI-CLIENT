@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
-    "build": "react-router typegen && tsc -b && react-router build",
+    "build": "node scripts/seo/generate-public-route-manifest.mjs && react-router typegen && tsc -b && react-router build",
+    "build:seo-fixture": "node scripts/seo/run-fixture-build.mjs",
     "typecheck": "react-router typegen && tsc -b",
     "lint": "eslint . --config ../../eslint.config.js",
     "gen:api-types": "node scripts/generate-openapi-types.mjs",
+    "gen:seo-manifest": "node scripts/seo/generate-public-route-manifest.mjs",
     "preview": "vite preview --outDir dist/client",
     "test": "vitest run",
     "test:watch": "vitest",
+    "verify:seo-build": "node scripts/seo/verify-prerender-build.mjs",
     "test:e2e": "playwright test --pass-with-no-tests",
     "test:e2e:ui": "playwright test --ui"
   },

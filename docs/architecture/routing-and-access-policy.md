@@ -4,10 +4,10 @@
 
 ## Router Structure
 
-- 라우터 설정은 `apps/client/src/app/router`에서 관리합니다.
+- React Router Framework Mode route config는 `apps/client/src/routes.ts`에서 관리합니다.
 - route path는 `apps/client/src/app/router/path.ts`의 `ROUTES` 상수로 관리합니다.
-- route config는 `apps/client/src/app/router/routes.ts`에서 관리합니다.
-- browser router instance는 `apps/client/src/app/router/router.tsx`에서 생성합니다.
+- route module은 `apps/client/src/app/routes`에서 page 조립, loader, metadata를 관리합니다.
+- document shell과 browser hydration entry는 각각 `apps/client/src/root.tsx`, `apps/client/src/entry.client.tsx`입니다.
 - layout component는 `apps/client/src/app/layout`에서 관리합니다.
 - 하단 네비게이션이 필요한 페이지는 `BottomNavigationLayout` 아래에 배치합니다.
 
@@ -37,19 +37,30 @@
 
 ## Public Routes
 
-| Page                  | Path                                       | Notes                                                              |
-| --------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
-| 홈 페이지             | `/`                                        | 첫 진입 페이지입니다.                                              |
-| 검색 페이지           | `/search`                                  |                                                                    |
-| 오늘의 식당 페이지    | `/restaurants/today`                       | 매장 정보, 메뉴, 리뷰 탭을 가집니다.                               |
-| 식당 상세 페이지      | `/restaurants/:restaurantId`               | 매장 정보, 메뉴, 리뷰 탭을 가집니다.                               |
-| 메뉴 상세 페이지      | `/restaurants/:restaurantId/menus/:menuId` | 식당 메뉴 카드에서 진입하는 메뉴 상세 화면입니다.                  |
-| hashi 픽 페이지       | `/restaurants/hashi-pick`                  |                                                                    |
-| 인기 맛집 페이지      | `/restaurants/popular`                     |                                                                    |
-| 지도 페이지           | `/map`                                     | 준비중 페이지를 렌더링합니다.                                      |
-| 매거진 리스트 페이지  | `/magazines`                               | 유지 여부 논의 중입니다.                                           |
-| 매거진 상세 페이지    | `/magazines/:magazineId`                   | 유지 여부 논의 중입니다.                                           |
-| 카카오 OAuth callback | `/oauth/callback/kakao`                    | 카카오 인가 code/state 처리 후 기존/신규 회원 흐름으로 분기합니다. |
+| Page                  | Path                                       | Rendering / index policy                      | Notes                                                              |
+| --------------------- | ------------------------------------------ | --------------------------------------------- | ------------------------------------------------------------------ |
+| 홈 페이지             | `/`                                        | build-time prerender / index                  | 첫 진입 페이지입니다.                                              |
+| 검색 페이지           | `/search`                                  | SPA / noindex                                 |                                                                    |
+| 오늘의 식당 페이지    | `/restaurants/today`                       | SPA / noindex                                 | 매장 정보, 메뉴, 리뷰 탭을 가집니다.                               |
+| 식당 상세 페이지      | `/restaurants/:restaurantId`               | 검증된 공개 ID만 build-time prerender / index | 매장 정보, 메뉴, 리뷰 탭을 가집니다.                               |
+| 메뉴 상세 페이지      | `/restaurants/:restaurantId/menus/:menuId` | SPA / noindex                                 | 식당 메뉴 카드에서 진입하는 메뉴 상세 화면입니다.                  |
+| hashi 픽 페이지       | `/restaurants/hashi-pick`                  | build-time prerender / index                  |                                                                    |
+| 인기 맛집 페이지      | `/restaurants/popular`                     | build-time prerender / index                  |                                                                    |
+| 지도 페이지           | `/map`                                     | SPA / noindex                                 | 준비중 페이지를 렌더링합니다.                                      |
+| 매거진 리스트 페이지  | `/magazines`                               | build-time prerender / index                  | 유지 여부 논의 중입니다.                                           |
+| 매거진 상세 페이지    | `/magazines/:magazineId`                   | SPA / noindex                                 | 유지 여부 논의 중입니다.                                           |
+| 카카오 OAuth callback | `/oauth/callback/kakao`                    | SPA / noindex                                 | 카카오 인가 code/state 처리 후 기존/신규 회원 흐름으로 분기합니다. |
+
+## Rendering And Index Policy
+
+- `apps/client/react-router.config.ts`는 `ssr: false`를 명시합니다. 런타임 SSR은 사용하지 않고, 선택된 공개 route만 배포 빌드에서 HTML로 생성합니다.
+- 빌드 전에 공개 식당 목록과 상세 응답을 검증해 `.seo/public-route-manifest.json`을 생성합니다. 프리렌더 경로와 sitemap은 같은 manifest를 사용합니다.
+- 프리렌더 데이터는 배포 빌드 시점의 snapshot이며, hydration 이후 TanStack Query 정책에 따라 최신 데이터로 갱신될 수 있습니다.
+- build-time `loader`는 필수 공개 데이터 실패 시 빌드를 중단합니다. 브라우저 `clientLoader`는 404만 route boundary로 전달하고 일반 API 실패는 기존 page/query의 local error UI가 처리하도록 빈 hydration state로 복구합니다.
+- 공개 식당 추가·삭제나 SEO metadata 변경을 검색 엔진 산출물에 반영하려면 client를 다시 배포합니다.
+- 인증 route와 사용자별 데이터 route는 SPA로 제공하고 `X-Robots-Tag: noindex` 대상에 포함합니다.
+- Workbox precache에는 식당별 HTML을 넣지 않습니다. `__spa-fallback.html`에는 배포 release revision을 붙여 이전 앱 shell이 남지 않게 합니다.
+- 결정적 산출물 검증은 `SEO_API_FIXTURE_PATH=scripts/seo/fixtures/public-api.json pnpm --filter @hashi/client build:seo-fixture` 후 `pnpm --filter @hashi/client verify:seo-build`로 실행합니다. 운영 빌드에서는 fixture 사용을 거부합니다.
 
 ## Auth Only Routes
 
@@ -100,11 +111,11 @@
 | ---------- | ---- | ------------------------------------------------ |
 | 404 페이지 | `*`  | 서비스에 없는 URL을 직접 입력했을 때 보여줍니다. |
 
-## Lazy Loading Policy
+## Route Module Policy
 
-- 가장 먼저 접근하는 홈 페이지(`/`)는 eager loading합니다.
-- 홈을 제외한 페이지 route는 lazy loading합니다.
-- 각 route는 `apps/client/src/pages/{pageName}`의 페이지 컴포넌트를 렌더링합니다.
+- 각 URL boundary는 `apps/client/src/app/routes`의 route module이 담당합니다.
+- route module은 기존 `apps/client/src/pages/{pageName}` page component를 조립하고, 필요한 경우 loader와 metadata를 함께 내보냅니다.
+- 핵심 공개 route loader는 독립 QueryClient에 필수 데이터를 채운 뒤 dehydrated state를 전달하여, 기존 TanStack Query page hook을 그대로 재사용합니다.
 
 ## Bottom Navigation Policy
 

@@ -12,14 +12,14 @@ Jira: HASHI-83, HASHI-114
 - path: `/my-reviews`
 - path constant:
   - `ROUTES.myReviews`
-- route owner: `apps/client/src/app/router/routes.ts`
+- route owner: `apps/client/src/routes.ts`
 - layout: `RootLayout`
 - access type:
   - `authOnly`
 - guard:
   - `AuthOnlyRoute`
-- lazy loading:
-  - `lazyPages.myReviews`
+- route module:
+  - `apps/client/src/app/routes/my-reviews.tsx`
 - bottom navigation:
   - no
 - redirect:

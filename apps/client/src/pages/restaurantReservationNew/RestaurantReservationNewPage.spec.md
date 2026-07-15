@@ -12,14 +12,14 @@ Jira: HASHI-78
 - path: `/restaurants/:restaurantId/reservations/new`
 - path constant:
   - `ROUTES.restaurantReservationNew`
-- route owner: `apps/client/src/app/router/routes.ts`
+- route owner: `apps/client/src/routes.ts`
 - layout: `RootLayout`
 - access type:
   - `authOnly`
 - guard:
   - `AuthOnlyRoute`
-- lazy loading:
-  - `lazyPages.restaurantReservationNew`
+- route module:
+  - `apps/client/src/app/routes/restaurant-reservation-new.tsx`
 - bottom navigation:
   - no
 - redirect:
@@ -36,8 +36,8 @@ Jira: HASHI-78
   - `apps/client/src/pages/restaurantReservationNew/RestaurantReservationNewPage.spec.md`
 - route registration:
   - existing `apps/client/src/app/router/path.ts`
-  - existing `apps/client/src/app/router/lazy.ts`
-  - existing `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
+  - `apps/client/src/app/routes/restaurant-reservation-new.tsx`
 
 ## Requirements
 

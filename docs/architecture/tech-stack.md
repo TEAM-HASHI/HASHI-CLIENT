@@ -20,28 +20,28 @@
 
 ## Stack
 
-| Area                        | Stack                                         | Version                                  | Status  | Notes                                      |
-| --------------------------- | --------------------------------------------- | ---------------------------------------- | ------- | ------------------------------------------ |
-| Package manager             | `pnpm`                                        | `10.18.3`                                | Current | 루트 `packageManager` 기준                 |
-| Monorepo                    | `pnpm workspace`, `pnpm catalog`, `Turborepo` | `pnpm@10.18.3`, `turbo@^2.7.2`           | Current | workspace와 task graph 기준                |
-| Language                    | `React`, `TypeScript`                         | `react@^19.2.6`, `typescript@~6.0.2`     | Current | `apps/client`, `packages/*` 공통 기준      |
-| Bundler                     | `Vite`                                        | `vite@^8.0.12`                           | Current | `@hashi/client` 실행/빌드 기준             |
-| PWA                         | `vite-plugin-pwa`, `Workbox`                  | `vite-plugin-pwa@^1.3.0`                 | Current | Manifest와 정적 앱 셸 캐시 기준            |
-| Routing                     | `React Router`                                | `react-router-dom@^7.18.1`               | Current | `apps/client` 라우팅과 route guard 기준    |
-| Lint and format             | `ESLint`, `Prettier`                          | `eslint@^10.3.0`, `prettier@^3.6.2`      | Current | 루트 script와 공통 ESLint config 기준      |
-| CSS                         | `Tailwind CSS`, `class-variance-authority`    | `tailwindcss@^4.3.1`, `cva@^0.7.1`       | Current | `@tailwindcss/vite`, `tailwind-merge` 사용 |
-| Accessibility UI primitives | `React Aria Components`                       | `react-aria-components@^1.19.0`          | Current | HDS overlay/date 계열 primitive 기준       |
-| API client                  | `ky`                                          | `ky@^2.0.2`                              | Current | `apps/client/src/shared/api` 기준          |
-| API type generation         | `openapi-typescript`                          | `openapi-typescript@^7.13.0`             | Current | Swagger/OpenAPI schema 타입 생성 기준      |
-| Server state                | `TanStack Query`                              | `@tanstack/react-query@^5.101.0`         | Current | app provider와 shared query client 기준    |
-| Unit/Component test         | `Vitest`                                      | `vitest@^3.2.4`                          | Current | client, HDS UI, shared config 기준         |
-| E2E test                    | `Playwright`                                  | `@playwright/test@^1.55.0`               | Current | client e2e scaffold 기준                   |
-| Icon pipeline               | `SVGR`                                        | `@svgr/core@^8.1.0`                      | Current | `packages/hds-icons` generator 기준        |
-| Error monitoring            | `Sentry`                                      | `@sentry/react@^10.60.0`                 | Current | React SDK와 Vite plugin 기준               |
-| Git hook                    | `Husky`, `lint-staged`                        | `husky@^9.1.7`, `lint-staged@^17.0.8`    | Current | prepare script와 lint-staged config 기준   |
-| UI docs/component test      | `Storybook`, `Chromatic`                      | `storybook@^10.4.6`, `chromatic@^17.5.0` | Current | HDS UI Storybook 기준                      |
-| Deployment                  | `Vercel`                                      | `vercel@^54.14.0`                        | Current | Vercel workflow 기준                       |
-| Infra                       | `AWS`                                         | 도입 시 결정                             | Planned | AWS 리소스가 필요해질 때 별도 문서화       |
+| Area                        | Stack                                         | Version                                  | Status  | Notes                                                   |
+| --------------------------- | --------------------------------------------- | ---------------------------------------- | ------- | ------------------------------------------------------- |
+| Package manager             | `pnpm`                                        | `10.18.3`                                | Current | 루트 `packageManager` 기준                              |
+| Monorepo                    | `pnpm workspace`, `pnpm catalog`, `Turborepo` | `pnpm@10.18.3`, `turbo@^2.7.2`           | Current | workspace와 task graph 기준                             |
+| Language                    | `React`, `TypeScript`                         | `react@^19.2.6`, `typescript@~6.0.2`     | Current | `apps/client`, `packages/*` 공통 기준                   |
+| Bundler                     | `Vite`                                        | `vite@^8.0.12`                           | Current | `@hashi/client` 실행/빌드 기준                          |
+| PWA                         | `vite-plugin-pwa`, `Workbox`                  | `vite-plugin-pwa@^1.3.0`                 | Current | Manifest와 정적 앱 셸 캐시 기준                         |
+| Routing and rendering       | `React Router Framework Mode`                 | `react-router@^7.18.1`                   | Current | `ssr: false`, 핵심 공개 route build-time prerender 기준 |
+| Lint and format             | `ESLint`, `Prettier`                          | `eslint@^10.3.0`, `prettier@^3.6.2`      | Current | 루트 script와 공통 ESLint config 기준                   |
+| CSS                         | `Tailwind CSS`, `class-variance-authority`    | `tailwindcss@^4.3.1`, `cva@^0.7.1`       | Current | `@tailwindcss/vite`, `tailwind-merge` 사용              |
+| Accessibility UI primitives | `React Aria Components`                       | `react-aria-components@^1.19.0`          | Current | HDS overlay/date 계열 primitive 기준                    |
+| API client                  | `ky`                                          | `ky@^2.0.2`                              | Current | `apps/client/src/shared/api` 기준                       |
+| API type generation         | `openapi-typescript`                          | `openapi-typescript@^7.13.0`             | Current | Swagger/OpenAPI schema 타입 생성 기준                   |
+| Server state                | `TanStack Query`                              | `@tanstack/react-query@^5.101.0`         | Current | app provider와 shared query client 기준                 |
+| Unit/Component test         | `Vitest`                                      | `vitest@^3.2.4`                          | Current | client, HDS UI, shared config 기준                      |
+| E2E test                    | `Playwright`                                  | `@playwright/test@^1.55.0`               | Current | client e2e scaffold 기준                                |
+| Icon pipeline               | `SVGR`                                        | `@svgr/core@^8.1.0`                      | Current | `packages/hds-icons` generator 기준                     |
+| Error monitoring            | `Sentry`                                      | `@sentry/react@^10.60.0`                 | Current | React SDK와 Vite plugin 기준                            |
+| Git hook                    | `Husky`, `lint-staged`                        | `husky@^9.1.7`, `lint-staged@^17.0.8`    | Current | prepare script와 lint-staged config 기준                |
+| UI docs/component test      | `Storybook`, `Chromatic`                      | `storybook@^10.4.6`, `chromatic@^17.5.0` | Current | HDS UI Storybook 기준                                   |
+| Deployment                  | `Vercel`                                      | `vercel@^54.14.0`                        | Current | Vercel workflow 기준                                    |
+| Infra                       | `AWS`                                         | 도입 시 결정                             | Planned | AWS 리소스가 필요해질 때 별도 문서화                    |
 
 ## Official Docs
 
@@ -72,6 +72,14 @@
 - 앱에만 필요한 dependency는 먼저 `@hashi/client`에 추가합니다.
 - 새 도구를 추가하거나 기존 도구의 CI/검증 절차를 바꾸면 관련 script와 문서를 함께 갱신합니다.
 - Playwright E2E task는 현재 client app에 있으며, 테스트 시나리오 확장은 별도 티켓에서 다룹니다.
+
+## Client Rendering Strategy
+
+- `apps/client`는 React Router Framework Mode를 사용합니다.
+- `ssr: false`를 명시하여 런타임 SSR 서버는 운영하지 않습니다.
+- 홈, 하시 PICK, 인기 맛집, 매거진 목록, 검증된 식당 상세 경로는 배포 빌드에서 실제 API 데이터를 포함한 HTML로 프리렌더링합니다.
+- 그 밖의 경로는 `__spa-fallback.html`을 사용하는 SPA로 제공하며, 개인·인증·검색·임시 페이지는 검색 색인 대상에서 제외합니다.
+- 프리렌더 HTML과 sitemap은 배포 빌드 시점의 snapshot입니다. API 데이터나 공개 식당이 바뀌면 재배포해야 SEO 산출물이 갱신됩니다.
 
 ## Related Docs
 

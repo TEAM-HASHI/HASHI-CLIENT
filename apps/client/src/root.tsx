@@ -17,6 +17,8 @@ import { LoadingScreen } from '@/shared/components/loadingScreen'
 
 const DEFAULT_DESCRIPTION =
   '한국인 여행자를 위한 일본 맛집 큐레이션 및 예약 서비스'
+export const VIEWPORT_CONTENT =
+  'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
 
 export const links: LinksFunction = () => [
   { rel: 'icon', href: '/favicon.ico', sizes: 'any' },
@@ -38,10 +40,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
     <html lang="ko">
       <head>
         <meta charSet="utf-8" />
-        <meta
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-          name="viewport"
-        />
+        <meta content={VIEWPORT_CONTENT} name="viewport" />
         <meta content="#273033" name="theme-color" />
         <meta content="yes" name="apple-mobile-web-app-capable" />
         <meta content="default" name="apple-mobile-web-app-status-bar-style" />

@@ -1,0 +1,62 @@
+{
+  "routes": {
+    "/api/v1/restaurants": {
+      "content": [
+        {
+          "restaurantId": 42,
+          "name": "하시 스시",
+          "rating": 4.7,
+          "area": "도쿄 긴자",
+          "foodCategory": "스시",
+          "genre": "sushi",
+          "thumbnailUrl": "https://www.hashi.kr/favicon.svg",
+          "imageUrls": ["https://www.hashi.kr/favicon.svg"],
+          "summary": "긴자에서 즐기는 스시 전문점",
+          "hashtags": ["스시", "긴자"]
+        }
+      ],
+      "hasNext": false
+    },
+    "/api/v1/magazines": {
+      "magazines": [],
+      "hasNext": false
+    },
+    "/api/v1/magazines/banners": {
+      "banners": []
+    },
+    "/api/v1/restaurants/42/summary": {
+      "restaurantId": 42,
+      "name": "하시 스시",
+      "localName": "HASHI SUSHI",
+      "rating": 4.7,
+      "reviewCount": 0,
+      "summary": "긴자에서 즐기는 스시 전문점",
+      "foodCategory": "스시",
+      "address": "도쿄도 주오구 긴자 1-1",
+      "thumbnailUrl": "https://www.hashi.kr/favicon.svg",
+      "imageUrls": ["https://www.hashi.kr/favicon.svg"],
+      "reservationFee": 4000
+    },
+    "/api/v1/restaurants/42/store-information": {
+      "restaurantId": 42,
+      "description": "긴자역 인근 스시 전문점",
+      "businessHours": [],
+      "priceRange": {
+        "currency": "JPY",
+        "minPrice": 1000,
+        "maxPrice": 3000
+      }
+    },
+    "/api/v1/restaurants/42/menus": {
+      "content": [],
+      "hasNext": false
+    },
+    "/api/v1/restaurants/42/reviews": {
+      "restaurantId": 42,
+      "averageRating": 0,
+      "reviewCount": 0,
+      "content": [],
+      "hasNext": false
+    }
+  }
+}

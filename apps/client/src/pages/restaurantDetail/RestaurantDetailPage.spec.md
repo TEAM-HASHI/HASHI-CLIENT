@@ -10,15 +10,19 @@
 - path constant:
   - `ROUTES.restaurantDetail`
 - route owner:
-  - `apps/client/src/pages/restaurantDetail`
+  - `apps/client/src/routes.ts`
+- route module:
+  - `apps/client/src/app/routes/restaurant-detail.tsx`
 - layout:
   - `RootLayout`
 - access type:
   - public
 - guard:
   - none
-- lazy loading:
-  - `lazyPages.restaurantDetail`
+- rendering:
+  - 검증된 공개 식당 ID만 build-time prerender
+- index policy:
+  - 검증된 공개 식당 ID만 index
 - bottom navigation:
   - no
 - redirect:
@@ -52,6 +56,15 @@
 - [ ] 모바일 폭에서 horizontal overflow가 없어야 합니다.
 
 ## Data Dependencies
+
+### Prerender And SEO
+
+- 빌드 전 공개 식당 목록을 cursor로 끝까지 조회하고 각 식당 summary를 검증한 ID만 manifest에 포함합니다.
+- build-time loader의 필수 데이터는 식당 summary, store information, 메뉴 첫 페이지입니다. 하나라도 실패하면 불완전한 상세 HTML을 배포하지 않습니다.
+- 리뷰 첫 페이지는 선택 데이터입니다. 실패해도 식당 기본 정보와 메뉴가 유효하면 상세 HTML을 생성합니다.
+- clientLoader의 일반 API 실패는 빈 hydration state로 복구해 기존 query 상태가 처리합니다. 유효하지 않은 식당 ID의 404는 route ErrorBoundary에서 Not Found UI를 렌더링하고 `noindex` metadata를 적용합니다.
+- title, description, canonical, Open Graph metadata와 `Restaurant` JSON-LD는 검증된 summary/store information만 사용합니다. 확인되지 않은 rating, review, price 정보는 구조화 데이터에 넣지 않습니다.
+- 새 식당 추가·삭제나 식당 정보 변경은 다음 client 재배포에서 manifest, HTML, sitemap에 반영됩니다.
 
 ### Query
 

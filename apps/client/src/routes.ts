@@ -10,6 +10,8 @@ import { ROUTES } from './app/router/path'
 const routePath = (path: string) => path.replace(/^\//, '')
 
 export default [
+  route('robots.txt', 'app/routes/robots.ts'),
+  route('sitemap.xml', 'app/routes/sitemap.ts'),
   layout('app/routes/root-layout.tsx', [
     layout(
       'app/routes/bottom-navigation-layout.tsx',

@@ -9,11 +9,11 @@
 
 - path: `/reviews/:reviewId`
 - path constant: `ROUTES.reviewDetail`
-- route owner: `apps/client/src/app/router/routes.ts`
+- route owner: `apps/client/src/routes.ts`
 - layout: `RootLayout`
 - access type: `authOnly`
 - guard: `AuthOnlyRoute`
-- lazy loading: `lazyPages.reviewDetail`
+- route module: `apps/client/src/app/routes/review-detail.tsx`
 - bottom navigation: 없음
 - route param validation:
   - `reviewId`는 0보다 큰 10진 정수 문자열만 허용한다.

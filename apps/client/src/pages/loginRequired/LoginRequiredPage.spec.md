@@ -12,7 +12,7 @@ Jira: HASHI-112
 - path constant:
   - `ROUTES.loginRequired`
 - route owner:
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
 - layout:
   - `RootLayout`
   - `BottomNavigationLayout`
@@ -20,8 +20,8 @@ Jira: HASHI-112
   - guestOnly
 - guard:
   - `GuestOnlyRoute`
-- lazy loading:
-  - `lazyPages.loginRequired`
+- route module:
+  - `apps/client/src/app/routes/login-required.tsx`
 - bottom navigation:
   - yes
 - redirect:

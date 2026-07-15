@@ -12,7 +12,7 @@
 - path constant:
   - `ROUTES.reservationDetail`
 - route owner:
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
 - layout:
   - `RootLayout`
   - bottom navigation layout 없음
@@ -20,8 +20,8 @@
   - `authOnly`
 - guard:
   - `AuthOnlyRoute`
-- lazy loading:
-  - `lazyPages.reservationDetail`
+- route module:
+  - `apps/client/src/app/routes/reservation-detail.tsx`
 - bottom navigation:
   - no
 - redirect:
@@ -38,8 +38,8 @@
   - `apps/client/src/pages/reservationDetail/ReservationDetailPage.spec.md`
 - route registration:
   - `apps/client/src/app/router/path.ts`
-  - `apps/client/src/app/router/lazy.ts`
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
+  - `apps/client/src/app/routes/reservation-detail.tsx`
 
 ## Requirements
 

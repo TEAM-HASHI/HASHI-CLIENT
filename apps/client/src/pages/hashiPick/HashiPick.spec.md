@@ -9,11 +9,13 @@
 - path: `/restaurants/hashi-pick`
 - path constant:
   - `ROUTES.hashiPickRestaurants`
-- route owner: `apps/client/src/app/router/routes.ts`
+- route owner: `apps/client/src/routes.ts`
+- route module: `apps/client/src/app/routes/hashi-pick.tsx`
 - layout: `RootLayout`
 - access type: public
 - guard: none
-- lazy loading: `lazyPages.hashiPick`
+- rendering: build-time prerender
+- index policy: index
 - bottom navigation: no
 - redirect:
   - unauthenticated: none
@@ -29,8 +31,8 @@
   - `apps/client/src/pages/hashiPick/HashiPick.spec.md`
 - route registration:
   - `apps/client/src/app/router/path.ts`
-  - `apps/client/src/app/router/lazy.ts`
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
+  - `apps/client/src/app/routes/hashi-pick.tsx`
 
 ## Requirements
 
@@ -51,6 +53,14 @@
 - [x] fixed header는 `z-fixed` 토큰을 사용하고, 스크롤 콘텐츠는 fixed header 높이만큼 top padding을 둡니다.
 
 ## Data Dependencies
+
+### Prerender And SEO
+
+- build-time loader는 기본 필터(`type=hashi-pick`, `genre=all`, `sort=basic`, `size=10`)의 첫 페이지를 필수 데이터로 prefetch합니다.
+- clientLoader의 prefetch 실패는 빈 hydration state로 복구하여 Header와 FilterBar를 유지하는 기존 local error UI가 처리합니다.
+- HTML에는 하시 PICK 목록 title, description, canonical, Open Graph metadata를 포함합니다.
+- 필터 변경 결과는 client-side query로 갱신하며, 검색 엔진용 HTML은 기본 목록만 포함합니다.
+- 프리렌더 HTML은 배포 시점 snapshot이며, 기본 목록 변경은 다음 재배포에서 반영됩니다.
 
 ### Source
 

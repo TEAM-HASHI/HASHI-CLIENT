@@ -13,14 +13,17 @@ Jira: HASHI-77
 - path: `/magazines`
 - path constant:
   - `ROUTES.magazines`
-- route owner: `apps/client/src/app/router/routes.ts`
+- route owner: `apps/client/src/routes.ts`
+- route module: `apps/client/src/app/routes/magazines.tsx`
 - layout: `RootLayout`
 - access type:
   - `public`
 - guard:
   - none
-- lazy loading:
-  - `lazyPages.magazines`
+- rendering:
+  - build-time prerender
+- index policy:
+  - index
 - bottom navigation:
   - no
 - redirect:
@@ -36,9 +39,9 @@ Jira: HASHI-77
 - spec path:
   - `apps/client/src/pages/magazines/MagazinesPage.spec.md`
 - route registration:
-  - existing `apps/client/src/app/router/path.ts`
-  - existing `apps/client/src/app/router/lazy.ts`
-  - existing `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/app/router/path.ts`
+  - `apps/client/src/routes.ts`
+  - `apps/client/src/app/routes/magazines.tsx`
 
 ## Requirements
 
@@ -60,6 +63,14 @@ Jira: HASHI-77
 - [x] 매거진 skeleton placeholder 색상은 하시 PICK/인기 맛집 리스트 skeleton과 같은 `secondary-200`을 사용한다.
 
 ## Data Dependencies
+
+### Prerender And SEO
+
+- build-time loader는 추천 매거진 첫 페이지(`size=10`)를 필수 데이터로 prefetch합니다.
+- 대표 배너는 선택 데이터입니다. 배너 API 실패가 목록 프리렌더 전체를 막지 않습니다.
+- clientLoader의 prefetch 실패는 route error로 전환하지 않고 빈 hydration state로 복구하여 기존 목록/배너 local state가 처리합니다.
+- HTML에는 매거진 목록 title, description, canonical, Open Graph metadata를 포함합니다.
+- 프리렌더 HTML은 배포 시점 snapshot이며, 목록 변경은 다음 재배포에서 반영됩니다.
 
 ### API Integration Map
 

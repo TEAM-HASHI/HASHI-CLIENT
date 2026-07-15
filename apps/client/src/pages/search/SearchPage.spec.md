@@ -30,7 +30,7 @@
 - path constant:
   - `ROUTES.search`
 - route owner:
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
 - layout:
   - `RootLayout`
   - `BottomNavigationLayout` 없음
@@ -38,8 +38,8 @@
   - public
 - guard:
   - none
-- lazy loading:
-  - `lazyPages.search`
+- route module:
+  - `apps/client/src/app/routes/search.tsx`
 - bottom navigation:
   - no
 - redirect:
@@ -56,8 +56,8 @@
   - `apps/client/src/pages/search/SearchPage.spec.md`
 - route registration:
   - `apps/client/src/app/router/path.ts`
-  - `apps/client/src/app/router/lazy.ts`
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
+  - `apps/client/src/app/routes/search.tsx`
 
 ## Requirements
 

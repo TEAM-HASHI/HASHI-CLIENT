@@ -16,7 +16,7 @@ Jira: HASHI-106
 - path constant:
   - `ROUTES.mypage`
 - route owner:
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
 - layout:
   - `RootLayout`
   - `BottomNavigationLayout`
@@ -24,8 +24,8 @@ Jira: HASHI-106
   - `authOnly`
 - guard:
   - `AuthOnlyRoute`
-- lazy loading:
-  - `lazyPages.mypage`
+- route module:
+  - `apps/client/src/app/routes/mypage.tsx`
 - bottom navigation:
   - yes
   - 하단 네비게이션은 페이지 내부에서 직접 구현하지 않고 `BottomNavigationLayout`에서 제공합니다.

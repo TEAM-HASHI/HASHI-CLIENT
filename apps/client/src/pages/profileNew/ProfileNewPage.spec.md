@@ -15,7 +15,7 @@ Jira: HASHI-120
 - path constant:
   - `ROUTES.profileNew`
 - route owner:
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
 - layout:
   - `RootLayout`
   - bottom navigation layout 없음
@@ -23,8 +23,8 @@ Jira: HASHI-120
   - `authOnly`
 - guard:
   - `AuthOnlyRoute`
-- lazy loading:
-  - `lazyPages.profileNew`
+- route module:
+  - `apps/client/src/app/routes/profile-new.tsx`
 - bottom navigation:
   - no
 - redirect:
@@ -42,8 +42,8 @@ Jira: HASHI-120
   - `apps/client/src/pages/profileNew/ProfileNewPage.spec.md`
 - route registration:
   - existing `apps/client/src/app/router/path.ts`
-  - existing `apps/client/src/app/router/lazy.ts`
-  - existing `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
+  - `apps/client/src/app/routes/profile-new.tsx`
 
 ## Requirements
 

@@ -17,8 +17,8 @@
   - public
 - guard:
   - none
-- lazy loading:
-  - `lazyPages.restaurantMenuDetail`
+- route module:
+  - `apps/client/src/app/routes/restaurant-menu-detail.tsx`
 - bottom navigation:
   - no
 

@@ -4,11 +4,45 @@
   "devCommand": "pnpm dev:client",
   "installCommand": "pnpm install",
   "framework": "vite",
-  "outputDirectory": "apps/client/dist",
+  "outputDirectory": "apps/client/dist/client",
+  "headers": [
+    {
+      "source": "/search",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/restaurants/today",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/restaurants/:restaurantId/menus/:menuId",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/restaurants/:restaurantId/reviews/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/restaurants/:restaurantId/reservations/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/magazines/:magazineId",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/(map|coming-soon|saved|mypage|withdrawal|my-reviews|my-reservations|login-required)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/(profile|reviews|reservations|oauth)/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/"
+      "destination": "/__spa-fallback.html"
     }
   ]
 }

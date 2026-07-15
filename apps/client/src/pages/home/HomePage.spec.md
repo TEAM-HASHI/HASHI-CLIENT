@@ -14,7 +14,9 @@
 - path constant:
   - `ROUTES.home`
 - route owner:
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
+- route module:
+  - `apps/client/src/app/routes/home.tsx`
 - layout:
   - `RootLayout`
   - `BottomNavigationLayout`
@@ -22,9 +24,10 @@
   - public
 - guard:
   - none
-- lazy loading:
-  - eager
-  - 홈은 첫 진입 화면이므로 `lazyPages`에 넣지 않고 `routes.ts`에서 `HomePage`를 직접 import합니다.
+- rendering:
+  - build-time prerender
+- index policy:
+  - index
 - bottom navigation:
   - yes
   - 홈 페이지 내부에서 하단 네비게이션을 다시 만들지 않습니다.
@@ -57,8 +60,8 @@
   - `apps/client/src/pages/home/constants/homeQuickLinks.ts`
 - route registration:
   - `apps/client/src/app/router/path.ts`
-  - `apps/client/src/app/router/routes.ts`
-  - `apps/client/src/app/router/lazy.ts`는 변경하지 않습니다.
+  - `apps/client/src/routes.ts`
+  - `apps/client/src/app/routes/home.tsx`
 
 ## Existing Asset Check
 
@@ -128,6 +131,14 @@ export const HomeLogo = () => {
 - [x] 이미지나 API 데이터가 아직 없을 때 최종 구현처럼 보이는 임시 체크보드 placeholder를 남기지 않습니다.
 
 ## Data Dependencies
+
+### Prerender And SEO
+
+- build-time loader는 SNS 인기 식당 첫 페이지를 필수 데이터로 prefetch합니다.
+- 매거진 배너는 선택 데이터입니다. 배너 API 실패가 홈 프리렌더 전체를 막지 않습니다.
+- clientLoader의 prefetch 실패는 route error로 전환하지 않고 빈 hydration state로 복구하여 기존 섹션 단위 loading/error/empty UI가 처리합니다.
+- HTML에는 HASHI 홈 title, description, canonical, Open Graph metadata와 `WebSite`, `Organization` JSON-LD를 포함합니다.
+- 프리렌더 HTML은 배포 시점 snapshot이며, API 데이터가 바뀌면 재배포 후 SEO 산출물이 갱신됩니다.
 
 ### Query
 

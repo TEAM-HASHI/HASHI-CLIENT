@@ -10,13 +10,18 @@
 - path constant:
   - `ROUTES.`
 - route owner:
+  - `apps/client/src/routes.ts`
+- route module:
+  - `apps/client/src/app/routes/{route-name}.tsx`
 - layout:
 - access type:
   - public / authOnly / guestOnly
 - guard:
   - none / AuthOnlyRoute / GuestOnlyRoute
-- lazy loading:
-  - eager / lazyPages
+- rendering:
+  - prerender / SPA
+- index policy:
+  - index / noindex
 - bottom navigation:
   - yes / no
 - redirect:
@@ -33,8 +38,8 @@
   - `apps/client/src/pages/{page}/{PageName}.spec.md`
 - route registration:
   - `apps/client/src/app/router/path.ts`
-  - `apps/client/src/app/router/lazy.ts` (lazy route only)
-  - `apps/client/src/app/router/routes.ts`
+  - `apps/client/src/routes.ts`
+  - `apps/client/src/app/routes/{route-name}.tsx`
 
 ## Scaffold
 

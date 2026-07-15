@@ -193,7 +193,9 @@ JSON-LD에는 실제 화면 및 API와 일치하는 이름, 설명, 주소, URL,
 
 ### 7.3 PWA
 
-현재 Workbox glob은 모든 HTML을 precache할 수 있으므로 식당별 프리렌더링 HTML은 precache에서 제외한다. 앱 shell, JavaScript, CSS, icon, 공통 asset만 precache한다. navigation fallback은 React Router가 생성한 SPA fallback과 일치시킨다.
+현재 Workbox glob은 모든 HTML을 precache할 수 있으므로 식당별 프리렌더링 HTML은 precache에서 제외한다. 앱 shell, JavaScript, CSS, icon, 공통 asset만 precache한다. navigation fallback은 React Router가 생성한 SPA fallback과 일치시키고, 고정 URL인 fallback에는 배포 release revision을 부여해 새 배포에서 cache key가 갱신되게 한다.
+
+build-time loader는 필수 공개 데이터 실패를 throw해 불완전한 HTML 배포를 막는다. 같은 strict loader를 브라우저 clientLoader에 그대로 사용하지 않는다. clientLoader의 일반 API 실패는 빈 hydration state로 복구해 기존 page/query local error UI가 처리하고, 유효하지 않은 식당 ID의 404만 route ErrorBoundary와 noindex metadata로 전달한다.
 
 ### 7.4 Sentry
 

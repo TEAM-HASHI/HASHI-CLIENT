@@ -17,8 +17,8 @@
   - public
 - guard:
   - none
-- lazy loading:
-  - `lazyPages.todayRestaurant`
+- route module:
+  - `apps/client/src/app/routes/today-restaurant.tsx`
 - bottom navigation:
   - no
 - redirect:
