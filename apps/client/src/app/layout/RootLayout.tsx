@@ -3,13 +3,19 @@ import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 
 import AsyncBoundary from '@/app/providers/AsyncBoundary'
+import { trackPageView } from '@/shared/lib/analytics'
 
 export const RootLayout = () => {
-  const { pathname } = useLocation()
+  const { hash = '', pathname, search = '' } = useLocation()
+  const pagePath = `${pathname}${search}${hash}`
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
   }, [pathname])
+
+  useEffect(() => {
+    trackPageView(pagePath)
+  }, [pagePath])
 
   return (
     <>
