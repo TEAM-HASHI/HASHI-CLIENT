@@ -11,6 +11,7 @@ export interface AdminTableColumn {
 interface AdminTableProps {
   columns: AdminTableColumn[]
   children: ReactNode
+  tableClassName?: string
   isLoading?: boolean
   isError?: boolean
   isEmpty?: boolean
@@ -22,6 +23,7 @@ interface AdminTableProps {
 export const AdminTable = ({
   columns,
   children,
+  tableClassName,
   isLoading = false,
   isError = false,
   isEmpty = false,
@@ -34,7 +36,12 @@ export const AdminTable = ({
   return (
     <div className="min-h-0 overflow-hidden bg-white">
       <div className="overflow-x-auto">
-        <table className="min-w-full table-fixed border-separate border-spacing-0 text-left">
+        <table
+          className={cn(
+            'min-w-full table-fixed border-separate border-spacing-0 text-left',
+            tableClassName,
+          )}
+        >
           <thead>
             <tr>
               {columns.map((column) => (
