@@ -116,10 +116,10 @@
 
 ### API Integration Map
 
-| UI area          | Endpoint                                                 | Params                                                               | Response data                                              | Query key                                                    | Mode       | Enabled                                 | States                                                 |
-| ---------------- | -------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ | ---------- | --------------------------------------- | ------------------------------------------------------ |
-| 검색 결과 리스트 | `GET /api/v1/restaurants`                                | `keyword`, `genre`, `foodCategory`, `sort`, `type`, `cursor`, `size` | `RestaurantListResponse.content`, `nextCursor`, `hasNext`  | `restaurantListQueryKeys.infiniteList(params)`               | `infinite` | trim 처리한 submitted keyword가 있을 때 | loading, next-page fetching, error, empty, success     |
-| 추천 검색어      | `GET /api/v1/restaurants/search-keyword-recommendations` | optional `size`                                                      | `RestaurantSearchKeywordRecommendationResponse.keywords[]` | `searchRestaurantQueryKeys.keywordRecommendations({ size })` | `query`    | 검색 전 idle panel 렌더링 시            | loading, empty fallback, error local fallback, success |
+| UI area          | Endpoint                                                 | Params                                                               | Response data                                              | Query key                                                    | Mode       | Enabled                           | States                                                 |
+| ---------------- | -------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ | ---------- | --------------------------------- | ------------------------------------------------------ |
+| 검색 결과 리스트 | `GET /api/v1/restaurants`                                | `keyword`, `genre`, `foodCategory`, `sort`, `type`, `cursor`, `size` | `RestaurantListResponse.content`, `nextCursor`, `hasNext`  | `restaurantListQueryKeys.infiniteList(params)`               | `infinite` | trim 처리한 URL keyword가 있을 때 | loading, next-page fetching, error, empty, success     |
+| 추천 검색어      | `GET /api/v1/restaurants/search-keyword-recommendations` | optional `size`                                                      | `RestaurantSearchKeywordRecommendationResponse.keywords[]` | `searchRestaurantQueryKeys.keywordRecommendations({ size })` | `query`    | 검색 전 idle panel 렌더링 시      | loading, empty fallback, error local fallback, success |
 
 ### Endpoint Type Mapping
 
@@ -270,13 +270,15 @@ export const searchRestaurantQueryKeys = {
   - food category bottom sheet open state
   - pending sort value
   - pending food category value
-  - has submitted search state
   - recent search keywords
 - form state:
   - 검색창 단일 입력값
 - URL state:
-  - 기본 구현에서는 URL query string 동기화를 하지 않습니다.
-  - 공유 가능한 검색 URL이 필요해지면 `keyword`, `sort`, `category`를 search params로 승격합니다.
+  - 검색 제출 또는 최근/추천 검색어 선택 시 `keyword` search param을 갱신합니다.
+  - 정렬 필터가 기본값이 아니면 `sort` search param을 갱신합니다.
+  - 음식 장르 필터가 기본값이 아니면 `category` search param을 갱신합니다.
+  - `/search?keyword=...`로 진입하면 검색창과 검색 결과 상태를 URL에서 복원합니다.
+  - 식당 상세로 이동한 뒤 브라우저 뒤로가기를 하면 직전 검색 URL이 복원되어 같은 검색 결과 상태로 돌아옵니다.
 - server state:
   - 검색 결과 식당 목록
   - loading / error / empty state
@@ -508,7 +510,9 @@ SearchPage
 - route params:
   - 없음
 - search params:
-  - 없음
+  - `keyword`: 제출된 검색어
+  - `sort`: `default`가 아닌 적용 정렬값
+  - `category`: `all`이 아닌 적용 음식 장르값
 - success redirect:
   - 없음
 - failure redirect:
