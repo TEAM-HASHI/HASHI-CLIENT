@@ -53,21 +53,22 @@
 
 ## Auth Only Routes
 
-| Page               | Path                                          | Notes                                                                                                        |
-| ------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| 리뷰 작성 페이지   | `/restaurants/:restaurantId/reviews/new`      |                                                                                                              |
-| 마이 리뷰 페이지   | `/my-reviews`                                 | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                    |
-| 리뷰 상세 페이지   | `/reviews/:reviewId`                          |                                                                                                              |
-| 리뷰 수정 페이지   | `/reviews/:reviewId/edit`                     |                                                                                                              |
-| 저장 페이지        | `/saved`                                      | 준비중 페이지를 렌더링합니다.                                                                                |
-| 마이 페이지        | `/mypage`                                     |                                                                                                              |
-| 프로필 생성 페이지 | `/profile/new`                                | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                 |
-| 탈퇴 페이지        | `/withdrawal`                                 | 유지 여부 논의 중입니다.                                                                                     |
-| 예약 페이지        | `/restaurants/:restaurantId/reservations/new` |                                                                                                              |
-| 어디든 예약 페이지 | `/reservations/anywhere`                      |                                                                                                              |
-| 예약 요청 페이지   | `/reservations/request`                       |                                                                                                              |
-| 예약 정보 페이지   | `/my-reservations`                            | 진행 중, 방문 예정, 방문 완료, 예약 취소 chip 상태에 따라 카드 디자인과 데이터가 달라지는 단일 페이지입니다. |
-| 예약 상세 페이지   | `/reservations/:reservationId`                |                                                                                                              |
+| Page                     | Path                                          | Notes                                                                                                        |
+| ------------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 리뷰 작성 페이지         | `/restaurants/:restaurantId/reviews/new`      |                                                                                                              |
+| 마이 리뷰 페이지         | `/my-reviews`                                 | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                    |
+| 리뷰 상세 페이지         | `/reviews/:reviewId`                          |                                                                                                              |
+| 리뷰 수정 페이지         | `/reviews/:reviewId/edit`                     |                                                                                                              |
+| 저장 페이지              | `/saved`                                      | 준비중 페이지를 렌더링합니다.                                                                                |
+| 마이 페이지              | `/mypage`                                     |                                                                                                              |
+| 프로필 생성 페이지       | `/profile/new`                                | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                 |
+| 탈퇴 페이지              | `/withdrawal`                                 | 유지 여부 논의 중입니다.                                                                                     |
+| 예약 페이지              | `/restaurants/:restaurantId/reservations/new` |                                                                                                              |
+| 어디든 예약 페이지       | `/reservations/anywhere`                      |                                                                                                              |
+| 예약 요청 페이지         | `/reservations/request`                       |                                                                                                              |
+| 예약 정보 페이지         | `/my-reservations`                            | 진행 중, 방문 예정, 방문 완료, 예약 취소 chip 상태에 따라 카드 디자인과 데이터가 달라지는 단일 페이지입니다. |
+| 예약 상세 페이지         | `/reservations/:reservationId`                |                                                                                                              |
+| 예약 취소 후 추천 페이지 | `/reservations/:reservationId/rescue`         | 예약 취소 직후 기존 HASHI PICK 식당 탐색을 이어갑니다.                                                       |
 
 ## Auth Gate Policy
 

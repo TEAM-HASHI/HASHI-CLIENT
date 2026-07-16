@@ -225,12 +225,20 @@ describe('ReservationDetailPage', () => {
       within(dialog).getByText('정말 예약을 취소하시겠습니까?'),
     ).toBeInTheDocument()
     expect(
-      within(dialog).getByText('동일한 예약은 다시 접수해야 합니다.'),
+      within(dialog).getByText(
+        '취소 후에도 다른 식당을 바로 찾아볼 수 있어요.',
+      ),
     ).toBeInTheDocument()
   })
 
-  it('cancels the reservation and moves to the canceled reservation list after confirming cancellation', async () => {
+  it('cancels the reservation and moves to restaurant recommendations after confirming cancellation', async () => {
     const { queryClient } = renderReservationDetailPage()
+    mockedGetMyReservations.mockImplementation(
+      () =>
+        new Promise(() => {
+          // 목록 동기화가 느려도 추천 화면 이동은 기다리지 않아야 합니다.
+        }),
+    )
 
     fireEvent.click(
       await screen.findByRole('button', { name: '예약 취소하기' }),
@@ -241,11 +249,9 @@ describe('ReservationDetailPage', () => {
 
     await waitFor(() => {
       expect(mockedCancelReservation).toHaveBeenCalledWith(12)
-      expect(mockShowToast).toHaveBeenCalledWith({
-        children: '예약 취소 요청이 완료되었습니다',
-      })
+      expect(mockShowToast).not.toHaveBeenCalled()
       expect(mockNavigate).toHaveBeenCalledWith(
-        `${ROUTES.myReservations}?status=CANCELED`,
+        ROUTES.reservationRescue.replace(':reservationId', '12'),
       )
       expect(queryClient.getQueryData(reservationDetailQueryKey(12))).toEqual({
         ...reservationDetailFixture,
@@ -351,7 +357,7 @@ describe('ReservationDetailPage', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        `${ROUTES.myReservations}?status=CANCELED`,
+        ROUTES.reservationRescue.replace(':reservationId', '12'),
       )
     })
   })
