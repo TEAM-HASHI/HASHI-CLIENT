@@ -140,6 +140,24 @@ describe('ReservationsPage', () => {
     )
   })
 
+  it('keeps compact reservation fields on one line in a scrollable table', () => {
+    render(<ReservationsPage />)
+
+    expect(screen.getByRole('table')).toHaveClass('w-full', 'min-w-[103rem]')
+    expect(screen.getByText('RSV-91').closest('td')).toHaveClass(
+      'whitespace-nowrap',
+    )
+    expect(screen.getByText('김하시').closest('td')).toHaveClass(
+      'whitespace-nowrap',
+    )
+    expect(screen.getByText('일반').closest('td')).toHaveClass(
+      'whitespace-nowrap',
+    )
+    expect(screen.getByText('30,000원').closest('td')).toHaveClass(
+      'whitespace-nowrap',
+    )
+  })
+
   it('warns on active reservations for the same restaurant in the same minute', () => {
     useReservationsQueryMock.mockReturnValue({
       data: {
