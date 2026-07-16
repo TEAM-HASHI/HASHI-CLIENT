@@ -6,30 +6,35 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RootLayout } from '@/app/layout/RootLayout'
 
-const { mockAsyncBoundary, mockToastRegion } = vi.hoisted(() => ({
-  mockAsyncBoundary: vi.fn(
-    ({
-      children,
-      resetKeys,
-    }: {
-      children: ReactNode
-      resetKeys?: unknown[]
-    }) => (
-      <div
-        data-testid="async-boundary"
-        data-reset-key={String(resetKeys?.[0] ?? '')}
-      >
-        {children}
-      </div>
+const { mockAsyncBoundary, mockToastRegion, mockTrackPageView } = vi.hoisted(
+  () => ({
+    mockAsyncBoundary: vi.fn(
+      ({
+        children,
+        resetKeys,
+      }: {
+        children: ReactNode
+        resetKeys?: unknown[]
+      }) => (
+        <div
+          data-testid="async-boundary"
+          data-reset-key={String(resetKeys?.[0] ?? '')}
+        >
+          {children}
+        </div>
+      ),
     ),
-  ),
-  mockToastRegion: vi.fn(({ className }: { className?: string }) => (
-    <div data-testid="toast-region" data-class-name={className} />
-  )),
-}))
+    mockToastRegion: vi.fn(({ className }: { className?: string }) => (
+      <div data-testid="toast-region" data-class-name={className} />
+    )),
+    mockTrackPageView: vi.fn(),
+  }),
+)
 const { mockLocationStore, mockScrollTo } = vi.hoisted(() => ({
   mockLocationStore: {
+    hash: '',
     pathname: '/',
+    search: '',
   },
   mockScrollTo: vi.fn(),
 }))
@@ -40,6 +45,10 @@ vi.mock('@hashi/hds-ui', () => ({
 
 vi.mock('@/app/providers/AsyncBoundary', () => ({
   default: mockAsyncBoundary,
+}))
+
+vi.mock('@/shared/lib/analytics', () => ({
+  trackPageView: mockTrackPageView,
 }))
 
 vi.mock('react-router-dom', () => ({
@@ -58,7 +67,10 @@ describe('RootLayout', () => {
     mockAsyncBoundary.mockClear()
     mockToastRegion.mockClear()
     mockScrollTo.mockClear()
+    mockTrackPageView.mockClear()
+    mockLocationStore.hash = ''
     mockLocationStore.pathname = '/'
+    mockLocationStore.search = ''
   })
 
   it('positions the toast region at the top of the mobile frame with 20px horizontal padding', () => {
@@ -109,6 +121,22 @@ describe('RootLayout', () => {
     expect(screen.getByTestId('async-boundary')).toHaveAttribute(
       'data-reset-key',
       '/restaurants/restaurant-1',
+    )
+  })
+
+  it('tracks page views with pathname, search, and hash', () => {
+    const { rerender } = render(<RootLayout />)
+
+    expect(mockTrackPageView).toHaveBeenCalledWith('/')
+
+    mockTrackPageView.mockClear()
+    mockLocationStore.pathname = '/restaurants/restaurant-1'
+    mockLocationStore.search = '?tab=review'
+    mockLocationStore.hash = '#photos'
+    rerender(<RootLayout />)
+
+    expect(mockTrackPageView).toHaveBeenCalledWith(
+      '/restaurants/restaurant-1?tab=review#photos',
     )
   })
 })

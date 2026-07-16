@@ -189,6 +189,15 @@ const renderSearchPage = () => {
   )
 }
 
+const createDeferred = <T,>() => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+
+  return { promise, resolve }
+}
+
 describe('SearchPage', () => {
   afterEach(() => {
     cleanup()
@@ -307,6 +316,40 @@ describe('SearchPage', () => {
       JSON.stringify(['아끼소바']),
     )
     expect(mockGetSearchKeywordRecommendations).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders search result skeletons with secondary color while searching', async () => {
+    const user = userEvent.setup()
+    const searchDeferred =
+      createDeferred<Awaited<ReturnType<typeof mockGetRestaurants>>>()
+    mockGetRestaurants.mockReturnValueOnce(searchDeferred.promise)
+
+    renderSearchPage()
+
+    await user.type(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+      '스시',
+    )
+    await user.keyboard('{Enter}')
+
+    const loadingList = screen.getByRole('list', {
+      name: '검색 결과 로딩 중',
+    })
+    const firstSkeletonItem = within(loadingList).getAllByRole('listitem')[0]
+
+    expect(firstSkeletonItem.querySelector('.bg-secondary-200')).toBeTruthy()
+    expect(firstSkeletonItem.querySelector('.bg-warm-gray-50')).toBeNull()
+
+    searchDeferred.resolve({
+      hasNext: false,
+      restaurants: searchRestaurantFixtures
+        .slice(0, 1)
+        .map(convertSearchRestaurantFixtureToSummary),
+    })
+
+    expect(
+      await screen.findByText(searchRestaurantFixtures[0].name),
+    ).toBeInTheDocument()
   })
 
   it('does not request recommended keywords after search results are shown', async () => {

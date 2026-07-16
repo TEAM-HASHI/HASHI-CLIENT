@@ -94,6 +94,15 @@ const renderMyReservationsPage = (
   )
 }
 
+const createDeferred = <T,>() => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+
+  return { promise, resolve }
+}
+
 describe('MyReservationsPage', () => {
   beforeEach(() => {
     mockedUseMyProfileSummaryQuery.mockReturnValue({
@@ -169,6 +178,37 @@ describe('MyReservationsPage', () => {
       screen.getByText((_, element) => element?.textContent === '총 7건'),
     ).toBeInTheDocument()
     expect(screen.getByText('3일')).toBeInTheDocument()
+  })
+
+  it('renders a skeleton instead of a loading message while reservations are loading', async () => {
+    const reservationsDeferred =
+      createDeferred<Awaited<ReturnType<typeof getMyReservations>>>()
+    mockedGetMyReservations.mockReturnValueOnce(reservationsDeferred.promise)
+
+    renderMyReservationsPage()
+
+    expect(screen.getByTestId('my-reservations-skeleton')).toBeInTheDocument()
+    expect(
+      screen.queryByText('예약 정보를 불러오는 중'),
+    ).not.toBeInTheDocument()
+
+    reservationsDeferred.resolve({
+      reservations: [
+        {
+          reservationId: 12,
+          restaurantId: 34,
+          restaurantName: '스시 하시',
+          reservedAt: '2026-07-20T18:30:00',
+          adultCount: 2,
+          reservationStatus: 'REQUESTED',
+          confirmDDay: 3,
+        },
+      ],
+      hasNext: false,
+      totalCount: 1,
+    })
+
+    expect(await screen.findByText('스시 하시')).toBeInTheDocument()
   })
 
   it('loads the next reservation page when the bottom sentinel intersects', async () => {

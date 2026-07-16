@@ -1,13 +1,14 @@
-import { Empty } from '@/shared/components/empty'
 import type { Ref } from 'react'
 
 import { ReservationCardsByStatus } from '@/pages/myReservations/components/ReservationCardsByStatus'
 import { ReservationListSummary } from '@/pages/myReservations/components/ReservationListSummary'
+import { ReservationListSkeleton } from '@/pages/myReservations/components/ReservationListSkeleton'
 import type { ReservationStatusFilterValue } from '@/pages/myReservations/constants/reservationStatus'
 import type {
   MyReservation,
   VisitedReservation,
 } from '@/pages/myReservations/types'
+import { Empty } from '@/shared/components/empty'
 
 type ReservationListSectionProps = {
   selectedStatus: ReservationStatusFilterValue
@@ -42,9 +43,7 @@ export const ReservationListSection = ({
     <section className="flex min-h-0 flex-1 flex-col">
       <ReservationListSummary totalCount={totalCount} sortLabel="최신순" />
       {isLoading ? (
-        <p className="typo-body-6 text-cool-gray-600 py-10 text-center">
-          예약 정보를 불러오는 중
-        </p>
+        <ReservationListSkeleton selectedStatus={selectedStatus} />
       ) : hasReservations ? (
         <div className="mb-2 flex flex-col gap-4">
           <ReservationCardsByStatus
