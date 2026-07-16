@@ -10,7 +10,7 @@ import {
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { SearchPage } from '@/pages/search/SearchPage'
@@ -189,6 +189,40 @@ const renderSearchPage = () => {
   )
 }
 
+const LocationState = () => {
+  const location = useLocation()
+
+  return <div data-testid="location-state">{location.search}</div>
+}
+
+const renderSearchPageWithRoutes = (initialEntry: string = ROUTES.search) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <Routes>
+          <Route
+            path={ROUTES.search}
+            element={
+              <>
+                <SearchPage />
+                <LocationState />
+              </>
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+}
+
 const createDeferred = <T,>() => {
   let resolve!: (value: T) => void
   const promise = new Promise<T>((promiseResolve) => {
@@ -316,6 +350,57 @@ describe('SearchPage', () => {
       JSON.stringify(['아끼소바']),
     )
     expect(mockGetSearchKeywordRecommendations).toHaveBeenCalledTimes(1)
+  })
+
+  it('stores submitted search state in the URL and restores results from the URL', async () => {
+    const user = userEvent.setup()
+
+    renderSearchPageWithRoutes()
+
+    await user.type(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+      '스시',
+    )
+    await user.keyboard('{Enter}')
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-state')).toHaveTextContent(
+        '?keyword=%EC%8A%A4%EC%8B%9C',
+      )
+    })
+    expect(await screen.findByText('스시 하루')).toBeInTheDocument()
+
+    cleanup()
+    vi.clearAllMocks()
+    mockGetSearchKeywordRecommendations.mockResolvedValue(['아끼소바'])
+    mockGetRestaurants.mockImplementation(({ genre, keyword, sort }) => {
+      const normalizedKeyword = keyword.trim().toLowerCase()
+      const restaurants = searchRestaurantFixtures.filter((restaurant) => {
+        const matchesKeyword = [
+          restaurant.name,
+          restaurant.tag,
+          ...restaurant.keywords,
+        ].some((value) => value.toLowerCase().includes(normalizedKeyword))
+
+        return (
+          matchesKeyword && (genre === 'all' || restaurant.category === genre)
+        )
+      })
+
+      return Promise.resolve({
+        hasNext: false,
+        restaurants: restaurants.map(convertSearchRestaurantFixtureToSummary),
+        ...(sort && { sort }),
+      })
+    })
+
+    renderSearchPageWithRoutes(`${ROUTES.search}?keyword=스시`)
+
+    expect(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+    ).toHaveValue('스시')
+    expect(await screen.findByText('스시 하루')).toBeInTheDocument()
+    expect(mockGetSearchKeywordRecommendations).not.toHaveBeenCalled()
   })
 
   it('renders search result skeletons with secondary color while searching', async () => {
