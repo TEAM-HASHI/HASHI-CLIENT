@@ -1,8 +1,8 @@
 import type { Ref } from 'react'
 
-import { MagazineEmptyState } from '@/pages/magazines/components/MagazineEmptyState'
 import { MagazineListItem } from '@/pages/magazines/components/MagazineListItem'
 import type { RecommendedMagazine } from '@/pages/magazines/types'
+import { ListEmptyState } from '@/shared/components/listEmptyState'
 
 interface Props {
   hasNextPage: boolean
@@ -90,7 +90,14 @@ export const RecommendedMagazineSection = ({
           {isFetchingNextPage ? renderSkeletonItems().slice(0, 1) : null}
         </ul>
       ) : null}
-      {shouldRenderEmptyState ? <MagazineEmptyState /> : null}
+      {shouldRenderEmptyState ? (
+        <div className="flex min-h-[calc(100dvh-75px)] items-center justify-center px-5 pb-20">
+          <ListEmptyState
+            className="min-h-0"
+            description="매거진 리스트를 준비중이에요."
+          />
+        </div>
+      ) : null}
     </section>
   )
 }
