@@ -38,16 +38,20 @@ const statusChangeOptions: SelectOption<DocumentedReservationStatus>[] =
   statusOptions.slice(1) as SelectOption<DocumentedReservationStatus>[]
 
 const tableColumns = [
-  { key: 'id', label: '예약 ID', className: 'w-28' },
-  { key: 'reservedAt', label: '방문 일시', className: 'w-44' },
-  { key: 'reserver', label: '예약자', className: 'w-32' },
+  { key: 'id', label: '예약 ID', className: 'w-28 whitespace-nowrap' },
+  {
+    key: 'reservedAt',
+    label: '방문 일시',
+    className: 'w-44 whitespace-nowrap',
+  },
+  { key: 'reserver', label: '예약자', className: 'w-32 whitespace-nowrap' },
   { key: 'restaurant', label: '식당', className: 'w-56' },
-  { key: 'guestCount', label: '인원', className: 'w-44' },
-  { key: 'type', label: '예약 유형', className: 'w-28' },
-  { key: 'payment', label: '결제', className: 'w-28' },
-  { key: 'amount', label: '결제 금액', className: 'w-28' },
-  { key: 'status', label: '예약 상태', className: 'w-28' },
-  { key: 'actions', label: '액션', className: 'w-56' },
+  { key: 'guestCount', label: '인원', className: 'w-44 whitespace-nowrap' },
+  { key: 'type', label: '예약 유형', className: 'w-28 whitespace-nowrap' },
+  { key: 'payment', label: '결제', className: 'w-28 whitespace-nowrap' },
+  { key: 'amount', label: '결제 금액', className: 'w-28 whitespace-nowrap' },
+  { key: 'status', label: '예약 상태', className: 'w-28 whitespace-nowrap' },
+  { key: 'actions', label: '액션', className: 'w-56 whitespace-nowrap' },
 ]
 
 const paymentStatusLabel: Record<ReservationPaymentStatus, string> = {
@@ -184,6 +188,7 @@ export const ReservationsPage = () => {
         <div className="border-cool-gray-100 overflow-hidden rounded-lg border">
           <AdminTable
             columns={tableColumns}
+            tableClassName="w-full min-w-[103rem]"
             isLoading={reservationsQuery.isLoading}
             isError={reservationsQuery.isError}
             isEmpty={reservations.length === 0}
@@ -203,7 +208,7 @@ export const ReservationsPage = () => {
                       : 'hover:bg-cool-gray-50'
                   }
                 >
-                  <td className="text-cool-gray-700 px-3 py-3 text-sm font-bold">
+                  <td className="text-cool-gray-700 px-3 py-3 text-sm font-bold whitespace-nowrap">
                     {formatReservationId(reservation.id)}
                   </td>
                   <td className="text-cool-gray-600 px-3 py-3 text-sm">
@@ -219,7 +224,7 @@ export const ReservationsPage = () => {
                       ) : null}
                     </div>
                   </td>
-                  <td className="text-cool-gray-900 px-3 py-3 text-sm font-bold">
+                  <td className="text-cool-gray-900 px-3 py-3 text-sm font-bold whitespace-nowrap">
                     {reservation.reserverName}
                   </td>
                   <td className="px-3 py-3 text-sm">
@@ -233,13 +238,13 @@ export const ReservationsPage = () => {
                   <td className="text-cool-gray-700 px-3 py-3 text-sm font-semibold">
                     <ReservationGuestLabel reservation={reservation} />
                   </td>
-                  <td className="text-cool-gray-600 px-3 py-3 text-sm">
+                  <td className="text-cool-gray-600 px-3 py-3 text-sm whitespace-nowrap">
                     {reservationTypeLabel[reservation.reservationType]}
                   </td>
                   <td className="px-3 py-3">
                     <PaymentStatusBadge status={reservation.paymentStatus} />
                   </td>
-                  <td className="text-cool-gray-600 px-3 py-3 text-sm">
+                  <td className="text-cool-gray-600 px-3 py-3 text-sm whitespace-nowrap">
                     {reservation.amount.toLocaleString()}원
                   </td>
                   <td className="px-3 py-3">
