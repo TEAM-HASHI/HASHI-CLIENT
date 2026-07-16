@@ -91,6 +91,15 @@ const renderPage = (initialEntry: string = ROUTES.myReviews) => {
   )
 }
 
+const createDeferred = <T,>() => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve
+  })
+
+  return { promise, resolve }
+}
+
 describe('MyReviewsPage', () => {
   beforeEach(() => {
     vi.mocked(getVisitedReservations).mockResolvedValue({
@@ -115,7 +124,10 @@ describe('MyReviewsPage', () => {
   it('renders API-backed writable reviews and their server count', async () => {
     renderPage()
 
-    expect(screen.getByText('리뷰 목록을 불러오는 중입니다.')).toBeVisible()
+    expect(screen.getByTestId('my-review-list-skeleton')).toBeInTheDocument()
+    expect(
+      screen.queryByText('리뷰 목록을 불러오는 중입니다.'),
+    ).not.toBeInTheDocument()
     expect(
       await screen.findByRole('tab', { name: '리뷰 쓰기 2' }),
     ).toHaveAttribute('aria-selected', 'true')
@@ -128,6 +140,32 @@ describe('MyReviewsPage', () => {
       screen.getByText((_, element) => element?.textContent === '총 2건'),
     ).toBeVisible()
     expect(screen.getAllByRole('button', { name: '리뷰 작성' })).toHaveLength(2)
+  })
+
+  it('uses secondary color for my review list skeletons', async () => {
+    const writableDeferred =
+      createDeferred<Awaited<ReturnType<typeof getVisitedReservations>>>()
+    vi.mocked(getVisitedReservations).mockReturnValueOnce(
+      writableDeferred.promise,
+    )
+
+    renderPage()
+
+    const skeleton = screen.getByTestId('my-review-list-skeleton')
+
+    expect(skeleton.querySelector('.bg-secondary-200')).toBeTruthy()
+    expect(skeleton.querySelector('.bg-warm-gray-50')).toBeNull()
+    expect(
+      screen.queryByText('리뷰 목록을 불러오는 중입니다.'),
+    ).not.toBeInTheDocument()
+
+    writableDeferred.resolve({
+      content: writableReservations,
+      hasNext: false,
+      totalCount: 2,
+    })
+
+    expect(await screen.findByText('아키토리 라멘')).toBeVisible()
   })
 
   it('opens the written reviews tab from the tab search parameter', async () => {
