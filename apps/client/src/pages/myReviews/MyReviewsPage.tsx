@@ -1,6 +1,7 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
 
+import { MyReviewListSkeleton } from '@/pages/myReviews/components/MyReviewListSkeleton'
 import { MyReviewTabs } from '@/pages/myReviews/components/MyReviewTabs'
 import { MyReviewTotalCount } from '@/pages/myReviews/components/MyReviewTotalCount'
 import { MyReviewsErrorState } from '@/pages/myReviews/components/MyReviewsErrorState'
@@ -60,9 +61,9 @@ export const MyReviewsPage = () => {
       />
 
       {isPending ? (
-        <p className="typo-body-4 text-primary-200 flex min-h-[360px] items-center justify-center px-5 text-center">
-          리뷰 목록을 불러오는 중입니다.
-        </p>
+        <MyReviewListSkeleton
+          variant={isWritableTab ? 'writable' : 'written'}
+        />
       ) : isError ? (
         <MyReviewsErrorState onRetry={handleRetry} />
       ) : isEmpty ? (
@@ -120,11 +121,7 @@ export const MyReviewsPage = () => {
             </div>
           )}
           <div aria-hidden="true" className="h-px" ref={loadMoreRef} />
-          {isFetchingNextPage ? (
-            <p className="typo-body-7 text-cool-gray-500 py-4 text-center">
-              리뷰를 더 불러오는 중입니다.
-            </p>
-          ) : null}
+          {isFetchingNextPage ? <div className="h-4" /> : null}
         </main>
       )}
       <ComingSoonDialog

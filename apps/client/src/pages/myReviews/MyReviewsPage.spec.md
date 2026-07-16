@@ -83,7 +83,7 @@ Jira: HASHI-83, HASHI-114
     - 작성한 리뷰 탭의 `총 N건`
     - 마이페이지 리뷰 개수와 같은 query cache 공유
 - loading state:
-  - 활성 탭의 첫 페이지 요청 중 로딩 문구를 표시한다.
+  - 활성 탭의 첫 페이지 요청 중 문구형 로딩을 표시하지 않고 page-local skeleton을 표시한다.
 - error state:
   - 활성 탭의 목록 요청 실패 시 로컬 오류와 `다시 시도` 버튼을 표시한다.
 - empty state:

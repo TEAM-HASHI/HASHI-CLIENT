@@ -10,7 +10,6 @@ import {
   setOnboardingSession,
 } from '@/features/auth/session/authSession'
 import { getApiAccessToken } from '@/shared/api/accessToken'
-import { LoadingScreen } from '@/shared/components/loadingScreen'
 
 interface AuthSessionRestoreGateProps {
   children: ReactNode
@@ -117,7 +116,7 @@ export const AuthSessionRestoreGate = ({
   }, [])
 
   if (!isRestoreCompleted) {
-    return <LoadingScreen message="로그인 상태를 확인하고 있어요" />
+    return null
   }
 
   return children

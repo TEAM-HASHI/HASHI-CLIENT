@@ -62,8 +62,8 @@ describe('AuthSessionRestoreGate', () => {
 
     expect(screen.queryByText('앱 화면')).not.toBeInTheDocument()
     expect(
-      screen.getByText('로그인 상태를 확인하고 있어요'),
-    ).toBeInTheDocument()
+      screen.queryByText('로그인 상태를 확인하고 있어요'),
+    ).not.toBeInTheDocument()
 
     await waitFor(() => {
       expect(screen.getByText('앱 화면')).toBeInTheDocument()

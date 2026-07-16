@@ -148,7 +148,7 @@ Jira: HASHI-77
   - next-page fetching must not shift existing list items.
 - empty:
   - if `banners` is empty or all banner items are unusable, do not render the hero banner section.
-  - if all magazine pages are empty, show `MagazineEmptyState` with `아직 추천 매거진이 없어요.`
+  - if all magazine pages are empty, show shared `ListEmptyState` with `매거진 리스트를 준비중이에요.`
   - if no usable list item is rendered yet but `hasNextPage` is true, do not show the empty state until the next page fetch resolves.
 - error:
   - expected `4xx` stays local to the page/query state.
@@ -229,7 +229,7 @@ MagazinesPage
       Carousel.Indicator
   RecommendedMagazineSection
     MagazineListItem x n
-    MagazineEmptyState?
+    ListEmptyState?
 ```
 
 ## Component Mapping
@@ -239,13 +239,12 @@ MagazinesPage
   - `IconButton`: 뒤로가기 아이콘 버튼
   - `Carousel`: 대표 매거진 배너 swipe/indicator
 - app shared component:
-  - none
+  - `ListEmptyState`: 추천 매거진 목록 empty 상태
 - page-local component:
   - `MagazineHeroBannerSection`
   - `MagazineHeroBannerSlide`
   - `RecommendedMagazineSection`
   - `MagazineListItem`
-  - `MagazineEmptyState`
 - page-local hook:
   - `useMagazinesPage`
 - shared hook:
@@ -308,7 +307,7 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
   - missing or invalid external URL: normalize to `null` in `useMagazinesPage`, then render the item as disabled-looking text content; do not crash the page.
   - broken image URL: rely on browser image behavior unless product approves a page-local or shared fallback.
 - user-facing message:
-  - empty recommended list: `아직 추천 매거진이 없어요.`
+  - empty recommended list: `매거진 리스트를 준비중이에요.`
 - retry or fallback:
   - use TanStack Query refetch/reset; do not call endpoint helpers directly from UI events.
 
@@ -372,7 +371,8 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
 - scroll area:
   - whole page scrolls vertically.
 - empty/loading/error layout:
-  - list empty state is rendered by `RecommendedMagazineSection`.
+  - list empty state is rendered by `RecommendedMagazineSection` using shared `ListEmptyState`.
+  - list empty state is vertically centered in the remaining page area below the fixed header.
   - loading/error states come from TanStack Query and page-local sections render section-level states.
 
 ## Accessibility

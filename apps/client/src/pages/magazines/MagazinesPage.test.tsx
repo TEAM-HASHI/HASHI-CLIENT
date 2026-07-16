@@ -289,6 +289,35 @@ describe('MagazinesPage', () => {
     expect(firstSkeletonImage).toHaveClass('w-[156px]')
   })
 
+  it('renders ListEmptyState when recommended magazines are empty', async () => {
+    mockGetMagazines.mockResolvedValueOnce({
+      hasNext: false,
+      magazines: [],
+    })
+
+    renderMagazinesPage()
+
+    const recommendedSection = screen.getByRole('region', {
+      name: '추천 매거진 목록',
+    })
+
+    expect(
+      await within(recommendedSection).findByText(
+        '매거진 리스트를 준비중이에요.',
+      ),
+    ).toHaveClass('typo-body-5', 'text-warm-gray-300')
+    expect(
+      within(recommendedSection).getByText('매거진 리스트를 준비중이에요.')
+        .parentElement?.parentElement,
+    ).toHaveClass(
+      'flex',
+      'min-h-[calc(100dvh-75px)]',
+      'items-center',
+      'justify-center',
+    )
+    expect(within(recommendedSection).queryByRole('list')).toBeNull()
+  })
+
   it('keeps the load-more sentinel when the current page has only filtered-out items and another page remains', async () => {
     mockGetMagazines
       .mockResolvedValueOnce({
