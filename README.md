@@ -28,7 +28,6 @@
     <td align="center" width="250">
       <a href="https://github.com/jyeon03">
         <img width="250" alt="Frame 2087333156" src="https://github.com/user-attachments/assets/ec95af4b-b8ae-4f26-828c-45f087a10e0d" />
-        <img width="250" alt="Frame 2087333156" src="https://github.com/user-attachments/assets/ec95af4b-b8ae-4f26-828c-45f087a10e0d" />
       </a>
       <br />
       <a href="https://github.com/jyeon03"><strong>jyeon03</strong></a>
@@ -37,7 +36,6 @@
     <td align="center" width="250">
     <td align="center" width="250">
       <a href="https://github.com/chungyo">
-        <img width="250"  alt="Frame 2087333151" src="https://github.com/user-attachments/assets/eb659069-7920-4a49-bc9d-b8b9da725f74" />
         <img width="250"  alt="Frame 2087333151" src="https://github.com/user-attachments/assets/eb659069-7920-4a49-bc9d-b8b9da725f74" />
       </a>
       <br />
@@ -48,7 +46,6 @@
     <td align="center" width="250">
       <a href="https://github.com/gyeongbibin">
         <img width="250"  alt="Frame 2087333146" src="https://github.com/user-attachments/assets/e50979a6-5a98-46a8-8a97-ff6b940f4982" />
-        <img width="250"  alt="Frame 2087333146" src="https://github.com/user-attachments/assets/e50979a6-5a98-46a8-8a97-ff6b940f4982" />
       </a>
       <br />
       <a href="https://github.com/gyeongbibin"><strong>gyeongbibin</strong></a>
@@ -58,7 +55,6 @@
     <td align="center" width="250">
       <a href="https://github.com/MinseoSONG">
         <img width="250" alt="Frame 2087333155" src="https://github.com/user-attachments/assets/3e815461-7eee-4565-adf4-13397d8dbd2a" />
-        <img width="250" alt="Frame 2087333155" src="https://github.com/user-attachments/assets/3e815461-7eee-4565-adf4-13397d8dbd2a" />
       </a>
       <br />
       <a href="https://github.com/MinseoSONG"><strong>MinseoSONG</strong></a>
@@ -67,7 +63,6 @@
     <td align="center" width="250">
     <td align="center" width="250">
       <a href="https://github.com/yurimidaH">
-        <img width="250" alt="Frame 2087333144" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
         <img width="250" alt="Frame 2087333144" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
       </a>
       <br />
