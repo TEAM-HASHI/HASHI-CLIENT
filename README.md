@@ -203,6 +203,10 @@ pnpm exec vercel build --local-config vercel.admin.json
 pnpm exec vercel deploy --prebuilt --local-config vercel.admin.json
 ```
 
+Admin 배포는 과거 `admin.hashi.kr`에 설치된 client PWA service worker를 제거하기 위해
+`apps/admin/public/sw.js`를 같은 경로의 self-destroying worker로 유지합니다. 해당 파일은
+기존 등록과 Cache Storage를 정리하므로 임의로 삭제하거나 이름을 변경하지 않습니다.
+
 ---
 
 ## 📖 Convention

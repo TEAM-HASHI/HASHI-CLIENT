@@ -11,6 +11,11 @@ export const lazyPages = {
       default: DashboardPage,
     })),
   ),
+  UsersPage: lazy(() =>
+    import('@/pages/users/UsersPage').then(({ UsersPage }) => ({
+      default: UsersPage,
+    })),
+  ),
   RestaurantsPage: lazy(() =>
     import('@/pages/restaurants/RestaurantsPage').then(
       ({ RestaurantsPage }) => ({

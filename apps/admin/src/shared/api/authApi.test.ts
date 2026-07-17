@@ -85,4 +85,15 @@ describe('authApi', () => {
       credentials: 'include',
     })
   })
+
+  it('returns the reissued access token', async () => {
+    postMock.mockResolvedValue(
+      createResponse({ authorization: 'Bearer renewed-admin-token' }),
+    )
+
+    await expect(authApi.reissue()).resolves.toBe('renewed-admin-token')
+    expect(postMock).toHaveBeenCalledWith('api/v1/auth/reissue', {
+      credentials: 'include',
+    })
+  })
 })

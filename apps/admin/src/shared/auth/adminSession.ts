@@ -1,4 +1,5 @@
 const ADMIN_SESSION_STORAGE_KEY = 'hashi.admin.session.v1'
+const sessionListeners = new Set<() => void>()
 
 export interface AdminSession {
   accessToken: string
@@ -47,10 +48,31 @@ export const setAdminSession = (session: AdminSession) => {
     ADMIN_SESSION_STORAGE_KEY,
     JSON.stringify(session),
   )
+  sessionListeners.forEach((listener) => listener())
 }
 
 export const clearAdminSession = () => {
   window.localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY)
+  sessionListeners.forEach((listener) => listener())
 }
 
 export const getAdminAccessToken = () => getAdminSession()?.accessToken ?? null
+
+export const getAdminSessionSnapshot = () =>
+  window.localStorage.getItem(ADMIN_SESSION_STORAGE_KEY)
+
+export const subscribeAdminSession = (listener: () => void) => {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === ADMIN_SESSION_STORAGE_KEY) {
+      listener()
+    }
+  }
+
+  sessionListeners.add(listener)
+  window.addEventListener('storage', handleStorage)
+
+  return () => {
+    sessionListeners.delete(listener)
+    window.removeEventListener('storage', handleStorage)
+  }
+}
