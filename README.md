@@ -231,6 +231,8 @@ pnpm exec vercel deploy --prebuilt --local-config vercel.admin.json
 
 ### Git Convention
 
+> 자세한 기준은 [Git Convention](./docs/conventions/git.md)을 따릅니다.
+
 HASHI Client는 Jira로 작업을 관리하고 GitHub로 코드 리뷰와 병합을 관리합니다.
 
 1. Jira 티켓을 생성합니다.
@@ -268,8 +270,6 @@ fix(hds-ui): HASHI-18 Button disabled 스타일 수정
 docs(docs): HASHI-30 컨벤션 문서 추가
 ```
 
-자세한 기준은 [Git Convention](./docs/conventions/git.md)을 따릅니다.
-
 ### Branch Strategy
 
 | Branch       | Description                               |
@@ -286,6 +286,8 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 
 ### PR Rule
 
+> 자세한 기준은 [PR Checklist](./docs/workflows/pr-checklist.md)을 따릅니다.
+
 - PR 대상 브랜치는 `develop`입니다.
 - PR 본문은 `.github/pull_request_template.md`를 기준으로 작성합니다.
 - 변경 범위가 하나의 Jira 이슈로 설명 가능한지 확인합니다.
@@ -293,17 +295,15 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 - UI 변경이 있으면 가능한 경우 screenshot 또는 수동 확인 결과를 남깁니다.
 - merge 전 최소 2명 이상의 approve를 받습니다.
 
-자세한 기준은 [PR Checklist](./docs/workflows/pr-checklist.md)을 따릅니다.
-
 ### Package Management
+
+> 자세한 기준은 [Package Management](./docs/conventions/package-management.md)을 따릅니다.
 
 - 패키지 매니저는 `pnpm`을 사용합니다.
 - `npm`, `yarn`, `bun` lockfile을 추가하지 않습니다.
 - 외부 패키지 버전은 `pnpm-workspace.yaml`의 catalog에서 관리합니다.
 - 내부 workspace 의존성은 `workspace:*`를 사용합니다.
 - 새 패키지를 추가하면 `package.json`, `pnpm-lock.yaml`, 필요 시 `pnpm-workspace.yaml`을 함께 갱신합니다.
-
-자세한 기준은 [Package Management](./docs/conventions/package-management.md)을 따릅니다.
 
 ---
 
@@ -332,14 +332,14 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 
 ## ☄️ Schedule Management
 
+> 자세한 기준은 [Jira Ticket Guide](./docs/conventions/jira-ticket.md)을 따릅니다.
+
 - 작업은 Jira 이슈 단위로 나누어 관리합니다.
 - 이슈 상태는 `TODO`, `IN PROGRESS`, `CODE REVIEW`, `QA`, `DONE` 흐름으로 관리합니다.
 - 작업을 시작하면 담당 이슈를 `IN PROGRESS`로 이동합니다.
 - PR을 생성하면 `CODE REVIEW` 상태로 관리합니다.
 - 리뷰 이후 확인이 필요한 작업은 `QA` 상태로 관리합니다.
 - PR이 병합되면 이슈를 `DONE`으로 정리합니다.
-
-> 자세한 기준은 [Jira Ticket Guide](./docs/conventions/jira-ticket.md)을 따릅니다.
 
 ---
 
