@@ -22,55 +22,55 @@
 
 ## 👥 Team
 
-<table align="center">
-  <tr>
-    <td align="center" width="250">
-    <td align="center" width="250">
-      <a href="https://github.com/jyeon03">
-        <img width="250" alt="Frame 2087333156" src="https://github.com/user-attachments/assets/ec95af4b-b8ae-4f26-828c-45f087a10e0d" />
-      </a>
-      <br />
-      <a href="https://github.com/jyeon03"><strong>jyeon03</strong></a>
-      <br />
-    </td>
-    <td align="center" width="250">
-    <td align="center" width="250">
-      <a href="https://github.com/chungyo">
-        <img width="250"  alt="Frame 2087333151" src="https://github.com/user-attachments/assets/eb659069-7920-4a49-bc9d-b8b9da725f74" />
-      </a>
-      <br />
-      <a href="https://github.com/chungyo"><strong>chungyo</strong></a>
-      <br />
-    </td>
-    <td align="center" width="250">
-    <td align="center" width="250">
-      <a href="https://github.com/gyeongbibin">
-        <img width="250"  alt="Frame 2087333146" src="https://github.com/user-attachments/assets/e50979a6-5a98-46a8-8a97-ff6b940f4982" />
-      </a>
-      <br />
-      <a href="https://github.com/gyeongbibin"><strong>gyeongbibin</strong></a>
-      <br />
-    </td>
-    <td align="center" width="250">
-    <td align="center" width="250">
-      <a href="https://github.com/MinseoSONG">
-        <img width="250" alt="Frame 2087333155" src="https://github.com/user-attachments/assets/3e815461-7eee-4565-adf4-13397d8dbd2a" />
-      </a>
-      <br />
-      <a href="https://github.com/MinseoSONG"><strong>MinseoSONG</strong></a>
-      <br />
-    </td>
-    <td align="center" width="250">
-    <td align="center" width="250">
-      <a href="https://github.com/yurimidaH">
-        <img width="250" alt="Frame 2087333144" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
-      </a>
-      <br />
-      <a href="https://github.com/yurimidaH"><strong>yurimidaH</strong></a>
-      <br />
-    </td>
-  </tr>
-</table>
+<div align="center">
+  <table>
+    <thead>
+      <tr>
+        <th>백지연</th>
+        <th>김충영</th>
+        <th>민경빈</th>
+        <th>송민서</th>
+        <th>황유림</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+            <img style="width: 220px;" alt="백지연" src="https://github.com/user-attachments/assets/ec95af4b-b8ae-4f26-828c-45f087a10e0d" />
+        </td>
+        <td>
+        <img style="width: 220px;" alt="김충영" src="https://github.com/user-attachments/assets/eb659069-7920-4a49-bc9d-b8b9da725f74" />
+        </td>
+        <td>
+          <img style="width: 220px;" alt="민경빈" src="https://github.com/user-attachments/assets/e50979a6-5a98-46a8-8a97-ff6b940f4982" />
+        </td>
+        <td>
+         <img style="width: 220px;" alt="송민서" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
+        </td>
+        <td>
+         <img style="width: 220px;" alt="황유림" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
+        </td>
+      </tr>
+      <tr align="center">
+        <td>
+          <a href="https://github.com/jyeon03" target="_blank">@jyeon03</a>
+        </td>
+        <td>
+          <a href="https://github.com/chungyo" target="_blank">@chungyo</a>
+        </td>
+        <td>
+          <a href="https://github.com/gyeongbibin" target="_blank">@gyeongbibin</a>
+        </td>
+        <td>
+          <a href="https://github.com/MinseoSONG" target="_blank">@MinseoSONG</a>
+        </td>
+        <td>
+          <a href="https://github.com/yurimidaH" target="_blank">@yurimidaH</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 ---
 
@@ -89,6 +89,14 @@
 | 마이페이지   | 사용자 프로필, 보유 포인트, 마이 리뷰 정보를 확인할 수 있습니다.           |
 | 매거진       | 일본 맛집과 여행 관련 콘텐츠를 제공합니다.                                 |
 | PWA          | 모바일 웹 환경에서 앱처럼 사용할 수 있도록 PWA를 지원합니다.               |
+
+<img width="7680" height="4320" alt="13  맛집 탐색" src="https://github.com/user-attachments/assets/22453cb0-5cab-4d8e-95c2-743e6e80fb0c" />
+<img width="7680" height="4320" alt="14  식당 예약 신청" src="https://github.com/user-attachments/assets/d02a100f-44d0-4ec7-8d3f-7c2cc4b8c9aa" />
+<img width="7680" height="4320" alt="15  어디든 예약" src="https://github.com/user-attachments/assets/093c808c-ab57-4439-a1be-265e8b964929" />
+<img width="7680" height="4320" alt="16  예약 상태 확인" src="https://github.com/user-attachments/assets/b49287ac-b8e8-4c83-81a1-951926a4e488" />
+<img width="7680" height="4320" alt="17  방문 이후 구조" src="https://github.com/user-attachments/assets/caa6b47f-1b82-43d1-a5f6-bf7f470d2e5c" />
+
+---
 
 ## ⚒️ Tech Stack
 
@@ -142,6 +150,8 @@
 
 </div>
 
+---
+
 ## 📁 Folder Responsibility
 
 > 자세한 기준은 [App Structure](./docs/architecture/app-structure.md)를 따릅니다.
@@ -161,6 +171,8 @@
 - 도메인 의미가 없는 공통 hook, util, component는 shared에 둡니다.
 - page끼리는 서로의 내부 파일을 직접 import하지 않습니다.
 - UI primitive는 packages/hds-ui, icon은 packages/hds-icons, token은 packages/hds-tokens에서 관리합니다.
+
+---
 
 ## 🧭 Workspace Apps
 
@@ -191,6 +203,8 @@ pnpm exec vercel build --local-config vercel.admin.json
 pnpm exec vercel deploy --prebuilt --local-config vercel.admin.json
 ```
 
+---
+
 ## 📖 Convention
 
 ### Coding Convention
@@ -216,6 +230,8 @@ pnpm exec vercel deploy --prebuilt --local-config vercel.admin.json
 - 공통 디자인 값은 HDS token을 우선 사용합니다.
 
 ### Git Convention
+
+> 자세한 기준은 [Git Convention](./docs/conventions/git.md)을 따릅니다.
 
 HASHI Client는 Jira로 작업을 관리하고 GitHub로 코드 리뷰와 병합을 관리합니다.
 
@@ -254,8 +270,6 @@ fix(hds-ui): HASHI-18 Button disabled 스타일 수정
 docs(docs): HASHI-30 컨벤션 문서 추가
 ```
 
-자세한 기준은 [Git Convention](./docs/conventions/git.md)을 따릅니다.
-
 ### Branch Strategy
 
 | Branch       | Description                               |
@@ -272,6 +286,8 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 
 ### PR Rule
 
+> 자세한 기준은 [PR Checklist](./docs/workflows/pr-checklist.md)을 따릅니다.
+
 - PR 대상 브랜치는 `develop`입니다.
 - PR 본문은 `.github/pull_request_template.md`를 기준으로 작성합니다.
 - 변경 범위가 하나의 Jira 이슈로 설명 가능한지 확인합니다.
@@ -279,9 +295,9 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 - UI 변경이 있으면 가능한 경우 screenshot 또는 수동 확인 결과를 남깁니다.
 - merge 전 최소 2명 이상의 approve를 받습니다.
 
-자세한 기준은 [PR Checklist](./docs/workflows/pr-checklist.md)을 따릅니다.
-
 ### Package Management
+
+> 자세한 기준은 [Package Management](./docs/conventions/package-management.md)을 따릅니다.
 
 - 패키지 매니저는 `pnpm`을 사용합니다.
 - `npm`, `yarn`, `bun` lockfile을 추가하지 않습니다.
@@ -289,7 +305,7 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 - 내부 workspace 의존성은 `workspace:*`를 사용합니다.
 - 새 패키지를 추가하면 `package.json`, `pnpm-lock.yaml`, 필요 시 `pnpm-workspace.yaml`을 함께 갱신합니다.
 
-자세한 기준은 [Package Management](./docs/conventions/package-management.md)을 따릅니다.
+---
 
 ## 🔥 Ground Rule
 
@@ -303,6 +319,8 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 8. 싸우지 않기
 9. 불편한 점이 있으면 바로 말하기
 
+---
+
 ## 📢 Communication
 
 - 빠른 공유가 필요한 내용은 카카오톡으로 소통합니다.
@@ -310,7 +328,11 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 - 코드 변경과 리뷰는 GitHub PR을 기준으로 진행합니다.
 - 기획, 정책, 회의 내용처럼 팀 전체가 참고해야 하는 내용은 문서로 남깁니다.
 
+---
+
 ## ☄️ Schedule Management
+
+> 자세한 기준은 [Jira Ticket Guide](./docs/conventions/jira-ticket.md)을 따릅니다.
 
 - 작업은 Jira 이슈 단위로 나누어 관리합니다.
 - 이슈 상태는 `TODO`, `IN PROGRESS`, `CODE REVIEW`, `QA`, `DONE` 흐름으로 관리합니다.
@@ -319,7 +341,7 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 - 리뷰 이후 확인이 필요한 작업은 `QA` 상태로 관리합니다.
 - PR이 병합되면 이슈를 `DONE`으로 정리합니다.
 
-> 자세한 기준은 [Jira Ticket Guide](./docs/conventions/jira-ticket.md)을 따릅니다.
+---
 
 ## 🤖 AI Harness
 
@@ -346,7 +368,7 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 - [Spec Templates](./docs/workflows/spec-templates/README.md)
 - [Turbo Generators](./docs/workflows/turbo-generators.md)
 
-#### Architecture
+### Architecture
 
 <img width="1672" height="941" alt="architecture" src="https://github.com/user-attachments/assets/fecb81dc-0a34-4f42-a502-fddb122ee227" />
 
