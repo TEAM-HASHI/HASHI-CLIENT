@@ -45,7 +45,7 @@
           <img style="width: 220px;" alt="민경빈" src="https://github.com/user-attachments/assets/e50979a6-5a98-46a8-8a97-ff6b940f4982" />
         </td>
         <td>
-         <img style="width: 220px;" alt="송민서" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
+          <img style="width: 220px;" alt="송민서" src="https://github.com/user-attachments/assets/80f8d0e7-adc7-46ae-a518-759eb11f8905" />
         </td>
         <td>
          <img style="width: 220px;" alt="황유림" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
