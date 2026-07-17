@@ -11,6 +11,7 @@
 </div>
 
 ---
+
 ## 🍽️ About Hashi
 
 <img width="7680" height="4320" alt="최종 디벨롭 후보" src="https://github.com/user-attachments/assets/cdb8f00b-8e43-41a9-9e03-c152bc3c5a9e" />
@@ -24,7 +25,9 @@
 <table align="center">
   <tr>
     <td align="center" width="250">
+    <td align="center" width="250">
       <a href="https://github.com/jyeon03">
+        <img width="250" alt="Frame 2087333156" src="https://github.com/user-attachments/assets/ec95af4b-b8ae-4f26-828c-45f087a10e0d" />
         <img width="250" alt="Frame 2087333156" src="https://github.com/user-attachments/assets/ec95af4b-b8ae-4f26-828c-45f087a10e0d" />
       </a>
       <br />
@@ -32,7 +35,9 @@
       <br />
     </td>
     <td align="center" width="250">
+    <td align="center" width="250">
       <a href="https://github.com/chungyo">
+        <img width="250"  alt="Frame 2087333151" src="https://github.com/user-attachments/assets/eb659069-7920-4a49-bc9d-b8b9da725f74" />
         <img width="250"  alt="Frame 2087333151" src="https://github.com/user-attachments/assets/eb659069-7920-4a49-bc9d-b8b9da725f74" />
       </a>
       <br />
@@ -40,7 +45,9 @@
       <br />
     </td>
     <td align="center" width="250">
+    <td align="center" width="250">
       <a href="https://github.com/gyeongbibin">
+        <img width="250"  alt="Frame 2087333146" src="https://github.com/user-attachments/assets/e50979a6-5a98-46a8-8a97-ff6b940f4982" />
         <img width="250"  alt="Frame 2087333146" src="https://github.com/user-attachments/assets/e50979a6-5a98-46a8-8a97-ff6b940f4982" />
       </a>
       <br />
@@ -48,7 +55,9 @@
       <br />
     </td>
     <td align="center" width="250">
+    <td align="center" width="250">
       <a href="https://github.com/MinseoSONG">
+        <img width="250" alt="Frame 2087333155" src="https://github.com/user-attachments/assets/3e815461-7eee-4565-adf4-13397d8dbd2a" />
         <img width="250" alt="Frame 2087333155" src="https://github.com/user-attachments/assets/3e815461-7eee-4565-adf4-13397d8dbd2a" />
       </a>
       <br />
@@ -56,7 +65,9 @@
       <br />
     </td>
     <td align="center" width="250">
+    <td align="center" width="250">
       <a href="https://github.com/yurimidaH">
+        <img width="250" alt="Frame 2087333144" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
         <img width="250" alt="Frame 2087333144" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
       </a>
       <br />
@@ -69,22 +80,23 @@
 ---
 
 ## ✨ Main Features
-| Feature | Description |
-| --- | --- |
-| 홈 | 오늘의 식당, 하시픽, 인기 맛집, 매거진 등 주요 콘텐츠를 제공합니다. |
-| 검색 | 키워드와 음식 장르, 정렬 필터를 통해 일본 맛집을 탐색할 수 있습니다. |
-| 식당 상세 | 식당 정보, 메뉴, 리뷰, 매장 정보를 확인할 수 있습니다. |
-| 오늘의 식당 | 랜덤 추천 식당을 확인하고 다시 추천받을 수 있습니다. |
-| 예약 신청 | 식당 예약 정보를 입력하고 포인트 기반 수수료를 확인할 수 있습니다. |
-| 내 예약 정보 | 진행 중, 방문 예정, 방문 완료, 예약 취소 상태별 예약을 확인할 수 있습니다. |
-| 예약 상세 | 예약 정보 확인과 예약 취소를 지원합니다. |
-| 리뷰 | 방문 완료 예약에 대해 리뷰를 작성하고, 작성한 리뷰를 관리할 수 있습니다. |
-| 마이페이지 | 사용자 프로필, 보유 포인트, 마이 리뷰 정보를 확인할 수 있습니다. |
-| 매거진 | 일본 맛집과 여행 관련 콘텐츠를 제공합니다. |
-| PWA | 모바일 웹 환경에서 앱처럼 사용할 수 있도록 PWA를 지원합니다. |
 
+| Feature      | Description                                                                |
+| ------------ | -------------------------------------------------------------------------- |
+| 홈           | 오늘의 식당, 하시픽, 인기 맛집, 매거진 등 주요 콘텐츠를 제공합니다.        |
+| 검색         | 키워드와 음식 장르, 정렬 필터를 통해 일본 맛집을 탐색할 수 있습니다.       |
+| 식당 상세    | 식당 정보, 메뉴, 리뷰, 매장 정보를 확인할 수 있습니다.                     |
+| 오늘의 식당  | 랜덤 추천 식당을 확인하고 다시 추천받을 수 있습니다.                       |
+| 예약 신청    | 식당 예약 정보를 입력하고 포인트 기반 수수료를 확인할 수 있습니다.         |
+| 내 예약 정보 | 진행 중, 방문 예정, 방문 완료, 예약 취소 상태별 예약을 확인할 수 있습니다. |
+| 예약 상세    | 예약 정보 확인과 예약 취소를 지원합니다.                                   |
+| 리뷰         | 방문 완료 예약에 대해 리뷰를 작성하고, 작성한 리뷰를 관리할 수 있습니다.   |
+| 마이페이지   | 사용자 프로필, 보유 포인트, 마이 리뷰 정보를 확인할 수 있습니다.           |
+| 매거진       | 일본 맛집과 여행 관련 콘텐츠를 제공합니다.                                 |
+| PWA          | 모바일 웹 환경에서 앱처럼 사용할 수 있도록 PWA를 지원합니다.               |
 
 ## ⚒️ Tech Stack
+
 > 자세한 기술 스택과 버전 기준은 [Tech Stack](./docs/architecture/tech-stack.md)을 따릅니다.
 
 <div align="center">
@@ -136,17 +148,19 @@
 </div>
 
 ## 📁 Folder Responsibility
+
 > 자세한 기준은 [App Structure](./docs/architecture/app-structure.md)를 따릅니다.
 
-| Folder | Responsibility |
-| --- | --- |
-| `app` | 전역 Provider, Router, Layout 등 앱 실행 조립 코드 |
-| `pages` | route 단위 화면, 페이지 전용 UI와 상태 조합 |
-| `features` | 여러 페이지에서 재사용되는 도메인 기능 |
-| `shared` | 도메인과 무관하게 앱 내부에서 공유되는 공통 코드 |
-| `test` | 테스트 환경 설정과 공통 mock 유틸 |
+| Folder     | Responsibility                                     |
+| ---------- | -------------------------------------------------- |
+| `app`      | 전역 Provider, Router, Layout 등 앱 실행 조립 코드 |
+| `pages`    | route 단위 화면, 페이지 전용 UI와 상태 조합        |
+| `features` | 여러 페이지에서 재사용되는 도메인 기능             |
+| `shared`   | 도메인과 무관하게 앱 내부에서 공유되는 공통 코드   |
+| `test`     | 테스트 환경 설정과 공통 mock 유틸                  |
 
 ### Placement Rule
+
 - 특정 route에서만 사용하는 코드는 pages/{pageName}에 둡니다.
 - 여러 페이지에서 재사용되는 도메인 기능은 features/{domain}으로 승격합니다.
 - 도메인 의미가 없는 공통 hook, util, component는 shared에 둡니다.
@@ -155,13 +169,13 @@
 
 ## 🧭 Workspace Apps
 
-| App | Package | Description |
-| --- | --- | --- |
-| `apps/client` | `@hashi/client` | 사용자 서비스 앱 |
-| `apps/admin` | `@hashi/admin` | 관리자 앱 |
-| `packages/hds-ui` | `@hashi/hds-ui` | 공통 UI 컴포넌트 패키지 |
-| `packages/hds-icons` | `@hashi/hds-icons` | 공통 아이콘 패키지 |
-| `packages/hds-tokens` | `@hashi/hds-tokens` | 디자인 토큰 패키지 |
+| App                   | Package             | Description             |
+| --------------------- | ------------------- | ----------------------- |
+| `apps/client`         | `@hashi/client`     | 사용자 서비스 앱        |
+| `apps/admin`          | `@hashi/admin`      | 관리자 앱               |
+| `packages/hds-ui`     | `@hashi/hds-ui`     | 공통 UI 컴포넌트 패키지 |
+| `packages/hds-icons`  | `@hashi/hds-icons`  | 공통 아이콘 패키지      |
+| `packages/hds-tokens` | `@hashi/hds-tokens` | 디자인 토큰 패키지      |
 
 ### App Commands
 
@@ -185,6 +199,7 @@ pnpm exec vercel deploy --prebuilt --local-config vercel.admin.json
 ## 📖 Convention
 
 ### Coding Convention
+
 > 자세한 기준은 [Coding Convention](./docs/conventions/coding.md)을 따릅니다.
 
 - 컴포넌트는 arrow function과 named export를 사용합니다.
@@ -194,7 +209,14 @@ pnpm exec vercel deploy --prebuilt --local-config vercel.admin.json
 - 타입 이름은 PascalCase, Props 타입은 Props 접미사를 사용합니다.
 - 이벤트 핸들러에는 handle 접두사를 사용합니다.
 - boolean 값은 is, has, check 등의 접두사로 의미를 드러냅니다.
+- 컴포넌트 파일은 PascalCase, 일반 .ts 파일과 폴더는 camelCase를 사용합니다.
+- 의미 없는 div 사용을 지양하고 가능한 semantic tag를 사용합니다.
+- 버튼 역할은 button 요소를 사용하고, 텍스트가 없는 아이콘 버튼에는 aria-label을 제공합니다.
+- 타입 이름은 PascalCase, Props 타입은 Props 접미사를 사용합니다.
+- 이벤트 핸들러에는 handle 접두사를 사용합니다.
+- boolean 값은 is, has, check 등의 접두사로 의미를 드러냅니다.
 - 스타일은 기본적으로 Tailwind CSS utility class를 사용합니다.
+- 반복되는 variant 조합은 class-variance-authority의 cva와 VariantProps를 사용합니다.
 - 반복되는 variant 조합은 class-variance-authority의 cva와 VariantProps를 사용합니다.
 - 공통 디자인 값은 HDS token을 우선 사용합니다.
 
@@ -241,17 +263,17 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 
 ### Branch Strategy
 
-| Branch | Description |
-| --- | --- |
-| `main` | 배포 가능한 브랜치 |
-| `develop` | 기능 브랜치들이 병합되는 개발 기준 브랜치 |
-| `feat/*` | 새로운 기능 개발 |
-| `fix/*` | 버그 수정 |
-| `refactor/*` | 기능 변화 없는 코드 구조 개선 |
-| `style/*` | UI 스타일, CSS, 포맷팅 수정 |
-| `docs/*` | 문서 작성 및 수정 |
-| `test/*` | 테스트 코드 및 테스트 환경 수정 |
-| `chore/*` | 빌드 설정, 패키지 관리, 기타 잡무 |
+| Branch       | Description                               |
+| ------------ | ----------------------------------------- |
+| `main`       | 배포 가능한 브랜치                        |
+| `develop`    | 기능 브랜치들이 병합되는 개발 기준 브랜치 |
+| `feat/*`     | 새로운 기능 개발                          |
+| `fix/*`      | 버그 수정                                 |
+| `refactor/*` | 기능 변화 없는 코드 구조 개선             |
+| `style/*`    | UI 스타일, CSS, 포맷팅 수정               |
+| `docs/*`     | 문서 작성 및 수정                         |
+| `test/*`     | 테스트 코드 및 테스트 환경 수정           |
+| `chore/*`    | 빌드 설정, 패키지 관리, 기타 잡무         |
 
 ### PR Rule
 
@@ -305,9 +327,11 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 > 자세한 기준은 [Jira Ticket Guide](./docs/conventions/jira-ticket.md)을 따릅니다.
 
 ## 🤖 AI Harness
+
 > HASHI는 AI와 함께 개발하기 위해 spec, convention, workflow, skill 문서를 함께 관리합니다.
 
 ### Docs
+
 - [Coding Convention](./docs/conventions/coding.md)
 - [Git Convention](./docs/conventions/git.md)
 - [Package Management](./docs/conventions/package-management.md)
@@ -316,9 +340,11 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 - [Serena MCP](./docs/agent/serena-mcp.md)
 
 ### Rules
+
 - [Design System Instructions](./docs/rules/design-system-instructions.md)
 
 ### Workflows
+
 - [Local Development](./docs/workflows/local-development.md)
 - [PR Checklist](./docs/workflows/pr-checklist.md)
 - [Spec Writing](./docs/workflows/spec-writing.md)
@@ -326,6 +352,7 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 - [Turbo Generators](./docs/workflows/turbo-generators.md)
 
 #### Architecture
+
 <img width="1672" height="941" alt="architecture" src="https://github.com/user-attachments/assets/fecb81dc-0a34-4f42-a502-fddb122ee227" />
 
 - [Tech Stack](./docs/architecture/tech-stack.md)
@@ -340,4 +367,5 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 - [Mobile WebView](./docs/architecture/mobile-webview.md)
 
 ---
+
 <img width="7680" height="4320" alt="24  마지막장" src="https://github.com/user-attachments/assets/5c58e290-0a69-492c-9efc-8c3b911504db" />
