@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import {
@@ -23,28 +23,42 @@ const getOptionLabel = <TValue extends string>(
   return options.find((option) => option.value === value)?.label ?? ''
 }
 
+const checkIsSearchSortValue = (
+  value: string | null,
+): value is SearchSortValue =>
+  sortOptions.some((option) => option.value === value)
+
+const checkIsFoodCategoryValue = (
+  value: string | null,
+): value is FoodCategoryValue =>
+  foodCategoryOptions.some((option) => option.value === value)
+
 export const useSearchPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const [urlSearchParams, setUrlSearchParams] = useSearchParams()
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const [keyword, setKeyword] = useState('')
-  const [submittedKeyword, setSubmittedKeyword] = useState('')
-  const [sortValue, setSortValue] =
-    useState<SearchSortValue>(DEFAULT_SORT_VALUE)
+  const urlKeyword = urlSearchParams.get('keyword')?.trim() ?? ''
+  const urlSort = urlSearchParams.get('sort')
+  const urlFoodCategory = urlSearchParams.get('category')
+  const sortValue = checkIsSearchSortValue(urlSort)
+    ? urlSort
+    : DEFAULT_SORT_VALUE
+  const foodCategoryValue = checkIsFoodCategoryValue(urlFoodCategory)
+    ? urlFoodCategory
+    : DEFAULT_FOOD_CATEGORY_VALUE
+  const [keyword, setKeyword] = useState(urlKeyword)
   const [pendingSortValue, setPendingSortValue] =
-    useState<SearchSortValue>(DEFAULT_SORT_VALUE)
-  const [foodCategoryValue, setFoodCategoryValue] = useState<FoodCategoryValue>(
-    DEFAULT_FOOD_CATEGORY_VALUE,
-  )
+    useState<SearchSortValue>(sortValue)
   const [pendingFoodCategoryValue, setPendingFoodCategoryValue] =
-    useState<FoodCategoryValue>(DEFAULT_FOOD_CATEGORY_VALUE)
+    useState<FoodCategoryValue>(foodCategoryValue)
   const [isSortSheetOpen, setIsSortSheetOpen] = useState(false)
   const [isFoodCategorySheetOpen, setIsFoodCategorySheetOpen] = useState(false)
   const { recentSearchKeywords, saveRecentSearchKeyword } =
     useRecentSearchKeywords()
 
   const searchParams = useMemo(() => {
-    const normalizedKeyword = submittedKeyword.trim()
+    const normalizedKeyword = urlKeyword.trim()
 
     if (!normalizedKeyword) {
       return null
@@ -55,7 +69,7 @@ export const useSearchPage = () => {
       keyword: normalizedKeyword,
       sort: sortValue,
     }
-  }, [foodCategoryValue, sortValue, submittedKeyword])
+  }, [foodCategoryValue, sortValue, urlKeyword])
 
   const searchRestaurantsQuery = useSearchRestaurantsInfiniteQuery(searchParams)
   const searchKeywordRecommendationsQuery =
@@ -90,17 +104,46 @@ export const useSearchPage = () => {
     searchInputRef.current?.focus()
   }, [])
 
+  const updateSearchUrlParams = ({
+    category = foodCategoryValue,
+    keyword: nextKeyword = urlKeyword,
+    sort = sortValue,
+  }: {
+    category?: FoodCategoryValue
+    keyword?: string
+    sort?: SearchSortValue
+  }) => {
+    const normalizedKeyword = nextKeyword.trim()
+
+    if (!normalizedKeyword) {
+      setUrlSearchParams({}, { replace: true })
+      return
+    }
+
+    const nextSearchParams = new URLSearchParams({ keyword: normalizedKeyword })
+
+    if (sort !== DEFAULT_SORT_VALUE) {
+      nextSearchParams.set('sort', sort)
+    }
+
+    if (category !== DEFAULT_FOOD_CATEGORY_VALUE) {
+      nextSearchParams.set('category', category)
+    }
+
+    setUrlSearchParams(nextSearchParams, { replace: true })
+  }
+
   const submitSearch = (nextKeyword = keyword) => {
     const normalizedKeyword = nextKeyword.trim()
 
     if (!normalizedKeyword) {
       setKeyword('')
-      setSubmittedKeyword('')
+      updateSearchUrlParams({ keyword: '' })
       return
     }
 
     setKeyword(normalizedKeyword)
-    setSubmittedKeyword(normalizedKeyword)
+    updateSearchUrlParams({ keyword: normalizedKeyword })
     saveRecentSearchKeyword(normalizedKeyword)
   }
 
@@ -130,23 +173,23 @@ export const useSearchPage = () => {
   }
 
   const handleSortApply = () => {
-    setSortValue(pendingSortValue)
     setIsSortSheetOpen(false)
+    updateSearchUrlParams({ sort: pendingSortValue })
   }
 
   const handleFoodCategoryApply = () => {
-    setFoodCategoryValue(pendingFoodCategoryValue)
     setIsFoodCategorySheetOpen(false)
+    updateSearchUrlParams({ category: pendingFoodCategoryValue })
   }
 
   const handleSortReset = () => {
     setPendingSortValue(DEFAULT_SORT_VALUE)
-    setSortValue(DEFAULT_SORT_VALUE)
+    updateSearchUrlParams({ sort: DEFAULT_SORT_VALUE })
   }
 
   const handleFoodCategoryReset = () => {
     setPendingFoodCategoryValue(DEFAULT_FOOD_CATEGORY_VALUE)
-    setFoodCategoryValue(DEFAULT_FOOD_CATEGORY_VALUE)
+    updateSearchUrlParams({ category: DEFAULT_FOOD_CATEGORY_VALUE })
   }
 
   const handleSortSelect = (value: string) => {
