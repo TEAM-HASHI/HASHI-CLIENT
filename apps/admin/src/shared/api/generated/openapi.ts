@@ -216,7 +216,10 @@ export interface components {
        */
       password: string
     }
-    /** @description 요일별 영업시간 — 휴무일(closed=true)은 시간 없이 보내고, 영업일은 openTime·closeTime이 필수다. */
+    /**
+     * @description 요일별 영업시간 — 휴무일(closed=true)은 시간 없이 보내고, 영업일은 openTime·closeTime이 필수다.
+     *      마감 시각이 오픈 시각보다 이르면 익일 마감(자정 넘김), 같으면 24시간 영업으로 해석한다.
+     */
     BusinessHourRequest: {
       /**
        * @description 요일
@@ -237,7 +240,7 @@ export interface components {
        */
       openTime?: string
       /**
-       * @description 마감 시각(HH:mm)
+       * @description 마감 시각(HH:mm) — 오픈 시각보다 이르면 익일 마감, 같으면 24시간 영업
        * @example 22:00
        */
       closeTime?: string
@@ -259,7 +262,7 @@ export interface components {
     }
     /**
      * @description 어드민 식당 등록 요청. imageKeys·메뉴 imageKey는 presigned URL로 업로드 완료된 S3 object key다.
-     *      genre·foodCategory·curationTypes는 사용자 API와 같은 소문자 케밥 값이다.
+     *      genre·curationTypes는 사용자 API와 같은 소문자 케밥 값이고, foodCategory는 카드 표시용 자유 텍스트다(#145).
      *      businessHours는 7개 요일(MONDAY~SUNDAY)을 중복 없이 모두 포함해야 한다(시간은 "HH:mm").
      */
     CreateRestaurantRequest: {
@@ -299,8 +302,8 @@ export interface components {
        */
       genre: string
       /**
-       * @description 음식 카테고리(소문자 케밥)
-       * @example sushi
+       * @description 음식 카테고리(카드 표시용 자유 텍스트)
+       * @example 야키니쿠
        */
       foodCategory: string
       /**
@@ -569,8 +572,8 @@ export interface components {
        */
       genre?: string
       /**
-       * @description 음식 카테고리(소문자 케밥, 선택)
-       * @example sushi
+       * @description 음식 카테고리(카드 표시용 자유 텍스트, 선택, 공백 불가)
+       * @example 야키니쿠
        */
       foodCategory?: string
       /**
@@ -1009,6 +1012,15 @@ export interface operations {
       }
       /** @description 에러 응답 */
       403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      404: {
         headers: {
           [name: string]: unknown
         }

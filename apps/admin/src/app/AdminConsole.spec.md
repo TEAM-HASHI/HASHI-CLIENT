@@ -13,6 +13,7 @@
 | `/admin/login`        | guest only | 관리자 로그인              |
 | `/admin/dashboard`    | admin only | 예약 기반 대시보드         |
 | `/admin/reservations` | admin only | 예약 목록 및 상태 관리     |
+| `/admin/users`        | admin only | 회원 목록 조회             |
 | `/admin/restaurants`  | admin only | 공개 식당 및 관리자 쓰기   |
 | `/admin/magazines`    | admin only | 공개 매거진 및 관리자 쓰기 |
 
@@ -23,9 +24,28 @@
 
 - 로그인은 `POST /api/v1/auth/admin/login`, 로그아웃은 `POST /api/v1/auth/admin/logout`을 사용합니다.
 - bearer token과 credential cookie를 함께 사용합니다.
+- access token 만료로 보호 API가 `401`을 반환하면 `POST /api/v1/auth/reissue`를 한 번 호출하고 원 요청을 한 번 재시도합니다.
+- 동시 `401` 요청은 하나의 token reissue를 공유합니다. 재발급 실패 또는 재시도 `401`은 session을 지우고 `/admin/login`으로 이동합니다.
 - 예약 목록은 `GET /api/v1/admin/reservations`, 예약자 조회와 상태 변경은 각 admin endpoint를 사용합니다.
 - 예약 목록 query는 상태·page·size를 key에 포함하고 상태 변경 성공 후 목록 prefix를 invalidate합니다.
+- 회원·예약의 offset 목록은 공용 숫자 pagination을 사용합니다.
+- 식당·매거진의 cursor 목록은 `더 보기`를 유지합니다.
 - 현재 조회한 페이지와 상태 필터 안에서 같은 식당·같은 분의 취소되지 않은 예약이 2건 이상이면 해당 행에 충돌 경고를 표시합니다.
+
+## Users
+
+### Data Dependencies
+
+- 회원 목록: `GET /api/v1/admin/users` (`sort`, optional trimmed `keyword`, zero-based `page`, `size=20`)
+- 기본 `CREATED_AT` 최신순 정렬과 `NICKNAME` 가나다순 정렬을 지원합니다.
+- 2026-07-17 기준 dev admin OpenAPI에 endpoint가 아직 없으므로 supplied backend spec 기반 page-local 타입을 사용합니다.
+
+### UX And Contract
+
+- 닉네임 부분 일치 검색은 입력이 멈춘 뒤 300ms 디바운스하여 적용하고 첫 페이지로 돌아갑니다.
+- 정렬 변경도 즉시 적용하고 첫 페이지로 돌아갑니다.
+- 표는 프로필, 닉네임, 영문 이름, 생년월일, 전화번호, 이메일, 가입일을 표시합니다.
+- loading, error/retry, keyword-aware empty, success, background fetching, pagination 상태를 구분합니다.
 
 ## Restaurants
 
@@ -77,6 +97,7 @@
 - 환경변수: `ADMIN_OPENAPI_SCHEMA_URL`, `USER_OPENAPI_SCHEMA_URL`
 - 명령: `pnpm gen:admin-api-types`, `pnpm gen:admin-user-api-types`, `pnpm gen:admin-all-api-types`
 - generated 파일은 직접 수정하지 않습니다.
+- `GET /api/v1/admin/users`가 admin OpenAPI에 배포되면 page-local 회원 타입을 generated 타입 alias로 교체합니다.
 
 ## UI States and Verification
 

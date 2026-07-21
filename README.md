@@ -45,7 +45,7 @@
           <img style="width: 220px;" alt="민경빈" src="https://github.com/user-attachments/assets/e50979a6-5a98-46a8-8a97-ff6b940f4982" />
         </td>
         <td>
-         <img style="width: 220px;" alt="송민서" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
+          <img style="width: 220px;" alt="송민서" src="https://github.com/user-attachments/assets/80f8d0e7-adc7-46ae-a518-759eb11f8905" />
         </td>
         <td>
          <img style="width: 220px;" alt="황유림" src="https://github.com/user-attachments/assets/3485814b-ff24-4a75-864d-276d16c0747d" />
@@ -202,6 +202,10 @@ GitHub Actions는 client와 admin 배포 workflow를 분리합니다. Admin work
 pnpm exec vercel build --local-config vercel.admin.json
 pnpm exec vercel deploy --prebuilt --local-config vercel.admin.json
 ```
+
+Admin 배포는 과거 `admin.hashi.kr`에 설치된 client PWA service worker를 제거하기 위해
+`apps/admin/public/sw.js`를 같은 경로의 self-destroying worker로 유지합니다. 해당 파일은
+기존 등록과 Cache Storage를 정리하므로 임의로 삭제하거나 이름을 변경하지 않습니다.
 
 ---
 

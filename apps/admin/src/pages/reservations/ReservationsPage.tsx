@@ -11,6 +11,7 @@ import type {
   ReservationPaymentStatus,
 } from '@/shared/api/reservationViewModel'
 import { ActionButton } from '@/shared/components/ActionButton'
+import { AdminPagination } from '@/shared/components/AdminPagination'
 import { AdminSelect, type SelectOption } from '@/shared/components/AdminSelect'
 import { AdminTable } from '@/shared/components/AdminTable'
 import { AdminToolbar } from '@/shared/components/AdminToolbar'
@@ -141,7 +142,6 @@ export const ReservationsPage = () => {
   const userQuery = useReservationUserQuery(userTargetId)
   const result = reservationsQuery.data
   const reservations = result?.reservations ?? []
-  const currentPage = result?.page ?? page
   const totalPages = result?.totalPages ?? 0
   const conflictCounts = getReservationConflictCounts(reservations)
 
@@ -180,9 +180,11 @@ export const ReservationsPage = () => {
       <div className="px-5 py-5 lg:px-8">
         <div className="text-cool-gray-500 mb-3 flex flex-wrap items-center justify-between gap-2 text-sm">
           <span>총 {(result?.totalCount ?? 0).toLocaleString()}개 예약</span>
-          <span>
-            {totalPages === 0 ? 0 : currentPage + 1} / {totalPages} 페이지
-          </span>
+          {reservationsQuery.isFetching && !reservationsQuery.isLoading ? (
+            <span role="status" className="text-primary-200 font-semibold">
+              목록 갱신 중
+            </span>
+          ) : null}
         </div>
 
         <div className="border-cool-gray-100 overflow-hidden rounded-lg border">
@@ -281,22 +283,12 @@ export const ReservationsPage = () => {
           </AdminTable>
         </div>
 
-        <div className="mt-4 flex justify-end gap-2">
-          <PaginationButton
-            label="이전 페이지"
-            disabled={page === 0 || reservationsQuery.isFetching}
-            onClick={() => setPage((current) => Math.max(0, current - 1))}
-          />
-          <PaginationButton
-            label="다음 페이지"
-            disabled={
-              reservationsQuery.isFetching ||
-              totalPages === 0 ||
-              page + 1 >= totalPages
-            }
-            onClick={() => setPage((current) => current + 1)}
-          />
-        </div>
+        <AdminPagination
+          currentPage={page}
+          totalPages={totalPages}
+          isDisabled={reservationsQuery.isFetching}
+          onPageChange={setPage}
+        />
       </div>
 
       <Drawer
@@ -366,26 +358,6 @@ const PaymentStatusBadge = ({
   >
     {paymentStatusLabel[status]}
   </span>
-)
-
-const PaginationButton = ({
-  label,
-  disabled,
-  onClick,
-}: {
-  label: string
-  disabled: boolean
-  onClick: () => void
-}) => (
-  <button
-    type="button"
-    aria-label={label}
-    disabled={disabled}
-    onClick={onClick}
-    className="border-cool-gray-100 text-cool-gray-700 hover:bg-cool-gray-50 h-9 rounded-md border bg-white px-4 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-40"
-  >
-    {label.replace(' 페이지', '')}
-  </button>
 )
 
 const DrawerLoading = () => (

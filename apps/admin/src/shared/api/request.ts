@@ -1,60 +1,49 @@
 import type { Options } from 'ky'
 import { apiClient } from '@/shared/api/apiClient'
+import { parseAdminApiResponse } from '@/shared/api/apiResponse'
+import {
+  checkIsSameAdminSession,
+  clearAdminSession,
+  getAdminSession,
+} from '@/shared/auth/adminSession'
+import { reissueAdminSession } from '@/shared/auth/reissueAdminSession'
 
-export interface AdminFieldError {
-  field: string
-  rejectedValue: unknown
-  reason: string
-}
-
-export interface AdminApiSuccessResponse<TData> {
-  success: true
-  code: string
-  message: string
-  data: TData
-}
-
-export interface AdminApiErrorResponse {
-  success: false
-  code: string
-  message: string
-  data: null
-  timestamp: string
-  path: string
-  errors?: AdminFieldError[]
-}
-
-export type AdminApiResponse<TData> =
-  | AdminApiSuccessResponse<TData>
-  | AdminApiErrorResponse
+export { AdminApiRequestError } from '@/shared/api/apiResponse'
 
 const normalizePath = (path: string) => path.replace(/^\/+/, '')
-
-export class AdminApiRequestError extends Error {
-  status: number
-  responseBody: AdminApiErrorResponse | null
-
-  constructor(status: number, responseBody: AdminApiErrorResponse | null) {
-    super(responseBody?.message ?? `HTTP ${status}`)
-    this.name = 'AdminApiRequestError'
-    this.status = status
-    this.responseBody = responseBody
-  }
-}
+const checkIsAuthPath = (path: string) => path.startsWith('api/v1/auth/')
 
 export const request = async <TData>(
   path: string,
   options?: Options,
 ): Promise<TData> => {
-  const response = await apiClient(normalizePath(path), options)
-  const responseBody = await response.json<AdminApiResponse<TData>>()
+  const normalizedPath = normalizePath(path)
+  let sessionToClear = getAdminSession()
+  let response = await apiClient(normalizedPath, options)
 
-  if (!response.ok || !responseBody.success) {
-    throw new AdminApiRequestError(
-      response.status,
-      responseBody.success ? null : responseBody,
-    )
+  if (
+    response.status === 401 &&
+    sessionToClear &&
+    !checkIsAuthPath(normalizedPath)
+  ) {
+    try {
+      await reissueAdminSession()
+      sessionToClear = getAdminSession()
+      response = await apiClient(normalizedPath, options)
+    } catch (error) {
+      if (checkIsSameAdminSession(getAdminSession(), sessionToClear)) {
+        clearAdminSession()
+      }
+      throw error
+    }
   }
 
-  return responseBody.data
+  if (
+    response.status === 401 &&
+    checkIsSameAdminSession(getAdminSession(), sessionToClear)
+  ) {
+    clearAdminSession()
+  }
+
+  return parseAdminApiResponse<TData>(response)
 }

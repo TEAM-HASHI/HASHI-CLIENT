@@ -10,6 +10,7 @@ import { RouteLoading } from '@/shared/components/RouteLoading'
 const {
   LoginPage,
   DashboardPage,
+  UsersPage,
   RestaurantsPage,
   ReservationsPage,
   MagazinesPage,
@@ -43,6 +44,10 @@ export const appRoutes = [
           {
             path: ROUTES.dashboard,
             element: withSuspense(<DashboardPage />),
+          },
+          {
+            path: ROUTES.users,
+            element: withSuspense(<UsersPage />),
           },
           {
             path: ROUTES.restaurants,

@@ -2,7 +2,8 @@
 
 ## Goal
 
-- admin OpenAPI의 11개 operation과 user OpenAPI의 공개 식당·매거진 조회 및 이미지 업로드를 관리자 UI에 연결합니다.
+- published admin OpenAPI operation과 user OpenAPI의 공개 식당·매거진 조회, 이미지 업로드, token reissue를 관리자 UI에 연결합니다.
+- 아직 admin OpenAPI에 배포되지 않은 회원 목록은 HASHI-142 backend spec을 page-local 계약으로 연결하고 schema 배포 후 generated 타입으로 교체합니다.
 - 실제 schema URL과 관리자 credential은 repository에 기록하지 않습니다.
 
 ## Query Map
@@ -10,6 +11,7 @@
 | UI                        | Endpoint                                     | Query mode/key                                                 | States                                   |
 | ------------------------- | -------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------- |
 | Dashboard/reservations    | `GET /api/v1/admin/reservations`             | finite query, `adminQueryKeys.reservations.*`                  | loading/error/empty/success              |
+| Users                     | `GET /api/v1/admin/users`                    | finite query, `userQueryKeys.list(params)`                     | loading/error/empty/success/fetching     |
 | Reservation user          | `GET /api/v1/admin/reservations/{id}/user`   | enabled finite query                                           | loading/error/success                    |
 | Published restaurants     | `GET /api/v1/restaurants`                    | infinite query, `restaurantQueryKeys.list(params)`             | loading/error/empty/success/next pending |
 | Restaurant update prefill | summary + store-information + all menu pages | enabled composed query, `restaurantQueryKeys.prefill(id, row)` | loading/error/success                    |
@@ -18,6 +20,15 @@
 - restaurant cursor는 opaque string으로 그대로 전달합니다.
 - magazine/menu cursor는 schema의 number를 그대로 전달합니다.
 - response를 바꾸는 filter와 size는 query key에 포함합니다.
+- user list는 `sort`, trimmed optional `keyword`, zero-based `page`, `size=20`을 key와 request에 포함합니다.
+
+## Auth Recovery
+
+1. 보호 API의 첫 `401`은 `POST /api/v1/auth/reissue`를 호출합니다.
+2. 동시 `401` 요청은 하나의 in-flight reissue를 공유합니다.
+3. 새 access token을 session에 반영한 뒤 각 원 요청을 한 번만 재시도합니다.
+4. auth endpoint는 recursive reissue 대상에서 제외합니다.
+5. reissue 실패 또는 재시도 `401`은 session을 지우고 route guard가 `/admin/login`으로 이동합니다.
 
 ## Mutation Map
 
@@ -63,6 +74,8 @@
 ## Done Criteria
 
 - query key factory, explicit initialPageParam/getNextPageParam, mutation invalidation이 구현됩니다.
+- 회원 목록의 search, sort, offset pagination과 loading/error/empty/fetching 상태가 구현됩니다.
+- access token 만료 시 single-flight reissue, one-time replay, terminal login redirect가 구현됩니다.
 - loading/error/empty/success/upload states가 UI에 연결됩니다.
 - 식당·매거진 raw image key 입력을 primary UI로 노출하지 않습니다.
 - `adminService`, `mockStore`, `Mock 상태` production 의존성이 없습니다.
