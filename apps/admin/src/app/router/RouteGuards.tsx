@@ -1,10 +1,10 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
-import { getAdminSession } from '@/shared/auth/adminSession'
+import { useAdminSession } from '@/shared/auth/useAdminSession'
 
 export const AdminOnlyRoute = () => {
   const location = useLocation()
-  const session = getAdminSession()
+  const session = useAdminSession()
 
   if (!session) {
     return <Navigate to={ROUTES.login} replace state={{ from: location }} />
@@ -14,7 +14,7 @@ export const AdminOnlyRoute = () => {
 }
 
 export const GuestOnlyRoute = () => {
-  const session = getAdminSession()
+  const session = useAdminSession()
 
   if (session) {
     return <Navigate to={ROUTES.dashboard} replace />

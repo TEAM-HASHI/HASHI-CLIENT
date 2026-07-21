@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ReservationsPage } from '@/pages/reservations/ReservationsPage'
@@ -42,6 +42,23 @@ const reservation = {
   userId: 3,
 }
 
+const createReservationsQueryResult = ({
+  isFetching = false,
+}: { isFetching?: boolean } = {}) =>
+  ({
+    data: {
+      page: 0,
+      reservations: [reservation],
+      size: 20,
+      totalCount: 21,
+      totalPages: 2,
+    },
+    isError: false,
+    isFetching,
+    isLoading: false,
+    refetch: vi.fn(),
+  }) as unknown as ReturnType<typeof useReservationsQuery>
+
 describe('ReservationsPage', () => {
   beforeEach(() => {
     mutateMock.mockReset()
@@ -49,19 +66,7 @@ describe('ReservationsPage', () => {
     useReservationUserQueryMock.mockReset()
     useUpdateReservationStatusMutationMock.mockReset()
 
-    useReservationsQueryMock.mockReturnValue({
-      data: {
-        page: 0,
-        reservations: [reservation],
-        size: 20,
-        totalCount: 21,
-        totalPages: 2,
-      },
-      isError: false,
-      isFetching: false,
-      isLoading: false,
-      refetch: vi.fn(),
-    } as unknown as ReturnType<typeof useReservationsQuery>)
+    useReservationsQueryMock.mockReturnValue(createReservationsQueryResult())
     useReservationUserQueryMock.mockReturnValue({
       data: {
         birthDate: '1999-01-01',
@@ -92,13 +97,33 @@ describe('ReservationsPage', () => {
     expect(screen.queryByLabelText('Mock 상태')).not.toBeInTheDocument()
     expect(screen.queryByPlaceholderText(/검색/)).not.toBeInTheDocument()
     expect(screen.queryByLabelText('날짜')).not.toBeInTheDocument()
+    expect(screen.queryByText('1 / 2 페이지')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '1페이지' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
 
-    await user.click(screen.getByRole('button', { name: '다음 페이지' }))
+    await user.click(screen.getByRole('button', { name: '2페이지' }))
 
     expect(useReservationsQueryMock).toHaveBeenLastCalledWith({
       page: 1,
       size: 20,
     })
+  })
+
+  it('announces updates and disables reservation pagination while fetching', () => {
+    useReservationsQueryMock.mockReturnValue(
+      createReservationsQueryResult({ isFetching: true }),
+    )
+
+    render(<ReservationsPage />)
+
+    expect(screen.getByRole('status')).toHaveTextContent('목록 갱신 중')
+    expect(
+      within(screen.getByRole('navigation', { name: '관리자 목록 페이지' }))
+        .getAllByRole('button')
+        .every((button) => button.hasAttribute('disabled')),
+    ).toBe(true)
   })
 
   it('loads the selected reservation user in a drawer', async () => {

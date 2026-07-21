@@ -3,6 +3,7 @@ import {
   HomeIcon,
   MagazineIcon,
   MenuIcon,
+  PeopleIcon,
   ReservationIcon,
   TodayRestaurantIcon,
 } from '@hashi/hds-icons'
@@ -25,6 +26,11 @@ const navigationItems = [
     label: '식당 관리',
     to: ROUTES.restaurants,
     icon: <TodayRestaurantIcon aria-hidden="true" className="size-5" />,
+  },
+  {
+    label: '회원 관리',
+    to: ROUTES.users,
+    icon: <PeopleIcon aria-hidden="true" className="size-5" />,
   },
   {
     label: '예약 관리',

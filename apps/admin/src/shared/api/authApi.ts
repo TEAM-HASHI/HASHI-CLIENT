@@ -1,26 +1,15 @@
 import type { components } from '@/shared/api/generated/openapi'
+import type { paths as UserApiPaths } from '@/shared/api/generated/user-openapi'
 import { apiClient } from '@/shared/api/apiClient'
-import {
-  AdminApiRequestError,
-  type AdminApiResponse,
-} from '@/shared/api/request'
+import { parseAdminApiResponse } from '@/shared/api/apiResponse'
 import type { AdminSession } from '@/shared/auth/adminSession'
 
 export type AdminLoginBody = components['schemas']['AdminLoginRequest']
 
 const LOGIN_PATH = 'api/v1/auth/admin/login'
 const LOGOUT_PATH = 'api/v1/auth/admin/logout'
-
-const parseResponse = async (response: Response) => {
-  const responseBody = (await response.json()) as AdminApiResponse<unknown>
-
-  if (!response.ok || !responseBody.success) {
-    throw new AdminApiRequestError(
-      response.status,
-      responseBody.success ? null : responseBody,
-    )
-  }
-}
+const REISSUE_OPENAPI_PATH = '/api/v1/auth/reissue' satisfies keyof UserApiPaths
+const REISSUE_PATH = REISSUE_OPENAPI_PATH.replace(/^\/+/, '')
 
 const getAccessToken = (response: Response) => {
   const authorization = response.headers.get('Authorization')?.trim()
@@ -40,7 +29,7 @@ export const authApi = {
       json: body,
     })
 
-    await parseResponse(response)
+    await parseAdminApiResponse<unknown>(response)
 
     return {
       accessToken: getAccessToken(response),
@@ -53,6 +42,15 @@ export const authApi = {
       credentials: 'include',
     })
 
-    await parseResponse(response)
+    await parseAdminApiResponse<unknown>(response)
+  },
+  async reissue() {
+    const response = await apiClient.post(REISSUE_PATH, {
+      credentials: 'include',
+    })
+
+    await parseAdminApiResponse<unknown>(response)
+
+    return getAccessToken(response)
   },
 }
