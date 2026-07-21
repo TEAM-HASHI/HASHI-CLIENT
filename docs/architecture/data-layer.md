@@ -25,7 +25,7 @@ HASHI 앱의 데이터 레이어는 앱 내부에서 먼저 조립하고, 실제
 - public read/upload generated output: `apps/admin/src/shared/api/generated/user-openapi.ts`
 - Query provider/client: `apps/admin/src/app/providers/QueryProvider.tsx`, `apps/admin/src/shared/lib/queryClient.ts`
 - admin 인증은 response `Authorization` header의 bearer token과 credential cookie를 함께 사용합니다.
-- 보호 API가 `401`을 반환하면 user OpenAPI의 `POST /api/v1/auth/reissue`로 access token을 한 번 재발급하고 원 요청을 한 번 재시도합니다. 동시 `401`은 하나의 재발급 요청을 공유하며, 실패하면 admin session을 지웁니다.
+- 보호 API가 `401`을 반환하면 user OpenAPI의 `POST /api/v1/auth/reissue`로 access token을 한 번 재발급하고 원 요청을 한 번 재시도합니다. 동시 `401`은 하나의 재발급 요청을 공유하며, 실패하면 재발급을 시작한 동일 session만 지우고 admin query cache도 함께 비웁니다.
 - 예약 query와 모든 admin mutation은 실제 endpoint를 사용합니다. 식당·매거진 공개 목록과 수정 prefill은 user API를 사용하며 전체 관리자 재고로 표현하지 않습니다.
 
 새 dependency를 추가하거나 버전을 바꾸는 경우 `docs/conventions/package-management.md`를 따릅니다.

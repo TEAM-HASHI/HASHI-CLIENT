@@ -49,6 +49,27 @@ describe('reissueAdminSession', () => {
     })
   })
 
+  it('does not overwrite a newer login for the same admin ID', async () => {
+    let resolveReissue: (accessToken: string) => void = () => undefined
+    reissueMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveReissue = resolve
+      }),
+    )
+    const reissue = reissueAdminSession()
+    const newerSession = {
+      accessToken: 'newer-token',
+      issuedAt: '2026-07-21T00:00:00Z',
+      loginId: 'hashi-admin',
+    }
+
+    setAdminSession(newerSession)
+    resolveReissue('renewed-token')
+
+    await expect(reissue).rejects.toThrow('관리자 세션이 변경되었습니다.')
+    expect(getAdminSession()).toEqual(newerSession)
+  })
+
   it('rejects reissue when no admin session exists', async () => {
     clearAdminSession()
 

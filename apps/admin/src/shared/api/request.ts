@@ -1,7 +1,11 @@
 import type { Options } from 'ky'
 import { apiClient } from '@/shared/api/apiClient'
 import { parseAdminApiResponse } from '@/shared/api/apiResponse'
-import { clearAdminSession, getAdminSession } from '@/shared/auth/adminSession'
+import {
+  checkIsSameAdminSession,
+  clearAdminSession,
+  getAdminSession,
+} from '@/shared/auth/adminSession'
 import { reissueAdminSession } from '@/shared/auth/reissueAdminSession'
 
 export { AdminApiRequestError } from '@/shared/api/apiResponse'
@@ -14,23 +18,30 @@ export const request = async <TData>(
   options?: Options,
 ): Promise<TData> => {
   const normalizedPath = normalizePath(path)
+  let sessionToClear = getAdminSession()
   let response = await apiClient(normalizedPath, options)
 
   if (
     response.status === 401 &&
-    getAdminSession() &&
+    sessionToClear &&
     !checkIsAuthPath(normalizedPath)
   ) {
     try {
       await reissueAdminSession()
+      sessionToClear = getAdminSession()
       response = await apiClient(normalizedPath, options)
     } catch (error) {
-      clearAdminSession()
+      if (checkIsSameAdminSession(getAdminSession(), sessionToClear)) {
+        clearAdminSession()
+      }
       throw error
     }
   }
 
-  if (response.status === 401) {
+  if (
+    response.status === 401 &&
+    checkIsSameAdminSession(getAdminSession(), sessionToClear)
+  ) {
     clearAdminSession()
   }
 

@@ -1,5 +1,9 @@
 import { authApi } from '@/shared/api/authApi'
-import { getAdminSession, setAdminSession } from '@/shared/auth/adminSession'
+import {
+  checkIsSameAdminSession,
+  getAdminSession,
+  setAdminSession,
+} from '@/shared/auth/adminSession'
 
 let inFlightReissue: Promise<void> | null = null
 
@@ -13,7 +17,7 @@ const runReissue = async () => {
   const accessToken = await authApi.reissue()
   const currentSession = getAdminSession()
 
-  if (!currentSession || currentSession.loginId !== session.loginId) {
+  if (!currentSession || !checkIsSameAdminSession(currentSession, session)) {
     throw new Error('관리자 세션이 변경되었습니다.')
   }
 

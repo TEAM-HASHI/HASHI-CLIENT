@@ -83,6 +83,27 @@ describe('admin request auth recovery', () => {
     expect(getAdminSession()).toBeNull()
   })
 
+  it('keeps a newer session when reissue fails after another admin signs in', async () => {
+    const newerSession = {
+      accessToken: 'newer-token',
+      issuedAt: '2026-07-21T00:00:00Z',
+      loginId: 'new-admin',
+    }
+    apiClientMock.mockResolvedValueOnce(
+      createResponse({ status: 401, success: false }),
+    )
+    reissueAdminSessionMock.mockImplementation(async () => {
+      setAdminSession(newerSession)
+      throw new Error('세션이 변경되었습니다.')
+    })
+
+    await expect(request('/api/v1/admin/users')).rejects.toThrow(
+      '세션이 변경되었습니다.',
+    )
+
+    expect(getAdminSession()).toEqual(newerSession)
+  })
+
   it('clears the session when the replay is still unauthorized', async () => {
     apiClientMock
       .mockResolvedValueOnce(createResponse({ status: 401, success: false }))
@@ -94,6 +115,28 @@ describe('admin request auth recovery', () => {
 
     expect(reissueAdminSessionMock).toHaveBeenCalledOnce()
     expect(getAdminSession()).toBeNull()
+  })
+
+  it('keeps a newer session when the replay is still unauthorized', async () => {
+    const newerSession = {
+      accessToken: 'newer-token',
+      issuedAt: '2026-07-21T00:00:00Z',
+      loginId: 'new-admin',
+    }
+    apiClientMock
+      .mockResolvedValueOnce(createResponse({ status: 401, success: false }))
+      .mockImplementationOnce(() => {
+        setAdminSession(newerSession)
+        return Promise.resolve(
+          createResponse({ status: 401, success: false }),
+        ) as ReturnType<typeof apiClient>
+      })
+
+    await expect(request('/api/v1/admin/users')).rejects.toMatchObject({
+      status: 401,
+    })
+
+    expect(getAdminSession()).toEqual(newerSession)
   })
 
   it('does not reissue forbidden requests', async () => {

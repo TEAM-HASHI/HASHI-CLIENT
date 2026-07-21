@@ -7,6 +7,14 @@ export interface AdminSession {
   issuedAt: string
 }
 
+export const checkIsSameAdminSession = (
+  first: AdminSession | null,
+  second: AdminSession | null,
+) =>
+  first?.accessToken === second?.accessToken &&
+  first?.loginId === second?.loginId &&
+  first?.issuedAt === second?.issuedAt
+
 const checkIsAdminSession = (value: unknown): value is AdminSession => {
   if (!value || typeof value !== 'object') {
     return false
