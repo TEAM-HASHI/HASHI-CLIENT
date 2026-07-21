@@ -2,6 +2,20 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const LIGHTHOUSE_COMMENT_MARKER = '<!-- lighthouse-ci-report -->'
+const CORE_METRIC_AUDIT_IDS = new Set([
+  'cumulative-layout-shift',
+  'first-contentful-paint',
+  'interactive',
+  'largest-contentful-paint',
+  'max-potential-fid',
+  'speed-index',
+  'total-blocking-time',
+])
+const EXCLUDED_SCORE_DISPLAY_MODES = new Set([
+  'informative',
+  'manual',
+  'notApplicable',
+])
 
 const selectRepresentativeResult = (manifest) => {
   if (!Array.isArray(manifest) || manifest.length === 0) {
@@ -17,6 +31,8 @@ const getCategoryScore = (report, categoryId) => {
   return typeof score === 'number' ? Math.round(score * 100) : 0
 }
 
+const isNonNegativeNumber = (value) => Number.isFinite(value) && value >= 0
+
 const getScoreStatus = (score) => {
   if (score >= 90) {
     return '🟢'
@@ -29,15 +45,110 @@ const getScoreStatus = (score) => {
   return '🔴'
 }
 
-const createLighthouseComment = ({
-  generatedAt = new Date(),
-  report,
-  runUrl,
-}) => {
+const getAuditNumericValue = (report, auditId) => {
+  const value = report?.audits?.[auditId]?.numericValue
+
+  return isNonNegativeNumber(value) ? value : undefined
+}
+
+const formatMilliseconds = (value) =>
+  Number.isFinite(value) ? `${Math.round(value)}ms` : 'N/A'
+
+const formatCls = (value) => (Number.isFinite(value) ? value.toFixed(3) : 'N/A')
+
+const formatKilobytes = (value) =>
+  Number.isFinite(value) ? `${Math.round(value / 1024)}KB` : 'N/A'
+
+const getResourceTransferSize = (report, resourceType) => {
+  const items = report?.audits?.['resource-summary']?.details?.items
+  const item = Array.isArray(items)
+    ? items.find((entry) => entry.resourceType === resourceType)
+    : undefined
+
+  return isNonNegativeNumber(item?.transferSize) ? item.transferSize : undefined
+}
+
+const getCoreMetrics = (report) => ({
+  cls: formatCls(getAuditNumericValue(report, 'cumulative-layout-shift')),
+  fcp: formatMilliseconds(
+    getAuditNumericValue(report, 'first-contentful-paint'),
+  ),
+  image: formatKilobytes(getResourceTransferSize(report, 'image')),
+  lcp: formatMilliseconds(
+    getAuditNumericValue(report, 'largest-contentful-paint'),
+  ),
+  script: formatKilobytes(getResourceTransferSize(report, 'script')),
+  tbt: formatMilliseconds(getAuditNumericValue(report, 'total-blocking-time')),
+})
+
+const formatImprovementSuggestion = ({ audit, savingsBytes, savingsMs }) => {
+  const formattedMilliseconds =
+    savingsMs > 0 ? `${Math.round(savingsMs)}ms` : undefined
+  const formattedKilobytes =
+    savingsBytes > 0 ? `${Math.round(savingsBytes / 1024)}KB` : undefined
+
+  if (formattedMilliseconds && formattedKilobytes) {
+    return `${audit.title} — 약 ${formattedMilliseconds}, ${formattedKilobytes} 절감 가능`
+  }
+
+  if (formattedMilliseconds) {
+    return `${audit.title} — 약 ${formattedMilliseconds} 단축 가능`
+  }
+
+  if (formattedKilobytes) {
+    return `${audit.title} — 약 ${formattedKilobytes} 절감 가능`
+  }
+
+  return audit.title
+}
+
+const getImprovementSuggestions = (report, limit = 3) =>
+  Object.values(report?.audits ?? {})
+    .filter(
+      (audit) =>
+        Number.isFinite(audit?.score) &&
+        audit.score < 1 &&
+        typeof audit.title === 'string' &&
+        audit.title.trim().length > 0 &&
+        !CORE_METRIC_AUDIT_IDS.has(audit.id) &&
+        !EXCLUDED_SCORE_DISPLAY_MODES.has(audit.scoreDisplayMode) &&
+        (audit.scoreDisplayMode === 'binary' ||
+          audit.scoreDisplayMode === 'metricSavings' ||
+          audit.details?.type === 'opportunity'),
+    )
+    .map((audit) => ({
+      audit,
+      savingsBytes: Number.isFinite(audit.details?.overallSavingsBytes)
+        ? audit.details.overallSavingsBytes
+        : 0,
+      savingsMs: Number.isFinite(audit.details?.overallSavingsMs)
+        ? audit.details.overallSavingsMs
+        : 0,
+    }))
+    .sort(
+      (left, right) =>
+        right.savingsMs - left.savingsMs ||
+        right.savingsBytes - left.savingsBytes ||
+        Number(right.audit.scoreDisplayMode === 'metricSavings') -
+          Number(left.audit.scoreDisplayMode === 'metricSavings') ||
+        left.audit.score - right.audit.score ||
+        left.audit.title.localeCompare(right.audit.title),
+    )
+    .slice(0, limit)
+    .map(({ audit, savingsBytes, savingsMs }) =>
+      formatImprovementSuggestion({ audit, savingsBytes, savingsMs }),
+    )
+
+const createLighthouseComment = ({ report }) => {
   const performance = getCategoryScore(report, 'performance')
   const accessibility = getCategoryScore(report, 'accessibility')
   const bestPractices = getCategoryScore(report, 'best-practices')
   const seo = getCategoryScore(report, 'seo')
+  const { cls, fcp, image, lcp, script, tbt } = getCoreMetrics(report)
+  const improvementSuggestions = getImprovementSuggestions(report)
+  const improvementItems = improvementSuggestions.length
+    ? improvementSuggestions.map((suggestion) => `- ${suggestion}`)
+    : ['- 감지된 주요 개선점이 없습니다.']
 
   return [
     LIGHTHOUSE_COMMENT_MARKER,
@@ -50,24 +161,19 @@ const createLighthouseComment = ({
     `| Best Practices | ${bestPractices} | ${getScoreStatus(bestPractices)} |`,
     `| SEO | ${seo} | ${getScoreStatus(seo)} |`,
     '',
-    '```mermaid',
-    'xychart',
-    '    title "Lighthouse Scores"',
-    '    x-axis ["Performance", "Accessibility", "Best Practices", "SEO"]',
-    '    y-axis "Score" 0 --> 100',
-    `    bar [${performance}, ${accessibility}, ${bestPractices}, ${seo}]`,
-    '```',
+    '| FCP | LCP | CLS | TBT | Script | Image |',
+    '| ---: | ---: | ---: | ---: | ---: | ---: |',
+    `| ${fcp} | ${lcp} | ${cls} | ${tbt} | ${script} | ${image} |`,
     '',
-    `[상세 HTML 리포트 다운로드](${runUrl})`,
+    '### 개선점 요약',
     '',
-    `_대표 실행 결과 · ${generatedAt.toISOString()}_`,
+    ...improvementItems,
   ].join('\n')
 }
 
 const commentLighthouseResults = async ({
   context,
   core,
-  generatedAt = new Date(),
   github,
   manifestPath = './lighthouse-reports/manifest.json',
 }) => {
@@ -110,8 +216,7 @@ const commentLighthouseResults = async ({
 
   const { owner, repo } = context.repo
   const issueNumber = context.issue.number
-  const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`
-  const body = createLighthouseComment({ generatedAt, report, runUrl })
+  const body = createLighthouseComment({ report })
   const comments = await github.paginate(github.rest.issues.listComments, {
     issue_number: issueNumber,
     owner,
@@ -150,6 +255,8 @@ module.exports = {
   commentLighthouseResults,
   createLighthouseComment,
   getCategoryScore,
+  getCoreMetrics,
+  getImprovementSuggestions,
   getScoreStatus,
   selectRepresentativeResult,
 }

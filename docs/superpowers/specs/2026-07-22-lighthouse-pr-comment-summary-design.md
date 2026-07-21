@@ -52,9 +52,9 @@ FCP, LCP, TBT는 반올림한 `ms`, CLS는 소수점 셋째 자리, Script와 Im
 
 ### Improvement summary
 
-네 category의 가중치가 있는 audit 중 점수가 1 미만인 항목을 개선 후보로 사용한다. `notApplicable`, `manual`, `informative`처럼 직접적인 실패나 개선 기회가 아닌 표시 모드는 제외한다.
+Lighthouse 전체 audit 중 점수가 1 미만인 실행 가능한 항목을 개선 후보로 사용한다. `notApplicable`, `manual`, `informative`처럼 직접적인 실패나 개선 기회가 아닌 표시 모드와 이미 핵심 지표 표에 노출한 metric audit은 제외한다.
 
-후보는 예상 시간 절감, 예상 byte 절감, 점수 부족 폭과 category weight 순으로 우선순위를 정하고 상위 3개만 표시한다. 각 항목은 Lighthouse report가 제공하는 audit 제목을 사용하며, 절감 시간 또는 byte 정보가 있으면 함께 표시한다. 후보가 없으면 `감지된 주요 개선점이 없습니다.`를 표시한다.
+후보는 예상 시간 절감, 예상 byte 절감, 개선 기회 여부, 점수 부족 폭 순으로 우선순위를 정하고 상위 3개만 표시한다. 각 항목은 Lighthouse report가 제공하는 audit 제목을 사용하며, 절감 시간 또는 byte 정보가 있으면 함께 표시한다. 후보가 없으면 `감지된 주요 개선점이 없습니다.`를 표시한다.
 
 ## Existing Behavior Preserved
 
