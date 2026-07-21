@@ -30,6 +30,16 @@ HASHI 앱의 데이터 레이어는 앱 내부에서 먼저 조립하고, 실제
 
 새 dependency를 추가하거나 버전을 바꾸는 경우 `docs/conventions/package-management.md`를 따릅니다.
 
+## Lighthouse CI Runtime
+
+Lighthouse workflow는 GitHub Actions Repository Variable `VITE_API_BASE_URL`을 같은 이름의 job 환경변수로 주입합니다. 이 값은 Client production build와 공개 read-only API smoke check가 공통으로 사용합니다.
+
+- CI에는 production이 아닌 개발 또는 staging API의 HTTP(S) 절대 URL을 등록합니다.
+- build 전에 `GET /api/v1/restaurants?type=sns-hot&size=1`의 HTTP 2xx 응답을 확인합니다.
+- variable 누락, 잘못된 URL, timeout, 네트워크 오류, non-2xx 응답은 workflow 오류로 처리합니다.
+- API base URL 전체와 응답 body는 Actions 로그에 출력하지 않습니다.
+- Lighthouse category 점수 미달은 API 연결 실패와 구분해 warning으로만 기록합니다.
+
 ## Provider Boundary
 
 서버 상태 Provider는 앱 실행 조립 코드에 둡니다.
