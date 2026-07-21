@@ -71,4 +71,8 @@ describe('appRoutes', () => {
   it('registers Kakao OAuth callback as an app route', () => {
     expect(collectRoutePaths(appRoutes)).toContain(ROUTES.kakaoOAuthCallback)
   })
+
+  it('registers reservation rescue as an app route', () => {
+    expect(collectRoutePaths(appRoutes)).toContain(ROUTES.reservationRescue)
+  })
 })
