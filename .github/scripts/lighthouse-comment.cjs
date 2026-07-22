@@ -147,25 +147,29 @@ const createLighthouseComment = ({ report }) => {
   const { cls, fcp, image, lcp, script, tbt } = getCoreMetrics(report)
   const improvementSuggestions = getImprovementSuggestions(report)
   const improvementItems = improvementSuggestions.length
-    ? improvementSuggestions.map((suggestion) => `- ${suggestion}`)
-    : ['- 감지된 주요 개선점이 없습니다.']
+    ? improvementSuggestions.map(
+        (suggestion, index) => `${index + 1}. ${suggestion}`,
+      )
+    : ['1. 감지된 주요 개선점이 없습니다.']
 
   return [
     LIGHTHOUSE_COMMENT_MARKER,
-    '## Lighthouse 결과',
     '',
-    '| Category | Score | Status |',
-    '| --- | ---: | :---: |',
-    `| Performance | ${performance} | ${getScoreStatus(performance)} |`,
-    `| Accessibility | ${accessibility} | ${getScoreStatus(accessibility)} |`,
-    `| Best Practices | ${bestPractices} | ${getScoreStatus(bestPractices)} |`,
-    `| SEO | ${seo} | ${getScoreStatus(seo)} |`,
+    '## 🔦 Lighthouse 결과',
     '',
-    '| FCP | LCP | CLS | TBT | Script | Image |',
-    '| ---: | ---: | ---: | ---: | ---: | ---: |',
-    `| ${fcp} | ${lcp} | ${cls} | ${tbt} | ${script} | ${image} |`,
+    '| 영역 | 항목 | 결과 |',
+    '| :--- | :--- | ---: |',
+    `| Score | Performance | ${getScoreStatus(performance)} **${performance}** |`,
+    `| Score | Accessibility | ${getScoreStatus(accessibility)} **${accessibility}** |`,
+    `| Score | Best Practices | ${getScoreStatus(bestPractices)} **${bestPractices}** |`,
+    `| Score | SEO | ${getScoreStatus(seo)} **${seo}** |`,
+    `| Metric | First Contentful Paint (FCP) | \`${fcp}\` |`,
+    `| Metric | Largest Contentful Paint (LCP) | \`${lcp}\` |`,
+    `| Metric | Cumulative Layout Shift (CLS) | \`${cls}\` |`,
+    `| Metric | Total Blocking Time (TBT) | \`${tbt}\` |`,
+    `| Resource | Script / Image | \`${script}\` / \`${image}\` |`,
     '',
-    '### 개선점 요약',
+    '### 💡 개선 우선순위',
     '',
     ...improvementItems,
   ].join('\n')

@@ -127,7 +127,7 @@ UI 변경:
 - `vercel-admin-preview.yml`: admin preview 배포만 담당합니다.
 - `vercel-admin-production.yml`: admin production 배포만 담당합니다.
 - `chromatic.yml`: HDS Storybook/Chromatic 검증만 담당하며, HDS 관련 경로가 바뀐 PR에서 실행됩니다.
-- `lighthouse.yml`: GitHub Actions Repository Variable `VITE_API_BASE_URL`을 Client build에 주입하고, build 전에 공개 read-only API 연결을 확인한 뒤 production build의 `/` 경로를 Lighthouse로 측정합니다. Variable 누락·잘못된 URL, API timeout·네트워크·non-2xx, Client build와 Lighthouse collect 같은 실행 오류는 workflow를 실패시킵니다. Performance는 80점, Accessibility·Best Practices·SEO는 각각 90점 기준을 적용하며, 네 category는 모두 warning으로만 기록되어 점수 미달만으로 workflow를 실패시키지 않습니다. 상세 HTML/JSON 리포트는 14일 보관 `lighthouse-reports` Artifact로 확인합니다. 같은 저장소의 PR에는 대표 실행의 category 점수·상태, FCP/LCP/CLS/TBT/Script/Image, 개선 audit 최대 3개를 하나의 코멘트로 생성하거나 갱신하며 Mermaid와 상세 리포트 링크는 표시하지 않습니다. 외부 fork PR은 코멘트를 건너뜁니다.
+- `lighthouse.yml`: GitHub Actions Repository Variable `VITE_API_BASE_URL`을 Client build에 주입하고, build 전에 공개 read-only API 연결을 확인한 뒤 production build의 `/` 경로를 Lighthouse로 측정합니다. Variable 누락·잘못된 URL, API timeout·네트워크·non-2xx, Client build와 Lighthouse collect 같은 실행 오류는 workflow를 실패시킵니다. Performance는 80점, Accessibility·Best Practices·SEO는 각각 90점 기준을 적용하며, 네 category는 모두 warning으로만 기록되어 점수 미달만으로 workflow를 실패시키지 않습니다. 상세 HTML/JSON 리포트는 14일 보관 `lighthouse-reports` Artifact로 확인합니다. 같은 저장소의 PR에는 대표 실행의 category, metric, resource를 영역으로 구분한 단일 세로 요약표와 개선 audit 최대 3개의 순서 있는 목록을 하나의 코멘트로 생성하거나 갱신하며 Mermaid와 상세 리포트 링크는 표시하지 않습니다. 외부 fork PR은 코멘트를 건너뜁니다.
 - auto-label, auto-assign, Discord workflow는 PR 운영 자동화를 담당합니다.
 
 ## Before Merge

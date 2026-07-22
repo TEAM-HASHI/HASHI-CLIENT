@@ -164,18 +164,22 @@ test('core metrics use N/A for missing or invalid values', () => {
   )
 })
 
-test('createLighthouseComment renders only the category and core metric tables', () => {
-  const comment = createLighthouseComment({
-    report: createReport(),
-  })
+test('createLighthouseComment renders a single vertical summary table', () => {
+  const comment = createLighthouseComment({ report: createReport() })
 
   assert.match(comment, new RegExp(LIGHTHOUSE_COMMENT_MARKER))
-  assert.match(comment, /\| Performance \| 82 \| 🟡 \|/)
-  assert.match(comment, /\| Accessibility \| 94 \| 🟢 \|/)
-  assert.match(comment, /\| FCP \| LCP \| CLS \| TBT \| Script \| Image \|/)
+  assert.match(comment, /## 🔦 Lighthouse 결과/)
+  assert.match(comment, /\| 영역 \| 항목 \| 결과 \|/)
+  assert.match(comment, /\| Score \| Performance \| 🟡 \*\*82\*\* \|/)
   assert.match(
     comment,
-    /\| 2053ms \| 2313ms \| 0\.045 \| 0ms \| 242KB \| 8KB \|/,
+    /\| Metric \| First Contentful Paint \(FCP\) \| `2053ms` \|/,
+  )
+  assert.match(comment, /\| Resource \| Script \/ Image \| `242KB` \/ `8KB` \|/)
+  assert.doesNotMatch(comment, /\| Category \| Score \| Status \|/)
+  assert.doesNotMatch(
+    comment,
+    /\| FCP \| LCP \| CLS \| TBT \| Script \| Image \|/,
   )
   assert.doesNotMatch(comment, /mermaid|xychart|actions\/runs|대표 실행 결과/)
 })
@@ -191,8 +195,11 @@ test('improvement suggestions prioritize savings and limit the result to three',
 
   const comment = createLighthouseComment({ report })
 
-  assert.match(comment, /### 개선점 요약/)
-  assert.match(comment, /- Reduce unused JavaScript/)
+  assert.match(comment, /### 💡 개선 우선순위/)
+  assert.match(comment, /1\. Reduce unused JavaScript/)
+  assert.match(comment, /2\. Preconnect to required origins/)
+  assert.match(comment, /3\. Improve image delivery/)
+  assert.doesNotMatch(comment, /- Reduce unused JavaScript/)
   assert.doesNotMatch(comment, /Browser errors were logged/)
 })
 
@@ -205,7 +212,7 @@ test('createLighthouseComment renders a fallback without improvement candidates'
 
   assert.match(
     createLighthouseComment({ report }),
-    /- 감지된 주요 개선점이 없습니다\./,
+    /1\. 감지된 주요 개선점이 없습니다\./,
   )
 })
 
@@ -247,7 +254,10 @@ test('commentLighthouseResults updates the existing bot comment', async (t) => {
   assert.equal(calls.create.length, 0)
   assert.equal(calls.update.length, 1)
   assert.equal(calls.update[0].comment_id, 55)
-  assert.match(calls.update[0].body, /\| Performance \| 82 \| 🟡 \|/)
+  assert.match(
+    calls.update[0].body,
+    /\| Score \| Performance \| 🟡 \*\*82\*\* \|/,
+  )
 })
 
 test('commentLighthouseResults creates a comment when no marker exists', async (t) => {
