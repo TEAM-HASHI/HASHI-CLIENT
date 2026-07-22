@@ -122,12 +122,11 @@ UI 변경:
 ## GitHub Actions Roles
 
 - `ci.yml`: format, lint, typecheck, test, build를 병렬 실행하는 코드 품질 gate입니다.
-- `vercel-preview.yml`: client preview 배포만 담당합니다.
+- `vercel-preview.yml`: client Preview를 먼저 배포하고, 배포 job이 반환한 URL을 Lighthouse가 모바일 환경에서 3회 측정합니다. 모든 LHR에서 실제 Preview URL, 브라우저 CORS, 홈의 배너·SNS 인기 식당 API 2xx를 확인하며 이 신뢰성 검증이 실패하면 점수 코멘트를 게시하지 않습니다. Performance 80, Accessibility·Best Practices·SEO 90 기준은 모두 warning이므로 점수 미달만으로 workflow를 실패시키지 않습니다. 대표 결과의 category·metric·resource와 개선 audit 최대 3개는 기존 PR 코멘트에 갱신되고 상세 HTML/JSON은 `lighthouse-reports` Artifact로 14일 보관됩니다. Vercel Preview의 자동 noindex header가 SEO 점수에 포함되므로 production SEO 최종 판정으로 사용하지 않습니다.
 - `vercel-production.yml`: client production 배포만 담당합니다.
 - `vercel-admin-preview.yml`: admin preview 배포만 담당합니다.
 - `vercel-admin-production.yml`: admin production 배포만 담당합니다.
 - `chromatic.yml`: HDS Storybook/Chromatic 검증만 담당하며, HDS 관련 경로가 바뀐 PR에서 실행됩니다.
-- `lighthouse.yml`: GitHub Actions Repository Variable `VITE_API_BASE_URL`을 Client build에 주입하고, build 전에 공개 read-only API 연결을 확인한 뒤 production build의 `/` 경로를 Lighthouse로 측정합니다. Variable 누락·잘못된 URL, API timeout·네트워크·non-2xx, Client build와 Lighthouse collect 같은 실행 오류는 workflow를 실패시킵니다. Performance는 80점, Accessibility·Best Practices·SEO는 각각 90점 기준을 적용하며, 네 category는 모두 warning으로만 기록되어 점수 미달만으로 workflow를 실패시키지 않습니다. 상세 HTML/JSON 리포트는 14일 보관 `lighthouse-reports` Artifact로 확인합니다. 같은 저장소의 PR에는 대표 실행의 category, metric, resource를 영역으로 구분한 단일 세로 요약표와 개선 audit 최대 3개의 순서 있는 목록을 하나의 코멘트로 생성하거나 갱신하며 Mermaid와 상세 리포트 링크는 표시하지 않습니다. 외부 fork PR은 코멘트를 건너뜁니다.
 - auto-label, auto-assign, Discord workflow는 PR 운영 자동화를 담당합니다.
 
 ## Before Merge

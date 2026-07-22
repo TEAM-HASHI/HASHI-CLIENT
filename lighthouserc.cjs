@@ -1,10 +1,7 @@
 module.exports = {
   ci: {
     collect: {
-      isSinglePageApplication: true,
       numberOfRuns: 3,
-      staticDistDir: './apps/client/dist',
-      url: ['http://localhost/'],
     },
     assert: {
       assertions: {
