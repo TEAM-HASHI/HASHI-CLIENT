@@ -36,6 +36,7 @@
 | Server state                | `TanStack Query`                              | `@tanstack/react-query@^5.101.0`         | Current | app provider와 shared query client 기준    |
 | Unit/Component test         | `Vitest`                                      | `vitest@^3.2.4`                          | Current | client, HDS UI, shared config 기준         |
 | E2E test                    | `Playwright`                                  | `@playwright/test@^1.55.0`               | Current | client e2e scaffold 기준                   |
+| Web quality check           | `Lighthouse CI`                               | `@lhci/cli@^0.15.1`                      | Current | Client Lighthouse 검사 기준                |
 | Icon pipeline               | `SVGR`                                        | `@svgr/core@^8.1.0`                      | Current | `packages/hds-icons` generator 기준        |
 | Error monitoring            | `Sentry`                                      | `@sentry/react@^10.60.0`                 | Current | React SDK와 Vite plugin 기준               |
 | Git hook                    | `Husky`, `lint-staged`                        | `husky@^9.1.7`, `lint-staged@^17.0.8`    | Current | prepare script와 lint-staged config 기준   |
@@ -59,6 +60,7 @@
 - Server state: [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview)
 - Unit/Component test: [Vitest](https://vitest.dev/guide/)
 - E2E test: [Playwright](https://playwright.dev/docs/intro)
+- Web quality check: [Lighthouse CI](https://github.com/GoogleChrome/lighthouse-ci)
 - Icon pipeline: [SVGR](https://react-svgr.com/docs/getting-started/)
 - Error monitoring: [Sentry React](https://docs.sentry.io/platforms/javascript/guides/react/)
 - Git hook: [Husky](https://typicode.github.io/husky/), [lint-staged](https://github.com/lint-staged/lint-staged)

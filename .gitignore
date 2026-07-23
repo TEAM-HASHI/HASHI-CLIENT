@@ -51,3 +51,7 @@ blob-report/
 playwright/.cache/
 .env*
 !.env.example
+
+# Lighthouse
+.lighthouseci/
+lighthouse-reports/

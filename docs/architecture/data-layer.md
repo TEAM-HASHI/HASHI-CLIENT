@@ -30,6 +30,17 @@ HASHI 앱의 데이터 레이어는 앱 내부에서 먼저 조립하고, 실제
 
 새 dependency를 추가하거나 버전을 바꾸는 경우 `docs/conventions/package-management.md`를 따릅니다.
 
+## Lighthouse CI Runtime
+
+Lighthouse는 별도 로컬 build가 아니라 PR의 Vercel Preview 배포 URL을 측정합니다. Client runtime API 주소는 GitHub Actions Variable이 아니라 Vercel Preview Environment의 `VITE_API_BASE_URL`에서 build 시 주입됩니다.
+
+- Preview에는 production이 아닌 개발 또는 staging API의 HTTP(S) 절대 URL을 등록합니다.
+- API 서버 CORS allowlist는 HASHI Client의 Vercel Preview origin을 허용해야 합니다.
+- Lighthouse가 기록한 모든 LHR에서 `GET /api/v1/magazines/banners`와 `GET /api/v1/restaurants?type=sns-hot&size=5`의 HTTP 2xx를 확인합니다.
+- Preview URL 불일치, runtime error, 브라우저 CORS 오류, 필수 API 누락·non-2xx는 측정 신뢰성 오류로 workflow를 실패시킵니다.
+- Lighthouse category 점수 미달은 API 연결 실패와 구분해 warning으로만 기록합니다.
+- Vercel Preview의 자동 `X-Robots-Tag: noindex`가 SEO 점수에 포함되므로 이 결과를 production SEO 색인 가능 여부의 최종 검증으로 사용하지 않습니다.
+
 ## Provider Boundary
 
 서버 상태 Provider는 앱 실행 조립 코드에 둡니다.
