@@ -1,6 +1,8 @@
 const fs = require('node:fs')
 const path = require('node:path')
 
+// Lighthouse가 홈(`/`)의 실제 화면을 측정했는지 검증하는 현재 필수 데이터 요청입니다.
+// 홈 API 의존성이 바뀌면 이 목록과 관련 테스트를 함께 갱신합니다.
 const REQUIRED_HOME_APIS = [
   {
     label: '/api/v1/magazines/banners',

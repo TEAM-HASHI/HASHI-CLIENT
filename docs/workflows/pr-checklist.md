@@ -122,7 +122,13 @@ UI 변경:
 ## GitHub Actions Roles
 
 - `ci.yml`: format, lint, typecheck, test, build를 병렬 실행하는 코드 품질 gate입니다.
-- `vercel-preview.yml`: client Preview를 먼저 배포하고, 배포 job이 반환한 URL을 Lighthouse가 모바일 환경에서 3회 측정합니다. 모든 LHR에서 실제 Preview URL, 브라우저 CORS, 홈의 배너·SNS 인기 식당 API 2xx를 확인하며 이 신뢰성 검증이 실패하면 점수 코멘트를 게시하지 않습니다. Performance 80, Accessibility·Best Practices·SEO 90 기준은 모두 warning이므로 점수 미달만으로 workflow를 실패시키지 않습니다. 대표 결과의 category·metric·resource와 개선 audit 최대 3개는 기존 PR 코멘트에 갱신되고 상세 HTML/JSON은 `lighthouse-reports` Artifact로 14일 보관됩니다. Vercel Preview의 자동 noindex header가 SEO 점수에 포함되므로 production SEO 최종 판정으로 사용하지 않습니다.
+- `vercel-preview.yml`: client Preview 배포와 Preview 기반 Lighthouse 측정을 담당합니다.
+  - PR에서는 Preview 배포 후 Lighthouse가 배포 URL의 홈(`/`)을 모바일 환경에서 3회 측정합니다.
+  - Preview URL 불일치, Lighthouse runtime error, 브라우저 CORS 오류, 홈 필수 API non-2xx는 측정 신뢰성 오류로 보고 workflow를 실패시킵니다.
+  - Performance 80, Accessibility·Best Practices·SEO 90 기준은 모두 warning으로 처리하므로 점수 미달만으로 workflow를 실패시키지 않습니다.
+  - 대표 결과의 category·metric·resource와 개선 audit 최대 3개는 기존 PR 코멘트에 갱신합니다.
+  - 상세 HTML/JSON 리포트는 `lighthouse-reports` Artifact로 14일 보관합니다.
+  - Vercel Preview의 자동 `X-Robots-Tag: noindex` header가 SEO 점수에 포함되므로 production SEO 최종 판정으로 사용하지 않습니다.
 - `vercel-production.yml`: client production 배포만 담당합니다.
 - `vercel-admin-preview.yml`: admin preview 배포만 담당합니다.
 - `vercel-admin-production.yml`: admin production 배포만 담당합니다.
