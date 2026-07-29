@@ -2,16 +2,8 @@ name: Vercel Preview Deployment
 
 on:
   pull_request:
-    paths:
-      - '.github/workflows/vercel-preview.yml'
-      - 'apps/client/**'
-      - 'configs/**'
-      - 'packages/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-      - 'turbo.json'
-      - 'vercel.json'
+    branches:
+      - develop
   push:
     branches:
       - develop
@@ -36,7 +28,10 @@ permissions:
 
 jobs:
   deploy-preview:
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
 
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -76,6 +71,7 @@ jobs:
 
       - name: Comment Preview URL
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
@@ -85,3 +81,60 @@ jobs:
               repo: context.repo.repo,
               body: `🚀 Client Preview deployed: ${{ steps.deploy.outputs.url }}`,
             })
+
+  lighthouse:
+    name: Lighthouse CI
+    if: ${{ github.event_name == 'pull_request' && needs.deploy-preview.result == 'success' }}
+    needs: deploy-preview
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test Lighthouse Helpers
+        run: pnpm test:lighthouse
+
+      - name: Collect Lighthouse Results
+        run: pnpm exec lhci collect --url='${{ needs.deploy-preview.outputs.url }}'
+
+      - name: Validate Lighthouse Preview
+        id: validate_preview
+        run: node .github/scripts/lighthouse-preview-validation.cjs '${{ needs.deploy-preview.outputs.url }}'
+
+      - name: Assert Lighthouse Results
+        run: pnpm exec lhci assert
+
+      - name: Export Lighthouse Results
+        if: always()
+        run: pnpm exec lhci upload
+
+      - name: Upload Lighthouse Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: lighthouse-reports
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Comment Lighthouse Results
+        if: ${{ always() && steps.validate_preview.outcome == 'success' && github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { commentLighthouseResults } = require('./.github/scripts/lighthouse-comment.cjs')
+
+            await commentLighthouseResults({ github, context, core })
