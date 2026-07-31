@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { showToast } from '@hashi/hds-ui'
 import { useQueryClient } from '@tanstack/react-query'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import {
@@ -207,16 +207,19 @@ export const useMyReservationsPage = () => {
   }
 
   const handleDetailPress = (reservationId: string) => {
-    navigate(ROUTES.reservationDetail.replace(':reservationId', reservationId))
+    navigate(generatePath(ROUTES.reservationDetail, { reservationId }))
   }
 
   const handleReviewPress = (reservation: VisitedReservation) => {
     if (reservation.reviewActionState === 'WRITTEN' && reservation.reviewId) {
-      navigate(ROUTES.reviewDetail.replace(':reviewId', reservation.reviewId), {
-        state: {
-          returnTo: `${ROUTES.myReservations}?status=VISITED`,
+      navigate(
+        generatePath(ROUTES.reviewDetail, { reviewId: reservation.reviewId }),
+        {
+          state: {
+            returnTo: `${ROUTES.myReservations}?status=VISITED`,
+          },
         },
-      })
+      )
       return
     }
 
@@ -227,10 +230,9 @@ export const useMyReservationsPage = () => {
       return
     }
 
-    const pathname = ROUTES.reviewNew.replace(
-      ':restaurantId',
-      reservation.restaurantId,
-    )
+    const pathname = generatePath(ROUTES.reviewNew, {
+      restaurantId: reservation.restaurantId,
+    })
     const searchParams = new URLSearchParams({
       reservationId: reservation.reservationId,
     })

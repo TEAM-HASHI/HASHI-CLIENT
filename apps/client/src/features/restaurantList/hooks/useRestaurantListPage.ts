@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { generatePath, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import {
@@ -30,10 +30,7 @@ const getOptionByValue = (options: FilterOption[], value: string) => {
 }
 
 const getRestaurantDetailPath = (restaurantId: string) => {
-  return ROUTES.restaurantDetail.replace(
-    ':restaurantId',
-    encodeURIComponent(restaurantId),
-  )
+  return generatePath(ROUTES.restaurantDetail, { restaurantId })
 }
 
 export const useRestaurantListPage = ({

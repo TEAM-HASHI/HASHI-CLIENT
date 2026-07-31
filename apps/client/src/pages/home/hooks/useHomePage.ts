@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { generatePath, useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
@@ -39,10 +39,7 @@ const markAuthGateShown = () => {
 }
 
 const getRestaurantDetailPath = (restaurantId: string) => {
-  return ROUTES.restaurantDetail.replace(
-    ':restaurantId',
-    encodeURIComponent(restaurantId),
-  )
+  return generatePath(ROUTES.restaurantDetail, { restaurantId })
 }
 
 export const useHomePage = () => {

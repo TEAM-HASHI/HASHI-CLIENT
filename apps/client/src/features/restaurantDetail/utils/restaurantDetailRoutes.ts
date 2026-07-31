@@ -1,4 +1,4 @@
-import type { NavigateFunction } from 'react-router-dom'
+import { generatePath, type NavigateFunction } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
@@ -14,24 +14,21 @@ export interface RestaurantMenuDetailLocationState {
 }
 
 export const getRestaurantDetailPath = (restaurantId: string) =>
-  ROUTES.restaurantDetail.replace(':restaurantId', restaurantId)
+  generatePath(ROUTES.restaurantDetail, { restaurantId })
 
 export const getRestaurantMenuDetailPath = (
   restaurantId: string,
   menuId: string,
-) =>
-  ROUTES.restaurantMenuDetail
-    .replace(':restaurantId', restaurantId)
-    .replace(':menuId', menuId)
+) => generatePath(ROUTES.restaurantMenuDetail, { menuId, restaurantId })
 
 export const getRestaurantReservationNewPath = (restaurantId: string) =>
-  ROUTES.restaurantReservationNew.replace(':restaurantId', restaurantId)
+  generatePath(ROUTES.restaurantReservationNew, { restaurantId })
 
 export const getRestaurantReviewNewPath = (
   restaurantId: string,
   reservationId: string,
 ) => {
-  const pathname = ROUTES.reviewNew.replace(':restaurantId', restaurantId)
+  const pathname = generatePath(ROUTES.reviewNew, { restaurantId })
   const searchParams = new URLSearchParams({ reservationId })
 
   return `${pathname}?${searchParams.toString()}`

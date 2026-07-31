@@ -1,5 +1,5 @@
 import { ClockSmallIcon, StarFillIcon } from '@hashi/hds-icons'
-import { Link } from 'react-router-dom'
+import { generatePath, Link } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import type { SearchRestaurant } from '@/pages/search/types'
@@ -10,10 +10,7 @@ interface RestaurantResultItemProps {
 }
 
 const createRestaurantDetailPath = (restaurantId: string) => {
-  return ROUTES.restaurantDetail.replace(
-    ':restaurantId',
-    encodeURIComponent(restaurantId),
-  )
+  return generatePath(ROUTES.restaurantDetail, { restaurantId })
 }
 
 export const RestaurantResultItem = ({

@@ -162,6 +162,7 @@ page 단위 구현, form/data fetching/mutation 흐름, HDS component, 여러 �
 
 - 라우터 설정은 `apps/client/src/app/router`에서 관리합니다.
 - route path는 문자열을 흩뿌리지 않고 상수화를 검토합니다.
+- 동적 route URL은 수동 문자열 치환 대신 React Router의 `generatePath`를 사용하고, path parameter는 사전 인코딩하지 않은 원본 값을 전달합니다.
 - URL params와 search params는 사용하는 위치에서 명시적으로 읽고 검증합니다.
 - 첫 진입 화면은 단순성을 우선하고, lazy loading은 실제 번들/사용성 이슈가 있을 때 도입합니다.
 - 페이지별 접근 권한과 redirect 정책은 [Routing And Access Policy](./routing-and-access-policy.md)를 따릅니다.

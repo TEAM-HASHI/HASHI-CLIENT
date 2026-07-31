@@ -61,6 +61,7 @@ const LocationPath = () => {
   return (
     <>
       <div data-testid="location-path">{location.pathname}</div>
+      <div data-testid="location-search">{location.search}</div>
       <div data-testid="location-state">{JSON.stringify(location.state)}</div>
     </>
   )
@@ -419,6 +420,9 @@ describe('MyReservationsPage', () => {
     )
     expect(screen.getByTestId('location-path')).toHaveTextContent(
       '/restaurants/42/reviews/new',
+    )
+    expect(screen.getByTestId('location-search')).toHaveTextContent(
+      '?reservationId=32',
     )
   })
 
