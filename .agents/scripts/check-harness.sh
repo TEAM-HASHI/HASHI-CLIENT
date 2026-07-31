@@ -40,6 +40,8 @@ require_path "docs/workflows/api-integration.md"
 require_path "docs/architecture/routing-and-access-policy.md"
 require_path "docs/workflows/pr-checklist.md"
 require_path "docs/workflows/spec-writing.md"
+require_path "docs/workflows/code-review.md"
+require_path "docs/workflows/testing.md"
 require_path ".agents/scripts/summarize-openapi.mjs"
 require_path "turbo/generators/templates/page/page.spec.md.hbs"
 
