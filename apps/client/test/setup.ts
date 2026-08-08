@@ -87,10 +87,12 @@ const installLocalStorageMock = () => {
 
 installLocalStorageMock()
 
-Object.defineProperty(window, 'scrollTo', {
-  configurable: true,
-  value: vi.fn(),
-})
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'scrollTo', {
+    configurable: true,
+    value: vi.fn(),
+  })
+}
 
 type TestGlobal = typeof globalThis & {
   IntersectionObserver?: unknown

@@ -133,6 +133,11 @@ describe('HashiPickPage', () => {
       sort: 'basic',
       type: 'hashi-pick',
     })
+    expect(document.title).toBe('하시 PICK | 일본 현지 맛집 큐레이션 | HASHI')
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://www.hashi.kr/restaurants/hashi-pick',
+    )
   })
 
   it('keeps selected sort unchanged until apply is pressed', async () => {
@@ -225,6 +230,29 @@ describe('HashiPickPage', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('does not replace prerendered SEO with an empty model while loading', () => {
+    mockedGetRestaurants.mockReturnValueOnce(new Promise(() => {}))
+    document.title = '프리렌더 하시 PICK | HASHI'
+    const robots = document.createElement('meta')
+    robots.name = 'robots'
+    robots.content = 'index, follow'
+    robots.setAttribute('data-hashi-seo', '')
+    document.head.append(robots)
+    const canonical = document.createElement('link')
+    canonical.rel = 'canonical'
+    canonical.href = 'https://www.hashi.kr/restaurants/hashi-pick'
+    canonical.setAttribute('data-hashi-seo', '')
+    document.head.append(canonical)
+
+    renderHashiPickPage()
+
+    expect(document.title).toBe('프리렌더 하시 PICK | HASHI')
+    expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'index, follow',
+    )
+  })
+
   it('renders only image urls returned by the server', async () => {
     mockedGetRestaurants.mockResolvedValueOnce(
       createRestaurantsResult({
@@ -297,5 +325,11 @@ describe('HashiPickPage', () => {
     expect(
       await screen.findAllByRole('button', { name: /히마와리 스시/ }),
     ).toHaveLength(12)
+    const itemList = JSON.parse(
+      document.querySelector('script[type="application/ld+json"]')
+        ?.textContent ?? '{}',
+    ) as { numberOfItems?: number }
+
+    expect(itemList.numberOfItems).toBe(10)
   })
 })

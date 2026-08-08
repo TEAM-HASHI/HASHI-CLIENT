@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
 import { AnywhereReservationCta } from '@/pages/home/components/AnywhereReservationCta'
 import { HomeCurationSection } from '@/pages/home/components/HomeCurationSection'
@@ -6,6 +8,7 @@ import { HomeQuickMenuSection } from '@/pages/home/components/HomeQuickMenuSecti
 import { HomeSearchEntry } from '@/pages/home/components/HomeSearchEntry'
 import { HotSnsRestaurantSection } from '@/pages/home/components/HotSnsRestaurantSection'
 import { useHomePage } from '@/pages/home/hooks/useHomePage'
+import { createHomeSeoPage, PageSeo } from '@/shared/seo'
 
 export const HomePage = () => {
   const {
@@ -19,9 +22,38 @@ export const HomePage = () => {
     quickLinks,
     searchPath,
   } = useHomePage()
+  const seoPage = useMemo(
+    () =>
+      createHomeSeoPage({
+        magazines: homeBanners.map((banner) => ({
+          externalUrl: banner.instagramUrl,
+          id: banner.id,
+          image: banner.imageUrl,
+          title: banner.imageAlt,
+        })),
+        restaurants: hotSnsRestaurants.map((restaurant) => ({
+          address: '',
+          cuisine: '',
+          description: restaurant.summary,
+          id: restaurant.restaurantId,
+          images: restaurant.imageUrl ? [restaurant.imageUrl] : [],
+          menus: [],
+          name: restaurant.name,
+          rating: 0,
+          reviewCount: 0,
+        })),
+      }),
+    [homeBanners, hotSnsRestaurants],
+  )
+  const shouldRegisterSeo =
+    !homeBannersState.isLoading &&
+    !homeBannersState.isError &&
+    !hotSnsRestaurantsQuery.isLoading &&
+    !hotSnsRestaurantsQuery.isError
 
   return (
     <>
+      {shouldRegisterSeo ? <PageSeo page={seoPage} /> : null}
       <div className="px-5 pt-[100px] pb-8">
         <h1 className="sr-only">Hashi 홈</h1>
         <header

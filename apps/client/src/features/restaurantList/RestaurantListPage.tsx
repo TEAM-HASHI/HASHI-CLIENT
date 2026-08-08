@@ -1,5 +1,6 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
+import { useMemo } from 'react'
 
 import {
   CATEGORY_OPTIONS,
@@ -13,6 +14,7 @@ import type {
 } from '@/features/restaurantList'
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
+import { createRestaurantListSeoPage, PageSeo } from '@/shared/seo'
 
 type RestaurantListPageProps = {
   title: string
@@ -62,6 +64,7 @@ export const RestaurantListPage = ({
     isLoading,
     loadMoreRef,
     selectedSort,
+    seoRestaurants,
     visibleRestaurants,
     handleApplyCategory,
     handleApplySort,
@@ -85,110 +88,132 @@ export const RestaurantListPage = ({
     !isFetchingNextPage
   const shouldRenderList =
     visibleRestaurants.length > 0 || hasMoreRestaurants || isFetchingNextPage
+  const shouldRegisterSeo = !isLoading && !isError
+  const seoPage = useMemo(
+    () =>
+      createRestaurantListSeoPage({
+        restaurants: seoRestaurants.map((restaurant) => ({
+          address: restaurant.region,
+          cuisine: restaurant.category,
+          description: restaurant.description,
+          id: restaurant.id,
+          images: restaurant.images,
+          menus: [],
+          name: restaurant.name,
+          rating: restaurant.rating,
+          reviewCount: 0,
+        })),
+        type: restaurantType,
+      }),
+    [restaurantType, seoRestaurants],
+  )
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
-      <div
-        className="app-mobile-fixed-top z-fixed bg-white"
-        data-testid="restaurant-list-sticky-header"
-      >
-        <Header
-          className="text-primary-200"
-          leftAction={
-            <IconButton
-              aria-label="뒤로가기"
-              onClick={handleBackClick}
-              size="xs"
-            >
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-          title={<h1>{title}</h1>}
-        />
-      </div>
-
-      <div
-        className="flex flex-1 flex-col pt-[75px]"
-        data-testid="restaurant-list-scroll-content"
-      >
-        <RestaurantFilterBar
-          categoryLabel={categoryLabel}
-          onClickCategory={handleOpenCategorySheet}
-          onClickSort={handleOpenSortSheet}
-          sortLabel={selectedSort.label}
-        />
-
-        {isLoading ? (
-          <ul
-            aria-label={`${title} 식당 목록 로딩 중`}
-            className="mx-auto flex w-full flex-col gap-1 px-5"
-            data-testid="restaurant-list"
-          >
-            {renderSkeletonItems(3)}
-          </ul>
-        ) : isError ? (
-          <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 px-5 text-center">
-            <p className="typo-body-4 text-primary-200">
-              식당 목록을 불러오지 못했습니다.
-            </p>
-            <Button onClick={handleRetry} size="sm" variant="neutral">
-              다시 시도
-            </Button>
-          </div>
-        ) : (
-          <>
-            {shouldRenderList ? (
-              <ul
-                className="mx-auto flex w-full flex-col gap-1 px-5"
-                data-testid="restaurant-list"
+    <>
+      {shouldRegisterSeo ? <PageSeo page={seoPage} /> : null}
+      <div className="flex min-h-dvh flex-col bg-white">
+        <div
+          className="app-mobile-fixed-top z-fixed bg-white"
+          data-testid="restaurant-list-sticky-header"
+        >
+          <Header
+            className="text-primary-200"
+            leftAction={
+              <IconButton
+                aria-label="뒤로가기"
+                onClick={handleBackClick}
+                size="xs"
               >
-                {visibleRestaurants.map((restaurant) => (
-                  <RestaurantCard
-                    key={restaurant.id}
-                    onClick={handleClickRestaurant}
-                    restaurant={restaurant}
-                  />
-                ))}
-                {hasMoreRestaurants && (
-                  <li
-                    aria-hidden="true"
-                    className="h-px"
-                    data-testid="restaurant-list-load-more"
-                    ref={loadMoreRef}
-                  />
-                )}
-                {isFetchingNextPage ? renderSkeletonItems(1) : null}
-              </ul>
-            ) : null}
-            {shouldRenderEmptyState ? (
-              <div className="flex flex-1 items-center justify-center px-5">
-                <ListEmptyState description="검색된 식당이 없습니다." />
-              </div>
-            ) : null}
-          </>
-        )}
-      </div>
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+            title={<h1>{title}</h1>}
+          />
+        </div>
 
-      <FilterBottomSheet
-        onApply={handleApplySort}
-        onOpenChange={handleCloseBottomSheet}
-        onReset={handleResetSort}
-        onSelect={handleSelectSort}
-        open={activeBottomSheet === 'sort'}
-        options={sortOptions}
-        selectedValue={draftSort.value}
-        title="정렬 순서"
-      />
-      <FilterBottomSheet
-        onApply={handleApplyCategory}
-        onOpenChange={handleCloseBottomSheet}
-        onReset={handleResetCategory}
-        onSelect={handleSelectCategory}
-        open={activeBottomSheet === 'category'}
-        options={CATEGORY_OPTIONS}
-        selectedValue={draftCategory.value}
-        title="음식 장르 선택"
-      />
-    </div>
+        <div
+          className="flex flex-1 flex-col pt-[75px]"
+          data-testid="restaurant-list-scroll-content"
+        >
+          <RestaurantFilterBar
+            categoryLabel={categoryLabel}
+            onClickCategory={handleOpenCategorySheet}
+            onClickSort={handleOpenSortSheet}
+            sortLabel={selectedSort.label}
+          />
+
+          {isLoading ? (
+            <ul
+              aria-label={`${title} 식당 목록 로딩 중`}
+              className="mx-auto flex w-full flex-col gap-1 px-5"
+              data-testid="restaurant-list"
+            >
+              {renderSkeletonItems(3)}
+            </ul>
+          ) : isError ? (
+            <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 px-5 text-center">
+              <p className="typo-body-4 text-primary-200">
+                식당 목록을 불러오지 못했습니다.
+              </p>
+              <Button onClick={handleRetry} size="sm" variant="neutral">
+                다시 시도
+              </Button>
+            </div>
+          ) : (
+            <>
+              {shouldRenderList ? (
+                <ul
+                  className="mx-auto flex w-full flex-col gap-1 px-5"
+                  data-testid="restaurant-list"
+                >
+                  {visibleRestaurants.map((restaurant) => (
+                    <RestaurantCard
+                      key={restaurant.id}
+                      onClick={handleClickRestaurant}
+                      restaurant={restaurant}
+                    />
+                  ))}
+                  {hasMoreRestaurants && (
+                    <li
+                      aria-hidden="true"
+                      className="h-px"
+                      data-testid="restaurant-list-load-more"
+                      ref={loadMoreRef}
+                    />
+                  )}
+                  {isFetchingNextPage ? renderSkeletonItems(1) : null}
+                </ul>
+              ) : null}
+              {shouldRenderEmptyState ? (
+                <div className="flex flex-1 items-center justify-center px-5">
+                  <ListEmptyState description="검색된 식당이 없습니다." />
+                </div>
+              ) : null}
+            </>
+          )}
+        </div>
+
+        <FilterBottomSheet
+          onApply={handleApplySort}
+          onOpenChange={handleCloseBottomSheet}
+          onReset={handleResetSort}
+          onSelect={handleSelectSort}
+          open={activeBottomSheet === 'sort'}
+          options={sortOptions}
+          selectedValue={draftSort.value}
+          title="정렬 순서"
+        />
+        <FilterBottomSheet
+          onApply={handleApplyCategory}
+          onOpenChange={handleCloseBottomSheet}
+          onReset={handleResetCategory}
+          onSelect={handleSelectCategory}
+          open={activeBottomSheet === 'category'}
+          options={CATEGORY_OPTIONS}
+          selectedValue={draftCategory.value}
+          title="음식 장르 선택"
+        />
+      </div>
+    </>
   )
 }

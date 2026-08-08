@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import type { RestaurantMenuListData } from '@/features/restaurantDetail/api/getRestaurantMenus'
 import type { RestaurantReviewListData } from '@/features/restaurantDetail/api/getRestaurantReviews'
@@ -14,7 +14,10 @@ import {
   restaurantStoreInformationQueryOptions,
 } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
-import { createRestaurantDetailViewModel } from '@/features/restaurantDetail/utils/createRestaurantDetailViewModel'
+import {
+  createRestaurantDetailViewModel,
+  createRestaurantMenusViewModel,
+} from '@/features/restaurantDetail/utils/createRestaurantDetailViewModel'
 import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 interface UseRestaurantDetailContentParams {
@@ -94,25 +97,44 @@ export const useRestaurantDetailContent = ({
   })
 
   const storeInformation = storeInformationQuery.data
-  const menuPages = menusQuery.data?.pages ?? []
-  const reviewPages = reviewsQuery.data?.pages ?? []
-  const menus = menuPages.flatMap((page: RestaurantMenuListData) => page.menus)
-  const reviews = reviewPages.flatMap(
-    (page: RestaurantReviewListData) => page.reviews,
+  const menuPages = useMemo(
+    () => menusQuery.data?.pages ?? [],
+    [menusQuery.data?.pages],
+  )
+  const reviewPages = useMemo(
+    () => reviewsQuery.data?.pages ?? [],
+    [reviewsQuery.data?.pages],
+  )
+  const menus = useMemo(
+    () => menuPages.flatMap((page: RestaurantMenuListData) => page.menus),
+    [menuPages],
+  )
+  const reviews = useMemo(
+    () => reviewPages.flatMap((page: RestaurantReviewListData) => page.reviews),
+    [reviewPages],
   )
   const firstReviewPage = reviewPages[0]
-  const restaurant =
-    summary && storeInformation
-      ? createRestaurantDetailViewModel({
-          summary,
-          storeInformation,
-          menus,
-          reviews,
-          averageRating: firstReviewPage?.averageRating ?? 0,
-          reviewCount: firstReviewPage?.reviewCount ?? 0,
-          ratingDistribution: firstReviewPage?.ratingDistribution,
-        })
-      : null
+  const firstMenuPage = menuPages[0]
+  const seoMenus = useMemo(
+    () =>
+      firstMenuPage ? createRestaurantMenusViewModel(firstMenuPage.menus) : [],
+    [firstMenuPage],
+  )
+  const restaurant = useMemo(
+    () =>
+      summary && storeInformation
+        ? createRestaurantDetailViewModel({
+            summary,
+            storeInformation,
+            menus,
+            reviews,
+            averageRating: firstReviewPage?.averageRating ?? 0,
+            reviewCount: firstReviewPage?.reviewCount ?? 0,
+            ratingDistribution: firstReviewPage?.ratingDistribution,
+          })
+        : null,
+    [firstReviewPage, menus, reviews, storeInformation, summary],
+  )
 
   const handlePressReviewImage = (reviewId: string, imageIndex: number) => {
     const selectedReview = restaurant?.reviews.find(
@@ -172,5 +194,6 @@ export const useRestaurantDetailContent = ({
     reviewImageViewerInitialIndex,
     reviewLoadMoreRef,
     selectedReviewSort,
+    seoMenus,
   }
 }

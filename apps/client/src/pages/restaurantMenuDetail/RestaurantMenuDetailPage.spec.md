@@ -133,3 +133,14 @@
 - [ ] `pnpm --filter @hashi/client typecheck`
 - [ ] `pnpm --filter @hashi/client exec vitest run src/pages/restaurantMenuDetail/RestaurantMenuDetailPage.test.tsx src/features/restaurantDetail/api/restaurantDetailApi.test.ts`
 - [ ] `pnpm --filter @hashi/client build`
+
+## SEO
+
+- 유효한 공개 메뉴 API 응답은 `index, follow`, 유효하지 않은 ID와 404는 `noindex, nofollow`입니다.
+- canonical: `https://www.hashi.kr/restaurants/{restaurantId}/menus/{menuId}`
+- 제목과 설명은 메뉴명, 식당명, 화면에 실제 노출되는 메뉴 정보를 사용합니다.
+- 정적 HTML에 `MenuItem`, `BreadcrumbList` 구조화 데이터를 제공합니다.
+- 메뉴 가격이 실제 숫자와 통화로 존재할 때만 `Offer`와 snapshot 가격 정보를 제공합니다. 표시용 빈 가격은 `0`으로 변환하지 않습니다.
+- 다른 메뉴 SEO 링크는 첫 조회 페이지로 고정하며 무한스크롤 추가 페이지가 head를 다시 만들지 않습니다.
+- 직접 진입한 정적 문서는 API loading 또는 일시적인 5xx 동안 기존 `index, follow` head를 유지하고, API 성공 후 실제 메뉴 데이터로 교체합니다. 확인된 404는 `noindex, nofollow`로 전환합니다.
+- 상세 설계는 `docs/superpowers/specs/2026-08-07-seo-static-prerendering-design.md`를 따릅니다.

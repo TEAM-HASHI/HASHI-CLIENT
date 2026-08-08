@@ -159,6 +159,21 @@ describe('HomePage', () => {
     expect(screen.getByRole('navigation', { name: '주요 기능' })).toHaveClass(
       'mt-5',
     )
+    expect(document.title).toBe('HASHI | 일본 맛집 발견부터 예약까지')
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://www.hashi.kr/',
+    )
+  })
+
+  it('preserves prerendered SEO while home data is loading', () => {
+    mockGetMagazineBanners.mockReturnValueOnce(new Promise(() => {}))
+    mockGetHotSnsRestaurants.mockReturnValueOnce(new Promise(() => {}))
+    document.title = '프리렌더 HASHI 홈'
+
+    renderHomePage()
+
+    expect(document.title).toBe('프리렌더 HASHI 홈')
   })
 
   it('renders API banner images even when title or Instagram URL is missing', async () => {

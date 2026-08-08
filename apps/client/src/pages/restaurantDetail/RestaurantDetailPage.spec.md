@@ -250,3 +250,15 @@ RestaurantDetailPage
 - [ ] `pnpm --filter @hashi/client test`
 - [ ] `/restaurants/:restaurantId` 직접 접근 확인
 - [ ] 탭 전환, 리뷰 더보기, 리뷰 이미지 뷰어, 안내 모달, fixed bottom bar 확인
+
+## SEO
+
+- 유효한 공개 식당 API 응답은 `index, follow`, 유효하지 않은 ID와 404는 `noindex, nofollow`입니다.
+- canonical: `https://www.hashi.kr/restaurants/{restaurantId}`
+- 제목과 설명은 식당명 및 화면에 실제 노출되는 식당 정보를 사용합니다.
+- 정적 HTML에 공개 API에서 수집한 `Restaurant` 구조화 데이터를 제공합니다.
+- semantic snapshot에는 주소, 평점, 가격대, 영업시간과 메뉴 첫 페이지를 포함합니다.
+- 직접 진입한 정적 문서는 API loading 또는 일시적인 5xx 동안 기존 `index, follow` head를 유지하고, 실제 식당 API 성공 후 runtime 데이터로 교체합니다.
+- 유효하지 않은 ID 또는 확인된 404는 `NotFoundPage`가 `noindex, nofollow`로 교체합니다. SPA 내부 이동에는 경로 기반 안전한 `noindex` fallback을 사용합니다.
+- 추가 메뉴·리뷰 페이지 로드는 SEO snapshot과 head를 변경하지 않습니다.
+- 상세 설계는 `docs/superpowers/specs/2026-08-07-seo-static-prerendering-design.md`를 따릅니다.

@@ -1,5 +1,6 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
+import { useMemo } from 'react'
 
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
@@ -16,9 +17,11 @@ import { useRestaurantMenuDetailPage } from '@/pages/restaurantMenuDetail/hooks/
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { ShareIconButton } from '@/shared/components/shareIconButton'
+import { createMenuDetailSeoPage, PageSeo, parseSeoPrice } from '@/shared/seo'
 
 export const RestaurantMenuDetailPage = () => {
   const {
+    currentRestaurantId,
     error,
     isAuthGateOpen,
     isComingSoonOpen,
@@ -27,6 +30,7 @@ export const RestaurantMenuDetailPage = () => {
     hasMoreOtherMenus,
     otherMenuLoadMoreRef,
     otherMenusForDisplay,
+    otherMenusForSeo,
     otherMenuTotalCount,
     restaurant,
     selectedMenu,
@@ -40,6 +44,31 @@ export const RestaurantMenuDetailPage = () => {
     onPressReservation,
     onTabChange,
   } = useRestaurantMenuDetailPage()
+  const seoPage = useMemo(() => {
+    if (!restaurant || !selectedMenu) {
+      return null
+    }
+
+    const mapMenu = (menu: typeof selectedMenu) => {
+      return {
+        currency: menu.priceCurrency,
+        description: menu.description,
+        id: menu.id,
+        image: menu.imageUrl,
+        name: menu.name,
+        price: parseSeoPrice(menu.price),
+      }
+    }
+
+    return createMenuDetailSeoPage({
+      menu: mapMenu(selectedMenu),
+      otherMenus: otherMenusForSeo.map(mapMenu),
+      restaurant: {
+        id: currentRestaurantId,
+        name: restaurant.name,
+      },
+    })
+  }, [currentRestaurantId, otherMenusForSeo, restaurant, selectedMenu])
 
   if (isNotFound) {
     return <NotFoundPage />
@@ -54,84 +83,87 @@ export const RestaurantMenuDetailPage = () => {
   }
 
   return (
-    <div
-      className="min-h-dvh bg-white pb-[calc(82px+var(--safe-area-bottom,0px))]"
-      data-testid="restaurant-menu-detail-page"
-    >
+    <>
+      {seoPage ? <PageSeo page={seoPage} /> : null}
       <div
-        className="z-fixed fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
-        data-testid="restaurant-menu-detail-fixed-header"
+        className="min-h-dvh bg-white pb-[calc(82px+var(--safe-area-bottom,0px))]"
+        data-testid="restaurant-menu-detail-page"
       >
-        <Header
-          leftAction={
-            <IconButton aria-label="뒤로가기" onClick={onPressBack} size="xs">
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-          className="h-[75px]"
-          rightAction={<ShareIconButton shareUrl={shareUrl} />}
-          title={
-            <span className="block truncate whitespace-nowrap">
-              {restaurant.name}
-            </span>
-          }
-          variant="largeTitle"
+        <div
+          className="z-fixed fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
+          data-testid="restaurant-menu-detail-fixed-header"
+        >
+          <Header
+            leftAction={
+              <IconButton aria-label="뒤로가기" onClick={onPressBack} size="xs">
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+            className="h-[75px]"
+            rightAction={<ShareIconButton shareUrl={shareUrl} />}
+            title={
+              <span className="block truncate whitespace-nowrap">
+                {restaurant.name}
+              </span>
+            }
+            variant="largeTitle"
+          />
+        </div>
+
+        <div
+          className="z-fixed fixed inset-x-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
+          data-testid="restaurant-menu-detail-tab-fixed-container"
+          style={{ top: RESTAURANT_MENU_DETAIL_HEADER_HEIGHT }}
+        >
+          <RestaurantDetailTabs
+            activeTab="menu"
+            onTabChange={onTabChange}
+            reviewCount={restaurant.reviewCount}
+          />
+        </div>
+        <div
+          aria-hidden="true"
+          data-testid="restaurant-menu-detail-fixed-spacer"
+          style={{
+            height:
+              RESTAURANT_MENU_DETAIL_HEADER_HEIGHT +
+              RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
+          }}
+        />
+
+        <RestaurantImage
+          className="h-[234px] w-full object-cover"
+          defaultImageTestId="restaurant-menu-detail-default-image"
+          logoSize="lg"
+          src={selectedMenu.imageUrl}
+        />
+
+        <RestaurantSelectedMenuSection menu={selectedMenu} />
+
+        <RestaurantOtherMenuSection
+          hasMoreMenus={hasMoreOtherMenus}
+          loadMoreRef={otherMenuLoadMoreRef}
+          menus={otherMenusForDisplay}
+          onPressMenuItem={onPressMenuItem}
+          totalCount={otherMenuTotalCount}
+        />
+
+        <RestaurantBottomBar
+          likeCount={restaurant.likeCount}
+          onPressLike={onPressLike}
+          onPressReservation={onPressReservation}
+          variant="detail"
+        />
+        <AuthGateBottomSheet
+          onKakaoPress={onPressKakao}
+          onOpenChange={onAuthGateOpenChange}
+          open={isAuthGateOpen}
+        />
+        <ComingSoonDialog
+          onOpenChange={onComingSoonOpenChange}
+          open={isComingSoonOpen}
         />
       </div>
-
-      <div
-        className="z-fixed fixed inset-x-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
-        data-testid="restaurant-menu-detail-tab-fixed-container"
-        style={{ top: RESTAURANT_MENU_DETAIL_HEADER_HEIGHT }}
-      >
-        <RestaurantDetailTabs
-          activeTab="menu"
-          onTabChange={onTabChange}
-          reviewCount={restaurant.reviewCount}
-        />
-      </div>
-      <div
-        aria-hidden="true"
-        data-testid="restaurant-menu-detail-fixed-spacer"
-        style={{
-          height:
-            RESTAURANT_MENU_DETAIL_HEADER_HEIGHT +
-            RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
-        }}
-      />
-
-      <RestaurantImage
-        className="h-[234px] w-full object-cover"
-        defaultImageTestId="restaurant-menu-detail-default-image"
-        logoSize="lg"
-        src={selectedMenu.imageUrl}
-      />
-
-      <RestaurantSelectedMenuSection menu={selectedMenu} />
-
-      <RestaurantOtherMenuSection
-        hasMoreMenus={hasMoreOtherMenus}
-        loadMoreRef={otherMenuLoadMoreRef}
-        menus={otherMenusForDisplay}
-        onPressMenuItem={onPressMenuItem}
-        totalCount={otherMenuTotalCount}
-      />
-
-      <RestaurantBottomBar
-        likeCount={restaurant.likeCount}
-        onPressLike={onPressLike}
-        onPressReservation={onPressReservation}
-        variant="detail"
-      />
-      <AuthGateBottomSheet
-        onKakaoPress={onPressKakao}
-        onOpenChange={onAuthGateOpenChange}
-        open={isAuthGateOpen}
-      />
-      <ComingSoonDialog
-        onOpenChange={onComingSoonOpenChange}
-        open={isComingSoonOpen}
-      />
-    </div>
+    </>
   )
 }

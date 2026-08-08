@@ -21,6 +21,11 @@ import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { checkIsNotFoundError } from '@/shared/api'
 import { useAuthStatus } from '@/shared/hooks'
+import {
+  createRestaurantDetailSeoPage,
+  PageSeo,
+  parseSeoPrice,
+} from '@/shared/seo'
 import { NotFoundPage } from '@/pages/notFound'
 
 const RESTAURANT_DETAIL_MENU_PAGE_SIZE = 10
@@ -64,6 +69,42 @@ const RestaurantDetailContent = ({
 
   const requestError =
     summaryQuery.error ?? detailContent.error ?? reviewWriteNavigation.error
+  const seoPage = useMemo(() => {
+    const restaurant = detailContent.restaurant
+
+    if (!restaurant) {
+      return null
+    }
+
+    return createRestaurantDetailSeoPage({
+      address: restaurant.address,
+      businessHours: restaurant.businessHours.map(({ day, hours }) => ({
+        label: day,
+        value: hours,
+      })),
+      cuisine: summaryQuery.data?.foodCategory ?? '',
+      description: restaurant.detailDescription || restaurant.summary,
+      id: restaurant.id,
+      images: restaurant.heroImages,
+      menus: detailContent.seoMenus.map((menu) => {
+        return {
+          currency: menu.priceCurrency,
+          description: menu.description,
+          id: menu.id,
+          image: menu.imageUrl,
+          name: menu.name,
+          price: parseSeoPrice(menu.price),
+        }
+      }),
+      name: restaurant.name,
+      priceRange:
+        restaurant.priceRange === '가격 정보 없음'
+          ? undefined
+          : restaurant.priceRange,
+      rating: restaurant.rating,
+      reviewCount: restaurant.reviewCount,
+    })
+  }, [detailContent.restaurant, detailContent.seoMenus, summaryQuery.data])
 
   if (requestError) {
     if (checkIsNotFoundError(requestError)) {
@@ -109,6 +150,7 @@ const RestaurantDetailContent = ({
 
   return (
     <>
+      {seoPage ? <PageSeo page={seoPage} /> : null}
       <RestaurantDetailTemplate
         activeTab={detailContent.activeTab}
         hasMoreMenus={detailContent.hasMoreMenus}

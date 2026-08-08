@@ -184,7 +184,7 @@ Sitemap: https://www.hashi.kr/sitemap.xml
 
 ## Routing and HTTP Status
 
-Vercel은 정적 파일을 우선 제공한다. 현재의 전체 경로 SPA rewrite는 제거한다. 알려진 검색·유틸리티 route는 `public-noindex-shell.html`로, 인증·사용자 전용 route는 `private-noindex-shell.html`로 명시적으로 rewrite한다. 프리렌더된 공개 경로는 rewrite하지 않는다.
+Vercel은 정적 파일을 우선 제공한다. 현재의 전체 경로 SPA rewrite는 제거한다. 알려진 검색·유틸리티 route는 `public-noindex-shell.html`의 clean URL인 `/public-noindex-shell`로, 인증·사용자 전용 route는 `private-noindex-shell.html`의 clean URL인 `/private-noindex-shell`로 명시적으로 rewrite한다. `cleanUrls: true`에서는 rewrite destination에 `.html` 확장자를 쓰지 않는다. 프리렌더된 공개 경로는 rewrite하지 않는다.
 
 정적 파일도 아니고 알려진 SPA route도 아닌 요청은 `404.html`과 HTTP 404를 반환한다. 따라서 존재하지 않는 식당·메뉴 ID와 임의 경로가 더 이상 soft 404 HTML 200을 반환하지 않는다. 후행 slash는 Vercel 설정으로 canonical의 slash 없는 형태로 정규화한다.
 
@@ -206,9 +206,22 @@ Vercel은 정적 파일을 우선 제공한다. 현재의 전체 경로 SPA rewr
 - build는 인증이 필요 없는 공개 조회 API만 호출한다.
 - API base URL 외의 secret을 HTML이나 생성 로그에 넣지 않는다.
 - 모든 API 문자열을 HTML attribute, text, XML, JSON-LD 문맥별로 escape한다.
+- 매거진 외부 링크는 browser runtime과 build가 같은 Instagram URL 정규화 함수를 사용한다. HTTP(S) Instagram URL이 아니면 링크와 JSON-LD URL에서 제외한다.
 - JSON-LD의 `<` 문자를 안전하게 직렬화해 script 종료 문자열 주입을 방지한다.
 - semantic snapshot은 실제 화면에서 제공하는 정보만 포함하며 숨겨진 SEO 전용 키워드를 추가하지 않는다.
 - `noindex`와 robots는 권한 통제가 아니므로 기존 route guard와 API 인증을 그대로 유지한다.
+
+## Runtime Preservation and Data Integrity
+
+- 정적 HTML의 canonical이 최초 browser pathname과 일치하고 `index, follow`인 경우, `SeoProvider`는 API loading 또는 일시적인 5xx 동안 해당 정적 head를 보존한다.
+- SPA 내부 이동은 대응 정적 문서가 없으므로 기존처럼 route별 안전한 `noindex` fallback을 즉시 적용한다.
+- 유효하지 않은 route param 또는 API 404가 확인되면 `NotFoundPage`가 정적 head보다 우선하는 `noindex, nofollow`를 등록한다.
+- 홈·식당 목록·매거진 목록 runtime SEO는 최초 query가 성공한 뒤 등록하며, API error 중에는 검증된 정적 head를 빈 model로 덮어쓰지 않는다.
+- 무한 목록의 runtime SEO snapshot과 `ItemList`는 최초 페이지 최대 10개에 고정한다. 추가 페이지 로드는 화면만 갱신하며 head를 다시 만들지 않는다.
+- build API는 응답 봉투뿐 아니라 endpoint별 `content`, `magazines`, `banners`, `hasNext`, `nextCursor` 구조를 runtime에서 검증한다. malformed success payload를 빈 페이지로 간주하지 않고 build를 실패시킨다.
+- 가격이 없는 메뉴는 `Offer`를 만들지 않는다. 표시용 빈 문자열을 숫자 `0`으로 변환하지 않는다.
+- 식당 snapshot은 주소, 평점, 가격대와 영업시간을, 메뉴 snapshot은 실제 가격을 선택적으로 제공한다. 홈 snapshot은 현재 노출하는 유효한 매거진 배너 링크와 인기 식당 링크를 함께 제공한다.
+- snapshot의 의미 있는 이미지는 콘텐츠 이름을 alt로 사용한다. 대표 이미지는 eager로 두되 목록 이미지는 lazy loading과 async decoding을 사용하고 width/height를 제공해 초기 layout 변동을 줄인다.
 
 ## Testing and Verification
 
@@ -219,12 +232,17 @@ Vercel은 정적 파일을 우선 제공한다. 현재의 전체 경로 SPA rewr
 - 구조화 데이터의 조건부 필드와 안전한 JSON 직렬화
 - 식당·메뉴·매거진 cursor 전체 순회, 중복 제거와 cursor loop 실패
 - API retry와 동시 실행 제한
+- endpoint별 malformed success payload build failure
+- build/runtime 매거진 외부 URL 정규화 일치
+- 가격이 없는 메뉴의 `Offer` 생략
 - HTML·XML escape
 - 사이트맵에 실제 concrete URL만 포함되고 비색인 URL이 제외되는지
 - 생성된 모든 사이트맵 URL에 대응 HTML 파일이 있는지
 - 각 공개 HTML에 title, description, canonical, robots가 정확히 하나씩 있는지
 - public·private noindex shell과 `404.html`이 각각 지정된 robots 정책을 갖는지
 - SPA 이동 시 기존 SEO head element와 JSON-LD가 교체되는지
+- 최초 정적 indexable head가 API loading 동안 보존되고 404에서 교체되는지
+- 무한 목록 추가 페이지가 SEO `ItemList`와 head를 변경하지 않는지
 - 기존 page, router, API 테스트 회귀가 없는지
 
 API와 filesystem은 test double을 주입해 실제 운영 API나 저장소 `dist`에 의존하지 않고 generator를 검증한다.

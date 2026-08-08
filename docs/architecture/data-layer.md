@@ -41,6 +41,24 @@ Lighthouse는 별도 로컬 build가 아니라 PR의 Vercel Preview 배포 URL�
 - Lighthouse category 점수 미달은 API 연결 실패와 구분해 warning으로만 기록합니다.
 - Vercel Preview의 자동 `X-Robots-Tag: noindex`가 SEO 점수에 포함되므로 이 결과를 production SEO 색인 가능 여부의 최종 검증으로 사용하지 않습니다.
 
+## Build-time SEO API Boundary
+
+`apps/client/seo`는 production build에서만 실행되는 공개 조회 API 경계입니다. 브라우저 runtime의 `ky`, TanStack Query cache, 인증 상태를 사용하지 않고 native `fetch`와 generated OpenAPI component type으로 식당·메뉴·매거진 inventory를 수집합니다.
+
+전체 색인 정책, 정적 HTML 생성과 browser head 동기화 설계는 `docs/architecture/seo.md`를 따릅니다.
+
+- `VITE_API_BASE_URL`만 사용하며 인증 credential이나 사용자 데이터를 요청하지 않습니다.
+- 기존 `{ success, data, code, message }` 응답 봉투를 검증하고 `data`가 없는 성공 응답도 build 오류로 처리합니다.
+- 응답 봉투를 통과한 뒤에도 endpoint별 목록 배열, `hasNext` boolean과 cursor 타입을 runtime에서 검증합니다. malformed success payload를 빈 마지막 페이지로 간주하지 않습니다.
+- network, timeout, HTTP 5xx만 최초 요청 포함 최대 3회 시도하며 500ms, 1,000ms 간격으로 재시도합니다.
+- HTTP 4xx와 malformed 응답은 재시도하지 않습니다.
+- cursor는 끝까지 순차 순회하고 반복 cursor 또는 `hasNext: true`인데 `nextCursor`가 없는 응답은 build 오류로 처리합니다.
+- 식당 상세 수집은 최대 4개 restaurant job만 동시에 실행합니다.
+- query key, mutation, runtime cache synchronization을 만들지 않습니다. 기존 페이지 query의 ownership과 동작은 그대로 유지합니다.
+- 매거진 외부 링크는 browser와 build가 `apps/client/src/shared/utils/normalizeInstagramUrl.ts`의 동일한 host/protocol 정책을 사용합니다.
+
+수집한 데이터는 정적 HTML, `sitemap.xml`, `robots.txt` 생성에만 사용하며 응답 봉투 전체를 산출물이나 로그에 직렬화하지 않습니다.
+
 ## Provider Boundary
 
 서버 상태 Provider는 앱 실행 조립 코드에 둡니다.

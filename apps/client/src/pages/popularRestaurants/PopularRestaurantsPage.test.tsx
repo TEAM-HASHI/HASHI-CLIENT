@@ -129,6 +129,11 @@ describe('PopularRestaurantsPage', () => {
       sort: 'basic',
       type: 'popular',
     })
+    expect(document.title).toBe('인기 맛집 | 일본 인기 식당 추천 | HASHI')
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://www.hashi.kr/restaurants/popular',
+    )
 
     fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 기본순' }))
 

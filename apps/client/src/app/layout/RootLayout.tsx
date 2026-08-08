@@ -4,6 +4,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 
 import AsyncBoundary from '@/app/providers/AsyncBoundary'
 import { trackPageView } from '@/shared/lib/analytics'
+import { SeoProvider } from '@/shared/seo'
 
 export const RootLayout = () => {
   const { hash = '', pathname, search = '' } = useLocation()
@@ -18,13 +19,13 @@ export const RootLayout = () => {
   }, [pagePath])
 
   return (
-    <>
+    <SeoProvider>
       <main className="app-mobile-frame min-h-dvh bg-white">
         <AsyncBoundary resetKeys={[pathname]}>
           <Outlet />
         </AsyncBoundary>
       </main>
       <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
-    </>
+    </SeoProvider>
   )
 }

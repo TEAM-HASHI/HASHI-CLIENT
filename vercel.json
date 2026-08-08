@@ -5,10 +5,88 @@
   "installCommand": "pnpm install",
   "framework": "vite",
   "outputDirectory": "apps/client/dist",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/"
+      "source": "/restaurants/:restaurantId/reviews/new",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/reviews/:reviewId/edit",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/reviews/:reviewId",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/restaurants/:restaurantId/reservations/new",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/reservations/anywhere",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/reservations/request",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/reservations/:reservationId",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/my-reviews",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/saved",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/mypage",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/my-reservations",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/profile/new",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/withdrawal",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/login-required",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/oauth/callback/kakao",
+      "destination": "/private-noindex-shell"
+    },
+    {
+      "source": "/search",
+      "destination": "/public-noindex-shell"
+    },
+    {
+      "source": "/restaurants/today",
+      "destination": "/public-noindex-shell"
+    },
+    {
+      "source": "/map",
+      "destination": "/public-noindex-shell"
+    },
+    {
+      "source": "/coming-soon",
+      "destination": "/public-noindex-shell"
+    },
+    {
+      "source": "/magazines/:magazineId",
+      "destination": "/public-noindex-shell"
     }
   ]
 }
