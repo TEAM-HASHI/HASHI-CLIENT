@@ -55,6 +55,7 @@ export default tseslint.config(
   {
     files: [
       '.agents/scripts/**/*.{js,mjs}',
+      '.github/scripts/**/*.{js,cjs,mjs}',
       'apps/admin/scripts/**/*.{js,mjs}',
       'apps/client/scripts/**/*.{js,mjs}',
       'scripts/**/*.{js,mjs}',
