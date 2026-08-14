@@ -139,6 +139,8 @@ API에 없거나 화면에 표시하지 않는 사실을 구조화 데이터에 
 
 snapshot은 숨겨진 SEO 전용 콘텐츠가 아닙니다. 현재 화면의 첫 조회 범위에 있는 정보만 사용하고, React가 mount되면 기존 SPA 화면이 같은 URL을 이어받습니다.
 
+생성 문서는 snapshot과 빈 `#root`를 같은 transition shell의 형제로 두고 동일한 grid 영역에 겹칩니다. React는 빈 `#root`에 SPA를 처음 commit하므로 snapshot DOM을 중간에 지우지 않습니다. `PrerenderSnapshotCleanup`은 SPA commit 직후의 layout effect에서 snapshot만 제거해 `snapshot → 빈 화면 → SPA`가 아닌 `snapshot → SPA`로 전환합니다. JavaScript 실행이 실패하면 snapshot은 그대로 남습니다.
+
 | 페이지              | snapshot 범위                                             |
 | ------------------- | --------------------------------------------------------- |
 | 홈                  | 매거진 배너와 현재 노출하는 인기 식당                     |
@@ -156,10 +158,12 @@ snapshot은 숨겨진 SEO 전용 콘텐츠가 아닙니다. 현재 화면의 첫
 ### 정적 URL로 직접 접근
 
 1. Vercel이 URL별 프리렌더 HTML을 반환합니다.
-2. `SeoProvider`는 현재 pathname과 정적 canonical이 일치하고 robots가 `index, follow`인지 확인합니다.
-3. API loading 또는 일시적인 5xx 동안 검증된 정적 head를 유지합니다.
-4. 필수 API가 성공하면 페이지의 `PageSeo`가 최신 page model을 등록합니다.
-5. 유효하지 않은 param이나 확인된 404는 `NotFoundPage`의 `noindex, nofollow`로 교체합니다.
+2. 공개 route는 인증 세션 복원과 병렬로 SPA loading UI를 즉시 commit합니다.
+3. layout effect가 프리렌더 snapshot을 제거하고 동일한 영역의 SPA가 화면을 이어받습니다.
+4. `SeoProvider`는 현재 pathname과 정적 canonical이 일치하고 robots가 `index, follow`인지 확인합니다.
+5. API loading 또는 일시적인 5xx 동안 검증된 정적 head를 유지합니다.
+6. 필수 API가 성공하면 페이지의 `PageSeo`가 최신 page model을 등록합니다.
+7. 유효하지 않은 param이나 확인된 404는 `NotFoundPage`의 `noindex, nofollow`로 교체합니다.
 
 ### SPA 내부 이동
 

@@ -1,8 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
-import { ROUTES } from '@/app/router/path'
 import { getAuthMe } from '@/features/auth/api/getAuthMe'
 import { requestTokenReissue } from '@/features/auth/api/reissueToken'
+import { AuthSessionRestoreContext } from '@/features/auth/session/AuthSessionRestoreContext'
 import {
   clearAuthSession,
   getAccessToken,
@@ -16,19 +16,6 @@ interface AuthSessionRestoreGateProps {
 }
 
 let authSessionRestorePromise: Promise<void> | undefined
-
-const AUTH_RESTORE_NON_BLOCKING_PATHS = new Set<string>([
-  ROUTES.hashiPickRestaurants,
-  ROUTES.popularRestaurants,
-])
-
-const getShouldRenderDuringAuthRestore = () => {
-  if (typeof window === 'undefined') {
-    return false
-  }
-
-  return AUTH_RESTORE_NON_BLOCKING_PATHS.has(window.location.pathname)
-}
 
 const restoreUserSession = async (accessToken: string) => {
   const authMe = await getAuthMe(accessToken)
@@ -85,8 +72,12 @@ const restoreAuthSession = async () => {
 export const AuthSessionRestoreGate = ({
   children,
 }: AuthSessionRestoreGateProps) => {
-  const [isRestoreCompleted, setIsRestoreCompleted] = useState(
-    () => Boolean(getAccessToken()) || getShouldRenderDuringAuthRestore(),
+  const [isRestoreCompleted, setIsRestoreCompleted] = useState(() =>
+    Boolean(getAccessToken()),
+  )
+  const restoreContextValue = useMemo(
+    () => ({ isRestoring: !isRestoreCompleted }),
+    [isRestoreCompleted],
   )
 
   useEffect(() => {
@@ -115,9 +106,9 @@ export const AuthSessionRestoreGate = ({
     }
   }, [])
 
-  if (!isRestoreCompleted) {
-    return null
-  }
-
-  return children
+  return (
+    <AuthSessionRestoreContext.Provider value={restoreContextValue}>
+      {children}
+    </AuthSessionRestoreContext.Provider>
+  )
 }

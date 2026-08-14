@@ -787,3 +787,50 @@ Parse every generated JSON-LD block, verify unique sitemap URLs and files, confi
 - [x] **Step 4: Report without committing**
 
 Summarize changed behavior, tests, generated counts, docs impact and remaining deployment-only URL Inspection checks. Do not commit, push, or open a PR.
+
+---
+
+### Task 12: Remove auth-restore blocking and stabilize the prerender handoff
+
+**Files:**
+
+- Create: `apps/client/src/features/auth/session/AuthSessionRestoreContext.ts`
+- Create: `apps/client/src/app/providers/PrerenderSnapshotCleanup.tsx`
+- Create: `apps/client/src/app/App.test.tsx`
+- Modify: `apps/client/src/app/App.tsx`
+- Modify: `apps/client/src/app/providers/AuthSessionRestoreGate.tsx`
+- Modify: `apps/client/src/app/providers/AuthSessionRestoreGate.test.tsx`
+- Modify: `apps/client/src/app/router/RouteGuards.tsx`
+- Modify: `apps/client/src/app/router/RouteGuards.test.tsx`
+- Modify: `apps/client/src/pages/home/hooks/useHomePage.ts`
+- Modify: `apps/client/src/pages/home/HomePage.test.tsx`
+- Modify: `apps/client/seo/renderSeoDocument.ts`
+- Modify: `apps/client/seo/renderSeoDocument.test.ts`
+- Modify: affected route, page, SEO architecture and design docs
+
+**Interfaces:**
+
+- `AuthSessionRestoreContext` exposes `isRestoring` without changing the authenticated/onboarding/unauthenticated session contract.
+- Public routes render while restore requests run; `AuthOnlyRoute` and `GuestOnlyRoute` defer redirect decisions until restoration completes.
+- Generated HTML keeps the snapshot and an empty `#root` as overlapping siblings.
+- `PrerenderSnapshotCleanup` removes the snapshot in a layout effect after the SPA first commits.
+
+- [x] **Step 1: Add failing public render, guard, and auth-gate tests**
+
+Verify the home child renders before token reissue completes, protected and guest-only routes render neither branch during restoration, and the home login sheet does not open or write its session marker early.
+
+- [x] **Step 2: Implement non-blocking public startup**
+
+Always render the router under the restore context, move waiting behavior into access guards, and make the home auth gate restoration-aware.
+
+- [x] **Step 3: Add failing prerender handoff tests**
+
+Verify generated HTML has an empty root beside the snapshot in a transition shell and the real `App` removes the snapshot only after route content commits.
+
+- [x] **Step 4: Implement the stable snapshot-to-SPA handoff**
+
+Render an overlapping shell in static documents and remove its snapshot from a layout effect without replacing `#root`.
+
+- [x] **Step 5: Synchronize docs and run full verification**
+
+Run focused tests, format, lint, typecheck, the full client test suite, a production build, generated-artifact checks and `git diff --check`. Do not commit or push.

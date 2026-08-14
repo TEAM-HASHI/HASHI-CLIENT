@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { AuthSessionRestoreContext } from '@/features/auth/session/AuthSessionRestoreContext'
 import { HomePage } from '@/pages/home/HomePage'
 
 const { mockGetHotSnsRestaurants } = vi.hoisted(() => ({
@@ -45,7 +46,7 @@ const LocationProbe = () => {
   return <div data-testid="location-pathname">{location.pathname}</div>
 }
 
-const renderHomePage = () => {
+const renderHomePage = ({ isRestoring = false } = {}) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -56,12 +57,14 @@ const renderHomePage = () => {
   })
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[ROUTES.home]}>
-        <HomePage />
-        <LocationProbe />
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <AuthSessionRestoreContext.Provider value={{ isRestoring }}>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[ROUTES.home]}>
+          <HomePage />
+          <LocationProbe />
+        </MemoryRouter>
+      </QueryClientProvider>
+    </AuthSessionRestoreContext.Provider>,
   )
 }
 
@@ -331,5 +334,14 @@ describe('HomePage', () => {
     renderHomePage()
 
     expect(screen.queryByText('간편하게 로그인하고')).not.toBeInTheDocument()
+  })
+
+  it('does not show the logged-out auth gate before session restoration completes', () => {
+    renderHomePage({ isRestoring: true })
+
+    expect(screen.queryByText('간편하게 로그인하고')).not.toBeInTheDocument()
+    expect(
+      window.sessionStorage.getItem('hashi:home-auth-gate-shown'),
+    ).toBeNull()
   })
 })

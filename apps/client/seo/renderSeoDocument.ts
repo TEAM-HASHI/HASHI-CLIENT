@@ -17,6 +17,30 @@ const removeExistingSeoHead = (html: string) =>
       /<script\b(?=[^>]*type=["']application\/ld\+json["'])(?=[^>]*data-hashi-seo)[^>]*>[\s\S]*?<\/script>\s*/gi,
       '',
     )
+    .replace(
+      /<style\b(?=[^>]*data-hashi-prerender-transition)[^>]*>[\s\S]*?<\/style>\s*/gi,
+      '',
+    )
+
+const renderPrerenderTransitionStyle =
+  () => `<style data-hashi-prerender-transition>
+      [data-hashi-prerender-shell] {
+        display: grid;
+        min-height: 100dvh;
+      }
+      [data-hashi-prerender-shell] > #root,
+      [data-hashi-prerender-shell] > [data-hashi-seo-snapshot] {
+        grid-area: 1 / 1;
+        min-width: 0;
+        min-height: 100dvh;
+      }
+      [data-hashi-seo-snapshot] {
+        width: 100%;
+        max-width: 430px;
+        margin-inline: auto;
+        background: #fff;
+      }
+    </style>`
 
 const renderMeta = (
   attribute: 'name' | 'property',
@@ -43,6 +67,7 @@ const renderHead = (page: SeoPage) => {
   ]
 
   return [
+    renderPrerenderTransitionStyle(),
     `<title>${escapeHtmlText(page.title)}</title>`,
     ...meta,
     `<link rel="canonical" href="${escapeHtmlAttribute(page.canonical)}" data-hashi-seo />`,
@@ -108,6 +133,6 @@ export const renderSeoDocument = (template: string, page: SeoPage) => {
 
   return withHead.replace(
     /<div\s+id=["']root["']\s*><\/div>/i,
-    `<div id="root">${renderSnapshot(page)}</div>`,
+    `<div data-hashi-prerender-shell>${renderSnapshot(page)}<div id="root"></div></div>`,
   )
 }

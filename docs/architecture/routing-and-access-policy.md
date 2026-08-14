@@ -34,6 +34,9 @@
 - `authenticated`는 accessToken이 메모리에 있는 상태입니다.
 - `onboarding`은 신규 회원 callback 이후 onboardingToken HttpOnly Cookie가 설정되었다고 보고 `/profile/new` 진입만 허용하는 상태입니다.
 - accessToken, refreshToken, onboardingToken을 localStorage에 저장하지 않습니다.
+- 앱 시작 시 세션 복원은 공개 route 렌더링과 병렬로 진행합니다. 홈과 공개 식당·메뉴·매거진 화면은 refresh cookie 확인이 끝날 때까지 빈 화면으로 대기하지 않습니다.
+- `AuthOnlyRoute`와 `GuestOnlyRoute`는 세션 복원 중에 redirect를 결정하지 않고, 복원이 완료된 뒤 확정된 인증 상태로 접근 여부를 판단합니다.
+- 공개 route 내부의 로그인 유도 UI는 세션 복원 중인 상태를 비로그인으로 확정하지 않습니다.
 
 ## Public Routes
 

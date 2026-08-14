@@ -98,6 +98,15 @@ describe('renderSeoDocument', () => {
     expect(html).toContain('loading="lazy" decoding="async"')
   })
 
+  it('keeps the prerender snapshot outside an empty React root in a stable transition shell', () => {
+    const html = renderSeoDocument(template, page)
+
+    expect(html).toContain('data-hashi-prerender-transition')
+    expect(html).toContain('data-hashi-prerender-shell')
+    expect(html).toContain('</main><div id="root"></div></div>')
+    expect(html).not.toContain('<div id="root"><main')
+  })
+
   it('rejects templates without the expected root or head marker', () => {
     expect(() => renderSeoDocument('<html></html>', page)).toThrow(
       'root 또는 head',

@@ -126,7 +126,7 @@ Vite production build의 후처리 plugin이 공개 API를 호출한다. 식당 
 - 메뉴 상세의 식당 상위 링크
 - 기존 Vite JavaScript와 CSS asset
 
-semantic snapshot은 숨기지 않고 React가 mount되기 전까지 표시한다. JavaScript가 실행되면 기존 SPA가 같은 URL과 API 데이터로 화면을 이어받는다. 검색로봇과 사용자에게 같은 HTML을 제공하고 bot user-agent 분기를 만들지 않는다.
+semantic snapshot은 숨기지 않고 React가 mount되기 전까지 표시한다. snapshot과 빈 React root를 하나의 grid transition shell에 겹치고, SPA가 root에 처음 commit한 직후 layout effect에서 snapshot만 제거한다. 이로써 인증 복원 중에 snapshot이 사라진 빈 root가 노출되는 구간을 만들지 않는다. JavaScript가 실행되면 기존 SPA가 같은 URL과 API 데이터로 화면을 이어받는다. 검색로봇과 사용자에게 같은 HTML을 제공하고 bot user-agent 분기를 만들지 않는다.
 
 snapshot은 현재 화면의 최초 조회 범위와 맞춘다. 홈은 현재 배너와 인기 식당 범위, 하시 PICK·인기 맛집·매거진은 첫 페이지 10개, 식당 상세는 요약·매장 정보와 메뉴 첫 페이지 10개, 메뉴 상세는 선택 메뉴와 현재 화면이 조회하는 다른 메뉴 첫 페이지를 담는다. 전체 URL 발견은 snapshot에 모든 항목을 밀어 넣지 않고 사이트맵으로 담당한다. `ItemList`도 해당 snapshot에 실제로 표시한 항목만 기술한다.
 
@@ -213,6 +213,7 @@ Vercel은 canonical URL을 생성된 실제 HTML 파일로 명시적으로 연�
 
 ## Runtime Preservation and Data Integrity
 
+- 공개 route는 인증 세션 복원과 병렬로 SPA를 렌더한다. `authOnly`·`guestOnly` guard는 복원이 완료된 뒤 redirect를 결정하며, 공개 route의 로그인 유도 UI는 복원 중 상태를 비로그인으로 확정하지 않는다.
 - 정적 HTML의 canonical이 최초 browser pathname과 일치하고 `index, follow`인 경우, `SeoProvider`는 API loading 또는 일시적인 5xx 동안 해당 정적 head를 보존한다.
 - SPA 내부 이동은 대응 정적 문서가 없으므로 기존처럼 route별 안전한 `noindex` fallback을 즉시 적용한다.
 - 유효하지 않은 route param 또는 API 404가 확인되면 `NotFoundPage`가 정적 head보다 우선하는 `noindex, nofollow`를 등록한다.
