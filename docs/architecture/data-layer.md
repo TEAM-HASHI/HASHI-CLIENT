@@ -32,7 +32,7 @@ HASHI 앱의 데이터 레이어는 앱 내부에서 먼저 조립하고, 실제
 
 ## Lighthouse CI Runtime
 
-Lighthouse는 별도 로컬 build가 아니라 PR의 Vercel Preview 배포 URL을 측정합니다. Client runtime API 주소는 GitHub Actions Variable이 아니라 Vercel Preview Environment의 `VITE_API_BASE_URL`에서 build 시 주입됩니다.
+일반 GitHub Actions CI의 Build job은 repository variable `VITE_API_BASE_URL`을 `pnpm build`에 주입해 build-time SEO 수집을 실행합니다. Lighthouse는 별도 로컬 build가 아니라 PR의 Vercel Preview 배포 URL을 측정합니다. 이 Preview build의 Client runtime 및 build-time SEO API 주소는 GitHub Actions Variable이 아니라 Vercel Preview Environment의 `VITE_API_BASE_URL`에서 주입됩니다.
 
 - Preview에는 production이 아닌 개발 또는 staging API의 HTTP(S) 절대 URL을 등록합니다.
 - API 서버 CORS allowlist는 HASHI Client의 Vercel Preview origin을 허용해야 합니다.

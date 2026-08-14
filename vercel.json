@@ -5,88 +5,112 @@
   "installCommand": "pnpm install",
   "framework": "vite",
   "outputDirectory": "apps/client/dist",
-  "cleanUrls": true,
+  "cleanUrls": false,
   "trailingSlash": false,
   "rewrites": [
     {
       "source": "/restaurants/:restaurantId/reviews/new",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/reviews/:reviewId/edit",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/reviews/:reviewId",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/restaurants/:restaurantId/reservations/new",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/reservations/anywhere",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/reservations/request",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/reservations/:reservationId",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/my-reviews",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/saved",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/mypage",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/my-reservations",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/profile/new",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/withdrawal",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/login-required",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/oauth/callback/kakao",
-      "destination": "/private-noindex-shell"
+      "destination": "/private-noindex-shell.html"
     },
     {
       "source": "/search",
-      "destination": "/public-noindex-shell"
+      "destination": "/public-noindex-shell.html"
     },
     {
       "source": "/restaurants/today",
-      "destination": "/public-noindex-shell"
+      "destination": "/public-noindex-shell.html"
     },
     {
       "source": "/map",
-      "destination": "/public-noindex-shell"
+      "destination": "/public-noindex-shell.html"
     },
     {
       "source": "/coming-soon",
-      "destination": "/public-noindex-shell"
+      "destination": "/public-noindex-shell.html"
     },
     {
       "source": "/magazines/:magazineId",
-      "destination": "/public-noindex-shell"
+      "destination": "/public-noindex-shell.html"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/restaurants/hashi-pick",
+      "destination": "/restaurants/hashi-pick/index.html"
+    },
+    {
+      "source": "/restaurants/popular",
+      "destination": "/restaurants/popular/index.html"
+    },
+    {
+      "source": "/magazines",
+      "destination": "/magazines/index.html"
+    },
+    {
+      "source": "/restaurants/:restaurantId/menus/:menuId",
+      "destination": "/restaurants/:restaurantId/menus/:menuId/index.html"
+    },
+    {
+      "source": "/restaurants/:restaurantId",
+      "destination": "/restaurants/:restaurantId/index.html"
     }
   ]
 }

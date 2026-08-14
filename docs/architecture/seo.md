@@ -209,12 +209,13 @@ apps/client/dist/
         └── menus/{menuId}/index.html
 ```
 
-Vercel은 생성된 정적 파일을 우선 제공합니다. 모든 URL을 SPA `index.html`로 보내는 포괄 rewrite는 사용하지 않습니다.
+Vercel은 canonical URL을 build가 생성한 실제 HTML 파일로 명시적으로 연결합니다. 모든 URL을 SPA `index.html`로 보내는 포괄 rewrite는 사용하지 않습니다.
 
-- 알려진 검색·탐색 route는 `public-noindex-shell`로 rewrite합니다.
-- 인증·사용자 전용 route는 `private-noindex-shell`로 rewrite합니다.
-- 생성되지 않은 식당·메뉴 ID와 알 수 없는 경로는 `404.html`과 HTTP 404를 반환합니다.
-- `cleanUrls: true`, `trailingSlash: false`로 canonical 형태를 통일합니다.
+- 홈·목록·실제 식당·메뉴 canonical URL은 대응하는 디렉터리의 `index.html`로 rewrite합니다.
+- 알려진 검색·탐색 route는 `public-noindex-shell.html`로 rewrite합니다.
+- 인증·사용자 전용 route는 `private-noindex-shell.html`로 rewrite합니다.
+- 생성되지 않은 식당·메뉴 ID는 rewrite 목적 파일이 없으므로, 알 수 없는 경로와 함께 `404.html` 및 HTTP 404를 반환합니다.
+- 디렉터리형 `index.html`은 `cleanUrls`가 자동 해석하지 않으므로 `cleanUrls: false`를 사용하고, `trailingSlash: false`로 canonical의 slash 없는 형태를 유지합니다.
 
 동적 식당·메뉴 HTML, sitemap, robots와 noindex shell은 PWA precache에서 제외합니다. service worker는 앱 실행에 필요한 JavaScript, CSS와 기본 asset만 cache해 콘텐츠 증가가 cache 크기 증가로 직결되지 않게 합니다.
 

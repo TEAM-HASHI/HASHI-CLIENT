@@ -184,7 +184,7 @@ Sitemap: https://www.hashi.kr/sitemap.xml
 
 ## Routing and HTTP Status
 
-Vercel은 정적 파일을 우선 제공한다. 현재의 전체 경로 SPA rewrite는 제거한다. 알려진 검색·유틸리티 route는 `public-noindex-shell.html`의 clean URL인 `/public-noindex-shell`로, 인증·사용자 전용 route는 `private-noindex-shell.html`의 clean URL인 `/private-noindex-shell`로 명시적으로 rewrite한다. `cleanUrls: true`에서는 rewrite destination에 `.html` 확장자를 쓰지 않는다. 프리렌더된 공개 경로는 rewrite하지 않는다.
+Vercel은 canonical URL을 생성된 실제 HTML 파일로 명시적으로 연결한다. 현재의 전체 경로 SPA rewrite는 제거한다. 홈·목록·식당·메뉴 canonical URL은 대응하는 디렉터리의 `index.html`로 rewrite한다. 알려진 검색·유틸리티 route는 `public-noindex-shell.html`로, 인증·사용자 전용 route는 `private-noindex-shell.html`로 명시적으로 rewrite한다. 디렉터리형 `index.html`은 `cleanUrls`가 자동 해석하지 않으므로 `cleanUrls: false`를 사용하고 후행 slash는 비활성화한다.
 
 정적 파일도 아니고 알려진 SPA route도 아닌 요청은 `404.html`과 HTTP 404를 반환한다. 따라서 존재하지 않는 식당·메뉴 ID와 임의 경로가 더 이상 soft 404 HTML 200을 반환하지 않는다. 후행 slash는 Vercel 설정으로 canonical의 slash 없는 형태로 정규화한다.
 

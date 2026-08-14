@@ -525,14 +525,14 @@ Run `git diff --check`. Confirm no secret or API response body was written to tr
 
 **Interfaces:**
 
-- Static indexable paths: served from generated filesystem files
-- Public noindex paths: rewrite to the clean URL `/public-noindex-shell`
-- Private noindex paths: rewrite to the clean URL `/private-noindex-shell`
+- Static indexable paths: rewrite canonical URLs to generated directory `index.html` files
+- Public noindex paths: rewrite to `/public-noindex-shell.html`
+- Private noindex paths: rewrite to `/private-noindex-shell.html`
 - Unknown/static-missing paths: Vercel `404.html` with HTTP 404
 
 - [x] **Step 1: Write a failing Vercel routing contract test**
 
-Read root `vercel.json` and assert there is no `/(.*)` rewrite. Assert exact public rewrites for `/search`, `/restaurants/today`, `/map`, `/coming-soon`, `/magazines/:magazineId`; assert private rewrites for saved, mypage, profile, withdrawal, reviews, reservations, login-required and OAuth paths. Assert neither `/restaurants/:restaurantId` nor menu detail has a dynamic SPA rewrite.
+Read root `vercel.json` and assert there is no `/(.*)` rewrite. Assert exact canonical-to-`index.html` rewrites for home, lists, restaurant detail and menu detail. Assert exact public shell rewrites for `/search`, `/restaurants/today`, `/map`, `/coming-soon`, `/magazines/:magazineId`; assert private shell rewrites for saved, mypage, profile, withdrawal, reviews, reservations, login-required and OAuth paths.
 
 - [x] **Step 2: Run the routing test and verify RED**
 
@@ -540,11 +540,11 @@ Read root `vercel.json` and assert there is no `/(.*)` rewrite. Assert exact pub
 pnpm --filter @hashi/client exec vitest run seo/vercelRouting.test.ts
 ```
 
-Expected: FAIL because `vercel.json` still contains the catch-all rewrite.
+Expected: FAIL because the existing clean URL configuration does not map directory-shaped `index.html` artifacts to canonical URLs.
 
 - [x] **Step 3: Implement explicit rewrites**
 
-Set `cleanUrls: true` and `trailingSlash: false`. Order specific reservation/review paths before generic parameter paths. Route known public noindex pages to `/public-noindex-shell` and known private pages to `/private-noindex-shell`; Vercel resolves those extensionless destinations to the corresponding `.html` artifacts. Leave indexable dynamic detail patterns without rewrites so only generated files resolve.
+Set `cleanUrls: false` and `trailingSlash: false`. Order specific reservation/review paths before generic parameter paths. Route known public noindex pages to `/public-noindex-shell.html` and known private pages to `/private-noindex-shell.html`. Rewrite canonical indexable paths to their generated directory `index.html`; missing dynamic IDs resolve to a nonexistent destination and therefore keep the HTTP 404 contract.
 
 - [x] **Step 4: Update architecture docs**
 
