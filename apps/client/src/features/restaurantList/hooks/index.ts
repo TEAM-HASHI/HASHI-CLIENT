@@ -1,1 +1,1 @@
-export { useRestaurantListPage } from './useRestaurantListPage'
+export { useRestaurantListContent } from './useRestaurantListContent'

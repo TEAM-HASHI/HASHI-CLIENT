@@ -75,8 +75,8 @@
 ### Current Implementation
 
 - 식당 목록 조회 endpoint 함수, query key factory, infinite query options는 `features/restaurantList`에 이미 구현되어 있습니다.
-- `PopularRestaurantsPage`는 `restaurantType="popular"`를 `RestaurantListPage`에 넘기고, 정적 restaurant fixture를 production render path에서 사용하지 않습니다.
-- `RestaurantListPage`와 `useRestaurantListPage`는 `restaurants` prop과 local slice가 아니라 TanStack Query server state와 `useInfiniteScrollTrigger`를 사용합니다.
+- `PopularRestaurantsPage`는 `restaurantType="popular"`를 `RestaurantListTemplate`에 넘기고, 정적 restaurant fixture를 production render path에서 사용하지 않습니다.
+- `RestaurantListTemplate`과 `useRestaurantListContent`는 `restaurants` prop과 local slice가 아니라 TanStack Query server state와 `useInfiniteScrollTrigger`를 사용합니다.
 - 이 API 연동은 기존 shared 식당 목록 API를 새로 만들지 않고, 인기 맛집 route UI가 기존 query options를 소비하도록 연결합니다.
 - 검색 화면과 같은 `restaurantsInfiniteQueryOptions` 패턴을 사용하되, 검색어 `keyword` 대신 인기 맛집 목록 유형 `type`을 고정해서 보냅니다.
 - 서버 기반 무한스크롤은 검색/매거진 화면 관례처럼 `useInfiniteScrollTrigger`로 sentinel intersect 시 `fetchNextPage`를 호출합니다. 기존 local slicing mock 경로는 제거합니다.
@@ -195,14 +195,14 @@
   - selected sort/category -> API request params
   - `RestaurantSummaryResponse` -> `Restaurant`
 - owner:
-  - list state and handlers are owned by `useRestaurantListPage`
+  - list state and handlers are owned by `useRestaurantListContent`
   - API response normalization is owned by `features/restaurantList` mapper/hook
 
 ## UI Structure
 
 ```text
 PopularRestaurantsPage
-  RestaurantListPage
+  RestaurantListTemplate
     Header
     RestaurantFilterBar
     RestaurantCard list
@@ -222,18 +222,18 @@ PopularRestaurantsPage
 - app shared component:
   - `FilterBottomSheet`
 - feature component:
-  - `RestaurantListPage`
+  - `RestaurantListTemplate`
   - `RestaurantFilterBar`
   - `RestaurantCard`
   - `RestaurantImageList`
 - feature hook:
-  - `useRestaurantListPage`
+  - `useRestaurantListContent`
   - `useRestaurantsInfiniteQuery`
   - `restaurantsInfiniteQueryOptions`
 - feature query composition:
   - `createRestaurantListRequestParams`
   - `restaurantsInfiniteQueryOptions`
-  - `useRestaurantListPage`에서 `restaurantsInfiniteQueryOptions`를 감싸고 `throwOnError: false`를 명시합니다.
+  - `useRestaurantListContent`에서 `restaurantsInfiniteQueryOptions`를 감싸고 `throwOnError: false`를 명시합니다.
 - feature mapper:
   - `RestaurantSummaryResponse` -> `Restaurant`
 - feature mock:

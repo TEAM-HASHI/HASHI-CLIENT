@@ -21,7 +21,7 @@ import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 type ActiveBottomSheet = 'sort' | 'category' | null
 
-type UseRestaurantListPageParams = {
+type UseRestaurantListContentParams = {
   restaurantType: RestaurantListCurationType
   sortOptions: FilterOption[]
 }
@@ -30,10 +30,10 @@ const getOptionByValue = (options: FilterOption[], value: string) => {
   return options.find((option) => option.value === value)
 }
 
-export const useRestaurantListPage = ({
+export const useRestaurantListContent = ({
   restaurantType,
   sortOptions,
-}: UseRestaurantListPageParams) => {
+}: UseRestaurantListContentParams) => {
   const navigate = useNavigate()
   const defaultSortOption = sortOptions[0]
   const [activeBottomSheet, setActiveBottomSheet] =

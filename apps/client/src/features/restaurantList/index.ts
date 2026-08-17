@@ -5,9 +5,12 @@ export {
   POPULAR_RESTAURANTS_SORT_OPTIONS,
   RESTAURANT_LIST_PAGE_SIZE,
 } from './constants'
-export { RestaurantListPage } from './RestaurantListPage'
-export { useRestaurantListPage } from './hooks'
-export { RestaurantCard, RestaurantFilterBar } from './components'
+export { useRestaurantListContent } from './hooks'
+export {
+  RestaurantCard,
+  RestaurantFilterBar,
+  RestaurantListTemplate,
+} from './components'
 export type {
   FilterOption,
   Restaurant,

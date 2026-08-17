@@ -1,20 +1,18 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
 
-import {
-  CATEGORY_OPTIONS,
-  RestaurantCard,
-  RestaurantFilterBar,
-  useRestaurantListPage,
-} from '@/features/restaurantList'
+import { RestaurantCard } from '@/features/restaurantList/components/RestaurantCard'
+import { RestaurantFilterBar } from '@/features/restaurantList/components/RestaurantFilterBar'
+import { CATEGORY_OPTIONS } from '@/features/restaurantList/constants'
+import { useRestaurantListContent } from '@/features/restaurantList/hooks/useRestaurantListContent'
 import type {
   FilterOption,
   RestaurantListCurationType,
-} from '@/features/restaurantList'
+} from '@/features/restaurantList/types'
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
 
-type RestaurantListPageProps = {
+type RestaurantListTemplateProps = {
   title: string
   restaurantType: RestaurantListCurationType
   sortOptions: FilterOption[]
@@ -46,11 +44,11 @@ const renderSkeletonItems = (count: number) => {
   ))
 }
 
-export const RestaurantListPage = ({
+export const RestaurantListTemplate = ({
   title,
   restaurantType,
   sortOptions,
-}: RestaurantListPageProps) => {
+}: RestaurantListTemplateProps) => {
   const {
     activeBottomSheet,
     categoryLabel,
@@ -75,7 +73,7 @@ export const RestaurantListPage = ({
     handleRetry,
     handleSelectCategory,
     handleSelectSort,
-  } = useRestaurantListPage({
+  } = useRestaurantListContent({
     restaurantType,
     sortOptions,
   })
