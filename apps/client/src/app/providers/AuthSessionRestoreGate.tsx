@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
-import { ROUTES } from '@/app/router/path'
+import { getShouldRenderDuringAuthRestore } from '@/app/providers/authSessionRestorePolicy'
 import { getAuthMe } from '@/features/auth/api/getAuthMe'
 import { requestTokenReissue } from '@/features/auth/api/reissueToken'
 import {
@@ -17,17 +17,12 @@ interface AuthSessionRestoreGateProps {
 
 let authSessionRestorePromise: Promise<void> | undefined
 
-const AUTH_RESTORE_NON_BLOCKING_PATHS = new Set<string>([
-  ROUTES.hashiPickRestaurants,
-  ROUTES.popularRestaurants,
-])
-
-const getShouldRenderDuringAuthRestore = () => {
+const getCurrentPathname = () => {
   if (typeof window === 'undefined') {
-    return false
+    return undefined
   }
 
-  return AUTH_RESTORE_NON_BLOCKING_PATHS.has(window.location.pathname)
+  return window.location.pathname
 }
 
 const restoreUserSession = async (accessToken: string) => {
@@ -86,7 +81,9 @@ export const AuthSessionRestoreGate = ({
   children,
 }: AuthSessionRestoreGateProps) => {
   const [isRestoreCompleted, setIsRestoreCompleted] = useState(
-    () => Boolean(getAccessToken()) || getShouldRenderDuringAuthRestore(),
+    () =>
+      Boolean(getAccessToken()) ||
+      getShouldRenderDuringAuthRestore(getCurrentPathname()),
   )
 
   useEffect(() => {

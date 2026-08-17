@@ -108,28 +108,34 @@ describe('AuthSessionRestoreGate', () => {
     expect(getAuthSessionStatus()).toBe('onboarding')
   })
 
-  it('renders public restaurant list routes while auth restore runs in the background', async () => {
-    mockedRequestTokenReissue.mockResolvedValue({
-      accessToken: 'restored-access-token',
-    })
-    window.history.pushState({}, '', ROUTES.hashiPickRestaurants)
+  it.each([
+    [ROUTES.hashiPickRestaurants, '하시픽 화면'],
+    [ROUTES.popularRestaurants, '인기 식당 화면'],
+  ])(
+    'renders %s while auth restore runs in the background',
+    async (pathname, screenText) => {
+      mockedRequestTokenReissue.mockResolvedValue({
+        accessToken: 'restored-access-token',
+      })
+      window.history.pushState({}, '', pathname)
 
-    render(
-      <AuthSessionRestoreGate>
-        <div>하시픽 화면</div>
-      </AuthSessionRestoreGate>,
-    )
+      render(
+        <AuthSessionRestoreGate>
+          <div>{screenText}</div>
+        </AuthSessionRestoreGate>,
+      )
 
-    expect(screen.getByText('하시픽 화면')).toBeInTheDocument()
-    expect(
-      screen.queryByText('로그인 상태를 확인하고 있어요'),
-    ).not.toBeInTheDocument()
+      expect(screen.getByText(screenText)).toBeInTheDocument()
+      expect(
+        screen.queryByText('로그인 상태를 확인하고 있어요'),
+      ).not.toBeInTheDocument()
 
-    await waitFor(() => {
-      expect(getAccessToken()).toBe('restored-access-token')
-    })
-    expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
-  })
+      await waitFor(() => {
+        expect(getAccessToken()).toBe('restored-access-token')
+      })
+      expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
+    },
+  )
 
   it('does not authenticate an admin session in the user client', async () => {
     mockedRequestTokenReissue.mockResolvedValue({
