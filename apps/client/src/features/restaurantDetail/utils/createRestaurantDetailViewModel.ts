@@ -70,13 +70,13 @@ const formatBusinessHours = (
 
 const formatBusinessHoursSummary = (
   businessHours: RestaurantStoreInformation['businessHours'],
+  now: Date,
 ) => {
-  const today = new Date()
-  const todayApiDay = API_DAY_BY_DATE_DAY[today.getDay()]
+  const todayApiDay = API_DAY_BY_DATE_DAY[now.getDay()]
   const todayHours = businessHours.find(
     (hours) => normalizeDayOfWeek(hours.dayOfWeek) === todayApiDay,
   )
-  const dateLabel = formatDateLabel(today)
+  const dateLabel = formatDateLabel(now)
 
   if (
     !todayHours ||
@@ -92,8 +92,9 @@ const formatBusinessHoursSummary = (
 
 const formatLastOrderTime = (
   businessHours: RestaurantStoreInformation['businessHours'],
+  now: Date,
 ) => {
-  const todayApiDay = API_DAY_BY_DATE_DAY[new Date().getDay()]
+  const todayApiDay = API_DAY_BY_DATE_DAY[now.getDay()]
   const todayHours = businessHours.find(
     (hours) => normalizeDayOfWeek(hours.dayOfWeek) === todayApiDay,
   )
@@ -197,6 +198,7 @@ interface CreateRestaurantDetailViewModelParams {
   averageRating?: number
   reviewCount?: number
   ratingDistribution?: RatingDistributionResponse
+  now?: Date
 }
 
 export const createRestaurantDetailViewModel = ({
@@ -207,6 +209,7 @@ export const createRestaurantDetailViewModel = ({
   averageRating,
   reviewCount,
   ratingDistribution,
+  now = new Date(),
 }: CreateRestaurantDetailViewModelParams): RestaurantDetail => {
   const businessHours = storeInformation.businessHours.reduce<
     RestaurantDetail['businessHours']
@@ -232,10 +235,11 @@ export const createRestaurantDetailViewModel = ({
     address: summary.address,
     businessHoursSummary: formatBusinessHoursSummary(
       storeInformation.businessHours,
+      now,
     ),
     deposit: formatWon(summary.reservationFee),
     detailDescription: storeInformation.description ?? summary.summary ?? '',
-    lastOrderTime: formatLastOrderTime(storeInformation.businessHours),
+    lastOrderTime: formatLastOrderTime(storeInformation.businessHours, now),
     businessHours,
     priceRange: formatPriceRange(storeInformation.priceRange),
     heroImages: summary.imageUrls,
