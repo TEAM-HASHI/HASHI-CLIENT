@@ -1,36 +1,122 @@
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+
+import { ROUTES } from '@/app/router/path'
 import { RestaurantResultList } from '@/pages/search/components/RestaurantResultList'
 import { SearchErrorState } from '@/pages/search/components/SearchErrorState'
 import { SearchFilterBar } from '@/pages/search/components/SearchFilterBar'
 import { SearchHeader } from '@/pages/search/components/SearchHeader'
 import { SearchIdlePanel } from '@/pages/search/components/SearchIdlePanel'
 import { SearchResultSkeleton } from '@/pages/search/components/SearchResultSkeleton'
-import { useSearchPage } from '@/pages/search/hooks/useSearchPage'
+import {
+  DEFAULT_FOOD_CATEGORY_VALUE,
+  DEFAULT_SORT_VALUE,
+  foodCategoryOptions,
+  sortOptions,
+} from '@/pages/search/constants/searchFilters'
+import { useRecentSearchKeywords } from '@/pages/search/hooks/useRecentSearchKeywords'
+import { useSearchFilterSheet } from '@/pages/search/hooks/useSearchFilterSheet'
+import { useSearchRestaurantResults } from '@/pages/search/hooks/useSearchRestaurantResults'
+import { useSearchUrlState } from '@/pages/search/hooks/useSearchUrlState'
+import { useSearchKeywordRecommendationsQuery } from '@/pages/search/queries/useSearchKeywordRecommendationsQuery'
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { cn } from '@/shared/utils'
 
+const getOptionLabel = <TValue extends string>(
+  options: readonly { label: string; value: TValue }[],
+  value: TValue,
+) => {
+  return options.find((option) => option.value === value)?.label ?? ''
+}
+
 export const SearchPage = () => {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const {
-    filterLabels,
-    foodCategorySheet,
-    keyword,
+    category: foodCategoryValue,
+    keyword: appliedKeyword,
+    searchParams,
+    sort: sortValue,
+    updateSearchUrlState,
+  } = useSearchUrlState()
+  const [keywordDraft, setKeywordDraft] = useState({
+    appliedKeyword,
+    value: appliedKeyword,
+  })
+  const { recentSearchKeywords, saveRecentSearchKeyword } =
+    useRecentSearchKeywords()
+  const searchKeywordRecommendationsQuery =
+    useSearchKeywordRecommendationsQuery({ enabled: searchParams === null })
+  const {
     loadMoreRef,
-    recentSearchKeywords,
-    recommendedSearchKeywords,
+    query: searchRestaurantsQuery,
     restaurants,
-    searchInputRef,
-    searchRestaurantsQuery,
-    sortSheet,
-    status,
-    onBackClick,
-    onFoodCategoryFilterClick,
-    onKeywordChange,
-    onKeywordSelect,
-    onSearchRetry,
-    onSearchSubmit,
-    onSortFilterClick,
-  } = useSearchPage()
-  const isSearchIdle = status.isSearchIdle
+    retry: retrySearchRestaurants,
+  } = useSearchRestaurantResults(searchParams)
+  const sortSheet = useSearchFilterSheet({
+    appliedValue: sortValue,
+    defaultValue: DEFAULT_SORT_VALUE,
+    onApplyValue: (sort) => {
+      updateSearchUrlState({ sort })
+    },
+    options: sortOptions,
+  })
+  const foodCategorySheet = useSearchFilterSheet({
+    appliedValue: foodCategoryValue,
+    defaultValue: DEFAULT_FOOD_CATEGORY_VALUE,
+    onApplyValue: (category) => {
+      updateSearchUrlState({ category })
+    },
+    options: foodCategoryOptions,
+  })
+  const isSearchIdle = searchParams === null
+  const sortLabel = getOptionLabel(sortOptions, sortValue)
+  const foodCategoryLabel =
+    foodCategoryValue === DEFAULT_FOOD_CATEGORY_VALUE
+      ? '음식 장르 선택'
+      : getOptionLabel(foodCategoryOptions, foodCategoryValue)
+  const recommendedSearchKeywords = searchKeywordRecommendationsQuery.data ?? []
+
+  if (keywordDraft.appliedKeyword !== appliedKeyword) {
+    setKeywordDraft({
+      appliedKeyword,
+      value: appliedKeyword,
+    })
+  }
+
+  const keyword = keywordDraft.value
+  const setKeyword = (value: string) => {
+    setKeywordDraft({ appliedKeyword, value })
+  }
+
+  useEffect(() => {
+    searchInputRef.current?.focus()
+  }, [])
+
+  const submitSearch = (nextKeyword = keyword) => {
+    const normalizedKeyword = nextKeyword.trim()
+
+    if (!normalizedKeyword) {
+      setKeyword('')
+      updateSearchUrlState({ keyword: '' })
+      return
+    }
+
+    setKeyword(normalizedKeyword)
+    updateSearchUrlState({ keyword: normalizedKeyword })
+    saveRecentSearchKeyword(normalizedKeyword)
+  }
+
+  const handleBackClick = () => {
+    if (location.key !== 'default') {
+      navigate(-1)
+      return
+    }
+
+    navigate(ROUTES.home)
+  }
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
@@ -38,16 +124,22 @@ export const SearchPage = () => {
         <SearchHeader
           inputRef={searchInputRef}
           keyword={keyword}
-          onBackClick={onBackClick}
-          onKeywordChange={onKeywordChange}
-          onSearchSubmit={onSearchSubmit}
+          onBackClick={handleBackClick}
+          onKeywordChange={setKeyword}
+          onSearchSubmit={() => {
+            submitSearch()
+          }}
         />
         {!isSearchIdle && (
           <SearchFilterBar
-            categoryLabel={filterLabels.foodCategory}
-            onCategoryClick={onFoodCategoryFilterClick}
-            onSortClick={onSortFilterClick}
-            sortLabel={filterLabels.sort}
+            categoryLabel={foodCategoryLabel}
+            onCategoryClick={() => {
+              foodCategorySheet.onOpenChange(true)
+            }}
+            onSortClick={() => {
+              sortSheet.onOpenChange(true)
+            }}
+            sortLabel={sortLabel}
           />
         )}
       </div>
@@ -61,14 +153,14 @@ export const SearchPage = () => {
           <SearchIdlePanel
             recentSearchKeywords={recentSearchKeywords}
             recommendedSearchKeywords={recommendedSearchKeywords}
-            onKeywordSelect={onKeywordSelect}
+            onKeywordSelect={submitSearch}
           />
         ) : (
           <>
             {searchRestaurantsQuery.isLoading ? (
               <SearchResultSkeleton />
             ) : searchRestaurantsQuery.isError ? (
-              <SearchErrorState onRetry={onSearchRetry} />
+              <SearchErrorState onRetry={retrySearchRestaurants} />
             ) : restaurants.length > 0 ? (
               <>
                 <RestaurantResultList restaurants={restaurants} />
@@ -86,8 +178,8 @@ export const SearchPage = () => {
           </>
         )}
       </div>
-      <FilterBottomSheet {...sortSheet} />
-      <FilterBottomSheet {...foodCategorySheet} />
+      <FilterBottomSheet {...sortSheet} title="정렬 순서" />
+      <FilterBottomSheet {...foodCategorySheet} title="음식 장르 선택" />
     </div>
   )
 }

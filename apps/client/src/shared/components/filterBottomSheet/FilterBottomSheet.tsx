@@ -13,7 +13,7 @@ type FilterBottomSheetProps = {
   onOpenChange: (open: boolean) => void
   maxHeightClassName?: string
   title: string
-  options: FilterOption[]
+  options: readonly FilterOption[]
   selectedValue: string
   onSelect: (value: string) => void
   onReset: () => void

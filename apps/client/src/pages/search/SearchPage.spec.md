@@ -262,8 +262,11 @@ export const searchRestaurantQueryKeys = {
 ## State
 
 - owner:
-  - `SearchPage`는 UI composition만 담당합니다.
-  - `useSearchPage`는 검색어 제출, 최근 검색어 저장, 필터 pending/apply/reset, 바텀시트 open state, navigation, query orchestration을 담당합니다.
+  - `SearchPage`는 UI composition, 검색어 제출, navigation, page-local hook 조립을 담당합니다.
+  - `useSearchUrlState`는 URL search param 파싱, 기본값 검증, 직렬화, 검색 API params 생성을 담당합니다.
+  - `useSearchFilterSheet`는 필터별 open, pending, apply, reset 상태를 담당합니다.
+  - `useRecentSearchKeywords`는 localStorage 기반 최근 검색어 상태를 담당합니다.
+  - `useSearchRestaurantResults`는 검색 infinite query, result mapping, infinite scroll trigger를 조립합니다.
 - local state:
   - search input value
   - sort bottom sheet open state
@@ -279,6 +282,7 @@ export const searchRestaurantQueryKeys = {
   - 음식 장르 필터가 기본값이 아니면 `category` search param을 갱신합니다.
   - `/search?keyword=...`로 진입하면 검색창과 검색 결과 상태를 URL에서 복원합니다.
   - 식당 상세로 이동한 뒤 브라우저 뒤로가기를 하면 직전 검색 URL이 복원되어 같은 검색 결과 상태로 돌아옵니다.
+  - 같은 `/search` route 안에서 browser history가 변경되면 검색창 draft도 URL keyword와 다시 동기화합니다.
 - server state:
   - 검색 결과 식당 목록
   - loading / error / empty state
@@ -326,7 +330,15 @@ export const searchRestaurantQueryKeys = {
 
 ```text
 SearchPage
-  useSearchPage
+  useSearchUrlState
+  useRecentSearchKeywords
+  useSearchKeywordRecommendationsQuery
+  useSearchFilterSheet(sort)
+  useSearchFilterSheet(foodCategory)
+  useSearchRestaurantResults
+    useSearchRestaurantsInfiniteQuery
+    useInfiniteScrollTrigger
+    mapSearchRestaurantPages
   SearchHeader
     BackButton
     SearchField
@@ -367,8 +379,10 @@ SearchPage
   - `RestaurantResultItem`
   - `SearchErrorState`
 - page-local hook:
-  - `useSearchPage`
   - `useRecentSearchKeywords`
+  - `useSearchUrlState`
+  - `useSearchFilterSheet`
+  - `useSearchRestaurantResults`
 - icon:
   - `BackIcon`
   - `TapDownIcon`: 설계서의 `ic_chevron_down`에 해당하는 기존 HDS 아이콘
@@ -383,8 +397,8 @@ SearchPage
 - `SearchField`를 사용합니다. 검색 실행, 최근 검색어, 추천 검색어, query 동기화는 HDS 범위가 아니므로 page가 소유합니다.
 - `IconButton size="xs"`와 `BackIcon`을 조합해 뒤로가기 버튼을 구현합니다. 호출부에서 `44px` 터치 영역을 확보하고 아이콘은 `24px`로 유지합니다.
 - `Chip`을 최근 검색어와 추천 검색어 pill에 사용합니다. 칩 목록의 horizontal scroll과 키워드 선택 동작은 page-local `KeywordChipList`가 소유합니다.
-- `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 `useSearchPage`가 주입합니다.
-- 검색/필터/바텀시트 상태와 이동 로직은 `SearchPage`에 직접 두지 않고 `useSearchPage`가 주입합니다.
+- `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 page-local `useSearchFilterSheet`가 주입합니다.
+- URL 적용 상태, 필터 pending 상태, 최근 검색어, query 결과 상태는 각각의 page-local hook이 소유하고 `SearchPage`는 검색 제출과 화면 조립만 담당합니다.
 - API 연동된 검색 식당 데이터와 추천 검색어는 page-local mock data에 의존하지 않습니다.
 - `BottomSheet`를 직접 새로 만들지 않습니다. overlay click과 Escape close는 기존 `BottomSheet`의 접근성 계약을 따릅니다.
 - `Button`을 바텀시트 footer 액션에 사용합니다.
@@ -432,8 +446,12 @@ SearchPage
   - 식당 결과 item 크기에 맞춘 loading skeleton을 렌더링합니다.
 - `apps/client/src/pages/search/hooks/useRecentSearchKeywords.ts`
   - localStorage 기반 최근 검색어 읽기/저장/중복 이동/최대 10개 제한을 담당합니다.
-- `apps/client/src/pages/search/hooks/useSearchPage.ts`
-  - 검색 page의 route-level orchestration, navigation, filter state, query params, 추천 키워드 query 주입을 담당합니다.
+- `apps/client/src/pages/search/hooks/useSearchUrlState.ts`
+  - URL search param과 적용된 검색 조건의 동기화를 담당합니다.
+- `apps/client/src/pages/search/hooks/useSearchFilterSheet.ts`
+  - 옵션 검증과 필터 바텀시트의 open, pending, apply, reset 상태를 담당합니다.
+- `apps/client/src/pages/search/hooks/useSearchRestaurantResults.ts`
+  - 검색 query, infinite scroll trigger, page mapping을 결과 영역에 필요한 형태로 조립합니다.
 - `apps/client/src/pages/search/constants/searchFilters.ts`
   - 정렬 옵션, 음식 장르 옵션을 둡니다.
 - `apps/client/src/pages/search/types.ts`
@@ -455,17 +473,17 @@ SearchPage
 - `apps/client/src/pages/search/queries/searchRestaurantQueryKeys.ts`
   - 추천 키워드 query key factory를 담당합니다.
 - `apps/client/src/pages/search/queries/useSearchRestaurantsInfiniteQuery.ts`
-  - 검색 화면의 필터 값을 공통 식당 목록 API params로 변환하고, local error policy를 적용합니다.
+  - 공통 식당 목록 infinite query options에 검색 params와 local error policy를 적용합니다.
 - `apps/client/src/pages/search/queries/useSearchKeywordRecommendationsQuery.ts`
   - 추천 검색어 query option/hook을 담당합니다.
 - `apps/client/src/pages/search/utils/mapSearchRestaurant.ts`
   - 공통 식당 목록 응답의 `RestaurantSummaryResponse`를 검색 결과 item view model로 변환합니다.
+  - infinite query pages를 단일 검색 결과 목록으로 펼칩니다.
   - 상세 이동에 필요한 `restaurantId`가 없으면 잘못된 `/restaurants/:restaurantId` 경로를 만들지 않도록 해당 항목을 검색 결과에서 제외합니다.
-
-### Optional Page-Local Files
-
+- `apps/client/src/pages/search/utils/searchUrlState.ts`
+  - URL search param을 적용 상태로 파싱하고 기본 필터를 생략한 URL로 직렬화합니다.
 - `apps/client/src/pages/search/utils/searchRestaurantParams.ts`
-  - sort/genre/type mapping이 길어지면 pure helper로 분리합니다.
+  - page filter 값을 공통 식당 목록 API request params로 변환합니다.
 
 ### Files Not To Add
 
@@ -610,6 +628,7 @@ SearchPage
 - [ ] `/search` 직접 진입 확인
 - [ ] 홈 검색 CTA에서 `/search` 진입 확인
 - [ ] 뒤로가기 동작 확인
+- [x] 같은 `/search` route history 이동 시 검색창과 결과 URL 상태 동기화 자동 테스트
 - [ ] 검색창 focus 시 키보드 노출 확인
 - [ ] 검색 전 최근 검색어 / 추천 검색어 노출 확인
 - [ ] 최근 검색어 탭 시 해당 키워드로 검색 결과 상태 전환 확인
