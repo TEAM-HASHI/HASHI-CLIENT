@@ -90,6 +90,23 @@ apps/client/src/features/{feature}/
   types.ts
 ```
 
+위치 판단은 다음 기준을 따릅니다.
+
+- 특정 page의 화면 진입, 제출, page draft/view model에 묶인 API는 page-local로 둡니다.
+- 여러 page가 같은 endpoint, 같은 query key, 같은 cache synchronization 기준을 공유하면 feature로 둡니다.
+- `shared/api`에는 endpoint 함수를 두지 않고 request wrapper, error model, generated OpenAPI type 같은 공통 인프라만 둡니다.
+- 재사용 가능성이 있어 보인다는 이유만으로 feature로 미리 올리지 않습니다.
+- 실제로 두 번째 사용처가 생기거나 cache/invalidation 기준을 공유해야 할 때 feature로 승격합니다.
+- 애매한 경우에는 page-local에서 시작하고, page spec 또는 PR에 feature 승격 조건을 남깁니다.
+
+예시:
+
+- Home 전용 SNS 인기 식당 adapter는 `pages/home/api`에 둡니다.
+- 검색, 하시픽, 인기 식당이 공유하는 식당 목록 조회는 `features/restaurantList/api`에 둡니다.
+- Home과 Magazines가 공유하는 매거진 배너 조회는 `features/magazine/api`에 둡니다.
+- 프로필 생성 온보딩처럼 특정 route의 제출 흐름에 묶인 API는 `pages/profileNew/api`에 둡니다.
+- 리뷰 상세 조회나 리뷰 이미지 업로드는 다른 리뷰 page와 공유되기 전까지 page-local에서 시작하고, `reviewEdit` 등 재사용처가 생기면 `features/review` 승격을 검토합니다.
+
 `apps/client/src/shared/api`는 low-level HTTP client와 response/error 처리만 담당합니다.
 Admin console API boundary는 `apps/admin/src/shared/api`에서 같은 원칙을 따릅니다.
 
