@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useDeleteReviewMutation } from '@/features/review/mutations/useDeleteReviewMutation'
-import { useReviewDetailQuery } from '@/pages/reviewDetail/queries/useReviewDetailQuery'
+import { useReviewDetailQuery } from '@/features/review/queries/useReviewDetailQuery'
 import { toReviewDetail } from '@/pages/reviewDetail/utils/reviewDetailViewModel'
 
 const parseReviewId = (value: string | undefined) => {

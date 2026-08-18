@@ -3,6 +3,7 @@ import { act, renderHook } from '@testing-library/react'
 import { createElement, type PropsWithChildren } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
 import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 import {
   submitReview,
@@ -71,7 +72,7 @@ describe('submitReview', () => {
 })
 
 describe('useSubmitReviewMutation', () => {
-  it('invalidates review context and visited reservation caches after submitting a review', async () => {
+  it('invalidates review context and related review caches after submitting a review', async () => {
     uploadReviewImagesMock.mockResolvedValue([])
     createReviewMock.mockResolvedValue({ reviewId: 501, earnedPoint: 100 })
     const queryClient = new QueryClient()
@@ -97,8 +98,14 @@ describe('useSubmitReviewMutation', () => {
       refetchType: 'none',
     })
     expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: myReviewQueryKeys.count(),
+    })
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: myReviewQueryKeys.lists(),
+    })
+    expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: visitedReservationQueryKeys.all,
     })
-    expect(invalidateQueries).toHaveBeenCalledTimes(2)
+    expect(invalidateQueries).toHaveBeenCalledTimes(4)
   })
 })

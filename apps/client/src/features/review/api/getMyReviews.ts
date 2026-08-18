@@ -4,7 +4,7 @@ import { request } from '@/shared/api/request'
 export type MyReviewsData = components['schemas']['MyReviewListResponse']
 export type MyReviewSummary = components['schemas']['MyReviewSummaryResponse']
 
-export interface MyReviewsPageParams {
+export interface MyReviewsParams {
   cursor?: number
   size: number
 }
@@ -20,7 +20,7 @@ const requireData = <TData>(data: TData | null, endpoint: string): TData => {
 export const getMyReviews = async ({
   cursor,
   size,
-}: MyReviewsPageParams): Promise<MyReviewsData> => {
+}: MyReviewsParams): Promise<MyReviewsData> => {
   const data = await request<MyReviewsData>('api/v1/reviews/me', {
     searchParams: {
       ...(cursor !== undefined && { cursor }),

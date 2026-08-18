@@ -13,8 +13,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
 import { deleteReview } from '@/features/review/api/deleteReview'
+import { getMyReviewDetail } from '@/features/review/api/getMyReviewDetail'
 import { REVIEW_PHOTO_MAX_COUNT } from '@/features/review/constants'
-import { getMyReviewDetail } from '@/pages/reviewDetail/api/getMyReviewDetail'
 import { ReviewDetailContentCard } from '@/pages/reviewDetail/components/ReviewDetailContentCard'
 import { ReviewDetailPage } from '@/pages/reviewDetail/ReviewDetailPage'
 
@@ -30,7 +30,7 @@ vi.mock('react-router-dom', () => ({
   useParams: () => ({ reviewId: reviewIdParam.current }),
 }))
 
-vi.mock('@/pages/reviewDetail/api/getMyReviewDetail', () => ({
+vi.mock('@/features/review/api/getMyReviewDetail', () => ({
   getMyReviewDetail: vi.fn(),
 }))
 

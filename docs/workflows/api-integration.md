@@ -105,7 +105,8 @@ apps/client/src/features/{feature}/
 - 검색, 하시픽, 인기 식당이 공유하는 식당 목록 조회는 `features/restaurantList/api`에 둡니다.
 - Home과 Magazines가 공유하는 매거진 배너 조회는 `features/magazine/api`에 둡니다.
 - 프로필 생성 온보딩처럼 특정 route의 제출 흐름에 묶인 API는 `pages/profileNew/api`에 둡니다.
-- 리뷰 상세 조회나 리뷰 이미지 업로드는 다른 리뷰 page와 공유되기 전까지 page-local에서 시작하고, `reviewEdit` 등 재사용처가 생기면 `features/review` 승격을 검토합니다.
+- 내 리뷰 목록/상세 조회처럼 삭제/수정/작성 후 같은 query key와 cache synchronization 기준을 공유하는 리뷰 API는 `features/review`에 둡니다.
+- 리뷰 작성 context, 이미지 업로드, 제출 adapter처럼 `reviewNew` page 전용 흐름에 묶인 API는 다른 리뷰 page와 공유되기 전까지 page-local에 둡니다.
 
 `apps/client/src/shared/api`는 low-level HTTP client와 response/error 처리만 담당합니다.
 Admin console API boundary는 `apps/admin/src/shared/api`에서 같은 원칙을 따릅니다.
