@@ -15,24 +15,17 @@
 - 리뷰어는 단순 approve를 위한 역할이 아니라, 구현 의도·상태·구조를 이해하고 피드백하는 책임을 가집니다.
 - 작성자는 PR의 `상세 설명`, `고민한 부분`, `리뷰어에게`를 통해 리뷰 시작에 필요한 맥락을 제공합니다.
 
-## First-Month Assignment Rule
+## Assignment Rule
 
-초기 한 달은 아래 우선순위로 가능한 균등하게 배정합니다.
+`.github/workflows/auto-assign-reviewers.yml`은 다음 순서로 리뷰어를 배정합니다.
 
-1. PR 작성자를 제외합니다.
-2. 직전 PR의 리뷰어가 연속으로 배정되지 않도록 합니다.
-3. 당월 리뷰어 배정 횟수가 적은 사람을 우선합니다.
-4. 이미 알린 시험·회사·개인 일정에는 배정 가중치를 낮춥니다.
-5. 고위험·복잡한 PR은 필요한 전문성을 가진 추가 리뷰어를 지정할 수 있습니다.
+1. PR 작성자와 `enabled`가 `false`인 reviewer를 후보에서 제외합니다.
+2. 최근 30일 동안 GitHub API가 반환한 reviewer 요청과 제출 review를 집계합니다.
+3. `(요청 횟수 + review 횟수) / weight`가 낮은 후보를 우선합니다.
+4. 점수가 같으면 PR 번호와 GitHub login을 사용한 결정적 순서로 정렬합니다.
+5. 정렬 결과에서 2명을 선택해 reviewer로 요청합니다.
 
-배정 담당자는 월간 reviewer assignment count와 실제 리뷰 참여 횟수를 구분해 기록합니다. `배정`만 받고 리뷰하지 못한 경우는 다음 달 가중치 판단에서 실제 참여로 계산하지 않습니다.
-
-## After First Month
-
-- 월말에 팀원별 배정 횟수와 실제 리뷰 참여 횟수를 함께 확인합니다.
-- 참여 횟수가 낮은 사람에게 다음 달 배정 가중치를 높입니다.
-- 장기 부재나 일시적인 과부하는 다음 배정 전에 반영합니다.
-- 숫자만 맞추기 위해 특정 사람에게 고난도 PR을 몰아주지 않습니다.
+reviewer roster, 조회 기간, 배정 인원, 활성화 여부, 가중치는 `.github/reviewer-assignment.json`에서 관리합니다.
 
 ## Review Quality
 
@@ -50,15 +43,11 @@
 - public API, route, hook return shape, design token 변경이 있다면 spec·호출부가 함께 갱신됐는지
 - 접근성, 긴 텍스트, overflow, responsive 상태가 필요한 만큼 확인됐는지
 
-## Automation Status And Prerequisites
+## Automation Scope
 
-현재 `.github/workflows/auto-assign-author.yml`은 PR 작성자만 assignee로 등록합니다. 공정 분배 기반의 리뷰어 자동 배정은 아직 구현돼 있지 않습니다.
+`.github/workflows/auto-assign-author.yml`은 PR 작성자를 assignee로 등록하고, `.github/workflows/auto-assign-reviewers.yml`은 draft가 아닌 PR에 리뷰어 2명을 자동 요청합니다.
 
-자동 배정을 구현하려면 먼저 다음 source of truth가 필요합니다.
-
-- 팀원 이름과 GitHub username의 확정 매핑
-- reviewer roster와 일시적 제외 기간
-- 월별 배정·실제 참여 횟수를 신뢰할 수 있게 저장할 위치
-- GitHub Actions의 권한·동시성·fork PR 보안 정책
-
-이 전제 없이 GitHub handle이나 배정 통계를 추측해서 workflow를 만들지 않습니다. 전제가 확정되기 전에는 위 회전 규칙으로 수동 배정하고, 기록을 남깁니다.
+- reviewer 자동 요청은 PR이 `opened`, `ready_for_review`, `reopened` 상태가 될 때 실행합니다.
+- 연속 배정 회피, 개인 일정, 변경 영역별 전문성은 자동으로 판단하지 않습니다.
+- 일시적 제외나 배정 가중치 변경은 reviewer config에 반영합니다.
+- 전문 리뷰가 더 필요하면 자동 배정 후 reviewer를 추가합니다.
