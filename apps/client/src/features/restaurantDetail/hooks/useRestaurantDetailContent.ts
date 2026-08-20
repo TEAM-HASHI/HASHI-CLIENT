@@ -1,21 +1,13 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useCallback, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
-import type { RestaurantMenuListData } from '@/features/restaurantDetail/api/getRestaurantMenus'
-import type { RestaurantReviewListData } from '@/features/restaurantDetail/api/getRestaurantReviews'
 import type { RestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
-import {
-  REVIEW_PAGE_SIZE,
-  type ReviewSortValue,
-} from '@/features/restaurantDetail/constants/restaurantReview'
-import {
-  restaurantMenusInfiniteQueryOptions,
-  restaurantReviewsInfiniteQueryOptions,
-  restaurantStoreInformationQueryOptions,
-} from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
+import { useRestaurantDetailInfiniteLists } from '@/features/restaurantDetail/hooks/useRestaurantDetailInfiniteLists'
+import { useRestaurantDetailReviewImageViewer } from '@/features/restaurantDetail/hooks/useRestaurantDetailReviewImageViewer'
+import { useRestaurantDetailReviewUnavailableModal } from '@/features/restaurantDetail/hooks/useRestaurantDetailReviewUnavailableModal'
+import { useRestaurantDetailTabs } from '@/features/restaurantDetail/hooks/useRestaurantDetailTabs'
+import { restaurantStoreInformationQueryOptions } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
 import { createRestaurantDetailViewModel } from '@/features/restaurantDetail/utils/createRestaurantDetailViewModel'
-import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 interface UseRestaurantDetailContentParams {
   enabled?: boolean
@@ -32,145 +24,81 @@ export const useRestaurantDetailContent = ({
   restaurantId,
   summary,
 }: UseRestaurantDetailContentParams) => {
-  const [activeTab, setActiveTab] = useState<RestaurantDetailTab>(
-    initialTab ?? 'info',
-  )
-  const [selectedReviewSort, setSelectedReviewSort] =
-    useState<ReviewSortValue>('latest')
-  const [isReviewImageViewerOpen, setIsReviewImageViewerOpen] = useState(false)
-  const [reviewImageViewerImageUrls, setReviewImageViewerImageUrls] = useState<
-    string[]
-  >([])
-  const [reviewImageViewerInitialIndex, setReviewImageViewerInitialIndex] =
-    useState(0)
-  const [isReviewUnavailableModalOpen, setIsReviewUnavailableModalOpen] =
-    useState(false)
+  const detailTabs = useRestaurantDetailTabs({ initialTab })
+  const reviewImageViewer = useRestaurantDetailReviewImageViewer()
+  const reviewUnavailableModal = useRestaurantDetailReviewUnavailableModal()
 
   const storeInformationQuery = useQuery({
     ...restaurantStoreInformationQueryOptions(restaurantId),
     enabled,
   })
-  const menusQuery = useInfiniteQuery({
-    ...restaurantMenusInfiniteQueryOptions(restaurantId, menuPageSize),
+  const infiniteLists = useRestaurantDetailInfiniteLists({
+    activeTab: detailTabs.activeTab,
     enabled,
-  })
-  const reviewsQuery = useInfiniteQuery({
-    ...restaurantReviewsInfiniteQueryOptions({
-      restaurantId,
-      size: REVIEW_PAGE_SIZE,
-      sort: selectedReviewSort,
-    }),
-    enabled,
-  })
-
-  const canFetchNextMenuPage =
-    menusQuery.hasNextPage && !menusQuery.isFetchingNextPage
-  const canFetchNextReviewPage =
-    reviewsQuery.hasNextPage && !reviewsQuery.isFetchingNextPage
-  const { fetchNextPage: fetchNextMenuPage } = menusQuery
-  const { fetchNextPage: fetchNextReviewPage } = reviewsQuery
-
-  const handleIntersectMenu = useCallback(() => {
-    if (canFetchNextMenuPage) {
-      return fetchNextMenuPage()
-    }
-  }, [canFetchNextMenuPage, fetchNextMenuPage])
-
-  const handleIntersectReview = useCallback(() => {
-    if (canFetchNextReviewPage) {
-      return fetchNextReviewPage()
-    }
-  }, [canFetchNextReviewPage, fetchNextReviewPage])
-
-  const menuLoadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
-    enabled: activeTab === 'menu' && canFetchNextMenuPage,
-    isLoading: menusQuery.isFetchingNextPage,
-    onIntersect: handleIntersectMenu,
-  })
-  const reviewLoadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
-    enabled: activeTab === 'review' && canFetchNextReviewPage,
-    isLoading: reviewsQuery.isFetchingNextPage,
-    onIntersect: handleIntersectReview,
+    menuPageSize,
+    restaurantId,
+    selectedReviewSort: detailTabs.selectedReviewSort,
   })
 
   const storeInformation = storeInformationQuery.data
-  const menuPages = menusQuery.data?.pages ?? []
-  const reviewPages = reviewsQuery.data?.pages ?? []
-  const menus = menuPages.flatMap((page: RestaurantMenuListData) => page.menus)
-  const reviews = reviewPages.flatMap(
-    (page: RestaurantReviewListData) => page.reviews,
-  )
-  const firstReviewPage = reviewPages[0]
   const restaurant =
     summary && storeInformation
       ? createRestaurantDetailViewModel({
           summary,
           storeInformation,
-          menus,
-          reviews,
-          averageRating: firstReviewPage?.averageRating ?? 0,
-          reviewCount: firstReviewPage?.reviewCount ?? 0,
-          ratingDistribution: firstReviewPage?.ratingDistribution,
+          menus: infiniteLists.menus,
+          reviews: infiniteLists.reviews,
+          averageRating: infiniteLists.firstReviewPage?.averageRating ?? 0,
+          reviewCount: infiniteLists.firstReviewPage?.reviewCount ?? 0,
+          ratingDistribution: infiniteLists.firstReviewPage?.ratingDistribution,
         })
       : null
 
   const handlePressReviewImage = (reviewId: string, imageIndex: number) => {
-    const selectedReview = restaurant?.reviews.find(
-      (review) => review.id === reviewId,
-    )
-
-    setReviewImageViewerImageUrls(selectedReview?.images ?? [])
-    setReviewImageViewerInitialIndex(imageIndex)
-    setIsReviewImageViewerOpen(true)
-  }
-
-  const handleCloseReviewImageViewer = () => {
-    setIsReviewImageViewerOpen(false)
-  }
-
-  const handleOpenReviewUnavailableModal = () => {
-    setIsReviewUnavailableModalOpen(true)
-  }
-
-  const handleCloseReviewUnavailableModal = () => {
-    setIsReviewUnavailableModalOpen(false)
+    reviewImageViewer.onOpenReviewImageViewer({
+      imageIndex,
+      restaurant,
+      reviewId,
+    })
   }
 
   const resetDetailState = () => {
-    setActiveTab('info')
-    setSelectedReviewSort('latest')
-    setIsReviewImageViewerOpen(false)
-    setIsReviewUnavailableModalOpen(false)
-    setReviewImageViewerImageUrls([])
-    setReviewImageViewerInitialIndex(0)
+    detailTabs.resetTabs()
+    reviewImageViewer.resetReviewImageViewer()
+    reviewUnavailableModal.resetReviewUnavailableModal()
   }
 
   return {
-    activeTab,
+    activeTab: detailTabs.activeTab,
     error: storeInformationQuery.error,
-    hasMoreMenus: menusQuery.hasNextPage,
-    hasMoreReviews: reviewsQuery.hasNextPage,
+    hasMoreMenus: infiniteLists.hasMoreMenus,
+    hasMoreReviews: infiniteLists.hasMoreReviews,
     isLoading:
-      enabled && (!summary || !storeInformation || menusQuery.isPending),
-    isMenuListError: menusQuery.isError && menuPages.length === 0,
-    isReviewImageViewerOpen,
-    isReviewListError: reviewsQuery.isError && reviewPages.length === 0,
-    isReviewListLoading: reviewsQuery.isPending,
-    isReviewUnavailableModalOpen,
-    menuLoadMoreRef,
-    onCloseReviewImageViewer: handleCloseReviewImageViewer,
-    onCloseReviewUnavailableModal: handleCloseReviewUnavailableModal,
-    onOpenReviewUnavailableModal: handleOpenReviewUnavailableModal,
+      enabled &&
+      (!summary || !storeInformation || infiniteLists.isMenuListPending),
+    isMenuListError: infiniteLists.isMenuListError,
+    isReviewImageViewerOpen: reviewImageViewer.isReviewImageViewerOpen,
+    isReviewListError: infiniteLists.isReviewListError,
+    isReviewListLoading: infiniteLists.isReviewListLoading,
+    isReviewUnavailableModalOpen:
+      reviewUnavailableModal.isReviewUnavailableModalOpen,
+    menuLoadMoreRef: infiniteLists.menuLoadMoreRef,
+    onCloseReviewImageViewer: reviewImageViewer.onCloseReviewImageViewer,
+    onCloseReviewUnavailableModal:
+      reviewUnavailableModal.onCloseReviewUnavailableModal,
+    onOpenReviewUnavailableModal:
+      reviewUnavailableModal.onOpenReviewUnavailableModal,
     onPressReviewImage: handlePressReviewImage,
-    onRetryMenuList: () => void menusQuery.refetch(),
-    onRetryReviewList: () => void reviewsQuery.refetch(),
-    onSelectReviewSort: setSelectedReviewSort,
-    onTabChange: setActiveTab,
+    onRetryMenuList: infiniteLists.onRetryMenuList,
+    onRetryReviewList: infiniteLists.onRetryReviewList,
+    onSelectReviewSort: detailTabs.onSelectReviewSort,
+    onTabChange: detailTabs.onTabChange,
     resetDetailState,
     restaurant,
-    reviewImageViewerImageUrls,
-    reviewImageViewerInitialIndex,
-    reviewLoadMoreRef,
-    selectedReviewSort,
+    reviewImageViewerImageUrls: reviewImageViewer.reviewImageViewerImageUrls,
+    reviewImageViewerInitialIndex:
+      reviewImageViewer.reviewImageViewerInitialIndex,
+    reviewLoadMoreRef: infiniteLists.reviewLoadMoreRef,
+    selectedReviewSort: detailTabs.selectedReviewSort,
   }
 }
