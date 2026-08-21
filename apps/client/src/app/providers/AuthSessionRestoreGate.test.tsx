@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthSessionRestoreGate } from '@/app/providers/AuthSessionRestoreGate'
 import { ROUTES } from '@/app/router/path'
 import { getAuthMe } from '@/features/auth/api/getAuthMe'
-import { requestTokenReissue } from '@/features/auth/api/reissueToken'
+import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
 import {
   clearAuthSession,
   getAccessToken,
@@ -23,7 +23,7 @@ vi.mock('@/features/auth/api/getAuthMe', () => ({
   getAuthMe: vi.fn(),
 }))
 
-vi.mock('@/features/auth/api/reissueToken', () => ({
+vi.mock('@/shared/api/requestTokenReissue', () => ({
   requestTokenReissue: vi.fn(),
 }))
 

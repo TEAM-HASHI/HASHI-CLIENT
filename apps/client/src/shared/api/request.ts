@@ -1,6 +1,6 @@
 import type { Options } from 'ky'
 
-import { requestTokenReissue } from '@/features/auth/api/reissueToken'
+import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
 import {
   clearAuthSession,
   getAccessToken,

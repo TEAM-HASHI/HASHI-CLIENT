@@ -1,7 +1,7 @@
 import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
-import { isErrorResponse, isSuccessResponse } from '@/shared/api/types'
 import { extractBearerToken } from '@/shared/api/extractBearerToken'
+import { isErrorResponse, isSuccessResponse } from '@/shared/api/types'
 
 export interface TokenReissueResult {
   accessToken: string
