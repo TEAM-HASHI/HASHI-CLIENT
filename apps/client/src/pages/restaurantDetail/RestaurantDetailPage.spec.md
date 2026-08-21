@@ -181,7 +181,7 @@ RestaurantDetailPage
   - `RestaurantDetailHero`
   - `RestaurantDetailTabs`
   - `RestaurantInfoSection`
-  - `RestaurantMenuSection`
+  - `RestaurantMenuListSection`
   - `RestaurantReviewSection`
   - `RestaurantBottomBar`
   - `ReviewImageViewer`
