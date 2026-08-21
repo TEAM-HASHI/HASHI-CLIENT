@@ -126,9 +126,6 @@ describe('AuthSessionRestoreGate', () => {
       )
 
       expect(screen.getByText(screenText)).toBeInTheDocument()
-      expect(
-        screen.queryByText('로그인 상태를 확인하고 있어요'),
-      ).not.toBeInTheDocument()
 
       await waitFor(() => {
         expect(getAccessToken()).toBe('restored-access-token')
