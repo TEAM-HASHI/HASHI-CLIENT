@@ -4,7 +4,7 @@ import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
 import { request, requestSuccessResponse } from '@/shared/api/request'
 import type { ErrorResponse } from '@/shared/api/types'
-import { requestTokenReissue } from '@/features/auth/api/reissueToken'
+import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
 import {
   clearAuthSession,
   getAccessToken,
@@ -15,7 +15,7 @@ vi.mock('@/shared/api/apiClient', () => ({
   apiClient: vi.fn(),
 }))
 
-vi.mock('@/features/auth/api/reissueToken', () => ({
+vi.mock('@/shared/api/requestTokenReissue', () => ({
   requestTokenReissue: vi.fn(),
 }))
 

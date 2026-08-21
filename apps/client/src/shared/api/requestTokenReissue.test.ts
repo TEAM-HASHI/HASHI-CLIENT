@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { apiClient } from '@/shared/api/apiClient'
-
-import { requestTokenReissue } from '@/features/auth/api/reissueToken'
+import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
 
 vi.mock('@/shared/api/apiClient', () => ({
   apiClient: vi.fn(),

@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 
 import { getShouldRenderDuringAuthRestore } from '@/app/providers/authSessionRestorePolicy'
 import { getAuthMe } from '@/features/auth/api/getAuthMe'
-import { requestTokenReissue } from '@/features/auth/api/reissueToken'
+import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
 import {
   clearAuthSession,
   getAccessToken,
