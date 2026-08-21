@@ -49,7 +49,7 @@ describe('createRestaurantDetailViewModel', () => {
       storeInformation,
       menus: [],
       reviews: [],
-      now: new Date('2026-08-17T09:00:00+09:00'),
+      now: new Date(2026, 7, 17, 9, 0, 0),
     })
 
     expect(restaurant.businessHoursSummary).toBe('8/17 (월) 11:00 ~ 21:00')
@@ -62,7 +62,7 @@ describe('createRestaurantDetailViewModel', () => {
       storeInformation,
       menus: [],
       reviews: [],
-      now: new Date('2026-08-18T09:00:00+09:00'),
+      now: new Date(2026, 7, 18, 9, 0, 0),
     })
 
     expect(restaurant.businessHoursSummary).toBe('8/18 (화) 12:00 ~ 20:00')
@@ -77,13 +77,14 @@ describe('createRestaurantDetailViewModel', () => {
         businessHours: [
           {
             dayOfWeek: 'MONDAY',
+            closeTime: '21:00',
             closed: true,
           },
         ],
       },
       menus: [],
       reviews: [],
-      now: new Date('2026-08-17T09:00:00+09:00'),
+      now: new Date(2026, 7, 17, 9, 0, 0),
     })
 
     expect(restaurant.businessHoursSummary).toBe('8/17 (월) 휴무')
