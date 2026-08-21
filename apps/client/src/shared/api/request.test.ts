@@ -9,7 +9,7 @@ import {
   clearAuthSession,
   getAccessToken,
   setAccessToken,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 
 vi.mock('@/shared/api/apiClient', () => ({
   apiClient: vi.fn(),

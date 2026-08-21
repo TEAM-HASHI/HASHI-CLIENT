@@ -5,7 +5,7 @@ import {
   clearAuthSession,
   getAccessToken,
   setAccessToken,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 import {
   ApiError,
   HttpStatusError,

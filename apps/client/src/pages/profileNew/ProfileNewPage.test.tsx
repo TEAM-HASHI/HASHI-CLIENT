@@ -17,7 +17,7 @@ import {
   getAccessToken,
   getAuthSessionStatus,
   setOnboardingSession,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 import profileEmptyImage from '@/shared/assets/images/profile-empty.svg'

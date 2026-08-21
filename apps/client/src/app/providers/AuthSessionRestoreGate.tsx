@@ -8,7 +8,7 @@ import {
   getAccessToken,
   setAccessToken,
   setOnboardingSession,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 import { getApiAccessToken } from '@/shared/api/accessToken'
 
 interface AuthSessionRestoreGateProps {
