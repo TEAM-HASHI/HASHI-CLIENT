@@ -12,7 +12,7 @@ import {
   getAccessToken,
   getAuthSessionStatus,
   setAccessToken,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 import { getApiAccessToken } from '@/shared/api/accessToken'
 
 vi.mock('@/shared/api/accessToken', () => ({

@@ -4,10 +4,7 @@ import { useRef, useState } from 'react'
 import { matchPath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import {
-  clearAuthSession,
-  setAccessToken,
-} from '@/features/auth/session/authSession'
+import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
 import { requestOnboarding } from '@/pages/profileNew/api/requestOnboarding'
 import { uploadProfileImage } from '@/pages/profileNew/api/uploadProfileImage'
 import {
