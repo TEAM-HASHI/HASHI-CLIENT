@@ -13,6 +13,7 @@ import { getApiAccessToken } from '@/shared/api/accessToken'
 
 interface AuthSessionRestoreGateProps {
   children: ReactNode
+  pathname?: string
 }
 
 let authSessionRestorePromise: Promise<void> | undefined
@@ -79,12 +80,16 @@ const restoreAuthSession = async () => {
 
 export const AuthSessionRestoreGate = ({
   children,
+  pathname,
 }: AuthSessionRestoreGateProps) => {
-  const [isRestoreCompleted, setIsRestoreCompleted] = useState(
-    () =>
-      Boolean(getAccessToken()) ||
-      getShouldRenderDuringAuthRestore(getCurrentPathname()),
+  const [isRestoreCompleted, setIsRestoreCompleted] = useState(() =>
+    Boolean(getAccessToken()),
   )
+  const currentPathname = pathname ?? getCurrentPathname()
+  const shouldRenderChildren =
+    isRestoreCompleted ||
+    Boolean(getAccessToken()) ||
+    getShouldRenderDuringAuthRestore(currentPathname)
 
   useEffect(() => {
     if (getAccessToken()) {
@@ -112,7 +117,7 @@ export const AuthSessionRestoreGate = ({
     }
   }, [])
 
-  if (!isRestoreCompleted) {
+  if (!shouldRenderChildren) {
     return null
   }
 

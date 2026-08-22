@@ -6,30 +6,40 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RootLayout } from '@/app/layout/RootLayout'
 
-const { mockAsyncBoundary, mockToastRegion, mockTrackPageView } = vi.hoisted(
-  () => ({
-    mockAsyncBoundary: vi.fn(
-      ({
-        children,
-        resetKeys,
-      }: {
-        children: ReactNode
-        resetKeys?: unknown[]
-      }) => (
-        <div
-          data-testid="async-boundary"
-          data-reset-key={String(resetKeys?.[0] ?? '')}
-        >
-          {children}
-        </div>
-      ),
+const {
+  mockAsyncBoundary,
+  mockAuthSessionRestoreGate,
+  mockToastRegion,
+  mockTrackPageView,
+} = vi.hoisted(() => ({
+  mockAsyncBoundary: vi.fn(
+    ({
+      children,
+      resetKeys,
+    }: {
+      children: ReactNode
+      resetKeys?: unknown[]
+    }) => (
+      <div
+        data-testid="async-boundary"
+        data-reset-key={String(resetKeys?.[0] ?? '')}
+      >
+        {children}
+      </div>
     ),
-    mockToastRegion: vi.fn(({ className }: { className?: string }) => (
-      <div data-testid="toast-region" data-class-name={className} />
-    )),
-    mockTrackPageView: vi.fn(),
-  }),
-)
+  ),
+  mockAuthSessionRestoreGate: vi.fn(
+    ({ children, pathname }: { children: ReactNode; pathname?: string }) => (
+      <div data-pathname={pathname} data-testid="auth-session-restore-gate">
+        {children}
+      </div>
+    ),
+  ),
+  mockToastRegion: vi.fn(({ className }: { className?: string }) => (
+    <div data-testid="toast-region" data-class-name={className} />
+  )),
+  mockTrackPageView: vi.fn(),
+}))
 const { mockLocationStore, mockScrollTo } = vi.hoisted(() => ({
   mockLocationStore: {
     hash: '',
@@ -45,6 +55,10 @@ vi.mock('@hashi/hds-ui', () => ({
 
 vi.mock('@/app/providers/AsyncBoundary', () => ({
   default: mockAsyncBoundary,
+}))
+
+vi.mock('@/app/providers/AuthSessionRestoreGate', () => ({
+  AuthSessionRestoreGate: mockAuthSessionRestoreGate,
 }))
 
 vi.mock('@/shared/lib/analytics', () => ({
@@ -65,6 +79,7 @@ describe('RootLayout', () => {
     cleanup()
     vi.unstubAllGlobals()
     mockAsyncBoundary.mockClear()
+    mockAuthSessionRestoreGate.mockClear()
     mockToastRegion.mockClear()
     mockScrollTo.mockClear()
     mockTrackPageView.mockClear()
@@ -86,11 +101,30 @@ describe('RootLayout', () => {
     render(<RootLayout />)
 
     const boundary = screen.getByTestId('async-boundary')
+    const authGate = screen.getByTestId('auth-session-restore-gate')
     const outlet = screen.getByTestId('route-outlet')
     const toastRegion = screen.getByTestId('toast-region')
 
-    expect(boundary).toContainElement(outlet)
+    expect(boundary).toContainElement(authGate)
+    expect(authGate).toContainElement(outlet)
     expect(boundary).not.toContainElement(toastRegion)
+  })
+
+  it('passes the current pathname to AuthSessionRestoreGate', () => {
+    const { rerender } = render(<RootLayout />)
+
+    expect(screen.getByTestId('auth-session-restore-gate')).toHaveAttribute(
+      'data-pathname',
+      '/',
+    )
+
+    mockLocationStore.pathname = '/restaurants/restaurant-1'
+    rerender(<RootLayout />)
+
+    expect(screen.getByTestId('auth-session-restore-gate')).toHaveAttribute(
+      'data-pathname',
+      '/restaurants/restaurant-1',
+    )
   })
 
   it('scrolls to the top when the route pathname changes', () => {

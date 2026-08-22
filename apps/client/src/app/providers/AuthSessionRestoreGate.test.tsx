@@ -134,6 +134,38 @@ describe('AuthSessionRestoreGate', () => {
     },
   )
 
+  it('rechecks the current route while auth restore is still running', async () => {
+    let resolveReissue: (
+      value: Awaited<ReturnType<typeof requestTokenReissue>>,
+    ) => void = () => {}
+    mockedRequestTokenReissue.mockReturnValue(
+      new Promise((resolve) => {
+        resolveReissue = resolve
+      }),
+    )
+
+    const { rerender } = render(
+      <AuthSessionRestoreGate pathname={ROUTES.hashiPickRestaurants}>
+        <div>route screen</div>
+      </AuthSessionRestoreGate>,
+    )
+
+    expect(screen.getByText('route screen')).toBeInTheDocument()
+
+    rerender(
+      <AuthSessionRestoreGate pathname={ROUTES.restaurantDetail}>
+        <div>route screen</div>
+      </AuthSessionRestoreGate>,
+    )
+
+    expect(screen.queryByText('route screen')).not.toBeInTheDocument()
+
+    resolveReissue({ accessToken: 'restored-access-token' })
+    await waitFor(() => {
+      expect(getAccessToken()).toBe('restored-access-token')
+    })
+  })
+
   it('does not authenticate an admin session in the user client', async () => {
     mockedRequestTokenReissue.mockResolvedValue({
       accessToken: 'admin-access-token',
