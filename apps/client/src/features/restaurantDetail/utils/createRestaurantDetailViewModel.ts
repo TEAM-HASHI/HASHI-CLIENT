@@ -99,11 +99,11 @@ const formatLastOrderTime = (
     (hours) => normalizeDayOfWeek(hours.dayOfWeek) === todayApiDay,
   )
 
-  if (todayHours?.closed) {
+  if (!todayHours || todayHours.closed || !todayHours.closeTime) {
     return '영업시간 정보 없음'
   }
 
-  return todayHours?.closeTime ?? '영업시간 정보 없음'
+  return todayHours.closeTime
 }
 
 const formatPriceRange = (
