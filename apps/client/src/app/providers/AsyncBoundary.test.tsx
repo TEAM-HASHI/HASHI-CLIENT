@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { FallbackProps } from 'react-error-boundary'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import AsyncBoundary from '@/app/providers/AsyncBoundary'
@@ -108,5 +109,26 @@ describe('AsyncBoundary', () => {
     )
 
     expect(await screen.findByText('next route')).toBeInTheDocument()
+  })
+
+  it('renders an injected fallback component with the caught error', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const CustomFallback = ({ error }: FallbackProps) => (
+      <p role="alert">
+        custom fallback:{' '}
+        {error instanceof Error ? error.message : 'unknown error'}
+      </p>
+    )
+
+    render(
+      <AsyncBoundary FallbackComponent={CustomFallback}>
+        <RouteContent shouldThrow />
+      </AsyncBoundary>,
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'custom fallback: route failed',
+    )
   })
 })

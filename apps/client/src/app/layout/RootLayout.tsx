@@ -8,6 +8,7 @@ import { trackPageView } from '@/shared/lib/analytics'
 export const RootLayout = () => {
   const { hash = '', pathname, search = '' } = useLocation()
   const pagePath = `${pathname}${search}${hash}`
+  const routeResetKey = `${pathname}${search}`
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
@@ -20,7 +21,7 @@ export const RootLayout = () => {
   return (
     <>
       <main className="app-mobile-frame min-h-dvh bg-white">
-        <AsyncBoundary resetKeys={[pathname]}>
+        <AsyncBoundary resetKeys={[routeResetKey]}>
           <Outlet />
         </AsyncBoundary>
       </main>

@@ -94,7 +94,10 @@ apps/admin/src/shared/api/
 
 route content용 `AsyncBoundary`는 `RootLayout` 내부에서 `Outlet`을 감싸며,
 retry 시 React error state와 TanStack Query error state를 함께 reset합니다. 또한
-pathname이 변경되면 이전 route에서 잡힌 error state를 reset합니다.
+pathname 또는 search params가 변경되면 이전 route에서 잡힌 error state를
+reset합니다. hash만 변경되는 경우에는 route data가 바뀌지 않으므로 reset하지
+않습니다. `AsyncBoundary`는 기본적으로 `AsyncErrorFallback`을 사용하고, route나
+page에서 별도 error UX가 필요하면 `FallbackComponent`를 주입할 수 있습니다.
 
 ## API Integration Workflow
 
