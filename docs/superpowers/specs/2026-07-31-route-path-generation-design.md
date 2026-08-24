@@ -18,7 +18,7 @@ HASHI Client는 동적 route pathname을 만들 때 React Router의
 
 ## Scope
 
-- `features/restaurantDetail/utils/restaurantDetailRoutes.ts`의 route helper
+- `features/restaurantDetail/utils/restaurantDetailRoutes.ts`의 path helper를 `app/router/routePaths.ts`로 이동
 - 홈, 검색 결과, 큐레이션 목록의 식당 상세 링크
 - 내 예약의 예약 상세, 리뷰 상세, 리뷰 작성 navigation
 - 관련 route helper 및 페이지 navigation 테스트
@@ -35,9 +35,11 @@ HASHI Client는 동적 route pathname을 만들 때 React Router의
 
 ## Design
 
-동적 pathname은 호출 위치에서 `generatePath(ROUTES.someRoute, params)`로 생성한다.
-추가 wrapper는 만들지 않는다. 이미 route-specific helper가 있는 식당 상세 흐름은
-그 helper 내부 구현만 `generatePath`로 교체한다.
+동적 pathname은 React Router의 `generatePath(ROUTES.someRoute, params)`로 생성한다.
+한 호출부에서만 사용하는 URL은 호출 위치에서 직접 생성할 수 있지만, 여러 페이지와
+feature가 재사용하는 route-specific helper는 `app/router/routePaths.ts`가 소유한다.
+식당 상세·메뉴 상세·예약·리뷰 작성 URL 생성 helper는 이 파일로 이동하고,
+`restaurantDetailRoutes.ts`에는 상세 화면의 state 해석과 navigation 동작만 남긴다.
 
 특수문자 인코딩은 `generatePath`에 맡긴다. 호출부에서
 `encodeURIComponent`를 먼저 적용하지 않아 이중 인코딩을 방지한다. query string은
@@ -55,6 +57,6 @@ pathname 생성 후 `URLSearchParams`로 연결하고, `returnTo` 같은 navigat
 ## Documentation and Folder Impact
 
 `docs/architecture/app-structure.md`에 동적 route URL은 수동 문자열 치환 대신
-`generatePath`를 사용한다는 규칙을 추가한다. `point/types`는 현재 Git tree에 없고
-Git은 완전히 빈 디렉터리를 추적하지 않으므로, 잔존하지 않음을 확인하는 것으로
-완료한다.
+`generatePath`를 사용하고, 재사용 URL helper는 `app/router/routePaths.ts`에서
+관리한다는 규칙을 추가한다. `point/types`는 현재 Git tree에 없고 Git은 완전히 빈
+디렉터리를 추적하지 않으므로, 잔존하지 않음을 확인하는 것으로 완료한다.

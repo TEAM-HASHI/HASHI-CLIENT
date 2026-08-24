@@ -5,22 +5,22 @@ import {
   getRestaurantMenuDetailPath,
   getRestaurantReservationNewPath,
   getRestaurantReviewNewPath,
-} from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
+} from '@/app/router/routePaths'
 
-describe('restaurantDetailRoutes', () => {
-  it('encodes a raw restaurant id as a path parameter', () => {
+describe('routePaths', () => {
+  it('creates an encoded restaurant detail path from a raw id', () => {
     expect(getRestaurantDetailPath('tokyo/sushi 한글')).toBe(
       '/restaurants/tokyo%2Fsushi%20%ED%95%9C%EA%B8%80',
     )
   })
 
-  it('encodes every parameter in a menu detail path', () => {
+  it('creates an encoded restaurant menu detail path from raw ids', () => {
     expect(getRestaurantMenuDetailPath('tokyo/sushi', 'menu?1')).toBe(
       '/restaurants/tokyo%2Fsushi/menus/menu%3F1',
     )
   })
 
-  it('keeps reservation and review query path generation consistent', () => {
+  it('creates reservation and review paths from raw ids', () => {
     expect(getRestaurantReservationNewPath('tokyo/sushi')).toBe(
       '/restaurants/tokyo%2Fsushi/reservations/new',
     )

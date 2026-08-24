@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { getRestaurantReviewNewPath } from '@/app/router/routePaths'
 import {
   type MyReservationsApiStatus,
   syncCanceledReservationCache,
@@ -230,14 +231,12 @@ export const useMyReservationsPage = () => {
       return
     }
 
-    const pathname = generatePath(ROUTES.reviewNew, {
-      restaurantId: reservation.restaurantId,
-    })
-    const searchParams = new URLSearchParams({
-      reservationId: reservation.reservationId,
-    })
-
-    navigate(`${pathname}?${searchParams.toString()}`)
+    navigate(
+      getRestaurantReviewNewPath(
+        reservation.restaurantId,
+        reservation.reservationId,
+      ),
+    )
   }
 
   const handleEmptyActionPress = () => {

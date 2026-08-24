@@ -3,6 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import {
+  getRestaurantDetailPath,
+  getRestaurantMenuDetailPath,
+  getRestaurantReservationNewPath,
+} from '@/app/router/routePaths'
 import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
 import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import type { RestaurantMenuListData } from '@/features/restaurantDetail/api/getRestaurantMenus'
@@ -17,10 +22,7 @@ import {
   createRestaurantMenuViewModel,
 } from '@/features/restaurantDetail/utils/createRestaurantDetailViewModel'
 import {
-  getRestaurantDetailPath,
-  getRestaurantMenuDetailPath,
   getRestaurantMenuDetailSourceState,
-  getRestaurantReservationNewPath,
   navigateBackOrReplace,
 } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import { checkIsNotFoundError } from '@/shared/api'

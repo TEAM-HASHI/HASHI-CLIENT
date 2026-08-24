@@ -146,7 +146,7 @@ page 단위 구현, form/data fetching/mutation 흐름, HDS component, 여러 �
 ## Placement Rules
 
 - 앱 실행 조립 코드는 각 앱의 `src/app`에 둡니다.
-- route path는 각 앱의 `src/app/router/path.ts`에 둡니다.
+- route pattern은 각 앱의 `src/app/router/path.ts`에 두고, 여러 호출부에서 재사용하는 URL 생성 helper는 `src/app/router/routePaths.ts`에서 관리합니다.
 - 앱 내부 공통 컴포넌트는 각 앱의 `src/shared/components`에 둡니다.
 - 식당 사진, 음식 사진처럼 실제 이미지 데이터가 없을 때 보여주는 앱 공통 fallback 이미지는 `apps/client/src/shared/components/defaultImage/DefaultImage.tsx`를 사용합니다.
   - 사용처는 컨테이너 크기와 radius를 `className`으로 지정합니다.

@@ -1,8 +1,9 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { generatePath, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { getRestaurantDetailPath } from '@/app/router/routePaths'
 import {
   CATEGORY_OPTIONS,
   DEFAULT_CATEGORY_OPTION,
@@ -27,10 +28,6 @@ type UseRestaurantListPageParams = {
 
 const getOptionByValue = (options: FilterOption[], value: string) => {
   return options.find((option) => option.value === value)
-}
-
-const getRestaurantDetailPath = (restaurantId: string) => {
-  return generatePath(ROUTES.restaurantDetail, { restaurantId })
 }
 
 export const useRestaurantListPage = ({
