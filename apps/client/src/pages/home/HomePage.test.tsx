@@ -83,7 +83,7 @@ describe('HomePage', () => {
         imageAlt: '돈카츠 후쿠마루 도쿄역 야에스점 대표 이미지',
         imageUrl: 'https://example.com/tonkatsu.jpg',
         name: '돈카츠 후쿠마루 도쿄역 야에스점',
-        restaurantId: '101',
+        restaurantId: 'tokyo/sushi',
         summary: 'SNS에서 핫한 돈카츠',
       },
       {
@@ -258,7 +258,7 @@ describe('HomePage', () => {
       await screen.findByRole('link', {
         name: /돈카츠 후쿠마루 도쿄역 야에스점/,
       }),
-    ).toHaveAttribute('href', '/restaurants/101')
+    ).toHaveAttribute('href', '/restaurants/tokyo%2Fsushi')
     expect(
       screen.getByRole('link', { name: /숯불 규카츠 미야비 긴자 본점/ }),
     ).toHaveAttribute('href', '/restaurants/102')

@@ -3,6 +3,10 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import {
+  getRestaurantMenuDetailPath,
+  getRestaurantReservationNewPath,
+} from '@/app/router/routePaths'
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
 import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
 import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
@@ -14,8 +18,6 @@ import { useRestaurantReviewWriteNavigation } from '@/features/restaurantDetail/
 import { randomRestaurantRecommendationQueryOptions } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
 import {
   getRestaurantDetailTabState,
-  getRestaurantMenuDetailPath,
-  getRestaurantReservationNewPath,
   navigateBackOrReplace,
 } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import { NotFoundPage } from '@/pages/notFound'
