@@ -373,8 +373,8 @@ BottomNavigationLayout
     - `imageUrl`
     - `imageAlt`
   - 이동 대상은 식당 상세로 통일합니다.
-  - `ROUTES.restaurantDetail`에 `restaurantId`를 주입하는 page-local path helper가 필요합니다.
-  - `restaurantId`는 URL path segment로 들어가므로 `encodeURIComponent`로 인코딩합니다.
+  - 공통 `getRestaurantDetailPath(restaurantId)` helper로 `ROUTES.restaurantDetail`의 동적 URL을 생성합니다.
+  - `restaurantId`는 사전 인코딩하지 않은 원본 값을 전달하고, helper 내부의 `generatePath`가 URL path segment를 인코딩합니다.
 - Behavior:
   - 항목 전체를 링크로 만들고, 제목과 요약은 1줄 말줄임으로 처리합니다.
   - 이미지 alt는 식당명만 반복하지 말고 이미지 의미가 있으면 `돈카츠 후쿠마루 도쿄역 야에스점 대표 메뉴`처럼 작성합니다.
