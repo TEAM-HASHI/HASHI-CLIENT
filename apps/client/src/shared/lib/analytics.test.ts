@@ -6,6 +6,15 @@ import {
   trackPageView,
 } from '@/shared/lib/analytics'
 
+const expectGtagCommand = (
+  command: IArguments | undefined,
+  expected: unknown[],
+) => {
+  expect(command).toBeDefined()
+  expect(Object.prototype.toString.call(command)).toBe('[object Arguments]')
+  expect(Array.from(command ?? [])).toEqual(expected)
+}
+
 describe('analytics', () => {
   beforeEach(() => {
     document.head.innerHTML = ''
@@ -38,9 +47,11 @@ describe('analytics', () => {
         'script[src="https://www.googletagmanager.com/gtag/js?id=G-TEST123"]',
       ),
     ).toBeInTheDocument()
-    expect(window.dataLayer).toEqual([
-      ['js', expect.any(Date)],
-      ['config', 'G-TEST123', { send_page_view: false }],
+    expectGtagCommand(window.dataLayer?.[0], ['js', expect.any(Date)])
+    expectGtagCommand(window.dataLayer?.[1], [
+      'config',
+      'G-TEST123',
+      { send_page_view: false },
     ])
   })
 
@@ -53,7 +64,7 @@ describe('analytics', () => {
     initAnalytics()
     trackPageView('/restaurants/1?tab=review')
 
-    expect(window.dataLayer?.at(-1)).toEqual([
+    expectGtagCommand(window.dataLayer?.at(-1), [
       'event',
       'page_view',
       {

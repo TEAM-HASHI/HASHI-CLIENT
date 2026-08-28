@@ -4,7 +4,7 @@ type GtagCommand = [string, ...unknown[]]
 
 declare global {
   interface Window {
-    dataLayer?: GtagCommand[]
+    dataLayer?: IArguments[]
     gtag?: (...args: GtagCommand) => void
   }
 }
@@ -23,9 +23,11 @@ export const initAnalytics = () => {
   window.dataLayer = window.dataLayer ?? []
   window.gtag =
     window.gtag ??
-    ((...args: GtagCommand) => {
-      window.dataLayer?.push(args)
-    })
+    function () {
+      // gtag.js requires queued commands to retain the Arguments object shape.
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer?.push(arguments)
+    }
 
   if (!document.getElementById(GA_SCRIPT_ID)) {
     const script = document.createElement('script')
