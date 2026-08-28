@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { getRestaurantReviewNewPath } from '@/app/router/routePaths'
 import { useDeleteReviewMutation } from '@/features/review/mutations/useDeleteReviewMutation'
 import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
 import { useVisitedReservationsInfiniteQuery } from '@/features/review/queries/visitedReservations'
@@ -99,10 +100,7 @@ export const useMyReviewsPage = () => {
     restaurantId: string,
     reservationId: string,
   ) => {
-    const pathname = generatePath(ROUTES.reviewNew, { restaurantId })
-    const searchParams = new URLSearchParams({ reservationId })
-
-    navigate(`${pathname}?${searchParams.toString()}`)
+    navigate(getRestaurantReviewNewPath(restaurantId, reservationId))
   }
 
   const handleNavigateToReviewDetail = (reviewId: string) => {

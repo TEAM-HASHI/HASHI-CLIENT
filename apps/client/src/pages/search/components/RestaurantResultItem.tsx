@@ -1,7 +1,7 @@
 import { ClockSmallIcon, StarFillIcon } from '@hashi/hds-icons'
 import { Link } from 'react-router-dom'
 
-import { ROUTES } from '@/app/router/path'
+import { getRestaurantDetailPath } from '@/app/router/routePaths'
 import type { SearchRestaurant } from '@/pages/search/types'
 import { ImageWithDefaultFallback } from '@/shared/components/defaultImage'
 
@@ -9,22 +9,12 @@ interface RestaurantResultItemProps {
   restaurant: SearchRestaurant
 }
 
-const createRestaurantDetailPath = (restaurantId: string) => {
-  return ROUTES.restaurantDetail.replace(
-    ':restaurantId',
-    encodeURIComponent(restaurantId),
-  )
-}
-
 export const RestaurantResultItem = ({
   restaurant,
 }: RestaurantResultItemProps) => {
   return (
     <li>
-      <Link
-        className="flex gap-3"
-        to={createRestaurantDetailPath(restaurant.id)}
-      >
+      <Link className="flex gap-3" to={getRestaurantDetailPath(restaurant.id)}>
         <ImageWithDefaultFallback
           alt=""
           className="h-[92px] w-[92px] shrink-0 rounded-[5px] object-cover"

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { getRestaurantDetailPath } from '@/app/router/routePaths'
 import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
 import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import { useMagazineBannersQuery } from '@/features/magazine/hooks/useMagazineBannersQuery'
@@ -36,13 +37,6 @@ const markAuthGateShown = () => {
   } catch {
     // Ignore storage failures and keep the current in-memory open state.
   }
-}
-
-const getRestaurantDetailPath = (restaurantId: string) => {
-  return ROUTES.restaurantDetail.replace(
-    ':restaurantId',
-    encodeURIComponent(restaurantId),
-  )
 }
 
 export const useHomePage = () => {

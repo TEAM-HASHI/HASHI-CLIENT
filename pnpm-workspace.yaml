@@ -5,6 +5,7 @@ packages:
 
 catalog:
   '@eslint/js': ^10.0.1
+  '@lhci/cli': ^0.15.1
   '@storybook/addon-docs': ^10.4.6
   '@storybook/react-vite': ^10.4.6
   '@playwright/test': ^1.55.0

@@ -505,8 +505,8 @@ SearchPage
   - 홈 화면 상단 검색 CTA
   - `/search` 직접 진입
 - links:
-  - 식당 리스트 item 클릭 시 `ROUTES.restaurantDetail`에 해당하는 `/restaurants/:restaurantId`로 이동합니다.
-  - `restaurantId`는 URL path segment로 들어가므로 `encodeURIComponent`로 인코딩합니다.
+  - 식당 리스트 item 클릭 시 공통 `getRestaurantDetailPath(restaurantId)` helper로 생성한 `/restaurants/:restaurantId` URL로 이동합니다.
+  - `restaurantId`는 사전 인코딩하지 않은 원본 값을 전달하고, helper 내부의 `generatePath`가 URL path segment를 인코딩합니다.
 - route params:
   - 없음
 - search params:
