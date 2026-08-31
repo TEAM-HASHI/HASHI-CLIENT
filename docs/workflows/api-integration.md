@@ -79,7 +79,7 @@ apps/client/src/pages/{page}/
   types.ts
 ```
 
-여러 페이지에서 같은 기능 흐름을 공유하면 feature로 승격합니다.
+여러 페이지가 page 전용 의존성 없이 같은 기능 흐름을 공유하면 feature로 승격합니다.
 
 ```text
 apps/client/src/features/{feature}/
