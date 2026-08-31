@@ -33,6 +33,8 @@
 - 재시도 후에도 한 파일이라도 실패하면 리뷰 작성 POST를 호출하지 않는다.
 - 모든 이미지 업로드가 성공하면 `fileKey` 목록을 `imageFileKeys`로 `POST /api/v1/reviews`에 전달한다.
 - 사진이 없으면 presigned API를 생략하고 빈 `imageFileKeys`로 리뷰를 작성한다.
+- 리뷰 작성 성공 후 작성 context cache는 재사용되지 않도록 refetch 없이 무효화한다.
+- 리뷰 작성 성공 후 내 리뷰 개수, 내 리뷰 목록, 작성 가능 예약 목록 cache를 무효화한다.
 
 ## Interaction
 
@@ -55,12 +57,12 @@
 
 ## API Integration Map
 
-| Action               | Endpoint                                         | Input                                                                 | Success                   | Failure                       |
-| -------------------- | ------------------------------------------------ | --------------------------------------------------------------------- | ------------------------- | ----------------------------- |
-| 작성 context 조회    | `GET /api/v1/reviews/context?reservationId={id}` | 양의 정수 예약 ID                                                     | 예약/식당/키워드 렌더링   | 작성 화면 오류 상태           |
-| 업로드 URL 벌크 발급 | `POST /api/v1/uploads/presigned-urls`            | `usage: review`, `files[]`                                            | `uploads[]` 수신          | 리뷰 POST 중단                |
-| S3 파일 업로드       | 각 `uploadUrl`                                   | 원본 `File`, `Content-Type`                                           | `fileKey` 수집            | 실패 파일만 1회 재발급/재시도 |
-| 리뷰 작성            | `POST /api/v1/reviews`                           | `reservationId`, `rating`, `keywordCodes`, `content`, `imageFileKeys` | `/reviews/:reviewId` 이동 | 현재 화면 유지 및 오류 표시   |
+| Action               | Endpoint                                         | Input                                                                 | Success                                                                                       | Failure                       |
+| -------------------- | ------------------------------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------- |
+| 작성 context 조회    | `GET /api/v1/reviews/context?reservationId={id}` | 양의 정수 예약 ID                                                     | 예약/식당/키워드 렌더링                                                                       | 작성 화면 오류 상태           |
+| 업로드 URL 벌크 발급 | `POST /api/v1/uploads/presigned-urls`            | `usage: review`, `files[]`                                            | `uploads[]` 수신                                                                              | 리뷰 POST 중단                |
+| S3 파일 업로드       | 각 `uploadUrl`                                   | 원본 `File`, `Content-Type`                                           | `fileKey` 수집                                                                                | 실패 파일만 1회 재발급/재시도 |
+| 리뷰 작성            | `POST /api/v1/reviews`                           | `reservationId`, `rating`, `keywordCodes`, `content`, `imageFileKeys` | `/reviews/:reviewId` 이동, 작성 context/내 리뷰 개수/내 리뷰 목록/작성 가능 예약 cache 무효화 | 현재 화면 유지 및 오류 표시   |
 
 ## State And Structure
 
