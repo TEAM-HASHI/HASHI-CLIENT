@@ -292,7 +292,7 @@ ProfileNewPage
   - `checkIsValidBirthDate`
   - `checkIsValidEmail`
   - `getAllowedProfileNewRedirectPath`
-  - `mapProfileNewOnboardingError`
+  - `applyProfileNewOnboardingError`
 - page-local constants:
   - `PROFILE_NEW_FORM_ID`
   - `SUPPORTED_PROFILE_IMAGE_MIME_TYPES`

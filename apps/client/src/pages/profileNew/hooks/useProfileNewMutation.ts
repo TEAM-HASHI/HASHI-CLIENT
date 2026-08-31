@@ -9,7 +9,7 @@ import { requestOnboarding } from '@/pages/profileNew/api/requestOnboarding'
 import type { ProfileDraft } from '@/pages/profileNew/hooks/useProfileNewForm'
 import { createOnboardingRequestBody } from '@/pages/profileNew/utils/profileNewForm'
 import {
-  mapProfileNewOnboardingError,
+  applyProfileNewOnboardingError,
   type ProfileNewOnboardingErrorHandlers,
 } from '@/pages/profileNew/utils/profileNewOnboardingError'
 import { checkHasHttpStatus } from '@/shared/api/apiError'
@@ -57,7 +57,7 @@ export const useProfileNewMutation = ({
       }
 
       if (
-        !mapProfileNewOnboardingError(error, {
+        !applyProfileNewOnboardingError(error, {
           setFieldError,
           setFormError,
         })

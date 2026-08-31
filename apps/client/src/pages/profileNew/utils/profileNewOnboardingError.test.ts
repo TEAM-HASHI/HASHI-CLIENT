@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { mapProfileNewOnboardingError } from '@/pages/profileNew/utils/profileNewOnboardingError'
+import { applyProfileNewOnboardingError } from '@/pages/profileNew/utils/profileNewOnboardingError'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 
@@ -28,7 +28,7 @@ describe('profileNewOnboardingError utils', () => {
     const setFieldError = vi.fn()
     const setFormError = vi.fn()
 
-    const handled = mapProfileNewOnboardingError(
+    const handled = applyProfileNewOnboardingError(
       createErrorResponse('USER-001', 409, '중복된 닉네임입니다'),
       {
         setFieldError,
@@ -48,7 +48,7 @@ describe('profileNewOnboardingError utils', () => {
     const setFieldError = vi.fn()
     const setFormError = vi.fn()
 
-    const handled = mapProfileNewOnboardingError(
+    const handled = applyProfileNewOnboardingError(
       createErrorResponse('COMMON-400', 400, '잘못된 요청입니다', [
         {
           field: 'phone',
@@ -74,7 +74,7 @@ describe('profileNewOnboardingError utils', () => {
     const setFieldError = vi.fn()
     const setFormError = vi.fn()
 
-    const handled = mapProfileNewOnboardingError(
+    const handled = applyProfileNewOnboardingError(
       createErrorResponse('COMMON-400', 400, '잘못된 요청입니다', [
         {
           field: 'unknown',
@@ -97,7 +97,7 @@ describe('profileNewOnboardingError utils', () => {
     const setFieldError = vi.fn()
     const setFormError = vi.fn()
 
-    const handled = mapProfileNewOnboardingError(new Error('network'), {
+    const handled = applyProfileNewOnboardingError(new Error('network'), {
       setFieldError,
       setFormError,
     })

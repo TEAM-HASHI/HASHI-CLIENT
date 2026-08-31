@@ -68,7 +68,7 @@ const applyProfileNewFieldErrors = (
   return hasMappedFieldError
 }
 
-export const mapProfileNewOnboardingError = (
+export const applyProfileNewOnboardingError = (
   error: unknown,
   handlers: ProfileNewOnboardingErrorHandlers,
 ) => {
