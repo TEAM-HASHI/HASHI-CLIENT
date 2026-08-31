@@ -93,7 +93,7 @@ apps/client/src/features/{feature}/
 위치 판단은 다음 기준을 따릅니다.
 
 - 특정 page의 화면 진입, 제출, page draft/view model에 묶인 API는 page-local로 둡니다.
-- 여러 page가 같은 endpoint, 같은 query key, 같은 cache synchronization 기준을 공유하면 feature로 둡니다.
+- page 전용 의존성을 제거해도 API 계약이 유지되고, 여러 page가 같은 endpoint, 같은 query key, 같은 cache synchronization 기준을 공유하면 feature로 둡니다.
 - `shared/api`에는 endpoint 함수를 두지 않고 request wrapper, error model, generated OpenAPI type 같은 공통 인프라만 둡니다.
 - 재사용 가능성이 있어 보인다는 이유만으로 feature로 미리 올리지 않습니다.
 - 실제로 두 번째 사용처가 생기거나 cache/invalidation 기준을 공유해야 할 때 feature로 승격합니다.

@@ -212,16 +212,28 @@ invalidation, error 처리 기준이 갈라질 수 있습니다.
 
 ### Promotion Rule
 
-page-local API를 feature로 승격하는 기준은 다음과 같습니다.
+page-local API를 feature로 승격할 때는 필수 조건과 승격 신호를 나누어
+판단합니다.
+
+필수 조건:
+
+- page 전용 draft, view model, route state, form state 의존성을 제거해도 API
+  함수의 의미와 request/response 계약이 유지됩니다.
+- feature로 이동한 뒤에도 특정 page의 제출 흐름이나 화면 adapter를 알지
+  않습니다.
+
+승격 신호:
 
 - 같은 endpoint 함수가 둘 이상의 page에서 필요해졌습니다.
 - 같은 query key factory를 여러 page가 공유해야 합니다.
 - mutation 성공 후 여러 page의 같은 도메인 cache를 일관되게 갱신해야 합니다.
-- page 전용 draft/view model 의존성을 제거해도 API 함수의 의미가 유지됩니다.
 - feature 내부 component, hook, query가 같은 API 타입을 공통 계약으로 사용합니다.
 
-승격 조건이 충족되지 않은 API는 당장 이동하지 않습니다. 대신 page spec이나 PR에
-"다른 page에서 재사용되면 feature로 승격" 조건을 남깁니다.
+필수 조건을 만족하고 승격 신호가 명확할 때 feature로 승격합니다. 승격 신호가
+있어도 page 전용 의존성이 남아 있으면 page-local adapter를 유지하고, 공통
+endpoint나 query key만 feature로 분리할 수 있는지 검토합니다. 애매한 경우에는
+page-local에서 시작하고, page spec이나 PR에 "다른 page에서 재사용되면 feature로
+승격" 조건을 남깁니다.
 
 현재 코드 기준 예시는 다음과 같습니다.
 
