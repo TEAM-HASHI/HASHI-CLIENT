@@ -284,11 +284,15 @@ ProfileNewPage
 - page-local hook:
   - `useProfileNewPage`
   - `useProfileNewForm`
+  - `useProfileNewMutation`
+  - `useUploadedProfileImageKey`
 - page-local utils:
   - `formatBirthDateInput`
   - `formatPhoneNumberInput`
   - `checkIsValidBirthDate`
   - `checkIsValidEmail`
+  - `getAllowedProfileNewRedirectPath`
+  - `mapProfileNewOnboardingError`
 - page-local constants:
   - `PROFILE_NEW_FORM_ID`
   - `SUPPORTED_PROFILE_IMAGE_MIME_TYPES`
@@ -378,10 +382,13 @@ ProfileNewPage
 ## Implementation Notes
 
 - `ProfileNewPage`는 화면 섹션 조합만 담당한다.
-- `useProfileNewPage`는 navigation, search param, TanStack Query mutation 기반 form submit 연결을 담당한다.
+- `useProfileNewPage`는 navigation, search param, form submit event, ErrorBoundary로 전달할 unhandled error 상태를 조합한다.
 - form state, formatting, validation, submit draft 생성은 `useProfileNewForm`에서 소유한다.
 - `useProfileNewForm`은 form 값, formatting, validation, 서버 field error를 소유하고, submitting 상태는 mutation `isPending`을 주입받아 CTA 상태 계산에 사용한다.
-- `useProfileNewPage`는 `useMutation`의 `mutateAsync`, `isPending`, `onSuccess`, `onError`로 submit orchestration, 성공한 profile image key 재사용, error mapping, navigation을 소유한다.
+- `useProfileNewMutation`은 TanStack Query mutation, profile image key 확보, onboarding request body 생성, 성공 시 access token 저장과 redirect, auth failure redirect, handled/unhandled error 분기를 소유한다.
+- `useUploadedProfileImageKey`는 같은 `File` 객체로 재제출할 때 성공한 profile image `fileKey`를 재사용하는 정책을 소유한다.
+- `profileNewOnboardingError`는 onboarding API error code와 field error를 profile form의 field/form error로 반영하는 정책을 소유한다.
+- `profileNewRedirect`는 `redirectTo` query param을 허용된 내부 route로 제한하고, 허용된 path의 query string/hash를 보존하는 정책을 소유한다.
 - `requestOnboarding`과 `uploadProfileImage`는 React, route, UI state를 알지 않는다.
 - `signup_token`은 HttpOnly cookie이므로 프론트 코드에서 읽거나 저장하지 않는다.
 - 온보딩 API 요청에 Authorization header를 임의로 추가하지 않는다.
