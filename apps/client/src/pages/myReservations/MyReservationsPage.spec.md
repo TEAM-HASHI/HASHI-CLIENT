@@ -454,7 +454,7 @@ POST /api/v1/reservations/{reservationId}/cancel
 성공 시:
 
 - 현재 `방문 예정` 리스트에서 해당 예약을 제거하거나 refetch합니다.
-- `예약 취소` chip으로 이동하지는 않습니다.
+- `예약 취소` chip으로 이동해 취소된 예약 목록을 표시합니다.
 - 취소 성공 toast를 보여줍니다.
 - toast 문구는 예약 취소 API 성공 응답의 `message`를 사용합니다.
 
