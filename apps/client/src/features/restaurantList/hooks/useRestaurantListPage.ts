@@ -63,14 +63,26 @@ export const useRestaurantListPage = ({
     isLoading: restaurantsQuery.isFetchingNextPage,
     onIntersect: restaurantsQuery.fetchNextPage,
   })
-  const visibleRestaurants =
-    restaurantsQuery.data?.pages.flatMap((page) =>
-      page.restaurants.flatMap((restaurant) => {
-        const mappedRestaurant = mapRestaurantSummaryToRestaurant(restaurant)
+  const visibleRestaurants = useMemo(
+    () =>
+      restaurantsQuery.data?.pages.flatMap((page) =>
+        page.restaurants.flatMap((restaurant) => {
+          const mappedRestaurant = mapRestaurantSummaryToRestaurant(restaurant)
 
+          return mappedRestaurant ? [mappedRestaurant] : []
+        }),
+      ) ?? [],
+    [restaurantsQuery.data?.pages],
+  )
+  const firstRestaurantPage = restaurantsQuery.data?.pages[0]
+  const seoRestaurants = useMemo(
+    () =>
+      firstRestaurantPage?.restaurants.flatMap((restaurant) => {
+        const mappedRestaurant = mapRestaurantSummaryToRestaurant(restaurant)
         return mappedRestaurant ? [mappedRestaurant] : []
-      }),
-    ) ?? []
+      }) ?? [],
+    [firstRestaurantPage],
+  )
   const hasMoreRestaurants = Boolean(restaurantsQuery.hasNextPage)
 
   const categoryLabel =
@@ -151,6 +163,7 @@ export const useRestaurantListPage = ({
     isError: restaurantsQuery.isError,
     loadMoreRef,
     selectedSort,
+    seoRestaurants,
     visibleRestaurants,
     handleApplyCategory,
     handleApplySort,

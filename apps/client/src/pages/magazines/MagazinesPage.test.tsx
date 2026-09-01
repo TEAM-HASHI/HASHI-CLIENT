@@ -148,6 +148,33 @@ describe('MagazinesPage', () => {
     expect(screen.queryByText('지역별')).not.toBeInTheDocument()
     expect(screen.queryByText('시리즈별')).not.toBeInTheDocument()
     expect(screen.queryByText('장르별')).not.toBeInTheDocument()
+    expect(document.title).toBe('HASHI 매거진 | 일본 미식·여행 콘텐츠')
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://www.hashi.kr/magazines',
+    )
+    const itemList = [
+      ...document.querySelectorAll('script[type="application/ld+json"]'),
+    ]
+      .map(
+        (script) =>
+          JSON.parse(script.textContent ?? '{}') as Record<string, unknown>,
+      )
+      .find((schema) => schema['@type'] === 'ItemList') as
+      | { numberOfItems?: number }
+      | undefined
+
+    expect(itemList?.numberOfItems).toBe(4)
+  })
+
+  it('preserves prerendered SEO while magazine data is loading', () => {
+    mockGetMagazineBanners.mockReturnValueOnce(new Promise(() => {}))
+    mockGetMagazines.mockReturnValueOnce(new Promise(() => {}))
+    document.title = '프리렌더 HASHI 매거진'
+
+    renderMagazinesPage()
+
+    expect(document.title).toBe('프리렌더 HASHI 매거진')
   })
 
   it('renders hero banners in API response order with meaningful accessible names', async () => {

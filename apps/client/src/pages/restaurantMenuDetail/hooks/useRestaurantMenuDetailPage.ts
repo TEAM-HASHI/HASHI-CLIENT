@@ -81,13 +81,24 @@ export const useRestaurantMenuDetailPage = () => {
     isLoading: menusQuery.isFetchingNextPage,
     onIntersect: handleIntersectOtherMenu,
   })
-  const selectedMenu = createRestaurantMenuViewModel(menuQuery.data ?? null)
+  const selectedMenu = useMemo(
+    () => createRestaurantMenuViewModel(menuQuery.data ?? null),
+    [menuQuery.data],
+  )
   const menus = useMemo(
     () =>
       menusQuery.data?.pages.flatMap((page: RestaurantMenuListData) =>
         createRestaurantMenusViewModel(page.menus),
       ) ?? [],
     [menusQuery.data?.pages],
+  )
+  const firstOtherMenuPage = menusQuery.data?.pages[0]
+  const otherMenusForSeo = useMemo(
+    () =>
+      firstOtherMenuPage
+        ? createRestaurantMenusViewModel(firstOtherMenuPage.menus)
+        : [],
+    [firstOtherMenuPage],
   )
 
   const otherMenuTotalCount = menuQuery.data?.otherMenuCount ?? menus.length
@@ -102,14 +113,18 @@ export const useRestaurantMenuDetailPage = () => {
     (!menuQuery.isPending && selectedMenu === null)
   const isLoading =
     summaryQuery.isPending || menuQuery.isPending || menusQuery.isPending
-  const restaurant = summaryQuery.data
-    ? {
-        id: String(summaryQuery.data.restaurantId),
-        name: summaryQuery.data.name,
-        likeCount: '0',
-        reviewCount: summaryQuery.data.reviewCount ?? 0,
-      }
-    : null
+  const restaurant = useMemo(
+    () =>
+      summaryQuery.data
+        ? {
+            id: String(summaryQuery.data.restaurantId),
+            name: summaryQuery.data.name,
+            likeCount: '0',
+            reviewCount: summaryQuery.data.reviewCount ?? 0,
+          }
+        : null,
+    [summaryQuery.data],
+  )
 
   useEffect(() => {
     window.scrollTo({ top: 0 })
@@ -179,6 +194,7 @@ export const useRestaurantMenuDetailPage = () => {
     hasMoreOtherMenus: menusQuery.hasNextPage,
     otherMenus: menus,
     otherMenusForDisplay: menus,
+    otherMenusForSeo,
     otherMenuLoadMoreRef,
     otherMenuTotalCount,
     restaurant,

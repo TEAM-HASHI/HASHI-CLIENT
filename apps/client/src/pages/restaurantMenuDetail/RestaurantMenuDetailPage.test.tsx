@@ -245,6 +245,33 @@ describe('RestaurantMenuDetailPage', () => {
     expect(
       screen.queryByRole('button', { name: '다시 추천 받기' }),
     ).not.toBeInTheDocument()
+    expect(document.title).toBe('시오라멘 - 하시 스시 | HASHI')
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://www.hashi.kr/restaurants/10/menus/100',
+    )
+  })
+
+  it('does not publish a zero-price offer when the menu price is missing', async () => {
+    mockedGetRestaurantMenu.mockResolvedValueOnce({
+      ...selectedMenu,
+      currency: undefined,
+      price: undefined,
+    })
+
+    renderPage()
+    await screen.findByRole('heading', { name: '시오라멘' })
+    const menuSchema = [
+      ...document.querySelectorAll('script[type="application/ld+json"]'),
+    ]
+      .map(
+        (script) =>
+          JSON.parse(script.textContent ?? '{}') as Record<string, unknown>,
+      )
+      .find((schema) => schema['@type'] === 'MenuItem')
+
+    expect(menuSchema).toBeDefined()
+    expect(menuSchema).not.toHaveProperty('offers')
   })
 
   it('loads the next other menu page when the bottom sentinel enters the viewport', async () => {

@@ -271,3 +271,13 @@ PopularRestaurantsPage
 - [x] `corepack pnpm --filter @hashi/client typecheck`
 - [x] `corepack pnpm --filter @hashi/client build`
 - [ ] 수동 확인: `/restaurants/popular` 진입, 정렬 적용, 장르 적용, 다음 페이지 fetch, empty, 400 local error, 5xx/ErrorBoundary 정책
+
+## SEO
+
+- 색인 정책: `index, follow`
+- canonical: `https://www.hashi.kr/restaurants/popular`
+- 쿼리 파라미터가 있어도 canonical은 기본 목록 URL로 통일합니다.
+- 빌드와 browser runtime 모두 최초 페이지의 유효한 맛집 최대 10개만 `ItemList` 구조화 데이터로 제공합니다.
+- 무한스크롤 추가 페이지는 화면 목록만 갱신하고 SEO head는 다시 만들지 않습니다.
+- 첫 조회 loading 또는 error 중에는 빌드에서 검증한 정적 head를 빈 목록 model로 덮어쓰지 않습니다.
+- 상세 설계는 `docs/superpowers/specs/2026-08-07-seo-static-prerendering-design.md`를 따릅니다.

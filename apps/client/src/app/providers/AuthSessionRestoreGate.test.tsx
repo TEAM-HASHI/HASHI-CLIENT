@@ -49,7 +49,7 @@ describe('AuthSessionRestoreGate', () => {
     window.history.pushState({}, '', '/')
   })
 
-  it('restores access token before rendering children', async () => {
+  it('renders public children while restoring the access token in the background', async () => {
     mockedRequestTokenReissue.mockResolvedValue({
       accessToken: 'restored-access-token',
     })
@@ -60,13 +60,13 @@ describe('AuthSessionRestoreGate', () => {
       </AuthSessionRestoreGate>,
     )
 
-    expect(screen.queryByText('앱 화면')).not.toBeInTheDocument()
+    expect(screen.getByText('앱 화면')).toBeInTheDocument()
     expect(
       screen.queryByText('로그인 상태를 확인하고 있어요'),
     ).not.toBeInTheDocument()
 
     await waitFor(() => {
-      expect(screen.getByText('앱 화면')).toBeInTheDocument()
+      expect(getAccessToken()).toBe('restored-access-token')
     })
     expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
     expect(mockedGetAuthMe).toHaveBeenCalledWith('restored-access-token')

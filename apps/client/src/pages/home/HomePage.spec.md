@@ -34,6 +34,8 @@
   - authenticated guest: 해당 없음
 - auth status:
   - uses `useAuthStatus`: yes
+  - 인증 세션 복원을 기다리며 페이지 전체를 차단하지 않고, 홈 콘텐츠 API와 병렬로 진행합니다.
+  - 세션 복원 중에는 비로그인 상태를 확정하지 않고 `AuthGateBottomSheet`를 열거나 세션 노출 이력을 저장하지 않습니다.
   - 비로그인 사용자가 브라우저 세션에서 홈 페이지에 처음 진입하면 기존 `AuthGateBottomSheet`를 유지합니다.
   - 같은 브라우저 세션에서는 새로고침해도 로그인 유도 바텀시트를 반복 노출하지 않습니다.
 
@@ -193,8 +195,8 @@ export const HomeLogo = () => {
 ## User Flow
 
 1. 사용자가 `/`로 진입합니다.
-2. 페이지가 홈 콘텐츠를 구성합니다.
-3. 비로그인 상태이고 현재 브라우저 세션에서 아직 표시한 적이 없다면 기존 로그인 유도 바텀시트를 표시합니다.
+2. 페이지가 인증 세션 복원과 병렬로 홈 콘텐츠를 구성합니다.
+3. 세션 복원이 완료된 뒤 비로그인 상태이고 현재 브라우저 세션에서 아직 표시한 적이 없다면 기존 로그인 유도 바텀시트를 표시합니다.
 4. 사용자가 검색 영역을 선택하면 홈에서 입력을 받지 않고 `/search`로 이동합니다.
 5. 사용자가 메인 배너를 선택하면 해당 인스타그램 링크로 이동합니다.
 6. 사용자가 퀵 버튼을 선택하면 연결된 앱 내부 화면으로 이동합니다.
@@ -538,3 +540,14 @@ BottomNavigationLayout
 - [ ] 메인 배너 carousel swipe/scroll 동작 확인
 - [ ] 하단 네비게이션 active 상태와 탭 이동 확인
 - [ ] 320px, 393px, 430px 폭에서 텍스트 겹침과 하단 네비게이션 겹침 확인
+
+## SEO
+
+- 색인 정책: `index, follow`
+- canonical: `https://www.hashi.kr/`
+- 문서 제목과 설명은 HASHI 홈의 서비스 가치와 노출 중인 맛집 콘텐츠를 요약합니다.
+- 정적 HTML에 `Organization`, `WebSite` 구조화 데이터를 제공합니다.
+- semantic snapshot에는 유효한 Instagram URL이 있는 현재 매거진 배너와 SNS 인기 맛집 링크를 함께 제공합니다.
+- browser runtime은 배너와 SNS 맛집 첫 조회가 모두 성공한 뒤 같은 SEO model을 등록합니다. loading 또는 API error 중에는 빌드에서 검증한 정적 head를 빈 model로 덮어쓰지 않습니다.
+- 프리렌더 snapshot은 빈 React root와 겹쳐진 전환 shell에 있다가 홈 SPA의 첫 commit 직후 제거됩니다. 인증 복원 동안 홈이 `null`을 렌더하지 않아 중간 빈 화면과 그에 따른 CLS를 만들지 않습니다.
+- 상세 설계는 `docs/superpowers/specs/2026-08-07-seo-static-prerendering-design.md`를 따릅니다.

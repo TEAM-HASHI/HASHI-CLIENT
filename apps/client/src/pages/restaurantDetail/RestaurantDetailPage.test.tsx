@@ -282,6 +282,11 @@ describe('RestaurantDetailPage', () => {
       screen.queryByRole('button', { name: '다시 추천 받기' }),
     ).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '예약하기' })).toBeTruthy()
+    expect(document.title).toBe('하시 스시 | 일본 맛집 정보·메뉴·예약 | HASHI')
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://www.hashi.kr/restaurants/10',
+    )
   })
 
   it('renders default image when restaurant hero image fails to load', async () => {

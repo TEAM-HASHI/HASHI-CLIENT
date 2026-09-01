@@ -34,6 +34,9 @@
 - `authenticated`는 accessToken이 메모리에 있는 상태입니다.
 - `onboarding`은 신규 회원 callback 이후 onboardingToken HttpOnly Cookie가 설정되었다고 보고 `/profile/new` 진입만 허용하는 상태입니다.
 - accessToken, refreshToken, onboardingToken을 localStorage에 저장하지 않습니다.
+- 앱 시작 시 세션 복원은 공개 route 렌더링과 병렬로 진행합니다. 홈과 공개 식당·메뉴·매거진 화면은 refresh cookie 확인이 끝날 때까지 빈 화면으로 대기하지 않습니다.
+- `AuthOnlyRoute`와 `GuestOnlyRoute`는 세션 복원 중에 redirect를 결정하지 않고, 복원이 완료된 뒤 확정된 인증 상태로 접근 여부를 판단합니다.
+- 공개 route 내부의 로그인 유도 UI는 세션 복원 중인 상태를 비로그인으로 확정하지 않습니다.
 
 ## Public Routes
 
@@ -99,6 +102,25 @@
 | Page       | Path | Notes                                            |
 | ---------- | ---- | ------------------------------------------------ |
 | 404 페이지 | `*`  | 서비스에 없는 URL을 직접 입력했을 때 보여줍니다. |
+
+## SEO And HTTP Delivery
+
+production build는 공개 API를 기준으로 다음 URL을 정적 HTML로 생성하고 `index, follow`로 제공합니다.
+
+- `/`
+- `/restaurants/hashi-pick`
+- `/restaurants/popular`
+- 실제로 존재하는 `/restaurants/{restaurantId}`
+- 실제로 존재하는 `/restaurants/{restaurantId}/menus/{menuId}`
+- `/magazines`
+
+Vercel은 canonical URL을 생성된 디렉터리형 `index.html`로 명시적으로 rewrite합니다. 식당과 메뉴의 동적 rewrite도 해당 ID의 실제 `index.html`만 가리키므로, 현재 build에 생성되지 않은 ID는 목적 파일을 찾지 못해 `404.html`과 HTTP 404로 응답합니다. 모든 경로를 SPA 홈으로 보내는 포괄 rewrite는 두지 않습니다. `cleanUrls: false`, `trailingSlash: false`를 사용해 디렉터리형 산출물을 정확히 제공하면서 canonical URL과 동일한 slash 없는 URL을 유지합니다.
+
+browser runtime에서 최초 pathname과 정적 canonical이 일치하는 `index, follow` 문서는 API loading과 일시적인 5xx 동안 기존 head를 유지합니다. API 성공 후 page model이 head를 갱신하고, 유효하지 않은 param 또는 확인된 404는 `NotFoundPage`의 `noindex, nofollow`가 우선합니다. SPA 내부 이동에는 대응 정적 문서가 없으므로 route별 안전한 fallback을 즉시 적용합니다.
+
+검색, 오늘의 식당, 지도, 준비중 화면과 미완성 매거진 상세는 정적 `public-noindex-shell.html`로 rewrite하고 `noindex, follow`를 사용합니다. 인증·사용자 전용·OAuth callback route는 `private-noindex-shell.html`로 rewrite하고 `noindex, nofollow`를 사용합니다. 이 robots 정책은 접근 제어가 아니며 기존 route guard와 API 인증을 대체하지 않습니다.
+
+정적 inventory는 배포 시점의 공개 API 상태입니다. 새 식당이나 메뉴는 클라이언트 SEO build와 Vercel 배포가 완료된 뒤 사용자에게 공개해야 하며, 다음 배포 전에는 새 URL 직접 접근이 404가 될 수 있습니다. 전체 SEO 설계와 실패 기준은 `docs/architecture/seo.md`를 따릅니다.
 
 ## Lazy Loading Policy
 

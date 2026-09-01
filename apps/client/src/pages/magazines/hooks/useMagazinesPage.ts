@@ -33,6 +33,7 @@ export const useMagazinesPage = () => {
   const magazinesQuery = useMagazinesInfiniteQuery({
     size: MAGAZINE_LIST_PAGE_SIZE,
   })
+  const { fetchNextPage } = magazinesQuery
   const canFetchNextPage =
     magazinesQuery.hasNextPage && !magazinesQuery.isFetchingNextPage
   const loadMoreRef = useInfiniteScrollTrigger<HTMLLIElement>({
@@ -92,18 +93,44 @@ export const useMagazinesPage = () => {
       }),
     )
   }, [magazinesQuery.data?.pages])
+  const firstMagazinePage = magazinesQuery.data?.pages[0]
+  const seoRecommendedMagazines = useMemo<RecommendedMagazine[]>(() => {
+    return (firstMagazinePage?.magazines ?? []).flatMap((magazine) => {
+      const { createdAt, magazineId, thumbnailImageUrl, title } = magazine
+
+      if (
+        magazineId === undefined ||
+        !title ||
+        !thumbnailImageUrl ||
+        !createdAt
+      ) {
+        return []
+      }
+
+      const publishedDate = formatMagazinePublishedDate(createdAt)
+      return publishedDate
+        ? [
+            {
+              id: String(magazineId),
+              imageUrl: thumbnailImageUrl,
+              instagramUrl: normalizeInstagramUrl(
+                magazine.instagramRedirectUrl ?? '',
+              ),
+              publishedDate,
+              title,
+            },
+          ]
+        : []
+    })
+  }, [firstMagazinePage])
 
   useEffect(() => {
     if (normalizedRecommendedMagazines.length > 0 || !canFetchNextPage) {
       return
     }
 
-    void magazinesQuery.fetchNextPage()
-  }, [
-    canFetchNextPage,
-    magazinesQuery.fetchNextPage,
-    normalizedRecommendedMagazines.length,
-  ])
+    void fetchNextPage()
+  }, [canFetchNextPage, fetchNextPage, normalizedRecommendedMagazines.length])
 
   const hasHeroBanners = heroBanners.length > 0
   const hasRecommendedMagazines = normalizedRecommendedMagazines.length > 0
@@ -133,5 +160,6 @@ export const useMagazinesPage = () => {
     refetchHeroBanners: magazineBannersQuery.refetch,
     refetchRecommendedMagazines: magazinesQuery.refetch,
     recommendedMagazines: normalizedRecommendedMagazines,
+    seoRecommendedMagazines,
   }
 }

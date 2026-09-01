@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { AuthSessionRestoreContext } from '@/features/auth/session/AuthSessionRestoreContext'
 import { HomePage } from '@/pages/home/HomePage'
 
 const { mockGetHotSnsRestaurants } = vi.hoisted(() => ({
@@ -45,7 +46,7 @@ const LocationProbe = () => {
   return <div data-testid="location-pathname">{location.pathname}</div>
 }
 
-const renderHomePage = () => {
+const renderHomePage = ({ isRestoring = false } = {}) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -56,12 +57,14 @@ const renderHomePage = () => {
   })
 
   return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[ROUTES.home]}>
-        <HomePage />
-        <LocationProbe />
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <AuthSessionRestoreContext.Provider value={{ isRestoring }}>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[ROUTES.home]}>
+          <HomePage />
+          <LocationProbe />
+        </MemoryRouter>
+      </QueryClientProvider>
+    </AuthSessionRestoreContext.Provider>,
   )
 }
 
@@ -159,6 +162,21 @@ describe('HomePage', () => {
     expect(screen.getByRole('navigation', { name: '주요 기능' })).toHaveClass(
       'mt-5',
     )
+    expect(document.title).toBe('HASHI | 일본 맛집 발견부터 예약까지')
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://www.hashi.kr/',
+    )
+  })
+
+  it('preserves prerendered SEO while home data is loading', () => {
+    mockGetMagazineBanners.mockReturnValueOnce(new Promise(() => {}))
+    mockGetHotSnsRestaurants.mockReturnValueOnce(new Promise(() => {}))
+    document.title = '프리렌더 HASHI 홈'
+
+    renderHomePage()
+
+    expect(document.title).toBe('프리렌더 HASHI 홈')
   })
 
   it('renders API banner images even when title or Instagram URL is missing', async () => {
@@ -316,5 +334,14 @@ describe('HomePage', () => {
     renderHomePage()
 
     expect(screen.queryByText('간편하게 로그인하고')).not.toBeInTheDocument()
+  })
+
+  it('does not show the logged-out auth gate before session restoration completes', () => {
+    renderHomePage({ isRestoring: true })
+
+    expect(screen.queryByText('간편하게 로그인하고')).not.toBeInTheDocument()
+    expect(
+      window.sessionStorage.getItem('hashi:home-auth-gate-shown'),
+    ).toBeNull()
   })
 })

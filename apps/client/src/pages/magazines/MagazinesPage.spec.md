@@ -414,3 +414,14 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
 - [x] 대표 배너/매거진 카드 외부 링크 이동 확인
 - [x] 카테고리 필터 UI가 렌더링되지 않는지 확인
 - [ ] 긴 제목과 좁은 viewport에서 텍스트와 이미지가 겹치지 않는지 확인
+
+## SEO
+
+- `/magazines` 색인 정책: `index, follow`
+- canonical: `https://www.hashi.kr/magazines`
+- 빌드와 browser runtime은 배너와 매거진 첫 페이지를 같은 ID 우선순위로 합치고 최대 10개를 `CollectionPage`, `ItemList` 구조화 데이터로 제공합니다.
+- 무한스크롤 추가 페이지는 화면만 갱신하며 SEO `ItemList`를 다시 만들지 않습니다.
+- 배너와 매거진 첫 조회 loading 또는 error 중에는 빌드에서 검증한 정적 head를 유지합니다.
+- 외부 링크는 공통 `normalizeInstagramUrl` 정책을 통과한 HTTP(S) Instagram URL만 사용합니다.
+- 아직 상세 화면이 완성되지 않은 `/magazines/:magazineId`는 `noindex, follow`이며 sitemap과 내부 상세 링크에서 제외합니다.
+- 상세 설계는 `docs/superpowers/specs/2026-08-07-seo-static-prerendering-design.md`를 따릅니다.

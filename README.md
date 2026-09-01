@@ -380,6 +380,7 @@ docs(docs): HASHI-30 컨벤션 문서 추가
 - [Monorepo](./docs/architecture/monorepo.md)
 - [App Structure](./docs/architecture/app-structure.md)
 - [Data Layer](./docs/architecture/data-layer.md)
+- [SEO Architecture](./docs/architecture/seo.md)
 - [Design System](./docs/architecture/design-system.md)
 - [Design System Components](./docs/architecture/design-system-components.md)
 - [Design System Component Plan](./docs/architecture/design-system-component-plan.md)

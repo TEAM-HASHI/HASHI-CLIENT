@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
 import { getRestaurantDetailPath } from '@/app/router/routePaths'
 import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
+import { useAuthSessionRestoreStatus } from '@/features/auth/session/AuthSessionRestoreContext'
 import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import { useMagazineBannersQuery } from '@/features/magazine/hooks/useMagazineBannersQuery'
 import { normalizeInstagramUrl } from '@/features/magazine/utils/normalizeInstagramUrl'
@@ -15,8 +16,11 @@ import { useHotSnsRestaurantsQuery } from '@/pages/home/queries/useHotSnsRestaur
 
 const HOME_AUTH_GATE_SESSION_KEY = 'hashi:home-auth-gate-shown'
 
-const getShouldOpenAuthGate = (isAuthenticated: boolean) => {
-  if (isAuthenticated || typeof window === 'undefined') {
+const getShouldOpenAuthGate = (
+  isAuthenticated: boolean,
+  isRestoring: boolean,
+) => {
+  if (isAuthenticated || isRestoring || typeof window === 'undefined') {
     return false
   }
 
@@ -41,11 +45,10 @@ const markAuthGateShown = () => {
 
 export const useHomePage = () => {
   const { isAuthenticated } = useAuthStatus()
+  const { isRestoring } = useAuthSessionRestoreStatus()
   const { startKakaoOAuth } = useKakaoOAuthStart()
   const hotSnsRestaurantsQuery = useHotSnsRestaurantsQuery()
-  const [isAuthGateOpen, setIsAuthGateOpen] = useState(() =>
-    getShouldOpenAuthGate(isAuthenticated),
-  )
+  const [isAuthGateDismissed, setIsAuthGateDismissed] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const magazineBannersQuery = useMagazineBannersQuery()
@@ -70,11 +73,14 @@ export const useHomePage = () => {
     })
   }, [magazineBannersQuery.data?.banners])
 
+  const isAuthGateOpen =
+    !isAuthGateDismissed && getShouldOpenAuthGate(isAuthenticated, isRestoring)
+
   useEffect(() => {
-    if (!isAuthenticated && isAuthGateOpen) {
+    if (isAuthGateOpen) {
       markAuthGateShown()
     }
-  }, [isAuthenticated, isAuthGateOpen])
+  }, [isAuthGateOpen])
 
   const handleAnywhereReservationPress = () => {
     navigate(ROUTES.anywhereReservation)
@@ -82,9 +88,9 @@ export const useHomePage = () => {
 
   return {
     authGate: {
-      open: !isAuthenticated && isAuthGateOpen,
+      open: !isAuthenticated && !isRestoring && isAuthGateOpen,
       onKakaoPress: () => startKakaoOAuth(getPathFromLocation(location)),
-      onOpenChange: setIsAuthGateOpen,
+      onOpenChange: (isOpen: boolean) => setIsAuthGateDismissed(!isOpen),
     },
     getRestaurantDetailPath,
     handleAnywhereReservationPress,
