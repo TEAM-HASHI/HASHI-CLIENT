@@ -7,7 +7,7 @@ import {
   setAccessToken,
   setOnboardingSession,
   subscribeAuthSession,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 
 describe('authSession', () => {
   afterEach(() => {

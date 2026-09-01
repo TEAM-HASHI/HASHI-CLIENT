@@ -102,6 +102,7 @@ features/{featureName}/
 
 ```text
 shared/
+  auth/        앱 공통 인메모리 인증 세션
   api/         HTTP client, API helper
   components/ 앱 내부 공통 UI
   constants/  route, config constant
@@ -110,6 +111,11 @@ shared/
   types/      앱 내부 공통 type
   utils/      순수 helper
 ```
+
+- `shared/auth`는 access token과 `authenticated`, `onboarding`, `unauthenticated` 세션 상태만 관리하며 OAuth, route, UI를 알지 않습니다.
+- `features/auth`는 Kakao OAuth, 인증 확인, 로그인 유도처럼 제품 인증 흐름을 관리하고 `shared/auth`, `shared/api`를 사용할 수 있습니다.
+- `shared`는 상위 기능 레이어인 `features`를 import하지 않습니다. 이 방향은 ESLint에서 차단합니다.
+- `shared/**/index.ts`는 같은 폴더의 public barrel export(`./*`)만 허용하며, 상위 폴더를 경유해 `features`를 참조하는 상대 경로는 ESLint에서 차단합니다.
 
 여러 workspace에서 재사용해야 하는 코드는 바로 `shared/`에 남기지 않고 목적에 따라 이동합니다.
 
