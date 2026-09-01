@@ -263,7 +263,7 @@ export const searchRestaurantQueryKeys = {
 
 - owner:
   - `SearchPage`는 UI composition, 검색어 제출, navigation, page-local hook 조립을 담당합니다.
-  - `useSearchUrlState`는 URL search param 파싱, 기본값 검증, 직렬화, 검색 API params 생성을 담당합니다.
+  - `useSearchUrlState`는 URL search param 파싱, 기본값 검증, 적용된 검색 상태 도출, URL 직렬화를 담당합니다.
   - `useSearchFilterSheet`는 필터별 open, pending, apply, reset 상태를 담당합니다.
   - `useRecentSearchKeywords`는 localStorage 기반 최근 검색어 상태를 담당합니다.
   - `useSearchRestaurantResults`는 검색 infinite query, result mapping, infinite scroll trigger를 조립합니다.
