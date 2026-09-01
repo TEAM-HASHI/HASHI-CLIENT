@@ -18,6 +18,12 @@ const sharedFeatureImportPattern = {
     'shared 레이어는 features를 import할 수 없습니다. 공통 기반으로 이동하거나 상위 레이어에서 조립하세요.',
 }
 
+const sharedIndexParentRelativeImportPattern = {
+  regex: '^\\.\\./',
+  message:
+    'shared index.ts는 같은 폴더의 public barrel export(./*)만 허용합니다. 상위 폴더를 참조하지 마세요.',
+}
+
 export default tseslint.config(
   {
     ignores: [
@@ -112,7 +118,10 @@ export default tseslint.config(
       'no-restricted-imports': [
         'error',
         {
-          patterns: [sharedFeatureImportPattern],
+          patterns: [
+            sharedFeatureImportPattern,
+            sharedIndexParentRelativeImportPattern,
+          ],
         },
       ],
     },
