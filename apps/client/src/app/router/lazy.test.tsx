@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, render, screen } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -12,6 +13,10 @@ vi.mock('@/shared/hooks/useAuthStatus', () => ({
     isAuthenticated,
     status: isAuthenticated ? 'authenticated' : 'unauthenticated',
   }),
+}))
+
+vi.mock('@/app/providers/AuthSessionRestoreGate', () => ({
+  AuthSessionRestoreGate: ({ children }: { children: ReactNode }) => children,
 }))
 
 vi.mock('@/features/magazine/api/getMagazineBanners', () => ({

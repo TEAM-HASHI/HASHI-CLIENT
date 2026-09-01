@@ -108,27 +108,62 @@ describe('AuthSessionRestoreGate', () => {
     expect(getAuthSessionStatus()).toBe('onboarding')
   })
 
-  it('renders public restaurant list routes while auth restore runs in the background', async () => {
-    mockedRequestTokenReissue.mockResolvedValue({
-      accessToken: 'restored-access-token',
-    })
-    window.history.pushState({}, '', ROUTES.hashiPickRestaurants)
+  it.each([
+    [ROUTES.hashiPickRestaurants, '하시픽 화면'],
+    [ROUTES.popularRestaurants, '인기 식당 화면'],
+  ])(
+    'renders %s while auth restore runs in the background',
+    async (pathname, screenText) => {
+      mockedRequestTokenReissue.mockResolvedValue({
+        accessToken: 'restored-access-token',
+      })
+      window.history.pushState({}, '', pathname)
 
-    render(
-      <AuthSessionRestoreGate>
-        <div>하시픽 화면</div>
+      render(
+        <AuthSessionRestoreGate>
+          <div>{screenText}</div>
+        </AuthSessionRestoreGate>,
+      )
+
+      expect(screen.getByText(screenText)).toBeInTheDocument()
+
+      await waitFor(() => {
+        expect(getAccessToken()).toBe('restored-access-token')
+      })
+      expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
+    },
+  )
+
+  it('rechecks the current route while auth restore is still running', async () => {
+    let resolveReissue: (
+      value: Awaited<ReturnType<typeof requestTokenReissue>>,
+    ) => void = () => {}
+    mockedRequestTokenReissue.mockReturnValue(
+      new Promise((resolve) => {
+        resolveReissue = resolve
+      }),
+    )
+
+    const { rerender } = render(
+      <AuthSessionRestoreGate pathname={ROUTES.hashiPickRestaurants}>
+        <div>route screen</div>
       </AuthSessionRestoreGate>,
     )
 
-    expect(screen.getByText('하시픽 화면')).toBeInTheDocument()
-    expect(
-      screen.queryByText('로그인 상태를 확인하고 있어요'),
-    ).not.toBeInTheDocument()
+    expect(screen.getByText('route screen')).toBeInTheDocument()
 
+    rerender(
+      <AuthSessionRestoreGate pathname={ROUTES.restaurantDetail}>
+        <div>route screen</div>
+      </AuthSessionRestoreGate>,
+    )
+
+    expect(screen.queryByText('route screen')).not.toBeInTheDocument()
+
+    resolveReissue({ accessToken: 'restored-access-token' })
     await waitFor(() => {
       expect(getAccessToken()).toBe('restored-access-token')
     })
-    expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
   })
 
   it('does not authenticate an admin session in the user client', async () => {
