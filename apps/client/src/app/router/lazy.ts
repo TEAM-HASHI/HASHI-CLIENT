@@ -1,13 +1,13 @@
 import { createElement, lazy, type ComponentType } from 'react'
 
-import { applyRouteLoadingTiming } from '@/app/router/routeLoadingPolicy'
+import { loadRouteChunk } from '@/app/router/routeLoadingPolicy'
 
 type LazyRouteModule = {
   default: ComponentType
 }
 
 const lazyRoute = <T extends LazyRouteModule>(importPage: () => Promise<T>) => {
-  return lazy(() => applyRouteLoadingTiming(importPage()))
+  return lazy(() => loadRouteChunk(importPage))
 }
 
 const SearchPage = lazyRoute(() => import('@/pages/search'))
