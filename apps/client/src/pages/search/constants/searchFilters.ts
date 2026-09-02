@@ -8,6 +8,10 @@ export const RECENT_SEARCH_KEYWORDS_STORAGE_KEY = 'hashi:search:recent-keywords'
 
 export const MAX_RECENT_SEARCH_KEYWORD_COUNT = 10
 
+export const DEFAULT_SORT_VALUE = 'default' satisfies SearchSortValue
+
+export const DEFAULT_FOOD_CATEGORY_VALUE = 'all' satisfies FoodCategoryValue
+
 export const sortOptions = [
   { label: '기본순', value: 'default' },
   { label: '인기순', value: 'popular' },
