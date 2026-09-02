@@ -1,97 +1,13 @@
-import {
-  createElement,
-  lazy,
-  Suspense,
-  type ComponentType,
-  type ReactNode,
-  useEffect,
-  useState,
-} from 'react'
-import { useLocation } from 'react-router-dom'
+import { createElement, lazy, type ComponentType } from 'react'
 
-import { LoadingScreen } from '@/shared/components/loadingScreen'
-
-const ROUTE_LOADING_DELAY_MS = 150
-const ROUTE_LOADING_MIN_VISIBLE_MS = 300
+import { loadRouteChunk } from '@/app/router/routeLoadingPolicy'
 
 type LazyRouteModule = {
   default: ComponentType
 }
 
-let wasRouteLoadingFallbackShown = false
-
-const resetRouteLoadingFallbackShown = () => {
-  wasRouteLoadingFallbackShown = false
-}
-
-const markRouteLoadingFallbackShown = () => {
-  wasRouteLoadingFallbackShown = true
-}
-
-const wait = (ms: number) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms)
-  })
-}
-
-const applyRouteLoadingTiming = async <T extends LazyRouteModule>(
-  modulePromise: Promise<T>,
-) => {
-  const startedAt = Date.now()
-  const module = await modulePromise
-  const elapsedMs = Date.now() - startedAt
-  const minimumPendingMs = ROUTE_LOADING_DELAY_MS + ROUTE_LOADING_MIN_VISIBLE_MS
-
-  if (
-    wasRouteLoadingFallbackShown &&
-    elapsedMs >= ROUTE_LOADING_DELAY_MS &&
-    elapsedMs < minimumPendingMs
-  ) {
-    await wait(minimumPendingMs - elapsedMs)
-  }
-
-  return module
-}
-
 const lazyRoute = <T extends LazyRouteModule>(importPage: () => Promise<T>) => {
-  return lazy(() => applyRouteLoadingTiming(importPage()))
-}
-
-const RouteLoadingFallback = () => {
-  const [isVisible, setIsVisible] = useState(false)
-
-  useEffect(() => {
-    resetRouteLoadingFallbackShown()
-
-    const timerId = setTimeout(() => {
-      markRouteLoadingFallbackShown()
-      setIsVisible(true)
-    }, ROUTE_LOADING_DELAY_MS)
-
-    return () => {
-      clearTimeout(timerId)
-    }
-  }, [])
-
-  if (!isVisible) {
-    return null
-  }
-
-  return createElement(LoadingScreen)
-}
-
-const RouteLoadingBoundary = ({ children }: { children: ReactNode }) => {
-  const location = useLocation()
-
-  useEffect(() => {
-    resetRouteLoadingFallbackShown()
-  }, [location.key])
-
-  return createElement(
-    Suspense,
-    { fallback: createElement(RouteLoadingFallback) },
-    children,
-  )
+  return lazy(() => loadRouteChunk(importPage))
 }
 
 const SearchPage = lazyRoute(() => import('@/pages/search'))
@@ -135,14 +51,6 @@ const NotFoundPage = lazyRoute(() => import('@/pages/notFound'))
 
 const lazyPage = (Page: ReturnType<typeof lazy>) => {
   return createElement(Page)
-}
-
-export const withLazyFallback = (element: ReactNode) => {
-  return createElement(RouteLoadingBoundary, null, element)
-}
-
-export const withSilentLazyFallback = (element: ReactNode) => {
-  return createElement(Suspense, { fallback: null }, element)
 }
 
 export const lazyPages = {

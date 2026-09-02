@@ -141,7 +141,7 @@ describe('RootLayout', () => {
     })
   })
 
-  it('uses the current pathname as the AsyncBoundary reset key', () => {
+  it('uses the current pathname and search as the AsyncBoundary reset key', () => {
     const { rerender } = render(<RootLayout />)
 
     expect(screen.getByTestId('async-boundary')).toHaveAttribute(
@@ -150,11 +150,12 @@ describe('RootLayout', () => {
     )
 
     mockLocationStore.pathname = '/restaurants/restaurant-1'
+    mockLocationStore.search = '?tab=review'
     rerender(<RootLayout />)
 
     expect(screen.getByTestId('async-boundary')).toHaveAttribute(
       'data-reset-key',
-      '/restaurants/restaurant-1',
+      '/restaurants/restaurant-1?tab=review',
     )
   })
 

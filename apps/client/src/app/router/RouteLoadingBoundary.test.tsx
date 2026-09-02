@@ -85,7 +85,7 @@ const createSignalCompatibleRequest = (NativeRequest: typeof Request) =>
     }
   } as unknown as typeof Request
 
-describe('route lazy fallback', () => {
+describe('route loading boundary', () => {
   afterEach(() => {
     cleanup()
     vi.useRealTimers()

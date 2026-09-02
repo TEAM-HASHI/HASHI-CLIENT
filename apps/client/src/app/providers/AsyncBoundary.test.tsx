@@ -7,9 +7,11 @@ import {
 } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { FallbackProps } from 'react-error-boundary'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import AsyncBoundary from '@/app/providers/AsyncBoundary'
+import { RouteChunkLoadError } from '@/app/router/routeLoadingPolicy'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 
@@ -47,10 +49,15 @@ const RouteContent = ({ shouldThrow }: { shouldThrow: boolean }) => {
   return <p>next route</p>
 }
 
+const RouteChunkContent = () => {
+  throw new RouteChunkLoadError()
+}
+
 describe('AsyncBoundary', () => {
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   it('shows mapped copy, captures the error, and refetches after reset', async () => {
@@ -108,5 +115,49 @@ describe('AsyncBoundary', () => {
     )
 
     expect(await screen.findByText('next route')).toBeInTheDocument()
+  })
+
+  it('reloads the app instead of resetting when a route chunk fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const user = userEvent.setup()
+    const reload = vi.fn()
+    vi.stubGlobal('location', { reload })
+
+    expect(window.location.reload).toBe(reload)
+
+    render(
+      <AsyncBoundary>
+        <RouteChunkContent />
+      </AsyncBoundary>,
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '페이지를 불러오지 못했습니다',
+    )
+
+    await user.click(screen.getByRole('button', { name: '다시 시도' }))
+
+    expect(reload).toHaveBeenCalledOnce()
+  })
+
+  it('renders an injected fallback component with the caught error', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const CustomFallback = ({ error }: FallbackProps) => (
+      <p role="alert">
+        custom fallback:{' '}
+        {error instanceof Error ? error.message : 'unknown error'}
+      </p>
+    )
+
+    render(
+      <AsyncBoundary FallbackComponent={CustomFallback}>
+        <RouteContent shouldThrow />
+      </AsyncBoundary>,
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'custom fallback: route failed',
+    )
   })
 })
