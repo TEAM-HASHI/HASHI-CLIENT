@@ -9,7 +9,7 @@ import {
   clearAuthSession,
   setAccessToken,
   setOnboardingSession,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 
 const renderProfileNewRoute = () => {
   return render(

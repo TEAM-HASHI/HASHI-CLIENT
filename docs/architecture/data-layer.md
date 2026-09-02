@@ -11,6 +11,8 @@ HASHI 앱의 데이터 레이어는 앱 내부에서 먼저 조립하고, 실제
 - API base URL: `VITE_API_BASE_URL`
 - OpenAPI type generation: `openapi-typescript`
 - 공통 request helper: `apps/client/src/shared/api`
+- 인메모리 인증 세션: `apps/client/src/shared/auth/authSession.ts`
+- token 재발급 endpoint: `apps/client/src/shared/api/requestTokenReissue.ts`
 - API error model: `ApiError`와 `HttpStatusError`가 HTTP status를 보존
 - generated API type output: `apps/client/src/shared/api/generated/openapi.ts`
 - Query provider/client: `apps/client/src/app/providers/QueryProvider.tsx`, `apps/client/src/shared/lib/queryClient.ts`
@@ -67,7 +69,9 @@ apps/admin/src/shared/api/
 ```
 
 - base URL, timeout, retry, header, 인증 토큰 주입 지점은 한 곳에서 조립합니다.
-- client 액세스 토큰은 `localStorage`의 `accessToken`을 우선 사용하고, 로컬 개발에서만 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있습니다.
+- client access token은 `apps/client/src/shared/auth/authSession.ts`의 메모리 상태에서 조회하고, 로컬 개발에서만 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있습니다.
+- `requestTokenReissue`는 공통 request의 인증 복구에 필요한 기반 endpoint로 `apps/client/src/shared/api`가 소유합니다.
+- 공통 request는 인증 필요 오류에서 token 재발급을 한 번 수행하고 원 요청을 한 번 재시도합니다. 동시 인증 오류는 하나의 재발급 요청을 공유하며, 재발급 실패 시 인메모리 세션을 초기화합니다.
 - endpoint 함수는 `request` 같은 low-level helper를 사용합니다.
 - endpoint 함수는 React, TanStack Query, route, UI state를 알면 안 됩니다.
 - 인증, refresh, retry 정책은 실제 요구사항 없이 미리 복잡하게 만들지 않습니다.
@@ -90,7 +94,7 @@ apps/admin/src/shared/api/
 - mutation 오류는 공통 Sentry 필터를 거쳐 5xx status error, 405 integration error, 예상하지 못한 오류만 기록합니다.
 - page/form이 field error, NotFound, Forbidden, conflict UX를 소유하면 query/mutation option에서 전역 기본값을 명시적으로 override합니다.
 - ErrorBoundary가 소비한 오류는 공통 Sentry 필터를 거쳐 unknown/render error, 5xx status error, 405 integration error만 기록합니다.
-- 인증 token refresh, request replay, logout은 error boundary가 아니라 별도 auth flow가 소유합니다.
+- 인증 token refresh와 request replay는 error boundary가 아니라 `shared/api/request.ts`의 인증 복구 흐름이 소유하고, 인증 세션 상태 전이는 `shared/auth/authSession.ts`가 관리합니다.
 
 route content용 `AsyncBoundary`는 `RootLayout` 내부에서 `Outlet`을 감싸며,
 retry 시 React error state와 TanStack Query error state를 함께 reset합니다. 또한

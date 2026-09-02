@@ -8,7 +8,7 @@ import {
   clearAuthSession,
   setAccessToken,
   setOnboardingSession,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 import { consumeKakaoOAuthState } from '@/features/auth/utils/kakaoOAuth'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 

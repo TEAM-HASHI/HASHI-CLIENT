@@ -2,8 +2,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { getRestaurantReviewNewPath } from '@/app/router/routePaths'
 import { visitedReservationsQueryOptions } from '@/features/review/queries/visitedReservations'
-import { getRestaurantReviewNewPath } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import { checkIsAuthRequiredError } from '@/shared/api'
 
 interface UseRestaurantReviewWriteNavigationParams {

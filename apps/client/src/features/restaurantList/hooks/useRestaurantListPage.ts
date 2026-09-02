@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { getRestaurantDetailPath } from '@/app/router/routePaths'
 import {
   CATEGORY_OPTIONS,
   DEFAULT_CATEGORY_OPTION,
@@ -27,13 +28,6 @@ type UseRestaurantListPageParams = {
 
 const getOptionByValue = (options: FilterOption[], value: string) => {
   return options.find((option) => option.value === value)
-}
-
-const getRestaurantDetailPath = (restaurantId: string) => {
-  return ROUTES.restaurantDetail.replace(
-    ':restaurantId',
-    encodeURIComponent(restaurantId),
-  )
 }
 
 export const useRestaurantListPage = ({

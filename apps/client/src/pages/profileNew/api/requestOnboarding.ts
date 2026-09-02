@@ -3,7 +3,7 @@ import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
 import { isErrorResponse, isSuccessResponse } from '@/shared/api/types'
 import type { ApiResponse } from '@/shared/api/types'
-import { extractBearerToken } from '@/features/auth/utils/extractBearerToken'
+import { extractBearerToken } from '@/shared/api/extractBearerToken'
 
 export type OnboardingRequestBody =
   components['schemas']['CompleteOnboardingRequest']

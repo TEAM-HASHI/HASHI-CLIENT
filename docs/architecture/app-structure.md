@@ -102,6 +102,7 @@ features/{featureName}/
 
 ```text
 shared/
+  auth/        앱 공통 인메모리 인증 세션
   api/         HTTP client, API helper
   components/ 앱 내부 공통 UI
   constants/  route, config constant
@@ -110,6 +111,11 @@ shared/
   types/      앱 내부 공통 type
   utils/      순수 helper
 ```
+
+- `shared/auth`는 access token과 `authenticated`, `onboarding`, `unauthenticated` 세션 상태만 관리하며 OAuth, route, UI를 알지 않습니다.
+- `features/auth`는 Kakao OAuth, 인증 확인, 로그인 유도처럼 제품 인증 흐름을 관리하고 `shared/auth`, `shared/api`를 사용할 수 있습니다.
+- `shared`는 상위 기능 레이어인 `features`를 import하지 않습니다. 이 방향은 ESLint에서 차단합니다.
+- `shared/**/index.ts`는 같은 폴더의 public barrel export(`./*`)만 허용하며, 상위 폴더를 경유해 `features`를 참조하는 상대 경로는 ESLint에서 차단합니다.
 
 여러 workspace에서 재사용해야 하는 코드는 바로 `shared/`에 남기지 않고 목적에 따라 이동합니다.
 
@@ -146,7 +152,7 @@ page 단위 구현, form/data fetching/mutation 흐름, HDS component, 여러 �
 ## Placement Rules
 
 - 앱 실행 조립 코드는 각 앱의 `src/app`에 둡니다.
-- route path는 각 앱의 `src/app/router/path.ts`에 둡니다.
+- route pattern은 각 앱의 `src/app/router/path.ts`에 두고, 여러 호출부에서 재사용하는 URL 생성 helper는 `src/app/router/routePaths.ts`에서 관리합니다.
 - 앱 내부 공통 컴포넌트는 각 앱의 `src/shared/components`에 둡니다.
 - 식당 사진, 음식 사진처럼 실제 이미지 데이터가 없을 때 보여주는 앱 공통 fallback 이미지는 `apps/client/src/shared/components/defaultImage/DefaultImage.tsx`를 사용합니다.
   - 사용처는 컨테이너 크기와 radius를 `className`으로 지정합니다.
@@ -162,6 +168,7 @@ page 단위 구현, form/data fetching/mutation 흐름, HDS component, 여러 �
 
 - 라우터 설정은 `apps/client/src/app/router`에서 관리합니다.
 - route path는 문자열을 흩뿌리지 않고 상수화를 검토합니다.
+- 동적 route URL은 수동 문자열 치환 대신 React Router의 `generatePath`를 사용하고, path parameter는 사전 인코딩하지 않은 원본 값을 전달합니다.
 - URL params와 search params는 사용하는 위치에서 명시적으로 읽고 검증합니다.
 - 첫 진입 화면은 단순성을 우선하고, lazy loading은 실제 번들/사용성 이슈가 있을 때 도입합니다.
 - 페이지별 접근 권한과 redirect 정책은 [Routing And Access Policy](./routing-and-access-policy.md)를 따릅니다.
