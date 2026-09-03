@@ -16,7 +16,7 @@ export const useRestaurantDetailTabs = ({
   const [selectedReviewSort, setSelectedReviewSort] =
     useState<ReviewSortValue>('latest')
 
-  const resetTabs = () => {
+  const resetTabsToDefault = () => {
     setActiveTab('info')
     setSelectedReviewSort('latest')
   }
@@ -25,7 +25,7 @@ export const useRestaurantDetailTabs = ({
     activeTab,
     onSelectReviewSort: setSelectedReviewSort,
     onTabChange: setActiveTab,
-    resetTabs,
+    resetTabsToDefault,
     selectedReviewSort,
   }
 }

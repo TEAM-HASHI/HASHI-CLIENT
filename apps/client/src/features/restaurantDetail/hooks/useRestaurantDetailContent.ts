@@ -63,7 +63,7 @@ export const useRestaurantDetailContent = ({
   }
 
   const resetDetailState = () => {
-    detailTabs.resetTabs()
+    detailTabs.resetTabsToDefault()
     reviewImageViewer.resetReviewImageViewer()
     reviewUnavailableModal.resetReviewUnavailableModal()
   }
