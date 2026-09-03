@@ -564,6 +564,7 @@ describe('MyReservationsPage', () => {
 
     await waitFor(() => {
       expect(mockedCancelReservation).toHaveBeenCalledWith(21)
+      expect(mockShowToast).toHaveBeenCalledTimes(1)
       expect(mockShowToast).toHaveBeenCalledWith({
         children: '예약 취소 요청이 완료되었습니다',
       })
