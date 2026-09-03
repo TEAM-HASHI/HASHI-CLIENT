@@ -33,7 +33,9 @@ export const ReservationCancelDialog = ({
               <span className="block">
                 예약을 취소하면 방문 예정 내역에서 삭제되며
               </span>
-              <span className="block">동일한 예약은 다시 접수해야 합니다.</span>
+              <span className="block">
+                취소 후에도 다른 식당을 바로 찾아볼 수 있어요.
+              </span>
             </Dialog.Description>
           </div>
         </Dialog.Header>

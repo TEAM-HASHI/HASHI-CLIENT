@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { showToast } from '@hashi/hds-ui'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
@@ -98,14 +97,18 @@ export const useReservationDetailPage = () => {
         queryKey,
         refetchType: 'inactive',
       })
-      await syncCanceledReservationCache(
+
+      setIsCancelDialogOpen(false)
+      navigate(
+        ROUTES.reservationRescue.replace(
+          ':reservationId',
+          String(reservationId),
+        ),
+      )
+      void syncCanceledReservationCache(
         queryClient,
         canceledReservation.reservation,
       )
-
-      showToast({ children: canceledReservation.message })
-      setIsCancelDialogOpen(false)
-      navigate(`${ROUTES.myReservations}?status=CANCELED`)
     } catch {
       // 실패 toast는 공통 mutation error handler에서 처리합니다.
     } finally {
