@@ -26,6 +26,7 @@ Audit HASHI client API integration for data-layer boundaries, query key correctn
 | `apps/client/src/**/*.test.{ts,tsx}`                  | API integration test isolation |
 | `apps/client/src/**/*.spec.md`                        | Data dependency specs          |
 | `docs/architecture/data-layer.md`                     | Data-layer source of truth     |
+| `docs/workflows/api-integration.md`                   | API workflow source of truth   |
 
 ## Workflow
 
@@ -38,20 +39,25 @@ git diff --name-only origin/develop...HEAD 2>/dev/null || true
 ```
 
 2. Inspect changed API/query/mutation files and nearby page or feature specs.
-3. Check endpoint boundaries:
+3. Check API placement:
+   - one-page flows and page draft/view model/form state adapters stay page-local
+   - feature endpoints are used only when page-specific dependencies can be removed without changing the API contract
+   - feature promotion has a clear reuse signal such as shared endpoint, query key, cache synchronization, or API type contract
+   - `shared/api` contains only low-level request, error, response envelope, and generated OpenAPI helpers
+4. Check endpoint boundaries:
    - endpoint functions use `request` or approved low-level API helpers
    - endpoint functions do not import React or TanStack Query
    - base URL, token, and secrets are not hardcoded
-4. Check query keys:
+5. Check query keys:
    - every hook uses a query key factory
    - no inline `queryKey: ['...']` arrays in hooks or invalidation calls
    - params that change response data are included in keys
    - finite and infinite queries do not share the same key
-5. Check query mode:
+6. Check query mode:
    - `useSuspenseQuery` is not used when `enabled`, `placeholderData`, manual loading UI, or local partial error UI is required
    - independent queries in one component do not create avoidable suspense waterfalls
    - infinite query uses explicit `initialPageParam` and documented `getNextPageParam`
-6. Check mutations:
+7. Check mutations:
    - mutation hooks use documented request variables
    - complete latest entity responses use `setQueryData` when the same detail must update immediately
    - partial responses and affected list/detail/infinite/count prefixes are invalidated
@@ -59,18 +65,19 @@ git diff --name-only origin/develop...HEAD 2>/dev/null || true
    - all cache operations use query key factory outputs
    - ordinary mutation success does not use `resetQueries` or `removeQueries`
    - optimistic updates exist only with explicit rollback requirements
-7. Check UI states:
+8. Check UI states:
    - loading, error, empty, disabled, and success states are mapped to existing UI
    - destructive or submit actions cannot double-fire while pending
-8. Check tests:
+9. Check tests:
    - page and component tests mock page/feature API modules with `vi.mock(...)`
    - API wrapper tests mock `@/shared/api/request` or another approved low-level helper
    - tests do not import `@/shared/api` barrels when direct module imports avoid `apiClient.ts`
    - tests do not depend on `VITE_API_BASE_URL` or hardcoded real API origins unless URL construction is the unit under test
-9. Check docs sync:
-   - target page spec includes `Data Dependencies` when behavior changed
-   - `docs/architecture/data-layer.md` still matches implementation patterns
-10. Run matching verification commands.
+10. Check docs sync:
+    - target page spec includes `Data Dependencies` when behavior changed
+    - `docs/architecture/data-layer.md` still matches implementation patterns
+    - `docs/workflows/api-integration.md` still matches implementation workflow
+11. Run matching verification commands.
 
 ```bash
 pnpm --filter @hashi/client lint
@@ -99,6 +106,7 @@ Status: PASS | FAIL
 
 ### Checks
 
+- API placement: PASS/FAIL
 - Endpoint boundary: PASS/FAIL
 - Query keys: PASS/FAIL
 - Query mode: PASS/FAIL

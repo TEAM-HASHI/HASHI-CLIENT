@@ -18,9 +18,9 @@ Use this skill to detect and fix:
 
 ## Registered Verify Skills
 
-| Skill                    | Description                                                                                      | Covered file patterns                                                                                                         |
-| ------------------------ | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `verify-api-integration` | Checks HASHI client API query, mutation, query key, invalidation, UI state, and docs sync rules. | `apps/client/src/pages/**`, `apps/client/src/features/**`, `apps/client/src/shared/api/**`, `docs/architecture/data-layer.md` |
+| Skill                    | Description                                                                                      | Covered file patterns                                                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `verify-api-integration` | Checks HASHI client API query, mutation, query key, invalidation, UI state, and docs sync rules. | `apps/client/src/pages/**`, `apps/client/src/features/**`, `apps/client/src/shared/api/**`, `docs/architecture/data-layer.md`, `docs/workflows/api-integration.md` |
 
 ## Workflow
 

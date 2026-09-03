@@ -58,7 +58,7 @@ apps/client/src/pages/{pageName}/
   types.ts
 ```
 
-Promote to `apps/client/src/features/{featureName}` only when the same API flow is reused by multiple pages. Keep `apps/client/src/shared/api` limited to low-level `request`, client config, and generated OpenAPI types.
+Promote to `apps/client/src/features/{featureName}` only when page-specific draft, view model, route state, and form state dependencies can be removed without changing the API contract, and the same endpoint, query key, cache synchronization, or API type contract is shared by multiple pages. Keep `apps/client/src/shared/api` limited to low-level `request`, client config, and generated OpenAPI types.
 
 Naming rules:
 
