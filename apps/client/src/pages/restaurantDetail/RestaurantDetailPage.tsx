@@ -3,11 +3,7 @@ import { useMemo } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import {
-  getRestaurantDetailPath,
-  getRestaurantMenuDetailPath,
-  getRestaurantReservationNewPath,
-} from '@/app/router/routePaths'
+import { getRestaurantDetailPath } from '@/app/router/routePaths'
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
 import { RestaurantDetailTemplate } from '@/features/restaurantDetail'
 import { useRestaurantDetailActions } from '@/features/restaurantDetail/hooks/useRestaurantDetailActions'

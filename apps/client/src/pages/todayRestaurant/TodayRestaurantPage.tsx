@@ -3,10 +3,6 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import {
-  getRestaurantMenuDetailPath,
-  getRestaurantReservationNewPath,
-} from '@/app/router/routePaths'
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
 import { RestaurantDetailTemplate } from '@/features/restaurantDetail'
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'

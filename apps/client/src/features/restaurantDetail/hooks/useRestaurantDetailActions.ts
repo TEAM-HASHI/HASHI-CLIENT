@@ -3,11 +3,11 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
 import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
-import type { RestaurantMenuDetailSource } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import {
   getRestaurantMenuDetailPath,
   getRestaurantReservationNewPath,
-} from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
+} from '@/app/router/routePaths'
+import type { RestaurantMenuDetailSource } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import { useAuthStatus } from '@/shared/hooks'
 
 interface UseRestaurantDetailActionsParams {
