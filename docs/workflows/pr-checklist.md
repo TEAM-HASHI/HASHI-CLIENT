@@ -12,7 +12,7 @@ PR을 열기 전 변경 범위, Jira 연결, 검증 결과를 명확히 남깁�
 - unrelated 변경이 섞이지 않았는지 `git status`와 diff를 확인합니다.
 - dependency 변경이 있으면 `package.json`, workspace `package.json`, `pnpm-lock.yaml` 변경을 함께 확인합니다.
 - 구현 기준 spec이 필요한 작업이면 [Spec Writing](./spec-writing.md)에 따라 `*.spec.md`를 작성하거나 갱신합니다.
-- `apps/client/**` 코드 변경은 [Client Testing Policy](./testing.md)에 따라 자동 테스트 또는 수동 확인 근거를 준비합니다.
+- `apps/client/**` 코드 변경은 [Client Testing Policy](./testing.md)에 따라 `Test Required`와 `Test Optional`을 구분합니다. `Test Required`는 자동 테스트를 준비하고, 테스트를 생략할 때는 생략 사유와 수동 확인 근거를 함께 준비합니다.
 - 문서 영향이 있는 변경이면 `README.md`, `AGENTS.md`, `docs/` 문서 갱신 여부를 확인합니다.
 - `apps/client/**` PR은 [Client Code Review Policy](./code-review.md)에 따라 작성자를 제외한 리뷰어 2명을 지정합니다.
 
@@ -54,6 +54,8 @@ _구현 방식, 설계 의도, 사용 예시 등 리뷰 전에 알아야 할 맥
 -
 
 ## ✅ 검증
+
+<!-- 해당 없는 항목은 삭제하거나 "해당 없음"으로 작성해주세요. -->
 
 - [ ] 자동 테스트:
 - [ ] 수동 확인:
@@ -100,7 +102,8 @@ Jira: HASHI-12
 ## 고민한 부분과 검증
 
 - `고민한 부분`은 구조·상태·API·UX 판단이 있었을 때 작성합니다. 단순 UI·copy 변경은 해당 섹션을 삭제할 수 있습니다.
-- `검증`에는 자동 테스트, 수동 확인, 테스트 생략 사유 중 변경에 해당하는 항목을 남깁니다.
+- `검증`에는 자동 테스트, 수동 확인, 테스트 생략 사유 중 변경에 해당하는 항목만 남깁니다.
+- `Test Required` 변경에서 자동 테스트를 생략했다면 생략 사유와 수동 확인 결과를 모두 남깁니다.
 - `apps/client/**` 변경은 [Client Testing Policy](./testing.md)를 따릅니다.
 
 ## 리뷰어에게

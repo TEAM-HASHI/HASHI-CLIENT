@@ -37,7 +37,7 @@
 | 단순 컴포넌트 조합 | 기존 컴포넌트로 화면 구성                 | 주요 진입·렌더링 경로                   |
 | 스타일 token 적용  | color, spacing, radius token              | hover/focus/disabled 영향을 포함한 상태 |
 
-단, 위 변경도 사용자 클릭·입력·선택, 상태별 UI, API loading/error/empty, 로그인 상태, URL search param, 서버 데이터에 따른 CTA 노출을 건드리면 자동 테스트 또는 명확한 수동 확인을 반드시 추가합니다.
+단, 위 변경도 사용자 클릭·입력·선택, 상태별 UI, API loading/error/empty, 로그인 상태, URL search param, 서버 데이터에 따른 CTA 노출을 건드리면 `Test Required`로 분류합니다. `Test Required`는 자동 테스트 작성을 원칙으로 하며, 기술적으로 작성하기 어려운 경우에만 테스트 생략 사유와 수동 확인 결과를 PR에 함께 남깁니다.
 
 ## Priority
 
