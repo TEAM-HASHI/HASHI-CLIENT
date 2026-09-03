@@ -5,8 +5,10 @@ import {
   formatReservationMonthDay,
 } from '@/features/reservation/utils/formatReservation'
 import type { ReservationDetailResponse } from '@/pages/reservationDetail/api/getReservationDetail'
-import type { ReservationProgressStep } from '@/pages/reservationDetail/components/ReservationProgressSection'
-import type { ReservationReceiptInfoItem } from '@/pages/reservationDetail/components/ReservationReceiptInfoCard'
+import type {
+  ReservationProgressStep,
+  ReservationReceiptInfoItem,
+} from '@/pages/reservationDetail/types'
 
 type ReservationStatus = NonNullable<
   ReservationDetailResponse['reservationStatus']
