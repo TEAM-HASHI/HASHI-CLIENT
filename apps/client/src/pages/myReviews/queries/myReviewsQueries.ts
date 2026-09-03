@@ -3,7 +3,7 @@ import { type InfiniteData, useInfiniteQuery } from '@tanstack/react-query'
 import {
   getMyReviews,
   type MyReviewsData,
-} from '@/pages/myReviews/api/myReviewsApi'
+} from '@/features/review/api/getMyReviews'
 import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
 
 export const MY_REVIEWS_PAGE_SIZE = 20

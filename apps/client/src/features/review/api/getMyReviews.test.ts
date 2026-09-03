@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMyReviews } from '@/pages/myReviews/api/myReviewsApi'
+import { getMyReviews } from '@/features/review/api/getMyReviews'
 import { request } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({
@@ -9,7 +9,7 @@ vi.mock('@/shared/api/request', () => ({
 
 const mockRequest = vi.mocked(request)
 
-describe('myReviewsApi', () => {
+describe('getMyReviews', () => {
   beforeEach(() => {
     mockRequest.mockReset()
   })

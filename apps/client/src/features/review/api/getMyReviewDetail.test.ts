@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMyReviewDetail } from '@/pages/reviewDetail/api/getMyReviewDetail'
+import { getMyReviewDetail } from '@/features/review/api/getMyReviewDetail'
 import { request } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({ request: vi.fn() }))

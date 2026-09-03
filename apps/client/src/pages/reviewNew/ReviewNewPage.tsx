@@ -111,6 +111,7 @@ export const ReviewNewPage = () => {
     submitReviewMutation.mutate(
       {
         reservationId,
+        restaurantId: reviewContext.restaurantId,
         rating,
         keywordCodes: selectedKeywordIds,
         content: reviewText,

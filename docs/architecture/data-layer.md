@@ -247,9 +247,10 @@ page-local에서 시작하고, page spec이나 PR에 "다른 page에서 재사�
   PopularRestaurants, Home adapter에서 공유하므로 feature-local에 둡니다.
 - `pages/reservationRequest/api/createReservation.ts`는 `ReservationRequestDraft`에
   강하게 의존하는 제출 adapter이므로 page-local에 둡니다.
-- 리뷰 관련 `myReviews`, `reviewDetail`, `reviewNew` API는 각 page 전용 흐름에서
-  시작하되, `reviewEdit` 등 다른 page와 같은 상세 조회, 이미지 업로드, cache
-  invalidation 기준을 공유하게 되면 `features/review` 승격을 검토합니다.
+- 리뷰 관련 `getMyReviews`, `getMyReviewDetail`은 삭제/수정/작성 후 같은
+  `myReviewQueryKeys` cache synchronization 기준을 공유하므로 `features/review`에
+  둡니다. `reviewNew`의 작성 context, 이미지 업로드, 제출 adapter는 작성 page
+  전용 흐름이므로 다른 리뷰 page와 공유되기 전까지 page-local에 둡니다.
 
 ## Query Key Rules
 
