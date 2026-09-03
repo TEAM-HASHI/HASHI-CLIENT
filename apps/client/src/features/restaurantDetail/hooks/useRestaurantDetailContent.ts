@@ -55,10 +55,13 @@ export const useRestaurantDetailContent = ({
       : null
 
   const handlePressReviewImage = (reviewId: string, imageIndex: number) => {
+    const selectedReview = restaurant?.reviews.find(
+      (review) => review.id === reviewId,
+    )
+
     reviewImageViewer.onOpenReviewImageViewer({
-      imageIndex,
-      restaurant,
-      reviewId,
+      imageUrls: selectedReview?.images ?? [],
+      initialIndex: imageIndex,
     })
   }
 

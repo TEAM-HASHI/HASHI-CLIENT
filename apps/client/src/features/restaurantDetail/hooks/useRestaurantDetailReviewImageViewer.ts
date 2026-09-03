@@ -1,11 +1,8 @@
 import { useState } from 'react'
 
-import type { RestaurantDetail } from '@/features/restaurantDetail/types/restaurantDetail'
-
 interface OpenReviewImageViewerParams {
-  imageIndex: number
-  restaurant: RestaurantDetail | null
-  reviewId: string
+  imageUrls: string[]
+  initialIndex: number
 }
 
 export const useRestaurantDetailReviewImageViewer = () => {
@@ -17,16 +14,11 @@ export const useRestaurantDetailReviewImageViewer = () => {
     useState(0)
 
   const openReviewImageViewer = ({
-    imageIndex,
-    restaurant,
-    reviewId,
+    imageUrls,
+    initialIndex,
   }: OpenReviewImageViewerParams) => {
-    const selectedReview = restaurant?.reviews.find(
-      (review) => review.id === reviewId,
-    )
-
-    setReviewImageViewerImageUrls(selectedReview?.images ?? [])
-    setReviewImageViewerInitialIndex(imageIndex)
+    setReviewImageViewerImageUrls(imageUrls)
+    setReviewImageViewerInitialIndex(initialIndex)
     setIsReviewImageViewerOpen(true)
   }
 
