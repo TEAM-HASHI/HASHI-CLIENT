@@ -42,6 +42,8 @@
 | 작업 유형                | 먼저 볼 문서                                                                                                 |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
 | Jira, branch, commit, PR | `docs/conventions/jira-ticket.md`, `docs/conventions/git.md`, `.agents/recipes/jira-branch-pr.md`            |
+| client 코드리뷰          | `docs/workflows/code-review.md`, `docs/workflows/pr-checklist.md`                                            |
+| client 테스트 판단       | `docs/workflows/testing.md`, `.agents/checklists/verification.md`                                            |
 | page 또는 route          | `docs/architecture/app-structure.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/page-feature.md`    |
 | API query 또는 mutation  | `docs/architecture/data-layer.md`, `docs/workflows/api-integration.md`, `.agents/recipes/api-integration.md` |
 | form 또는 state flow     | `docs/conventions/coding.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/form-flow.md`               |

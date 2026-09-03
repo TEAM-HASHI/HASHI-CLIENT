@@ -31,10 +31,12 @@ type(scope): HASHI-00 작업 내용
 ```
 
 5. PR은 `develop`을 대상으로 생성하고 `.github/pull_request_template.md`를 채웁니다.
-6. PR 본문에는 Jira key와 검증 결과를 포함합니다.
+6. PR 본문에는 Jira key, 작업 내용, 설계 판단, 테스트 또는 수동 확인 결과를 포함합니다.
+7. `apps/client/**` PR은 `docs/workflows/code-review.md`에 따라 자동 요청된 리뷰어 2명을 확인합니다. 개인 일정이나 변경 영역의 전문성 때문에 조정이 필요하면 reviewer를 수동으로 변경하거나 추가합니다.
 
 ## Done Criteria
 
 - 브랜치명, 커밋 메시지, PR 본문에 같은 Jira key가 사용됩니다.
 - PR 대상 브랜치는 `develop`입니다.
 - unrelated 변경이 섞이지 않습니다.
+- 필요한 테스트·수동 확인 근거와 리뷰어 2명 지정이 PR에 반영됩니다.

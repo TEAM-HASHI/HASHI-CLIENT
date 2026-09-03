@@ -3,6 +3,8 @@
 Spec은 구현 전에 행동, 상태, 책임 범위를 짧게 고정하기 위한 문서입니다.
 모든 변경에 강제하지 않고, 구현 중 해석이 흔들릴 수 있는 작업에 사용합니다.
 
+이번 스프린트의 상세 운영 기준은 `apps/client/**`에 적용합니다. `apps/admin/**`, `packages/**`, 서버 영역에는 이 문서를 자동 확장하지 않습니다.
+
 ## Location
 
 spec template은 [Spec Templates](./spec-templates/README.md)를 사용합니다.
@@ -42,6 +44,8 @@ Spec을 작성하거나 갱신해야 하는 경우:
 - UI state가 loading, empty, error, disabled 등 여러 상태로 나뉘는 component를 추가할 때
 - public props, hook return shape, route params/search params, API contract가 바뀔 때
 - 구현 중 요구사항이 바뀌어 기존 spec과 달라졌을 때
+
+Spec이 필요한 변경은 코드와 spec을 같은 PR에서 갱신합니다. 테스트 필요 여부는 [Client Testing Policy](./testing.md)를 함께 확인합니다.
 
 ## Optional
 
@@ -84,3 +88,4 @@ Component spec에는 `Public API` 섹션을 둡니다.
 - 요구사항, 상태, 에러 처리, 접근성, 검증 방법이 적혀 있는가?
 - 구현이 spec과 달라졌다면 spec도 함께 갱신했는가?
 - spec을 생략했다면 생략 이유가 PR에서 설명 가능한가?
+- 변경된 동작의 테스트 또는 수동 확인 기준이 spec `Verification`과 PR에 일관되게 남았는가?
