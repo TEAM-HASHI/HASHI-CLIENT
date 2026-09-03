@@ -42,7 +42,8 @@ Repo-local hook은 프로젝트 `.codex/` layer가 trusted 상태일 때 실행�
 - `git reset --hard`
 - `git checkout --`
 - `git clean`에 force와 directory flag가 함께 있는 명령
-- `git push --force`, `git push --force-with-lease`, `git push -f`
+- `git push --force`, `git push -f`
+- 보호 브랜치 또는 작업 브랜치 패턴이 아닌 브랜치로 향하는 `git push --force-with-lease`
 - `rm`에 recursive와 force flag가 함께 있는 명령
 - `npm`, `npx`, `yarn`, `bun`, `bunx`
 - `pnpm add`인데 `--filter`/`-F` 또는 `-w`/`--workspace-root`가 없는 명령
@@ -60,6 +61,10 @@ pnpm add -D -w package-name
 이 hook은 agent 실수 방지용 guardrail입니다.
 Codex `PreToolUse`가 모든 shell 실행 경로를 완전히 가로채는 보안 경계는 아닙니다.
 파괴적인 작업이나 예외적인 Git 작업은 사람이 의도를 명확히 확인한 뒤 별도 명령으로 수행합니다.
+
+Stacked PR rebase 흐름에서는 작업 브랜치에 한해 `git push --force-with-lease`를 허용합니다.
+허용되는 작업 브랜치 패턴은 `feat/**`, `feature/**`, `fix/**`, `hotfix/**`, `refactor/**`, `docs/**`, `chore/**`입니다.
+`develop`, `main`, `master`, `production` 같은 보호 브랜치로 향하는 force-with-lease push는 계속 차단합니다.
 
 API 연동 품질 검사는 hook이 아니라 `.agents/skills/verify-api-integration`에서 수행합니다.
 query key, Suspense query 선택, mutation cache synchronization, UI state 같은 판단은 코드 문맥이 필요하므로 lifecycle hook으로 차단하지 않습니다.
