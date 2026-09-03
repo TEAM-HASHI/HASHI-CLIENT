@@ -90,4 +90,26 @@ describe('createRestaurantDetailViewModel', () => {
     expect(restaurant.businessHoursSummary).toBe('8/17 (월) 휴무')
     expect(restaurant.lastOrderTime).toBe('영업시간 정보 없음')
   })
+
+  it('keeps business hours summary and last order unavailable when open time is missing', () => {
+    const restaurant = createRestaurantDetailViewModel({
+      summary: restaurantSummary,
+      storeInformation: {
+        ...storeInformation,
+        businessHours: [
+          {
+            dayOfWeek: 'MONDAY',
+            closeTime: '21:00',
+            closed: false,
+          },
+        ],
+      },
+      menus: [],
+      reviews: [],
+      now: new Date(2026, 7, 17, 9, 0, 0),
+    })
+
+    expect(restaurant.businessHoursSummary).toBe('8/17 (월) 휴무')
+    expect(restaurant.lastOrderTime).toBe('영업시간 정보 없음')
+  })
 })

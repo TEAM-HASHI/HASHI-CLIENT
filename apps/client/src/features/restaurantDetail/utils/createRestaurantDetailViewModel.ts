@@ -29,6 +29,10 @@ const API_DAY_BY_DATE_DAY = [
 ] as const
 
 type BusinessHoursViewModel = RestaurantDetail['businessHours'][number]
+type OpenBusinessHours = RestaurantStoreInformation['businessHours'][number] & {
+  closeTime: string
+  openTime: string
+}
 
 const formatNumber = (value: number) => value.toLocaleString('ko-KR')
 
@@ -68,6 +72,11 @@ const formatBusinessHours = (
     : null
 }
 
+const hasOpenBusinessHours = (
+  hours: RestaurantStoreInformation['businessHours'][number] | undefined,
+): hours is OpenBusinessHours =>
+  Boolean(hours && !hours.closed && hours.openTime && hours.closeTime)
+
 const formatBusinessHoursSummary = (
   businessHours: RestaurantStoreInformation['businessHours'],
   now: Date,
@@ -78,12 +87,7 @@ const formatBusinessHoursSummary = (
   )
   const dateLabel = formatDateLabel(now)
 
-  if (
-    !todayHours ||
-    todayHours.closed ||
-    !todayHours.openTime ||
-    !todayHours.closeTime
-  ) {
+  if (!hasOpenBusinessHours(todayHours)) {
     return `${dateLabel} 휴무`
   }
 
@@ -99,7 +103,7 @@ const formatLastOrderTime = (
     (hours) => normalizeDayOfWeek(hours.dayOfWeek) === todayApiDay,
   )
 
-  if (!todayHours || todayHours.closed || !todayHours.closeTime) {
+  if (!hasOpenBusinessHours(todayHours)) {
     return '영업시간 정보 없음'
   }
 
