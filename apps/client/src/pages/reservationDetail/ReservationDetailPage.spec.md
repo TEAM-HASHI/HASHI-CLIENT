@@ -196,6 +196,11 @@ ReservationDetailPage
   - `features/reservation/useCancelReservationMutation`
 - feature api:
   - `features/reservation/cancelReservation`
+- feature util:
+  - `features/reservation/formatReservationDate`
+  - `features/reservation/formatReservationDateTime`
+  - `features/reservation/formatReservationGuestSummary`
+  - `features/reservation/formatReservationMonthDay`
 - page-local util:
   - `createReservationDetailViewModel`
   - `reservationDetailPolicy`

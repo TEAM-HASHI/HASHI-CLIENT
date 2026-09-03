@@ -54,6 +54,33 @@ describe('createMyReservationViewModel', () => {
     })
   })
 
+  it('maps missing in-progress display values to page fallbacks', () => {
+    expect(
+      createMyReservationViewModel({
+        reservationId: 14,
+        restaurantName: '정보 확인 중인 식당',
+        reservationStatus: 'REQUESTED',
+      }),
+    ).toMatchObject({
+      visitDateTime: '- 방문',
+      guestSummary: '-',
+      reservedAt: '- 방문 예정',
+    })
+  })
+
+  it('maps a missing upcoming date to the upcoming fallback', () => {
+    expect(
+      createMyReservationViewModel({
+        reservationId: 15,
+        restaurantName: '예약 확정 식당',
+        reservationStatus: 'CONFIRMED',
+      }),
+    ).toMatchObject({
+      visitDateTime: '- 방문 예정',
+      guestSummary: '-',
+    })
+  })
+
   it('returns null when the reservation status is unsupported for the current API scope', () => {
     expect(
       createMyReservationViewModel({
