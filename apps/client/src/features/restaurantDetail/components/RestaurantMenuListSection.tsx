@@ -5,7 +5,7 @@ import { RestaurantImage } from '@/features/restaurantDetail/components/Restaura
 import type { RestaurantMenu } from '@/features/restaurantDetail/types/restaurantDetail'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
 
-interface RestaurantMenuSectionProps {
+interface RestaurantMenuListSectionProps {
   menus: RestaurantMenu[]
   hasMoreMenus?: boolean
   isMenuListError?: boolean
@@ -14,14 +14,14 @@ interface RestaurantMenuSectionProps {
   onRetryMenuList?: () => void
 }
 
-export const RestaurantMenuSection = ({
+export const RestaurantMenuListSection = ({
   menus,
   hasMoreMenus = false,
   isMenuListError = false,
   loadMoreRef,
   onPressMenuItem,
   onRetryMenuList,
-}: RestaurantMenuSectionProps) => {
+}: RestaurantMenuListSectionProps) => {
   if (isMenuListError) {
     return (
       <section

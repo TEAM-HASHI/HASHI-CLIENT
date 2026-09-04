@@ -14,7 +14,7 @@ import { RestaurantBottomBar } from '@/features/restaurantDetail/components/Rest
 import { RestaurantDetailHero } from '@/features/restaurantDetail/components/RestaurantDetailHero'
 import { RestaurantDetailTabs } from '@/features/restaurantDetail/components/RestaurantDetailTabs'
 import { RestaurantInfoSection } from '@/features/restaurantDetail/components/RestaurantInfoSection'
-import { RestaurantMenuSection } from '@/features/restaurantDetail/components/RestaurantMenuSection'
+import { RestaurantMenuListSection } from '@/features/restaurantDetail/components/RestaurantMenuListSection'
 import { RestaurantReviewSection } from '@/features/restaurantDetail/components/RestaurantReviewSection'
 import { ReviewImageViewer } from '@/features/restaurantDetail/components/ReviewImageViewer'
 import { ReviewUnavailableModal } from '@/features/restaurantDetail/components/ReviewUnavailableModal'
@@ -264,7 +264,7 @@ export const RestaurantDetailTemplate = ({
       {activeTab === 'info' ? (
         <RestaurantInfoSection restaurant={restaurant} />
       ) : activeTab === 'menu' ? (
-        <RestaurantMenuSection
+        <RestaurantMenuListSection
           hasMoreMenus={hasMoreMenus}
           isMenuListError={isMenuListError}
           loadMoreRef={menuLoadMoreRef}

@@ -117,7 +117,7 @@
   - `LoadingScreen`
 - feature component:
   - `RestaurantDetailTabs`
-  - `RestaurantMenuSection`
+  - `RestaurantMenuListSection`
   - `RestaurantBottomBar`
   - `RestaurantImage`
 - page-local component:
