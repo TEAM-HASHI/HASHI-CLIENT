@@ -1,7 +1,9 @@
 export type ReservationProgressStatus = 'completed' | 'current' | 'pending'
 
+export type ReservationProgressStepId = 'received' | 'contacting' | 'confirmed'
+
 export interface ReservationProgressStep {
-  id: string
+  id: ReservationProgressStepId
   title: string
   description: string
   requestedAt?: string

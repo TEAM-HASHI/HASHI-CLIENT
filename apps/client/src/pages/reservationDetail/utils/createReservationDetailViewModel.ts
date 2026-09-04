@@ -41,10 +41,7 @@ const formatAmount = (amount: number | undefined) => {
 
 const getStepStatuses = (
   reservationStatus: ReservationStatus | undefined,
-): Record<
-  'received' | 'contacting' | 'confirmed',
-  ReservationProgressStep['status']
-> => {
+): Record<ReservationProgressStep['id'], ReservationProgressStep['status']> => {
   if (reservationStatus === 'REQUESTED') {
     return {
       received: 'current',
