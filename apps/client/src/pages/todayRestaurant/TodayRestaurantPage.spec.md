@@ -91,7 +91,7 @@
 
 - query: restaurant menus infinite
 - endpoint: `GET /api/v1/restaurants/{restaurantId}/menus`
-- enabled condition: today restaurant id exists and menu tab has been requested
+- enabled condition: today restaurant id exists
 - request params:
   - path: `restaurantId`
   - query: `cursor`, `size`
@@ -103,7 +103,7 @@
 - refetch condition: restaurantId 변경
 - pagination:
   - `getNextPageParam`: `hasNext`가 true이면 `nextCursor`
-  - next page trigger: 공통 `useInfiniteScrollTrigger` sentinel intersect
+  - next page trigger: 메뉴 탭이 active일 때 공통 `useInfiniteScrollTrigger` sentinel intersect
 
 - query: restaurant reviews infinite
 - requested endpoint: `GET /api/v1/restaurants/{restaurantId}/reviews`
