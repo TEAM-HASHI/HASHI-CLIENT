@@ -5,8 +5,10 @@ import {
   formatReservationMonthDay,
 } from '@/features/reservation/utils/formatReservation'
 import type { ReservationDetailResponse } from '@/pages/reservationDetail/api/getReservationDetail'
-import type { ReservationProgressStep } from '@/pages/reservationDetail/components/ReservationProgressSection'
-import type { ReservationReceiptInfoItem } from '@/pages/reservationDetail/components/ReservationReceiptInfoCard'
+import type {
+  ReservationProgressStep,
+  ReservationReceiptInfoItem,
+} from '@/pages/reservationDetail/types'
 
 type ReservationStatus = NonNullable<
   ReservationDetailResponse['reservationStatus']
@@ -39,10 +41,7 @@ const formatAmount = (amount: number | undefined) => {
 
 const getStepStatuses = (
   reservationStatus: ReservationStatus | undefined,
-): Record<
-  'received' | 'contacting' | 'confirmed',
-  ReservationProgressStep['status']
-> => {
+): Record<ReservationProgressStep['id'], ReservationProgressStep['status']> => {
   if (reservationStatus === 'REQUESTED') {
     return {
       received: 'current',

@@ -1,15 +1,9 @@
 import { ReservationRestaurantSummary } from '@/pages/reservationDetail/components/ReservationRestaurantSummary'
+import type {
+  ReservationProgressStatus,
+  ReservationProgressStep,
+} from '@/pages/reservationDetail/types'
 import { cn } from '@/shared/utils'
-
-export type ReservationProgressStatus = 'completed' | 'current' | 'pending'
-
-export type ReservationProgressStep = {
-  id: string
-  title: string
-  description: string
-  requestedAt?: string
-  status: ReservationProgressStatus
-}
 
 export type ReservationProgressSectionProps = {
   requestedDate: string
