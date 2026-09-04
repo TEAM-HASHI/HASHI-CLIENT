@@ -6,6 +6,10 @@ import { generatePath, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { myPointBalanceQueryOptions } from '@/features/point/queries/pointQueryOptions'
+import {
+  formatReservationDraftDateTime,
+  formatReservationGuestSummary,
+} from '@/features/reservation/utils/formatReservation'
 import { ReservationConfirmDialog } from '@/pages/reservationRequest/components/ReservationConfirmDialog'
 import { ReservationNoticeSection } from '@/pages/reservationRequest/components/ReservationNoticeSection'
 import { ReservationPointSection } from '@/pages/reservationRequest/components/ReservationPointSection'
@@ -14,8 +18,6 @@ import { useCreateReservationMutation } from '@/pages/reservationRequest/hooks/u
 import { useReservationPoint } from '@/pages/reservationRequest/hooks/useReservationPoint'
 import { useReservationRequestDraft } from '@/pages/reservationRequest/hooks/useReservationRequestDraft'
 import type { ReservationRequestDraft } from '@/pages/reservationRequest/hooks/useReservationRequestDraft'
-import { formatReservationDateTime } from '@/pages/reservationRequest/utils/formatReservationDateTime'
-import { formatReservationGuests } from '@/pages/reservationRequest/utils/formatReservationGuests'
 
 const ANYWHERE_RESERVATION_FEE = 4_000
 
@@ -40,8 +42,9 @@ const ReservationRequestContent = ({
     paymentAmount,
   })
 
-  const guestText = formatReservationGuests(reservationDraft.guests)
-  const visitDateTime = formatReservationDateTime({
+  const guestText =
+    formatReservationGuestSummary(reservationDraft.guests) ?? '0명'
+  const visitDateTime = formatReservationDraftDateTime({
     date: reservationDraft.date,
     time: reservationDraft.time,
   })

@@ -1,49 +1,18 @@
+import {
+  formatReservationDate,
+  formatReservationDateTime,
+  formatReservationGuestSummary,
+  formatReservationMonthDay,
+} from '@/features/reservation/utils/formatReservation'
+import type { ReservationDetailResponse } from '@/pages/reservationDetail/api/getReservationDetail'
 import type { ReservationProgressStep } from '@/pages/reservationDetail/components/ReservationProgressSection'
 import type { ReservationReceiptInfoItem } from '@/pages/reservationDetail/components/ReservationReceiptInfoCard'
-import type { ReservationDetailResponse } from '@/pages/reservationDetail/api/getReservationDetail'
-import { formatDotDateTime, formatMonthDay } from '@/shared/utils'
 
 type ReservationStatus = NonNullable<
   ReservationDetailResponse['reservationStatus']
 >
 
-const createDate = (value: string | undefined) => {
-  if (!value) {
-    return null
-  }
-
-  return new Date(value)
-}
-
-const formatDotDate = (date: Date | null) => {
-  if (!date) {
-    return '-'
-  }
-
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-
-  return `${year}.${month}.${day}`
-}
-
-const formatOptionalDotDateTime = (date: Date | null) => {
-  if (!date) {
-    return '-'
-  }
-
-  return formatDotDateTime(date)
-}
-
-const formatOptionalMonthDay = (date: Date | null) => {
-  if (!date) {
-    return undefined
-  }
-
-  return formatMonthDay(date)
-}
-
-const formatPeopleCount = ({
+const formatReservationGuestSummaryWithFallback = ({
   adultCount,
   teenCount,
   childCount,
@@ -51,17 +20,13 @@ const formatPeopleCount = ({
   ReservationDetailResponse,
   'adultCount' | 'teenCount' | 'childCount'
 >) => {
-  const countItems = [
-    { label: '어른', count: adultCount ?? 0 },
-    { label: '청소년', count: teenCount ?? 0 },
-    { label: '어린이', count: childCount ?? 0 },
-  ].filter((item) => item.count > 0)
-
-  if (countItems.length === 0) {
-    return '-'
-  }
-
-  return countItems.map((item) => `${item.label} ${item.count}명`).join(', ')
+  return (
+    formatReservationGuestSummary({
+      adult: adultCount ?? 0,
+      teen: teenCount ?? 0,
+      child: childCount ?? 0,
+    }) ?? '-'
+  )
 }
 
 const formatAmount = (amount: number | undefined) => {
@@ -104,17 +69,18 @@ const getStepStatuses = (
 const createReservationProgressSteps = (
   reservationDetail: ReservationDetailResponse,
 ): ReservationProgressStep[] => {
-  const receivedAt = createDate(reservationDetail.receivedAt)
-  const confirmExpectedAt = createDate(reservationDetail.confirmExpectedAt)
   const stepStatuses = getStepStatuses(reservationDetail.reservationStatus)
-  const confirmExpectedDate = formatOptionalMonthDay(confirmExpectedAt)
+  const confirmExpectedDate = formatReservationMonthDay(
+    reservationDetail.confirmExpectedAt,
+  )
 
   return [
     {
       id: 'received',
       title: '예약 접수',
       description: '예약 요청이 접수되었어요',
-      requestedAt: formatOptionalMonthDay(receivedAt),
+      requestedAt:
+        formatReservationMonthDay(reservationDetail.receivedAt) ?? undefined,
       status: stepStatuses.received,
     },
     {
@@ -145,7 +111,7 @@ const createReceiptInfoItems = (
   },
   {
     label: '인원',
-    value: formatPeopleCount(reservationDetail),
+    value: formatReservationGuestSummaryWithFallback(reservationDetail),
   },
   {
     label: '식당 주소',
@@ -153,7 +119,7 @@ const createReceiptInfoItems = (
   },
   {
     label: '식당 방문 일정',
-    value: formatOptionalDotDateTime(createDate(reservationDetail.reservedAt)),
+    value: formatReservationDateTime(reservationDetail.reservedAt) ?? '-',
   },
   {
     label: '수수료',
@@ -164,7 +130,7 @@ const createReceiptInfoItems = (
 export const createReservationDetailViewModel = (
   reservationDetail: ReservationDetailResponse,
 ) => ({
-  requestedDate: formatDotDate(createDate(reservationDetail.receivedAt)),
+  requestedDate: formatReservationDate(reservationDetail.receivedAt) ?? '-',
   reservationProgressSteps: createReservationProgressSteps(reservationDetail),
   reservationReceiptInfoItems: createReceiptInfoItems(reservationDetail),
   reservationRestaurant: {

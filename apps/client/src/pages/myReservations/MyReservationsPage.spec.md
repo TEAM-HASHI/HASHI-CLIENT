@@ -560,6 +560,12 @@ feature api/hooks:
 - `features/user/useMyProfileSummaryQuery`
 - `features/reservation/useCancelReservationMutation`
 
+feature util:
+
+- `features/reservation/formatReservationDate`
+- `features/reservation/formatReservationDateTime`
+- `features/reservation/formatReservationGuestSummary`
+
 queries:
 
 - `myReservationsQueryKeys`

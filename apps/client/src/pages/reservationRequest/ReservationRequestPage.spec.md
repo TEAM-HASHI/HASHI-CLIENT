@@ -206,6 +206,8 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - Feature:
   - `myPointBalanceQueryOptions`
   - `pointQueryKeys`
+  - `features/reservation/formatReservationGuestSummary`
+  - `features/reservation/formatReservationDraftDateTime`
 - Route/shared 영향:
   - 새 route 추가 없음
   - shared API client의 액세스 토큰 주입 정책 갱신

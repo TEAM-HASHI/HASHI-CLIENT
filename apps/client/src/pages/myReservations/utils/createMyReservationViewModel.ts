@@ -1,47 +1,23 @@
 import type { ReservationResponse } from '@/features/reservation'
+import {
+  formatReservationDate,
+  formatReservationDateTime,
+  formatReservationGuestSummary,
+} from '@/features/reservation/utils/formatReservation'
 import type { VisitedReservation as VisitedReservationResponse } from '@/features/review/api/getVisitedReservations'
 import type {
   MyReservation,
   VisitedReservationReviewActionState,
 } from '@/pages/myReservations/types'
-import { formatDotDateTime } from '@/shared/utils'
 
-const createDate = (value: string | undefined) => {
-  if (!value) {
-    return null
-  }
-
-  return new Date(value)
-}
-
-const formatReservationDateTime = (
+const formatReservationDateTimeWithSuffix = (
   value: string | undefined,
   suffix: string,
 ) => {
-  const date = createDate(value)
-
-  if (!date) {
-    return `- ${suffix}`
-  }
-
-  return `${formatDotDateTime(date)} ${suffix}`
+  return `${formatReservationDateTime(value) ?? '-'} ${suffix}`
 }
 
-const formatReservationDate = (value: string | undefined, suffix: string) => {
-  const date = createDate(value)
-
-  if (!date) {
-    return `- ${suffix}`
-  }
-
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-
-  return `${year}.${month}.${day} ${suffix}`
-}
-
-const formatPeopleCount = ({
+const formatReservationGuestSummaryWithFallback = ({
   adultCount,
   teenCount,
   childCount,
@@ -49,17 +25,13 @@ const formatPeopleCount = ({
   ReservationResponse | VisitedReservationResponse,
   'adultCount' | 'teenCount' | 'childCount'
 >) => {
-  const countItems = [
-    { label: '어른', count: adultCount ?? 0 },
-    { label: '청소년', count: teenCount ?? 0 },
-    { label: '어린이', count: childCount ?? 0 },
-  ].filter((item) => item.count > 0)
-
-  if (countItems.length === 0) {
-    return '-'
-  }
-
-  return countItems.map((item) => `${item.label} ${item.count}명`).join(', ')
+  return (
+    formatReservationGuestSummary({
+      adult: adultCount ?? 0,
+      teen: teenCount ?? 0,
+      child: childCount ?? 0,
+    }) ?? '-'
+  )
 }
 
 const createBaseReservation = (
@@ -77,8 +49,11 @@ const createBaseReservation = (
         : String(reservation.restaurantId),
     restaurantName: reservation.restaurantName,
     restaurantImageUrl: reservation.restaurantImageUrl ?? null,
-    visitDateTime: formatReservationDateTime(reservation.reservedAt, '방문'),
-    guestSummary: formatPeopleCount(reservation),
+    visitDateTime: formatReservationDateTimeWithSuffix(
+      reservation.reservedAt,
+      '방문',
+    ),
+    guestSummary: formatReservationGuestSummaryWithFallback(reservation),
   }
 }
 
@@ -95,7 +70,7 @@ export const createMyReservationViewModel = (
     return {
       ...baseReservation,
       status: 'IN_PROGRESS',
-      reservedAt: formatReservationDate(reservation.reservedAt, '방문 예정'),
+      reservedAt: `${formatReservationDate(reservation.reservedAt) ?? '-'} 방문 예정`,
       remainingDays: reservation.confirmDDay ?? 0,
       progressStep: 'RECEIVED',
     }
@@ -105,7 +80,7 @@ export const createMyReservationViewModel = (
     return {
       ...baseReservation,
       status: 'IN_PROGRESS',
-      reservedAt: formatReservationDate(reservation.reservedAt, '방문 예정'),
+      reservedAt: `${formatReservationDate(reservation.reservedAt) ?? '-'} 방문 예정`,
       remainingDays: reservation.confirmDDay ?? 0,
       progressStep: 'CONTACTING',
     }
@@ -115,7 +90,7 @@ export const createMyReservationViewModel = (
     return {
       ...baseReservation,
       status: 'UPCOMING',
-      visitDateTime: formatReservationDateTime(
+      visitDateTime: formatReservationDateTimeWithSuffix(
         reservation.reservedAt,
         '방문 예정',
       ),
@@ -151,8 +126,11 @@ export const createMyVisitedReservationViewModel = (
         : String(reservation.restaurantId),
     restaurantName: reservation.restaurantName,
     restaurantImageUrl: reservation.restaurantThumbnailUrl ?? null,
-    visitDateTime: formatReservationDateTime(reservation.visitedAt, '방문'),
-    guestSummary: formatPeopleCount(reservation),
+    visitDateTime: formatReservationDateTimeWithSuffix(
+      reservation.visitedAt,
+      '방문',
+    ),
+    guestSummary: formatReservationGuestSummaryWithFallback(reservation),
     status: 'VISITED',
     reviewActionState,
     hasReview,
