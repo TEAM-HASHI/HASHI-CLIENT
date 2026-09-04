@@ -20,7 +20,13 @@ export const formatReservationGuestSummary = (
 }
 
 const createReservationDate = (value: string | undefined) => {
-  return value ? new Date(value) : null
+  if (!value) {
+    return null
+  }
+
+  const date = new Date(value)
+
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 export const formatReservationDate = (value: string | undefined) => {

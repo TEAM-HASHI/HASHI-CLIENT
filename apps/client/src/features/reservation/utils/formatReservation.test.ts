@@ -35,6 +35,14 @@ describe('formatReservation', () => {
     expect(formatReservationMonthDay(undefined)).toBeNull()
   })
 
+  it('returns null when an API reservation date is invalid', () => {
+    const value = 'invalid-date'
+
+    expect(formatReservationDate(value)).toBeNull()
+    expect(formatReservationDateTime(value)).toBeNull()
+    expect(formatReservationMonthDay(value)).toBeNull()
+  })
+
   it('formats a reservation draft date and time', () => {
     expect(
       formatReservationDraftDateTime({
