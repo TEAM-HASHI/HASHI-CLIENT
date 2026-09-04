@@ -1,17 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import {
-  getRestaurantDetailPath,
-  getRestaurantMenuDetailPath,
-  getRestaurantReservationNewPath,
-} from '@/app/router/routePaths'
+import { getRestaurantDetailPath } from '@/app/router/routePaths'
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
-import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
-import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import { RestaurantDetailTemplate } from '@/features/restaurantDetail'
+import { useRestaurantDetailActions } from '@/features/restaurantDetail/hooks/useRestaurantDetailActions'
 import { useRestaurantDetailContent } from '@/features/restaurantDetail/hooks/useRestaurantDetailContent'
 import { useRestaurantReviewWriteNavigation } from '@/features/restaurantDetail/hooks/useRestaurantReviewWriteNavigation'
 import { restaurantSummaryQueryOptions } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
@@ -45,10 +40,7 @@ const RestaurantDetailContent = ({
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated } = useAuthStatus()
-  const { startKakaoOAuth } = useKakaoOAuthStart()
   const initialTab = getRestaurantDetailTabState(location.state).activeTab
-  const [isAuthGateOpen, setIsAuthGateOpen] = useState(false)
-  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
 
   const summaryQuery = useQuery(restaurantSummaryQueryOptions(restaurantId))
   const detailContent = useRestaurantDetailContent({
@@ -57,9 +49,13 @@ const RestaurantDetailContent = ({
     restaurantId,
     summary: summaryQuery.data,
   })
+  const detailActions = useRestaurantDetailActions({
+    menuDetailSource: 'detail',
+    restaurantId: String(restaurantId),
+  })
   const reviewWriteNavigation = useRestaurantReviewWriteNavigation({
     isAuthenticated,
-    onAuthRequired: () => setIsAuthGateOpen(true),
+    onAuthRequired: () => detailActions.onAuthGateOpenChange(true),
     onReviewUnavailable: detailContent.onOpenReviewUnavailableModal,
     restaurantId,
   })
@@ -85,30 +81,6 @@ const RestaurantDetailContent = ({
     navigateBackOrReplace(navigate, ROUTES.home)
   }
 
-  const handlePressLike = () => {
-    if (!isAuthenticated) {
-      setIsAuthGateOpen(true)
-      return
-    }
-
-    setIsComingSoonOpen(true)
-  }
-
-  const handlePressReservation = () => {
-    if (!isAuthenticated) {
-      setIsAuthGateOpen(true)
-      return
-    }
-
-    navigate(getRestaurantReservationNewPath(restaurant.id))
-  }
-
-  const handlePressMenuItem = (menuId: string) => {
-    navigate(getRestaurantMenuDetailPath(restaurant.id, menuId), {
-      state: { source: 'detail' },
-    })
-  }
-
   return (
     <>
       <RestaurantDetailTemplate
@@ -128,9 +100,9 @@ const RestaurantDetailContent = ({
           detailContent.onCloseReviewUnavailableModal
         }
         onPressBack={handlePressBack}
-        onPressLike={handlePressLike}
-        onPressMenuItem={handlePressMenuItem}
-        onPressReservation={handlePressReservation}
+        onPressLike={detailActions.onPressLike}
+        onPressMenuItem={detailActions.onPressMenuItem}
+        onPressReservation={detailActions.onPressReservation}
         onPressReviewImage={detailContent.onPressReviewImage}
         onPressWriteReview={reviewWriteNavigation.onPressWriteReview}
         onRetryMenuList={detailContent.onRetryMenuList}
@@ -152,13 +124,13 @@ const RestaurantDetailContent = ({
         variant="detail"
       />
       <AuthGateBottomSheet
-        onKakaoPress={() => startKakaoOAuth(getPathFromLocation(location))}
-        onOpenChange={setIsAuthGateOpen}
-        open={isAuthGateOpen}
+        onKakaoPress={detailActions.onPressKakao}
+        onOpenChange={detailActions.onAuthGateOpenChange}
+        open={detailActions.isAuthGateOpen}
       />
       <ComingSoonDialog
-        onOpenChange={setIsComingSoonOpen}
-        open={isComingSoonOpen}
+        onOpenChange={detailActions.onComingSoonOpenChange}
+        open={detailActions.isComingSoonOpen}
       />
     </>
   )

@@ -3,16 +3,11 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import {
-  getRestaurantMenuDetailPath,
-  getRestaurantReservationNewPath,
-} from '@/app/router/routePaths'
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
-import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
-import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import { RestaurantDetailTemplate } from '@/features/restaurantDetail'
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'
 import type { RestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
+import { useRestaurantDetailActions } from '@/features/restaurantDetail/hooks/useRestaurantDetailActions'
 import { useRestaurantDetailContent } from '@/features/restaurantDetail/hooks/useRestaurantDetailContent'
 import { useRestaurantReviewWriteNavigation } from '@/features/restaurantDetail/hooks/useRestaurantReviewWriteNavigation'
 import { randomRestaurantRecommendationQueryOptions } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
@@ -32,12 +27,9 @@ export const TodayRestaurantPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated } = useAuthStatus()
-  const { startKakaoOAuth } = useKakaoOAuthStart()
   const initialTab = getRestaurantDetailTabState(location.state).activeTab
   const [recommendedSummary, setRecommendedSummary] =
     useState<RestaurantSummary | null>(null)
-  const [isAuthGateOpen, setIsAuthGateOpen] = useState(false)
-  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
 
   const randomRecommendationQuery = useQuery(
     randomRestaurantRecommendationQueryOptions(),
@@ -52,9 +44,13 @@ export const TodayRestaurantPage = () => {
     restaurantId,
     summary,
   })
+  const detailActions = useRestaurantDetailActions({
+    menuDetailSource: 'today',
+    restaurantId: String(restaurantId),
+  })
   const reviewWriteNavigation = useRestaurantReviewWriteNavigation({
     isAuthenticated,
-    onAuthRequired: () => setIsAuthGateOpen(true),
+    onAuthRequired: () => detailActions.onAuthGateOpenChange(true),
     onReviewUnavailable: detailContent.onOpenReviewUnavailableModal,
     restaurantId,
   })
@@ -97,24 +93,6 @@ export const TodayRestaurantPage = () => {
     navigateBackOrReplace(navigate, ROUTES.home)
   }
 
-  const handlePressLike = () => {
-    if (!isAuthenticated) {
-      setIsAuthGateOpen(true)
-      return
-    }
-
-    setIsComingSoonOpen(true)
-  }
-
-  const handlePressReservation = () => {
-    if (!isAuthenticated) {
-      setIsAuthGateOpen(true)
-      return
-    }
-
-    navigate(getRestaurantReservationNewPath(restaurant.id))
-  }
-
   const handlePressRecommendAgain = () => {
     if (recommendAgainMutation.isPending) {
       return
@@ -122,12 +100,6 @@ export const TodayRestaurantPage = () => {
 
     recommendAgainMutation.mutate({
       excludeRestaurantId: restaurant.id ? Number(restaurant.id) : undefined,
-    })
-  }
-
-  const handlePressMenuItem = (menuId: string) => {
-    navigate(getRestaurantMenuDetailPath(restaurant.id, menuId), {
-      state: { source: 'today' },
     })
   }
 
@@ -150,10 +122,10 @@ export const TodayRestaurantPage = () => {
           detailContent.onCloseReviewUnavailableModal
         }
         onPressBack={handlePressBack}
-        onPressLike={handlePressLike}
-        onPressMenuItem={handlePressMenuItem}
+        onPressLike={detailActions.onPressLike}
+        onPressMenuItem={detailActions.onPressMenuItem}
         onPressRecommendAgain={handlePressRecommendAgain}
-        onPressReservation={handlePressReservation}
+        onPressReservation={detailActions.onPressReservation}
         onPressReviewImage={detailContent.onPressReviewImage}
         onPressWriteReview={reviewWriteNavigation.onPressWriteReview}
         onRetryMenuList={detailContent.onRetryMenuList}
@@ -172,13 +144,13 @@ export const TodayRestaurantPage = () => {
         variant="today"
       />
       <AuthGateBottomSheet
-        onKakaoPress={() => startKakaoOAuth(getPathFromLocation(location))}
-        onOpenChange={setIsAuthGateOpen}
-        open={isAuthGateOpen}
+        onKakaoPress={detailActions.onPressKakao}
+        onOpenChange={detailActions.onAuthGateOpenChange}
+        open={detailActions.isAuthGateOpen}
       />
       <ComingSoonDialog
-        onOpenChange={setIsComingSoonOpen}
-        open={isComingSoonOpen}
+        onOpenChange={detailActions.onComingSoonOpenChange}
+        open={detailActions.isComingSoonOpen}
       />
     </>
   )
