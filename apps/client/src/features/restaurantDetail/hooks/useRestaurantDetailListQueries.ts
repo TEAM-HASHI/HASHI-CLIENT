@@ -14,7 +14,7 @@ import {
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
 import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
-interface UseRestaurantDetailInfiniteListsParams {
+interface UseRestaurantDetailListQueriesParams {
   activeTab: RestaurantDetailTab
   enabled: boolean
   menuPageSize: number
@@ -22,13 +22,13 @@ interface UseRestaurantDetailInfiniteListsParams {
   selectedReviewSort: ReviewSortValue
 }
 
-export const useRestaurantDetailInfiniteLists = ({
+export const useRestaurantDetailListQueries = ({
   activeTab,
   enabled,
   menuPageSize,
   restaurantId,
   selectedReviewSort,
-}: UseRestaurantDetailInfiniteListsParams) => {
+}: UseRestaurantDetailListQueriesParams) => {
   const menusQuery = useInfiniteQuery({
     ...restaurantMenusInfiniteQueryOptions(restaurantId, menuPageSize),
     enabled,

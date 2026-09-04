@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 import type { RestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
-import { useRestaurantDetailInfiniteLists } from '@/features/restaurantDetail/hooks/useRestaurantDetailInfiniteLists'
+import { useRestaurantDetailListQueries } from '@/features/restaurantDetail/hooks/useRestaurantDetailListQueries'
 import { useRestaurantDetailReviewImageViewer } from '@/features/restaurantDetail/hooks/useRestaurantDetailReviewImageViewer'
 import { useRestaurantDetailReviewUnavailableModal } from '@/features/restaurantDetail/hooks/useRestaurantDetailReviewUnavailableModal'
 import { useRestaurantDetailTabs } from '@/features/restaurantDetail/hooks/useRestaurantDetailTabs'
@@ -32,7 +32,7 @@ export const useRestaurantDetailContent = ({
     ...restaurantStoreInformationQueryOptions(restaurantId),
     enabled,
   })
-  const infiniteLists = useRestaurantDetailInfiniteLists({
+  const infiniteLists = useRestaurantDetailListQueries({
     activeTab: detailTabs.activeTab,
     enabled,
     menuPageSize,
