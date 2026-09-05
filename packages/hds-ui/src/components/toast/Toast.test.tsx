@@ -54,6 +54,25 @@ describe('Toast', () => {
     ).toHaveClass('w-full', 'px-5')
   })
 
+  it('uses the dim background token and 26px icon slot', () => {
+    const queue = createToastQueue()
+    queue.add({
+      children: '예약이 취소되었어요.',
+      icon: <svg data-testid="toast-icon" />,
+    })
+
+    render(<ToastRegion queue={queue} />)
+
+    const toast = screen
+      .getByText('예약이 취소되었어요.')
+      .closest('[role="alert"]')?.parentElement
+
+    expect(toast).toHaveClass('bg-dim')
+    expect(screen.getByTestId('toast-icon').parentElement).toHaveClass(
+      'size-6.5',
+    )
+  })
+
   it('applies a soft enter keyframe animation', () => {
     const queue = createToastQueue()
     queue.add({ children: '링크가 복사 되었어요.' })

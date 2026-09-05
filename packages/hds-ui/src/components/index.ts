@@ -36,16 +36,10 @@ export {
   createToastQueue,
   DEFAULT_TOAST_TIMEOUT,
   showToast,
-  Toast,
   ToastRegion,
   toastQueue,
 } from './toast'
-export type {
-  ToastContent,
-  ToastOptions,
-  ToastProps,
-  ToastRegionProps,
-} from './toast'
+export type { ToastContent, ToastOptions, ToastRegionProps } from './toast'
 export { Dialog } from './dialog'
 export type {
   DialogBodyProps,
