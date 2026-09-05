@@ -32,7 +32,6 @@ jobs:
             const authorLabels = {
               gyeongbibin: '🫪 경빈',
               chungyo: '🥸 충영',
-              MinseoSONG: '😋 민서',
               yurimidaH: '😜 유림',
               jyeon03: '🙄 지연',
             }

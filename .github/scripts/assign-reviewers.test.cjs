@@ -21,7 +21,6 @@ const createConfig = () => ({
     { enabled: true, login: 'jyeon03', weight: 1 },
     { enabled: true, login: 'chungyo', weight: 1 },
     { enabled: true, login: 'gyeongbibin', weight: 1 },
-    { enabled: true, login: 'MinseoSONG', weight: 1 },
     { enabled: true, login: 'yurimidaH', weight: 1 },
   ],
 })
@@ -100,7 +99,7 @@ test('collectReviewStats counts only reviews submitted within the lookback windo
           },
           {
             submitted_at: '2026-06-01T00:00:00.000Z',
-            user: { login: 'MinseoSONG' },
+            user: { login: 'external-reviewer' },
           },
         ]
       }
@@ -126,10 +125,7 @@ test('collectReviewStats counts only reviews submitted within the lookback windo
     assignments: 0,
     reviews: 1,
   })
-  assert.deepEqual(reviewStats.get('minseosong'), {
-    assignments: 0,
-    reviews: 0,
-  })
+  assert.equal(reviewStats.has('external-reviewer'), false)
 })
 
 test('selectReviewers excludes the PR author and always returns 2 reviewers', () => {
@@ -153,8 +149,8 @@ test('selectReviewers prefers reviewers with fewer recent reviews and assignment
 
   addAssignment(reviewStats, 'chungyo')
   addReview(reviewStats, 'gyeongbibin')
-  addReview(reviewStats, 'MinseoSONG')
-  addAssignment(reviewStats, 'MinseoSONG')
+  addReview(reviewStats, 'yurimidaH')
+  addAssignment(reviewStats, 'yurimidaH')
 
   const reviewers = selectReviewers({
     author: 'jyeon03',
@@ -163,7 +159,7 @@ test('selectReviewers prefers reviewers with fewer recent reviews and assignment
     reviewStats,
   })
 
-  assert.deepEqual(new Set(reviewers), new Set(['yurimidaH', 'chungyo']))
+  assert.deepEqual(new Set(reviewers), new Set(['chungyo', 'gyeongbibin']))
 })
 
 test('selectReviewers ignores disabled reviewers', () => {
