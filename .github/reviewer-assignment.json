@@ -19,11 +19,6 @@
     },
     {
       "enabled": true,
-      "login": "MinseoSONG",
-      "weight": 1
-    },
-    {
-      "enabled": true,
       "login": "yurimidaH",
       "weight": 1
     }
