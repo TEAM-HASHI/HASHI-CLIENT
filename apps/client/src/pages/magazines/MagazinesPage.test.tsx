@@ -133,7 +133,7 @@ describe('MagazinesPage', () => {
     expect(heroBanner.closest('main')).toHaveClass('pt-[75px]')
     expect(
       heroBanner.querySelector('[data-hds-carousel-indicator]'),
-    ).toHaveAttribute('data-align', 'end')
+    ).toHaveAttribute('data-placement', 'inline')
     expect(screen.queryByText('오늘의 하시 Pick')).not.toBeInTheDocument()
     expect(
       screen.queryByText('짧은 매거진에 대한 소개를 넣어보기'),
@@ -227,8 +227,8 @@ describe('MagazinesPage', () => {
 
     expect(heroBanner).toHaveClass('mt-[4px]', 'px-5')
     expect(heroViewport).toHaveClass('aspect-[353/160]')
-    expect(indicator).toHaveAttribute('data-align', 'end')
-    expect(indicator).toHaveClass('!right-[33px]')
+    expect(indicator).toHaveAttribute('data-placement', 'inline')
+    expect(indicator?.closest('[data-hds-banner]')).toBeInTheDocument()
     expect(
       screen.queryByRole('heading', { name: '최근 _한 추천 매거진' }),
     ).not.toBeInTheDocument()

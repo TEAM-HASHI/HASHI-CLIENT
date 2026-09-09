@@ -72,3 +72,5 @@ export type { CalendarProps } from './calendar'
 
 export { TimeSlotPicker } from './timeSlotPicker'
 export type { TimeSlotPickerProps } from './timeSlotPicker'
+export { Banner } from './banner'
+export type { BannerProps } from './banner'

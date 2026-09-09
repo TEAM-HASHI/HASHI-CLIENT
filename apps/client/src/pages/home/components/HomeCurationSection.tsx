@@ -1,4 +1,4 @@
-import { Carousel } from '@hashi/hds-ui'
+import { Banner, Carousel } from '@hashi/hds-ui'
 
 import type { HomeBanner } from '@/pages/home/homeContent'
 
@@ -26,7 +26,7 @@ export const HomeCurationSection = ({
         </h2>
         <div
           aria-label="맛집 큐레이션 배너 로딩 중"
-          className="bg-secondary-200 mt-2.5 aspect-[353/160] w-full rounded-[8px]"
+          className="bg-secondary-200 mt-2.5 aspect-[353/160] w-full rounded-[5px]"
         />
       </section>
     )
@@ -41,7 +41,7 @@ export const HomeCurationSection = ({
         >
           맛집 큐레이션을 둘러보세요!
         </h2>
-        <div className="bg-cool-gray-50 mt-2.5 rounded-[8px] px-5 py-8 text-center">
+        <div className="bg-cool-gray-50 mt-2.5 rounded-[5px] px-5 py-8 text-center">
           <p className="typo-body-3 text-cool-gray-600">
             큐레이션 배너를 불러오지 못했어요.
           </p>
@@ -62,7 +62,11 @@ export const HomeCurationSection = ({
   }
 
   const renderBannerImage = ({ imageAlt, imageUrl }: HomeBanner) => (
-    <img alt={imageAlt} className="size-full object-cover" src={imageUrl} />
+    <Banner
+      imageAlt={imageAlt}
+      imageSrc={imageUrl}
+      indicator={<Carousel.Indicator placement="inline" />}
+    />
   )
 
   return (
@@ -78,7 +82,7 @@ export const HomeCurationSection = ({
         className="mt-2.5"
         defaultIndex={0}
       >
-        <Carousel.Viewport className="aspect-[353/160] w-full overflow-y-hidden rounded-[8px]">
+        <Carousel.Viewport className="aspect-[353/160] w-full overflow-y-hidden rounded-[5px]">
           <Carousel.Track>
             {banners.map((banner) => (
               <Carousel.Item key={banner.id}>
@@ -100,11 +104,6 @@ export const HomeCurationSection = ({
             ))}
           </Carousel.Track>
         </Carousel.Viewport>
-        <Carousel.Indicator
-          activeDotClassName="h-1 w-3 bg-cool-gray-700"
-          className="bottom-3"
-          dotClassName="size-1 bg-warm-gray-300"
-        />
       </Carousel.Root>
     </section>
   )

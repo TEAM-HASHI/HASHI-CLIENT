@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState, type ReactNode } from 'react'
 
+import { Banner } from '../banner'
 import { Carousel } from './Carousel'
 
 const bannerMagazineImageSrc = new URL(
@@ -9,7 +10,7 @@ const bannerMagazineImageSrc = new URL(
 ).href
 
 const mobileFrameDecorator = (Story: () => ReactNode) => (
-  <div className="w-[393px] bg-white">
+  <div className="w-full max-w-[393px] bg-white">
     <Story />
   </div>
 )
@@ -85,36 +86,34 @@ const BasicSlides = ({ count = 4 }: { count?: number }) => (
   </Carousel.Track>
 )
 
-const MagazineBannerSlide = ({ index }: { index: number }) => (
-  <a
-    className="relative block size-full overflow-hidden"
-    href={`#carousel-magazine-${index + 1}`}
-  >
-    <img
-      alt=""
-      className="absolute inset-0 size-full object-cover"
-      src={bannerMagazineImageSrc}
-    />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-    <div className="absolute inset-x-5 bottom-5 flex flex-col gap-2">
-      <p className="m-0 text-[24px] leading-[normal] font-semibold text-white">
-        오늘의 하시 <span className="text-[#ff5d5d]">Pick</span>
-      </p>
-      <p className="m-0 w-[244px] text-[14px] leading-[normal] font-medium text-white">
-        짧은 매거진에 대한 소개를 넣어보기
-      </p>
-    </div>
-  </a>
-)
-
-const MagazineBannerSlides = ({ count = 5 }: { count?: number }) => (
+const BannerSlides = ({
+  withText = false,
+  count = 4,
+  longText = false,
+}: {
+  withText?: boolean
+  count?: number
+  longText?: boolean
+}) => (
   <Carousel.Track>
     {Array.from({ length: count }, (_, index) => (
-      <Carousel.Item
-        aria-label={`${index + 1} / ${count}: 오늘의 하시 Pick`}
-        key={index}
-      >
-        <MagazineBannerSlide index={index} />
+      <Carousel.Item key={index}>
+        <Banner
+          imageSrc={bannerMagazineImageSrc}
+          imageAlt={withText ? '' : `배너 이미지 ${index + 1}`}
+          indicator={<Carousel.Indicator placement="inline" />}
+          {...(withText
+            ? {
+                variant: 'withText' as const,
+                title: longText
+                  ? '아주 긴 제목이 들어와도 배너 너비를 넘지 않도록 확인합니다'
+                  : `제목제목제목제목제목 ${index + 1}`,
+                subtitle: longText
+                  ? '긴 설명과 인디케이터가 겹치지 않고 남은 공간에서 말줄임됩니다'
+                  : '소제목소제목소제목소제목소제목',
+              }
+            : { variant: 'withoutText' as const })}
+        />
       </Carousel.Item>
     ))}
   </Carousel.Track>
@@ -122,23 +121,48 @@ const MagazineBannerSlides = ({ count = 5 }: { count?: number }) => (
 
 export const Default: Story = {
   render: (args) => (
-    <Carousel.Root {...args} aria-label="오늘의 하시 Pick 배너">
-      <Carousel.Viewport className="aspect-[393/260] overflow-y-hidden">
-        <MagazineBannerSlides />
+    <div className="mx-auto w-full max-w-[353px]">
+      <Carousel.Root {...args}>
+        <Carousel.Viewport>
+          <BannerSlides withText />
+        </Carousel.Viewport>
+      </Carousel.Root>
+    </div>
+  ),
+}
+
+export const WithoutText: Story = {
+  render: (args) => (
+    <div className="mx-auto w-full max-w-[353px]">
+      <Carousel.Root {...args}>
+        <Carousel.Viewport>
+          <BannerSlides />
+        </Carousel.Viewport>
+      </Carousel.Root>
+    </div>
+  ),
+}
+
+export const NarrowBanner: Story = {
+  decorators: [
+    (Story) => (
+      <div className="w-full max-w-[280px]">
+        <Story />
+      </div>
+    ),
+  ],
+  render: (args) => (
+    <Carousel.Root {...args}>
+      <Carousel.Viewport>
+        <BannerSlides withText longText count={6} />
       </Carousel.Viewport>
-      <Carousel.Indicator
-        align="end"
-        activeDotClassName="h-1 w-3 bg-warm-gray-300"
-        className="right-5 bottom-[27px] gap-[5px]"
-        dotClassName="size-1 bg-warm-gray-300"
-      />
     </Carousel.Root>
   ),
 }
 
 export const PaddedMagazineBanner: Story = {
   render: (args) => (
-    <div className="mx-auto w-[353px]">
+    <div className="mx-auto w-full max-w-[353px]">
       <Carousel.Root {...args}>
         <Carousel.Viewport className="aspect-[353/160] overflow-y-hidden rounded-[8px]">
           <BasicSlides />
@@ -211,12 +235,11 @@ export const SwipeInteraction: Story = {
 
 export const SingleItemWithoutIndicator: Story = {
   render: (args) => (
-    <div className="mx-auto w-[353px]">
+    <div className="mx-auto w-full max-w-[353px]">
       <Carousel.Root {...args} aria-label="단일 콘텐츠 배너">
-        <Carousel.Viewport className="aspect-[353/160] overflow-y-hidden rounded-[8px]">
-          <BasicSlides count={1} />
+        <Carousel.Viewport>
+          <BannerSlides withText count={1} />
         </Carousel.Viewport>
-        <Carousel.Indicator />
       </Carousel.Root>
     </div>
   ),
@@ -226,7 +249,7 @@ const ControlledCarousel = () => {
   const [index, setIndex] = useState(0)
 
   return (
-    <div className="mx-auto flex w-[353px] flex-col gap-4">
+    <div className="mx-auto flex w-full max-w-[353px] flex-col gap-4">
       <Carousel.Root
         aria-label="제어되는 콘텐츠 배너"
         index={index}
@@ -260,7 +283,7 @@ export const ControlledIndex: Story = {
 
 export const InteractiveChildContent: Story = {
   render: (args) => (
-    <div className="mx-auto w-[353px]">
+    <div className="mx-auto w-full max-w-[353px]">
       <Carousel.Root {...args} aria-label="상호작용 콘텐츠 배너">
         <Carousel.Viewport className="aspect-[353/160] overflow-y-hidden rounded-[8px]">
           <Carousel.Track>
@@ -295,7 +318,7 @@ export const InteractiveChildContent: Story = {
 
 export const CustomIndicatorClasses: Story = {
   render: (args) => (
-    <div className="mx-auto w-[353px]">
+    <div className="mx-auto w-full max-w-[353px]">
       <Carousel.Root {...args} aria-label="커스텀 인디케이터 배너">
         <Carousel.Viewport className="aspect-[353/160] overflow-y-hidden rounded-[8px]">
           <BasicSlides />
@@ -312,7 +335,7 @@ export const CustomIndicatorClasses: Story = {
 
 export const LongContentOverflow: Story = {
   render: (args) => (
-    <div className="mx-auto w-[353px]">
+    <div className="mx-auto w-full max-w-[353px]">
       <Carousel.Root {...args} aria-label="긴 콘텐츠 배너">
         <Carousel.Viewport className="aspect-[353/160] overflow-y-hidden rounded-[8px]">
           <Carousel.Track>

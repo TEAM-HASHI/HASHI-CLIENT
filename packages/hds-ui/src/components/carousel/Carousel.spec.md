@@ -47,29 +47,31 @@ HDS에서는 **Carousel의 compound slot 구조, Embla 기반 한 장씩 이동,
 
 ## 별도 결정 필요
 
-| 항목                        | 권장 방향                                                         |
-| --------------------------- | ----------------------------------------------------------------- |
-| 컴포넌트 위치               | `packages/hds-ui` 공통 컴포넌트                                   |
-| API 형태                    | compound API                                                      |
-| slide 이동 방식             | Embla Carousel (`align: 'start'`, `loop: false`)                  |
-| 전환 속도                   | Embla 기본 이동을 사용하고 reduced motion에서는 즉시 이동         |
-| 자동 재생                   | v1 제외                                                           |
-| 무한 루프                   | v1 제외                                                           |
-| 좌우 화살표                 | v1 제외                                                           |
-| dot pagination              | v1은 클릭 불가 현재 위치 표시만 지원                              |
-| indicator 정렬              | `center` 기본, `end` 지원                                         |
-| desktop swipe               | 트랙패드 / 터치 스크린 Embla drag 지원                            |
-| mouse drag-to-scroll        | Embla 기본 drag 동작 사용                                         |
-| 한 화면 노출 개수           | v1은 1개씩 노출                                                   |
-| 크기 / 비율                 | 호출부 `className`으로 지정                                       |
-| full-bleed 여부             | App Shell / Page에서 처리                                         |
-| slide click                 | HDS가 소유하지 않고 children composition으로 처리                 |
-| text overlay                | HDS가 별도 slot을 제공하지 않고 `Carousel.Item` children으로 처리 |
-| `href` / `Link` / `asChild` | v1 제외                                                           |
-| 이미지 fallback             | HDS가 소유하지 않음                                               |
-| 접근성 라벨                 | `Carousel.Root`에 `aria-label` 또는 `aria-labelledby` 제공        |
+| 항목                        | 권장 방향                                                     |
+| --------------------------- | ------------------------------------------------------------- |
+| 컴포넌트 위치               | `packages/hds-ui` 공통 컴포넌트                               |
+| API 형태                    | compound API                                                  |
+| slide 이동 방식             | Embla Carousel (`align: 'start'`, `loop: false`)              |
+| 전환 속도                   | Embla 기본 이동을 사용하고 reduced motion에서는 즉시 이동     |
+| 자동 재생                   | v1 제외                                                       |
+| 무한 루프                   | v1 제외                                                       |
+| 좌우 화살표                 | v1 제외                                                       |
+| dot pagination              | v1은 클릭 불가 현재 위치 표시만 지원                          |
+| indicator 정렬              | `center` 기본, `end` 지원                                     |
+| desktop swipe               | 트랙패드 / 터치 스크린 Embla drag 지원                        |
+| mouse drag-to-scroll        | Embla 기본 drag 동작 사용                                     |
+| 한 화면 노출 개수           | v1은 1개씩 노출                                               |
+| 크기 / 비율                 | 호출부 `className`으로 지정                                   |
+| full-bleed 여부             | App Shell / Page에서 처리                                     |
+| slide click                 | HDS가 소유하지 않고 children composition으로 처리             |
+| text overlay                | `Carousel.Item` children에 `Banner` 또는 호출부 콘텐츠를 조합 |
+| `href` / `Link` / `asChild` | v1 제외                                                       |
+| 이미지 fallback             | HDS가 소유하지 않음                                           |
+| 접근성 라벨                 | `Carousel.Root`에 `aria-label` 또는 `aria-labelledby` 제공    |
 
 ## Figma References
+
+HASHI-175 리디자인은 [Banner](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=7869-36806&m=dev)와 [책임 구분](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=7869-36834&m=dev)을 따릅니다. 아래는 기존 화면별 비율 참고입니다.
 
 | Node         | Name              | Size        | Usage                          |
 | ------------ | ----------------- | ----------- | ------------------------------ |
@@ -223,7 +225,8 @@ Carousel.Root
 ### `Carousel.Indicator`
 
 - native `div` props
-- `align`: `'center' | 'end'`, optional, default `'center'`
+- `align`: `'center' | 'end'`, optional, default `'center'`. overlay에서만 위치를 결정합니다.
+- `placement`: `'overlay' | 'inline'`, optional, default `'overlay'`. inline은 absolute positioning 없이 부모 flex layout에 참여합니다. `Banner.indicator`에 조합할 때 사용합니다.
 - `className`: wrapper class와 병합
 - `dotClassName`: dot class와 병합
 - `activeDotClassName`: active dot class와 병합
@@ -266,10 +269,10 @@ Carousel.Root
 - `Carousel.Viewport`는 Embla overflow wrapper로 `overflow-hidden`을 소유합니다.
 - indicator align center: horizontal center
 - indicator align end: right side in the current LTR layout
-- active dot: elongated pill shape
-- inactive dot: small circular dot
-- indicator color: existing HDS gray tokens, not raw hex values
-- indicator transition: width, height, opacity, transform, background-color를 `150ms`로 전환합니다.
+- active dot: 12×4px pill (기존 22×4px에서 변경)
+- inactive dot: 4×4px circle (기존 6×6px + scale/opacity에서 변경)
+- indicator color: 활성/비활성 모두 `warm-gray-300`, opacity 1. 간격 7px. 기존 호출부의 className override는 유지합니다.
+- indicator transition: width, background-color를 `150ms`로 전환합니다.
 - drag feedback transition: current slide를 약 `220ms` ease-out으로 복원합니다.
 - reduced motion: drag transform, opacity, transition을 제거합니다.
 - size and ratio: caller sets on `Carousel.Viewport` through `className`
@@ -384,3 +387,7 @@ Figma example mapping:
 - [ ] `corepack pnpm --filter @hashi/hds-ui typecheck`
 - [ ] `corepack pnpm --filter @hashi/hds-ui build`
 - [ ] `corepack pnpm --filter @hashi/hds-ui test`
+
+## Banner composition
+
+공통 배너는 `Banner`에 이미지와 선택적 문구를 전달하고 `indicator={<Carousel.Indicator placement="inline" />}`로 조합합니다. 소제목과 indicator가 한 줄의 공간을 나눠 쓰므로 고정 폭으로 겹치지 않습니다. 카드별 indicator는 동일한 Carousel context의 선택 상태를 읽으며 모두 aria-hidden입니다. 한 항목이면 슬롯의 indicator가 렌더링되지 않습니다. 식당 상세/리뷰 이미지 뷰어는 기존 overlay API와 호출부 위치를 유지합니다. 상세 비율/텍스트 계약은 [Banner.spec.md](../banner/Banner.spec.md)를 따릅니다.
