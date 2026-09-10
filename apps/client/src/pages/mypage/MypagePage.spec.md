@@ -193,7 +193,7 @@ type ComingSoonDialogProps = {
 
 - 수정 버튼은 MVP 제외입니다.
 - MVP에서는 버튼을 노출하되 disabled 처리합니다.
-- 프로필 이미지가 없으면 `profile-empty.svg` fallback 이미지를 사용합니다.
+- 프로필 이미지가 없으면 HDS `Avatar`의 guest fallback을 사용합니다.
 
 ### 2. Point Section
 
@@ -450,7 +450,7 @@ HDS icon:
 shared component:
 
 - `ComingSoonDialog`
-- 프로필 이미지 fallback이 여러 화면에서 반복되면 shared component 승격을 검토합니다.
+- 프로필 이미지와 guest fallback은 HDS `Avatar`가 담당합니다.
 
 page-local components:
 
@@ -524,7 +524,7 @@ types:
 
 - 마이 페이지 자체 empty state는 없습니다.
 - 값이 없는 항목은 아래처럼 처리합니다.
-  - 프로필 이미지 없음: 프로필 생성 화면과 같은 `profile-empty.svg` fallback 이미지
+  - 프로필 이미지 없음: HDS `Avatar`의 guest fallback
   - 포인트 이력 없음: 유효한 `{ balance: 0 }` 응답을 `0 P`로 표시
   - 리뷰 개수 없음: `0`
   - 찜한 식당 개수: MVP 고정값 `0`
