@@ -57,7 +57,7 @@ export type {
   DialogType,
 } from './dialog'
 export { Checkbox } from './checkbox/Checkbox'
-export { CollapsibleText } from './collapsibleText'
+export { ExpandableText } from './expandableText'
 export { Carousel } from './carousel'
 export type {
   CarouselIndicatorAlign,

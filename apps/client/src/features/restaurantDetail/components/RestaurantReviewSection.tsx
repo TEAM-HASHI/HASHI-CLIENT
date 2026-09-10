@@ -3,7 +3,7 @@ import {
   Avatar,
   Button,
   Chip,
-  CollapsibleText,
+  ExpandableText,
   StarRating,
 } from '@hashi/hds-ui'
 import type { CSSProperties, Ref } from 'react'
@@ -254,7 +254,7 @@ export const RestaurantReviewSection = ({
                       {review.date}
                     </time>
                   </div>
-                  <CollapsibleText
+                  <ExpandableText
                     className="[&_p]:typo-long-body-1 [&_p]:text-primary-200 [&_button]:text-cool-gray-600"
                     text={review.content}
                   />
