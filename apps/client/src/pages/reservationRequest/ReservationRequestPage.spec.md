@@ -126,7 +126,7 @@ POST /api/v1/reservations/anywhere
 
 1. `restaurantImageUrl`이 있고 로드에 성공하면 해당 이미지 표시
 2. 어디든 예약(`source: 'anywhere'`)에서 넘어왔고 이미지가 없으면 Figma `2-a` placeholder 표시
-3. 일반 예약에서 이미지가 없거나 이미지 로드에 실패하면 shared `DefaultImage` 표시
+3. 일반 예약에서 이미지가 없거나 이미지 로드에 실패하면 HDS `Thumbnail` fallback 표시
 
 ### 포인트
 
@@ -195,7 +195,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
   - `HashiPointMarkIcon`
   - `HashiPlaceholderIcon`
 - Shared:
-  - `ImageWithDefaultFallback` (`DefaultImage` fallback 포함)
+  - `Thumbnail` (`ImageFallback` fallback 포함)
 - Page-local:
   - `ReservationRequestInfoSection`
   - `ReservationPointSection`
@@ -211,7 +211,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - Route/shared 영향:
   - 새 route 추가 없음
   - shared API client의 액세스 토큰 주입 정책 갱신
-  - 일반 예약 식당 이미지 fallback은 기존 shared `DefaultImage` 사용
+  - 일반 예약 식당 이미지는 HDS `Thumbnail` 사용
   - 어디든 예약 식당 이미지 fallback은 HDS `HashiPlaceholderIcon` 사용
   - `@hashi/hds-icons`에 `HashiPointMarkIcon`, `HashiPlaceholderIcon` 추가
 

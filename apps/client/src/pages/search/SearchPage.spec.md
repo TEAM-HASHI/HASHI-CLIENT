@@ -89,7 +89,7 @@
 - [x] 현재 식당 목록 API의 `summary`는 식당 소개 문구이므로 영업시간으로 매핑하지 않습니다.
 - [x] 식당 목록 API의 `todayBusinessHour`를 시간 영역에 표시합니다.
 - [x] `todayBusinessHour`가 없거나 영업시간 정보가 불완전하면 시간 영역에는 `영업시간 확인 필요`를 표시합니다.
-- [x] 식당 이미지가 없거나 이미지 로드에 실패하면 임시 placeholder 대신 공통 `DefaultImage` fallback을 사용합니다.
+- [x] 식당 이미지는 HDS `Thumbnail`을 사용하며, 이미지가 없거나 로드에 실패하면 내부 fallback을 표시합니다.
 - [x] 검색 결과가 없으면 결과 리스트 대신 shared `ListEmptyState`를 보여줍니다.
 - [x] empty state에서도 검색어와 적용된 필터값은 유지합니다.
 - [x] 좁은 viewport에서 긴 식당명은 최대 2줄까지 보여주고 카드 레이아웃을 깨지 않습니다.
@@ -489,7 +489,7 @@ SearchPage
 
 - 새 HDS component는 추가하지 않습니다.
 - 새 HDS icon은 추가하지 않습니다.
-- 검색 전용 app shared component는 추가하지 않습니다. 이미지 로드 실패 fallback은 기존 shared `DefaultImage` 계열의 `ImageWithDefaultFallback`을 사용합니다.
+- 검색 전용 이미지 컴포넌트를 추가하지 않고 HDS `Thumbnail`을 사용합니다.
 - 검색 전용 empty state component 또는 empty image asset은 추가하지 않습니다.
 - 검색 결과 식당 카드가 다른 페이지에서도 반복된다는 근거가 생기기 전까지 `shared/components`로 승격하지 않습니다.
 - `Header`, `StarRating`, `Badge`, `BottomNavigation`을 검색 페이지 요구사항에 맞추기 위해 수정하지 않습니다.
@@ -506,7 +506,7 @@ SearchPage
 - validation error:
   - 이번 범위에서는 검색어 validation error를 노출하지 않습니다.
 - exceptional case:
-  - 식당 이미지가 없거나 이미지 로드에 실패하면 공통 `DefaultImage` fallback을 사용합니다.
+  - 식당 이미지가 없거나 이미지 로드에 실패하면 `Thumbnail` 내부 fallback을 사용합니다.
   - API `summary`는 식당 소개 문구이므로 영업시간으로 사용하지 않습니다.
   - `todayBusinessHour`가 없거나 영업시간 정보가 불완전하면 `영업시간 확인 필요`를 표시합니다.
   - 별점, 태그가 없을 때 숨김 또는 대체 문구는 추가 확인 후 구현합니다.
@@ -574,7 +574,7 @@ SearchPage
   - list item 사이 간격은 `30px`입니다.
   - 결과 리스트 하단 padding은 `30px`입니다.
   - 식당 이미지는 `92px * 92px`, radius `5px`입니다.
-  - 식당 이미지가 없거나 이미지 로드에 실패하면 `DefaultImage`를 같은 크기와 radius로 렌더링합니다.
+  - 식당 이미지가 없거나 이미지 로드에 실패하면 `Thumbnail`이 같은 크기와 radius의 fallback을 렌더링합니다.
   - 이미지와 내용 사이 간격은 `12px`입니다.
   - 오른쪽 내용 영역은 이미지 높이 기준 vertical center로 정렬합니다.
   - title은 `typo-sub-header-2 text-cool-gray-900`이며 최대 2줄입니다.

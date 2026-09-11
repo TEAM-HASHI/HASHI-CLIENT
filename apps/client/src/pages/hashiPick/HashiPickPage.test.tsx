@@ -244,10 +244,10 @@ describe('HashiPickPage', () => {
     expect(imageList).toHaveClass('w-full', 'overflow-x-auto')
     expect(imageList).not.toHaveClass('max-w-[353px]')
     expect(screen.getAllByRole('img')).toHaveLength(3)
-    expect(screen.queryByTestId('restaurant-image-placeholder')).toBeNull()
+    expect(imageList.querySelector('[data-slot="image-fallback"]')).toBeNull()
   })
 
-  it('renders one default image when no image is returned by the server', async () => {
+  it('renders one image fallback when no image is returned by the server', async () => {
     mockedGetRestaurants.mockResolvedValueOnce(
       createRestaurantsResult({
         count: 1,
@@ -259,9 +259,11 @@ describe('HashiPickPage', () => {
     await screen.findByRole('button', { name: /히마와리 스시 1/ })
 
     expect(screen.queryAllByRole('img')).toHaveLength(0)
-    expect(screen.getAllByTestId('restaurant-image-placeholder')).toHaveLength(
-      1,
-    )
+    expect(
+      screen
+        .getAllByTestId('restaurant-image-list')[0]
+        .querySelectorAll('[data-slot="image-fallback"]'),
+    ).toHaveLength(1)
   })
 
   it('fetches next page when the bottom sentinel enters the viewport', async () => {

@@ -1,6 +1,5 @@
 import { useState } from 'react'
-
-import { DefaultImage } from '@/shared/components/defaultImage'
+import { ImageFallback } from '@hashi/hds-ui'
 
 export type ReservationRestaurantSummaryProps = {
   requestedDate: string
@@ -39,10 +38,10 @@ export const ReservationRestaurantSummary = ({
             src={restaurant.imageSrc}
           />
         ) : (
-          <DefaultImage
+          <ImageFallback
             aria-label={`${restaurant.name} 이미지`}
             className="size-17 shrink-0 rounded-[5px]"
-            logoSize="sm"
+            markSize="sm"
             role="img"
           />
         )}

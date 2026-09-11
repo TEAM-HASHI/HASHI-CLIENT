@@ -142,11 +142,9 @@ describe('ReservationRequestPage', () => {
 
     fireEvent.error(restaurantImage)
 
-    expect(
-      screen.queryByRole('img', { name: restaurantImageName }),
-    ).not.toBeInTheDocument()
-    expect(screen.getByLabelText(restaurantImageName)).toHaveClass(
-      'bg-warm-gray-100',
+    expect(restaurantImage).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: restaurantImageName })).toHaveClass(
+      'bg-warm-gray-50',
     )
   })
 

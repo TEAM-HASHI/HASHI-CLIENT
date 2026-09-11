@@ -44,8 +44,8 @@
 - [x] `초기화`는 현재 열린 sheet 값을 기본값으로 적용하고 BottomSheet를 닫습니다.
 - [x] 필터 BottomSheet는 X 버튼으로만 닫힙니다.
 - [x] RestaurantCard는 반복 렌더링되고 카드 클릭 시 식당 상세 route로 이동합니다.
-- [x] 식당 이미지는 서버가 내려준 이미지만 가로 스크롤 리스트로 표시하고 부족한 슬롯을 `DefaultImage`로 채우지 않습니다.
-- [x] 서버 이미지(`imageUrls`, fallback `thumbnailUrl`)가 하나도 없으면 공통 `DefaultImage`를 1개만 표시합니다.
+- [x] 식당 이미지는 HDS `Thumbnail`로 표시하며, 서버가 내려준 이미지보다 부족한 슬롯을 추가하지 않습니다.
+- [x] 서버 이미지(`imageUrls`, fallback `thumbnailUrl`)가 하나도 없으면 `Thumbnail`의 fallback을 1개만 표시합니다.
 - [x] 기존 shared 식당 목록 조회 API(`getRestaurants`, `restaurantsInfiniteQueryOptions`)를 사용해 `GET /api/v1/restaurants` 응답을 커서 기반 무한스크롤로 렌더링합니다.
 - [x] 현재 page의 정적 restaurant fixture prop 주입은 production render path에서 제거했습니다.
 - [x] fixed header는 `z-fixed` 토큰을 사용하고, 스크롤 콘텐츠는 fixed header 높이만큼 top padding을 둡니다.
@@ -156,22 +156,22 @@
 
 ### Response Mapping
 
-| API field                           | UI use                        | Nullable           | Transform / 판단                                                                                                                                               |
-| ----------------------------------- | ----------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `RestaurantListResponse.content`    | 카드 리스트                   | yes                | 없으면 빈 배열로 정규화합니다.                                                                                                                                 |
-| `RestaurantListResponse.nextCursor` | 다음 페이지 cursor            | yes                | `hasNext`가 true일 때만 다음 요청 `cursor`로 전달합니다.                                                                                                       |
-| `RestaurantListResponse.hasNext`    | 하단 sentinel 노출            | yes                | 없으면 `false`로 정규화합니다.                                                                                                                                 |
-| `restaurantId`                      | card key, 상세 route param    | generated optional | 서버 명세상 필수입니다. 문자열로 변환합니다. 실제 응답에서 누락되면 해당 item은 상세 이동이 불가능하므로 제외합니다.                                           |
-| `name`                              | 식당명                        | generated optional | 서버 명세상 필수입니다. 누락 시 `이름 없는 식당` fallback을 사용합니다.                                                                                        |
-| `rating`                            | 별점                          | generated optional | 서버 명세상 필수입니다. 누락 시 `0`으로 표시하고, UI에서는 `4.0`, `3.0`처럼 소수점 1자리로 표시합니다.                                                         |
-| `area`                              | 지역 label                    | generated optional | 서버 명세상 필수입니다. 카드의 `{region} · {category}` 중 region으로 사용합니다.                                                                               |
-| `foodCategory`                      | 음식 카테고리 label           | generated optional | 서버 명세상 필수입니다. category 우선값입니다. 없으면 `genre`를 fallback으로 사용합니다.                                                                       |
-| `genre`                             | 음식 카테고리 fallback/filter | generated optional | 서버가 한글 label 또는 API code를 줄 수 있으므로 mapper에서 label 변환을 흡수합니다.                                                                           |
-| `imageUrls`                         | 가로 스크롤 이미지 리스트     | generated optional | 서버 명세상 최대 3개입니다. 서버가 내려준 이미지만 표시하고 부족한 슬롯을 `DefaultImage`로 채우지 않습니다. 없으면 `thumbnailUrl`을 fallback으로 봅니다.       |
-| `thumbnailUrl`                      | 이미지 fallback               | generated optional | 서버 명세상 필수입니다. `imageUrls`가 없을 때만 리스트 이미지로 사용합니다. `imageUrls`와 `thumbnailUrl`이 모두 없으면 UI에서 `DefaultImage` 1개를 표시합니다. |
-| `summary`                           | 식당 소개                     | generated optional | 서버 명세상 필수입니다. 카드 설명 문구로 사용합니다. 영업시간으로 매핑하지 않습니다.                                                                           |
-| `hashtags`                          | 관련 해시태그                 | generated optional | 서버 명세상 필수입니다. `#` prefix가 없으면 UI mapper에서 붙여 표시합니다.                                                                                     |
-| `todayBusinessHour`                 | 사용 안 함                    | yes                | 인기 맛집 카드 UI에는 영업시간 영역이 없으므로 매핑하지 않습니다.                                                                                              |
+| API field                           | UI use                        | Nullable           | Transform / 판단                                                                                                                                                     |
+| ----------------------------------- | ----------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RestaurantListResponse.content`    | 카드 리스트                   | yes                | 없으면 빈 배열로 정규화합니다.                                                                                                                                       |
+| `RestaurantListResponse.nextCursor` | 다음 페이지 cursor            | yes                | `hasNext`가 true일 때만 다음 요청 `cursor`로 전달합니다.                                                                                                             |
+| `RestaurantListResponse.hasNext`    | 하단 sentinel 노출            | yes                | 없으면 `false`로 정규화합니다.                                                                                                                                       |
+| `restaurantId`                      | card key, 상세 route param    | generated optional | 서버 명세상 필수입니다. 문자열로 변환합니다. 실제 응답에서 누락되면 해당 item은 상세 이동이 불가능하므로 제외합니다.                                                 |
+| `name`                              | 식당명                        | generated optional | 서버 명세상 필수입니다. 누락 시 `이름 없는 식당` fallback을 사용합니다.                                                                                              |
+| `rating`                            | 별점                          | generated optional | 서버 명세상 필수입니다. 누락 시 `0`으로 표시하고, UI에서는 `4.0`, `3.0`처럼 소수점 1자리로 표시합니다.                                                               |
+| `area`                              | 지역 label                    | generated optional | 서버 명세상 필수입니다. 카드의 `{region} · {category}` 중 region으로 사용합니다.                                                                                     |
+| `foodCategory`                      | 음식 카테고리 label           | generated optional | 서버 명세상 필수입니다. category 우선값입니다. 없으면 `genre`를 fallback으로 사용합니다.                                                                             |
+| `genre`                             | 음식 카테고리 fallback/filter | generated optional | 서버가 한글 label 또는 API code를 줄 수 있으므로 mapper에서 label 변환을 흡수합니다.                                                                                 |
+| `imageUrls`                         | 가로 스크롤 이미지 리스트     | generated optional | 서버 명세상 최대 3개입니다. 서버가 내려준 이미지만 표시하고 부족한 슬롯을 추가하지 않습니다. 없으면 `thumbnailUrl`을 fallback으로 봅니다.                            |
+| `thumbnailUrl`                      | 이미지 fallback               | generated optional | 서버 명세상 필수입니다. `imageUrls`가 없을 때만 리스트 이미지로 사용합니다. `imageUrls`와 `thumbnailUrl`이 모두 없으면 UI에서 `Thumbnail` fallback 1개를 표시합니다. |
+| `summary`                           | 식당 소개                     | generated optional | 서버 명세상 필수입니다. 카드 설명 문구로 사용합니다. 영업시간으로 매핑하지 않습니다.                                                                                 |
+| `hashtags`                          | 관련 해시태그                 | generated optional | 서버 명세상 필수입니다. `#` prefix가 없으면 UI mapper에서 붙여 표시합니다.                                                                                           |
+| `todayBusinessHour`                 | 사용 안 함                    | yes                | 인기 맛집 카드 UI에는 영업시간 영역이 없으므로 매핑하지 않습니다.                                                                                                    |
 
 ### Missing Server Questions
 
@@ -207,7 +207,7 @@ PopularRestaurantsPage
     RestaurantFilterBar
     RestaurantCard list
       RestaurantImageList
-        server images or single DefaultImage fallback
+        server images or single Thumbnail fallback
     FilterBottomSheet(sort)
     FilterBottomSheet(category)
 ```

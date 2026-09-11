@@ -93,7 +93,7 @@ apps/client/src/pages/myReservations/
 - [ ] 하단 네비게이션은 고정으로 유지됩니다.
 - [ ] 카드 이미지는 식당/음식 이미지가 없을 경우 fallback 이미지를 보여줍니다.
   - 현재 구현은 page-local `ReservationCardImage`의 임시 fallback을 사용합니다.
-  - `DefaultImage`가 머지되면 `ReservationCardImage` 내부 fallback을 `DefaultImage`로 교체합니다.
+  - `ReservationCardImage`의 임의 크기와 비활성 상태는 유지하고, 내부 fallback은 HDS `ImageFallback`을 사용합니다.
 - [ ] 각 상태별 카드 UI를 분리합니다.
 - [ ] `진행 중`, `방문 예정`, `예약 취소` 탭은 `GET /api/v1/reservations/me` API로 조회합니다.
 - [ ] `방문 완료` 탭은 `GET /api/v1/reviews/visited-reservations` API로 조회합니다.
@@ -741,4 +741,4 @@ types:
 
 ## Open Questions
 
-- `DefaultImage`가 머지되면 `ReservationCardImage`의 임시 fallback을 교체해야 합니다.
+- `ReservationCardImage`는 HDS `ImageFallback`을 사용하되 카드별 크기와 비활성 상태를 직접 관리합니다.

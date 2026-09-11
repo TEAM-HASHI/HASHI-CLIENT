@@ -52,7 +52,7 @@
 - [ ] 예약 안내 문구는 고정 정책 문구로 표시합니다.
 - [ ] 하단 액션 영역은 스크롤해도 유지됩니다.
 - [ ] 하단 액션에는 `예약 취소하기`, `홈으로 돌아가기` 버튼을 표시합니다.
-- [ ] 식당 이미지가 없으면 공통 `DefaultImage`를 사용합니다.
+- [ ] 식당 이미지가 없으면 공통 `ImageFallback`을 사용합니다.
 - [ ] fixed Header와 fixed ActionBar는 z-index 토큰을 사용합니다.
 - [ ] 취소된 예약(`reservationStatus: CANCELED`)은 URL 직접 접근으로도 상세 화면을 표시하지 않고 `NotFoundPage`를 표시합니다.
 - [ ] 예약 취소 요청 중에는 취소 확인 버튼과 닫기 버튼을 비활성화해 중복 요청과 중간 닫기를 방지합니다.
@@ -179,7 +179,7 @@ ReservationDetailPage
   - `IconButton`
   - `Button`
 - app shared component:
-  - `DefaultImage`
+  - `ImageFallback`
 - feature component:
   - `ReservationCancelDialog`
 - page-local component:

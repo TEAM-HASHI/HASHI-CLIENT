@@ -28,7 +28,7 @@
 - [ ] 공유 클릭 시 `ROUTES.restaurantMenuDetail` 기준 메뉴 상세 링크를 현재 origin 기준 absolute URL로 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
 - [ ] 매장 정보, 메뉴, 리뷰 탭을 표시하고 `메뉴` 탭을 선택 상태로 둡니다.
 - [ ] 메뉴 상세 route 진입 또는 `menuId` 변경 시 페이지 스크롤을 최상단으로 초기화합니다.
-- [ ] 메뉴 이미지는 실제 이미지가 있으면 `img`, 없거나 로딩 실패하면 공통 `DefaultImage`로 표시합니다.
+- [ ] 메뉴 이미지는 실제 이미지가 있으면 `img`, 없거나 로딩 실패하면 공통 `ImageFallback`으로 표시합니다.
 - [ ] route param `restaurantId`, `menuId`가 유효한 양의 정수가 아니면 `NotFoundPage`를 표시합니다.
 - [ ] 메뉴 상세 API가 404를 반환하거나 성공 응답에 메뉴 데이터가 없으면 `NotFoundPage`를 표시합니다.
 - [ ] 선택한 메뉴 이름, 가격, 설명을 표시합니다.
@@ -112,7 +112,7 @@
   - `Dialog`
 - app shared component:
   - `ShareIconButton`
-  - `DefaultImage`
+  - `ImageFallback`
   - `ComingSoonDialog`
   - `LoadingScreen`
 - feature component:

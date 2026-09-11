@@ -86,9 +86,8 @@ export const RestaurantMenuListSection = ({
               </span>
             </span>
             <RestaurantImage
-              className="size-[100px] shrink-0 rounded-[5px] object-cover"
-              defaultImageTestId="restaurant-menu-default-image"
-              logoSize="sm"
+              className="size-25 shrink-0 rounded-[5px] object-cover"
+              markSize="sm"
               src={menu.imageUrl}
             />
           </button>

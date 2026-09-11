@@ -1,6 +1,6 @@
 import { useState } from 'react'
+import { ImageFallback } from '@hashi/hds-ui'
 
-import { DefaultImage } from '@/shared/components/defaultImage'
 import { cn } from '@/shared/utils'
 
 type ReservationCardImageProps = {
@@ -33,14 +33,14 @@ export const ReservationCardImage = ({
   }
 
   return (
-    <DefaultImage
+    <ImageFallback
       aria-label={`${restaurantName} 이미지`}
       className={cn(
         'size-16 shrink-0 rounded-[5px]',
         disabled && 'opacity-60',
         className,
       )}
-      logoSize="sm"
+      markSize="sm"
       role="img"
     />
   )

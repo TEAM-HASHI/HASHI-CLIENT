@@ -187,7 +187,7 @@ describe('RestaurantReviewSection', () => {
     })
   })
 
-  it('renders default image when review image fails to load', () => {
+  it('renders ImageFallback when review image fails to load', () => {
     renderReviewSection({
       reviews: [
         {
@@ -197,17 +197,21 @@ describe('RestaurantReviewSection', () => {
       ],
     })
 
-    expect(screen.queryByTestId('restaurant-review-default-image')).toBeNull()
+    const reviewImageButton = screen.getByRole('button', {
+      name: '리뷰 이미지 1',
+    })
 
-    const reviewImage = screen
-      .getByRole('button', { name: '리뷰 이미지 1' })
-      .querySelector('img')
+    expect(
+      reviewImageButton.querySelector('[data-slot="image-fallback"]'),
+    ).toBeNull()
+
+    const reviewImage = reviewImageButton.querySelector('img')
     expect(reviewImage).toBeInTheDocument()
 
     fireEvent.error(reviewImage as HTMLImageElement)
 
     expect(
-      screen.getByTestId('restaurant-review-default-image'),
+      reviewImageButton.querySelector('[data-slot="image-fallback"]'),
     ).toBeInTheDocument()
   })
 

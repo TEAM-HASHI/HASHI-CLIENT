@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { ReservationCardImage } from '@/pages/myReservations/components/ReservationCardImage'
 
 describe('ReservationCardImage', () => {
-  it('shows the default image when the restaurant image fails to load', () => {
+  it('shows ImageFallback when the restaurant image fails to load', () => {
     render(
       <ReservationCardImage
         imageUrl="https://example.com/broken.jpg"
