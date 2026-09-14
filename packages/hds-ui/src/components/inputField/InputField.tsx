@@ -99,7 +99,7 @@ export const InputField = ({
         className={cn(
           'border-warm-gray-100 flex h-11.25 w-full items-center rounded-[10px] border bg-white',
           hasRightContent ? 'pr-2 pl-2.75' : 'px-2.75',
-          'has-[:focus-visible]:outline-cool-gray-500 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2',
+          '[&:has(>input:focus-visible)]:outline-cool-gray-500 [&:has(>input:focus-visible)]:outline-2 [&:has(>input:focus-visible)]:outline-offset-2',
           'data-[disabled=true]:cursor-not-allowed',
           className,
         )}

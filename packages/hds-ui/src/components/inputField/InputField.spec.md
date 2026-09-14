@@ -31,7 +31,7 @@ Jira: HASHI-176 (기존 HASHI-64 리디자인)
 - label은 `htmlFor`와 `id`로 연결하며, 전달된 id를 우선합니다.
 - 박스 여백을 누르면 input에 focus합니다. 우측 slot 동작은 가로채지 않습니다.
 - disabled이면 native input을 비활성화하고 우측 action slot은 `inert` 처리합니다.
-- 키보드 focus는 박스 바깥쪽 `cool-gray-500` 2px outline, offset 2px로 표시합니다. Figma의 rest/input 외 접근성 보완입니다.
+- input의 키보드 focus만 박스 바깥쪽 `cool-gray-500` 2px outline, offset 2px로 표시합니다. Figma의 rest/input 외 접근성 보완입니다. 우측 action에 focus가 이동하면 입력 박스 outline은 해제되며 action 자체의 focus 표시는 호출부가 담당합니다.
 
 ## Styling
 
@@ -59,4 +59,4 @@ Default, Filled, WithLabel, 우측 icon/action 조합, Disabled, DisabledWithAct
 - `pnpm --filter @hashi/hds-ui typecheck`
 - `pnpm --filter @hashi/hds-ui build`
 - `pnpm build-storybook`
-- 브라우저에서 입력, focus, disabled action, 좁은 화면 overflow를 확인합니다.
+- 브라우저에서 입력, Tab으로 input → 우측 action 이동 시 박스 outline 해제와 action focus 표시, disabled action, 좁은 화면 overflow를 확인합니다.

@@ -88,6 +88,14 @@ export const WithLabel: Story = {
 }
 
 export const WithRightElement: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Tab으로 input과 우측 버튼을 차례로 선택합니다. input에만 박스 outline이 표시되고, 버튼에서는 버튼 자체의 focus 표시를 확인합니다.',
+      },
+    },
+  },
   args: {
     label: '라벨',
     placeholder: '내용을 입력해 주세요.',
