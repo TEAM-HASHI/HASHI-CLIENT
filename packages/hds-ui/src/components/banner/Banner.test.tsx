@@ -30,31 +30,28 @@ describe('Banner', () => {
     expect(screen.queryByText('설명')).not.toBeInTheDocument()
   })
 
-  it('composes inline indicators with controlled selection and hides them for one item', () => {
+  it('synchronizes a fixed indicator with controlled selection and hides it for one item', () => {
     const renderBanners = (count: number, index: number) => (
       <Carousel.Root aria-label="배너 목록" index={index}>
         <Carousel.Viewport>
           <Carousel.Track>
             {Array.from({ length: count }, (_, itemIndex) => (
               <Carousel.Item key={itemIndex}>
-                <Banner
-                  imageSrc="/banner.png"
-                  imageAlt="배너"
-                  indicator={<Carousel.Indicator placement="inline" />}
-                />
+                <Banner imageSrc="/banner.png" imageAlt="배너" />
               </Carousel.Item>
             ))}
           </Carousel.Track>
         </Carousel.Viewport>
+        <Carousel.Indicator align="end" className="right-5 bottom-5.75" />
       </Carousel.Root>
     )
     const { container, rerender } = render(renderBanners(3, 0))
     const indicators = () =>
       Array.from(container.querySelectorAll('[data-hds-carousel-indicator]'))
-    expect(indicators()).toHaveLength(3)
+    expect(indicators()).toHaveLength(1)
     indicators().forEach((indicator) => {
       expect(indicator).toHaveAttribute('aria-hidden', 'true')
-      expect(indicator).not.toHaveClass('absolute', '-translate-x-1/2')
+      expect(indicator.closest('[data-hds-carousel-track]')).toBeNull()
       expect(indicator.children[0]).toHaveAttribute('data-current', 'true')
     })
     rerender(renderBanners(3, 2))

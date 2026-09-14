@@ -50,7 +50,10 @@ export const MagazineHeroBannerSection = ({
   }
 
   return (
-    <Carousel.Root aria-label="대표 매거진 배너" className="mt-[4px] px-5">
+    <Carousel.Root
+      aria-label="대표 매거진 배너"
+      className="mx-5 mt-[4px] w-auto"
+    >
       <Carousel.Viewport className="aspect-[353/160] overflow-y-hidden rounded-[5px]">
         <Carousel.Track>
           {banners.map((banner) => (
@@ -60,6 +63,7 @@ export const MagazineHeroBannerSection = ({
           ))}
         </Carousel.Track>
       </Carousel.Viewport>
+      <Carousel.Indicator align="end" className="right-5 bottom-5.75" />
     </Carousel.Root>
   )
 }

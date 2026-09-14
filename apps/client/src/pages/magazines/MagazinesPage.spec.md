@@ -227,7 +227,7 @@ MagazinesPage
         Carousel.Track
           MagazineHeroBannerSlide x n
             Banner
-              Carousel.Indicator (inline)
+      Carousel.Indicator (Viewport 형제, 고정 overlay)
   RecommendedMagazineSection
     MagazineListItem x n
     ListEmptyState?
@@ -350,7 +350,7 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
   - viewport keeps the shared magazine image ratio `353:160`.
   - image uses `object-cover`.
   - title/description overlay is not rendered because those are included in the banner image.
-  - `Banner` 이미지형에 `Carousel.Indicator placement="inline"`을 조합합니다.
+  - `Banner` 이미지형과 Viewport의 형제인 `Carousel.Indicator` 하나를 조합합니다. Root는 좌우 margin 20px/자동 너비로 배너 영역에 맞추며, 스와이프 중에도 indicator 위치는 고정됩니다.
   - 모서리는 `5px`, indicator는 카드 오른쪽 `20px`/아래 `23px`, 활성 `12×4px`/비활성 `4×4px`, 간격 `7px`입니다.
 - recommendation section:
   - horizontal padding uses `px-5`.

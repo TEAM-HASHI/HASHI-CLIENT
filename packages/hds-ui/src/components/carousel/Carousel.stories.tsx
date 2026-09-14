@@ -101,7 +101,15 @@ const BannerSlides = ({
         <Banner
           imageSrc={bannerMagazineImageSrc}
           imageAlt={withText ? '' : `배너 이미지 ${index + 1}`}
-          indicator={<Carousel.Indicator placement="inline" />}
+          indicator={
+            withText && count > 1 ? (
+              <span
+                aria-hidden="true"
+                className="shrink-0"
+                style={{ width: `${(12 + (count - 1) * 11) / 16}rem` }}
+              />
+            ) : undefined
+          }
           {...(withText
             ? {
                 variant: 'withText' as const,
@@ -126,6 +134,7 @@ export const Default: Story = {
         <Carousel.Viewport>
           <BannerSlides withText />
         </Carousel.Viewport>
+        <Carousel.Indicator align="end" className="right-5 bottom-5.75" />
       </Carousel.Root>
     </div>
   ),
@@ -138,6 +147,7 @@ export const WithoutText: Story = {
         <Carousel.Viewport>
           <BannerSlides />
         </Carousel.Viewport>
+        <Carousel.Indicator align="end" className="right-5 bottom-5.75" />
       </Carousel.Root>
     </div>
   ),
@@ -156,6 +166,7 @@ export const NarrowBanner: Story = {
       <Carousel.Viewport>
         <BannerSlides withText longText count={6} />
       </Carousel.Viewport>
+      <Carousel.Indicator align="end" className="right-5 bottom-5.75" />
     </Carousel.Root>
   ),
 }
@@ -164,10 +175,10 @@ export const PaddedMagazineBanner: Story = {
   render: (args) => (
     <div className="mx-auto w-full max-w-[353px]">
       <Carousel.Root {...args}>
-        <Carousel.Viewport className="aspect-[353/160] overflow-y-hidden rounded-[8px]">
-          <BasicSlides />
+        <Carousel.Viewport className="overflow-y-hidden rounded-[5px]">
+          <BannerSlides />
         </Carousel.Viewport>
-        <Carousel.Indicator />
+        <Carousel.Indicator align="end" className="right-5 bottom-5.75" />
       </Carousel.Root>
     </div>
   ),
@@ -240,6 +251,7 @@ export const SingleItemWithoutIndicator: Story = {
         <Carousel.Viewport>
           <BannerSlides withText count={1} />
         </Carousel.Viewport>
+        <Carousel.Indicator align="end" className="right-5 bottom-5.75" />
       </Carousel.Root>
     </div>
   ),

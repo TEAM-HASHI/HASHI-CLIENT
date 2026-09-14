@@ -62,11 +62,7 @@ export const HomeCurationSection = ({
   }
 
   const renderBannerImage = ({ imageAlt, imageUrl }: HomeBanner) => (
-    <Banner
-      imageAlt={imageAlt}
-      imageSrc={imageUrl}
-      indicator={<Carousel.Indicator placement="inline" />}
-    />
+    <Banner imageAlt={imageAlt} imageSrc={imageUrl} />
   )
 
   return (
@@ -104,6 +100,7 @@ export const HomeCurationSection = ({
             ))}
           </Carousel.Track>
         </Carousel.Viewport>
+        <Carousel.Indicator align="end" className="right-5 bottom-5.75" />
       </Carousel.Root>
     </section>
   )

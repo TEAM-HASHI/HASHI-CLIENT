@@ -226,7 +226,7 @@ Carousel.Root
 
 - native `div` props
 - `align`: `'center' | 'end'`, optional, default `'center'`. overlay에서만 위치를 결정합니다.
-- `placement`: `'overlay' | 'inline'`, optional, default `'overlay'`. inline은 absolute positioning 없이 부모 flex layout에 참여합니다. `Banner.indicator`에 조합할 때 사용합니다.
+- `placement`: `'overlay' | 'inline'`, optional, default `'overlay'`. inline은 absolute positioning 없이 부모 flex layout에 참여합니다. Track 밖에서 별도의 flex layout에 조합할 때 사용합니다. 스와이프 중 고정할 indicator를 Item 내부에 넣지 않습니다.
 - `className`: wrapper class와 병합
 - `dotClassName`: dot class와 병합
 - `activeDotClassName`: active dot class와 병합
@@ -390,4 +390,4 @@ Figma example mapping:
 
 ## Banner composition
 
-공통 배너는 `Banner`에 이미지와 선택적 문구를 전달하고 `indicator={<Carousel.Indicator placement="inline" />}`로 조합합니다. 소제목과 indicator가 한 줄의 공간을 나눠 쓰므로 고정 폭으로 겹치지 않습니다. 카드별 indicator는 동일한 Carousel context의 선택 상태를 읽으며 모두 aria-hidden입니다. 한 항목이면 슬롯의 indicator가 렌더링되지 않습니다. 식당 상세/리뷰 이미지 뷰어는 기존 overlay API와 호출부 위치를 유지합니다. 상세 비율/텍스트 계약은 [Banner.spec.md](../banner/Banner.spec.md)를 따릅니다.
+공통 배너는 `Banner`에 이미지와 선택적 문구를 전달하고, `Carousel.Indicator` 하나를 Viewport의 형제로 배치합니다. Root는 배너 영역과 같은 크기를 사용하며 `align="end" className="right-5 bottom-5.75"`로 스와이프 중에도 오른쪽 20px/아래 23px 위치를 유지합니다. 텍스트형 Banner의 indicator 슬롯에는 실제 dot 대신 동일 너비의 빈 요소를 넣어 소제목과 겹치지 않게 합니다. 한 항목이면 indicator와 여백을 모두 생략합니다. PaddedMagazineBanner도 이미지형 Banner/5px 모서리/고정 indicator 조합을 사용합니다. 식당 상세/리뷰 이미지 뷰어는 기존 overlay API와 호출부 위치를 유지합니다. 상세 비율/텍스트 계약은 [Banner.spec.md](../banner/Banner.spec.md)를 따릅니다.
