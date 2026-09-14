@@ -30,8 +30,7 @@ const meta = {
   },
   argTypes: {
     value: {
-      control: 'select',
-      options: ['info', 'menu', 'review'],
+      control: false,
     },
   },
 } satisfies Meta<typeof Tabs>
