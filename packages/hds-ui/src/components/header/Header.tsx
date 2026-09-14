@@ -1,7 +1,12 @@
 import { cva, type VariantProps } from 'class-variance-authority'
-import type { ComponentPropsWithoutRef, ReactNode } from 'react'
+import type {
+  ButtonHTMLAttributes,
+  ComponentPropsWithoutRef,
+  ReactNode,
+} from 'react'
 
 import { cn } from '../../utils'
+import { IconButton } from '../iconButton'
 
 const headerVariants = cva('relative w-full bg-white text-primary-200', {
   variants: {
@@ -23,7 +28,24 @@ const headerVariants = cva('relative w-full bg-white text-primary-200', {
 type HeaderVariantProps = VariantProps<typeof headerVariants>
 
 export type HeaderVariant = NonNullable<HeaderVariantProps['variant']>
-export type HeaderRightActionType = 'icon' | 'text'
+
+type HeaderActionButtonProps = Pick<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'disabled' | 'onClick'
+>
+
+export type HeaderIconAction = HeaderActionButtonProps & {
+  type: 'icon'
+  icon: ReactNode
+  ariaLabel: string
+}
+
+export type HeaderTextAction = HeaderActionButtonProps & {
+  type: 'text'
+  label: string
+}
+
+export type HeaderRightAction = HeaderIconAction | HeaderTextAction
 
 type HeaderNativeProps = Omit<
   ComponentPropsWithoutRef<'header'>,
@@ -33,8 +55,7 @@ type HeaderNativeProps = Omit<
 type HeaderBaseProps = {
   title: ReactNode
   leftAction?: ReactNode
-  rightAction?: ReactNode
-  rightActionType?: HeaderRightActionType
+  rightAction?: HeaderRightAction
   elevated?: boolean
   className?: string
   contentClassName?: string
@@ -73,7 +94,6 @@ export const Header = ({
   subtitle,
   leftAction,
   rightAction,
-  rightActionType = 'icon',
   elevated = true,
   variant = 'center',
   className,
@@ -82,11 +102,15 @@ export const Header = ({
 }: HeaderProps) => {
   const isLargeTitle = variant === 'largeTitle'
   const hasSubtitle = !isLargeTitle && hasRenderableContent(subtitle)
+  const shouldElevate = elevated && !hasSubtitle
 
   return (
     <header
       {...props}
-      className={cn(headerVariants({ variant, elevated }), className)}
+      className={cn(
+        headerVariants({ variant, elevated: shouldElevate }),
+        className,
+      )}
     >
       {leftAction ? (
         <div className="text-cool-gray-900 absolute top-[33px] left-[13px] flex size-6 items-center justify-center">
@@ -97,12 +121,30 @@ export const Header = ({
         <div
           className={cn(
             'text-cool-gray-900 absolute flex items-center',
-            rightActionType === 'text'
+            rightAction.type === 'text'
               ? 'top-[26px] right-3 h-[39px] w-[45px] justify-end'
               : 'top-[33px] right-5 size-6 justify-center',
           )}
         >
-          {rightAction}
+          {rightAction.type === 'icon' ? (
+            <IconButton
+              aria-label={rightAction.ariaLabel}
+              disabled={rightAction.disabled}
+              onClick={rightAction.onClick}
+              size="xs"
+            >
+              {rightAction.icon}
+            </IconButton>
+          ) : (
+            <button
+              className="typo-body-6 text-primary-200 inline-flex h-[35px] w-[45px] items-center justify-center truncate whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={rightAction.disabled}
+              onClick={rightAction.onClick}
+              type="button"
+            >
+              {rightAction.label}
+            </button>
+          )}
         </div>
       ) : null}
       <div
@@ -111,7 +153,7 @@ export const Header = ({
             ? 'absolute top-[33px] right-16 left-[57px] min-w-0 text-left'
             : cn(
                 'absolute top-[34.5px] flex min-w-0 flex-col items-center text-center',
-                rightAction && rightActionType === 'text'
+                rightAction?.type === 'text'
                   ? 'inset-x-[57px]'
                   : 'inset-x-[45px]',
               ),

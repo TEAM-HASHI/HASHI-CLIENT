@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ReactNode } from 'react'
 
 import { IconButton } from '../iconButton'
-import { Header } from './Header'
+import { Header, type HeaderRightAction } from './Header'
 
 const mobileFrameDecorator = (Story: () => ReactNode) => (
   <div className="w-[393px] max-w-full bg-white">
@@ -17,20 +17,16 @@ const backAction = (
   </IconButton>
 )
 
-const shareAction = (
-  <IconButton aria-label="공유하기" size="xs">
-    <ShareIcon className="size-6" />
-  </IconButton>
-)
+const shareAction = {
+  type: 'icon',
+  icon: <ShareIcon className="size-6" />,
+  ariaLabel: '공유하기',
+} satisfies HeaderRightAction
 
-const textAction = (
-  <button
-    className="typo-body-6 text-primary-200 h-[35px] w-[45px]"
-    type="button"
-  >
-    저장
-  </button>
-)
+const textAction = {
+  type: 'text',
+  label: '저장',
+} satisfies HeaderRightAction
 
 const meta = {
   title: 'Components/Header',
@@ -40,7 +36,6 @@ const meta = {
   args: {
     elevated: true,
     leftAction: backAction,
-    rightActionType: 'icon',
     title: '예약 상세',
     variant: 'center',
   },
@@ -59,10 +54,6 @@ const meta = {
     },
     rightAction: {
       control: false,
-    },
-    rightActionType: {
-      control: 'select',
-      options: ['icon', 'text'],
     },
     subtitle: {
       control: 'text',
@@ -94,7 +85,6 @@ export const WithTextAction: Story = {
   args: {
     elevated: false,
     rightAction: textAction,
-    rightActionType: 'text',
     title: '내 정보 수정',
   },
 }
@@ -102,7 +92,6 @@ export const WithTextAction: Story = {
 export const TextActionOverflow: Story = {
   args: {
     rightAction: textAction,
-    rightActionType: 'text',
     title: '개인정보 및 알림 설정 변경',
   },
   decorators: [

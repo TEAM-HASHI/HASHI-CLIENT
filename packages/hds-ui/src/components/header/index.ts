@@ -1,6 +1,8 @@
 export { Header } from './Header'
 export type {
+  HeaderIconAction,
   HeaderProps,
-  HeaderRightActionType,
+  HeaderRightAction,
+  HeaderTextAction,
   HeaderVariant,
 } from './Header'

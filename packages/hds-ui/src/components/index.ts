@@ -24,8 +24,10 @@ export { StarRating } from './starRating'
 export type { StarRatingProps, StarRatingSize } from './starRating'
 export { Header } from './header'
 export type {
+  HeaderIconAction,
   HeaderProps,
-  HeaderRightActionType,
+  HeaderRightAction,
+  HeaderTextAction,
   HeaderVariant,
 } from './header'
 export { SearchField } from './searchField'

@@ -6,7 +6,7 @@ Jira: HASHI-189
 
 `Header`는 모바일 화면 상단에서 페이지 제목과 선택적 좌우 액션을 배치하는 HDS의 공통 topbar primitive입니다.
 
-HDS에서는 **상단바 visual structure, 제목/보조 텍스트 layout, 좌우 action slot, typography, spacing, 기본 접근성 계약만 담당**합니다. 실제 route 이동, 공유 실행, 검색 submit, safe area inset, sticky/fixed 배치, analytics, 앱 전용 copy/data 구성은 각 App Shell / Page / Feature에서 처리합니다.
+HDS에서는 **상단바 visual structure, 제목/보조 텍스트 layout, 좌우 action, typography, spacing, 기본 접근성 계약만 담당**합니다. 실제 route 이동, 공유 실행, 검색 submit, safe area inset, sticky/fixed 배치, analytics, 앱 전용 copy/data 구성은 각 App Shell / Page / Feature에서 처리합니다.
 
 ## Component Type
 
@@ -65,8 +65,9 @@ Figma: `Hashi.kr / Basic·complex / 빨간 테두리 컴포넌트 범위`
 
 - [x] 제품 도메인 데이터, route, API, logging, analytics에 의존하지 않습니다.
 - [x] visible title을 렌더링합니다.
-- [x] left action과 right action은 caller가 `ReactNode`로 주입합니다.
-- [x] action slot에는 기존 `IconButton`과 `@hashi/hds-icons` 조합을 사용할 수 있습니다.
+- [x] left action은 caller가 `ReactNode`로 주입합니다.
+- [x] right action은 icon/text 종류와 필요한 값을 한 `HeaderRightAction` 객체로 받습니다.
+- [x] Header는 right icon action에 `IconButton size="xs"`를, right text action에 Figma typography와 크기를 적용합니다.
 - [x] `Header`는 `393px`/`394px` 고정 width를 소유하지 않고 부모 너비를 따릅니다.
 - [x] 기본 topbar 높이는 `75px`입니다.
 - [x] long title variant는 `77px` 높이를 사용합니다.
@@ -83,7 +84,7 @@ Header
   content
     title
     subtitle?
-  right action slot?
+  right icon or text action?
 ```
 
 ## Props
@@ -109,23 +110,16 @@ Header
 
 ### `rightAction`
 
-- type: `React.ReactNode`
+- type: `HeaderRightAction`
 - required: `false`
-- description: 오른쪽 액션 영역입니다. icon action은 호출부가 `IconButton size="xs"`와 아이콘을 조합하고, text action은 Ghost 형태의 버튼을 전달합니다.
-
-### `rightActionType`
-
-- type: `'icon' | 'text'`
-- required: `false`
-- default: `'icon'`
-- description: 오른쪽 액션의 시각 크기에 맞는 배치 규칙을 선택합니다. 실제 아이콘, 텍스트, click handler는 `rightAction`이 소유합니다.
+- description: 오른쪽 액션의 종류, content, 접근성 label, callback을 묶은 판별 유니온입니다. icon action은 `icon`, `ariaLabel`, 선택적 `onClick`/`disabled`를 받고, text action은 `label`, 선택적 `onClick`/`disabled`를 받습니다. type과 content를 따로 전달할 수 없으므로 24px icon slot에 text action이 들어가는 조합을 TypeScript가 차단합니다.
 
 ### `elevated`
 
 - type: `boolean`
 - required: `false`
 - default: `true`
-- description: `false`이면 기본 `shadow-header` elevation을 제거합니다.
+- description: `false`이면 기본 `shadow-header` elevation을 제거합니다. 표시 가능한 subtitle이 있으면 Figma 규칙에 따라 이 값과 관계없이 elevation을 적용하지 않습니다.
 
 ### `variant`
 
@@ -155,13 +149,28 @@ Header
 
 ```tsx
 type HeaderVariant = 'center' | 'largeTitle'
-type HeaderRightActionType = 'icon' | 'text'
+
+type HeaderIconAction = {
+  type: 'icon'
+  icon: React.ReactNode
+  ariaLabel: string
+  onClick?: React.MouseEventHandler<HTMLButtonElement>
+  disabled?: boolean
+}
+
+type HeaderTextAction = {
+  type: 'text'
+  label: string
+  onClick?: React.MouseEventHandler<HTMLButtonElement>
+  disabled?: boolean
+}
+
+type HeaderRightAction = HeaderIconAction | HeaderTextAction
 
 type HeaderBaseProps = {
   title: React.ReactNode
   leftAction?: React.ReactNode
-  rightAction?: React.ReactNode
-  rightActionType?: HeaderRightActionType
+  rightAction?: HeaderRightAction
   elevated?: boolean
   className?: string
   contentClassName?: string
@@ -190,11 +199,12 @@ Recommended usage:
       <BackIcon className="size-6" />
     </IconButton>
   }
-  rightAction={
-    <IconButton size="xs" aria-label="공유하기" onClick={handleShare}>
-      <ShareIcon className="size-6" />
-    </IconButton>
-  }
+  rightAction={{
+    type: 'icon',
+    icon: <ShareIcon className="size-6" />,
+    ariaLabel: '공유하기',
+    onClick: handleShare,
+  }}
 />
 ```
 
@@ -202,23 +212,23 @@ Recommended usage:
 
 - default: title만 있거나 left/right action이 선택적으로 있는 상태
 - with icon action: 공유처럼 오른쪽 icon action이 있는 상태
-- with text action: 저장처럼 오른쪽 text action이 있고 elevation이 없는 상태
+- with text action: 저장처럼 오른쪽 text action을 Header가 렌더링하는 상태
 - subtitle: `center` variant에서 title 아래 보조 텍스트가 있는 상태
 - largeTitle: 긴 title을 한 줄 말줄임으로 보여주는 상태
 
-v1에서는 `largeTitle`과 `subtitle` 조합, disabled, loading, selected, invalid/error 상태를 `Header`가 직접 소유하지 않습니다. 각 action의 disabled/loading은 action slot에 전달되는 `IconButton`이 소유합니다.
+v1에서는 `largeTitle`과 `subtitle` 조합, loading, selected, invalid/error 상태를 `Header`가 직접 소유하지 않습니다. `rightAction.disabled`는 icon/text action의 native button에 전달하지만, 실제 비활성 조건과 loading state는 호출부가 소유합니다.
 
 ## Behavior
 
 1. `title`을 Header의 주요 텍스트로 렌더링합니다.
 2. `leftAction`이 있으면 왼쪽 action slot에 렌더링합니다.
-3. `rightAction`이 있으면 오른쪽 action slot에 렌더링합니다.
+3. `rightAction`이 있으면 `type`에 맞는 오른쪽 action을 렌더링합니다. `icon`은 `IconButton size="xs"`와 필수 `ariaLabel`을 사용하고, `text`는 Header가 정의한 Ghost button typography와 크기를 사용합니다.
 4. `variant="center"`에서 표시 가능한 `subtitle`이 있으면 `75px` 높이를 유지하고 title 아래 보조 텍스트로 렌더링합니다.
 5. `variant="center"`에서는 title이 가운데 정렬됩니다.
-6. `rightActionType="text"`이고 `rightAction`이 있으면 Figma의 `45px x 35px` text action을 위한 `45px x 39px` 오른쪽 slot을 사용하고, 중앙 title 영역은 양쪽 `57px` inset으로 action과 겹치지 않게 합니다.
+6. `rightAction.type="text"`이면 Figma의 `45px x 35px` text action을 위한 `45px x 39px` 오른쪽 slot을 사용하고, 중앙 title 영역은 양쪽 `57px` inset으로 action과 겹치지 않게 합니다.
 7. `variant="largeTitle"`에서는 title이 action 사이 content 영역에서 왼쪽 정렬되고 한 줄을 넘으면 말줄임 처리됩니다.
-8. `elevated={false}`이면 기본 Header shadow를 제거합니다.
-9. `Header`는 action click handler를 직접 만들지 않습니다. 모든 interaction은 slot에 전달된 요소가 소유합니다.
+8. `elevated={false}` 또는 표시 가능한 `subtitle`이 있으면 Header shadow를 제거합니다.
+9. `Header`는 action click handler를 직접 만들지 않고, `rightAction.onClick`을 해당 native button에 연결합니다. callback의 실제 side effect는 호출부가 소유합니다.
 10. `Header`는 safe area, fixed/sticky, route navigation을 직접 처리하지 않습니다.
 
 ## Styling
@@ -234,6 +244,7 @@ v1에서는 `largeTitle`과 `subtitle` 조합, disabled, loading, selected, inva
 - default padding: `pt-[33px]`, `pb-[18px]`, `pl-[13px]`, `pr-5`
 - large title padding: `pt-[33px]`, `pb-3`, `pl-[13px]`, `pr-5`
 - action visual size: `24px x 24px`, use `IconButton size="xs"`
+- text action button: `45px x 35px`, `typo-body-6`, `text-primary-200`
 - text action position: `top 26px`, `right 12px`, `45px x 39px` alignment area
 - center title inset with text action: `57px` on both sides
 - title color: `text-primary-200`
@@ -247,16 +258,16 @@ v1에서는 `largeTitle`과 `subtitle` 조합, disabled, loading, selected, inva
 
 `12px`, `13px`, `26px`, `33px`, `39px`, `45px`, `57px`, `75px`, `77px`는 Figma Navigation Bar와 직접 대응되는 값이므로 arbitrary value로 유지합니다. 같은 값이 여러 topbar/header 계열에서 반복되고 token 기준이 확정되면 spacing/height token 승격을 검토합니다.
 
-Header elevation은 HDS token `shadow-header`로 관리합니다. Header를 사용하는 페이지는 기본 elevation과 중복되는 `border-b`를 추가하지 않습니다.
+Header elevation은 HDS token `shadow-header`로 관리합니다. Header를 사용하는 페이지는 기본 elevation과 중복되는 `border-b`를 추가하지 않습니다. subtitle을 렌더링하는 Header는 Figma 상태에 맞춰 elevation을 적용하지 않습니다.
 
 ## Accessibility
 
 - semantic element: root는 `header`를 사용합니다.
 - title semantic: visible title은 기본적으로 text로 렌더링합니다.
 - heading level: HDS가 문서 구조를 소유하지 않으므로 `h1`/`h2`를 강제하지 않습니다. 페이지 heading이 필요하면 호출부가 `title`에 heading element를 전달하거나, 별도 heading 정책을 정한 뒤 API를 확장합니다.
-- action accessible name: action slot 안의 `IconButton`이 `aria-label`을 제공해야 합니다.
-- keyboard interaction: Header 자체는 keyboard interaction을 소유하지 않습니다. action slot의 interactive element가 native keyboard interaction을 제공합니다.
-- focus-visible: Header 자체가 아니라 action slot의 interactive element에서 제공합니다.
+- action accessible name: icon action은 `ariaLabel`을 필수로 받고 Header가 `IconButton`에 연결합니다. text action은 `label`을 native button의 accessible name으로 사용합니다.
+- keyboard interaction: Header는 right action을 native button으로 렌더링하며, action callback은 호출부가 제공합니다.
+- focus-visible: icon action은 `IconButton`의 focus-visible 상태를 사용합니다. text action은 keyboard focus outline을 제공합니다.
 
 ## Storybook
 
@@ -268,14 +279,14 @@ Header elevation은 HDS token `shadow-header`로 관리합니다. Header를 사�
 - [x] Subtitle: terms detail처럼 subtitle이 있는 topbar
 - [x] LargeTitle: 긴 식당명 single-line overflow
 
-v1에서 search header, sticky header, transparent header, `largeTitle` + `subtitle` 조합, loading/disabled/error 상태는 지원하지 않습니다.
+v1에서 search header, sticky header, transparent header, `largeTitle` + `subtitle` 조합, loading/selected/error 상태는 지원하지 않습니다.
 
 ## Public API
 
 - [x] `Header` value export
 - [x] `HeaderProps` type export
 - [x] `HeaderVariant` type export
-- [x] `HeaderRightActionType` type export
+- [x] `HeaderRightAction`, `HeaderIconAction`, `HeaderTextAction` type export
 - [x] no private helper export
 
 ## HDS가 가지면 안 되는 것

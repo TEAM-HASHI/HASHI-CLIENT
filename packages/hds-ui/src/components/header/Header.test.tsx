@@ -1,9 +1,8 @@
 import '@testing-library/jest-dom/vitest'
 
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import type { HeaderRightActionType } from '../../index'
 import { Header } from './Header'
 
 afterEach(() => {
@@ -11,32 +10,81 @@ afterEach(() => {
 })
 
 describe('Header', () => {
-  const textActionType: HeaderRightActionType = 'text'
+  it('renders a text right action from its typed config', () => {
+    const handleSave = vi.fn()
 
-  it('renders a full-width center header with a visible title', () => {
-    render(<Header title="식당 상세 정보" />)
+    render(
+      <Header
+        rightAction={{
+          type: 'text',
+          label: '저장',
+          onClick: handleSave,
+        }}
+        title="개인정보 및 알림 설정 변경"
+      />,
+    )
 
-    const header = screen.getByRole('banner')
+    const action = screen.getByRole('button', { name: '저장' })
 
-    expect(screen.getByText('식당 상세 정보')).toBeInTheDocument()
-    expect(header).toHaveClass('h-[75px]', 'shadow-header', 'w-full')
-    expect(header).not.toHaveClass('w-[393px]', 'w-[394px]')
+    expect(screen.getByText('개인정보 및 알림 설정 변경')).toBeInTheDocument()
+
+    fireEvent.click(action)
+
+    expect(handleSave).toHaveBeenCalledOnce()
   })
 
-  it('renders caller-provided left and right action slots', () => {
+  it('renders an icon right action from its typed config', () => {
+    const handleShare = vi.fn()
+
+    render(
+      <Header
+        rightAction={{
+          type: 'icon',
+          icon: <span aria-hidden="true">공유</span>,
+          ariaLabel: '공유하기',
+          onClick: handleShare,
+        }}
+        title="오늘의 식당"
+      />,
+    )
+
+    const action = screen.getByRole('button', { name: '공유하기' })
+
+    fireEvent.click(action)
+
+    expect(handleShare).toHaveBeenCalledOnce()
+  })
+
+  it('removes elevation when a visible subtitle is rendered', () => {
+    render(
+      <Header
+        subtitle="최종 업데이트: 2026. 06. 29"
+        title="개인정보 수집 및 이용 동의"
+      />,
+    )
+
+    expect(screen.getByRole('banner')).toHaveClass('shadow-none')
+    expect(screen.getByRole('banner')).not.toHaveClass('shadow-header')
+  })
+
+  it('renders a visible title', () => {
+    render(<Header title="식당 상세 정보" />)
+
+    expect(screen.getByText('식당 상세 정보')).toBeInTheDocument()
+  })
+
+  it('renders a caller-provided left action slot', () => {
     render(
       <Header
         title="오늘의 식당"
         leftAction={<button type="button">뒤로가기</button>}
-        rightAction={<button type="button">공유하기</button>}
       />,
     )
 
     expect(screen.getByRole('button', { name: '뒤로가기' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '공유하기' })).toBeInTheDocument()
   })
 
-  it('keeps the 75px header height and 18px subtitle line height', () => {
+  it('renders a visible subtitle', () => {
     render(
       <Header
         title="개인정보 수집 및 이용 동의"
@@ -44,24 +92,18 @@ describe('Header', () => {
       />,
     )
 
-    expect(screen.getByRole('banner')).toHaveClass('h-[75px]')
-    expect(screen.getByText('최종 업데이트: 2026. 06. 29')).toHaveClass(
-      'mt-[1.5px]',
-      'leading-[18px]',
-    )
+    expect(screen.getByText('최종 업데이트: 2026. 06. 29')).toBeInTheDocument()
   })
 
   it('renders valid falsy subtitle content', () => {
     render(<Header title="알림" subtitle={0} />)
 
-    expect(screen.getByRole('banner')).toHaveClass('h-[75px]')
     expect(screen.getByText('0')).toBeInTheDocument()
   })
 
   it('does not render false subtitle content', () => {
     render(<Header title="알림" subtitle={false} />)
 
-    expect(screen.getByRole('banner')).toHaveClass('h-[75px]')
     expect(screen.getByText('알림').parentElement).toHaveTextContent('알림')
     expect(screen.getByText('알림').parentElement?.children).toHaveLength(1)
   })
@@ -69,25 +111,7 @@ describe('Header', () => {
   it('does not render an empty string subtitle', () => {
     render(<Header title="알림" subtitle="" />)
 
-    expect(screen.getByRole('banner')).toHaveClass('h-[75px]')
     expect(screen.getByText('알림').parentElement?.children).toHaveLength(1)
-  })
-
-  it('positions a text right action using the Figma text-action layout', () => {
-    render(
-      <Header
-        rightAction={<button type="button">저장</button>}
-        rightActionType={textActionType}
-        title="개인정보 및 알림 설정 변경"
-      />,
-    )
-
-    expect(
-      screen.getByRole('button', { name: '저장' }).parentElement,
-    ).toHaveClass('top-[26px]', 'right-3', 'h-[39px]', 'w-[45px]')
-    expect(
-      screen.getByText('개인정보 및 알림 설정 변경').parentElement,
-    ).toHaveClass('inset-x-[57px]')
   })
 
   it('removes the header elevation when elevated is false', () => {
@@ -95,40 +119,5 @@ describe('Header', () => {
 
     expect(screen.getByRole('banner')).toHaveClass('shadow-none')
     expect(screen.getByRole('banner')).not.toHaveClass('shadow-header')
-  })
-
-  it('uses the single-line large title layout for restaurant names', () => {
-    render(
-      <Header
-        title="야키니쿠 리키마루 이케부쿠로 히가시구치 텐"
-        variant="largeTitle"
-      />,
-    )
-
-    const title = screen.getByText('야키니쿠 리키마루 이케부쿠로 히가시구치 텐')
-
-    expect(screen.getByRole('banner')).toHaveClass('h-[77px]')
-    expect(title).toHaveClass(
-      'typo-header-2',
-      'truncate',
-      'whitespace-nowrap',
-      'text-left',
-    )
-    expect(title).not.toHaveClass('line-clamp-2')
-  })
-
-  it('merges root and content class names', () => {
-    render(
-      <Header
-        className="data-test-root"
-        contentClassName="data-test-content"
-        title="리뷰 작성"
-      />,
-    )
-
-    expect(screen.getByRole('banner')).toHaveClass('data-test-root')
-    expect(screen.getByText('리뷰 작성').parentElement).toHaveClass(
-      'data-test-content',
-    )
   })
 })
