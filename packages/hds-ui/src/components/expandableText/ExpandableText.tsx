@@ -83,7 +83,7 @@ export const ExpandableText = ({
       <p
         ref={textRef}
         className={cn(
-          'typo-long-body-1 text-primary-200 whitespace-pre-wrap',
+          'typo-long-body-1 text-primary-200 w-full whitespace-pre-wrap',
           !isExpanded && 'line-clamp-3',
         )}
       >

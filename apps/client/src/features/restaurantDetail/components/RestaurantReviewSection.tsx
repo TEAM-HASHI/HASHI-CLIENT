@@ -1,11 +1,5 @@
 import { PencilIcon } from '@hashi/hds-icons'
-import {
-  Avatar,
-  Button,
-  Chip,
-  ExpandableText,
-  StarRating,
-} from '@hashi/hds-ui'
+import { Avatar, Button, Chip, ExpandableText, StarRating } from '@hashi/hds-ui'
 import type { CSSProperties, Ref } from 'react'
 
 import { ReviewKeywordBadge } from '@/features/review/components'
