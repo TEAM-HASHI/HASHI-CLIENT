@@ -1,14 +1,15 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react'
 import { useId, useState } from 'react'
-import { TapDownIcon, TapUpIcon } from '@hashi/hds-icons'
+import { TapDownIcon } from '@hashi/hds-icons'
 import { cn } from '../../utils'
 
 export type AccordionProps = Omit<
   ComponentPropsWithRef<'div'>,
   'children' | 'title'
 > & {
-  title: ReactNode
+  title: string
   children: ReactNode
+  headingLevel?: 2 | 3 | 4 | 5 | 6
   defaultExpanded?: boolean
   expanded?: boolean
   onExpandedChange?: (expanded: boolean) => void
@@ -18,6 +19,7 @@ export type AccordionProps = Omit<
 export const Accordion = ({
   title,
   children,
+  headingLevel = 3,
   defaultExpanded = false,
   expanded,
   onExpandedChange,
@@ -31,7 +33,6 @@ export const Accordion = ({
     useState(defaultExpanded)
   const isControlled = expanded !== undefined
   const isExpanded = isControlled ? expanded : uncontrolledExpanded
-  const ToggleIcon = isExpanded ? TapUpIcon : TapDownIcon
 
   const handleToggle = () => {
     const nextExpanded = !isExpanded
@@ -53,39 +54,43 @@ export const Accordion = ({
       )}
       {...props}
     >
-      <button
-        type="button"
-        aria-controls={contentId}
-        aria-expanded={isExpanded}
-        className="focus-visible:outline-cool-gray-900 flex min-h-8 w-full appearance-none items-center justify-between gap-3 border-0 bg-transparent p-0 text-left font-sans focus-visible:outline-2 focus-visible:outline-offset-2"
-        onClick={handleToggle}
-      >
-        <span
-          className={cn(
-            'min-w-0 flex-1 break-words text-black',
-            isExpanded ? 'typo-sub-header-3' : 'typo-body-5',
-          )}
+      <div role="heading" aria-level={headingLevel} className="w-full">
+        <button
+          type="button"
+          aria-controls={contentId}
+          aria-expanded={isExpanded}
+          className="focus-visible:outline-cool-gray-900 flex min-h-8 w-full appearance-none items-center justify-between gap-3 border-0 bg-transparent p-0 text-left font-sans focus-visible:outline-2 focus-visible:outline-offset-2"
+          onClick={handleToggle}
         >
-          {title}
-        </span>
-        <ToggleIcon
-          aria-hidden="true"
-          className="text-cool-gray-900 size-5 shrink-0"
-          focusable="false"
-        />
-      </button>
+          <span
+            className={cn(
+              'min-w-0 flex-1 break-words text-black',
+              isExpanded ? 'typo-sub-header-3' : 'typo-body-5',
+            )}
+          >
+            {title}
+          </span>
+          <TapDownIcon
+            aria-hidden="true"
+            className={cn(
+              'text-cool-gray-900 size-5 shrink-0 transition-transform duration-200 ease-out motion-reduce:transition-none',
+              isExpanded && 'rotate-180',
+            )}
+            focusable="false"
+          />
+        </button>
+      </div>
 
-      {isExpanded ? (
-        <div
-          id={contentId}
-          className={cn(
-            'typo-caption-2 text-warm-gray-300 w-full leading-[1.5]',
-            contentClassName,
-          )}
-        >
-          {children}
-        </div>
-      ) : null}
+      <div
+        id={contentId}
+        hidden={!isExpanded}
+        className={cn(
+          'typo-caption-2 text-warm-gray-300 w-full leading-[1.5]',
+          contentClassName,
+        )}
+      >
+        {children}
+      </div>
     </div>
   )
 }
