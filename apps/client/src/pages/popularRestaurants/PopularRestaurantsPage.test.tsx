@@ -237,10 +237,14 @@ describe('PopularRestaurantsPage', () => {
     await screen.findByRole('button', { name: /히마와리 스시 1/ })
 
     expect(screen.getAllByRole('img')).toHaveLength(2)
-    expect(screen.queryByTestId('restaurant-image-placeholder')).toBeNull()
+    expect(
+      screen
+        .getAllByTestId('restaurant-image-list')[0]
+        .querySelector('[data-slot="image-fallback"]'),
+    ).toBeNull()
   })
 
-  it('renders one default image when no image is returned by the server', async () => {
+  it('renders one image fallback when no image is returned by the server', async () => {
     mockedGetRestaurants.mockResolvedValueOnce(
       createRestaurantsResult({
         count: 1,
@@ -252,8 +256,10 @@ describe('PopularRestaurantsPage', () => {
     await screen.findByRole('button', { name: /히마와리 스시 1/ })
 
     expect(screen.queryAllByRole('img')).toHaveLength(0)
-    expect(screen.getAllByTestId('restaurant-image-placeholder')).toHaveLength(
-      1,
-    )
+    expect(
+      screen
+        .getAllByTestId('restaurant-image-list')[0]
+        .querySelectorAll('[data-slot="image-fallback"]'),
+    ).toHaveLength(1)
   })
 })

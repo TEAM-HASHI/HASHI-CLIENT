@@ -80,8 +80,7 @@ export const ReviewImageViewer = ({
                 >
                   <RestaurantImage
                     className="size-full object-cover"
-                    defaultImageTestId="review-image-viewer-default-image"
-                    logoSize="lg"
+                    markSize="lg"
                     src={imageUrl}
                   />
                 </div>

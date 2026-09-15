@@ -107,8 +107,7 @@ export const RestaurantMenuDetailPage = () => {
 
       <RestaurantImage
         className="h-[234px] w-full object-cover"
-        defaultImageTestId="restaurant-menu-detail-default-image"
-        logoSize="lg"
+        markSize="lg"
         src={selectedMenu.imageUrl}
       />
 

@@ -376,17 +376,20 @@ describe('RestaurantMenuDetailPage', () => {
     })
   })
 
-  it('renders menu image fallback with default image component', async () => {
+  it('renders menu ImageFallback when the image URL is missing', async () => {
     mockedGetRestaurantMenu.mockResolvedValue({
       ...selectedMenu,
       imageUrl: undefined,
     })
 
-    renderPage()
+    const { container } = renderPage()
 
     expect(
-      await screen.findByTestId('restaurant-menu-detail-default-image'),
-    ).toBeTruthy()
+      await screen.findByRole('heading', { name: '시오라멘' }),
+    ).toBeInTheDocument()
+    expect(
+      container.querySelector('[data-slot="image-fallback"]'),
+    ).toBeInTheDocument()
   })
 
   it('opens login bottom sheet for unauthenticated reservation action', async () => {

@@ -37,10 +37,10 @@ Jira: HASHI-83, HASHI-114
 - [x] 작성 가능 예약 개수는 예약 목록 응답의 `totalCount`를 표시한다.
 - [x] 작성한 리뷰 개수는 리뷰 count API 응답을 표시한다.
 - [x] `리뷰 쓰기` 탭은 최근 방문했지만 아직 리뷰를 쓰지 않은 예약 목록을 보여준다.
-- [x] `리뷰 쓰기` 카드 이미지는 서버 썸네일을 사용하고, 값이 없거나 로딩에 실패하면 공통 `DefaultImage` fallback을 표시한다.
+- [x] `리뷰 쓰기` 카드 이미지는 HDS `Thumbnail`을 사용하고, 값이 없거나 로딩에 실패하면 내부 fallback을 표시한다.
 - [x] `리뷰 쓰기` 카드의 CTA를 누르면 해당 식당의 리뷰 작성 페이지로 이동한다.
 - [x] `작성한 리뷰` 탭은 사용자가 작성한 리뷰 목록을 보여준다.
-- [x] `작성한 리뷰` 카드 이미지는 서버 썸네일을 사용하고, 값이 없거나 로딩에 실패하면 공통 `DefaultImage` fallback을 표시한다.
+- [x] `작성한 리뷰` 카드 이미지는 HDS `Thumbnail`을 사용하고, 값이 없거나 로딩에 실패하면 내부 fallback을 표시한다.
 - [x] `작성한 리뷰` 카드 본문을 누르면 해당 리뷰 상세 페이지로 이동한다.
 - [x] 작성한 리뷰 카드에는 별점과 더보기 메뉴를 보여준다.
 - [x] 더보기 메뉴는 `수정하기`, `삭제하기` 액션을 보여준다.
@@ -154,15 +154,14 @@ MyReviewsPage
   - `Button`
   - `Dialog`
   - `StarRating`
+  - `Thumbnail`
 - feature component:
   - `ReviewDeleteConfirmDialog`
 - app shared component:
   - `ComingSoonDialog`
-  - `DefaultImage`
   - `Empty`
 - page-local component:
   - `MyReviewTotalCount`
-  - `ReviewImagePlaceholder`
   - `ReviewWritableCard`
   - `WrittenReviewCard`
 - icon:
