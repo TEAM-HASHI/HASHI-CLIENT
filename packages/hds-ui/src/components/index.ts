@@ -75,3 +75,6 @@ export type {
 } from './carousel'
 export { Calendar } from './calendar'
 export type { CalendarProps } from './calendar'
+
+export { TimeSlotPicker } from './timeSlotPicker'
+export type { TimeSlotPickerProps } from './timeSlotPicker'
