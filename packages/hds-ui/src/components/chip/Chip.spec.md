@@ -102,19 +102,22 @@ Exported types:
 
 ```text
 Chip
-  Root
-    Icon(optional)
-    Label
-    Count(optional)
+  ChipRoot
+    BasicChip
+      Label
+      Count(optional)
+    IconChip
+      Icon
+      Label
 ```
 
 ## Props
 
 ### `children`
 
-- type: `ReactNode`
+- type: `string`
 - required: `true`
-- description: 칩 안에 표시할 라벨입니다. 일반 사용은 짧은 텍스트를 권장합니다.
+- description: 칩 안에 표시할 짧은 텍스트 라벨입니다.
 
 ### `variant`
 
@@ -279,8 +282,10 @@ Chip
   - border: `warm-gray-100`
   - text: `warm-gray-300`
   - icon: 호출부가 `disabledIcon`으로 주입
+  - disabled는 selected 여부와 관계없이 native `disabled:*` style로 최종 비활성 스타일을 우선 적용합니다.
 - hover/focus/active:
   - hover/active cursor와 focus-visible ring을 제공합니다.
+  - icon chip의 hover/active는 disabled 상태에서 적용되지 않도록 `enabled:*` 상태로 제한합니다.
 - layout shift 방지 조건:
   - `selected` 전환 시 border width, font weight, padding 변화로 크기가 흔들리지 않아야 합니다.
   - 긴 라벨 방어는 고정 width가 아니라 `max-width`, `min-w-0`, `truncate` 같은 overflow 제어로 처리합니다.
@@ -337,11 +342,12 @@ Chip
 - `Chip`이라는 이름만으로도 제품 의미 없이 shape, selected state, accessibility contract를 표현할 수 있습니다.
 - 정렬, 예약, 평점 같은 필터 도메인은 호출부가 label과 state로 주입합니다.
 - 기존 `Badge`는 유지하되, 신규 리디자인 대응은 `Chip` 중심으로 진행합니다.
+- public export는 `Chip` 하나로 유지하되 내부 구현은 `ChipRoot`, `BasicChip`, `IconChip`으로 나눠 공통 button 접근성 계약과 variant별 slot/style 책임을 분리합니다.
 
 ## Verification
 
-- [ ] `corepack pnpm --filter @hashi/hds-ui lint`
-- [ ] `corepack pnpm --filter @hashi/hds-ui typecheck`
-- [ ] `corepack pnpm --filter @hashi/hds-ui build`
-- [ ] `corepack pnpm --filter @hashi/hds-ui test`
+- [x] `corepack pnpm --filter @hashi/hds-ui lint`
+- [x] `corepack pnpm --filter @hashi/hds-ui typecheck`
+- [x] `corepack pnpm --filter @hashi/hds-ui build`
+- [x] `corepack pnpm --filter @hashi/hds-ui test`
 - [ ] Storybook에서 selected, unselected, filter cases, overflow 상태 수동 확인
