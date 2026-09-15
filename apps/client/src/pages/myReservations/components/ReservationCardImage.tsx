@@ -10,23 +10,20 @@ type ReservationCardImageProps = {
   className?: string
 }
 
-export const ReservationCardImage = ({
+const ReservationCardImageContent = ({
   imageUrl,
   restaurantName,
   disabled = false,
   className,
 }: ReservationCardImageProps) => {
-  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
-  const shouldShowImage = imageUrl && failedImageUrl !== imageUrl
+  const [hasError, setHasError] = useState(false)
 
-  if (shouldShowImage) {
+  if (imageUrl && !hasError) {
     return (
       <img
         alt={restaurantName}
         className={cn('size-16 shrink-0 rounded-[5px] object-cover', className)}
-        onError={() => {
-          setFailedImageUrl(imageUrl)
-        }}
+        onError={() => setHasError(true)}
         src={imageUrl}
       />
     )
@@ -44,4 +41,8 @@ export const ReservationCardImage = ({
       role="img"
     />
   )
+}
+
+export const ReservationCardImage = (props: ReservationCardImageProps) => {
+  return <ReservationCardImageContent key={props.imageUrl} {...props} />
 }
