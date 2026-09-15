@@ -6,10 +6,12 @@
 
 ## Public API
 
-- export: `ShareIconButton`
+- exports: `ShareIconButton`, `useShareLink`
 - props:
   - `shareUrl?: string`
 - accessible name: `공유하기`
+
+`useShareLink(shareUrl?)`는 Header처럼 부모가 icon button의 visual을 소유하는 곳에서 동일한 공유 callback을 전달할 때 사용합니다.
 
 ## Behavior
 
@@ -21,7 +23,8 @@
 ## Placement
 
 - `apps/client/src/shared/components/shareIconButton`
-- 공유 링크 복사는 모든 공유 아이콘에 동일하게 적용되는 앱 공통 동작이므로 page handler가 아니라 공유 아이콘 전용 app shared component가 소유합니다.
+- `ShareIconButton.tsx`는 아이콘 버튼 UI를, `useShareLink.tsx`는 링크 복사와 성공 toast callback을 소유합니다.
+- 공유 링크 복사와 성공 toast는 모든 공유 아이콘에 동일하게 적용되는 앱 공통 동작이므로 `ShareIconButton`과 `useShareLink`가 함께 소유합니다. 부모는 icon의 배치와 click handler 연결만 담당합니다.
 
 ## Verification
 

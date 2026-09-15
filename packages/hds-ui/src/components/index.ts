@@ -29,7 +29,13 @@ export type { OptionItemProps } from './optionItem'
 export { StarRating } from './starRating'
 export type { StarRatingProps, StarRatingSize } from './starRating'
 export { Header } from './header'
-export type { HeaderProps, HeaderVariant } from './header'
+export type {
+  HeaderIconAction,
+  HeaderProps,
+  HeaderRightAction,
+  HeaderTextAction,
+  HeaderVariant,
+} from './header'
 export { SearchField } from './searchField'
 export type { SearchFieldProps } from './searchField'
 export { BottomSheet } from './bottomSheet'

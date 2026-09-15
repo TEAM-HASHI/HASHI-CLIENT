@@ -223,16 +223,16 @@ describe('RestaurantMenuDetailPage', () => {
       screen
         .getByTestId('restaurant-menu-detail-fixed-header')
         .querySelector('header'),
-    ).toHaveClass('h-[75px]')
+    ).toHaveClass('h-[77px]')
     expect(
       screen.getByTestId('restaurant-menu-detail-tab-fixed-container'),
     ).toHaveClass('fixed', 'max-w-[var(--app-mobile-max-width,100%)]')
     expect(
       screen.getByTestId('restaurant-menu-detail-tab-fixed-container'),
-    ).toHaveStyle({ top: '75px' })
+    ).toHaveStyle({ top: '77px' })
     expect(
       screen.getByTestId('restaurant-menu-detail-fixed-spacer'),
-    ).toHaveStyle({ height: '125px' })
+    ).toHaveStyle({ height: '127px' })
     expect(screen.getByText('하시 스시')).toHaveClass(
       'truncate',
       'whitespace-nowrap',
