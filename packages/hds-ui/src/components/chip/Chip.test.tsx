@@ -132,8 +132,8 @@ describe('Chip', () => {
       'border-[1.4px]',
       'border-primary-400',
       'bg-primary-400/20',
-      'hover:bg-primary-400/30',
-      'active:bg-primary-400/50',
+      'enabled:hover:bg-primary-400/30',
+      'enabled:active:bg-primary-400/50',
     )
   })
 
@@ -155,12 +155,35 @@ describe('Chip', () => {
     const chip = screen.getByRole('button', { name: '친절해요' })
 
     expect(chip).toBeDisabled()
-    expect(chip).toHaveClass('bg-primary-100', 'text-warm-gray-300')
+    expect(chip).toHaveClass(
+      'disabled:bg-primary-100',
+      'disabled:text-warm-gray-300',
+    )
     expect(screen.queryByTestId('enabled-icon')).not.toBeInTheDocument()
     expect(screen.getByTestId('disabled-icon')).toBeInTheDocument()
 
     fireEvent.click(chip)
 
     expect(handleSelectedChange).not.toHaveBeenCalled()
+  })
+
+  it('keeps disabled icon chip styles first when disabled and selected are both true', () => {
+    render(
+      <Chip disabled icon={<span />} selected variant="icon">
+        친절해요
+      </Chip>,
+    )
+
+    const chip = screen.getByRole('button', { name: '친절해요' })
+
+    expect(chip).toBeDisabled()
+    expect(chip).toHaveAttribute('aria-pressed', 'true')
+    expect(chip).toHaveClass(
+      'disabled:border-warm-gray-100',
+      'disabled:bg-primary-100',
+      'disabled:text-warm-gray-300',
+      'enabled:hover:bg-primary-400/30',
+      'enabled:active:bg-primary-400/50',
+    )
   })
 })

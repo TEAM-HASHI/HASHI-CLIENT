@@ -12,7 +12,7 @@ type ChipBasicProps = Omit<
   ChipBaseButtonProps,
   'aria-disabled' | 'disabled'
 > & {
-  children: ReactNode
+  children: string
   count?: ReactNode
   disabledIcon?: never
   icon?: never
@@ -22,7 +22,7 @@ type ChipBasicProps = Omit<
 }
 
 type ChipIconProps = ChipBaseButtonProps & {
-  children: ReactNode
+  children: string
   count?: never
   disabledIcon?: ReactNode
   icon: ReactNode
@@ -55,31 +55,15 @@ const basicChipCountVariants = cva(
 )
 
 const iconChipVariants = cva(
-  'inline-flex h-9 max-w-full shrink-0 cursor-pointer appearance-none items-center justify-center gap-1 rounded-[5px] border px-2.5 py-1 font-sans text-black transition-colors focus-visible:outline-cool-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed',
+  'inline-flex h-9 max-w-full shrink-0 cursor-pointer appearance-none items-center justify-center gap-1 rounded-[5px] border px-2.5 py-1 font-sans text-black transition-colors focus-visible:outline-cool-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:border-warm-gray-100 disabled:bg-primary-100 disabled:text-warm-gray-300',
   {
     variants: {
-      disabled: {
-        true: 'border-warm-gray-100 bg-primary-100 text-warm-gray-300',
-        false: null,
-      },
       selected: {
-        true: 'border-[1.4px] border-primary-400 bg-primary-400/20 hover:bg-primary-400/30 active:bg-primary-400/50',
+        true: 'border-[1.4px] border-primary-400 bg-primary-400/20 enabled:hover:bg-primary-400/30 enabled:active:bg-primary-400/50',
         false:
-          'border-warm-gray-100 bg-white hover:bg-primary-100 active:bg-primary-400/20',
+          'border-warm-gray-100 bg-white enabled:hover:bg-primary-100 enabled:active:bg-primary-400/20',
       },
     },
-    compoundVariants: [
-      {
-        className: 'bg-primary-100 hover:bg-primary-100 active:bg-primary-100',
-        disabled: true,
-        selected: false,
-      },
-      {
-        className: 'bg-primary-100 hover:bg-primary-100 active:bg-primary-100',
-        disabled: true,
-        selected: true,
-      },
-    ],
   },
 )
 
@@ -98,63 +82,93 @@ const ChipIconSlot = ({ icon }: { icon: ReactNode }) => {
   )
 }
 
-const getButtonProps = (props: ChipProps) => {
-  const buttonProps = { ...props } as Record<string, unknown>
-
-  delete buttonProps.children
-  delete buttonProps.className
-  delete buttonProps.count
-  delete buttonProps.disabledIcon
-  delete buttonProps.icon
-  delete buttonProps.onSelectedChange
-  delete buttonProps.selected
-  delete buttonProps.variant
-
-  return buttonProps as ComponentPropsWithoutRef<'button'>
+type ChipRootProps = ChipBaseButtonProps & {
+  children: ReactNode
+  onSelectedChange?: (selected: boolean) => void
+  selected?: boolean
 }
 
-export const Chip = (props: ChipProps) => {
-  const { children, className, onSelectedChange, selected = false } = props
-
+const ChipRoot = ({
+  children,
+  onSelectedChange,
+  selected = false,
+  ...buttonProps
+}: ChipRootProps) => {
   const handleClick = () => {
     onSelectedChange?.(!selected)
   }
-
-  if (props.variant === 'icon') {
-    const { disabled = false, disabledIcon, icon } = props
-    const buttonProps = getButtonProps(props)
-    const displayIcon = disabled && disabledIcon ? disabledIcon : icon
-
-    return (
-      <button
-        {...buttonProps}
-        aria-pressed={selected}
-        className={cn(iconChipVariants({ disabled, selected }), className)}
-        disabled={disabled}
-        onClick={handleClick}
-        type="button"
-      >
-        <ChipIconSlot icon={displayIcon} />
-        <span className={cn(iconChipLabelVariants())}>{children}</span>
-      </button>
-    )
-  }
-
-  const { count } = props
-  const buttonProps = getButtonProps(props)
 
   return (
     <button
       {...buttonProps}
       aria-pressed={selected}
-      className={cn(basicChipVariants({ selected }), className)}
       onClick={handleClick}
       type="button"
+    >
+      {children}
+    </button>
+  )
+}
+
+const BasicChip = ({
+  children,
+  className,
+  count,
+  onSelectedChange,
+  selected = false,
+  variant: _variant,
+  ...buttonProps
+}: ChipBasicProps) => {
+  void _variant
+
+  return (
+    <ChipRoot
+      {...buttonProps}
+      className={cn(basicChipVariants({ selected }), className)}
+      selected={selected}
+      onSelectedChange={onSelectedChange}
     >
       <span className={cn(basicChipLabelVariants())}>{children}</span>
       {count !== undefined && count !== null ? (
         <span className={cn(basicChipCountVariants())}>{count}</span>
       ) : null}
-    </button>
+    </ChipRoot>
   )
+}
+
+const IconChip = ({
+  children,
+  className,
+  disabled = false,
+  disabledIcon,
+  icon,
+  onSelectedChange,
+  selected = false,
+  variant: _variant,
+  ...buttonProps
+}: ChipIconProps) => {
+  void _variant
+
+  const displayIcon = disabled && disabledIcon ? disabledIcon : icon
+
+  return (
+    <ChipRoot
+      {...buttonProps}
+      className={cn(iconChipVariants({ selected }), className)}
+      disabled={disabled}
+      selected={selected}
+      onSelectedChange={onSelectedChange}
+    >
+      <ChipIconSlot icon={displayIcon} />
+      <span className={cn(iconChipLabelVariants())}>{children}</span>
+    </ChipRoot>
+  )
+}
+
+export const Chip = (props: ChipProps) => {
+  if (props.variant === 'icon') {
+    return <IconChip {...props} />
+  }
+
+  return <BasicChip {...props} />
 }
