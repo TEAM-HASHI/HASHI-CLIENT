@@ -269,8 +269,8 @@ BottomNavigationLayout
 ### 1. Search entry
 
 - Reuse:
-  - `SearchField` from `@hashi/hds-ui`
-  - `SearchIcon` is already included in `SearchField`
+  - `SearchBar` from `@hashi/hds-ui`
+  - `SearchIcon` is already included in `SearchBar`
   - `ROUTES.search`
 - Do not create:
   - 새 검색 input primitive
@@ -278,13 +278,13 @@ BottomNavigationLayout
 - Page-local:
   - `HomeSearchEntry`
 - Behavior:
-  - 사용자가 홈에서 검색어를 입력하는 플로우가 아니라면 `SearchField`를 실제 form input으로 운영하지 않습니다.
-  - `SearchField`를 `readOnly` 시각 요소로 렌더링하고, 실제 이동 컨트롤은 `ROUTES.search`로 이동하는 page-local `Link`가 담당합니다.
+  - 사용자가 홈에서 검색어를 입력하는 플로우가 아니라면 `SearchBar`를 실제 form input으로 운영하지 않습니다.
+  - `SearchBar`를 `readOnly` 시각 요소로 렌더링하고, 실제 이동 컨트롤은 `ROUTES.search`로 이동하는 page-local `Link`가 담당합니다.
   - 아이콘/패딩을 포함한 검색 박스 전체가 클릭 진입점이 되도록 `HomeSearchEntry`에서 링크 클릭 영역을 제공합니다.
   - 접근 가능한 컨트롤 이름은 `식당 또는 메뉴 검색하기`로 제공합니다.
 - Risk:
-  - `SearchField` 내부는 `input type="search"`입니다. `div onClick` navigation만 붙이면 의미상 클릭 가능한 컨트롤이 불명확합니다.
-  - 이 충돌을 줄이기 위해 홈에서는 `SearchField`를 `readOnly`와 `tabIndex={-1}`로 렌더링하고, 실제 검색어 입력은 검색 페이지가 소유합니다.
+  - `SearchBar` 내부는 `input type="search"`입니다. `div onClick` navigation만 붙이면 의미상 클릭 가능한 컨트롤이 불명확합니다.
+  - 이 충돌을 줄이기 위해 홈에서는 `SearchBar`를 `readOnly`와 `tabIndex={-1}`로 렌더링하고, 실제 검색어 입력은 검색 페이지가 소유합니다.
 
 ### 2. Main banner
 
@@ -396,7 +396,7 @@ BottomNavigationLayout
 ## Component Boundary Decisions
 
 - HDS 사용:
-  - `SearchField`
+  - `SearchBar`
   - `Button`
   - `Carousel`
   - `BottomNavigation` through `BottomNavigationLayout`

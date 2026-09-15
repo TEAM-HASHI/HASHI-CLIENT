@@ -1,12 +1,12 @@
-# Component Spec: `SearchField`
+# Component Spec: `SearchBar`
 
-Jira: HASHI-56
+Jira: HASHI-190
 
 ## Purpose
 
-`SearchField`는 사용자가 검색어를 입력할 수 있도록 하는 HDS의 공통 search input primitive입니다.
+`SearchBar`는 사용자가 검색어를 입력할 수 있도록 하는 HDS의 공통 search input primitive입니다.
 
-HDS에서는 **native input 렌더링, 검색 아이콘 고정 배치, 입력 영역 layout, placeholder/value 전달, disabled 상태, input ref forwarding, 기본 접근성 계약만 담당**합니다. 실제 검색 실행, debounce, query parameter 동기화, API 호출, 최근 검색어, 자동완성, analytics, 도메인 copy/data 구성은 각 App Shell / Page / Feature에서 처리합니다.
+HDS에서는 **native input 렌더링, 검색 아이콘 표시 여부, 입력 영역 layout, placeholder/value 전달, disabled 상태, input ref forwarding, 기본 접근성 계약만 담당**합니다. 실제 검색 실행, debounce, query parameter 동기화, API 호출, 최근 검색어, 자동완성, analytics, 도메인 copy/data 구성은 각 App Shell / Page / Feature에서 처리합니다.
 
 ## Component Type
 
@@ -16,25 +16,27 @@ HDS에서는 **native input 렌더링, 검색 아이콘 고정 배치, 입력 �
 
 ## Figma Audit
 
-SearchField 설계를 위해 아래 Figma 패턴을 확인했습니다. 이 목록은 전부 `SearchField` v1에 포함한다는 의미가 아니라, 포함/제외 판단을 위한 검토 범위입니다.
+SearchBar 설계를 위해 아래 Figma 패턴을 확인했습니다. 이 목록은 전부 `SearchBar` v1에 포함한다는 의미가 아니라, 포함/제외 판단을 위한 검토 범위입니다.
 
-- `Common_Components / bar_search`
-  - Figma size: `353px x 44px`
-  - implementation: `w-full`, `h-11`
-  - background: `Primary_100` / `#f6f6f6`
-- leading search icon: search field 정체성을 만드는 고정 아이콘
-- placeholder: `식당 혹은 메뉴를 검색해보세요`
+- `Components / search_bar`
+  - Figma size: `353px x 45px`
+  - implementation: `w-full`, `h-[45px]`
+  - background: `Primary_100`
+  - hover background: `Warm_Gray_50`
+  - pressed background: `Warm_Gray_100`
+- leading search icon: `icon=true`일 때 표시합니다.
+- placeholder: 호출부가 전달합니다.
 
 ## Figma 판단
 
-`SearchField` v1에 포함하는 패턴:
+`SearchBar` v1에 포함하는 패턴:
 
-- 왼쪽 검색 아이콘이 고정으로 들어가는 단일 search input
-- `h-11` / `2.75rem` / `44px` 높이의 rounded container
+- 왼쪽 검색 아이콘을 선택적으로 표시할 수 있는 단일 search input
+- `h-[45px]` 높이의 rounded container
 - full width layout 안에서 부모 width를 따르는 구조
 - placeholder를 호출부가 전달하는 구조
 
-`SearchField` v1에 포함하지 않는 패턴:
+`SearchBar` v1에 포함하지 않는 패턴:
 
 - clear button
 - submit button
@@ -48,14 +50,14 @@ SearchField 설계를 위해 아래 Figma 패턴을 확인했습니다. 이 목�
 
 ## Usage Location
 
-- `packages/hds-ui/src/components/searchField/SearchField.tsx`
+- `packages/hds-ui/src/components/searchBar/SearchBar.tsx`
 
 ## Requirements
 
 - [x] 제품 도메인 데이터, route, API, logging, analytics에 의존하지 않습니다.
 - [x] native `input` 기반으로 렌더링합니다.
 - [x] `type="search"`를 기본으로 고정합니다.
-- [x] 검색 아이콘은 `SearchField` 내부에 고정으로 렌더링합니다.
+- [x] 검색 아이콘은 `SearchBar` 내부에서 `icon` prop에 따라 렌더링합니다.
 - [x] visible label이 없으므로 접근성 이름을 요구합니다.
 - [x] controlled / uncontrolled input 사용을 모두 지원합니다.
 - [x] disabled 상태 시각 표현 및 interaction 차단을 지원합니다.
@@ -67,8 +69,8 @@ SearchField 설계를 위해 아래 Figma 패턴을 확인했습니다. 이 목�
 ## UI Structure
 
 ```text
-SearchField
-  search icon
+SearchBar
+  search icon (optional)
   input
 ```
 
@@ -117,6 +119,13 @@ SearchField
 - default: `false`
 - description: input interaction을 비활성화합니다.
 
+### `icon`
+
+- type: `boolean`
+- required: `false`
+- default: `true`
+- description: 왼쪽 검색 아이콘 표시 여부입니다. 기존 호출부 호환을 위해 기본값은 아이콘 표시입니다.
+
 ### `className`
 
 - type: `string`
@@ -132,25 +141,29 @@ SearchField
 ## Recommended API
 
 ```tsx
-type SearchFieldProps = {
+type SearchBarProps = {
   className?: string
   inputClassName?: string
+  icon?: boolean
   'aria-label': string
 } & Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
   'className' | 'type' | 'size' | 'children'
 >
 
-const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(...)
+const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(...)
 ```
 
 ## States
 
-- default: 기본 입력 가능 상태
+- default/rest: 기본 입력 가능 상태
+- hover: root background가 `Warm_Gray_50`으로 변경됩니다.
+- pressed: root background가 `Warm_Gray_100`으로 변경됩니다.
+- input: value가 있으면 입력 텍스트를 `black`으로 렌더링합니다.
 - focused: native input focus와 caret 동작을 따릅니다. v1 디자인에서는 별도 root border/outline 변화를 제공하지 않습니다.
 - disabled: interaction이 막힌 상태
 
-v1에서는 loading, invalid/error, clearable, autocomplete 상태를 `SearchField`가 직접 소유하지 않습니다.
+v1에서는 loading, invalid/error, clearable, autocomplete 상태를 `SearchBar`가 직접 소유하지 않습니다.
 
 ## Behavior
 
@@ -167,10 +180,13 @@ v1에서는 loading, invalid/error, clearable, autocomplete 상태를 `SearchFie
 - element: root `div`, native `input`
 - layout: horizontal flex, center alignment
 - width: `w-full`
-- height: `h-11`
-- icon: leading search icon fixed, decorative
-- spacing: icon과 input 사이 gap은 Figma 기준을 우선합니다.
-- background: `primary-100` / `#f6f6f6`을 사용합니다.
+- height: `h-[45px]`
+- icon: `icon=true`일 때 leading search icon decorative
+- spacing: `icon=true`일 때 icon과 input 사이 `gap-2`를 사용합니다.
+- root padding: 좌우 `12px`를 유지해 긴 placeholder/value와 caret이 rounded edge에 붙지 않도록 합니다.
+- background: `primary-100`을 사용합니다.
+- hover background: `warm-gray-50`
+- pressed background: `warm-gray-100`
 - radius: `rounded-[10px]`를 사용합니다.
 - typography: input text와 placeholder는 `typo-body-4`를 사용합니다.
 - color: input text는 `black`, placeholder는 `warm-gray-300`, icon은 검색 필드 기본 톤을 따릅니다.
@@ -186,15 +202,18 @@ v1에서는 loading, invalid/error, clearable, autocomplete 상태를 `SearchFie
 - placeholder는 label을 대체하지 않습니다.
 - keyboard interaction: native input keyboard interaction을 따릅니다.
 - focus: native input focus와 text caret 동작을 따릅니다. 별도 focus indicator가 필요해지면 디자인 기준과 함께 재검토합니다.
-- icon: 검색 아이콘은 장식 요소로 취급하고 `aria-hidden` 처리합니다.
+- icon: 검색 아이콘은 장식 요소로 취급하고 `aria-hidden` 처리합니다. `icon=false`이면 렌더링하지 않습니다.
 
 ## Storybook
 
 - [x] Default
 - [x] With value
+- [x] Without icon
+- [x] Without icon with value
 - [x] Disabled
 - [x] Focus state
 - [x] Long placeholder overflow
+- [x] Long value overflow
 - [x] Full width in 430px mobile viewport wrapper
 - [x] Controlled example
 - [x] Uncontrolled example
@@ -203,7 +222,7 @@ v1에서 loading, invalid/error, clear button, autocomplete, recent keyword list
 
 ## Validation
 
-`SearchField`는 검색어 유효성 검증을 직접 수행하지 않습니다.
+`SearchBar`는 검색어 유효성 검증을 직접 수행하지 않습니다.
 
 아래 정책은 App Shell / Page / Feature가 소유합니다.
 
@@ -216,8 +235,10 @@ v1에서 loading, invalid/error, clear button, autocomplete, recent keyword list
 
 ## Public API
 
-- [x] `SearchField` value export
-- [x] `SearchFieldProps` type export
+- [x] `SearchBar` value export
+- [x] `SearchBarProps` type export
+- [x] `SearchField` compatibility alias export
+- [x] `SearchFieldProps` compatibility alias type export
 - [x] ref forwards to native input
 - [x] no private helper export
 
@@ -240,11 +261,13 @@ v1에서 loading, invalid/error, clear button, autocomplete, recent keyword list
 
 ## Implementation Notes
 
-- 검색 아이콘은 v1에서 고정으로 둡니다.
+- 검색 아이콘은 v1에서 `icon` prop으로 표시 여부만 제어합니다.
 - 별도 `leftIcon` / `rightIcon` prop은 제공하지 않습니다.
 - clear button은 v1에서 제공하지 않습니다.
 - 구현은 `@hashi/hds-icons`의 `SearchIcon`을 사용합니다.
-- `SearchIcon`은 `currentColor` 기반으로 SearchField의 icon color를 상속합니다.
+- `SearchIcon`은 `currentColor` 기반으로 SearchBar의 icon color를 상속합니다.
+- Figma 컴포넌트명은 `Search Bar`로 변경되었으므로 정식 public API는 `SearchBar`입니다.
+- 기존 HDS public API와 호출부 호환성을 위해 `SearchField`는 `SearchBar`의 alias로 유지합니다.
 - 브라우저가 `type="search"`에 기본 clear control을 표시하는 경우에도 v1에서는 HDS clear button을 제공하지 않도록 기본 search cancel UI를 숨깁니다.
 
 ## Deferred Decisions
@@ -253,7 +276,7 @@ v1에서 loading, invalid/error, clear button, autocomplete, recent keyword list
 
 검색 필드에서 clear button이 반복적으로 필요해지면 `clearable` 또는 `onClear` API를 검토합니다.
 
-v1에서는 clear button을 제공하지 않습니다. 호출부가 별도 action을 추가해야 하는 경우, SearchField 확장보다 화면 요구사항을 먼저 확인합니다.
+v1에서는 clear button을 제공하지 않습니다. 호출부가 별도 action을 추가해야 하는 경우, SearchBar 확장보다 화면 요구사항을 먼저 확인합니다.
 
 ### submit / onSearch
 
@@ -263,7 +286,7 @@ Enter 입력 또는 검색 아이콘 클릭으로 검색을 실행하는 API는 
 
 ### size
 
-Figma에서 확인한 기본 SearchField 높이는 `h-11` / `2.75rem` / `44px`입니다. v1에서는 size prop을 제공하지 않습니다.
+Figma에서 확인한 기본 SearchBar 높이는 `45px`입니다. v1에서는 size prop을 제공하지 않습니다.
 
 검색 필드가 작은 topbar형, 큰 페이지형으로 반복되면 `size` 추가를 검토합니다.
 
@@ -274,7 +297,8 @@ Figma에서 확인한 기본 SearchField 높이는 `h-11` / `2.75rem` / `44px`�
 - [x] `corepack pnpm --filter @hashi/hds-ui typecheck`
 - [x] `corepack pnpm --filter @hashi/hds-ui build`
 - [x] `corepack pnpm --filter @hashi/hds-ui test`
-- [x] `corepack pnpm --filter @hashi/hds-ui build-storybook`
+- [ ] `corepack pnpm --filter @hashi/hds-ui build-storybook`
+  - 현재 로컬 환경에서 `ast-types@0.16.1`의 `plugin is not a function` 오류로 실패합니다.
 - [x] `corepack pnpm --filter @hashi/hds-icons lint`
 - [x] `corepack pnpm --filter @hashi/hds-icons typecheck`
 - [x] `corepack pnpm --filter @hashi/hds-icons build`

@@ -341,7 +341,7 @@ SearchPage
     mapSearchRestaurantPages
   SearchHeader
     BackButton
-    SearchField
+    SearchBar
   SearchIdlePanel
     RecentSearchKeywordSection
       KeywordChipList
@@ -362,7 +362,7 @@ SearchPage
 ## Component Mapping
 
 - HDS component:
-  - `SearchField`: 검색 input primitive
+  - `SearchBar`: 검색 input primitive
   - `IconButton`: 뒤로가기 icon-only button
   - `Chip`: 최근 검색어와 추천 검색어 keyword pill
   - `Button`: 바텀시트 footer의 `초기화`, `적용`
@@ -388,14 +388,14 @@ SearchPage
   - `BackIcon`
   - `TapDownIcon`: 설계서의 `ic_chevron_down`에 해당하는 기존 HDS 아이콘
   - `CheckIcon`
-  - `SearchIcon`은 `SearchField` 내부에서 사용
+  - `SearchIcon`은 `SearchBar` 내부에서 사용
   - `StarFillIcon`: 결과 리스트의 단일 별점 아이콘
   - `ClockSmallIcon`
   - empty state graphic은 shared `ListEmptyState`가 소유하는 공통 이미지를 사용합니다.
 
 ## Reuse Audit
 
-- `SearchField`를 사용합니다. 검색 실행, 최근 검색어, 추천 검색어, query 동기화는 HDS 범위가 아니므로 page가 소유합니다.
+- `SearchBar`를 사용합니다. 검색 실행, 최근 검색어, 추천 검색어, query 동기화는 HDS 범위가 아니므로 page가 소유합니다.
 - `IconButton size="xs"`와 `BackIcon`을 조합해 뒤로가기 버튼을 구현합니다. 호출부에서 `44px` 터치 영역을 확보하고 아이콘은 `24px`로 유지합니다.
 - `Chip`을 최근 검색어와 추천 검색어 pill에 사용합니다. 칩 목록의 horizontal scroll과 키워드 선택 동작은 page-local `KeywordChipList`가 소유합니다.
 - `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 page-local `useSearchFilterSheet`가 주입합니다.
@@ -404,7 +404,7 @@ SearchPage
 - `BottomSheet`를 직접 새로 만들지 않습니다. overlay click과 Escape close는 기존 `BottomSheet`의 접근성 계약을 따릅니다.
 - `Button`을 바텀시트 footer 액션에 사용합니다.
 - 검색 결과 없음 UI는 shared `ListEmptyState`를 사용합니다. 검색 페이지는 `description="검색된 식당이 없습니다."`와 결과 영역 중앙 정렬에 필요한 `className`만 주입합니다.
-- `Header`는 사용하지 않습니다. HDS `Header` spec에서 `bar_search_back_button`은 `IconButton` + `SearchField` 조합으로 분류되어 `Header` v1 범위에서 제외되어 있습니다.
+- `Header`는 사용하지 않습니다. HDS `Header` spec에서 `bar_search_back_button`은 `IconButton` + `SearchBar` 조합으로 분류되어 `Header` v1 범위에서 제외되어 있습니다.
 - `StarRating`은 사용하지 않습니다. 검색 결과 리스트 디자인은 5개 별 묶음이 아니라 단일 별 아이콘 + 숫자 텍스트이므로 `StarFillIcon`과 텍스트 조합이 더 정확합니다.
 - `Badge`는 사용하지 않습니다. 음식 종류는 pill/badge가 아니라 `# 아끼소바` 형태의 텍스트 태그로 보이므로 page-local 텍스트로 구현합니다.
 - 검색 전용 `SearchEmptyState`와 page-local empty asset은 사용하지 않습니다. list empty UI는 앱 공통 `ListEmptyState`로 통일합니다.
@@ -430,7 +430,7 @@ SearchPage
 ### Page-Local Files To Keep
 
 - `apps/client/src/pages/search/components/SearchHeader.tsx`
-  - 뒤로가기 `IconButton`과 `SearchField`를 조합합니다.
+  - 뒤로가기 `IconButton`과 `SearchBar`를 조합합니다.
 - `apps/client/src/pages/search/components/SearchIdlePanel.tsx`
   - 검색 전 최근 검색어와 추천 검색어 영역을 조립합니다.
 - `apps/client/src/pages/search/components/KeywordChipList.tsx`
@@ -561,10 +561,10 @@ SearchPage
   - bottom padding은 `9px`입니다.
   - 뒤로가기 아이콘은 `24px`입니다.
   - 뒤로가기 버튼 터치 영역은 `44px * 44px`입니다.
-  - 뒤로가기 버튼과 `SearchField` 사이 간격은 `10px`입니다.
+  - 뒤로가기 버튼과 `SearchBar` 사이 간격은 `10px`입니다.
 - filter bar:
   - filter trigger는 page-local component로 조합합니다.
-  - `SearchField`와 filter section 사이 간격은 fixed search header의 bottom padding `9px`로 확보합니다.
+  - `SearchBar`와 filter section 사이 간격은 fixed search header의 bottom padding `9px`로 확보합니다.
   - 검색 결과 상태에서 fixed search header 아래에 렌더링합니다.
   - filter section 내부 vertical padding은 `9px`입니다.
   - trigger text는 `typo-sub-header-3 text-primary-200`입니다.
@@ -601,7 +601,7 @@ SearchPage
   - unselected option text는 `typo-body-4 text-black`입니다.
   - selected option check icon은 `CheckIcon text-cool-gray-700`, `20px`입니다.
 - search idle state:
-  - `SearchField`와 검색어 section title 사이 총 간격은 `30px`입니다.
+  - `SearchBar`와 검색어 section title 사이 총 간격은 `30px`입니다.
   - fixed search header의 bottom padding `9px`를 제외한 idle panel top padding은 `21px`입니다.
   - 최근 검색어/추천 검색어 title은 `typo-sub-header-3 text-primary-200`입니다.
   - title과 chip 사이 간격은 `16px`입니다.

@@ -2,19 +2,22 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import type { ComponentProps } from 'react'
 import { useState } from 'react'
 
-import { SearchField } from './SearchField'
+import { SearchBar } from './SearchBar'
 
-const meta: Meta<typeof SearchField> = {
-  title: 'Components/SearchField',
-  component: SearchField,
+const meta: Meta<typeof SearchBar> = {
+  title: 'Components/SearchBar',
+  component: SearchBar,
   tags: ['autodocs'],
   args: {
-    'aria-label': '식당 또는 메뉴 검색',
-    placeholder: '식당 혹은 메뉴를 검색해보세요',
+    'aria-label': '검색',
+    placeholder: '플레이스홀더',
   },
   argTypes: {
     className: {
       control: false,
+    },
+    icon: {
+      control: 'boolean',
     },
     inputClassName: {
       control: false,
@@ -36,13 +39,13 @@ export default meta
 
 type Story = StoryObj<typeof meta>
 
-type SearchFieldStoryProps = ComponentProps<typeof SearchField>
+type SearchBarStoryProps = ComponentProps<typeof SearchBar>
 
-const ControlledSearchField = (args: SearchFieldStoryProps) => {
-  const [value, setValue] = useState('초밥')
+const ControlledSearchBar = (args: SearchBarStoryProps) => {
+  const [value, setValue] = useState('텍스트')
 
   return (
-    <SearchField
+    <SearchBar
       {...args}
       onChange={(event) => {
         setValue(event.target.value)
@@ -56,14 +59,27 @@ export const Default: Story = {}
 
 export const WithValue: Story = {
   args: {
-    defaultValue: '연어 덮밥',
+    defaultValue: '텍스트',
+  },
+}
+
+export const WithoutIcon: Story = {
+  args: {
+    icon: false,
+  },
+}
+
+export const WithoutIconWithValue: Story = {
+  args: {
+    defaultValue: '텍스트',
+    icon: false,
   },
 }
 
 export const Disabled: Story = {
   args: {
     disabled: true,
-    value: '검색 비활성화',
+    value: '텍스트',
   },
 }
 
@@ -75,8 +91,21 @@ export const FocusState: Story = {
 
 export const LongPlaceholderOverflow: Story = {
   args: {
-    placeholder:
-      '식당 이름, 메뉴, 지역명처럼 긴 검색어 안내 문구가 들어와도 레이아웃이 깨지지 않습니다',
+    placeholder: '긴 플레이스홀더가 들어와도 레이아웃이 깨지지 않습니다',
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-[240px] bg-white p-4">
+        <Story />
+      </div>
+    ),
+  ],
+}
+
+export const LongValueOverflow: Story = {
+  args: {
+    value: '긴 검색어가 입력되어도 오른쪽 둥근 경계에 붙지 않습니다',
+    readOnly: true,
   },
   decorators: [
     (Story) => (
@@ -98,11 +127,11 @@ export const MobileViewport430: Story = {
 }
 
 export const Controlled: Story = {
-  render: ControlledSearchField,
+  render: ControlledSearchBar,
 }
 
 export const Uncontrolled: Story = {
   args: {
-    defaultValue: '라멘',
+    defaultValue: '텍스트',
   },
 }

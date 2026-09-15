@@ -311,11 +311,11 @@ v1에서 search header, sticky header, transparent header, `largeTitle` + `subti
 
 ### search header
 
-`bar_search_back_button`은 `BackIcon`과 `SearchField`를 조합한 별도 layout입니다. `Header` v1에 검색 입력 책임을 넣으면 topbar primitive와 form primitive가 섞이므로 제외합니다.
+`bar_search_back_button`은 `BackIcon`과 `SearchBar`를 조합한 별도 layout입니다. `Header` v1에 검색 입력 책임을 넣으면 topbar primitive와 form primitive가 섞이므로 제외합니다.
 
 검색 헤더가 여러 화면에서 반복되면 아래 중 하나를 별도 검토합니다.
 
-- app shared composition: page/app shell에서 `IconButton + SearchField` 조합
+- app shared composition: page/app shell에서 `IconButton + SearchBar` 조합
 - HDS `SearchHeader`: 제품 의미 없이 반복되는 search topbar primitive
 
 ### `as` or heading level

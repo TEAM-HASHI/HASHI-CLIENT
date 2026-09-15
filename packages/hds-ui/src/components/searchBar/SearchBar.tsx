@@ -4,31 +4,40 @@ import type { InputHTMLAttributes } from 'react'
 
 import { cn } from '../../utils'
 
-export type SearchFieldProps = {
+export type SearchBarProps = {
   className?: string
   inputClassName?: string
+  icon?: boolean
   'aria-label': string
 } & Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'children' | 'className' | 'size' | 'type'
 >
 
-export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
-  ({ className, inputClassName, disabled = false, ...props }, ref) => {
+export type SearchFieldProps = SearchBarProps
+
+export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
+  (
+    { className, icon = true, inputClassName, disabled = false, ...props },
+    ref,
+  ) => {
     return (
       <div
         className={cn(
-          'bg-primary-100 text-cool-gray-700 flex h-11 w-full items-center gap-2 rounded-[10px] px-4',
+          'bg-primary-100 hover:bg-warm-gray-50 active:bg-warm-gray-100 flex h-[45px] w-full items-center rounded-[10px] py-4 pr-3 pl-3 transition-colors',
+          icon && 'gap-2',
           'data-[disabled=true]:opacity-40',
           className,
         )}
         data-disabled={disabled ? 'true' : undefined}
       >
-        <SearchIcon
-          aria-hidden="true"
-          className="size-6 shrink-0"
-          focusable="false"
-        />
+        {icon ? (
+          <SearchIcon
+            aria-hidden="true"
+            className="text-cool-gray-700 size-6 shrink-0"
+            focusable="false"
+          />
+        ) : null}
         <input
           {...props}
           ref={ref}
@@ -45,4 +54,6 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
   },
 )
 
-SearchField.displayName = 'SearchField'
+SearchBar.displayName = 'SearchBar'
+
+export const SearchField = SearchBar
