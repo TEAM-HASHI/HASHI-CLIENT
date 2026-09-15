@@ -42,7 +42,7 @@ describe('Thumbnail', () => {
     ).toBeTruthy()
   })
 
-  it('tries to render the next image when src changes after an error', () => {
+  it('retries a previously failed image after src changes away and back', () => {
     const { rerender } = render(
       <Thumbnail alt="식당 이미지" src="/broken.png" />,
     )
@@ -53,6 +53,13 @@ describe('Thumbnail', () => {
     expect(screen.getByRole('img', { name: '식당 이미지' })).toHaveAttribute(
       'src',
       '/next.png',
+    )
+
+    rerender(<Thumbnail alt="식당 이미지" src="/broken.png" />)
+
+    expect(screen.getByRole('img', { name: '식당 이미지' })).toHaveAttribute(
+      'src',
+      '/broken.png',
     )
   })
 

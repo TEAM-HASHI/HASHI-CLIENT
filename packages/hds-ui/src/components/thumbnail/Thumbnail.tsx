@@ -1,4 +1,4 @@
-import { useState, type ComponentPropsWithoutRef } from 'react'
+import { useEffect, useState, type ComponentPropsWithoutRef } from 'react'
 
 import { ImageFallback, type ImageFallbackMarkSize } from '../imageFallback'
 import { cn } from '../../utils'
@@ -38,6 +38,10 @@ export const Thumbnail = ({
     sizeConfig.className,
     className,
   )
+
+  useEffect(() => {
+    setFailedSrc(null)
+  }, [src])
 
   if (!src || failedSrc === src) {
     return (
