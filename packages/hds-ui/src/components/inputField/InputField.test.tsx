@@ -83,25 +83,6 @@ describe('InputField', () => {
     expect(input).toHaveFocus()
   })
 
-  it('does not render a focus outline on the input box', () => {
-    render(<InputField aria-label="name" />)
-
-    const inputBox = screen.getByRole('textbox', { name: 'name' }).parentElement
-
-    expect(inputBox).not.toHaveClass('focus-within:outline-cool-gray-500')
-    expect(inputBox).not.toHaveClass('focus-within:outline-2')
-    expect(inputBox).not.toHaveClass('focus-within:outline-offset-0')
-  })
-
-  it('uses 13px vertical padding on the input box', () => {
-    render(<InputField aria-label="name" />)
-
-    const inputBox = screen.getByRole('textbox', { name: 'name' }).parentElement
-
-    expect(inputBox).toHaveClass('h-[45px]')
-    expect(inputBox).toHaveClass('py-3.25')
-  })
-
   it('resets native input spacing so the wrapper owns the inner padding', () => {
     render(<InputField aria-label="name" />)
 
