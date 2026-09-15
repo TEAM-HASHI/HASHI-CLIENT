@@ -50,7 +50,7 @@
 - [x] file input은 `accept="image/jpeg,image/png,image/webp"`와 `multiple`을 가집니다.
 - [x] file input이 변경되면 JPEG, PNG, WEBP이면서 장당 5MB 이하인 파일만 기존 `photoFiles` 뒤에 이어 `onPhotoFilesChange`에 전달합니다.
 - [x] 지원하지 않는 MIME 타입은 `photoFiles`에 추가하지 않고 `JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.`를 표시합니다.
-- [x] 장당 5MB를 초과한 파일은 `photoFiles`에 추가하지 않고 `사진은 장당 5MB 이하로 첨부해주세요.`를 표시합니다.
+- [x] 장당 5MB를 초과한 파일은 `photoFiles`에 추가하지 않고 `용량이 초과되었어요.`를 표시합니다.
 - [x] 선택된 사진이 10장이 되면 사진 추가 버튼과 숨겨진 file input을 비활성화합니다.
 - [x] 남은 사진 슬롯보다 많은 파일을 선택하면 최대 10장까지만 `photoFiles`에 추가하고 `사진은 최대 10장까지 첨부할 수 있어요.`를 표시합니다.
 - [x] 선택된 `photoFiles`가 있으면 사진 추가 버튼과 선택된 이미지 미리보기를 가로 스크롤 목록으로 표시합니다.
@@ -152,7 +152,7 @@ InputReviewMain
 2. 사용자가 사진 첨부 트리거를 누르면 숨겨진 file input click을 실행합니다.
 3. 사용자가 파일을 선택하면 JPEG, PNG, WEBP이면서 5MB 이하인 파일 중 남은 사진 슬롯 수만큼만 `onPhotoFilesChange?.([...photoFiles, ...nextFiles])`로 전달합니다.
 4. 지원하지 않는 MIME 타입이 있으면 해당 파일은 거절하고 `JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.`를 표시합니다.
-5. 5MB를 초과한 파일이 있으면 해당 파일은 거절하고 `사진은 장당 5MB 이하로 첨부해주세요.`를 표시합니다.
+5. 5MB를 초과한 파일이 있으면 해당 파일은 거절하고 `용량이 초과되었어요.`를 표시합니다.
 6. 남은 사진 슬롯보다 많은 파일을 선택하면 초과 파일은 거절하고 `사진은 최대 10장까지 첨부할 수 있어요.`를 표시합니다.
 7. 선택된 사진이 10장이면 사진 추가 버튼과 file input은 비활성화됩니다.
 8. 선택된 `photoFiles`가 있으면 사진 추가 버튼과 이미지 미리보기를 `overflow-x-auto` 가로 스크롤 목록으로 표시합니다.
