@@ -30,7 +30,7 @@ export const Checkbox = ({
       />
       <span
         className={cn(
-          'bg-cool-gray-100 peer-focus-visible:outline-cool-gray-900 peer-checked:text-cool-gray-900 flex h-[26px] w-[26px] items-center justify-center rounded-[3px] text-white transition-colors peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2',
+          'bg-cool-gray-100 peer-focus-visible:outline-cool-gray-800 peer-checked:text-cool-gray-900 flex h-[26px] w-[26px] items-center justify-center rounded-[3px] text-white transition-colors peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2',
           !disabled &&
             'group-hover/checkbox:bg-cool-gray-200 group-active/checkbox:bg-cool-gray-300',
         )}

@@ -76,6 +76,7 @@ describe('Checkbox', () => {
       'bg-cool-gray-100',
       'group-hover/checkbox:bg-cool-gray-200',
       'group-active/checkbox:bg-cool-gray-300',
+      'peer-focus-visible:outline-cool-gray-800',
       'peer-checked:text-cool-gray-900',
     )
     expect(icon).toHaveClass('h-[26px]', 'w-[26px]')
