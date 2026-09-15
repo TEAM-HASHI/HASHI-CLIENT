@@ -5,22 +5,26 @@ import { cn } from '../../utils'
 const buttonVariants = cva(
   [
     'inline-flex items-center justify-center gap-1 rounded-[5px] px-4',
-    'typo-body-6 whitespace-nowrap',
+    'whitespace-nowrap',
     'disabled:cursor-not-allowed',
   ],
   {
     variants: {
       variant: {
         primary:
-          'bg-cool-gray-800 text-white enabled:active:bg-cool-gray-300 disabled:bg-secondary-200 disabled:text-warm-gray-300',
+          'bg-cool-gray-800 text-white enabled:hover:bg-cool-gray-700 enabled:active:bg-cool-gray-900 disabled:bg-warm-gray-100 disabled:text-white',
         neutral:
-          'bg-secondary-200 text-cool-gray-900 enabled:active:bg-warm-gray-100 disabled:bg-secondary-200 disabled:text-warm-gray-300',
+          'bg-secondary-200 text-black enabled:hover:bg-warm-gray-50 enabled:active:bg-warm-gray-100 disabled:bg-secondary-200 disabled:text-warm-gray-300',
+        destructive:
+          'bg-secondary-200 text-primary-400 enabled:hover:bg-warm-gray-50 enabled:active:bg-warm-gray-100 disabled:bg-secondary-200 disabled:text-warm-gray-300',
+        ghost:
+          'bg-transparent px-2.5 text-primary-200 enabled:hover:text-cool-gray-400 enabled:active:text-cool-gray-900 disabled:text-warm-gray-300',
       },
       size: {
-        sm: 'h-[2.25rem]',
-        md: 'h-[2.625rem]',
-        lg: 'h-[2.875rem]',
-        xl: 'h-[3.25rem]',
+        sm: 'typo-body-6 h-7',
+        md: 'typo-body-6 h-9',
+        lg: 'typo-sub-header-2 h-10.5',
+        xl: 'typo-sub-header-2 h-13',
       },
       width: {
         fit: 'w-fit',

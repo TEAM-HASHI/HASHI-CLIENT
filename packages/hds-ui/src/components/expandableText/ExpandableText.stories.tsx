@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { CollapsibleText } from './CollapsibleText'
+import { ExpandableText } from './ExpandableText'
 
 const longText =
   '정말 맛있습니다 와우!!! 정말 맛있습니다 와우!!!정말 맛있습니다 와우!!!정말 맛있습니다 와우!!!정말 맛있습니다 와우!!!정말 맛있습니다 와우!!!정말 맛있습니다 와우!!!정말 맛있습니다 와우!!!정말 맛있습니다 와우!!!'
 
-const meta: Meta<typeof CollapsibleText> = {
-  title: 'Components/CollapsibleText',
-  component: CollapsibleText,
+const meta: Meta<typeof ExpandableText> = {
+  title: 'Components/ExpandableText',
+  component: ExpandableText,
   tags: ['autodocs'],
   args: {
     text: longText,
@@ -49,8 +49,8 @@ export const ShortText: Story = {
 export const States: Story = {
   render: (args) => (
     <div className="flex flex-col gap-6">
-      <CollapsibleText {...args} />
-      <CollapsibleText {...args} defaultExpanded />
+      <ExpandableText {...args} />
+      <ExpandableText {...args} defaultExpanded />
     </div>
   ),
 }

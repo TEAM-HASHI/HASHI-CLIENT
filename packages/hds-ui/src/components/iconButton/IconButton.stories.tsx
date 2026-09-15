@@ -1,51 +1,6 @@
+import { BackIcon, PencilIcon, ShareIcon } from '@hashi/hds-icons'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { IconButton } from './IconButton'
-
-const BackIcon = () => (
-  <svg aria-hidden="true" className="size-6" fill="none" viewBox="0 0 24 24">
-    <path
-      d="M15 5L8 12L15 19"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-    />
-  </svg>
-)
-
-const ShareIcon = () => (
-  <svg aria-hidden="true" className="size-6" fill="none" viewBox="0 0 24 24">
-    <path
-      d="M12 15V4"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeWidth="1.8"
-    />
-    <path
-      d="M8 8L12 4L16 8"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.8"
-    />
-    <path
-      d="M6 12V20H18V12"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.8"
-    />
-  </svg>
-)
-
-const EditIcon = () => (
-  <svg aria-hidden="true" className="size-5" fill="none" viewBox="0 0 24 24">
-    <path
-      d="M5 19L6.2 14.5L15.4 5.3C16.1 4.6 17.2 4.6 17.9 5.3L18.7 6.1C19.4 6.8 19.4 7.9 18.7 8.6L9.5 17.8L5 19Z"
-      fill="currentColor"
-    />
-  </svg>
-)
 
 const meta = {
   title: 'Components/IconButton',
@@ -53,9 +8,10 @@ const meta = {
   tags: ['autodocs'],
   args: {
     'aria-label': '뒤로가기',
-    children: <BackIcon />,
+    children: <BackIcon className="size-6" />,
     size: 'md',
     type: 'button',
+    variant: 'plain',
   },
   argTypes: {
     'aria-label': {
@@ -69,7 +25,11 @@ const meta = {
     },
     size: {
       control: 'select',
-      options: ['xs', 'md'],
+      options: ['xs', 'sm', 'md'],
+    },
+    variant: {
+      control: 'select',
+      options: ['plain', 'soft'],
     },
     type: {
       control: 'select',
@@ -84,10 +44,23 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 
+export const Variants: Story = {
+  render: () => (
+    <div className="bg-secondary-200 text-cool-gray-900 flex items-center gap-4 p-4">
+      <IconButton aria-label="기본 수정 버튼" variant="plain">
+        <PencilIcon className="size-6" />
+      </IconButton>
+      <IconButton aria-label="부드러운 수정 버튼" size="sm" variant="soft">
+        <PencilIcon className="size-[25px]" />
+      </IconButton>
+    </div>
+  ),
+}
+
 export const TopbarAction: Story = {
   args: {
     'aria-label': '뒤로가기',
-    children: <BackIcon />,
+    children: <BackIcon className="size-6" />,
     size: 'xs',
   },
   decorators: [
@@ -104,7 +77,7 @@ export const TopbarAction: Story = {
 export const ShareAction: Story = {
   args: {
     'aria-label': '공유하기',
-    children: <ShareIcon />,
+    children: <ShareIcon className="size-6" />,
     size: 'xs',
   },
 }
@@ -112,9 +85,9 @@ export const ShareAction: Story = {
 export const EditAction: Story = {
   args: {
     'aria-label': '수정하기',
-    children: <EditIcon />,
-    className: 'rounded-full bg-white shadow-sm',
-    size: 'md',
+    children: <PencilIcon className="size-[25px]" />,
+    size: 'sm',
+    variant: 'soft',
   },
   decorators: [
     (Story) => (
@@ -129,10 +102,13 @@ export const Sizes: Story = {
   render: () => (
     <div className="text-cool-gray-900 flex items-center gap-4">
       <IconButton aria-label="뒤로가기" size="xs">
-        <BackIcon />
+        <BackIcon className="size-6" />
+      </IconButton>
+      <IconButton aria-label="부드러운 수정하기" size="sm" variant="soft">
+        <PencilIcon className="size-[25px]" />
       </IconButton>
       <IconButton aria-label="수정하기" size="md">
-        <EditIcon />
+        <PencilIcon className="size-6" />
       </IconButton>
     </div>
   ),
@@ -141,17 +117,20 @@ export const Sizes: Story = {
 export const Disabled: Story = {
   args: {
     'aria-label': '공유하기',
-    children: <ShareIcon />,
+    children: <ShareIcon className="size-6" />,
     disabled: true,
-    size: 'xs',
+    size: 'sm',
+    variant: 'soft',
   },
 }
 
 export const Loading: Story = {
   args: {
     'aria-label': '저장 중',
-    children: <EditIcon />,
+    children: <PencilIcon className="size-[25px]" />,
     loading: true,
+    size: 'sm',
+    variant: 'soft',
   },
 }
 
@@ -163,7 +142,7 @@ export const WiderTopbarHitArea: Story = {
         className="-m-2.5 box-content p-2.5"
         size="xs"
       >
-        <BackIcon />
+        <BackIcon className="size-6" />
       </IconButton>
       <span className="typo-sub-header-2">식당 상세 정보</span>
       <IconButton
@@ -171,7 +150,7 @@ export const WiderTopbarHitArea: Story = {
         className="-m-2.5 box-content p-2.5"
         size="xs"
       >
-        <ShareIcon />
+        <ShareIcon className="size-6" />
       </IconButton>
     </div>
   ),

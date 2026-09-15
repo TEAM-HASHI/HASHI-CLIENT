@@ -50,7 +50,7 @@ Jira: HASHI-120
 - [ ] 상단에 `프로필 생성` 제목과 뒤로가기 버튼을 보여준다.
 - [ ] 뒤로가기 버튼은 `navigate(-1)`을 실행한다.
 - [ ] 화면 진입 시 기본 프로필 이미지를 보여준다.
-- [ ] 기본 프로필 이미지는 `apps/client/src/shared/assets/images/profile-empty.svg`를 사용한다.
+- [ ] 기본 프로필 이미지는 HDS `Avatar`의 guest fallback을 사용한다.
 - [ ] 프로필 이미지 수정 버튼은 이미지 파일 선택을 연다.
 - [ ] 사용자가 이미지를 선택하면 원형 preview로 표시한다.
 - [ ] 프로필 이미지는 `image/jpeg`, `image/png`, `image/webp` MIME 타입만 허용한다.
@@ -273,7 +273,7 @@ ProfileNewPage
 - app shared component:
   - none
 - app shared asset:
-  - `profile-empty.svg`
+  - none
 - feature component:
   - none
 - page-local component:

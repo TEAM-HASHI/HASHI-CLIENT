@@ -131,6 +131,9 @@ describe('MyReviewsPage', () => {
     expect(
       await screen.findByRole('tab', { name: '리뷰 쓰기 2' }),
     ).toHaveAttribute('aria-selected', 'true')
+    expect(
+      document.querySelector('[data-hds-tabs-indicator]'),
+    ).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: '작성한 리뷰 4' })).toBeVisible()
     expect(getVisitedReservations).not.toHaveBeenCalledWith({
       reviewStatus: 'reviewed',

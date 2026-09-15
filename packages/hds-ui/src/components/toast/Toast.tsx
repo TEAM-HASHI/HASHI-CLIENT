@@ -15,18 +15,10 @@ export type ToastContent = {
   children: ReactNode
 }
 
-type AriaToastOptions = NonNullable<
-  Parameters<AriaToastQueue<ToastContent>['add']>[1]
->
+type ToastQueue = AriaToastQueue<ToastContent>
+type ToastQueueAddOptions = NonNullable<Parameters<ToastQueue['add']>[1]>
 
-export type ToastOptions = Omit<AriaToastOptions, 'timeout'>
-
-export type ToastProps = Omit<
-  AriaToastProps<ToastContent>,
-  'children' | 'className'
-> & {
-  className?: string
-}
+export type ToastOptions = Omit<ToastQueueAddOptions, 'timeout'>
 
 export type ToastRegionProps = Omit<
   AriaToastRegionProps<ToastContent>,
@@ -36,13 +28,21 @@ export type ToastRegionProps = Omit<
   queue?: AriaToastRegionProps<ToastContent>['queue']
 }
 
+type ToastProps = Omit<
+  AriaToastProps<ToastContent>,
+  'children' | 'className'
+> & {
+  className?: string
+}
+
+export const DEFAULT_TOAST_TIMEOUT = 1500
+
 export const createToastQueue = () =>
   new AriaToastQueue<ToastContent>({
     maxVisibleToasts: 1,
   })
 
 export const toastQueue = createToastQueue()
-export const DEFAULT_TOAST_TIMEOUT = 1500
 
 export const showToast = (content: ToastContent, options?: ToastOptions) => {
   return toastQueue.add(content, {
@@ -51,7 +51,7 @@ export const showToast = (content: ToastContent, options?: ToastOptions) => {
   })
 }
 
-export const Toast = ({ className, ...props }: ToastProps) => {
+const Toast = ({ className, ...props }: ToastProps) => {
   const { icon, children } = props.toast.content
 
   return (
@@ -59,7 +59,7 @@ export const Toast = ({ className, ...props }: ToastProps) => {
       {...props}
       className={cn(
         'pointer-events-none flex h-15 w-full items-center gap-2.75 px-5',
-        'bg-primary-200 rounded-[10px] text-white',
+        'bg-dim rounded-[10px] text-white',
         'transform-gpu',
         props.toast.timeout
           ? 'animate-toast-with-timeout'
@@ -69,7 +69,7 @@ export const Toast = ({ className, ...props }: ToastProps) => {
     >
       <AriaToastContent className="contents">
         {icon ? (
-          <span aria-hidden="true" className="flex size-6 shrink-0">
+          <span aria-hidden="true" className="flex size-6.5 shrink-0">
             {icon}
           </span>
         ) : null}

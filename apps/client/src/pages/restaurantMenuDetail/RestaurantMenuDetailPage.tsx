@@ -1,4 +1,4 @@
-import { BackIcon } from '@hashi/hds-icons'
+import { BackIcon, ShareIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
 
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
@@ -15,7 +15,7 @@ import { RestaurantSelectedMenuSection } from '@/pages/restaurantMenuDetail/comp
 import { useRestaurantMenuDetailPage } from '@/pages/restaurantMenuDetail/hooks/useRestaurantMenuDetailPage'
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
-import { ShareIconButton } from '@/shared/components/shareIconButton'
+import { useShareLink } from '@/shared/components/shareIconButton'
 
 export const RestaurantMenuDetailPage = () => {
   const {
@@ -40,6 +40,7 @@ export const RestaurantMenuDetailPage = () => {
     onPressReservation,
     onTabChange,
   } = useRestaurantMenuDetailPage()
+  const handleShare = useShareLink(shareUrl)
 
   if (isNotFound) {
     return <NotFoundPage />
@@ -68,8 +69,12 @@ export const RestaurantMenuDetailPage = () => {
               <BackIcon className="size-6" />
             </IconButton>
           }
-          className="h-[75px]"
-          rightAction={<ShareIconButton shareUrl={shareUrl} />}
+          rightAction={{
+            type: 'icon',
+            icon: <ShareIcon className="size-6" />,
+            ariaLabel: '공유하기',
+            onClick: handleShare,
+          }}
           title={
             <span className="block truncate whitespace-nowrap">
               {restaurant.name}

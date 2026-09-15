@@ -20,7 +20,6 @@ import {
 } from '@/shared/auth/authSession'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
-import profileEmptyImage from '@/shared/assets/images/profile-empty.svg'
 import { createQueryClient } from '@/shared/lib/queryClient'
 
 import { ProfileNewPage } from '@/pages/profileNew/ProfileNewPage'
@@ -140,16 +139,11 @@ describe('ProfileNewPage', () => {
   it('shows the default profile image before and after deleting profile image', () => {
     renderProfileNewPage()
 
-    const profileImage = screen.getByRole('img', { name: '프로필 이미지' })
-
-    expect(profileImage).toHaveAttribute('src', profileEmptyImage)
+    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: '프로필 삭제' }))
 
-    expect(screen.getByRole('img', { name: '프로필 이미지' })).toHaveAttribute(
-      'src',
-      profileEmptyImage,
-    )
+    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
   })
 
   it('opens the profile image file input from the edit button and previews the selected image', () => {
@@ -203,10 +197,7 @@ describe('ProfileNewPage', () => {
     })
 
     expect(createObjectUrl).not.toHaveBeenCalled()
-    expect(screen.getByRole('img', { name: '프로필 이미지' })).toHaveAttribute(
-      'src',
-      profileEmptyImage,
-    )
+    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
     expect(screen.getByText('5MB 이하의 이미지만 등록해주세요.')).toHaveClass(
       'typo-body-3',
       'text-error',

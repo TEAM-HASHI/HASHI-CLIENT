@@ -17,13 +17,25 @@ export type {
 export { Chip } from './chip'
 export type { ChipProps } from './chip'
 export { IconButton } from './iconButton'
-export type { IconButtonProps, IconButtonSize } from './iconButton'
+export type {
+  IconButtonProps,
+  IconButtonSize,
+  IconButtonVariant,
+} from './iconButton'
 export { InputField } from './inputField'
 export type { InputFieldProps } from './inputField'
+export { OptionItem } from './optionItem'
+export type { OptionItemProps } from './optionItem'
 export { StarRating } from './starRating'
 export type { StarRatingProps, StarRatingSize } from './starRating'
 export { Header } from './header'
-export type { HeaderProps, HeaderVariant } from './header'
+export type {
+  HeaderIconAction,
+  HeaderProps,
+  HeaderRightAction,
+  HeaderTextAction,
+  HeaderVariant,
+} from './header'
 export { SearchBar, SearchField } from './searchBar'
 export type { SearchBarProps, SearchFieldProps } from './searchBar'
 export { BottomSheet } from './bottomSheet'
@@ -36,16 +48,10 @@ export {
   createToastQueue,
   DEFAULT_TOAST_TIMEOUT,
   showToast,
-  Toast,
   ToastRegion,
   toastQueue,
 } from './toast'
-export type {
-  ToastContent,
-  ToastOptions,
-  ToastProps,
-  ToastRegionProps,
-} from './toast'
+export type { ToastContent, ToastOptions, ToastRegionProps } from './toast'
 export { Dialog } from './dialog'
 export type {
   DialogBodyProps,
@@ -61,7 +67,7 @@ export type {
   DialogType,
 } from './dialog'
 export { Checkbox } from './checkbox/Checkbox'
-export { CollapsibleText } from './collapsibleText'
+export { ExpandableText } from './expandableText'
 export { Carousel } from './carousel'
 export type {
   CarouselIndicatorAlign,
@@ -73,3 +79,8 @@ export type {
 } from './carousel'
 export { Calendar } from './calendar'
 export type { CalendarProps } from './calendar'
+
+export { TimeSlotPicker } from './timeSlotPicker'
+export type { TimeSlotPickerProps } from './timeSlotPicker'
+export { Banner } from './banner'
+export type { BannerProps } from './banner'
