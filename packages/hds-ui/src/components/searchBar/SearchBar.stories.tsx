@@ -102,6 +102,20 @@ export const LongPlaceholderOverflow: Story = {
   ],
 }
 
+export const LongValueOverflow: Story = {
+  args: {
+    value: '긴 검색어가 입력되어도 오른쪽 둥근 경계에 붙지 않습니다',
+    readOnly: true,
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-[240px] bg-white p-4">
+        <Story />
+      </div>
+    ),
+  ],
+}
+
 export const MobileViewport430: Story = {
   decorators: [
     (Story) => (

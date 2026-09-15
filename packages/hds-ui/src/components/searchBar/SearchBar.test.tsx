@@ -33,6 +33,7 @@ describe('SearchBar', () => {
       'active:bg-warm-gray-100',
       'py-4',
       'pl-3',
+      'pr-3',
     )
     expect(input).toHaveClass(
       'typo-body-4',
@@ -93,6 +94,21 @@ describe('SearchBar', () => {
     fireEvent.change(input, { target: { value: '라멘' } })
 
     expect(handleChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps end padding for long input values', () => {
+    render(
+      <SearchBar
+        aria-label="식당 검색"
+        value="긴 검색어가 입력되어도 오른쪽 둥근 경계에 붙지 않습니다"
+        readOnly
+      />,
+    )
+
+    const input = screen.getByRole('searchbox', { name: '식당 검색' })
+
+    expect(input.parentElement).toHaveClass('pr-3')
+    expect(input).toHaveClass('min-w-0', 'flex-1')
   })
 
   it('supports an uncontrolled default value', () => {

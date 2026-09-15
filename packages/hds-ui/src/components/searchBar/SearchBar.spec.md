@@ -183,6 +183,7 @@ v1에서는 loading, invalid/error, clearable, autocomplete 상태를 `SearchBar
 - height: `h-[45px]`
 - icon: `icon=true`일 때 leading search icon decorative
 - spacing: `icon=true`일 때 icon과 input 사이 `gap-2`를 사용합니다.
+- root padding: 좌우 `12px`를 유지해 긴 placeholder/value와 caret이 rounded edge에 붙지 않도록 합니다.
 - background: `primary-100`을 사용합니다.
 - hover background: `warm-gray-50`
 - pressed background: `warm-gray-100`
@@ -212,6 +213,7 @@ v1에서는 loading, invalid/error, clearable, autocomplete 상태를 `SearchBar
 - [x] Disabled
 - [x] Focus state
 - [x] Long placeholder overflow
+- [x] Long value overflow
 - [x] Full width in 430px mobile viewport wrapper
 - [x] Controlled example
 - [x] Uncontrolled example

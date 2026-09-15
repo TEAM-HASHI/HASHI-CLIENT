@@ -24,7 +24,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
     return (
       <div
         className={cn(
-          'bg-primary-100 hover:bg-warm-gray-50 active:bg-warm-gray-100 flex h-[45px] w-full items-center rounded-[10px] py-4 pl-3 transition-colors',
+          'bg-primary-100 hover:bg-warm-gray-50 active:bg-warm-gray-100 flex h-[45px] w-full items-center rounded-[10px] py-4 pr-3 pl-3 transition-colors',
           icon && 'gap-2',
           'data-[disabled=true]:opacity-40',
           className,
