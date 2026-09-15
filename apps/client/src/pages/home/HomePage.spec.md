@@ -359,7 +359,7 @@ BottomNavigationLayout
 
 - Reuse:
   - 현재 재사용 가능한 식당 리스트/카드 컴포넌트는 확인되지 않았습니다.
-  - 이미지 렌더링은 `Thumbnail`을 사용해 URL 누락과 이미지 로드 실패 모두 공통 `ImageFallback` fallback으로 처리합니다.
+  - 이미지 렌더링은 HDS `Thumbnail`을 사용해 URL 누락과 이미지 로드 실패를 내부 fallback으로 처리합니다.
 - Do not create:
   - 초기부터 `shared/components/RestaurantCard`
   - HDS 식당 카드
@@ -501,7 +501,7 @@ BottomNavigationLayout
   - 없음
 - exceptional case:
   - 이미지 로드 실패 시 레이아웃이 깨지지 않도록 고정 크기/비율과 배경색을 유지합니다.
-  - SNS 맛집 이미지는 URL이 없거나 이미지 요청이 403/404/CORS 등으로 실패하면 공통 `ImageFallback`를 렌더링합니다.
+  - SNS 맛집 이미지는 URL이 없거나 이미지 요청이 403/404/CORS 등으로 실패하면 HDS `Thumbnail`의 내부 fallback을 렌더링합니다.
   - route target이 확정되지 않은 콘텐츠는 클릭 가능한 UI로 노출하지 않습니다.
 - user-facing message:
   - 홈 전체 error message는 만들지 않습니다.

@@ -92,8 +92,8 @@ apps/client/src/pages/myReservations/
 - [ ] 조회된 리스트가 비어 있으면 shared `Empty` 컴포넌트를 사용합니다.
 - [ ] 하단 네비게이션은 고정으로 유지됩니다.
 - [ ] 카드 이미지는 식당/음식 이미지가 없을 경우 fallback 이미지를 보여줍니다.
-  - 현재 구현은 page-local `ReservationCardImage`의 임시 fallback을 사용합니다.
-  - `ReservationCardImage`의 임의 크기와 비활성 상태는 유지하고, 내부 fallback은 HDS `ImageFallback`을 사용합니다.
+  - 카드별 크기와 비활성 상태는 page-local `ReservationCardImage`가 관리합니다.
+  - 이미지 fallback은 HDS `ImageFallback`을 사용합니다.
 - [ ] 각 상태별 카드 UI를 분리합니다.
 - [ ] `진행 중`, `방문 예정`, `예약 취소` 탭은 `GET /api/v1/reservations/me` API로 조회합니다.
 - [ ] `방문 완료` 탭은 `GET /api/v1/reviews/visited-reservations` API로 조회합니다.
@@ -521,6 +521,7 @@ HDS component:
 - `Button`
 - `Dialog`
 - `BottomNavigation`
+- `ImageFallback`
 
 HDS icon:
 

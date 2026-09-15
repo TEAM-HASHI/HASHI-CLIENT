@@ -219,6 +219,7 @@ HashiPickPage
   - `IconButton`
   - `BottomSheet`
   - `Button`
+  - `Thumbnail`
 - app shared component:
   - `FilterBottomSheet`
 - feature component:

@@ -367,6 +367,7 @@ SearchPage
   - `Chip`: 최근 검색어와 추천 검색어 keyword pill
   - `Button`: 바텀시트 footer의 `초기화`, `적용`
   - `BottomSheet`: 필터 바텀시트 shell
+  - `Thumbnail`: 검색 결과 이미지와 이미지 로드 실패 fallback
 - app shared component:
   - `FilterBottomSheet`: 정렬/음식 장르 단일 선택 바텀시트 조합
   - `ListEmptyState`: 검색 결과 없음 상태

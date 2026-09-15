@@ -26,7 +26,7 @@
 - 뒤로가기 버튼을 누르면 `ROUTES.myReviews`에 `tab=written` 검색 파라미터를 붙여 이동하고 `작성한 리뷰` 탭을 연다.
 - 식당 정보 영역은 review feature의 `ReviewReservationSummary`를 재사용한다.
   - 식당 썸네일, 식당명, 방문 일시, 방문 인원 정보를 표시한다.
-  - 이미지가 없으면 공통 `ImageFallback` fallback을 사용한다.
+  - 이미지가 없거나 로드에 실패하면 HDS `Thumbnail`의 내부 fallback을 사용한다.
 - 리뷰 내용 영역은 별점, 작성일, 리뷰 본문을 표시한다.
 - 리뷰 본문은 HDS `ExpandableText`를 사용한다.
   - 본문이 실제 3줄을 초과하면 접힌 상태에서 최대 3줄까지 보여주고 `더보기` 버튼으로 전체 내용을 펼친다.
