@@ -42,6 +42,30 @@ describe('Thumbnail', () => {
     ).toBeTruthy()
   })
 
+  it('preserves shared attributes when the image falls back', () => {
+    const { container } = render(
+      <Thumbnail
+        aria-describedby="thumbnail-description"
+        alt="식당 이미지"
+        id="restaurant-thumbnail"
+        src="/broken.png"
+        title="식당 대표 이미지"
+      />,
+    )
+
+    fireEvent.error(screen.getByRole('img', { name: '식당 이미지' }))
+
+    expect(
+      container.querySelector('[data-slot="image-fallback"]'),
+    ).toHaveAttribute('aria-describedby', 'thumbnail-description')
+    expect(
+      container.querySelector('[data-slot="image-fallback"]'),
+    ).toHaveAttribute('id', 'restaurant-thumbnail')
+    expect(
+      container.querySelector('[data-slot="image-fallback"]'),
+    ).toHaveAttribute('title', '식당 대표 이미지')
+  })
+
   it('retries a previously failed image after src changes away and back', () => {
     const { rerender } = render(
       <Thumbnail alt="식당 이미지" src="/broken.png" />,

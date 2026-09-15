@@ -5,11 +5,14 @@ import { cn } from '../../utils'
 
 export type ThumbnailSize = 'sm' | 'md' | 'lg'
 
-export interface ThumbnailProps extends Omit<
+type ThumbnailSharedProps = Pick<
   ComponentPropsWithoutRef<'img'>,
-  'alt' | 'src'
-> {
+  'aria-describedby' | 'aria-hidden' | 'className' | 'id' | 'title'
+>
+
+export interface ThumbnailProps extends ThumbnailSharedProps {
   alt: string
+  onError?: ComponentPropsWithoutRef<'img'>['onError']
   size?: ThumbnailSize
   src?: string | null
 }
@@ -24,12 +27,15 @@ const thumbnailSizeConfig = {
 >
 
 export const Thumbnail = ({
+  'aria-describedby': ariaDescribedBy,
+  'aria-hidden': ariaHidden,
   alt,
   className,
+  id,
   onError,
   size = 'sm',
   src,
-  ...props
+  title,
 }: ThumbnailProps) => {
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
   const sizeConfig = thumbnailSizeConfig[size]
@@ -46,27 +52,32 @@ export const Thumbnail = ({
   if (!src || failedSrc === src) {
     return (
       <ImageFallback
-        aria-hidden={alt === '' ? 'true' : undefined}
+        aria-describedby={ariaDescribedBy}
+        aria-hidden={ariaHidden ?? (alt === '' ? true : undefined)}
         aria-label={alt || undefined}
         className={thumbnailClassName}
-        id={props.id}
+        id={id}
         markSize={sizeConfig.markSize}
         role={alt ? 'img' : undefined}
+        title={title}
       />
     )
   }
 
   return (
     <img
-      {...props}
+      aria-describedby={ariaDescribedBy}
+      aria-hidden={ariaHidden}
       alt={alt}
       className={cn(thumbnailClassName, 'object-cover')}
       data-slot="thumbnail-image"
+      id={id}
       onError={(event) => {
         setFailedSrc(src)
         onError?.(event)
       }}
       src={src}
+      title={title}
     />
   )
 }

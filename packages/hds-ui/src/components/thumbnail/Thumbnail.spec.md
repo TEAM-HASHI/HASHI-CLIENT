@@ -9,7 +9,8 @@
 - `src`: 이미지 URL. 없거나 로딩에 실패하면 `ImageFallback`을 표시합니다.
 - `alt`: 이미지 대체 텍스트입니다.
 - `size`: `sm | md | lg`, 기본값은 `sm`입니다.
-- 그 외 표준 `img` 속성을 전달할 수 있습니다.
+- `className`, `id`, `title`, `aria-describedby`, `aria-hidden`: 정상 이미지와 fallback에 공통으로 전달합니다.
+- `onError`: 실제 이미지의 로딩 실패 이벤트를 전달합니다.
 
 ## Size
 
