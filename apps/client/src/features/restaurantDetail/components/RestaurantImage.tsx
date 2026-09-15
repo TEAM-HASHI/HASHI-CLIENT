@@ -7,20 +7,20 @@ interface RestaurantImageProps {
   src?: string
 }
 
-export const RestaurantImage = ({
+const RestaurantImageContent = ({
   className,
   markSize,
   src,
 }: RestaurantImageProps) => {
-  const [failedSrc, setFailedSrc] = useState<string | null>(null)
+  const [hasError, setHasError] = useState(false)
 
-  if (src && failedSrc !== src) {
+  if (src && !hasError) {
     return (
       <img
         alt=""
         aria-hidden="true"
         className={className}
-        onError={() => setFailedSrc(src)}
+        onError={() => setHasError(true)}
         src={src}
       />
     )
@@ -34,3 +34,7 @@ export const RestaurantImage = ({
     />
   )
 }
+
+export const RestaurantImage = (props: RestaurantImageProps) => (
+  <RestaurantImageContent key={props.src} {...props} />
+)
