@@ -438,6 +438,7 @@ MVP 제외:
 
 HDS component:
 
+- `Avatar`: 프로필 이미지와 guest fallback을 담당합니다.
 - `Button`
 - `Dialog`
 - 필요한 경우 `IconButton`
@@ -450,7 +451,6 @@ HDS icon:
 shared component:
 
 - `ComingSoonDialog`
-- 프로필 이미지와 guest fallback은 HDS `Avatar`가 담당합니다.
 
 page-local components:
 
