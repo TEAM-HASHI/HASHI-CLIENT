@@ -189,13 +189,12 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
   - `IconButton`
   - `Button`
   - `Dialog`
+  - `Thumbnail` (`ImageFallback` fallback 포함)
 - HDS Icons:
   - `BackIcon`
   - `CheckIcon`
   - `HashiPointMarkIcon`
   - `HashiPlaceholderIcon`
-- Shared:
-  - `Thumbnail` (`ImageFallback` fallback 포함)
 - Page-local:
   - `ReservationRequestInfoSection`
   - `ReservationPointSection`

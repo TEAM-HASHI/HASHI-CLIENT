@@ -178,7 +178,6 @@ ReservationDetailPage
   - `Header`
   - `IconButton`
   - `Button`
-- app shared component:
   - `ImageFallback`
 - feature component:
   - `ReservationCancelDialog`

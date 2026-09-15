@@ -110,9 +110,9 @@
   - `Button`
   - `Badge`
   - `Dialog`
+  - `ImageFallback`
 - app shared component:
   - `ShareIconButton`
-  - `ImageFallback`
   - `ComingSoonDialog`
   - `LoadingScreen`
 - feature component:
