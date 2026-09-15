@@ -179,7 +179,7 @@ TodayRestaurantPage
   - `Dialog`
   - `StarRating`
   - `Carousel`
-  - `CollapsibleText`
+  - `ExpandableText`
   - `Chip`
   - `Badge`
 - app shared component:

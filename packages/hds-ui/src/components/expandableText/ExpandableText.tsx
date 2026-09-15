@@ -10,10 +10,7 @@ import { cn } from '../../utils'
 const COLLAPSED_LINE_COUNT = 3
 const DEFAULT_LINE_HEIGHT = 24
 
-type CollapsibleTextProps = Omit<
-  ComponentPropsWithoutRef<'div'>,
-  'children'
-> & {
+type ExpandableTextProps = Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
   text: string
   defaultExpanded?: boolean
 }
@@ -38,12 +35,12 @@ const getCollapsedHeight = (element: HTMLElement) => {
   return Math.ceil(fallbackLineHeight * COLLAPSED_LINE_COUNT)
 }
 
-export const CollapsibleText = ({
+export const ExpandableText = ({
   text,
   defaultExpanded = false,
   className,
   ...props
-}: CollapsibleTextProps) => {
+}: ExpandableTextProps) => {
   const textRef = useRef<HTMLParagraphElement>(null)
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [isOverflowing, setIsOverflowing] = useState(false)
@@ -79,11 +76,14 @@ export const CollapsibleText = ({
   const ToggleIcon = isExpanded ? TapUpIcon : TapDownIcon
 
   return (
-    <div className={cn('w-full', className)} {...props}>
+    <div
+      className={cn('flex w-full flex-col items-end gap-1', className)}
+      {...props}
+    >
       <p
         ref={textRef}
         className={cn(
-          'typo-long-body-1 text-primary-200 whitespace-pre-wrap',
+          'typo-long-body-1 text-primary-200 w-full whitespace-pre-wrap',
           !isExpanded && 'line-clamp-3',
         )}
       >
@@ -94,7 +94,7 @@ export const CollapsibleText = ({
         <button
           type="button"
           aria-expanded={isExpanded}
-          className="typo-body-6 text-cool-gray-600 mt-1 ml-auto flex items-center"
+          className="typo-body-6 text-cool-gray-600 flex items-center"
           onClick={() => setIsExpanded((current) => !current)}
         >
           {toggleLabel}
