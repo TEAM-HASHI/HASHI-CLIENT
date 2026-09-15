@@ -16,6 +16,7 @@ HDS가 담당하는 것:
 - title 영역과 content 영역의 시각 구조
 - expanded 여부에 따른 title typography 변경
 - content를 `children`으로 자유롭게 렌더링
+- header heading level을 호출부가 페이지 구조에 맞게 지정
 - controlled / uncontrolled 상태 제어
 - keyboard interaction과 focus-visible outline을 포함한 기본 접근성 계약
 
@@ -41,6 +42,10 @@ HDS가 담당하지 않는 것:
 >
   {term.content}
 </Accordion>
+
+<Accordion title={term.title} headingLevel={4}>
+  {term.content}
+</Accordion>
 ```
 
 Exported value:
@@ -55,15 +60,22 @@ Exported types:
 
 ### `title`
 
-- type: `ReactNode`
+- type: `string`
 - required: `true`
-- description: accordion header에 렌더링할 title입니다. 서버에서 받은 약관 제목도 prop으로 전달할 수 있습니다.
+- description: accordion header button의 accessible name으로도 쓰이는 title입니다. 서버에서 받은 약관 제목 문자열을 전달할 수 있습니다.
 
 ### `children`
 
 - type: `ReactNode`
 - required: `true`
 - description: expanded 상태에서 렌더링할 content입니다. 서버에서 받은 약관 내용이나 호출부가 조합한 ReactNode를 전달합니다.
+
+### `headingLevel`
+
+- type: `2 | 3 | 4 | 5 | 6`
+- required: `false`
+- default: `3`
+- description: accordion header의 heading level입니다. 페이지의 heading 구조에 맞게 호출부가 조정합니다.
 
 ### `defaultExpanded`
 
@@ -98,8 +110,8 @@ Exported types:
 
 ## States
 
-- collapsed: content를 렌더링하지 않고 title을 `typo-body-5`로 표시합니다.
-- expanded: content를 렌더링하고 title을 `typo-sub-header-3`로 표시합니다.
+- collapsed: content DOM은 유지하되 `hidden`으로 숨기고 title을 `typo-body-5`로 표시합니다.
+- expanded: content의 `hidden`을 해제하고 title을 `typo-sub-header-3`로 표시합니다.
 - controlled: 호출부가 `expanded`와 `onExpandedChange`로 상태를 관리합니다.
 - uncontrolled: 컴포넌트가 `defaultExpanded` 기반으로 내부 상태를 관리합니다.
 
@@ -118,6 +130,7 @@ hover, pressed, disabled, loading 상태는 현재 Figma에 정의되어 있지 
 - title overflow: 줄바꿈 허용
 - icon size: `20px * 20px`
 - icon color: `cool-gray-900`
+- icon transition: expanded 상태에서 `TapDownIcon`을 180도 회전합니다.
 - content typography: `typo-caption-2`
 - content line-height: `1.5`
 - content color: `warm-gray-300`
@@ -127,9 +140,9 @@ Figma의 component width `393px`는 예시 viewport 기준이므로 컴포넌트
 
 ## Accessibility
 
-- header는 `button type="button"`으로 렌더링합니다.
+- header는 `role="heading"`과 `aria-level`을 가진 wrapper 내부의 `button type="button"`으로 렌더링합니다.
 - expanded 상태를 `aria-expanded`로 전달합니다.
-- trigger와 content는 `aria-controls` / `id`로 연결합니다.
+- trigger와 content는 collapsed 상태에서도 `aria-controls` / `id`로 연결합니다.
 - icon은 장식 요소이므로 `aria-hidden="true"`와 `focusable="false"`를 적용합니다.
 - keyboard interaction은 native button 동작을 따릅니다.
 
@@ -144,6 +157,7 @@ Controls:
 
 - `title`
 - `children`
+- `headingLevel`
 - `defaultExpanded`
 - `expanded`
 
@@ -151,17 +165,18 @@ Storybook의 약관 문구는 UI 확인용 예시이며, 실제 서비스 데이
 
 ## Test
 
-- [x] title button 렌더링
-- [x] collapsed 기본 상태에서 content 미렌더링
-- [x] `defaultExpanded` 상태에서 content 렌더링
+- [x] title heading button 렌더링
+- [x] custom heading level 렌더링
+- [x] collapsed 기본 상태에서 content DOM 유지 및 hidden 처리
+- [x] `defaultExpanded` 상태에서 content hidden 해제
 - [x] trigger click 시 expanded 상태 전환
 - [x] controlled mode에서 `onExpandedChange` 호출
-- [x] state별 typography/color token 적용
+- [x] `aria-controls`와 content `id` 연결
 
 ## Verification
 
-- [ ] `pnpm --filter @hashi/hds-ui lint`
-- [ ] `pnpm --filter @hashi/hds-ui typecheck`
-- [ ] `pnpm --filter @hashi/hds-ui build-storybook`
-- [ ] `pnpm --filter @hashi/hds-ui test`
-- [ ] `git diff --check`
+- [x] `pnpm --filter @hashi/hds-ui lint`
+- [x] `pnpm --filter @hashi/hds-ui typecheck`
+- [x] `pnpm --filter @hashi/hds-ui build-storybook`
+- [x] `pnpm --filter @hashi/hds-ui test`
+- [x] `git diff --check`

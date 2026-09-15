@@ -20,6 +20,10 @@ const meta: Meta<typeof Accordion> = {
     children: {
       control: 'text',
     },
+    headingLevel: {
+      control: 'select',
+      options: [2, 3, 4, 5, 6],
+    },
     defaultExpanded: {
       control: 'boolean',
     },
