@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { ComponentProps } from 'react'
-import { SmileIcon } from '@hashi/hds-icons'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 import { Chip } from './Chip'
@@ -28,26 +27,6 @@ const StatefulChip = (args: ChipPropsForStory) => {
 
   return <Chip {...args} selected={selected} onSelectedChange={setSelected} />
 }
-
-const DisabledSmileIcon = () => (
-  <svg
-    aria-hidden="true"
-    className="text-warm-gray-300 size-[1em]"
-    fill="none"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <circle cx={12} cy={12} r={9.3} stroke="currentColor" strokeWidth={1.4} />
-    <circle cx={9} cy={10} fill="currentColor" r={1} />
-    <circle cx={15} cy={10} fill="currentColor" r={1} />
-    <path
-      d="M8.5 14C8.5 14 9.375 16 12 16C14.625 16 15.5 14 15.5 14"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeWidth={1.4}
-    />
-  </svg>
-)
 
 const ChipPreview = ({ initialValue, items }: ChipPreviewProps) => {
   const [value, setValue] = useState(initialValue)
@@ -129,21 +108,11 @@ const meta = {
     count: {
       control: 'number',
     },
-    disabledIcon: {
-      control: false,
-    },
-    icon: {
-      control: false,
-    },
     onSelectedChange: {
       control: false,
     },
     selected: {
       control: 'boolean',
-    },
-    variant: {
-      control: 'select',
-      options: ['basic', 'icon'],
     },
   },
 } satisfies Meta<typeof Chip>
@@ -199,42 +168,6 @@ export const LongText: Story = {
       </div>
     ),
   ],
-}
-
-export const Icon: Story = {
-  args: {
-    children: '친절해요',
-    icon: <SmileIcon />,
-    variant: 'icon',
-  },
-}
-
-export const IconSelected: Story = {
-  args: {
-    children: '친절해요',
-    icon: <SmileIcon />,
-    selected: true,
-    variant: 'icon',
-  },
-}
-
-export const IconToggle: Story = {
-  args: {
-    children: '친절해요',
-    icon: <SmileIcon />,
-    variant: 'icon',
-  },
-  render: StatefulChip,
-}
-
-export const IconDisabled: Story = {
-  args: {
-    children: '친절해요',
-    disabled: true,
-    disabledIcon: <DisabledSmileIcon />,
-    icon: <SmileIcon />,
-    variant: 'icon',
-  },
 }
 
 export const FilterCategoryCases: Story = {
