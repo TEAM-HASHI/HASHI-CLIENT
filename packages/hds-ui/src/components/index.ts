@@ -1,5 +1,9 @@
 export { Avatar } from './avatar'
 export type { AvatarProps, AvatarSize } from './avatar'
+export { ImageFallback } from './imageFallback'
+export type { ImageFallbackMarkSize, ImageFallbackProps } from './imageFallback'
+export { Thumbnail } from './thumbnail'
+export type { ThumbnailProps, ThumbnailSize } from './thumbnail'
 export { Button } from './button'
 export type {
   ButtonProps,
