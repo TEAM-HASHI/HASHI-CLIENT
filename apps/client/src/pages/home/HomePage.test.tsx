@@ -280,7 +280,7 @@ describe('HomePage', () => {
     ).toHaveClass('mt-5')
   })
 
-  it('shows DefaultImage when an SNS hot restaurant image request fails', async () => {
+  it('shows ImageFallback when an SNS hot restaurant image request fails', async () => {
     renderHomePage()
 
     const image = await screen.findByRole('img', {
@@ -292,7 +292,7 @@ describe('HomePage', () => {
     expect(image).not.toBeInTheDocument()
     expect(
       screen.getByLabelText('돈카츠 후쿠마루 도쿄역 야에스점 대표 이미지'),
-    ).toHaveClass('bg-warm-gray-100')
+    ).toHaveClass('bg-warm-gray-50')
   })
 
   it('hides the SNS hot restaurant section when the API returns no restaurants', async () => {

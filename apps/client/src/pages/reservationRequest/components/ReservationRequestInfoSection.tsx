@@ -1,6 +1,5 @@
 import { HashiPlaceholderIcon } from '@hashi/hds-icons'
-
-import { ImageWithDefaultFallback } from '@/shared/components/defaultImage'
+import { Thumbnail } from '@hashi/hds-ui'
 
 interface ReservationRequestInfoSectionProps {
   restaurantName: string
@@ -57,10 +56,9 @@ export const ReservationRequestInfoSection = ({
               role="img"
             />
           ) : (
-            <ImageWithDefaultFallback
+            <Thumbnail
               alt={`${restaurantName} 식당 이미지`}
-              className="size-15 shrink-0 rounded-[5px] object-cover"
-              fallbackLogoSize="sm"
+              size="sm"
               src={restaurantImageUrl ?? undefined}
             />
           )}

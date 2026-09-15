@@ -1,6 +1,6 @@
 import type { ComponentPropsWithRef, ReactNode } from 'react'
 import { useId, useState } from 'react'
-import { TapDownIcon } from '@hashi/hds-icons'
+import { TapDownIcon as ToggleIcon } from '@hashi/hds-icons'
 import { cn } from '../../utils'
 
 export type AccordionProps = Omit<
@@ -70,7 +70,7 @@ export const Accordion = ({
           >
             {title}
           </span>
-          <TapDownIcon
+          <ToggleIcon
             aria-hidden="true"
             className={cn(
               'text-cool-gray-900 size-5 shrink-0 transition-transform duration-200 ease-out motion-reduce:transition-none',

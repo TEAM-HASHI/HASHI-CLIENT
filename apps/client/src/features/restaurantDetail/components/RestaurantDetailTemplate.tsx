@@ -4,6 +4,7 @@ import {
   CopyIcon,
   LocationIcon,
   MoneySmallIcon,
+  ShareIcon,
   StarFillIcon,
 } from '@hashi/hds-icons'
 import { Header, IconButton, showToast, toastQueue } from '@hashi/hds-ui'
@@ -29,7 +30,7 @@ import type {
   RestaurantDetailVariant,
 } from '@/features/restaurantDetail/types/restaurantDetail'
 import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
-import { ShareIconButton } from '@/shared/components/shareIconButton'
+import { useShareLink } from '@/shared/components/shareIconButton'
 import { cn, copyTextToClipboard } from '@/shared/utils'
 
 interface RestaurantDetailTemplateProps {
@@ -101,6 +102,7 @@ export const RestaurantDetailTemplate = ({
 }: RestaurantDetailTemplateProps) => {
   const { isTabBarFixed, markerRef } = useRestaurantDetailTabBarFixed()
   const hasScrolledToInitialTabRef = useRef(false)
+  const handleShare = useShareLink(shareUrl)
 
   const scrollToTabBarTop = useCallback(() => {
     const marker = markerRef.current
@@ -168,7 +170,12 @@ export const RestaurantDetailTemplate = ({
               <BackIcon className="size-6" />
             </IconButton>
           }
-          rightAction={<ShareIconButton shareUrl={shareUrl} />}
+          rightAction={{
+            type: 'icon',
+            icon: <ShareIcon className="size-6" />,
+            ariaLabel: '공유하기',
+            onClick: handleShare,
+          }}
           title={title}
         />
       </div>

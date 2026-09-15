@@ -154,9 +154,9 @@ page 단위 구현, form/data fetching/mutation 흐름, HDS component, 여러 �
 - 앱 실행 조립 코드는 각 앱의 `src/app`에 둡니다.
 - route pattern은 각 앱의 `src/app/router/path.ts`에 두고, 여러 호출부에서 재사용하는 URL 생성 helper는 `src/app/router/routePaths.ts`에서 관리합니다.
 - 앱 내부 공통 컴포넌트는 각 앱의 `src/shared/components`에 둡니다.
-- 식당 사진, 음식 사진처럼 실제 이미지 데이터가 없을 때 보여주는 앱 공통 fallback 이미지는 `apps/client/src/shared/components/defaultImage/DefaultImage.tsx`를 사용합니다.
-  - 사용처는 컨테이너 크기와 radius를 `className`으로 지정합니다.
-  - 내부 Hashi 로고 크기는 `logoSize`로 조정합니다.
+- 정해진 크기의 목록 이미지는 HDS `Thumbnail`을 사용하고, 임의 크기 이미지의 fallback은 HDS `ImageFallback`을 사용합니다.
+  - `Thumbnail`은 이미지 로드 실패 처리와 fallback 전환을 함께 담당합니다.
+  - `ImageFallback`의 내부 Hashi 마크 크기는 `markSize`로 조정합니다.
   - 각 화면에서 별도 회색 박스나 임시 placeholder를 직접 만들지 않습니다.
 - 새 shared component scaffold는 `pnpm gen:component`를 우선 사용합니다.
 - 새 shared hook scaffold는 `pnpm gen:hook`을 우선 사용합니다.

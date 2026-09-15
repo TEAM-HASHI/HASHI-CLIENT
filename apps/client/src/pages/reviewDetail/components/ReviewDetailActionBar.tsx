@@ -16,10 +16,9 @@ export const ReviewDetailActionBar = ({
     >
       <div className="grid grid-cols-2 gap-3.25">
         <Button
-          className="text-primary-400"
           onClick={onDeleteClick}
           size="lg"
-          variant="neutral"
+          variant="destructive"
           width="full"
         >
           삭제하기

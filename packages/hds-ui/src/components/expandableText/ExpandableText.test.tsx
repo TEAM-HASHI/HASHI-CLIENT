@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { CollapsibleText } from './CollapsibleText'
+import { ExpandableText } from './ExpandableText'
 
 const longText =
   '정말 맛있습니다 와우!!! 정말 맛있습니다 와우!!!정말 맛있습니다 와우!!!정말 맛있습니다 와우!!!정말 맛있습니다 와우!!!'
@@ -44,15 +44,15 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('CollapsibleText', () => {
+describe('ExpandableText', () => {
   it('renders the provided text', () => {
-    render(<CollapsibleText text={longText} />)
+    render(<ExpandableText text={longText} />)
 
     expect(screen.getByText(longText)).toBeInTheDocument()
   })
 
   it('renders collapsed by default', () => {
-    render(<CollapsibleText text={longText} />)
+    render(<ExpandableText text={longText} />)
 
     expect(screen.getByText(longText)).toHaveClass('line-clamp-3')
   })
@@ -60,7 +60,7 @@ describe('CollapsibleText', () => {
   it('renders expanded when defaultExpanded is true', () => {
     mockTextHeight(120)
 
-    render(<CollapsibleText text={longText} defaultExpanded />)
+    render(<ExpandableText text={longText} defaultExpanded />)
 
     expect(screen.getByText(longText)).not.toHaveClass('line-clamp-3')
   })
@@ -68,7 +68,7 @@ describe('CollapsibleText', () => {
   it('toggles expanded state when the button is clicked', () => {
     mockTextHeight(120)
 
-    render(<CollapsibleText text={longText} defaultExpanded />)
+    render(<ExpandableText text={longText} defaultExpanded />)
 
     fireEvent.click(screen.getByRole('button', { name: '접기' }))
 
@@ -85,7 +85,7 @@ describe('CollapsibleText', () => {
 
     vi.stubGlobal('ResizeObserver', ResizeObserverMock)
 
-    render(<CollapsibleText text={longText} />)
+    render(<ExpandableText text={longText} />)
 
     expect(ResizeObserverMock).toHaveBeenCalled()
     expect(observe).toHaveBeenCalledWith(screen.getByText(longText))
@@ -95,7 +95,7 @@ describe('CollapsibleText', () => {
     mockTextStyle({ fontSize: '15px', lineHeight: '1.5' })
     vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(68)
 
-    render(<CollapsibleText text={longText} />)
+    render(<ExpandableText text={longText} />)
 
     expect(
       screen.queryByRole('button', { name: '더보기' }),
@@ -122,7 +122,7 @@ describe('CollapsibleText', () => {
       () => scrollHeight,
     )
 
-    render(<CollapsibleText text={longText} defaultExpanded />)
+    render(<ExpandableText text={longText} defaultExpanded />)
 
     expect(screen.getByRole('button', { name: '접기' })).toBeInTheDocument()
 

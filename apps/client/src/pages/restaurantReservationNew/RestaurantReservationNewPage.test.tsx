@@ -134,7 +134,7 @@ describe('RestaurantReservationNewPage', () => {
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
   })
 
-  it('shows the black Hashi placeholder when the restaurant image fails to load', () => {
+  it('shows ImageFallback when the restaurant image fails to load', () => {
     renderPage()
 
     const restaurantImage = screen.getByRole('img', {
@@ -143,15 +143,13 @@ describe('RestaurantReservationNewPage', () => {
 
     fireEvent.error(restaurantImage)
 
-    expect(
-      screen.queryByRole('img', { name: '하시 스시 식당 이미지' }),
-    ).not.toBeInTheDocument()
+    expect(restaurantImage).not.toBeInTheDocument()
     const placeholder = screen.getByRole('img', {
-      name: '하시 스시 식당 기본 이미지',
+      name: '하시 스시 식당 이미지',
     })
 
-    expect(placeholder.tagName).toBe('svg')
-    expect(placeholder.querySelector('rect')).toHaveAttribute('fill', 'black')
+    expect(placeholder).toHaveClass('bg-warm-gray-50')
+    expect(placeholder.querySelector('svg')).toHaveClass('text-primary-100')
   })
 
   it('renders the shared 1000-character request note textarea', () => {
