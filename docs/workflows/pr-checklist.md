@@ -160,9 +160,13 @@ UI 변경:
 
 ## GitHub Actions Roles
 
-- `ci.yml`: format, lint, typecheck, test, build를 병렬 실행하는 코드 품질 gate입니다.
-- `vercel-preview.yml`: client Preview 배포와 Preview 기반 Lighthouse 측정을 담당합니다.
-  - PR에서는 Preview 배포 후 Lighthouse가 배포 URL의 홈(`/`)을 모바일 환경에서 3회 측정합니다.
+- `ci.yml`: `Quality & Build`와 `Client & HDS Tests`를 병렬 실행하는 코드 품질 gate입니다.
+  - `Quality & Build`는 format, lint, typecheck, build 순서로 실행합니다.
+  - lint, typecheck, build는 변경된 workspace와 영향을 받는 workspace만 `--affected`로 검증합니다.
+  - CI, ESLint, package, lockfile, workspace, Turbo 설정처럼 전체 프로젝트에 영향을 줄 수 있는 파일이 변경되거나 비교할 commit을 찾지 못하면 전체 검증으로 fallback합니다.
+  - `Client & HDS Tests`는 client 코드, 공통 package/config, package/workspace 설정 또는 CI workflow 변경에서 `pnpm test`를 실행합니다. 이 범위에 영향을 주지 않는 문서나 admin-only 변경에서는 test를 생략합니다.
+- `vercel-preview.yml`: client 빌드 결과에 영향을 주는 경로가 변경된 경우에만 Preview 배포와 Preview 기반 Lighthouse 측정을 실행합니다.
+  - PR에서는 Preview 배포 후 Lighthouse가 배포 URL의 홈(`/`)을 모바일 환경에서 1회 측정합니다.
   - Preview URL 불일치, Lighthouse runtime error, 브라우저 CORS 오류, 홈 필수 API non-2xx는 측정 신뢰성 오류로 보고 workflow를 실패시킵니다.
   - Performance 80, Accessibility·Best Practices·SEO 90 기준은 모두 warning으로 처리하므로 점수 미달만으로 workflow를 실패시키지 않습니다.
   - 대표 결과의 category·metric·resource와 개선 audit 최대 3개는 기존 PR 코멘트에 갱신합니다.
