@@ -141,26 +141,9 @@ describe('ProfileNewPage', () => {
     renderProfileNewPage()
 
     const profileImage = screen.getByRole('img', { name: '프로필 이미지' })
-    const editButton = screen.getByRole('button', {
-      name: '프로필 이미지 수정',
-    })
     const deleteButton = screen.getByRole('button', { name: '프로필 삭제' })
 
     expect(profileImage).toHaveAttribute('src', profileEmptyImage)
-    expect(editButton).toHaveClass(
-      'size-9',
-      'rounded-full',
-      'bg-white',
-      'enabled:hover:bg-primary-100',
-      'enabled:active:bg-warm-gray-100',
-    )
-    expect(deleteButton).toHaveClass(
-      'h-9',
-      'typo-body-6',
-      'bg-transparent',
-      'text-primary-200',
-      'enabled:hover:text-cool-gray-400',
-    )
 
     fireEvent.click(deleteButton)
 

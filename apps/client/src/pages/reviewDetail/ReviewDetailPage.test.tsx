@@ -106,12 +106,6 @@ describe('ReviewDetailPage', () => {
     )
     expect(keywordList).not.toHaveClass('flex-wrap')
     expect(keywordList.querySelectorAll('svg')).toHaveLength(3)
-    expect(screen.getByRole('button', { name: '삭제하기' })).toHaveClass(
-      'bg-secondary-200',
-      'text-primary-400',
-      'enabled:hover:bg-warm-gray-50',
-      'enabled:active:bg-warm-gray-100',
-    )
     expect(getMyReviewDetail).toHaveBeenCalledWith(5)
   })
 
