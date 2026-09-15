@@ -1,5 +1,7 @@
 export { Avatar } from './avatar'
 export type { AvatarProps, AvatarSize } from './avatar'
+export { Accordion } from './accordion'
+export type { AccordionProps } from './accordion'
 export { ImageFallback } from './imageFallback'
 export type { ImageFallbackMarkSize, ImageFallbackProps } from './imageFallback'
 export { Thumbnail } from './thumbnail'
