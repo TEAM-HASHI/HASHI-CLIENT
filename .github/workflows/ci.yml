@@ -29,33 +29,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect Quality Scope
-        id: quality-scope
+      - name: Detect CI Scope
+        id: ci-scope
         shell: bash
-        run: |
-          if ! git cat-file -e "${TURBO_SCM_BASE}^{commit}" 2>/dev/null ||
-            ! git cat-file -e "${TURBO_SCM_HEAD}^{commit}" 2>/dev/null; then
-            echo "turbo_args=" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-
-          if git diff --quiet "${TURBO_SCM_BASE}" "${TURBO_SCM_HEAD}" -- \
-            .github/workflows/ci.yml \
-            eslint.config.js \
-            package.json \
-            pnpm-lock.yaml \
-            pnpm-workspace.yaml \
-            turbo.json; then
-            echo "turbo_args=--affected" >> "${GITHUB_OUTPUT}"
-          else
-            diff_status=$?
-
-            if [ "${diff_status}" -eq 1 ]; then
-              echo "turbo_args=" >> "${GITHUB_OUTPUT}"
-            else
-              exit "${diff_status}"
-            fi
-          fi
+        run: .github/scripts/detect-ci-scope.sh "${TURBO_SCM_BASE}" "${TURBO_SCM_HEAD}" >> "${GITHUB_OUTPUT}"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -69,17 +46,20 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Test CI Scope Detection
+        run: pnpm test:ci-scope
+
       - name: Format Check
         run: pnpm format:check
 
       - name: Lint
-        run: pnpm turbo lint ${{ steps.quality-scope.outputs.turbo_args }}
+        run: pnpm turbo lint ${{ steps.ci-scope.outputs.turbo_args }}
 
       - name: Type Check
-        run: pnpm turbo typecheck ${{ steps.quality-scope.outputs.turbo_args }}
+        run: pnpm turbo typecheck ${{ steps.ci-scope.outputs.turbo_args }}
 
       - name: Build
-        run: pnpm turbo build ${{ steps.quality-scope.outputs.turbo_args }}
+        run: pnpm turbo build ${{ steps.ci-scope.outputs.turbo_args }}
 
   test:
     name: Client & HDS Tests
@@ -91,51 +71,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect Test Scope
-        id: test-scope
+      - name: Detect CI Scope
+        id: ci-scope
         shell: bash
-        run: |
-          if ! git cat-file -e "${TURBO_SCM_BASE}^{commit}" 2>/dev/null ||
-            ! git cat-file -e "${TURBO_SCM_HEAD}^{commit}" 2>/dev/null; then
-            echo "run=true" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-
-          if git diff --quiet "${TURBO_SCM_BASE}" "${TURBO_SCM_HEAD}" -- \
-            .github/workflows/ci.yml \
-            apps/client \
-            configs \
-            package.json \
-            packages \
-            pnpm-lock.yaml \
-            pnpm-workspace.yaml \
-            turbo.json; then
-            echo "run=false" >> "${GITHUB_OUTPUT}"
-          else
-            diff_status=$?
-
-            if [ "${diff_status}" -eq 1 ]; then
-              echo "run=true" >> "${GITHUB_OUTPUT}"
-            else
-              exit "${diff_status}"
-            fi
-          fi
+        run: .github/scripts/detect-ci-scope.sh "${TURBO_SCM_BASE}" "${TURBO_SCM_HEAD}" >> "${GITHUB_OUTPUT}"
 
       - name: Setup pnpm
-        if: steps.test-scope.outputs.run == 'true'
+        if: steps.ci-scope.outputs.run_tests == 'true'
         uses: pnpm/action-setup@v4
 
       - name: Setup Node
-        if: steps.test-scope.outputs.run == 'true'
+        if: steps.ci-scope.outputs.run_tests == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
       - name: Install Dependencies
-        if: steps.test-scope.outputs.run == 'true'
+        if: steps.ci-scope.outputs.run_tests == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Test
-        if: steps.test-scope.outputs.run == 'true'
+        if: steps.ci-scope.outputs.run_tests == 'true'
         run: pnpm test
