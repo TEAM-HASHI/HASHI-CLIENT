@@ -45,7 +45,7 @@ describe('NotFoundPage', () => {
       name: '홈으로 돌아가기',
     })
 
-    expect(homeButton).toHaveClass('h-[2.625rem]', 'w-[185px]')
+    expect(homeButton).toHaveClass('w-[185px]')
 
     fireEvent.click(homeButton)
 

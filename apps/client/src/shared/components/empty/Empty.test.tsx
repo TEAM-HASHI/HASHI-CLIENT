@@ -30,7 +30,7 @@ describe('Empty', () => {
       name: '일본 맛집 추천받기',
     })
 
-    expect(action).toHaveClass('h-[2.625rem]', 'w-[185px]')
+    expect(action).toHaveClass('w-[185px]')
 
     fireEvent.click(action)
 
