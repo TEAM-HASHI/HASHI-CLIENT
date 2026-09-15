@@ -86,8 +86,8 @@ Exported types:
 - check vector size: SVG viewBox 내부 기준 약 `10px * 9.5px`
 - radius: `3px`
 - rest background: `bg-cool-gray-100`
-- hover background: `group-hover:bg-cool-gray-200`
-- pressed background: `group-active:bg-cool-gray-300`
+- hover background: `group-hover/checkbox:bg-cool-gray-200`
+- pressed background: `group-active/checkbox:bg-cool-gray-300`
 - unchecked icon color: `text-white`
 - checked icon color: `peer-checked:text-cool-gray-900`
 - disabled: `cursor-not-allowed`
