@@ -7,6 +7,7 @@ import { Chip } from './Chip'
 type ChipPropsForStory = ComponentProps<typeof Chip>
 
 type ChipPreviewItem = {
+  count?: number
   value: string
   label: string
 }
@@ -37,6 +38,7 @@ const ChipPreview = ({ initialValue, items }: ChipPreviewProps) => {
 
         return (
           <Chip
+            count={item.count}
             key={item.value}
             selected={isSelected}
             onSelectedChange={(selected) => {
@@ -93,6 +95,7 @@ const meta = {
   tags: ['autodocs'],
   args: {
     children: '인기순',
+    count: undefined,
     selected: false,
   },
   argTypes: {
@@ -101,6 +104,9 @@ const meta = {
     },
     className: {
       control: false,
+    },
+    count: {
+      control: 'number',
     },
     onSelectedChange: {
       control: false,
@@ -123,6 +129,21 @@ export const Selected: Story = {
   },
 }
 
+export const WithCount: Story = {
+  args: {
+    children: '지역별',
+    count: 12,
+  },
+}
+
+export const SelectedWithCount: Story = {
+  args: {
+    children: '지역별',
+    count: 12,
+    selected: true,
+  },
+}
+
 export const FilterToggle: Story = {
   render: StatefulChip,
 }
@@ -137,6 +158,7 @@ export const SelectedFilterToggle: Story = {
 export const LongText: Story = {
   args: {
     children: '아주 긴 칩 라벨이 들어왔을 때 말줄임 처리가 되는 상태',
+    count: 99,
     selected: true,
   },
   decorators: [
@@ -150,7 +172,13 @@ export const LongText: Story = {
 
 export const FilterCategoryCases: Story = {
   render: () => (
-    <ChipSinglePreview initialValue="popular" items={categoryItems} />
+    <ChipSinglePreview
+      initialValue="popular"
+      items={categoryItems.map((item, index) => ({
+        ...item,
+        count: index + 1,
+      }))}
+    />
   ),
 }
 

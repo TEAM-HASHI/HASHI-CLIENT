@@ -4,7 +4,7 @@
 
 `Chip`은 짧은 필터 값을 알약 형태로 표시하고, 선택 여부를 동일한 시각 규칙으로 표현하는 HDS UI primitive입니다.
 
-첨부 디자인의 칩은 모두 사용자가 선택 상태를 바꿀 수 있는 필터 칩입니다. HDS는 칩의 시각 구조, 선택 상태, button 기반 접근성 계약만 담당하고, 필터 값과 단일/다중 선택 정책은 호출부가 소유합니다.
+HASHI-187 범위에서는 Figma `Chip / Basic` 리디자인만 반영합니다. 아이콘과 라벨을 함께 표시하는 선택형 UI는 기존 `Badge` 책임으로 유지합니다. HDS `Chip`은 칩의 시각 구조, 선택 상태, count slot, button 기반 접근성 계약만 담당하고, 필터 값과 단일/다중 선택 정책은 호출부가 소유합니다.
 
 ## Component Type
 
@@ -37,6 +37,8 @@ pnpm gen:ds-component
 ```tsx
 <Chip selected>인기순</Chip>
 
+<Chip count={12}>지역별</Chip>
+
 <Chip
   selected={sort === 'popular'}
   onSelectedChange={(selected) => {
@@ -54,6 +56,7 @@ pnpm gen:ds-component
 - 호출부가 소유하는 책임:
   - 필터 값, 정렬 값 같은 도메인 enum 정의
   - 현재 필터 상태를 `selected`로 매핑
+  - count에 표시할 숫자 또는 짧은 보조 라벨 계산
   - 단일 선택, 다중 선택, 토글 해제 가능 여부 같은 그룹 정책
   - 클릭 이후 query, mutation, route update, analytics 실행
 - 컴포넌트가 소유하지 않는 책임:
@@ -75,24 +78,25 @@ Exported types:
 - [x] 선택됨/선택 안 됨 상태를 동일한 shape 안에서 표현합니다.
 - [x] 칩은 button 기반 filter chip으로 동작합니다.
 - [x] 선택 상태는 controlled prop인 `selected`로 받습니다.
-- [x] 칩은 고정 width/height가 아니라 라벨 길이와 padding으로 크기를 정합니다.
+- [x] Basic 칩은 Figma 기준 36px height를 유지하고, width는 라벨과 padding으로 정합니다.
+- [x] 선택적 count slot을 label 뒤에 표시할 수 있습니다.
 - [x] 예외적으로 긴 라벨이 들어와도 부모 layout을 밀어내지 않도록 max-width와 overflow 정책을 정합니다.
 
 ## UI Structure
 
 ```text
 Chip
-  Root
-    Label
+  Label
+  Count(optional)
 ```
 
 ## Props
 
 ### `children`
 
-- type: `ReactNode`
+- type: `string`
 - required: `true`
-- description: 칩 안에 표시할 라벨입니다. 일반 사용은 짧은 텍스트를 권장합니다.
+- description: 칩 안에 표시할 짧은 텍스트 라벨입니다.
 
 ### `selected`
 
@@ -100,6 +104,12 @@ Chip
 - required: `false`
 - default: `false`
 - description: 선택된 시각 상태를 제어합니다.
+
+### `count`
+
+- type: `ReactNode`
+- required: `false`
+- description: 라벨 뒤에 표시할 짧은 보조 값입니다. 숫자 카운트를 주 용도로 하지만 HDS는 값의 도메인 의미를 해석하지 않습니다.
 
 ### `onSelectedChange`
 
@@ -120,7 +130,7 @@ Chip
 - uncontrolled state: 제공하지 않음
 - loading state: 제공하지 않음
 - error state: 제공하지 않음
-- disabled state: 제공하지 않으며, `ChipProps`에서도 `disabled`와 `aria-disabled`를 제외합니다.
+- disabled state: 제공하지 않습니다. `ChipProps`에서도 `disabled`와 `aria-disabled`를 제외합니다.
 
 ## Behavior
 
@@ -145,26 +155,41 @@ Chip
 - styling 기준:
   - Tailwind CSS utility class
   - `@hashi/hds-tokens` color, typography, radius 기준
-- layout:
+- Layout:
   - inline-flex
   - center aligned label
   - pill radius
-- sizing:
-  - width와 height를 고정하지 않고 label content, padding, line-height로 크기를 정합니다.
+- Sizing:
+  - height는 `36px`입니다.
+  - width는 label, optional count, padding으로 크기를 정합니다.
   - 기본 라벨은 한 줄 pill 형태를 유지합니다.
   - 부모가 좁거나 라벨이 비정상적으로 길면 max-width 안에서 ellipsis 처리합니다.
-- spacing:
+- Spacing:
   - horizontal padding은 `12px`입니다.
   - vertical padding은 `8px`입니다.
-  - border radius는 `10rem`입니다.
-- typography:
-  - label은 `typo-body-7`을 사용합니다.
-- selected:
-  - fill: `cool-gray-800`
-  - text: `white`
-- unselected:
+  - label과 count 사이 gap은 `2px`입니다.
+  - border radius는 pill 형태를 유지하는 `rounded-full`입니다.
+- Typography:
+  - label은 `typo-body-6`, line-height `1.36`을 사용합니다.
+  - count는 `typo-caption-1`, line-height `1.5`를 사용합니다.
+- Unselected rest:
   - fill: `warm-gray-50`
   - text: `primary-200`
+- Unselected hover:
+  - fill: `warm-gray-100`
+  - text: `primary-200`
+- Unselected pressed:
+  - fill: `warm-gray-300`
+  - text: `primary-200`
+- Selected rest:
+  - fill: `cool-gray-800`
+  - text: `white`
+- Selected hover:
+  - fill: `cool-gray-700`
+  - text: `white`
+- Selected pressed:
+  - fill: `cool-gray-900`
+  - text: `white`
 - hover/focus/active:
   - hover/active cursor와 focus-visible ring을 제공합니다.
 - layout shift 방지 조건:
@@ -193,36 +218,33 @@ Chip
 
 - [x] Default
 - [x] selected / unselected
+- [x] count
 - [x] filter category / reservation / rating / sort cases
 - [ ] loading
 - [ ] error 또는 invalid
 - [x] 긴 텍스트 또는 overflow
-- [ ] icon 포함 케이스
 
-`Chip`은 현재 loading, error, invalid, icon을 지원하지 않습니다. 해당 story는 prop 추가가 확정될 때 작성합니다.
+`Chip`은 현재 loading, error, invalid를 지원하지 않습니다.
 
 ## Non-Goals
 
 - `FilterChip`을 별도 HDS public component로 분리하지 않습니다.
 - `ChipGroup`은 이번 범위에 포함하지 않습니다. 단일 선택, 다중 선택, wrapping, spacing 정책이 여러 화면에서 반복되면 별도 compound primitive로 검토합니다.
-- disabled 상태는 이번 범위에 포함하지 않습니다. Figma variant가 확정되면 별도 prop과 story로 추가합니다.
+- 기존 `Badge` public export와 아이콘+라벨 선택형 책임은 이번 범위에서 유지합니다.
+- 기존 `@hashi/hds-icons` 아이콘 색상 구조는 이번 범위에서 변경하지 않습니다.
 - 서버 API 응답 상태나 필터 enum을 HDS props로 정의하지 않습니다.
 - 도메인별 색상 의미를 `tone="reservationCanceled"`처럼 넣지 않습니다.
 
 ## Architecture Decision
 
-하나의 `Chip` 컴포넌트를 button 기반 필터 칩으로 구현합니다.
+`Chip`은 이번 범위에서 Figma `Chip / Basic` 리디자인만 반영합니다.
 
-별도 `FilterChip`을 만들지 않는 이유:
-
-- 현재 HDS에 노출할 칩 유형이 필터 칩 하나입니다.
-- `Chip`이라는 이름만으로도 제품 의미 없이 shape, selected state, accessibility contract를 표현할 수 있습니다.
-- 정렬, 예약, 평점 같은 필터 도메인은 호출부가 label과 state로 주입합니다.
+아이콘+라벨 선택형 UI는 기존 public component인 `Badge`가 이미 담당하고 있으므로, `Chip`에 `icon` variant를 추가하지 않습니다. 이렇게 하면 `Chip`과 `Badge`의 public API 경계를 유지하면서, 이번 PR은 실제 리디자인 대상인 Chip Basic 스타일 변경에만 집중할 수 있습니다.
 
 ## Verification
 
-- [ ] `corepack pnpm --filter @hashi/hds-ui lint`
-- [ ] `corepack pnpm --filter @hashi/hds-ui typecheck`
-- [ ] `corepack pnpm --filter @hashi/hds-ui build`
-- [ ] `corepack pnpm --filter @hashi/hds-ui test`
+- [x] `corepack pnpm --filter @hashi/hds-ui lint`
+- [x] `corepack pnpm --filter @hashi/hds-ui typecheck`
+- [x] `corepack pnpm --filter @hashi/hds-ui build`
+- [x] `corepack pnpm --filter @hashi/hds-ui test`
 - [ ] Storybook에서 selected, unselected, filter cases, overflow 상태 수동 확인

@@ -96,7 +96,9 @@ describe('Badge', () => {
 
     expect(screen.getByRole('button', { name: '선택 라벨' })).toHaveClass(
       'cursor-not-allowed',
-      'opacity-40',
+      'border-warm-gray-100',
+      'bg-primary-100',
+      'text-warm-gray-300',
     )
   })
 
@@ -110,11 +112,11 @@ describe('Badge', () => {
     )
   })
 
-  it('미선택 상태에도 border 두께를 1.4px로 유지합니다', () => {
+  it('미선택 상태에는 기본 border 스타일을 적용합니다', () => {
     render(<Badge interactive label="선택 라벨" />)
 
     expect(screen.getByRole('button', { name: '선택 라벨' })).toHaveClass(
-      'border-[1.4px]',
+      'border',
       'border-warm-gray-100',
     )
   })
@@ -123,8 +125,12 @@ describe('Badge', () => {
     render(<Badge label="정적 라벨" />)
 
     expect(screen.getByText('정적 라벨').parentElement).toHaveClass(
+      'h-9',
+      'rounded-[5px]',
       'border-warm-gray-100',
       'bg-white',
+      'px-2.5',
+      'py-1',
     )
     expect(screen.getByText('정적 라벨').parentElement).not.toHaveClass(
       'border-primary-400',
@@ -144,5 +150,20 @@ describe('Badge', () => {
     expect(
       screen.getByRole('button', { name: '선택 라벨' }),
     ).toBeInTheDocument()
+  })
+
+  it('aria-disabled가 true이면 disabledIcon을 우선 표시합니다', () => {
+    render(
+      <Badge
+        aria-disabled="true"
+        disabledIcon={<span data-testid="disabled-icon">비활성 아이콘</span>}
+        icon={<span data-testid="enabled-icon">아이콘</span>}
+        interactive
+        label="선택 라벨"
+      />,
+    )
+
+    expect(screen.queryByTestId('enabled-icon')).not.toBeInTheDocument()
+    expect(screen.getByTestId('disabled-icon')).toBeInTheDocument()
   })
 })

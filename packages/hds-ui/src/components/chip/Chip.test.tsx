@@ -61,11 +61,37 @@ describe('Chip', () => {
 
     expect(screen.getByText('선택').parentElement).toHaveClass(
       'bg-cool-gray-800',
+      'hover:bg-cool-gray-700',
+      'active:bg-cool-gray-900',
       'text-white',
     )
     expect(screen.getByText('미선택').parentElement).toHaveClass(
       'bg-warm-gray-50',
+      'hover:bg-warm-gray-100',
+      'active:bg-warm-gray-300',
       'text-primary-200',
     )
+  })
+
+  it('applies basic chip layout and typography from the redesign', () => {
+    render(<Chip>라벨</Chip>)
+
+    const chip = screen.getByRole('button', { name: '라벨' })
+
+    expect(chip).toHaveClass('h-9', 'gap-0.5', 'rounded-full', 'px-3', 'py-2')
+    expect(screen.getByText('라벨')).toHaveClass('typo-body-6')
+  })
+
+  it('renders an optional basic count label', () => {
+    render(<Chip count={12}>라벨</Chip>)
+
+    expect(screen.getByRole('button', { name: '라벨 12' })).toBeInTheDocument()
+    expect(screen.getByText('12')).toHaveClass('typo-caption-1')
+  })
+
+  it('renders zero when count is 0', () => {
+    render(<Chip count={0}>라벨</Chip>)
+
+    expect(screen.getByRole('button', { name: '라벨 0' })).toBeInTheDocument()
   })
 })
