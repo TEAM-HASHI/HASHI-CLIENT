@@ -1,5 +1,11 @@
 import { PencilIcon } from '@hashi/hds-icons'
-import { Button, Chip, CollapsibleText, StarRating } from '@hashi/hds-ui'
+import {
+  Avatar,
+  Button,
+  Chip,
+  CollapsibleText,
+  StarRating,
+} from '@hashi/hds-ui'
 import type { CSSProperties, Ref } from 'react'
 
 import { ReviewKeywordBadge } from '@/features/review/components'
@@ -229,10 +235,9 @@ export const RestaurantReviewSection = ({
               >
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
-                    <RestaurantImage
-                      className="size-10 shrink-0 rounded-full object-cover"
-                      defaultImageTestId="restaurant-review-profile-default-image"
-                      logoSize="sm"
+                    <Avatar
+                      alt={`${review.reviewerName} 프로필 이미지`}
+                      size="sm"
                       src={review.reviewerProfileImageUrl}
                     />
                     <h3 className="typo-sub-header-2 text-primary-200">
