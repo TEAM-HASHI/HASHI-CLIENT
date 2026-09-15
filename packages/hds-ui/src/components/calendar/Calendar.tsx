@@ -1,4 +1,4 @@
-import { BackIcon, NextIcon } from '@hashi/hds-icons'
+import { TapDownIcon as ToggleIcon } from '@hashi/hds-icons'
 import type { ComponentPropsWithoutRef } from 'react'
 
 import { cn } from '../../utils'
@@ -105,7 +105,7 @@ export const Calendar = ({
           onClick={() => onMonthChange?.(createAdjacentMonth(visibleMonth, -1))}
           type="button"
         >
-          <BackIcon aria-hidden="true" />
+          <ToggleIcon aria-hidden="true" className="rotate-90" />
         </button>
         <h2 className="flex w-10 flex-col items-center justify-center gap-0.5 text-center">
           <span className="typo-body-3 text-cool-gray-900">
@@ -122,7 +122,7 @@ export const Calendar = ({
           onClick={() => onMonthChange?.(createAdjacentMonth(visibleMonth, 1))}
           type="button"
         >
-          <NextIcon aria-hidden="true" />
+          <ToggleIcon aria-hidden="true" className="-rotate-90" />
         </button>
       </div>
       <div className="grid grid-cols-[repeat(7,auto)] justify-between gap-y-1.5">

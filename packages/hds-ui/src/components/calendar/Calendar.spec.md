@@ -274,7 +274,8 @@ export type CalendarProps = Omit<
   - left/right icon button과 centered month label
   - month label: `typo-sub-header-1`, `text-black`
   - icon color: `text-cool-gray-900`
-  - icon source: `BackIcon`, `NextIcon` from `@hashi/hds-icons`
+  - icon source: `TapDownIcon as ToggleIcon` from `@hashi/hds-icons`
+  - previous/next direction은 같은 `ToggleIcon`을 각각 `rotate-90`, `-rotate-90`으로 회전해 표현합니다.
 - date grid:
   - `grid`, `grid-template-columns: repeat(7, auto)`, `justify-content: space-between`
   - `row-gap: 6px`
@@ -327,8 +328,7 @@ export type CalendarProps = Omit<
 
 - components: none
 - icons:
-  - `BackIcon` from `@hashi/hds-icons`
-  - `NextIcon` from `@hashi/hds-icons`
+  - `TapDownIcon as ToggleIcon` from `@hashi/hds-icons`
 - utils:
   - `cn` from `packages/hds-ui/src/utils`
 - hooks: none
