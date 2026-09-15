@@ -13,9 +13,9 @@ const mobileFrameDecorator = (Story: () => ReactNode) => (
 type ToastPreviewProps = ToastContent
 
 const ToastPreview = ({ icon, children }: ToastPreviewProps) => (
-  <div className="bg-primary-200 flex h-15 w-full items-center gap-2.75 rounded-[10px] px-5 text-white">
+  <div className="bg-dim flex h-15 w-full items-center gap-2.75 rounded-[10px] px-5 text-white">
     {icon ? (
-      <span aria-hidden="true" className="flex size-6 shrink-0">
+      <span aria-hidden="true" className="flex size-6.5 shrink-0">
         {icon}
       </span>
     ) : null}
@@ -30,7 +30,7 @@ const meta = {
   decorators: [mobileFrameDecorator],
   args: {
     children: '링크가 복사 되었어요.',
-    icon: <LinkIcon className="size-6" />,
+    icon: <LinkIcon className="size-6.5" />,
   },
   argTypes: {
     children: {
@@ -69,7 +69,7 @@ export const LongText: Story = {
 export const Success: Story = {
   args: {
     children: '예약이 취소되었어요.',
-    icon: <CheckIcon className="text-success size-6" />,
+    icon: <CheckIcon className="text-success size-6.5" />,
   },
   render: (args) => <ToastPreview {...args} />,
 }
@@ -83,7 +83,7 @@ export const Error: Story = {
         잠시후 다시 시도해주세요.
       </>
     ),
-    icon: <NoteIcon className="size-6" />,
+    icon: <NoteIcon className="size-6.5" />,
   },
   render: (args) => <ToastPreview {...args} />,
 }

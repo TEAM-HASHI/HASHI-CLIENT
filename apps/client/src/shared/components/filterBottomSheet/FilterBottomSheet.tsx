@@ -1,5 +1,4 @@
-import { CheckIcon } from '@hashi/hds-icons'
-import { BottomSheet, Button } from '@hashi/hds-ui'
+import { BottomSheet, Button, OptionItem } from '@hashi/hds-ui'
 
 import { cn } from '@/shared/utils'
 
@@ -73,23 +72,12 @@ export const FilterBottomSheet = ({
 
             return (
               <li key={option.value}>
-                <button
-                  aria-pressed={isSelected}
-                  className={cn(
-                    'flex min-h-5 w-full items-center justify-between py-2.5 text-black',
-                    isSelected ? 'typo-body-3' : 'typo-body-4',
-                  )}
+                <OptionItem
                   onClick={() => onSelect(option.value)}
-                  type="button"
+                  selected={isSelected}
                 >
-                  <span>{option.label}</span>
-                  {isSelected && (
-                    <CheckIcon
-                      aria-hidden="true"
-                      className="text-cool-gray-700 size-5 shrink-0"
-                    />
-                  )}
-                </button>
+                  {option.label}
+                </OptionItem>
               </li>
             )
           })}

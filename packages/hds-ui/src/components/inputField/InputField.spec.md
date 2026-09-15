@@ -1,127 +1,62 @@
 # Component Spec: `InputField`
 
-Jira: HASHI-64
+Jira: HASHI-176 (기존 HASHI-64 리디자인)
 
 ## Purpose
 
-`InputField`는 여러 화면에서 재사용 가능한 HDS 공통 입력 primitive입니다.
-
-HDS는 label, input box, right icon slot, right element slot, disabled state, focus style, className merge, native input attribute forwarding, baseline accessibility만 담당합니다. 연락처, 전화번호, 인증번호, 재전송, 확인, 인증 API, route, analytics, 제품별 검증 정책은 호출부가 처리합니다.
-
-## Usage Location
-
-- `packages/hds-ui/src/components/inputField/InputField.tsx`
-
-## Requirements
-
-- [x] 제품 도메인 copy나 검증 정책을 하드코딩하지 않습니다.
-- [x] native `input` props를 전달합니다.
-- [x] `label`, `rightIcon`, `rightElement`, `disabled`, `className`을 지원합니다.
-- [x] `label`이 있으면 `htmlFor`와 `id`로 input에 연결합니다.
-- [x] `id`가 전달되면 해당 id를 우선 사용합니다.
-- [x] `rightElement`는 외부에서 주입된 element를 렌더링만 합니다.
-- [x] `rightIcon`은 외부에서 주입된 icon을 장식 영역에 렌더링만 합니다.
-- [x] error / invalid 상태와 도메인 검증은 1차 구현에서 제외합니다.
-- [x] 컴포넌트 기본 width는 `w-full`이며 화면 고정 width를 하드코딩하지 않습니다.
+제품 의미가 없는 한 줄 입력 primitive입니다. label, 입력 외형, 우측 slot, disabled, focus, native input props를 담당합니다. 검증 정책, 인증 API, 제품 문구와 제출 동작은 호출부가 소유합니다.
 
 ## Figma References
 
-| Node         | Name                               | Notes                               |
-| ------------ | ---------------------------------- | ----------------------------------- |
-| `2136:64708` | `input_name`                       | label + placeholder 기본 input      |
-| `2136:64489` | `input_contact_verified`           | label + right action                |
-| `2136:64707` | `input_verification_code_disabled` | placeholder + right action          |
-| `2136:64711` | `input_verification_code_complete` | value + success icon + right action |
-
-Figma의 `연락처`, `010-7875-7856`, `4846`, `재전송`, `확인`, `인증하기` 문구는 HDS 내부에 하드코딩하지 않고 Storybook 예시에서만 사용합니다.
+- [Input line](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=7869-36441&m=dev)
+- rest: `7869:36479`, input: `7869:36481`, 본문 typography: `7869:36480`
+- 2026-09-08 ego-browser의 Dev Mode 화면과 속성 패널에서 확인했습니다.
 
 ## Public API
 
 ```tsx
-<InputField
-  label="연락처"
-  placeholder="연락처를 입력해 주세요."
-  rightElement={<Button>인증하기</Button>}
-/>
+<InputField label="라벨" placeholder="텍스트" onChange={handleChange} />
 ```
 
-Exported value:
+- export: `InputField`, `InputFieldProps` (변경 없음)
+- `label`: input과 연결되는 선택적 label. 생략 시 `aria-label` 또는 `aria-labelledby` 필수.
+- `rightIcon`: 장식용 아이콘 slot.
+- `rightElement`: 호출부가 동작과 접근성을 소유하는 action/content slot.
+- `className`: 외형을 담당하는 input box에 병합.
+- native input props, controlled `value`, uncontrolled `defaultValue`, ref 전달을 유지합니다. native `size`는 제외합니다.
 
-- `InputField`
+## States And Behavior
 
-Exported type:
-
-- `InputFieldProps`
-
-## Props
-
-- `label`: `string`, optional label rendered above the input.
-- `rightIcon`: `ReactNode`, optional decorative right icon slot.
-- `rightElement`: `ReactNode`, optional right action/content slot.
-- `className`: `string`, optional className merged into the visual input box container.
-- native `input` props except `size` and inner input `className`.
-
-## States
-
-- default: editable input with optional placeholder.
-- labeled: label is rendered and connected to the input.
-- with right icon: external icon is rendered in the right icon slot.
-- with right element: external action/content is rendered in the right element slot.
-- focused: no additional outline style is applied by default.
-- disabled: native disabled input with disabled cursor/text treatment.
-
-## Behavior
-
-1. The root renders a full-width vertical stack.
-2. `label` renders above the input box with an `8px` gap.
-3. The input renders native attributes and event handlers.
-4. `rightIcon` and `rightElement` render on the right side without owning their meaning or behavior.
-5. The input uses `min-w-0` and `flex-1` so right-side content can coexist in narrow mobile widths.
+- rest는 placeholder, input은 실제 입력값으로 표현합니다. 별도 시각 상태 prop을 추가하지 않습니다.
+- label은 `htmlFor`와 `id`로 연결하며, 전달된 id를 우선합니다.
+- 박스 여백을 누르면 input에 focus합니다. 우측 slot 동작은 가로채지 않습니다.
+- disabled이면 native input을 비활성화하고 우측 action slot은 `inert` 처리합니다.
+- input의 키보드 focus만 박스 바깥쪽 `cool-gray-500` 2px outline, offset 2px로 표시합니다. Figma의 rest/input 외 접근성 보완입니다. 우측 action에 focus가 이동하면 입력 박스 outline은 해제되며 action 자체의 focus 표시는 호출부가 담당합니다.
 
 ## Styling
 
-- root width: `100%`
-- label/input gap: `8px`
-- input box height: `45px`
-- input box padding-top / padding-bottom: `13px` (`py-3.25`)
-- input box padding-left: `15px`
-- input box padding-right: `15px` without right content, `9px` with right content
-- input box radius: `10px`
-- input box background: `primary-100`
-- label: `font-sans`, `typo-sub-header-2`, `black`
-- input text: `font-sans`, `typo-body-4`, `primary-200`
-- placeholder/hint: input typography와 동일한 `typo-body-4`, `warm-gray-300`
-- inner native input resets: `appearance-none`, `border-0`, `p-0`
-- input and right content minimum gap: `10px`
-- right icon and right element gap: `10px`
-- right action position in Figma examples: `right 9px`, vertically centered in the `45px` box
-- right icon visual box: `22px`
+| 항목               | 이전                   | 리디자인          |
+| ------------------ | ---------------------- | ----------------- |
+| 배경               | primary-100            | white             |
+| 테두리             | 없음                   | warm-gray-100 1px |
+| 높이 / radius      | 45px / 10px            | 유지              |
+| 입력값             | primary-200            | black             |
+| 글꼴 / placeholder | Body 4 / warm-gray-300 | 유지              |
+| 왼쪽 inset         | 15px                   | 테두리 포함 12px  |
 
-Figma selection width is `345px`, but the component uses `w-full` for mobile app layouts. Storybook examples wrap the component in a `345px` preview frame.
+- 너비는 `w-full`. Figma 예시 345px는 Storybook 프레임에만 사용합니다.
+- 세로 정렬은 flex center. Figma의 45px 높이와 19px 텍스트보다 큰 상하 16px padding을 함께 강제하지 않습니다.
+- border 1px + padding 11px로 왼쪽 inset 12px를 맞춥니다. 오른쪽은 긴 입력값이 테두리에 닿지 않도록 같은 inset을 유지합니다.
+- 우측 slot이 있으면 기존의 테두리 포함 오른쪽 inset 9px, slot gap 10px, icon 22px를 유지합니다.
+- label gap 8px와 Sub Header 2 typography를 유지합니다.
 
-## Accessibility
+## Storybook And Verification
 
-- `label` connects to the input through `htmlFor` and `id`.
-- If no `label` is provided, consumers provide `aria-label` or `aria-labelledby`.
-- `disabled` uses the native input `disabled` attribute.
-- `rightIcon` is rendered inside an `aria-hidden` wrapper.
-- `rightElement` accessibility is owned by the provided external element.
+Default, Filled, WithLabel, 우측 icon/action 조합, Disabled, DisabledWithAction, LongText로 확인합니다.
 
-## Storybook
-
-- [x] Default
-- [x] WithLabel
-- [x] WithRightElement
-- [x] WithRightIcon
-- [x] WithRightIconAndElement
-- [x] Disabled
-- [x] PhoneVerificationExample
-- [x] CodeVerificationExample
-
-## Verification
-
-- `corepack pnpm --filter @hashi/hds-ui lint`
-- `corepack pnpm --filter @hashi/hds-ui typecheck`
-- `corepack pnpm --filter @hashi/hds-ui build`
-- `corepack pnpm --filter @hashi/hds-ui test`
-- `corepack pnpm --filter @hashi/hds-ui build-storybook`
+- `pnpm --filter @hashi/hds-ui test`
+- `pnpm --filter @hashi/hds-ui lint`
+- `pnpm --filter @hashi/hds-ui typecheck`
+- `pnpm --filter @hashi/hds-ui build`
+- `pnpm build-storybook`
+- 브라우저에서 입력, Tab으로 input → 우측 action 이동 시 박스 outline 해제와 action focus 표시, disabled action, 좁은 화면 overflow를 확인합니다.

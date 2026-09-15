@@ -1,8 +1,7 @@
 import { BackIcon } from '@hashi/hds-icons'
-import { Header, IconButton } from '@hashi/hds-ui'
+import { Header, IconButton, Tabs } from '@hashi/hds-ui'
 
 import { MyReviewListSkeleton } from '@/pages/myReviews/components/MyReviewListSkeleton'
-import { MyReviewTabs } from '@/pages/myReviews/components/MyReviewTabs'
 import { MyReviewTotalCount } from '@/pages/myReviews/components/MyReviewTotalCount'
 import { MyReviewsErrorState } from '@/pages/myReviews/components/MyReviewsErrorState'
 import { ReviewWritableCard } from '@/pages/myReviews/components/ReviewWritableCard'
@@ -54,11 +53,15 @@ export const MyReviewsPage = () => {
         className="shadow-none"
         title="마이 리뷰"
       />
-      <MyReviewTabs
-        items={tabItems}
-        onChange={handleChangeTab}
-        value={activeTab}
-      />
+      <div className="px-5">
+        <Tabs
+          items={tabItems}
+          onChange={(value) =>
+            handleChangeTab(value as (typeof tabItems)[number]['value'])
+          }
+          value={activeTab}
+        />
+      </div>
 
       {isPending ? (
         <MyReviewListSkeleton

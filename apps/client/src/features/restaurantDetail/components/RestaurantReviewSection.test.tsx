@@ -211,15 +211,13 @@ describe('RestaurantReviewSection', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders default image when reviewer profile image is empty', () => {
+  it('renders the Avatar guest fallback when reviewer profile image is empty', () => {
     renderReviewSection()
 
-    expect(
-      screen.getByTestId('restaurant-review-profile-default-image'),
-    ).toBeInTheDocument()
+    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
   })
 
-  it('renders default image when reviewer profile image fails to load', () => {
+  it('renders the Avatar guest fallback when reviewer profile image fails to load', () => {
     renderReviewSection({
       reviews: [
         {
@@ -229,9 +227,7 @@ describe('RestaurantReviewSection', () => {
       ],
     })
 
-    expect(
-      screen.queryByTestId('restaurant-review-profile-default-image'),
-    ).toBeNull()
+    expect(screen.queryByTestId('avatar-placeholder')).toBeNull()
 
     const profileImage = screen
       .getByText('혁줌마')
@@ -240,9 +236,7 @@ describe('RestaurantReviewSection', () => {
 
     fireEvent.error(profileImage as HTMLImageElement)
 
-    expect(
-      screen.getByTestId('restaurant-review-profile-default-image'),
-    ).toBeInTheDocument()
+    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
   })
 
   it('renders icons for every supported review keyword', () => {

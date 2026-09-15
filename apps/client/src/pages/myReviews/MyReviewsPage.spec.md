@@ -133,7 +133,7 @@ Jira: HASHI-83, HASHI-114
 MyReviewsPage
   useMyReviewsPage
   Header
-  MyReviewTabs
+  Tabs
   MyReviewsErrorState
   Empty
   MyReviewTotalCount
@@ -150,6 +150,7 @@ MyReviewsPage
 - HDS component:
   - `Header`
   - `IconButton`
+  - `Tabs`
   - `Button`
   - `Dialog`
   - `StarRating`
@@ -160,7 +161,6 @@ MyReviewsPage
   - `DefaultImage`
   - `Empty`
 - page-local component:
-  - `MyReviewTabs`
   - `MyReviewTotalCount`
   - `ReviewImagePlaceholder`
   - `ReviewWritableCard`
