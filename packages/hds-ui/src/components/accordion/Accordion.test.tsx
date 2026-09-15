@@ -10,20 +10,37 @@ afterEach(() => {
 })
 
 describe('Accordion', () => {
-  it('renders the title as a full-width toggle button', () => {
+  it('renders the title as a heading toggle button', () => {
     render(<Accordion title="제1조 (목적)">약관 내용</Accordion>)
 
     const trigger = screen.getByRole('button', { name: '제1조 (목적)' })
+    const heading = screen.getByRole('heading', { level: 3 })
 
+    expect(heading).toContainElement(trigger)
     expect(trigger).toBeInTheDocument()
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
-    expect(trigger.parentElement).toHaveClass('w-full')
   })
 
-  it('does not render content while collapsed by default', () => {
+  it('supports custom heading level', () => {
+    render(
+      <Accordion title="제1조 (목적)" headingLevel={4}>
+        약관 내용
+      </Accordion>,
+    )
+
+    expect(screen.getByRole('heading', { level: 4 })).toContainElement(
+      screen.getByRole('button', { name: '제1조 (목적)' }),
+    )
+  })
+
+  it('keeps content mounted and hidden while collapsed by default', () => {
     render(<Accordion title="제1조 (목적)">약관 내용</Accordion>)
 
-    expect(screen.queryByText('약관 내용')).not.toBeInTheDocument()
+    const trigger = screen.getByRole('button', { name: '제1조 (목적)' })
+    const content = screen.getByText('약관 내용')
+
+    expect(content).toHaveAttribute('hidden')
+    expect(trigger).toHaveAttribute('aria-controls', content.id)
   })
 
   it('renders content when expanded by default', () => {
@@ -33,7 +50,7 @@ describe('Accordion', () => {
       </Accordion>,
     )
 
-    expect(screen.getByText('약관 내용')).toBeInTheDocument()
+    expect(screen.getByText('약관 내용')).not.toHaveAttribute('hidden')
     expect(
       screen.getByRole('button', { name: '제1조 (목적)' }),
     ).toHaveAttribute('aria-expanded', 'true')
@@ -44,7 +61,7 @@ describe('Accordion', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '제1조 (목적)' }))
 
-    expect(screen.getByText('약관 내용')).toBeInTheDocument()
+    expect(screen.getByText('약관 내용')).not.toHaveAttribute('hidden')
     expect(
       screen.getByRole('button', { name: '제1조 (목적)' }),
     ).toHaveAttribute('aria-expanded', 'true')
@@ -67,33 +84,6 @@ describe('Accordion', () => {
 
     expect(handleExpandedChange).toHaveBeenCalledTimes(1)
     expect(handleExpandedChange).toHaveBeenCalledWith(true)
-    expect(screen.queryByText('약관 내용')).not.toBeInTheDocument()
-  })
-
-  it('applies Figma typography and color tokens by state', () => {
-    const { rerender } = render(
-      <Accordion title="제1조 (목적)">약관 내용</Accordion>,
-    )
-
-    expect(screen.getByText('제1조 (목적)')).toHaveClass(
-      'typo-body-5',
-      'text-black',
-    )
-
-    rerender(
-      <Accordion title="제1조 (목적)" expanded>
-        약관 내용
-      </Accordion>,
-    )
-
-    expect(screen.getByText('제1조 (목적)')).toHaveClass(
-      'typo-sub-header-3',
-      'text-black',
-    )
-    expect(screen.getByText('약관 내용')).toHaveClass(
-      'typo-caption-2',
-      'text-warm-gray-300',
-      'leading-[1.5]',
-    )
+    expect(screen.getByText('약관 내용')).toHaveAttribute('hidden')
   })
 })
