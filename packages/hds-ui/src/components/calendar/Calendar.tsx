@@ -3,27 +3,6 @@ import type { ComponentPropsWithoutRef } from 'react'
 
 import { cn } from '../../utils'
 
-const DEFAULT_WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const
-const DEFAULT_WEEKDAY_ARIA_LABELS = [
-  '일요일',
-  '월요일',
-  '화요일',
-  '수요일',
-  '목요일',
-  '금요일',
-  '토요일',
-] as const
-
-type WeekdayLabels = readonly [
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-]
-
 export type CalendarProps = Omit<
   ComponentPropsWithoutRef<'section'>,
   'children' | 'onChange'
@@ -38,8 +17,6 @@ export type CalendarProps = Omit<
   formatYearLabel?: (month: Date) => string
   formatMonthLabel?: (month: Date) => string
   getDateAriaLabel?: (date: Date) => string
-  weekdayLabels?: WeekdayLabels
-  weekdayAriaLabels?: WeekdayLabels
 }
 
 const createMonthDate = (date: Date, day = 1) => {
@@ -94,8 +71,6 @@ export const Calendar = ({
   formatYearLabel = defaultFormatYearLabel,
   formatMonthLabel = defaultFormatMonthLabel,
   getDateAriaLabel = defaultGetDateAriaLabel,
-  weekdayLabels = DEFAULT_WEEKDAY_LABELS,
-  weekdayAriaLabels = DEFAULT_WEEKDAY_ARIA_LABELS,
   className,
   'aria-label': ariaLabel = '달력',
   ...props
@@ -122,7 +97,7 @@ export const Calendar = ({
       className={cn('w-full font-sans', className)}
       {...props}
     >
-      <div className="mb-[22px] flex h-11 items-center justify-between">
+      <div className="mb-6.5 flex h-11 items-center justify-between">
         <button
           aria-label="이전 달"
           className="text-cool-gray-900 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 flex size-6 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent p-0 text-[24px] focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed"
@@ -150,23 +125,7 @@ export const Calendar = ({
           <NextIcon aria-hidden="true" />
         </button>
       </div>
-      <div className="bg-primary-100 mb-[22px] grid grid-cols-7 rounded-[5px]">
-        {weekdayLabels.map((label, index) => (
-          <span
-            aria-label={weekdayAriaLabels[index]}
-            className={cn(
-              'flex items-center justify-center px-3 py-[5px] text-black',
-              index === 0 || index === 6 ? 'typo-sub-header-3' : 'typo-body-5',
-              index === 0 && 'text-primary-400',
-              index === 6 && 'text-point-300',
-            )}
-            key={`${label}-${index}`}
-          >
-            {label}
-          </span>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-y-[10px]">
+      <div className="grid grid-cols-[repeat(7,auto)] justify-between gap-y-1.5">
         {Array.from({ length: firstWeekday }, (_, index) => (
           <span aria-hidden="true" key={`empty-${index}`} />
         ))}
@@ -178,14 +137,17 @@ export const Calendar = ({
             checkIsSameDay(date, selectedDate)
 
           return (
-            <div className="flex min-w-0 justify-center" key={date.getTime()}>
+            <div
+              className="flex size-9 items-center justify-center"
+              key={date.getTime()}
+            >
               <button
                 aria-label={getDateAriaLabel(date)}
                 aria-pressed={isSelected}
                 className={cn(
-                  'typo-body-4 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 flex h-8 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent px-3 py-[5px] text-black focus-visible:outline-2 focus-visible:outline-offset-2',
+                  'typo-body-4 focus-visible:outline-cool-gray-900 disabled:text-cool-gray-400 flex w-8.5 shrink-0 appearance-none items-center justify-center rounded-[5px] border-0 bg-transparent px-1.5 py-1.25 text-black focus-visible:outline-2 focus-visible:outline-offset-2',
                   isSelected &&
-                    'typo-sub-header-2 size-8 bg-black p-0 text-white',
+                    'typo-sub-header-2 size-9 bg-black px-1.75 py-1 text-white',
                 )}
                 disabled={isDisabled}
                 onClick={() => onDateSelect?.(date)}
