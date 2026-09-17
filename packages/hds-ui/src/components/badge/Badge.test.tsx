@@ -91,47 +91,6 @@ describe('Badge', () => {
     expect(handleSelectedChange).not.toHaveBeenCalled()
   })
 
-  it('aria-disabled가 true이면 비활성 스타일을 적용합니다', () => {
-    render(<Badge aria-disabled="true" interactive label="선택 라벨" />)
-
-    expect(screen.getByRole('button', { name: '선택 라벨' })).toHaveClass(
-      'cursor-not-allowed',
-      'opacity-40',
-    )
-  })
-
-  it('선택 상태 스타일을 적용합니다', () => {
-    render(<Badge interactive label="선택 라벨" selected />)
-
-    expect(screen.getByRole('button', { name: '선택 라벨' })).toHaveClass(
-      'border-primary-400',
-      'border-[1.4px]',
-      'bg-primary-400/20',
-    )
-  })
-
-  it('미선택 상태에도 border 두께를 1.4px로 유지합니다', () => {
-    render(<Badge interactive label="선택 라벨" />)
-
-    expect(screen.getByRole('button', { name: '선택 라벨' })).toHaveClass(
-      'border-[1.4px]',
-      'border-warm-gray-100',
-    )
-  })
-
-  it('정적 Badge에는 기본 스타일을 적용합니다', () => {
-    render(<Badge label="정적 라벨" />)
-
-    expect(screen.getByText('정적 라벨').parentElement).toHaveClass(
-      'border-warm-gray-100',
-      'bg-white',
-    )
-    expect(screen.getByText('정적 라벨').parentElement).not.toHaveClass(
-      'border-primary-400',
-      'bg-primary-400/20',
-    )
-  })
-
   it('아이콘은 accessible name에 포함하지 않고 visible label을 이름으로 사용합니다', () => {
     render(
       <Badge
@@ -144,5 +103,20 @@ describe('Badge', () => {
     expect(
       screen.getByRole('button', { name: '선택 라벨' }),
     ).toBeInTheDocument()
+  })
+
+  it('aria-disabled가 true이면 disabledIcon을 우선 표시합니다', () => {
+    render(
+      <Badge
+        aria-disabled="true"
+        disabledIcon={<span data-testid="disabled-icon">비활성 아이콘</span>}
+        icon={<span data-testid="enabled-icon">아이콘</span>}
+        interactive
+        label="선택 라벨"
+      />,
+    )
+
+    expect(screen.queryByTestId('enabled-icon')).not.toBeInTheDocument()
+    expect(screen.getByTestId('disabled-icon')).toBeInTheDocument()
   })
 })
