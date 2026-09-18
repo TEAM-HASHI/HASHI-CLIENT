@@ -34,6 +34,26 @@ const mobileFrameDecorator = (Story: () => ReactNode) => (
   </div>
 )
 
+const DisabledSmileIcon = () => (
+  <svg
+    aria-hidden="true"
+    className="text-warm-gray-300 size-[1em]"
+    fill="none"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx={12} cy={12} r={9.3} stroke="currentColor" strokeWidth={1.4} />
+    <circle cx={9} cy={10} fill="currentColor" r={1} />
+    <circle cx={15} cy={10} fill="currentColor" r={1} />
+    <path
+      d="M8.5 14C8.5 14 9.375 16 12 16C14.625 16 15.5 14 15.5 14"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeWidth={1.4}
+    />
+  </svg>
+)
+
 const meta = {
   title: 'Components/Badge',
   component: Badge,
@@ -44,6 +64,9 @@ const meta = {
     icon: <SmileIcon />,
   },
   argTypes: {
+    disabledIcon: {
+      control: false,
+    },
     icon: {
       control: false,
     },
@@ -174,6 +197,7 @@ export const Selected: Story = {
 export const Disabled: Story = {
   args: {
     'aria-disabled': 'true',
+    disabledIcon: <DisabledSmileIcon />,
     icon: <TalkIcon />,
     interactive: true,
     label: '대화하기 좋아요',
