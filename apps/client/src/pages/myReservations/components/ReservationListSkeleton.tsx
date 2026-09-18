@@ -68,6 +68,32 @@ const DefaultReservationSkeleton = () => {
   )
 }
 
+const VisitedReservationSkeleton = () => {
+  return (
+    <article className="border-warm-gray-50 border-b last:border-0">
+      <div className="flex gap-3 py-3.5">
+        <div
+          className={cn(
+            skeletonBlockClassName,
+            'size-23 shrink-0 rounded-[5px]',
+          )}
+        />
+        <div className="flex min-w-0 flex-1 flex-col pt-0.5">
+          <div className={cn(skeletonBlockClassName, 'h-6 w-full')} />
+          <div className={cn(skeletonBlockClassName, 'mt-2 h-4 w-40')} />
+          <div className={cn(skeletonBlockClassName, 'mt-1 h-4 w-24')} />
+        </div>
+      </div>
+      <div
+        className={cn(
+          skeletonBlockClassName,
+          'mb-[21.5px] h-12.5 w-full rounded-[5px]',
+        )}
+      />
+    </article>
+  )
+}
+
 export const ReservationListSkeleton = ({
   selectedStatus,
 }: ReservationListSkeletonProps) => {
@@ -76,12 +102,14 @@ export const ReservationListSkeleton = ({
   return (
     <div
       aria-hidden="true"
-      className="mb-2 flex flex-col gap-4"
+      className="mb-2 flex flex-col gap-2"
       data-testid="my-reservations-skeleton"
     >
       {skeletonItems.map((index) =>
         selectedStatus === 'IN_PROGRESS' ? (
           <InProgressReservationSkeleton key={index} />
+        ) : selectedStatus === 'VISITED' ? (
+          <VisitedReservationSkeleton key={index} />
         ) : (
           <DefaultReservationSkeleton key={index} />
         ),

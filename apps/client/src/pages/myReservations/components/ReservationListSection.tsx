@@ -45,7 +45,7 @@ export const ReservationListSection = ({
       {isLoading ? (
         <ReservationListSkeleton selectedStatus={selectedStatus} />
       ) : hasReservations ? (
-        <div className="mb-2 flex flex-col gap-4">
+        <div className="mb-2 flex flex-col gap-2">
           <ReservationCardsByStatus
             reservations={reservations}
             selectedStatus={selectedStatus}
