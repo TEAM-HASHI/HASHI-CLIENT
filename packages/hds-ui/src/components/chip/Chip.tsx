@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from 'react'
+import type { ComponentPropsWithoutRef } from 'react'
 import { cva } from 'class-variance-authority'
 
 import { cn } from '../../utils'
@@ -12,8 +12,8 @@ export type ChipProps = Omit<
   | 'onClick'
   | 'type'
 > & {
-  children: ReactNode
-  count?: ReactNode
+  children: string
+  count?: number
   onSelectedChange?: (selected: boolean) => void
   selected?: boolean
 }
