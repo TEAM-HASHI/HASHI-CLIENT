@@ -26,6 +26,36 @@ describe('Badge', () => {
     )
   })
 
+  it('정적 Badge의 root span에 표준 DOM 속성을 전달합니다', () => {
+    render(
+      <Badge data-testid="static-badge" label="정적 라벨" title="정적 Badge" />,
+    )
+
+    const badge = screen.getByTestId('static-badge')
+
+    expect(badge.tagName).toBe('SPAN')
+    expect(badge).toHaveAttribute('title', '정적 Badge')
+  })
+
+  it('interactive Badge의 root button에 표준 DOM 속성을 전달합니다', () => {
+    render(
+      <>
+        <span id="badge-description">설명</span>
+        <Badge
+          aria-describedby="badge-description"
+          data-testid="interactive-badge"
+          interactive
+          label="선택 라벨"
+        />
+      </>,
+    )
+
+    const badge = screen.getByTestId('interactive-badge')
+
+    expect(badge.tagName).toBe('BUTTON')
+    expect(badge).toHaveAttribute('aria-describedby', 'badge-description')
+  })
+
   it('선택되지 않은 interactive badge를 누르면 true를 전달합니다', () => {
     const handleSelectedChange = vi.fn()
 

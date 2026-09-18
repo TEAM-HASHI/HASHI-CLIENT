@@ -3,24 +3,28 @@ import { cva } from 'class-variance-authority'
 import { cn } from '../../utils'
 
 type BadgeBaseProps = {
-  label: ReactNode
+  label: string
   icon?: ReactNode
-  disabledIcon?: ReactNode
-  className?: string
 }
 
-type BadgeStaticProps = BadgeBaseProps & {
-  interactive?: false
-  selected?: never
-  onSelectedChange?: never
-}
+type BadgeStaticProps = Omit<ComponentPropsWithoutRef<'span'>, 'children'> &
+  BadgeBaseProps & {
+    disabledIcon?: never
+    interactive?: false
+    onSelectedChange?: never
+    selected?: never
+  }
 
-type BadgeInteractiveProps = BadgeBaseProps & {
-  interactive: true
-  selected?: boolean
-  onSelectedChange?: (selected: boolean) => void
-  'aria-disabled'?: ComponentPropsWithoutRef<'button'>['aria-disabled']
-}
+type BadgeInteractiveProps = Omit<
+  ComponentPropsWithoutRef<'button'>,
+  'aria-pressed' | 'children' | 'disabled' | 'onClick' | 'type'
+> &
+  BadgeBaseProps & {
+    disabledIcon?: ReactNode
+    interactive: true
+    onSelectedChange?: (selected: boolean) => void
+    selected?: boolean
+  }
 
 export type BadgeProps = BadgeStaticProps | BadgeInteractiveProps
 
@@ -74,16 +78,19 @@ const BadgeContent = ({ icon, label }: Pick<BadgeProps, 'icon' | 'label'>) => {
   )
 }
 
-export const Badge = (props: BadgeProps) => {
-  const { disabledIcon, icon, label, className } = props
-  const selected = props.interactive ? (props.selected ?? false) : false
-
-  if (props.interactive) {
+export const Badge = ({ interactive, ...props }: BadgeProps) => {
+  if (interactive) {
     const {
       'aria-disabled': ariaDisabled,
+      className,
+      disabledIcon,
+      icon,
+      label,
       onSelectedChange,
-      selected: interactiveSelected = false,
+      selected = false,
+      ...buttonProps
     } = props
+
     const isDisabled = ariaDisabled === true || ariaDisabled === 'true'
     const displayIcon = isDisabled && disabledIcon ? disabledIcon : icon
     const visualSelected = isDisabled ? false : selected
@@ -93,11 +100,12 @@ export const Badge = (props: BadgeProps) => {
         return
       }
 
-      onSelectedChange?.(!interactiveSelected)
+      onSelectedChange?.(!selected)
     }
 
     return (
       <button
+        {...buttonProps}
         aria-disabled={ariaDisabled}
         aria-pressed={selected}
         className={cn(
@@ -116,9 +124,15 @@ export const Badge = (props: BadgeProps) => {
     )
   }
 
+  const { className, icon, label, ...spanProps } = props
+
   return (
     <span
-      className={cn(badgeVariants({ interactive: false, selected }), className)}
+      {...spanProps}
+      className={cn(
+        badgeVariants({ interactive: false, selected: false }),
+        className,
+      )}
     >
       <BadgeContent icon={icon} label={label} />
     </span>
