@@ -63,11 +63,11 @@ const ReservationInfoSkeleton = ({ className }: { className?: string }) => {
 
 const UpcomingReservationSkeleton = () => {
   return (
-    <article className="border-secondary-200 border-b pb-4 last:border-b-0 last:pb-0">
+    <article className="border-secondary-200 border-b py-3.5 last:border-b-0 last:pb-0">
       <ReservationInfoSkeleton />
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className={cn(skeletonBlockClassName, 'h-11 rounded-[5px]')} />
-        <div className={cn(skeletonBlockClassName, 'h-11 rounded-[5px]')} />
+        <div className={cn(skeletonBlockClassName, 'h-9 rounded-[5px]')} />
+        <div className={cn(skeletonBlockClassName, 'h-9 rounded-[5px]')} />
       </div>
     </article>
   )

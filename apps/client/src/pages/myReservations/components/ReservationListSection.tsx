@@ -42,7 +42,11 @@ export const ReservationListSection = ({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
-      <ReservationListSummary totalCount={totalCount} sortLabel="최신순" />
+      <ReservationListSummary
+        className={selectedStatus === 'IN_PROGRESS' ? 'mb-3.5' : undefined}
+        totalCount={totalCount}
+        sortLabel="최신순"
+      />
       {isLoading ? (
         <ReservationListSkeleton selectedStatus={selectedStatus} />
       ) : hasReservations ? (

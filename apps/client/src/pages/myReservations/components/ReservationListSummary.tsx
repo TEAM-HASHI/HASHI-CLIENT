@@ -14,7 +14,7 @@ export const ReservationListSummary = ({
   return (
     <div
       className={cn(
-        'typo-body-2 mb-3 flex items-center justify-between py-[7.5px]',
+        'typo-body-2 flex items-center justify-between py-[7.5px]',
         className,
       )}
     >
