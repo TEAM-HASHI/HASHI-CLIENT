@@ -9,7 +9,7 @@ export const CanceledReservationCard = ({
   reservation,
 }: CanceledReservationCardProps) => {
   return (
-    <article className="border-warm-gray-50 border-b pb-3.5 last:border-0">
+    <article className="border-warm-gray-50 border-b py-3.5 last:border-0">
       <div className="flex gap-3">
         <ReservationCardImage
           disabled

@@ -1,3 +1,5 @@
+import type { ComponentType } from 'react'
+
 import type { ReservationStatusFilterValue } from '@/pages/myReservations/constants/reservationStatus'
 import { cn } from '@/shared/utils'
 
@@ -44,22 +46,25 @@ const InProgressReservationSkeleton = () => {
   )
 }
 
-const DefaultReservationSkeleton = () => {
+const ReservationInfoSkeleton = ({ className }: { className?: string }) => {
+  return (
+    <div className={cn('flex gap-3', className)}>
+      <div
+        className={cn(skeletonBlockClassName, 'size-23 shrink-0 rounded-[5px]')}
+      />
+      <div className="flex min-w-0 flex-1 flex-col pt-0.5">
+        <div className={cn(skeletonBlockClassName, 'h-6 w-full')} />
+        <div className={cn(skeletonBlockClassName, 'mt-2 h-4 w-40')} />
+        <div className={cn(skeletonBlockClassName, 'mt-1 h-4 w-24')} />
+      </div>
+    </div>
+  )
+}
+
+const UpcomingReservationSkeleton = () => {
   return (
     <article className="border-secondary-200 border-b pb-4 last:border-b-0 last:pb-0">
-      <div className="flex gap-3">
-        <div
-          className={cn(
-            skeletonBlockClassName,
-            'size-23 shrink-0 rounded-[5px]',
-          )}
-        />
-        <div className="flex min-w-0 flex-1 flex-col pt-0.5">
-          <div className={cn(skeletonBlockClassName, 'h-6 w-full')} />
-          <div className={cn(skeletonBlockClassName, 'mt-2 h-4 w-40')} />
-          <div className={cn(skeletonBlockClassName, 'mt-1 h-4 w-24')} />
-        </div>
-      </div>
+      <ReservationInfoSkeleton />
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div className={cn(skeletonBlockClassName, 'h-11 rounded-[5px]')} />
         <div className={cn(skeletonBlockClassName, 'h-11 rounded-[5px]')} />
@@ -71,19 +76,7 @@ const DefaultReservationSkeleton = () => {
 const VisitedReservationSkeleton = () => {
   return (
     <article className="border-warm-gray-50 border-b last:border-0">
-      <div className="flex gap-3 py-3.5">
-        <div
-          className={cn(
-            skeletonBlockClassName,
-            'size-23 shrink-0 rounded-[5px]',
-          )}
-        />
-        <div className="flex min-w-0 flex-1 flex-col pt-0.5">
-          <div className={cn(skeletonBlockClassName, 'h-6 w-full')} />
-          <div className={cn(skeletonBlockClassName, 'mt-2 h-4 w-40')} />
-          <div className={cn(skeletonBlockClassName, 'mt-1 h-4 w-24')} />
-        </div>
-      </div>
+      <ReservationInfoSkeleton className="py-3.5" />
       <div
         className={cn(
           skeletonBlockClassName,
@@ -94,26 +87,39 @@ const VisitedReservationSkeleton = () => {
   )
 }
 
+const CanceledReservationSkeleton = () => {
+  return (
+    <article className="border-warm-gray-50 border-b py-3.5 last:border-0">
+      <ReservationInfoSkeleton />
+    </article>
+  )
+}
+
+const reservationSkeletonByStatus = {
+  IN_PROGRESS: InProgressReservationSkeleton,
+  UPCOMING: UpcomingReservationSkeleton,
+  VISITED: VisitedReservationSkeleton,
+  CANCELED: CanceledReservationSkeleton,
+} satisfies Record<ReservationStatusFilterValue, ComponentType>
+
 export const ReservationListSkeleton = ({
   selectedStatus,
 }: ReservationListSkeletonProps) => {
   const skeletonItems = Array.from({ length: 3 }, (_, index) => index)
+  const ReservationSkeleton = reservationSkeletonByStatus[selectedStatus]
 
   return (
     <div
       aria-hidden="true"
-      className="mb-2 flex flex-col gap-2"
+      className={cn(
+        'mb-2 flex flex-col',
+        selectedStatus !== 'CANCELED' && 'gap-2',
+      )}
       data-testid="my-reservations-skeleton"
     >
-      {skeletonItems.map((index) =>
-        selectedStatus === 'IN_PROGRESS' ? (
-          <InProgressReservationSkeleton key={index} />
-        ) : selectedStatus === 'VISITED' ? (
-          <VisitedReservationSkeleton key={index} />
-        ) : (
-          <DefaultReservationSkeleton key={index} />
-        ),
-      )}
+      {skeletonItems.map((index) => (
+        <ReservationSkeleton key={index} />
+      ))}
     </div>
   )
 }

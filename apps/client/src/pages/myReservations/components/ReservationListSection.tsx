@@ -9,6 +9,7 @@ import type {
   VisitedReservation,
 } from '@/pages/myReservations/types'
 import { Empty } from '@/shared/components/empty'
+import { cn } from '@/shared/utils'
 
 type ReservationListSectionProps = {
   selectedStatus: ReservationStatusFilterValue
@@ -45,7 +46,12 @@ export const ReservationListSection = ({
       {isLoading ? (
         <ReservationListSkeleton selectedStatus={selectedStatus} />
       ) : hasReservations ? (
-        <div className="mb-2 flex flex-col gap-2">
+        <div
+          className={cn(
+            'flex flex-col',
+            selectedStatus !== 'CANCELED' && 'gap-2',
+          )}
+        >
           <ReservationCardsByStatus
             reservations={reservations}
             selectedStatus={selectedStatus}
