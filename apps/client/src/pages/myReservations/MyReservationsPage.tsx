@@ -31,15 +31,15 @@ export const MyReservationsPage = () => {
   }
 
   return (
-    <section className="app-mobile-bottom-nav-content flex flex-col">
-      <div className="app-mobile-fixed-top z-fixed bg-white px-5 pt-[calc(32px+var(--safe-area-top,0px))]">
+    <section className="app-mobile-bottom-nav-content flex h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] min-h-0 flex-col overflow-hidden">
+      <div className="z-fixed shrink-0 bg-white px-5 pt-[calc(32px+var(--safe-area-top,0px))]">
         <MyReservationsHeader userName={userName} />
         <ReservationStatusFilter
           selectedStatus={selectedStatus}
           onStatusChange={handleStatusChange}
         />
       </div>
-      <div className="flex flex-1 flex-col px-5 pt-[calc(122px+var(--safe-area-top,0px))]">
+      <div className="flex min-h-0 flex-1 [scrollbar-width:none] flex-col overflow-y-auto overscroll-contain px-5 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <ReservationListSection
           reservations={reservations}
           selectedStatus={selectedStatus}
