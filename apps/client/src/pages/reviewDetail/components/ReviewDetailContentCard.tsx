@@ -1,4 +1,4 @@
-import { CollapsibleText, StarRating } from '@hashi/hds-ui'
+import { ExpandableText, StarRating } from '@hashi/hds-ui'
 
 import { ReviewKeywordBadge } from '@/features/review/components'
 import {
@@ -38,7 +38,7 @@ export const ReviewDetailContentCard = ({
             {writtenDate}
           </time>
         </div>
-        <CollapsibleText className="break-words" text={content} />
+        <ExpandableText className="break-words" text={content} />
       </div>
 
       {visibleImages.length > 0 ? (

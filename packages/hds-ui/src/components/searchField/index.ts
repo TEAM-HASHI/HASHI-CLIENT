@@ -1,2 +1,2 @@
-export { SearchField } from './SearchField'
-export type { SearchFieldProps } from './SearchField'
+export { SearchBar, SearchField } from '../searchBar'
+export type { SearchBarProps, SearchFieldProps } from '../searchBar'

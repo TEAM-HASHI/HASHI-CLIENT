@@ -187,7 +187,7 @@ describe('RestaurantReviewSection', () => {
     })
   })
 
-  it('renders default image when review image fails to load', () => {
+  it('renders ImageFallback when review image fails to load', () => {
     renderReviewSection({
       reviews: [
         {
@@ -197,29 +197,31 @@ describe('RestaurantReviewSection', () => {
       ],
     })
 
-    expect(screen.queryByTestId('restaurant-review-default-image')).toBeNull()
+    const reviewImageButton = screen.getByRole('button', {
+      name: '리뷰 이미지 1',
+    })
 
-    const reviewImage = screen
-      .getByRole('button', { name: '리뷰 이미지 1' })
-      .querySelector('img')
+    expect(
+      reviewImageButton.querySelector('[data-slot="image-fallback"]'),
+    ).toBeNull()
+
+    const reviewImage = reviewImageButton.querySelector('img')
     expect(reviewImage).toBeInTheDocument()
 
     fireEvent.error(reviewImage as HTMLImageElement)
 
     expect(
-      screen.getByTestId('restaurant-review-default-image'),
+      reviewImageButton.querySelector('[data-slot="image-fallback"]'),
     ).toBeInTheDocument()
   })
 
-  it('renders default image when reviewer profile image is empty', () => {
+  it('renders the Avatar guest fallback when reviewer profile image is empty', () => {
     renderReviewSection()
 
-    expect(
-      screen.getByTestId('restaurant-review-profile-default-image'),
-    ).toBeInTheDocument()
+    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
   })
 
-  it('renders default image when reviewer profile image fails to load', () => {
+  it('renders the Avatar guest fallback when reviewer profile image fails to load', () => {
     renderReviewSection({
       reviews: [
         {
@@ -229,9 +231,7 @@ describe('RestaurantReviewSection', () => {
       ],
     })
 
-    expect(
-      screen.queryByTestId('restaurant-review-profile-default-image'),
-    ).toBeNull()
+    expect(screen.queryByTestId('avatar-placeholder')).toBeNull()
 
     const profileImage = screen
       .getByText('혁줌마')
@@ -240,9 +240,7 @@ describe('RestaurantReviewSection', () => {
 
     fireEvent.error(profileImage as HTMLImageElement)
 
-    expect(
-      screen.getByTestId('restaurant-review-profile-default-image'),
-    ).toBeInTheDocument()
+    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
   })
 
   it('renders icons for every supported review keyword', () => {

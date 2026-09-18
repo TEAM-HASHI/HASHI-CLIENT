@@ -43,11 +43,9 @@ describe('FilterBottomSheet', () => {
       screen.getByRole('button', { name: '스시/사시미류' }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: '스시/사시미류' })).toHaveClass(
-      'typo-body-3',
+      'h-9',
     )
-    expect(screen.getByRole('button', { name: '면류' })).toHaveClass(
-      'typo-body-4',
-    )
+    expect(screen.getByText('면류')).toHaveClass('typo-body-3')
   })
 
   it('uses viewport-aware max height instead of fixed inline height', () => {

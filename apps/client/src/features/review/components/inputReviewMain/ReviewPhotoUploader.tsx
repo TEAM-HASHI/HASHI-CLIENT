@@ -29,6 +29,12 @@ const photoTriggerClassName = cn(
   'focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40',
 )
 
+const photoTileTriggerClassName = cn(
+  'border-warm-gray-100 text-warm-gray-300 focus-visible:outline-cool-gray-500',
+  'flex size-[130px] shrink-0 items-center justify-center rounded-[5px] border bg-white',
+  'focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40',
+)
+
 const photoTriggerContent = (
   <>
     <CameraIcon aria-hidden="true" className="size-6 shrink-0 opacity-50" />
@@ -63,7 +69,7 @@ export const ReviewPhotoUploader = ({
             <button
               aria-controls={photoInputId}
               aria-label="사진을 첨부해 주세요. (선택)"
-              className="border-warm-gray-100 text-warm-gray-300 focus-visible:outline-cool-gray-500 flex size-[130px] flex-col items-center justify-center gap-2 rounded-[10px] border bg-white px-5 py-10 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+              className={photoTileTriggerClassName}
               disabled={isPhotoInputDisabled}
               type="button"
               onClick={onPhotoTriggerClick}
@@ -72,15 +78,17 @@ export const ReviewPhotoUploader = ({
                 aria-hidden="true"
                 className="size-6 shrink-0 opacity-50"
               />
-              <span className="typo-body-4 whitespace-nowrap">사진 추가</span>
             </button>
           </li>
           {photoPreviewItems.map(({ id, name, src }, index) => (
-            <li key={id} className="relative size-[130px] shrink-0">
+            <li
+              key={id}
+              className="relative size-[130px] shrink-0 rounded-[5px]"
+            >
               <img
                 src={src}
                 alt={`${name} 미리보기`}
-                className="border-warm-gray-100 size-full rounded-[10px] border object-cover"
+                className="size-full rounded-[5px] object-cover"
               />
               <button
                 aria-label={`${name} 사진 삭제`}
@@ -119,7 +127,7 @@ export const ReviewPhotoUploader = ({
       {photoErrorMessage ? (
         <p
           aria-live="polite"
-          className="typo-body-6 text-primary-400 w-full break-words"
+          className="typo-body-7 text-primary-400 w-full break-words"
         >
           {photoErrorMessage}
         </p>

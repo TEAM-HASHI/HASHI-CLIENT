@@ -133,7 +133,7 @@ describe('MagazinesPage', () => {
     expect(heroBanner.closest('main')).toHaveClass('pt-[75px]')
     expect(
       heroBanner.querySelector('[data-hds-carousel-indicator]'),
-    ).toHaveAttribute('data-align', 'end')
+    ).toHaveAttribute('data-placement', 'overlay')
     expect(screen.queryByText('오늘의 하시 Pick')).not.toBeInTheDocument()
     expect(
       screen.queryByText('짧은 매거진에 대한 소개를 넣어보기'),
@@ -225,10 +225,13 @@ describe('MagazinesPage', () => {
     const firstImage = firstLink.querySelector('img')
     const firstDate = screen.getByText('2026. 07.12.')
 
-    expect(heroBanner).toHaveClass('mt-[4px]', 'px-5')
+    expect(heroBanner).toHaveClass('mt-[4px]', 'mx-5')
     expect(heroViewport).toHaveClass('aspect-[353/160]')
-    expect(indicator).toHaveAttribute('data-align', 'end')
-    expect(indicator).toHaveClass('!right-[33px]')
+    expect(
+      heroBanner.querySelectorAll('[data-hds-carousel-indicator]'),
+    ).toHaveLength(1)
+    expect(indicator).toHaveAttribute('data-placement', 'overlay')
+    expect(indicator?.closest('[data-hds-carousel-track]')).toBeNull()
     expect(
       screen.queryByRole('heading', { name: '최근 _한 추천 매거진' }),
     ).not.toBeInTheDocument()

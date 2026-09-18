@@ -113,6 +113,7 @@ export const HomeLogo = () => {
 - [x] Hashi 로고와 검색 진입 영역, 검색바 아래 여백은 홈 본문 스크롤과 무관하게 상단에 고정합니다.
 - [x] 메인 배너 섹션 타이틀 `맛집 큐레이션을 둘러보세요!`를 노출합니다.
 - [x] 메인 배너는 여러 장 carousel로 노출합니다.
+- [x] 이미지형 HDS `Banner`와 Track 밖에 하나만 렌더링하는 `Carousel.Indicator`를 조합합니다. 스와이프 중에도 indicator는 배너 영역에 고정됩니다. 모서리 5px, indicator 오른쪽 20px/아래 23px, 활성 12×4px/비활성 4×4px, 간격 7px입니다.
 - [x] 메인 배너는 매거진 상단 대표 배너와 같은 `353:160` 이미지 비율을 사용합니다.
 - [x] 메인 배너 데이터는 서버에서 받은 이미지와 인스타그램 이동 대상 정보로 구성합니다.
 - [x] 퀵 버튼 4개를 노출합니다.
@@ -268,8 +269,8 @@ BottomNavigationLayout
 ### 1. Search entry
 
 - Reuse:
-  - `SearchField` from `@hashi/hds-ui`
-  - `SearchIcon` is already included in `SearchField`
+  - `SearchBar` from `@hashi/hds-ui`
+  - `SearchIcon` is already included in `SearchBar`
   - `ROUTES.search`
 - Do not create:
   - 새 검색 input primitive
@@ -277,13 +278,13 @@ BottomNavigationLayout
 - Page-local:
   - `HomeSearchEntry`
 - Behavior:
-  - 사용자가 홈에서 검색어를 입력하는 플로우가 아니라면 `SearchField`를 실제 form input으로 운영하지 않습니다.
-  - `SearchField`를 `readOnly` 시각 요소로 렌더링하고, 실제 이동 컨트롤은 `ROUTES.search`로 이동하는 page-local `Link`가 담당합니다.
+  - 사용자가 홈에서 검색어를 입력하는 플로우가 아니라면 `SearchBar`를 실제 form input으로 운영하지 않습니다.
+  - `SearchBar`를 `readOnly` 시각 요소로 렌더링하고, 실제 이동 컨트롤은 `ROUTES.search`로 이동하는 page-local `Link`가 담당합니다.
   - 아이콘/패딩을 포함한 검색 박스 전체가 클릭 진입점이 되도록 `HomeSearchEntry`에서 링크 클릭 영역을 제공합니다.
   - 접근 가능한 컨트롤 이름은 `식당 또는 메뉴 검색하기`로 제공합니다.
 - Risk:
-  - `SearchField` 내부는 `input type="search"`입니다. `div onClick` navigation만 붙이면 의미상 클릭 가능한 컨트롤이 불명확합니다.
-  - 이 충돌을 줄이기 위해 홈에서는 `SearchField`를 `readOnly`와 `tabIndex={-1}`로 렌더링하고, 실제 검색어 입력은 검색 페이지가 소유합니다.
+  - `SearchBar` 내부는 `input type="search"`입니다. `div onClick` navigation만 붙이면 의미상 클릭 가능한 컨트롤이 불명확합니다.
+  - 이 충돌을 줄이기 위해 홈에서는 `SearchBar`를 `readOnly`와 `tabIndex={-1}`로 렌더링하고, 실제 검색어 입력은 검색 페이지가 소유합니다.
 
 ### 2. Main banner
 
@@ -358,7 +359,7 @@ BottomNavigationLayout
 
 - Reuse:
   - 현재 재사용 가능한 식당 리스트/카드 컴포넌트는 확인되지 않았습니다.
-  - 이미지 렌더링은 `ImageWithDefaultFallback`을 사용해 URL 누락과 이미지 로드 실패 모두 공통 `DefaultImage` fallback으로 처리합니다.
+  - 이미지 렌더링은 HDS `Thumbnail`을 사용해 URL 누락과 이미지 로드 실패를 내부 fallback으로 처리합니다.
 - Do not create:
   - 초기부터 `shared/components/RestaurantCard`
   - HDS 식당 카드
@@ -395,7 +396,7 @@ BottomNavigationLayout
 ## Component Boundary Decisions
 
 - HDS 사용:
-  - `SearchField`
+  - `SearchBar`
   - `Button`
   - `Carousel`
   - `BottomNavigation` through `BottomNavigationLayout`
@@ -500,7 +501,7 @@ BottomNavigationLayout
   - 없음
 - exceptional case:
   - 이미지 로드 실패 시 레이아웃이 깨지지 않도록 고정 크기/비율과 배경색을 유지합니다.
-  - SNS 맛집 이미지는 URL이 없거나 이미지 요청이 403/404/CORS 등으로 실패하면 공통 `DefaultImage`를 렌더링합니다.
+  - SNS 맛집 이미지는 URL이 없거나 이미지 요청이 403/404/CORS 등으로 실패하면 HDS `Thumbnail`의 내부 fallback을 렌더링합니다.
   - route target이 확정되지 않은 콘텐츠는 클릭 가능한 UI로 노출하지 않습니다.
 - user-facing message:
   - 홈 전체 error message는 만들지 않습니다.

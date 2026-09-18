@@ -1,6 +1,6 @@
 import { useState } from 'react'
+import { ImageFallback } from '@hashi/hds-ui'
 
-import { DefaultImage } from '@/shared/components/defaultImage'
 import { cn } from '@/shared/utils'
 
 type ReservationCardImageProps = {
@@ -10,38 +10,39 @@ type ReservationCardImageProps = {
   className?: string
 }
 
-export const ReservationCardImage = ({
+const ReservationCardImageContent = ({
   imageUrl,
   restaurantName,
   disabled = false,
   className,
 }: ReservationCardImageProps) => {
-  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
-  const shouldShowImage = imageUrl && failedImageUrl !== imageUrl
+  const [hasError, setHasError] = useState(false)
 
-  if (shouldShowImage) {
+  if (imageUrl && !hasError) {
     return (
       <img
         alt={restaurantName}
         className={cn('size-16 shrink-0 rounded-[5px] object-cover', className)}
-        onError={() => {
-          setFailedImageUrl(imageUrl)
-        }}
+        onError={() => setHasError(true)}
         src={imageUrl}
       />
     )
   }
 
   return (
-    <DefaultImage
+    <ImageFallback
       aria-label={`${restaurantName} 이미지`}
       className={cn(
         'size-16 shrink-0 rounded-[5px]',
         disabled && 'opacity-60',
         className,
       )}
-      logoSize="sm"
+      markSize="sm"
       role="img"
     />
   )
+}
+
+export const ReservationCardImage = (props: ReservationCardImageProps) => {
+  return <ReservationCardImageContent key={props.imageUrl} {...props} />
 }

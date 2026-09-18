@@ -258,8 +258,6 @@ describe('ReviewNewPage', () => {
       target: { files: [largePhotoFile] },
     })
 
-    expect(
-      screen.getByText('사진은 장당 5MB 이하로 첨부해주세요.'),
-    ).toBeInTheDocument()
+    expect(screen.getByText('용량이 초과되었어요.')).toBeInTheDocument()
   })
 })

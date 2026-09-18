@@ -36,6 +36,7 @@
     "storybook": "pnpm --filter @hashi/hds-ui storybook",
     "test": "turbo test --filter=@hashi/client --filter=@hashi/hds-ui",
     "test:assign-reviewers": "node --test .github/scripts/assign-reviewers.test.cjs",
+    "test:ci-scope": "node --test .github/scripts/detect-ci-scope.test.cjs",
     "test:lighthouse-comment": "node --test .github/scripts/lighthouse-comment.test.cjs",
     "test:lighthouse-preview-validation": "node --test .github/scripts/lighthouse-preview-validation.test.cjs",
     "test:lighthouse": "pnpm test:lighthouse-comment && pnpm test:lighthouse-preview-validation",

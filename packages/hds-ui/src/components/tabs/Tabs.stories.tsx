@@ -1,6 +1,12 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Tabs, type TabsProps } from './Tabs'
+
+const mobileFrameDecorator = (Story: () => ReactNode) => (
+  <div className="w-[393px] bg-white py-8">
+    <Story />
+  </div>
+)
 
 const StatefulTabs = (args: TabsProps) => {
   const [value, setValue] = useState(args.value)
@@ -12,9 +18,10 @@ const meta = {
   title: 'Components/Tabs',
   component: Tabs,
   tags: ['autodocs'],
+  decorators: [mobileFrameDecorator],
   args: {
     items: [
-      { value: 'info', label: '매장 정보' },
+      { value: 'info', label: '라벨' },
       { value: 'menu', label: '메뉴' },
       { value: 'review', label: '리뷰', count: 256 },
     ],
@@ -23,8 +30,7 @@ const meta = {
   },
   argTypes: {
     value: {
-      control: 'select',
-      options: ['info', 'menu', 'review'],
+      control: false,
     },
   },
 } satisfies Meta<typeof Tabs>
@@ -40,10 +46,23 @@ export const Default: Story = {
 export const TwoItems: Story = {
   args: {
     items: [
-      { value: 'write', label: '리뷰 쓰기', count: 1 },
-      { value: 'written', label: '작성한 리뷰', count: 4 },
+      { value: 'first', label: '라벨', count: 12 },
+      { value: 'second', label: '라벨', count: 34 },
     ],
-    value: 'write',
+    value: 'first',
+  },
+  render: StatefulTabs,
+}
+
+export const FourItems: Story = {
+  args: {
+    items: [
+      { value: 'first', label: '라벨' },
+      { value: 'second', label: '라벨' },
+      { value: 'third', label: '라벨' },
+      { value: 'fourth', label: '라벨' },
+    ],
+    value: 'first',
   },
   render: StatefulTabs,
 }

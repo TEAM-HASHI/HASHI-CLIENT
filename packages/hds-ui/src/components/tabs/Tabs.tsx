@@ -17,26 +17,39 @@ export type TabsProps = Omit<
   onChange: (value: string) => void
 }
 
-const tabButtonVariants = cva(
-  'relative z-raised flex h-full min-w-0 flex-1 items-center justify-center gap-1',
+const tabButtonClassName =
+  'flex min-w-0 flex-1 items-center justify-center gap-1 border-b border-warm-gray-100 py-2.5'
+
+const tabIndicatorClassName =
+  'bg-primary-200 pointer-events-none absolute bottom-0 left-0 z-raised h-0.5 transition-transform duration-200 ease-out motion-reduce:transition-none'
+
+const tabLabelVariants = cva(
+  'truncate transition-colors duration-200 ease-out motion-reduce:transition-none',
+  {
+    variants: {
+      selected: {
+        true: 'typo-sub-header-2 text-primary-200',
+        false: 'typo-body-4 text-warm-gray-300',
+      },
+    },
+  },
 )
 
-const tabLabelVariants = cva('truncate', {
-  variants: {
-    selected: {
-      true: 'typo-sub-header-2 text-primary-200',
-      false: 'typo-body-4 text-warm-gray-300',
+const tabCountVariants = cva(
+  'shrink-0 transition-colors duration-200 ease-out motion-reduce:transition-none',
+  {
+    variants: {
+      selected: {
+        true: 'typo-caption-2 text-primary-200',
+        false: 'typo-caption-2 text-warm-gray-300',
+      },
     },
   },
-})
+)
 
-const tabCountVariants = cva('shrink-0', {
-  variants: {
-    selected: {
-      true: 'typo-caption-1 text-primary-200',
-      false: 'typo-caption-2 text-warm-gray-300',
-    },
-  },
+const getTabIndicatorStyle = (itemCount: number, selectedIndex: number) => ({
+  width: `calc(100% / ${itemCount})`,
+  transform: `translateX(${Math.max(selectedIndex, 0) * 100}%)`,
 })
 
 export const Tabs = ({
@@ -46,10 +59,8 @@ export const Tabs = ({
   className,
   ...props
 }: TabsProps) => {
-  const selectedIndex = Math.max(
-    items.findIndex((item) => item.value === value),
-    0,
-  )
+  const selectedIndex = items.findIndex((item) => item.value === value)
+  const hasSelectedItem = selectedIndex >= 0
 
   const handleTabSelect = (item: TabsItem) => {
     if (item.value === value) {
@@ -61,21 +72,20 @@ export const Tabs = ({
   return (
     <div
       className={cn(
-        'border-warm-gray-100 relative flex h-10 w-full border-b bg-white',
+        'relative flex h-12.5 w-full items-end bg-white',
         className,
       )}
       {...props}
       role="tablist"
     >
-      <div
-        aria-hidden="true"
-        className="bg-primary-200 pointer-events-none absolute bottom-0 left-0 h-0.5 translate-y-px transition-transform duration-200 ease-out motion-reduce:transition-none"
-        data-hds-tabs-indicator=""
-        style={{
-          width: `${100 / items.length}%`,
-          transform: `translateX(${selectedIndex * 100}%)`,
-        }}
-      />
+      {hasSelectedItem ? (
+        <div
+          aria-hidden="true"
+          className={tabIndicatorClassName}
+          data-hds-tabs-indicator=""
+          style={getTabIndicatorStyle(items.length, selectedIndex)}
+        />
+      ) : null}
       {items.map((item) => {
         const isSelected = item.value === value
 
@@ -84,7 +94,7 @@ export const Tabs = ({
             key={item.value}
             type="button"
             aria-selected={isSelected}
-            className={cn(tabButtonVariants())}
+            className={tabButtonClassName}
             onClick={() => handleTabSelect(item)}
             role="tab"
           >

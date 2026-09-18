@@ -1,12 +1,12 @@
 # Component Spec: `Calendar`
 
-Jira: HASHI-42
+Jira: HASHI-177 (최초 구현: HASHI-42)
 
 ## Purpose
 
 `Calendar`는 월 단위 날짜 선택 UI를 그리는 HDS의 공통 interactive primitive입니다.
 
-HDS는 **월 헤더, 이전/다음 월 탐색 버튼, 요일 행, 날짜 grid, 선택/비활성 날짜의 시각 상태, 기본 접근성 계약, controlled selection callback**만 담당합니다. 실제 예약 가능 여부 계산, API 호출, query/mutation, 예약 정책, 영업일 규칙, 결제/예약 submit, analytics, 제품 copy는 App Shell / Page / Feature에서 처리합니다.
+HDS는 **월 헤더, 이전/다음 월 탐색 버튼, 날짜 grid, 선택/비활성 날짜의 시각 상태, 기본 접근성 계약, controlled selection callback**만 담당합니다. 실제 예약 가능 여부 계산, API 호출, query/mutation, 예약 정책, 영업일 규칙, 결제/예약 submit, analytics, 제품 copy는 App Shell / Page / Feature에서 처리합니다.
 
 ## Component Type
 
@@ -16,9 +16,10 @@ HDS는 **월 헤더, 이전/다음 월 탐색 버튼, 요일 행, 날짜 grid, �
 
 ## Figma Reference
 
-- 전달 이미지 기준 calendar month view
+- [Calendar 리디자인](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=7869-36523&m=dev)
+- 기본 날짜: `7869:36535`, 선택 예시: `7869:36537`, 선택 날짜: `7869:36542`
 - month header: left `icon_back`, two-line year/month text, right `icon_next`
-- weekday row: `S M T W T F S`
+- weekday row: 최신 디자인에서는 표시하지 않음
 - date grid: 7 columns, month days only
 - selected date state: black rounded rectangle
 - unavailable date state: muted cool-gray text
@@ -92,14 +93,14 @@ HDS는 **월 헤더, 이전/다음 월 탐색 버튼, 요일 행, 날짜 grid, �
 - [x] 제품 도메인 데이터, route, API, logging, analytics에 의존하지 않습니다.
 - [x] `month` 기준으로 visible month를 렌더링합니다.
 - [x] visible month 외 날짜는 v1에서 렌더링하지 않고 empty grid cell로 정렬합니다.
-- [x] 요일은 일요일부터 토요일까지 7개 column으로 렌더링합니다.
-- [x] 날짜 column은 `repeat(7, minmax(0, 1fr))` 형태의 equal-column grid로 배치합니다.
+- [x] 요일 행은 표시하지 않으며 날짜는 일요일부터 토요일 순서의 7개 column으로 렌더링합니다.
+- [x] 날짜 column은 `36px` 셀 7개를 부모 너비 안에 균등 분산합니다. 최소 콘텐츠 너비는 `252px`입니다.
 - [x] 날짜 visual은 각 grid cell 중앙에 정렬합니다.
 - [x] month header는 `44px` 높이 안에서 연도와 월을 세로 2줄로 중앙 정렬합니다.
 - [x] 연도 label은 `typo-body-3`, `text-cool-gray-900` 기준을 따릅니다.
 - [x] 월 label은 `typo-sub-header-1`, `text-black` 기준을 따릅니다.
-- [x] 세로 row gap은 `10px` 기준으로 구현합니다.
-- [x] 날짜 텍스트 visual box는 `padding: 5px 12px` 기준을 따릅니다.
+- [x] 날짜 셀 높이는 `36px`, 세로 row gap은 `6px`로 고정해 선택 시 행이 움직이지 않게 합니다.
+- [x] 일반 날짜는 너비 `34px`, `padding: 5px 6px`이며 선택 날짜는 `36px × 36px`, `padding: 4px 7px`입니다.
 - [x] 선택 가능한 날짜는 `typo-body-4`, `text-black` 기준을 따릅니다.
 - [x] 선택 불가 날짜는 `typo-body-4`, `text-cool-gray-400` 기준을 따릅니다.
 - [x] 선택된 날짜는 `rounded-[5px]`, `bg-black`, `typo-sub-header-2`, `text-white` 기준을 따릅니다.
@@ -110,7 +111,6 @@ HDS는 **월 헤더, 이전/다음 월 탐색 버튼, 요일 행, 날짜 grid, �
 - [x] `onMonthChange`가 없으면 월 이동 버튼은 disabled 상태로 렌더링합니다.
 - [x] `minMonth`가 visible month와 같거나 이후면 이전 달 버튼은 disabled 상태로 렌더링합니다.
 - [x] 날짜 버튼에는 기본적으로 `YYYY년 M월 D일` 형태의 accessible name을 제공합니다.
-- [x] 요일 label에는 전체 요일 accessible name을 제공합니다.
 - [x] `className`은 root에 안전하게 병합합니다.
 
 ## UI Structure
@@ -122,8 +122,6 @@ Calendar
     Year label
     Month label
     Next month button
-  Weekday row
-    Weekday label x 7
   Date grid
     Empty cell x leading offset
     Date button x month day count
@@ -195,20 +193,6 @@ Calendar
 - default: Korean full date label, for example `'2026년 6월 1일'`
 - description: 날짜 button의 accessible name을 포맷합니다. visible text는 숫자만 유지하되 스크린리더에는 연/월/일 정보를 제공합니다.
 
-### `weekdayLabels`
-
-- type: `readonly [string, string, string, string, string, string, string]`
-- required: `false`
-- default: `['S', 'M', 'T', 'W', 'T', 'F', 'S']`
-- description: 요일 표시 텍스트입니다. 일요일부터 토요일 순서로 전달합니다.
-
-### `weekdayAriaLabels`
-
-- type: `readonly [string, string, string, string, string, string, string]`
-- required: `false`
-- default: `['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']`
-- description: 요일 label의 accessible name입니다. 시각 label은 `S M T W T F S`처럼 짧게 유지하되 스크린리더에는 전체 요일명을 제공합니다.
-
 ### `className`
 
 - type: `string`
@@ -238,24 +222,6 @@ export type CalendarProps = Omit<
   formatYearLabel?: (month: Date) => string
   formatMonthLabel?: (month: Date) => string
   getDateAriaLabel?: (date: Date) => string
-  weekdayLabels?: readonly [
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-  ]
-  weekdayAriaLabels?: readonly [
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-  ]
 }
 ```
 
@@ -277,7 +243,7 @@ export type CalendarProps = Omit<
 ## Behavior
 
 1. `month`의 year/month를 기준으로 첫 요일 offset과 월 일수를 계산합니다.
-2. 요일 row는 항상 7개 label을 렌더링합니다.
+2. 요일 row는 렌더링하지 않습니다.
 3. 날짜 grid는 7 columns를 유지하고 첫 날짜 전 empty cell을 렌더링합니다.
 4. 각 날짜는 native `button`으로 렌더링합니다.
 5. 활성 날짜를 클릭하면 해당 날짜의 `Date` 객체로 `onDateSelect`를 호출합니다.
@@ -304,31 +270,19 @@ export type CalendarProps = Omit<
   - white background는 호출부 surface에 맡기되 story에서는 white wrapper를 제공합니다.
 - header:
   - horizontal layout
-  - bottom spacing to weekday row: `22px`
+  - bottom spacing to date grid: `26px`
   - left/right icon button과 centered month label
   - month label: `typo-sub-header-1`, `text-black`
   - icon color: `text-cool-gray-900`
   - icon source: `BackIcon`, `NextIcon` from `@hashi/hds-icons`
-- weekday row:
-  - `grid`
-  - `grid-template-columns: repeat(7, minmax(0, 1fr))`
-  - bottom spacing to date grid: `22px`
-  - `bg-primary-100`
-  - `rounded-[5px]`
-  - weekday text: `typo-body-5`, `text-black`
-  - Sunday label text: `typo-sub-header-3`, `text-primary-400`
-  - Saturday label text: `typo-sub-header-3`, `text-point-300`
-  - label padding: `py-[5px] px-3`
 - date grid:
-  - `grid`
-  - `grid-template-columns: repeat(7, minmax(0, 1fr))`
-  - `row-gap: 10px`
-  - column spacing is produced by equal-width columns and centered date boxes, not fixed `column-gap: 18px`
-  - date cell: center alignment
-  - date button: `h-8`, `py-[5px] px-3`, `rounded-[5px]`
+  - `grid`, `grid-template-columns: repeat(7, auto)`, `justify-content: space-between`
+  - `row-gap: 6px`
+  - date cell: `size-9` (`36px × 36px`), center alignment
+  - date button: `w-8.5`, `py-1.25 px-1.5`, `rounded-[5px]`
   - available date: `typo-body-4`, `text-black`
   - disabled date: `typo-body-4`, `text-cool-gray-400`
-  - selected date: `size-8`, `typo-sub-header-2`, `bg-black`, `text-white`
+  - selected date: `size-9`, `py-1 px-1.75`, `typo-sub-header-2`, `bg-black`, `text-white`
 - focus-visible:
   - `focus-visible:outline-2`
   - `focus-visible:outline-offset-2`
@@ -338,9 +292,12 @@ export type CalendarProps = Omit<
 
 - `Black`은 Tailwind 기본 `text-black`/`bg-black` utility를 사용합니다.
 - `radius 5`는 현재 radius token이 없으므로 `rounded-[5px]`를 사용합니다.
-- `5px` vertical padding은 Tailwind 기본 spacing에 없으므로 `py-[5px]`를 사용합니다.
-- `12px` horizontal padding은 Tailwind `px-3`와 일치합니다.
-- date button은 선택 상태에서 row 높이가 흔들리지 않도록 기본 높이를 `h-8`로 고정합니다.
+- spacing/sizing은 Tailwind scale을 사용합니다: `py-1.25` = 5px, `px-1.5` = 6px, `size-9` = 36px.
+- Figma 기본 날짜는 너비 34px, 선택 날짜는 36px입니다. 모든 날짜의 배치 공간을 36px로 통일해 선택 상태 변경 시 행/열 이동을 막습니다.
+- Figma 기본/선택 예시의 날짜 영역 시작점은 2px 다릅니다. 선택 예시의 header–grid 간격 26px를 기준으로 사용하며, 날짜 행 간격은 42px로 통일합니다.
+- Figma의 346px는 비교용 너비이며 root에 고정하지 않습니다. 36px 셀 사이의 수평 간격은 부모 너비에 맞춰 분산합니다.
+- Figma 예시의 2026년 6월에 포함된 31일과 날짜 시작 위치는 복제하지 않습니다. 실제 연월의 일수와 시작 요일을 계산합니다.
+- `weekdayLabels`, `weekdayAriaLabels`는 요일 행 제거와 함께 public API에서 제거했습니다. 기존 앱 호출부 두 곳에서는 사용하지 않습니다.
 
 ## Accessibility
 
@@ -359,9 +316,6 @@ export type CalendarProps = Omit<
   - `role="grid"`/roving tabindex는 v1에서 도입하지 않습니다. 완전한 date picker keyboard contract가 필요해지면 `react-aria-components` 기반 Calendar로 확장합니다.
   - selected date에는 button 역할에 맞는 `aria-pressed="true"`를 제공합니다.
   - disabled date에는 native `disabled`를 사용합니다.
-- weekday row:
-  - visual label은 `S M T W T F S`를 유지합니다.
-  - 각 weekday label에는 `weekdayAriaLabels`로 전체 요일 accessible name을 제공합니다.
 - visible text:
   - date button의 visible text는 숫자만 렌더링합니다.
   - date button의 accessible name은 `getDateAriaLabel` 결과를 사용합니다.
@@ -393,8 +347,9 @@ export type CalendarProps = Omit<
 - [x] Month navigation callbacks
 - [x] Minimum month previous-navigation disabled state
 - [x] Custom month label formatter
-- [x] Custom weekday labels
-- [x] Narrow mobile wrapper around `393px`
+- [x] Figma 비교용 346px 콘텐츠 너비
+- [x] Narrow container: 320px viewport에서 좌우 여백 32px를 제외한 256px 콘텐츠 너비
+- [x] Six-week month: 2026년 8월
 - [x] Long root `aria-label` or labelled wrapper accessibility check
 
 v1에서 loading, error, invalid, range selection, time selection, popover positioning은 지원하지 않습니다.
@@ -420,10 +375,15 @@ v1에서 loading, error, invalid, range selection, time selection, popover posit
 
 ## Verification
 
-- [x] `corepack pnpm format:check`
-- [x] `corepack pnpm --filter @hashi/hds-ui lint`
-- [x] `corepack pnpm --filter @hashi/hds-ui typecheck`
-- [x] `corepack pnpm --filter @hashi/hds-ui build`
-- [x] `corepack pnpm --filter @hashi/hds-ui test`
-- [x] `corepack pnpm --filter @hashi/hds-ui build-storybook`
-- [x] 주요 UI 상태 Storybook story 구성 확인
+- [x] `pnpm format:check`
+- [x] `pnpm --filter @hashi/hds-ui lint`
+- [x] `pnpm --filter @hashi/hds-ui typecheck`
+- [x] `pnpm --filter @hashi/hds-ui build`
+- [x] `pnpm --filter @hashi/hds-ui test`
+- [x] `pnpm build-storybook`
+- [x] 기본/선택/비활성/월 이동/좁은 너비/6주 렌더링을 브라우저에서 확인
+- [x] 선택 전후 날짜 중심 좌표와 행 높이가 동일한지 확인
+- [x] `pnpm --filter @hashi/client typecheck` — 앱 호출부 호환성 확인
+- [x] Tab으로 비활성 날짜 건너뛰기, 포커스 표시, Enter로 날짜 선택 확인
+
+2026-09-07 검증: HDS 19개 파일/179개 테스트 통과. 브라우저에서 346px/256px 콘텐츠 너비, 320px viewport, 선택 전후 중심 좌표 유지, 월 이동 및 6주 렌더링을 확인했습니다. 예약 API 및 실제 예약 제출은 변경하지 않았으며 이번 검증 범위에 포함하지 않습니다.

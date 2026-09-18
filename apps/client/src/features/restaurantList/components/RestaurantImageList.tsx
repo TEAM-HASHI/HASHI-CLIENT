@@ -1,4 +1,4 @@
-import { DefaultImage } from '@/shared/components/defaultImage'
+import { Thumbnail } from '@hashi/hds-ui'
 
 type RestaurantImageListProps = {
   images: string[]
@@ -11,26 +11,21 @@ export const RestaurantImageList = ({
 }: RestaurantImageListProps) => {
   return (
     <span
-      className="block w-full [scrollbar-width:none] overflow-x-auto overflow-y-hidden [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      className="block w-full scrollbar-none overflow-x-auto overflow-y-hidden [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       data-testid="restaurant-image-list"
     >
       <span className="flex w-max gap-2">
         {images.length > 0 ? (
           images.map((image, index) => (
-            <img
+            <Thumbnail
               alt={`${restaurantName} 사진 ${index + 1}`}
-              className="size-33.75 shrink-0 rounded-[5px] object-cover"
               key={`${image}-${index}`}
+              size="lg"
               src={image}
             />
           ))
         ) : (
-          <DefaultImage
-            aria-hidden="true"
-            className="size-33.75 shrink-0 rounded-[5px]"
-            data-testid="restaurant-image-placeholder"
-            logoSize="md"
-          />
+          <Thumbnail alt="" aria-hidden="true" size="lg" />
         )}
       </span>
     </span>

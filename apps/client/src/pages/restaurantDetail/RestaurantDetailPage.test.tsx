@@ -284,13 +284,15 @@ describe('RestaurantDetailPage', () => {
     expect(screen.getByRole('button', { name: '예약하기' })).toBeTruthy()
   })
 
-  it('renders default image when restaurant hero image fails to load', async () => {
+  it('renders ImageFallback when restaurant hero image fails to load', async () => {
     const { container } = renderPage()
 
     await screen.findByRole('main')
 
+    const heroSlide = container.querySelector('[aria-label="식당 이미지 1"]')
+
     expect(
-      screen.queryByTestId('restaurant-detail-hero-default-image'),
+      heroSlide?.querySelector('[data-slot="image-fallback"]'),
     ).not.toBeInTheDocument()
 
     const heroImage = container.querySelector(
@@ -301,42 +303,44 @@ describe('RestaurantDetailPage', () => {
     fireEvent.error(heroImage as HTMLImageElement)
 
     expect(
-      screen.getByTestId('restaurant-detail-hero-default-image'),
+      heroSlide?.querySelector('[data-slot="image-fallback"]'),
     ).toBeInTheDocument()
   })
 
-  it('renders one default hero image when restaurant has no images', async () => {
+  it('renders one hero ImageFallback when restaurant has no images', async () => {
     mockedGetRestaurantSummary.mockResolvedValue({
       ...restaurantSummary,
       imageUrls: [],
     })
 
-    renderPage()
+    const { container } = renderPage()
 
     await screen.findByRole('main')
 
     expect(screen.getAllByLabelText(/식당 이미지 \d+/)).toHaveLength(1)
     expect(
-      screen.getByTestId('restaurant-detail-hero-default-image'),
+      container.querySelector(
+        '[aria-label="식당 이미지 1"] [data-slot="image-fallback"]',
+      ),
     ).toBeInTheDocument()
   })
 
-  it('renders default image when menu image fails to load', async () => {
+  it('renders ImageFallback when menu image fails to load', async () => {
     renderPage()
 
     fireEvent.click(await screen.findByRole('tab', { name: '메뉴' }))
 
-    expect(screen.queryByTestId('restaurant-menu-default-image')).toBeNull()
+    const menuButton = screen.getByRole('button', { name: /시오라멘/ })
 
-    const menuImage = screen
-      .getByRole('button', { name: /시오라멘/ })
-      .querySelector('img')
+    expect(menuButton.querySelector('[data-slot="image-fallback"]')).toBeNull()
+
+    const menuImage = menuButton.querySelector('img')
     expect(menuImage).toBeInTheDocument()
 
     fireEvent.error(menuImage as HTMLImageElement)
 
     expect(
-      screen.getByTestId('restaurant-menu-default-image'),
+      menuButton.querySelector('[data-slot="image-fallback"]'),
     ).toBeInTheDocument()
   })
 

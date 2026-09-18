@@ -1,4 +1,4 @@
-import { SearchField } from '@hashi/hds-ui'
+import { SearchBar } from '@hashi/hds-ui'
 import { Link } from 'react-router-dom'
 
 interface HomeSearchEntryProps {
@@ -8,7 +8,7 @@ interface HomeSearchEntryProps {
 export const HomeSearchEntry = ({ to }: HomeSearchEntryProps) => {
   return (
     <div className="relative mt-[15px]">
-      <SearchField
+      <SearchBar
         readOnly
         aria-hidden="true"
         aria-label="식당 혹은 메뉴를 검색해보세요"

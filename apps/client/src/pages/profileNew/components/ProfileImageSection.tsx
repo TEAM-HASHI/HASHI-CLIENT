@@ -1,10 +1,9 @@
 import { PencilIcon } from '@hashi/hds-icons'
-import { Avatar, IconButton } from '@hashi/hds-ui'
+import { Avatar, Button, IconButton } from '@hashi/hds-ui'
 import { type ChangeEvent, useRef } from 'react'
 
 import { FieldError } from '@/pages/profileNew/components/FieldError'
 import { PROFILE_IMAGE_ACCEPT } from '@/pages/profileNew/constants/profileImage'
-import profileEmptyImage from '@/shared/assets/images/profile-empty.svg'
 
 interface ProfileImageSectionProps {
   disabled?: boolean
@@ -44,18 +43,14 @@ export const ProfileImageSection = ({
       className="flex flex-col items-center pt-6 pb-7"
     >
       <div className="relative">
-        <Avatar
-          alt="프로필 이미지"
-          className="bg-cool-gray-100"
-          size="lg"
-          src={previewUrl ?? profileEmptyImage}
-        />
+        <Avatar alt="프로필 이미지" size="lg" src={previewUrl} />
         <IconButton
           aria-label="프로필 이미지 수정"
-          className="absolute right-[-4px] bottom-0 size-10 rounded-full bg-white shadow-sm"
+          className="absolute right-[-4px] bottom-0"
           disabled={disabled}
           onClick={handleImageButtonClick}
-          size="md"
+          size="sm"
+          variant="soft"
         >
           <PencilIcon className="size-[25px]" />
         </IconButton>
@@ -70,14 +65,16 @@ export const ProfileImageSection = ({
         onChange={handleFileChange}
         type="file"
       />
-      <button
-        className="typo-body-3 text-primary-200 mt-4 disabled:cursor-not-allowed disabled:opacity-50"
+      <Button
+        className="mt-4"
         disabled={disabled}
         onClick={onImageDelete}
+        size="md"
         type="button"
+        variant="ghost"
       >
         프로필 삭제
-      </button>
+      </Button>
       <FieldError id="profile-image-file-error" message={errorMessage} />
     </section>
   )
