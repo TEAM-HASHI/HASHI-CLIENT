@@ -119,4 +119,16 @@ describe('Badge', () => {
     expect(screen.queryByTestId('enabled-icon')).not.toBeInTheDocument()
     expect(screen.getByTestId('disabled-icon')).toBeInTheDocument()
   })
+
+  it('aria-disabled가 true이면 선택 상태여도 비활성 스타일을 우선 적용합니다', () => {
+    render(
+      <Badge aria-disabled="true" interactive label="선택 라벨" selected />,
+    )
+
+    const badge = screen.getByRole('button', { name: '선택 라벨' })
+
+    expect(badge).toHaveAttribute('aria-pressed', 'true')
+    expect(badge).not.toHaveClass('border-[1.4px]', 'border-primary-400')
+    expect(badge).toHaveClass('border-warm-gray-100', 'bg-primary-100')
+  })
 })

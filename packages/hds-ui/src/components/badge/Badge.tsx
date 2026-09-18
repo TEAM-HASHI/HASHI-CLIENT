@@ -86,6 +86,7 @@ export const Badge = (props: BadgeProps) => {
     } = props
     const isDisabled = ariaDisabled === true || ariaDisabled === 'true'
     const displayIcon = isDisabled && disabledIcon ? disabledIcon : icon
+    const visualSelected = isDisabled ? false : selected
 
     const handleClick = () => {
       if (isDisabled) {
@@ -100,7 +101,11 @@ export const Badge = (props: BadgeProps) => {
         aria-disabled={ariaDisabled}
         aria-pressed={selected}
         className={cn(
-          badgeVariants({ disabled: isDisabled, interactive: true, selected }),
+          badgeVariants({
+            disabled: isDisabled,
+            interactive: true,
+            selected: visualSelected,
+          }),
           className,
         )}
         onClick={handleClick}
