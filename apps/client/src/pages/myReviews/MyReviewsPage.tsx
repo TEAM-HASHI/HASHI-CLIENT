@@ -7,7 +7,6 @@ import { MyReviewsErrorState } from '@/pages/myReviews/components/MyReviewsError
 import { ReviewWritableCard } from '@/pages/myReviews/components/ReviewWritableCard'
 import { WrittenReviewCard } from '@/pages/myReviews/components/WrittenReviewCard'
 import { useMyReviewsPage } from '@/pages/myReviews/hooks/useMyReviewsPage'
-import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import { Empty } from '@/shared/components/empty'
 
 export const MyReviewsPage = () => {
@@ -15,7 +14,6 @@ export const MyReviewsPage = () => {
     activeTab,
     currentCount,
     isDeletePending,
-    isEditComingSoonDialogOpen,
     isError,
     isFetchingNextPage,
     isPending,
@@ -31,11 +29,10 @@ export const MyReviewsPage = () => {
     handleCloseReviewMenu,
     handleDeleteReview,
     handleNavigateToReviewDetail,
+    handleNavigateToReviewEdit,
     handleNavigateToReviewNew,
     handleNavigateToTodayRestaurant,
-    handleOpenReviewEditComingSoonDialog,
     handleRetry,
-    handleReviewEditComingSoonDialogOpenChange,
     handleToggleReviewMenu,
   } = useMyReviewsPage()
 
@@ -104,7 +101,7 @@ export const MyReviewsPage = () => {
               ))}
             </div>
           ) : (
-            <div className="min-w-0">
+            <div className="flex min-w-0 flex-col gap-3">
               {writtenReviews.map((review) => (
                 <WrittenReviewCard
                   key={review.id}
@@ -116,7 +113,7 @@ export const MyReviewsPage = () => {
                   review={review}
                   onCloseMenu={handleCloseReviewMenu}
                   onDelete={() => handleDeleteReview(review.id)}
-                  onEdit={handleOpenReviewEditComingSoonDialog}
+                  onEdit={() => handleNavigateToReviewEdit(review.id)}
                   onOpenDetail={() => handleNavigateToReviewDetail(review.id)}
                   onToggleMenu={() => handleToggleReviewMenu(review.id)}
                 />
@@ -127,10 +124,6 @@ export const MyReviewsPage = () => {
           {isFetchingNextPage ? <div className="h-4" /> : null}
         </main>
       )}
-      <ComingSoonDialog
-        open={isEditComingSoonDialogOpen}
-        onOpenChange={handleReviewEditComingSoonDialogOpenChange}
-      />
     </section>
   )
 }
