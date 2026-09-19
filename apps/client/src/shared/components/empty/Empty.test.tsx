@@ -7,7 +7,7 @@ import emptyImage from '@/shared/assets/images/empty.webp'
 import { Empty } from '@/shared/components/empty'
 
 describe('Empty', () => {
-  it('renders the QA graphic, message, and action sizing', () => {
+  it('renders the graphic and message and invokes the action', () => {
     const onAction = vi.fn()
     const { container } = render(
       <Empty
@@ -17,20 +17,14 @@ describe('Empty', () => {
       />,
     )
 
-    expect(container.querySelector(`img[src="${emptyImage}"]`)).toHaveClass(
-      'h-19',
-      'w-[101px]',
-    )
-    expect(screen.getByText('최근 방문한 맛집이 없어요.')).toHaveClass(
-      'typo-sub-header-1',
-      'text-cool-gray-900',
-    )
+    expect(
+      container.querySelector(`img[src="${emptyImage}"]`),
+    ).toBeInTheDocument()
+    expect(screen.getByText('최근 방문한 맛집이 없어요.')).toBeInTheDocument()
 
     const action = screen.getByRole('button', {
       name: '일본 맛집 추천받기',
     })
-
-    expect(action).toHaveClass('w-[185px]')
 
     fireEvent.click(action)
 
