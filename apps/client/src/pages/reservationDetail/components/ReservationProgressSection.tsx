@@ -88,7 +88,7 @@ export const ReservationProgressSection = ({
   steps,
 }: ReservationProgressSectionProps) => {
   return (
-    <section className="pt-5 pb-7">
+    <section className="py-6">
       <ReservationRestaurantSummary
         requestedDate={requestedDate}
         requestedLabel={requestedLabel}

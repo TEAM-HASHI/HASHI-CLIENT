@@ -51,19 +51,18 @@ export const ReservationRestaurantSummary = ({
 }: ReservationRestaurantSummaryProps) => {
   return (
     <>
-      <h2 className="typo-body-3 mb-4">
-        <time className="text-primary-200">{requestedDate}</time>{' '}
-        <span className="text-cool-gray-900">{requestedLabel}</span>
+      <h2 className="typo-body-3 text-cool-gray-600 mb-4">
+        <time>{requestedDate}</time> <span>{requestedLabel}</span>
       </h2>
 
       <div className="mb-6 flex gap-3">
         <RestaurantImage name={restaurant.name} src={restaurant.imageSrc} />
 
         <div className="min-w-0">
-          <p className="typo-sub-header-1 text-cool-gray-900 line-clamp-2">
+          <p className="typo-sub-header-2 text-cool-gray-900 line-clamp-2">
             {restaurant.name}
           </p>
-          <p className="typo-body-3 text-primary-200 mt-1 line-clamp-1">
+          <p className="typo-body-3 text-primary-200 mt-2 line-clamp-1">
             {restaurant.localName}
           </p>
         </div>
