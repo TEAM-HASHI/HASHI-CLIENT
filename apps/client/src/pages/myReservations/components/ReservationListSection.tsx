@@ -9,6 +9,7 @@ import type {
   VisitedReservation,
 } from '@/pages/myReservations/types'
 import { Empty } from '@/shared/components/empty'
+import { cn } from '@/shared/utils'
 
 type ReservationListSectionProps = {
   selectedStatus: ReservationStatusFilterValue
@@ -41,11 +42,20 @@ export const ReservationListSection = ({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
-      <ReservationListSummary totalCount={totalCount} sortLabel="최신순" />
+      <ReservationListSummary
+        className={selectedStatus === 'IN_PROGRESS' ? 'mb-3.5' : undefined}
+        totalCount={totalCount}
+        sortLabel="최신순"
+      />
       {isLoading ? (
         <ReservationListSkeleton selectedStatus={selectedStatus} />
       ) : hasReservations ? (
-        <div className="mb-2 flex flex-col gap-4">
+        <div
+          className={cn(
+            'flex flex-col',
+            selectedStatus !== 'CANCELED' && 'gap-2',
+          )}
+        >
           <ReservationCardsByStatus
             reservations={reservations}
             selectedStatus={selectedStatus}
