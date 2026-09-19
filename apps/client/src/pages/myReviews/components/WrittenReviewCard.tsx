@@ -80,27 +80,30 @@ export const WrittenReviewCard = ({
   }
 
   return (
-    <article className="border-warm-gray-50 flex h-[120px] min-w-0 items-center gap-3 border-b">
+    <article className="border-warm-gray-50 relative h-29 min-w-0 border-b">
       <button
         aria-label={`${review.restaurantName} 리뷰 상세 보기`}
-        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        className="focus-visible:outline-cool-gray-500 absolute inset-0 rounded-[5px] focus-visible:outline-2 focus-visible:outline-offset-2"
         onClick={onOpenDetail}
         type="button"
-      >
+      />
+      <div className="pointer-events-none flex h-full min-w-0 items-start gap-3 py-3">
         <Thumbnail alt="" size="md" src={review.thumbnailUrl} />
-        <div className="min-w-0 flex-1">
-          <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2 min-w-0 flex-1">
-            {review.restaurantName}
-          </h2>
-          <p className="typo-body-7 text-cool-gray-500 mt-2">
-            {review.visitedAt}
-          </p>
-          <StarRating className="mt-0.5" size="sm" value={review.rating} />
+        <div className="flex h-full min-w-0 flex-1 flex-col gap-2 pr-7">
+          <div className="flex h-[38px] items-center">
+            <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2 min-w-0 flex-1">
+              {review.restaurantName}
+            </h2>
+          </div>
+          <div className="flex h-[46px] flex-col gap-0.5">
+            <p className="typo-body-7 text-cool-gray-600">{review.visitedAt}</p>
+            <StarRating size="sm" value={review.rating} />
+          </div>
         </div>
-      </button>
+      </div>
       <div
         ref={menuContainerRef}
-        className="relative mt-3.5 flex size-[18px] shrink-0 items-center justify-center self-start"
+        className="z-raised absolute top-3 right-0 flex size-[18px] items-center justify-center"
       >
         <button
           aria-controls={isMenuOpen ? menuId : undefined}
@@ -144,7 +147,7 @@ interface ReviewMoreMenuProps {
 const ReviewMoreMenu = ({ id, onDelete, onEdit }: ReviewMoreMenuProps) => {
   return (
     <div
-      className="border-warm-gray-100 z-floating absolute top-[calc(100%+12px)] right-0 h-20 w-[140px] rounded-[10px] border bg-white px-2.5"
+      className="border-warm-gray-100 z-floating absolute top-[22px] right-[7px] h-20 w-[140px] rounded-[10px] border bg-white px-2.5"
       id={id}
       role="menu"
     >
