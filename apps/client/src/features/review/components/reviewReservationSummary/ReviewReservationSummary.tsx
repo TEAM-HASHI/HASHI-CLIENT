@@ -7,6 +7,7 @@ export interface ReviewReservationSummaryProps extends Omit<
   ComponentPropsWithoutRef<'section'>,
   'children'
 > {
+  density?: 'default' | 'comfortable'
   restaurantName: string
   visitedAt: string
   guestSummary: string
@@ -14,6 +15,7 @@ export interface ReviewReservationSummaryProps extends Omit<
 }
 
 export const ReviewReservationSummary = ({
+  density = 'default',
   restaurantName,
   visitedAt,
   guestSummary,
@@ -30,7 +32,12 @@ export const ReviewReservationSummary = ({
       aria-label={ariaLabel}
       className={cn('flex w-full flex-col items-start px-5', className)}
     >
-      <div className="border-warm-gray-50 flex h-30 w-full items-center gap-3 border-b">
+      <div
+        className={cn(
+          'border-warm-gray-50 flex w-full items-center gap-3 border-b',
+          density === 'comfortable' ? 'py-5' : 'h-30',
+        )}
+      >
         <Thumbnail alt={thumbnailLabel} size="md" src={thumbnailSrc} />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <p className="typo-sub-header-2 text-cool-gray-900 line-clamp-2 w-full break-words">

@@ -76,11 +76,10 @@ describe('InputReviewMain', () => {
     expect(screen.getByLabelText('리뷰 내용')).toHaveClass(
       'typo-long-body-1',
       'text-primary-200',
+      'min-h-57.5',
+      'p-5',
     )
-    expect(screen.getByLabelText('리뷰 내용')).toHaveAttribute(
-      'maxlength',
-      '1000',
-    )
+    expect(screen.getByLabelText('리뷰 내용')).not.toHaveAttribute('maxlength')
     expect(screen.getByText('10자 이상')).toHaveClass('text-warm-gray-300')
     expect(
       screen.queryByText('10자 이상 작성해주세요.'),
@@ -101,7 +100,7 @@ describe('InputReviewMain', () => {
     expect(handleValueChange).toHaveBeenCalledWith('정말 맛있었어요')
   })
 
-  it('limits the next review text to maxLength before calling onValueChange', () => {
+  it('keeps an over-limit value so the user can see and fix the validation error', () => {
     const handleValueChange = vi.fn()
 
     render(<InputReviewMain maxLength={3} onValueChange={handleValueChange} />)
@@ -111,7 +110,7 @@ describe('InputReviewMain', () => {
     })
 
     expect(handleValueChange).toHaveBeenCalledTimes(1)
-    expect(handleValueChange).toHaveBeenCalledWith('abc')
+    expect(handleValueChange).toHaveBeenCalledWith('abcd')
   })
 
   it('passes selected photo files to onPhotoFilesChange', () => {
@@ -411,7 +410,8 @@ describe('InputReviewMain', () => {
 
     const textarea = screen.getByLabelText('리뷰 내용')
 
-    expect(textarea).toHaveValue('abc')
+    expect(textarea).toHaveValue('abcd')
+    expect(textarea).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByText('글자 수 제한을 초과했어요.')).toHaveClass(
       'text-primary-400',
     )

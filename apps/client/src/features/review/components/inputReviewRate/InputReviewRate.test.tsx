@@ -24,7 +24,7 @@ describe('InputReviewRate', () => {
     const stars = screen.getAllByRole('radio')
 
     expect(stars).toHaveLength(5)
-    expect(stars[0]).toHaveClass('size-[29px]')
+    expect(stars[0]).toHaveClass('size-9')
     stars.forEach((star) => {
       expect(star).toHaveAttribute('aria-checked', 'false')
       expect(star).toHaveAttribute('data-state', 'empty')

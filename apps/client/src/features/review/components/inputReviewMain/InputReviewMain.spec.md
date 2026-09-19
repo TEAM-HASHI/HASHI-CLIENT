@@ -59,7 +59,7 @@
 - [x] 이미지 삭제 버튼을 누르면 기존 사진 오류 메시지를 초기화합니다.
 - [x] 리뷰 본문 textarea는 HDS `Textarea`를 사용하며, 공통 Input 리디자인 이후에도 `min-h-57.5`로 기존 최소 높이 `230px`를 유지합니다.
 - [x] textarea placeholder는 `리뷰를 작성해 주세요.`입니다.
-- [x] textarea에는 `maxLength`를 전달해 HDS `Textarea`의 입력 제한 로직을 사용합니다.
+- [x] textarea에는 `maxLengthBehavior="allow"`를 사용해 최대 글자 수를 넘어선 값도 표시하고 오류 상태로 안내합니다.
 - [x] textarea 본문은 Figma `Long Body 1` 기준인 `typo-long-body-1`을 사용합니다.
 - [x] 입력하지 않은 빈 상태의 helper text는 `10자 이상`입니다.
 - [x] textarea가 blur되었거나 본문이 입력된 뒤 10자 미만이면 helper text를 `10자 이상 작성해주세요.`로 표시합니다.
@@ -100,7 +100,7 @@ InputReviewMain
 
 - type: `(value: string) => void`
 - required: `false`
-- description: textarea 변경 시 HDS `Textarea`의 `maxLength` 제한을 거친 다음 문자열을 호출부에 전달합니다.
+- description: textarea 변경 시 최대 글자 수를 넘어선 값도 그대로 호출부에 전달합니다.
 
 ### `photoFiles`
 
@@ -120,7 +120,7 @@ InputReviewMain
 - type: `number`
 - required: `false`
 - default: `1000`
-- description: 리뷰 본문 최대 글자 수 기준입니다. HDS `Textarea`에 전달해 입력 값을 제한하고 helper text와 counter 상태 판단에 사용합니다.
+- description: 리뷰 본문 최대 글자 수 기준입니다. 입력 자체를 자르지 않고 helper text, counter, invalid 상태 판단에 사용합니다.
 
 ### `disabled`
 
@@ -157,7 +157,7 @@ InputReviewMain
 7. 선택된 사진이 10장이면 사진 추가 버튼과 file input은 비활성화됩니다.
 8. 선택된 `photoFiles`가 있으면 사진 추가 버튼과 이미지 미리보기를 `overflow-x-auto` 가로 스크롤 목록으로 표시합니다.
 9. 이미지 미리보기의 삭제 버튼을 누르면 사진 오류 메시지를 초기화하고, 해당 file index를 제외한 다음 `photoFiles` 배열을 `onPhotoFilesChange`에 전달합니다.
-10. 사용자가 textarea를 변경하면 HDS `Textarea`가 `maxLength` 기준으로 제한한 다음 `onValueChange?.(nextValue)`를 호출합니다.
+10. 사용자가 textarea를 변경하면 최대 글자 수를 넘어선 값도 `onValueChange?.(nextValue)`로 전달합니다.
 11. 입력하지 않은 빈 상태에서는 helper text를 `10자 이상`으로 표시합니다.
 12. textarea가 blur되었거나 본문이 입력된 뒤 `value.length < 10`이면 helper text는 `10자 이상 작성해주세요.`입니다.
 13. 호출부에서 전달한 `value.length > maxLength`이면 helper text는 `글자 수 제한을 초과했어요.`입니다.
@@ -166,8 +166,7 @@ InputReviewMain
 ## Validation
 
 - 리뷰 본문 최소 10자 helper text는 컴포넌트가 표시합니다.
-- 리뷰 본문 최대 글자 수 초과 입력은 HDS `Textarea`의 `maxLength` 입력 제한으로 먼저 막습니다.
-- 이미 초과된 controlled value가 전달된 경우의 최대 글자 수 초과 helper text는 컴포넌트가 표시합니다.
+- 리뷰 본문 최대 글자 수 초과 입력은 유지하며 `글자 수 제한을 초과했어요.` helper text와 초과 counter를 표시합니다.
 - submit 가능 여부는 호출부가 처리합니다.
 - 사진 MIME 타입 검증은 컴포넌트가 처리하고, JPEG, PNG, WEBP가 아닌 파일은 호출부 상태로 전달하지 않습니다.
 - 사진 장당 5MB 검증은 컴포넌트가 처리하고, 초과 파일은 호출부 상태로 전달하지 않습니다.
@@ -190,7 +189,7 @@ InputReviewMain
 - spacing: Figma 기준 root `px-5 py-7`, title 영역 `gap-1`, content 영역 `gap-5`를 사용합니다.
 - photo input: parent width, height `130px`, `max-w-full`, border `warm-gray-100`, radius `10px`, icon/text center alignment를 사용합니다.
 - selected photo list: parent width, `max-w-full`, `min-w-0`, `overflow-x-auto`, `overflow-y-hidden`, hidden scrollbar horizontal scroll, 130px tile, selected image `rounded-[10px] object-cover`를 사용합니다.
-- textarea: HDS `Textarea`를 사용하고, 본문 text style은 `textareaClassName="typo-long-body-1"`로 주입합니다. Figma에 없는 추가 focus border는 노출하지 않습니다.
+- textarea: HDS `Textarea`를 사용하고, 본문 text style과 20px 내부 여백을 `textareaClassName`으로 주입합니다. Figma에 없는 추가 focus border는 노출하지 않습니다.
 - responsive: 부모 너비를 따르고 내부 control은 고정 max width 없이 `w-full`, `max-w-full`, `min-w-0`, `overflow-x-hidden` 조합으로 viewport 밖으로 밀리지 않게 합니다.
 - layout shift 방지 조건: 사진 첨부 영역은 `h-[130px]`, textarea는 HDS min-height `230px`를 유지합니다.
 
@@ -201,7 +200,7 @@ InputReviewMain
 - file input은 `aria-label="리뷰 사진 첨부"`를 가집니다.
 - textarea는 `aria-label="리뷰 내용"`을 가집니다.
 - keyboard interaction: 사진 첨부는 button, textarea는 native textarea interaction을 사용합니다.
-- counter는 HDS `Textarea`의 `aria-live="polite"`를 사용합니다.
+- counter는 `InputReviewMain`이 직접 렌더링하며 `aria-live="polite"`를 사용합니다.
 - disabled state는 native disabled 속성을 사용합니다.
 
 ## Dependencies
