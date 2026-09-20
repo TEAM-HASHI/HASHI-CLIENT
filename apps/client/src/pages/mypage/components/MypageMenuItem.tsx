@@ -15,7 +15,7 @@ export const MypageMenuItem = ({
     return (
       <li>
         <a
-          className="typo-body-4 text-cool-gray-900 flex h-9 w-full items-center text-left"
+          className="typo-body-4 text-cool-gray-900 flex h-7.5 w-full items-center text-left"
           href={action.url}
           rel="noreferrer"
           target="_blank"

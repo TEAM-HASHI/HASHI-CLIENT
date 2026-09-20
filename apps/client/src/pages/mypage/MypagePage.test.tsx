@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -211,14 +211,20 @@ describe('MypagePage', () => {
     )
   })
 
-  it('does not render the MVP-excluded account section', async () => {
+  it('renders account actions and explains that unavailable actions are being prepared', async () => {
     renderMypagePage()
 
     expect(
       await screen.findByRole('heading', { name: '테스트유저님' }),
     ).toBeInTheDocument()
-    expect(screen.queryByText('계정')).not.toBeInTheDocument()
-    expect(screen.queryByText('로그아웃')).not.toBeInTheDocument()
-    expect(screen.queryByText('회원탈퇴')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '계정' })).toBeInTheDocument()
+    const logoutButton = screen.getByRole('button', { name: '로그아웃' })
+    expect(screen.getByRole('button', { name: '회원탈퇴' })).toBeInTheDocument()
+
+    fireEvent.click(logoutButton)
+
+    expect(
+      screen.getByRole('dialog', { name: '서비스를 준비하고 있어요.' }),
+    ).toBeInTheDocument()
   })
 })

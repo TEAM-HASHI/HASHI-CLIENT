@@ -71,4 +71,24 @@ export const mypageMenuSections: MypageMenuSection[] = [
       },
     ],
   },
+  {
+    id: 'account',
+    title: '계정',
+    items: [
+      {
+        id: 'logout',
+        label: '로그아웃',
+        action: {
+          type: 'comingSoon',
+        },
+      },
+      {
+        id: 'withdrawal',
+        label: '회원탈퇴',
+        action: {
+          type: 'comingSoon',
+        },
+      },
+    ],
+  },
 ]
