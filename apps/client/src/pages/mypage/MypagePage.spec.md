@@ -61,7 +61,15 @@ apps/client/src/features/point/
 │   └── getMyPointBalance.ts
 ├── hooks/
 │   └── useMyPointBalanceQuery.ts
+├── queries/
+│   └── pointQueryOptions.ts
 └── index.ts
+
+apps/client/src/features/review/
+├── api/
+│   └── getMyReviewCount.ts
+└── queries/
+    └── useMyReviewCountQuery.ts
 
 apps/client/src/features/user/
 ├── api/
@@ -78,7 +86,6 @@ apps/client/src/features/user/
 - `request<T>()`는 성공 응답의 `data`가 비어 있을 수 있으므로 endpoint 함수에서 UI view type으로 정규화합니다.
 - 다른 페이지에서도 재사용되는 포인트 잔액 조회는 `features/point`에서 관리합니다.
 - 리뷰 개수 조회는 `features/review`, 사용자 프로필 요약 조회는 `features/user`에서 관리합니다.
-- 다른 페이지에서도 재사용되는 사용자 프로필 요약 조회는 `features/user`에서 관리합니다.
 - API 연동 전후 테스트 fixture가 필요하면 해당 테스트 파일 안에서 endpoint별 mock으로 둡니다.
 
 ## Requirements
@@ -254,6 +261,12 @@ type ComingSoonDialogProps = {
 
 - Hashi 서비스 이용약관 노션 페이지로 이동합니다.
 - 외부 URL은 상수로 관리합니다.
+
+### 5. Account Menu Section
+
+- 로그아웃과 회원탈퇴 메뉴를 표시합니다.
+- MVP에서는 실제 계정 처리 대신 `ComingSoonDialog`를 표시합니다.
+- 서비스 이용 영역과 같은 `MypageMenuSection` 레이아웃을 재사용합니다.
 
 ## Data Dependencies
 
@@ -453,6 +466,7 @@ HDS icon:
 shared component:
 
 - `ComingSoonDialog`
+- `LoadingScreen`
 
 page-local components:
 
