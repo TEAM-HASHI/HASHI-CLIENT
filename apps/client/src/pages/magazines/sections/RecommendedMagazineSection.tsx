@@ -47,7 +47,7 @@ export const RecommendedMagazineSection = ({
 
   if (isLoading) {
     return (
-      <section aria-label="추천 매거진 목록" className="pt-4">
+      <section aria-label="추천 매거진 목록" className="pt-2.5">
         <ul className="flex flex-col px-5">{renderSkeletonItems()}</ul>
       </section>
     )
@@ -55,8 +55,8 @@ export const RecommendedMagazineSection = ({
 
   if (isError) {
     return (
-      <section aria-label="추천 매거진 목록" className="px-5 pt-5">
-        <div className="bg-cool-gray-50 rounded-[8px] px-5 py-8 text-center">
+      <section aria-label="추천 매거진 목록" className="px-5 pt-2.5">
+        <div className="bg-cool-gray-50 rounded-lg px-5 py-8 text-center">
           <p className="typo-body-3 text-cool-gray-600">
             매거진을 불러오지 못했어요.
           </p>
@@ -73,7 +73,7 @@ export const RecommendedMagazineSection = ({
   }
 
   return (
-    <section aria-label="추천 매거진 목록" className="pt-4">
+    <section aria-label="추천 매거진 목록" className="pt-2.5">
       {shouldRenderList ? (
         <ul className="flex flex-col px-5">
           {magazines.map((magazine) => (
