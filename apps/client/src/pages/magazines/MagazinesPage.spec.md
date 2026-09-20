@@ -346,7 +346,7 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
   - fixed header가 콘텐츠를 덮지 않도록 본문에 header height만큼 top padding을 둔다.
 - representative banner:
   - visual area below header uses horizontal page padding `px-5`.
-  - visual area starts `4px` below the fixed header content offset.
+  - visual area starts `18px` below the fixed header content offset.
   - viewport keeps the shared magazine image ratio `353:160`.
   - image uses `object-cover`.
   - title/description overlay is not rendered because those are included in the banner image.
@@ -354,6 +354,7 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
   - 모서리는 `5px`, indicator는 카드 오른쪽 `20px`/아래 `23px`, 활성 `12×4px`/비활성 `4×4px`, 간격 `7px`입니다.
 - recommendation section:
   - horizontal padding uses `px-5`.
+  - section starts `10px` below the preceding content.
   - large section heading such as `최근 _한 추천 매거진` is not rendered.
   - list item uses text column and fixed image area.
   - list item vertical padding uses `py-4` so top and bottom are both `16px`.

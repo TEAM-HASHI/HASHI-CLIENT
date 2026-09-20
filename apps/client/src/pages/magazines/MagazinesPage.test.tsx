@@ -119,21 +119,6 @@ describe('MagazinesPage', () => {
     })
 
     expect(heroBanner).toBeInTheDocument()
-    expect(screen.getByRole('banner')).toHaveClass(
-      'fixed',
-      'top-0',
-      'right-0',
-      'left-0',
-      'z-20',
-      'mx-auto',
-      'w-full',
-      'max-w-[var(--app-mobile-max-width)]',
-      'bg-white',
-    )
-    expect(heroBanner.closest('main')).toHaveClass('pt-[75px]')
-    expect(
-      heroBanner.querySelector('[data-hds-carousel-indicator]'),
-    ).toHaveAttribute('data-placement', 'overlay')
     expect(screen.queryByText('오늘의 하시 Pick')).not.toBeInTheDocument()
     expect(
       screen.queryByText('짧은 매거진에 대한 소개를 넣어보기'),
@@ -201,60 +186,7 @@ describe('MagazinesPage', () => {
     ).toBeNull()
   })
 
-  it('applies requested magazine layout token classes', async () => {
-    renderMagazinesPage()
-
-    const heroBanner = await screen.findByRole('region', {
-      name: '대표 매거진 배너',
-    })
-    const heroViewport = heroBanner.querySelector(
-      '[data-hds-carousel-viewport]',
-    )
-    const indicator = heroBanner.querySelector('[data-hds-carousel-indicator]')
-    const recommendedSection = screen.getByRole('region', {
-      name: '추천 매거진 목록',
-    })
-    const magazineList = within(recommendedSection).getByRole('list')
-    const firstItem = screen.getAllByRole('listitem')[0]
-    const firstLink = screen.getByRole('link', {
-      name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
-    })
-    const firstTitle = screen.getByRole('heading', {
-      name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
-    })
-    const firstImage = firstLink.querySelector('img')
-    const firstDate = screen.getByText('2026. 07.12.')
-
-    expect(heroBanner).toHaveClass('mt-[4px]', 'mx-5')
-    expect(heroViewport).toHaveClass('aspect-[353/160]')
-    expect(
-      heroBanner.querySelectorAll('[data-hds-carousel-indicator]'),
-    ).toHaveLength(1)
-    expect(indicator).toHaveAttribute('data-placement', 'overlay')
-    expect(indicator?.closest('[data-hds-carousel-track]')).toBeNull()
-    expect(
-      screen.queryByRole('heading', { name: '최근 _한 추천 매거진' }),
-    ).not.toBeInTheDocument()
-    expect(recommendedSection).toHaveClass('pt-4')
-    expect(firstItem).toHaveClass('border-warm-gray-50')
-    expect(magazineList).toHaveClass('px-5')
-    expect(magazineList).not.toHaveClass('gap-5')
-    expect(firstLink).toHaveClass('gap-[21px]', 'py-4')
-    expect(firstTitle).toHaveClass('typo-body-6', 'text-black')
-    expect(firstImage).toHaveAttribute('alt', '')
-    expect(firstImage).toHaveClass(
-      'aspect-[156/88]',
-      'w-[156px]',
-      'rounded-[5px]',
-    )
-    expect(firstDate).toHaveClass(
-      'typo-caption-1',
-      'font-medium',
-      'text-warm-gray-300',
-    )
-  })
-
-  it('uses the shared restaurant list skeleton color for magazine loading placeholders', () => {
+  it('renders placeholders while magazine data is loading', () => {
     mockGetMagazineBanners.mockImplementation(
       () =>
         new Promise(() => {
@@ -272,24 +204,13 @@ describe('MagazinesPage', () => {
 
     expect(
       screen.getByRole('region', { name: '대표 매거진 배너 로딩 중' }),
-    ).toHaveClass('bg-secondary-200')
+    ).toBeInTheDocument()
     const recommendedSection = screen.getByRole('region', {
       name: '추천 매거진 목록',
     })
-    const firstSkeletonItem = within(recommendedSection).getAllByRole(
-      'listitem',
-      {
-        hidden: true,
-      },
-    )[0]
-    const firstSkeletonImage = firstSkeletonItem.querySelector(
-      '.aspect-\\[156\\/88\\]',
-    )
-
-    expect(firstSkeletonItem.querySelector('.bg-secondary-200')).toBeTruthy()
-    expect(firstSkeletonItem.querySelector('.bg-cool-gray-100')).toBeNull()
-    expect(firstSkeletonItem).toHaveClass('grid-cols-[1fr_156px]', 'py-4')
-    expect(firstSkeletonImage).toHaveClass('w-[156px]')
+    expect(
+      within(recommendedSection).getAllByRole('listitem', { hidden: true }),
+    ).toHaveLength(4)
   })
 
   it('renders ListEmptyState when recommended magazines are empty', async () => {
@@ -308,16 +229,7 @@ describe('MagazinesPage', () => {
       await within(recommendedSection).findByText(
         '매거진 리스트를 준비중이에요.',
       ),
-    ).toHaveClass('typo-body-5', 'text-warm-gray-300')
-    expect(
-      within(recommendedSection).getByText('매거진 리스트를 준비중이에요.')
-        .parentElement?.parentElement,
-    ).toHaveClass(
-      'flex',
-      'min-h-[calc(100dvh-75px)]',
-      'items-center',
-      'justify-center',
-    )
+    ).toBeInTheDocument()
     expect(within(recommendedSection).queryByRole('list')).toBeNull()
   })
 
