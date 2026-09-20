@@ -4,12 +4,14 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ROUTES } from '@/app/router/path'
 import {
   HASHI_NOTICE_URL,
   HASHI_TERMS_URL,
 } from '@/pages/mypage/constants/mypageMenu'
 import { MypagePage } from '@/pages/mypage/MypagePage'
 import { request } from '@/shared/api/request'
+import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
 const { mockNavigate, mockRequest } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -103,6 +105,18 @@ describe('MypagePage', () => {
     ).toBeInTheDocument()
   })
 
+  it('opens the coming soon dialog from the saved restaurant menu', async () => {
+    renderMypagePage()
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /내가 찜한 식당 0/ }),
+    )
+
+    expect(
+      screen.getByRole('dialog', { name: '서비스를 준비하고 있어요.' }),
+    ).toBeInTheDocument()
+  })
+
   it('renders my review count from the API response', async () => {
     mockRequest.mockImplementation((path: string) => {
       if (path === '/api/v1/users/me/profile-summary') {
@@ -129,6 +143,14 @@ describe('MypagePage', () => {
       await screen.findByRole('button', { name: /마이 리뷰 3/ }),
     ).toBeInTheDocument()
     expect(request).toHaveBeenCalledWith('/api/v1/reviews/me/count')
+  })
+
+  it('navigates to the my reviews page from the menu', async () => {
+    renderMypagePage()
+
+    fireEvent.click(await screen.findByRole('button', { name: /마이 리뷰 8/ }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.myReviews)
   })
 
   it('renders available point from the API response', async () => {
@@ -188,16 +210,21 @@ describe('MypagePage', () => {
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
   })
 
-  it('renders confirmed notice and terms links as external links', async () => {
+  it('renders confirmed service links as external links', async () => {
     renderMypagePage()
 
-    expect(
-      await screen.findByRole('link', { name: '공지사항' }),
-    ).toHaveAttribute('href', HASHI_NOTICE_URL)
-    expect(screen.getByRole('link', { name: '이용약관' })).toHaveAttribute(
-      'href',
-      HASHI_TERMS_URL,
-    )
+    const links = [
+      ['공지사항', HASHI_NOTICE_URL],
+      ['문의하기', HASHI_KAKAO_CHANNEL_URL],
+      ['개선 제안', HASHI_KAKAO_CHANNEL_URL],
+      ['이용약관', HASHI_TERMS_URL],
+    ] as const
+
+    await screen.findByRole('link', { name: '공지사항' })
+
+    links.forEach(([name, href]) => {
+      expect(screen.getByRole('link', { name })).toHaveAttribute('href', href)
+    })
   })
 
   it('renders account actions and explains that unavailable actions are being prepared', async () => {

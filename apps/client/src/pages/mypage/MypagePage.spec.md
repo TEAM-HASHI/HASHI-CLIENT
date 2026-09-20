@@ -36,9 +36,11 @@ Jira: HASHI-106
 ```txt
 apps/client/src/pages/mypage/
 ├── MypagePage.tsx
+├── MypagePage.test.tsx
 ├── MypagePage.spec.md
 ├── components/
 │   ├── MypageProfile.tsx
+│   ├── MypageProfile.test.tsx
 │   ├── MypagePointSummary.tsx
 │   ├── MenuButton.tsx
 │   ├── MypageMenuSection.tsx
@@ -74,8 +76,8 @@ apps/client/src/features/user/
 - `request`와 공통 response 처리는 `shared/api`를 사용합니다.
 - API 응답 타입은 `shared/api/generated/openapi.ts`의 `components['schemas']` 타입을 참조합니다.
 - `request<T>()`는 성공 응답의 `data`가 비어 있을 수 있으므로 endpoint 함수에서 UI view type으로 정규화합니다.
-- 마이페이지에서만 사용하는 endpoint 함수와 query key는 `pages/mypage` 내부에 둡니다.
 - 다른 페이지에서도 재사용되는 포인트 잔액 조회는 `features/point`에서 관리합니다.
+- 리뷰 개수 조회는 `features/review`, 사용자 프로필 요약 조회는 `features/user`에서 관리합니다.
 - 다른 페이지에서도 재사용되는 사용자 프로필 요약 조회는 `features/user`에서 관리합니다.
 - API 연동 전후 테스트 fixture가 필요하면 해당 테스트 파일 안에서 endpoint별 mock으로 둡니다.
 
@@ -211,7 +213,7 @@ type ComingSoonDialogProps = {
 포인트 값은 서버에서 내려주는 숫자를 화면 표시용 문자열로 포맷합니다.
 `{ balance: 0 }`은 `0 P`로 표시하고, 응답 data가 `null`이거나 `balance`가 숫자가 아니면 `AsyncBoundary`로 오류를 전파합니다.
 
-### 3. Primary Menu Cards
+### 3. Primary Menu Buttons
 
 예약/리뷰 관련 주요 메뉴를 카드 형태로 보여줍니다.
 
@@ -343,13 +345,14 @@ type MyReviewCountData = {
 }
 ```
 
-fallback:
+validation:
 
-- `myReviewCount`: `0`
+- `reviewCount`가 숫자로 제공되면 `myReviewCount`로 매핑합니다.
+- API data가 `null`이거나 `reviewCount`가 없으면 계약 위반 오류를 발생시킵니다.
 
 notes:
 
-- `request<MyReviewCountResponse>()` 결과가 `null`이거나 `reviewCount`가 없으면 `0`으로 정규화합니다.
+- 서버가 `reviewCount: 0`을 반환하면 유효한 리뷰 없음 상태로 처리합니다.
 
 ### View Model
 
@@ -401,7 +404,6 @@ derived state:
 - 포인트 표시 문자열
 - primary menu item 목록
 - menu section 목록
-- 외부 링크 open handler
 - 내부 route navigation handler
 
 ## Navigation
@@ -442,11 +444,10 @@ HDS component:
 - `Avatar`: 프로필 이미지와 guest fallback을 담당합니다.
 - `Button`
 - `Dialog`
-- 필요한 경우 `IconButton`
 
 HDS icon:
 
-- 우측 이동 chevron icon
+- `NextIcon`
 - `SmileIcon`
 
 shared component:
@@ -521,7 +522,7 @@ types:
 - 값이 없는 항목은 아래처럼 처리합니다.
   - 프로필 이미지 없음: HDS `Avatar`의 guest fallback
   - 포인트 이력 없음: 유효한 `{ balance: 0 }` 응답을 `0 P`로 표시
-  - 리뷰 개수 없음: `0`
+  - 리뷰 없음: 서버의 유효한 `reviewCount: 0` 응답을 `0`으로 표시
   - 찜한 식당 개수: MVP 고정값 `0`
 
 ## Accessibility
@@ -538,7 +539,7 @@ types:
 
 - `pnpm --filter @hashi/client typecheck`
 - `pnpm --filter @hashi/client lint`
-- `pnpm --filter @hashi/client test -- MypagePage apiClient`
+- `pnpm --filter @hashi/client exec vitest run src/pages/mypage/MypagePage.test.tsx src/pages/mypage/components/MypageProfile.test.tsx`
 - 마이 페이지가 `/mypage`에서 렌더링되는지 확인
 - 하단 네비게이션의 `마이` 탭이 active인지 확인
 - `GET /api/v1/users/me/profile-summary` 결과의 닉네임과 프로필 이미지가 표시되는지 확인
@@ -549,13 +550,12 @@ types:
 - `GET /api/v1/reviews/me/count` 결과의 `reviewCount`가 마이 리뷰 count로 표시되는지 확인
 - 내가 찜한 식당 count가 API 없이 `0`으로 표시되는지 확인
 - 내가 찜한 식당 클릭 시 준비중 모달이 열리는지 확인
-- 준비중 모달에서 확인 버튼 클릭 시 모달이 닫히는지 확인
 - 마이 리뷰 클릭 시 `/my-reviews`로 이동하는지 확인
 - 문의하기/개선 제안 클릭 시 카카오톡 채널이 열리는지 확인
 - 공지사항/이용약관 클릭 시 노션 페이지가 새 탭으로 열리는지 확인
 - 프로필 수정 버튼이 disabled인지 확인
 - 계정 섹션에 로그아웃과 회원탈퇴가 노출되는지 확인
-- 로그아웃과 회원탈퇴 클릭 시 준비중 모달이 열리는지 확인
+- 계정의 준비 중 액션 클릭 시 모달이 열리는지 확인
 - 각 query 실패 시 해당 오류를 `AsyncBoundary`로 전달하는지 확인
 
 ## Open Questions
