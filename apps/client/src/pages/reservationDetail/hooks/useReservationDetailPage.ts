@@ -15,6 +15,7 @@ import {
   parseReservationId,
 } from '@/pages/reservationDetail/utils/reservationDetailPolicy'
 import { checkIsNotFoundError } from '@/shared/api/apiError'
+import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
 type ReservationDetailLocationState = {
   fromReservationRequest?: boolean
@@ -110,8 +111,8 @@ export const useReservationDetailPage = () => {
     }
   }
 
-  const handleHome = () => {
-    navigate(ROUTES.home)
+  const handleContact = () => {
+    window.open(HASHI_KAKAO_CHANNEL_URL, '_blank', 'noreferrer')
   }
 
   return {
@@ -131,6 +132,6 @@ export const useReservationDetailPage = () => {
     handleCancelDialogOpenChange,
     handleCancelReservation,
     handleConfirmCancelPress,
-    handleHome,
+    handleContact,
   }
 }

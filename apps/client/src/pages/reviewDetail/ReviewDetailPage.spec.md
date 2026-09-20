@@ -90,6 +90,7 @@
 - `ReviewDetailPage`는 route page로서 layout composition과 hook 연결만 담당한다.
 - `useReviewDetailPage`는 route param 검증, detail query 조합, delete/edit modal open state, navigation handler를 관리한다.
 - 리뷰 상세에서만 쓰이는 본문/이미지/액션바/모달 UI는 page-local component로 둔다.
+- `ReviewDetailActionBar`는 app shared `BottomActionBar`로 고정 배치와 버튼 열 구성을 재사용한다.
 - 리뷰 작성/상세/수정 흐름에서도 사용하는 `ReviewHeader`, 예약 요약 UI, 키워드 상수, 사진 제한 상수는 `features/review`에서 재사용한다.
 - page-local component에는 review feature에서 재사용 가능한 header wrapper를 중복 구현하지 않는다.
 - HDS package에는 route, API, 제품 copy, 도메인 데이터를 넣지 않는다.

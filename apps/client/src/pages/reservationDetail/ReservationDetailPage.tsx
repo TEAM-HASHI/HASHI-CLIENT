@@ -9,10 +9,6 @@ import { ReservationReceiptInfoCard } from '@/pages/reservationDetail/components
 import { useReservationDetailPage } from '@/pages/reservationDetail/hooks/useReservationDetailPage'
 import { NotFoundPage } from '@/pages/notFound'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
-import { cn } from '@/shared/utils'
-
-const actionBarSafeSpaceClassName =
-  'pb-[calc(80px+var(--safe-area-bottom,0px))]'
 
 export const ReservationDetailPage = () => {
   const {
@@ -29,7 +25,7 @@ export const ReservationDetailPage = () => {
     handleCancelDialogOpenChange,
     handleCancelReservation,
     handleConfirmCancelPress,
-    handleHome,
+    handleContact,
   } = useReservationDetailPage()
 
   if (isInvalidReservationId || isNotFound) {
@@ -45,9 +41,7 @@ export const ReservationDetailPage = () => {
   }
 
   return (
-    <section
-      className={cn('min-h-dvh', 'pt-18.75', actionBarSafeSpaceClassName)}
-    >
+    <section className="app-mobile-bottom-action-content min-h-dvh pt-18.75">
       <Header
         leftAction={
           isBackHidden ? undefined : (
@@ -78,7 +72,7 @@ export const ReservationDetailPage = () => {
       <ReservationNoticeSection notices={reservationNotices} />
       <ReservationDetailActionBar
         onCancel={handleCancelReservation}
-        onHome={handleHome}
+        onContact={handleContact}
       />
       <ReservationCancelDialog
         open={isCancelDialogOpen}

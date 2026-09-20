@@ -19,6 +19,7 @@ import { ReservationDetailPage } from '@/pages/reservationDetail/ReservationDeta
 import { reservationDetailQueryKey } from '@/pages/reservationDetail/hooks/useReservationDetailQuery'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
+import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 import { createQueryClient } from '@/shared/lib/queryClient'
 
 const {
@@ -357,14 +358,18 @@ describe('ReservationDetailPage', () => {
     })
   })
 
-  it('moves to home from the fixed action bar', async () => {
+  it('opens the contact channel from the fixed action bar', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+
     renderReservationDetailPage()
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: '홈으로 돌아가기' }),
-    )
+    fireEvent.click(await screen.findByRole('button', { name: '문의하기' }))
 
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home)
+    expect(openSpy).toHaveBeenCalledWith(
+      HASHI_KAKAO_CHANNEL_URL,
+      '_blank',
+      'noreferrer',
+    )
   })
 
   it('moves back when the back button is pressed from a normal entry', async () => {

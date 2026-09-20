@@ -106,6 +106,10 @@
   min-height: calc(100dvh - 84px - var(--safe-area-bottom, 0px));
 }
 
+@utility app-mobile-bottom-action-content {
+  padding-bottom: calc(106px + var(--safe-area-bottom, 0px));
+}
+
 @keyframes reservation-progress-dot-ripple {
   0% {
     opacity: 0.5;

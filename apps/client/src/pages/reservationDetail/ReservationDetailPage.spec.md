@@ -51,7 +51,8 @@
 - [ ] 예약 접수 정보 카드는 예약자, 인원, 식당 주소, 식당 방문 일정, 수수료를 표시합니다. 수수료는 예약 상세 응답의 `amount` 값을 사용합니다.
 - [ ] 예약 안내 문구는 고정 정책 문구로 표시합니다.
 - [ ] 하단 액션 영역은 스크롤해도 유지됩니다.
-- [ ] 하단 액션에는 `예약 취소하기`, `홈으로 돌아가기` 버튼을 표시합니다.
+- [ ] 하단 액션에는 `예약 취소하기`, `문의하기` 버튼을 표시합니다.
+- [ ] `문의하기` 버튼은 Hashi 공식 카카오톡 채널을 새 창으로 엽니다.
 - [ ] 식당 이미지가 없으면 HDS `ImageFallback`을 사용합니다.
 - [ ] fixed Header와 fixed ActionBar는 z-index 토큰을 사용합니다.
 - [ ] 취소된 예약(`reservationStatus: CANCELED`)은 URL 직접 접근으로도 상세 화면을 표시하지 않고 `NotFoundPage`를 표시합니다.
@@ -109,7 +110,7 @@
 8. 사용자가 모달에서 취소하기를 누르면 예약 취소 API를 호출합니다.
 9. 예약 취소에 성공하면 서버 응답 `message`로 성공 toast를 표시하고 예약 정보 페이지의 예약 취소 상태로 이동합니다.
 10. 예약 취소에 실패하면 실패 toast를 표시하고 현재 페이지에 머무릅니다.
-11. 사용자가 홈 버튼을 누르면 홈(`/`)으로 이동합니다.
+11. 사용자가 문의하기 버튼을 누르면 Hashi 공식 카카오톡 채널을 새 창으로 엽니다.
 
 ## State
 
@@ -168,7 +169,7 @@ ReservationDetailPage
   ReservationNoticeSection
   ReservationDetailActionBar
     CancelButton
-    HomeButton
+    ContactButton
   ReservationCancelDialog
 ```
 
@@ -181,6 +182,8 @@ ReservationDetailPage
   - `ImageFallback`
 - feature component:
   - `ReservationCancelDialog`
+- app shared component:
+  - `BottomActionBar`
 - page-local component:
   - `ReservationProgressSection`
   - `ReservationRestaurantSummary`
@@ -233,8 +236,8 @@ ReservationDetailPage
   - 예약 정보 페이지의 상세보기 액션
   - 예약 요청 성공 직후 진입점: `{ fromReservationRequest: true }` route state를 사용합니다.
   - 예약 관련 진입점
-- links:
-  - 홈: `ROUTES.home`
+- external links:
+  - 문의하기: `HASHI_KAKAO_CHANNEL_URL`
 - route params:
   - `reservationId`
 - search params:
@@ -279,3 +282,4 @@ ReservationDetailPage
 - [ ] 예약 진행 상태별 UI 확인
 - [ ] 식당 이미지 fallback 확인
 - [ ] 뒤로가기 버튼 동작 확인
+- [ ] 문의하기 버튼 클릭 시 Hashi 공식 카카오톡 채널 새 창 열림 확인
