@@ -1,4 +1,4 @@
-import { MypageMenuItem } from '@/pages/mypage/components/MypageMenuItem'
+import { MenuItem } from '@/pages/mypage/components/MenuItem'
 import type {
   MypageMenuAction,
   MypageMenuSection as MypageMenuSectionType,
@@ -20,7 +20,7 @@ export const MypageMenuSection = ({
       </h2>
       <ul className="flex flex-col gap-3 pt-3">
         {section.items.map((item) => (
-          <MypageMenuItem
+          <MenuItem
             action={item.action}
             key={item.id}
             label={item.label}

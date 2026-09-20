@@ -1,5 +1,5 @@
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
-import { MypageMenuCard } from '@/pages/mypage/components/MypageMenuCard'
+import { MenuButton } from '@/pages/mypage/components/MenuButton'
 import { MypageMenuSection } from '@/pages/mypage/components/MypageMenuSection'
 import { MypagePointSummary } from '@/pages/mypage/components/MypagePointSummary'
 import { MypageProfile } from '@/pages/mypage/components/MypageProfile'
@@ -33,7 +33,7 @@ export const MypagePage = () => {
 
         <div className="mb-8 flex flex-col gap-3.25">
           {primaryMenuItems.map((item) => (
-            <MypageMenuCard
+            <MenuButton
               action={item.action}
               count={item.count}
               highlighted={item.highlighted}

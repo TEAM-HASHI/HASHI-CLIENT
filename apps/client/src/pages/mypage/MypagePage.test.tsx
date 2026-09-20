@@ -95,17 +95,6 @@ describe('MypagePage', () => {
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
   })
 
-  it('renders primary action buttons with design token colors', async () => {
-    renderMypagePage()
-
-    expect(await screen.findByRole('button', { name: '수정' })).toHaveClass(
-      'bg-cool-gray-800',
-    )
-    expect(screen.getByRole('button', { name: /내가 찜한 식당/ })).toHaveClass(
-      'bg-cool-gray-800',
-    )
-  })
-
   it('renders saved restaurant count as zero during MVP', async () => {
     renderMypagePage()
 

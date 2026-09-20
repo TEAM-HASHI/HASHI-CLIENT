@@ -40,9 +40,9 @@ apps/client/src/pages/mypage/
 ├── components/
 │   ├── MypageProfile.tsx
 │   ├── MypagePointSummary.tsx
-│   ├── MypageMenuCard.tsx
+│   ├── MenuButton.tsx
 │   ├── MypageMenuSection.tsx
-│   └── MypageMenuItem.tsx
+│   └── MenuItem.tsx
 ├── constants/
 │   └── mypageMenu.ts
 ├── hooks/
@@ -457,9 +457,9 @@ page-local components:
 
 - `MypageProfile`
 - `MypagePointSummary`
-- `MypageMenuCard`
+- `MenuButton`
 - `MypageMenuSection`
-- `MypageMenuItem`
+- `MenuItem`
 
 page-local api:
 
@@ -503,9 +503,8 @@ types:
 
 ### Loading
 
-- 프로필, 포인트, 리뷰 count 조회 중에는 각 값의 fallback을 먼저 표시하거나 skeleton을 표시합니다.
-- 메뉴 목록은 고정 항목이므로 먼저 렌더링할 수 있습니다.
-- 세 query가 독립적이므로 한 query의 loading이 다른 영역 렌더링을 막지 않게 합니다.
+- 마이페이지 필수 query 중 하나라도 pending 상태이면 `LoadingScreen`을 표시합니다.
+- API 응답이 오기 전에는 `DEFAULT_MYPAGE_SUMMARY`를 실제 사용자 데이터처럼 렌더링하지 않습니다.
 
 ### Error
 
@@ -515,11 +514,6 @@ types:
 - 4xx API 에러도 마이페이지에서는 fallback 값을 실제 사용자 데이터처럼 보여주지 않고 `AsyncBoundary`로 전달합니다.
 - endpoint 함수의 fallback 정규화는 API 요청이 성공했지만 응답 값이 비어 있는 경우에만 사용합니다.
 - 내가 찜한 식당 count `0`은 API 실패 fallback이 아니라 MVP 제외 범위에 따른 고정 표시입니다.
-
-### Loading
-
-- 마이페이지 필수 query 중 하나라도 pending 상태이면 `LoadingScreen`을 표시합니다.
-- API 응답이 오기 전에는 `DEFAULT_MYPAGE_SUMMARY`를 실제 사용자 데이터처럼 렌더링하지 않습니다.
 
 ### Empty
 
