@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   checkIsSupportedProfileImageMimeType,
   PROFILE_IMAGE_MAX_FILE_SIZE_BYTES,
-} from '@/pages/profileNew/constants/profileImage'
+} from '@/features/profile/constants/profileImage'
 import {
   checkIsValidBirthDate,
   checkIsValidEmail,
@@ -11,7 +11,7 @@ import {
   formatBirthDateInput,
   formatPhoneNumberInput,
   normalizeDigits,
-} from '@/pages/profileNew/utils/profileNewForm'
+} from '@/features/profile/utils/profileForm'
 
 export interface ProfileDraft {
   profileImageFile?: File
@@ -23,7 +23,16 @@ export interface ProfileDraft {
 }
 
 interface UseProfileNewFormOptions {
+  initialValues?: Partial<{
+    profileImageUrl: string
+    nickname: string
+    birthDate: string
+    phoneNumber: string
+    englishName: string
+    email: string
+  }>
   isSubmitting?: boolean
+  requireChanges?: boolean
 }
 
 type ProfileFieldName =
@@ -38,18 +47,29 @@ const PROFILE_IMAGE_INVALID_FILE_TYPE_ERROR_MESSAGE =
 const PROFILE_IMAGE_MAX_FILE_SIZE_ERROR_MESSAGE =
   '5MB 이하의 이미지만 등록해주세요.'
 
-export const useProfileNewForm = ({
+export const useProfileForm = ({
+  initialValues = {},
   isSubmitting = false,
+  requireChanges = false,
 }: UseProfileNewFormOptions = {}) => {
   const [profileImageFile, setProfileImageFile] = useState<File>()
-  const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<string>()
+  const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<
+    string | undefined
+  >(() => initialValues.profileImageUrl)
+  const [isProfileImageChanged, setIsProfileImageChanged] = useState(false)
   const profileImagePreviewUrlRef = useRef<string | undefined>(undefined)
   const [profileImageErrorMessage, setProfileImageErrorMessage] = useState('')
-  const [nickname, setNickname] = useState('')
-  const [birthDate, setBirthDate] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [englishName, setEnglishName] = useState('')
-  const [email, setEmail] = useState('')
+  const [nickname, setNickname] = useState(() => initialValues.nickname ?? '')
+  const [birthDate, setBirthDate] = useState(
+    () => initialValues.birthDate ?? '',
+  )
+  const [phoneNumber, setPhoneNumber] = useState(
+    () => initialValues.phoneNumber ?? '',
+  )
+  const [englishName, setEnglishName] = useState(
+    () => initialValues.englishName ?? '',
+  )
+  const [email, setEmail] = useState(() => initialValues.email ?? '')
   const [touchedFields, setTouchedFields] = useState<Set<string>>(
     () => new Set(),
   )
@@ -69,12 +89,18 @@ export const useProfileNewForm = ({
   const isBirthDateValid = checkIsValidBirthDate(normalizedBirthDate)
   const isPhoneNumberValid = checkIsValidPhoneNumber(normalizedPhoneNumber)
   const isEmailValid = checkIsValidEmail(trimmedEmail)
-  const canSubmit =
-    isNicknameValid &&
-    isBirthDateValid &&
-    isPhoneNumberValid &&
-    isEmailValid &&
-    !isSubmitting
+  const hasChanges =
+    isProfileImageChanged ||
+    trimmedNickname !== (initialValues.nickname ?? '').trim() ||
+    normalizedBirthDate !==
+      normalizeDigits(initialValues.birthDate ?? '').slice(0, 8) ||
+    normalizedPhoneNumber !==
+      normalizeDigits(initialValues.phoneNumber ?? '').slice(0, 11) ||
+    trimmedEnglishName !== (initialValues.englishName ?? '').trim() ||
+    trimmedEmail !== (initialValues.email ?? '').trim()
+  const isValid =
+    isNicknameValid && isBirthDateValid && isPhoneNumberValid && isEmailValid
+  const canSubmit = isValid && !isSubmitting && (!requireChanges || hasChanges)
 
   const checkShouldShowError = (fieldName: string) => {
     return hasSubmitAttempted || touchedFields.has(fieldName)
@@ -167,6 +193,7 @@ export const useProfileNewForm = ({
     }
 
     setProfileImageFile(file)
+    setIsProfileImageChanged(true)
     setProfileImageErrorMessage('')
 
     if (typeof URL.createObjectURL === 'function') {
@@ -179,6 +206,7 @@ export const useProfileNewForm = ({
 
   const handleProfileImageDelete = () => {
     setProfileImageFile(undefined)
+    setIsProfileImageChanged(true)
     revokeProfileImagePreviewUrl()
     setProfileImagePreviewUrl(undefined)
     setProfileImageErrorMessage('')
@@ -275,6 +303,7 @@ export const useProfileNewForm = ({
     formError,
     submit: {
       canSubmit,
+      hasChanges,
       isSubmitting,
       createProfileDraft,
       setFieldError: handleFieldServerError,

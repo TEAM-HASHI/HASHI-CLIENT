@@ -1,18 +1,20 @@
 import { Button } from '@hashi/hds-ui'
 
-interface ProfileNewBottomBarProps {
+interface ProfileFormBottomBarProps {
   disabled: boolean
   formId: string
+  label: string
   loading?: boolean
 }
 
-export const ProfileNewBottomBar = ({
+export const ProfileFormBottomBar = ({
   disabled,
   formId,
+  label,
   loading = false,
-}: ProfileNewBottomBarProps) => {
+}: ProfileFormBottomBarProps) => {
   return (
-    <div className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-[17px] pb-[calc(17px+var(--safe-area-bottom,0px))]">
+    <div className="mt-auto bg-white px-5 pt-11.25 pb-[calc(48px+var(--safe-area-bottom,0px))]">
       <Button
         disabled={disabled}
         form={formId}
@@ -21,7 +23,7 @@ export const ProfileNewBottomBar = ({
         type="submit"
         width="full"
       >
-        완료
+        {label}
       </Button>
     </div>
   )

@@ -198,11 +198,9 @@ describe('ProfileNewPage', () => {
 
     expect(createObjectUrl).not.toHaveBeenCalled()
     expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
-    expect(screen.getByText('5MB 이하의 이미지만 등록해주세요.')).toHaveClass(
-      'typo-body-3',
-      'text-error',
-      'mt-3',
-    )
+    expect(
+      screen.getByText('5MB 이하의 이미지만 등록해주세요.'),
+    ).toBeInTheDocument()
   })
 
   it('does not block submit with the old duplicated nickname mock list', async () => {

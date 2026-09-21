@@ -2,8 +2,8 @@ import { PencilIcon } from '@hashi/hds-icons'
 import { Avatar, Button, IconButton } from '@hashi/hds-ui'
 import { type ChangeEvent, useRef } from 'react'
 
-import { FieldError } from '@/pages/profileNew/components/FieldError'
-import { PROFILE_IMAGE_ACCEPT } from '@/pages/profileNew/constants/profileImage'
+import { FieldError } from '@/features/profile/components/FieldError'
+import { PROFILE_IMAGE_ACCEPT } from '@/features/profile/constants/profileImage'
 
 interface ProfileImageSectionProps {
   disabled?: boolean
@@ -40,19 +40,19 @@ export const ProfileImageSection = ({
   return (
     <section
       aria-label="프로필 이미지"
-      className="flex flex-col items-center pt-6 pb-7"
+      className="flex flex-col items-center py-4"
     >
       <div className="relative">
         <Avatar alt="프로필 이미지" size="lg" src={previewUrl} />
         <IconButton
           aria-label="프로필 이미지 수정"
-          className="absolute right-[-4px] bottom-0"
+          className="absolute right-0 bottom-0 size-7"
           disabled={disabled}
           onClick={handleImageButtonClick}
-          size="sm"
+          size="xs"
           variant="soft"
         >
-          <PencilIcon className="size-[25px]" />
+          <PencilIcon className="size-5" />
         </IconButton>
       </div>
       <input
@@ -66,8 +66,8 @@ export const ProfileImageSection = ({
         type="file"
       />
       <Button
-        className="mt-4"
-        disabled={disabled}
+        className="mt-1"
+        disabled={disabled || !previewUrl}
         onClick={onImageDelete}
         size="md"
         type="button"

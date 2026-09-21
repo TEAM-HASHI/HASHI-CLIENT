@@ -1,15 +1,15 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { useProfileNewForm } from '@/pages/profileNew/hooks/useProfileNewForm'
+import { useProfileForm } from '@/features/profile/hooks/useProfileForm'
 
-describe('useProfileNewForm', () => {
+describe('useProfileForm', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
 
   const fillRequiredFields = (result: {
-    current: ReturnType<typeof useProfileNewForm>
+    current: ReturnType<typeof useProfileForm>
   }) => {
     act(() => {
       result.current.fields.nickname.onValueChange('하시')
@@ -36,7 +36,7 @@ describe('useProfileNewForm', () => {
       type: 'image/png',
     })
     const thirdFile = new File(['third'], 'third.png', { type: 'image/png' })
-    const { result, unmount } = renderHook(() => useProfileNewForm())
+    const { result, unmount } = renderHook(() => useProfileForm())
 
     act(() => {
       result.current.profileImage.onChange(firstFile)
@@ -73,7 +73,7 @@ describe('useProfileNewForm', () => {
       ...URL,
       createObjectURL: createObjectUrl,
     })
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
     const textFile = new File(['profile'], 'profile.txt', {
       type: 'text/plain',
     })
@@ -95,7 +95,7 @@ describe('useProfileNewForm', () => {
       ...URL,
       createObjectURL: createObjectUrl,
     })
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
     const gifFile = new File(['profile'], 'profile.gif', {
       type: 'image/gif',
     })
@@ -117,7 +117,7 @@ describe('useProfileNewForm', () => {
       createObjectURL: vi.fn(() => 'blob:profile-preview'),
       revokeObjectURL: vi.fn(),
     })
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
     const imageFile = new File(['profile'], 'profile.png', {
       type: 'image/png',
     })
@@ -143,7 +143,7 @@ describe('useProfileNewForm', () => {
   })
 
   it('does not keep submitting state after creating a local profile draft', () => {
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
     fillRequiredFields(result)
 
     act(() => {
@@ -155,9 +155,7 @@ describe('useProfileNewForm', () => {
   })
 
   it('uses external submitting state to block draft creation', () => {
-    const { result } = renderHook(() =>
-      useProfileNewForm({ isSubmitting: true }),
-    )
+    const { result } = renderHook(() => useProfileForm({ isSubmitting: true }))
     fillRequiredFields(result)
 
     let profileDraft: ReturnType<
@@ -173,8 +171,56 @@ describe('useProfileNewForm', () => {
     expect(profileDraft).toBeUndefined()
   })
 
+  it('initializes fields and profile image from existing profile values', () => {
+    const { result } = renderHook(() =>
+      useProfileForm({
+        initialValues: {
+          profileImageUrl: 'https://example.com/profile.png',
+          nickname: '하시',
+          birthDate: '20260708',
+          phoneNumber: '01012345678',
+          englishName: 'Hashi',
+          email: 'hashi@example.com',
+        },
+      }),
+    )
+
+    expect(result.current.profileImage.previewUrl).toBe(
+      'https://example.com/profile.png',
+    )
+    expect(result.current.fields.nickname.value).toBe('하시')
+    expect(result.current.fields.birthDate.value).toBe('2026/07/08')
+    expect(result.current.fields.phoneNumber.value).toBe('010-1234-5678')
+    expect(result.current.fields.englishName.value).toBe('Hashi')
+    expect(result.current.fields.email.value).toBe('hashi@example.com')
+  })
+
+  it('requires a valid change when requireChanges is enabled', () => {
+    const { result } = renderHook(() =>
+      useProfileForm({
+        initialValues: {
+          nickname: '하시',
+          birthDate: '20260708',
+          phoneNumber: '01012345678',
+          email: 'hashi@example.com',
+        },
+        requireChanges: true,
+      }),
+    )
+
+    expect(result.current.submit.hasChanges).toBe(false)
+    expect(result.current.submit.canSubmit).toBe(false)
+
+    act(() => {
+      result.current.fields.nickname.onValueChange('하시 수정')
+    })
+
+    expect(result.current.submit.hasChanges).toBe(true)
+    expect(result.current.submit.canSubmit).toBe(true)
+  })
+
   it('creates a normalized profile draft from valid form values', () => {
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
 
     act(() => {
       result.current.fields.nickname.onValueChange('  하시  ')
@@ -202,7 +248,7 @@ describe('useProfileNewForm', () => {
   })
 
   it('does not block submit with the old duplicated nickname mock list', () => {
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
 
     act(() => {
       result.current.fields.nickname.onValueChange('중복')

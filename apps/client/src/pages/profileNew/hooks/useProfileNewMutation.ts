@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { ROUTES } from '@/app/router/path'
 import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
 import { requestOnboarding } from '@/pages/profileNew/api/requestOnboarding'
-import type { ProfileDraft } from '@/pages/profileNew/hooks/useProfileNewForm'
+import type { ProfileDraft } from '@/features/profile/hooks/useProfileForm'
 import { createOnboardingRequestBody } from '@/pages/profileNew/utils/profileNewForm'
 import {
   applyProfileNewOnboardingError,

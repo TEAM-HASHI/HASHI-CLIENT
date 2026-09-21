@@ -1,9 +1,9 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
 
-import { ProfileFields } from '@/pages/profileNew/components/ProfileFields'
-import { ProfileImageSection } from '@/pages/profileNew/components/ProfileImageSection'
-import { ProfileNewBottomBar } from '@/pages/profileNew/components/ProfileNewBottomBar'
+import { ProfileFields } from '@/features/profile/components/ProfileFields'
+import { ProfileFormBottomBar } from '@/features/profile/components/ProfileFormBottomBar'
+import { ProfileImageSection } from '@/features/profile/components/ProfileImageSection'
 import { useProfileNewPage } from '@/pages/profileNew/hooks/useProfileNewPage'
 
 export const ProfileNewPage = () => {
@@ -15,7 +15,7 @@ export const ProfileNewPage = () => {
   }
 
   return (
-    <div className="min-h-dvh bg-white pb-32">
+    <div className="flex min-h-dvh flex-col bg-white">
       <h1 className="sr-only">프로필 생성</h1>
       <div className="app-mobile-fixed-top z-fixed bg-white">
         <Header
@@ -32,7 +32,7 @@ export const ProfileNewPage = () => {
         />
       </div>
 
-      <form className="px-6 pt-[75px]" id={formId} onSubmit={handleSubmit}>
+      <form className="px-5 pt-[75px]" id={formId} onSubmit={handleSubmit}>
         <ProfileImageSection
           disabled={form.submit.isSubmitting}
           errorMessage={form.profileImage.errorMessage}
@@ -53,9 +53,10 @@ export const ProfileNewPage = () => {
         ) : null}
       </form>
 
-      <ProfileNewBottomBar
+      <ProfileFormBottomBar
         disabled={!form.submit.canSubmit}
         formId={formId}
+        label="완료"
         loading={form.submit.isSubmitting}
       />
     </div>

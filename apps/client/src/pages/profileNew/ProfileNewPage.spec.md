@@ -58,8 +58,8 @@ Jira: HASHI-120
 - [ ] 5MB를 초과하는 프로필 이미지는 등록하지 않고 `5MB 이하의 이미지만 등록해주세요.` 오류 문구를 표시한다.
 - [ ] `프로필 삭제` 버튼은 선택한 이미지를 제거하고 기본 프로필 이미지 상태로 되돌린다.
 - [ ] 신규 프로필 생성 화면에서 `프로필 삭제`는 선택 파일 reset만 의미하며, 서버 이미지 삭제용 상태나 필드를 draft에 두지 않는다.
-- [ ] 프로필 이미지는 90px 원형으로 노출하고, 수정 아이콘은 `button_edit` 성격의 25px 아이콘을 사용한다.
-- [ ] 프로필 이미지와 `프로필 삭제` 텍스트 사이 간격은 16px이고, 텍스트는 `Body3 / primary-200`을 사용한다.
+- [ ] 프로필 이미지는 90px 원형으로 노출하고, 수정 버튼은 28px 영역 안에 20px 아이콘을 사용한다.
+- [ ] 프로필 이미지와 `프로필 삭제` 액션은 4px 간격으로 배치한다.
 - [ ] 닉네임 입력 필드를 보여준다.
 - [ ] 닉네임은 필수값이며 local mock 기반 중복 차단은 하지 않는다.
 - [ ] 닉네임 중복 서버 응답이 오면 필드 아래에 `중복된 네이밍입니다.`를 `Body3 / error` 문구로 표시한다.
@@ -178,14 +178,14 @@ Jira: HASHI-120
   - selected profile image file
   - profile image file error message
   - form-level error message, API 연동 전에는 기본값 없음
-  - owner: `useProfileNewForm`
+  - owner: `useProfileForm`
 - form state:
   - `nickname`
   - `birthDate`
   - `phoneNumber`
   - `englishName`
   - `email`
-  - owner: `useProfileNewForm`
+  - owner: `useProfileForm`
   - `react-hook-form`, `zod`는 이번 티켓에서 추가하지 않는다.
   - 추후 폼 표준화 시 `react-hook-form` + `zod resolver` 기반으로 validation, submit 가능 여부, payload 변환을 schema 중심으로 재검토한다.
 - URL state:
@@ -207,7 +207,7 @@ Jira: HASHI-120
   - `isPhoneNumberValid`
   - `isEmailValid`
   - `canSubmit`
-  - owner: `useProfileNewForm`
+  - owner: `useProfileForm`
 
 ## Validation
 
@@ -258,7 +258,7 @@ ProfileNewPage
       InputField: email
       FieldError
     FormError
-  ProfileNewBottomBar
+  ProfileFormBottomBar
     CompleteButton
 ```
 
@@ -275,17 +275,18 @@ ProfileNewPage
 - app shared asset:
   - none
 - feature component:
-  - none
-- page-local component:
   - `ProfileImageSection`
   - `ProfileFields`
-  - `ProfileNewBottomBar`
+  - `ProfileFormBottomBar`
   - `FieldError`
+- page-local component:
+  - none
 - page-local hook:
   - `useProfileNewPage`
-  - `useProfileNewForm`
   - `useProfileNewMutation`
   - `useUploadedProfileImageKey`
+- feature hook:
+  - `useProfileForm`
 - page-local utils:
   - `formatBirthDateInput`
   - `formatPhoneNumberInput`
@@ -372,7 +373,7 @@ ProfileNewPage
   - fixed 영역은 `z-fixed`를 사용한다.
   - 하단 padding은 `var(--safe-area-bottom,0px)`를 고려한다.
 - scroll area:
-  - 본문은 fixed bottom bar에 가리지 않도록 `pb-32` 하단 padding을 가진다.
+  - 하단 CTA는 문서 흐름 안에 배치하고, 입력 영역과 70px 간격을 둔다.
   - 입력 필드와 오류 문구가 키보드에 가려지지 않는지 수동 확인한다.
 - empty/loading/error layout:
   - field error가 나타나도 input 자체 width가 변하지 않는다.
@@ -383,8 +384,8 @@ ProfileNewPage
 
 - `ProfileNewPage`는 화면 섹션 조합만 담당한다.
 - `useProfileNewPage`는 navigation, search param, form submit event, ErrorBoundary로 전달할 unhandled error 상태를 조합한다.
-- form state, formatting, validation, submit draft 생성은 `useProfileNewForm`에서 소유한다.
-- `useProfileNewForm`은 form 값, formatting, validation, 서버 field error를 소유하고, submitting 상태는 mutation `isPending`을 주입받아 CTA 상태 계산에 사용한다.
+- form state, formatting, validation, submit draft 생성은 `features/profile`의 `useProfileForm`에서 소유한다.
+- `useProfileForm`은 form 값, formatting, validation, 서버 field error를 소유하고, submitting 상태는 mutation `isPending`을 주입받아 CTA 상태 계산에 사용한다.
 - `useProfileNewMutation`은 TanStack Query mutation, profile image key 확보, onboarding request body 생성, 성공 시 access token 저장과 redirect, auth failure redirect, handled/unhandled error 분기를 소유한다.
 - `useUploadedProfileImageKey`는 같은 `File` 객체로 재제출할 때 성공한 profile image `fileKey`를 재사용하는 정책을 소유한다.
 - `profileNewOnboardingError`는 onboarding API error code와 field error를 profile form의 field/form error로 반영하는 정책을 소유한다.
@@ -394,10 +395,10 @@ ProfileNewPage
 - 온보딩 API 요청에 Authorization header를 임의로 추가하지 않는다.
 - 온보딩 API와 presigned URL 발급 요청은 `credentials: 'include'`를 명시한다.
 - presigned URL의 `uploadUrl`은 S3 업로드에만 사용하고, 온보딩 API에는 `fileKey`만 `profileImageKey`로 보낸다.
-- 프로필 이미지 MIME allowlist와 file input `accept` 값은 `constants/profileImage.ts`에서 단일 관리한다.
+- 프로필 이미지 MIME allowlist와 file input `accept` 값은 `features/profile/constants/profileImage.ts`에서 단일 관리한다.
 - 하단 CTA는 기존 예약 페이지처럼 `form` attribute와 `PROFILE_NEW_FORM_ID`를 연결해 submit한다.
 - `redirectTo`는 리뷰 작성/예약 플로우 복귀에 필요한 내부 route만 허용한다.
-- page-local 컴포넌트 import는 `@/pages/profileNew/...` alias를 사용한다.
+- 공통 프로필 UI는 `@/features/profile/...`, 온보딩 전용 로직은 `@/pages/profileNew/...` alias를 사용한다.
 - HDS 컴포넌트에는 route, API, submit, tracking, 제품 검증 정책을 넣지 않는다.
 - `InputField`는 error UI를 소유하지 않으므로 `FieldError`를 page-local로 둔다.
 - 프로필 이미지 수정 버튼은 텍스트 없는 버튼이므로 `aria-label`을 제공한다.
