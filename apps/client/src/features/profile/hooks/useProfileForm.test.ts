@@ -219,6 +219,48 @@ describe('useProfileForm', () => {
     expect(result.current.submit.canSubmit).toBe(true)
   })
 
+  it('shows required field errors after submit is attempted', () => {
+    const { result } = renderHook(() => useProfileForm())
+
+    act(() => {
+      result.current.submit.createProfileDraft()
+    })
+
+    expect(result.current.fields.nickname.errorMessage).toBe(
+      '닉네임을 입력해주세요.',
+    )
+    expect(result.current.fields.birthDate.errorMessage).toBe(
+      '생년월일을 정확히 입력해주세요.',
+    )
+    expect(result.current.fields.phoneNumber.errorMessage).toBe(
+      '연락처를 정확히 입력해주세요.',
+    )
+    expect(result.current.fields.email.errorMessage).toBe(
+      '이메일을 정확히 입력해주세요.',
+    )
+  })
+
+  it('blocks submit after a server field error until that field changes', () => {
+    const { result } = renderHook(() => useProfileForm())
+    fillRequiredFields(result)
+
+    act(() => {
+      result.current.submit.setFieldError('nickname', '중복된 닉네임입니다.')
+    })
+
+    expect(result.current.fields.nickname.errorMessage).toBe(
+      '중복된 닉네임입니다.',
+    )
+    expect(result.current.submit.canSubmit).toBe(false)
+
+    act(() => {
+      result.current.fields.nickname.onValueChange('새로운 닉네임')
+    })
+
+    expect(result.current.fields.nickname.errorMessage).toBe('')
+    expect(result.current.submit.canSubmit).toBe(true)
+  })
+
   it('creates a normalized profile draft from valid form values', () => {
     const { result } = renderHook(() => useProfileForm())
 

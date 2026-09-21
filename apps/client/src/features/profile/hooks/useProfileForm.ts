@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
   checkIsSupportedProfileImageMimeType,
@@ -22,7 +22,7 @@ export interface ProfileDraft {
   email: string
 }
 
-interface UseProfileNewFormOptions {
+interface UseProfileFormOptions {
   initialValues?: Partial<{
     profileImageUrl: string
     nickname: string
@@ -51,7 +51,7 @@ export const useProfileForm = ({
   initialValues = {},
   isSubmitting = false,
   requireChanges = false,
-}: UseProfileNewFormOptions = {}) => {
+}: UseProfileFormOptions = {}) => {
   const [profileImageFile, setProfileImageFile] = useState<File>()
   const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<
     string | undefined
@@ -100,54 +100,40 @@ export const useProfileForm = ({
     trimmedEmail !== (initialValues.email ?? '').trim()
   const isValid =
     isNicknameValid && isBirthDateValid && isPhoneNumberValid && isEmailValid
-  const canSubmit = isValid && !isSubmitting && (!requireChanges || hasChanges)
+  const hasServerFieldError = Object.keys(serverFieldErrors).length > 0
+  const canSubmit =
+    isValid &&
+    !hasServerFieldError &&
+    !isSubmitting &&
+    (!requireChanges || hasChanges)
 
   const checkShouldShowError = (fieldName: string) => {
     return hasSubmitAttempted || touchedFields.has(fieldName)
   }
 
-  const fieldErrors = useMemo(
-    () => ({
-      nickname: serverFieldErrors.nickname ?? '',
-      birthDate:
-        serverFieldErrors.birthDate ??
-        (normalizedBirthDate.length > 0 &&
-        !isBirthDateValid &&
-        checkShouldShowError('birthDate')
-          ? '생년월일을 정확히 입력해주세요.'
-          : ''),
-      phoneNumber:
-        serverFieldErrors.phoneNumber ??
-        (normalizedPhoneNumber.length > 0 &&
-        !isPhoneNumberValid &&
-        checkShouldShowError('phoneNumber')
-          ? '연락처를 정확히 입력해주세요.'
-          : ''),
-      englishName: serverFieldErrors.englishName ?? '',
-      email:
-        serverFieldErrors.email ??
-        (trimmedEmail.length > 0 &&
-        !isEmailValid &&
-        checkShouldShowError('email')
-          ? '이메일을 정확히 입력해주세요.'
-          : ''),
-    }),
-    [
-      hasSubmitAttempted,
-      isBirthDateValid,
-      isEmailValid,
-      isPhoneNumberValid,
-      normalizedBirthDate.length,
-      normalizedPhoneNumber.length,
-      serverFieldErrors.birthDate,
-      serverFieldErrors.email,
-      serverFieldErrors.englishName,
-      serverFieldErrors.nickname,
-      serverFieldErrors.phoneNumber,
-      touchedFields,
-      trimmedEmail.length,
-    ],
-  )
+  const fieldErrors = {
+    nickname:
+      serverFieldErrors.nickname ??
+      (!isNicknameValid && checkShouldShowError('nickname')
+        ? '닉네임을 입력해주세요.'
+        : ''),
+    birthDate:
+      serverFieldErrors.birthDate ??
+      (!isBirthDateValid && checkShouldShowError('birthDate')
+        ? '생년월일을 정확히 입력해주세요.'
+        : ''),
+    phoneNumber:
+      serverFieldErrors.phoneNumber ??
+      (!isPhoneNumberValid && checkShouldShowError('phoneNumber')
+        ? '연락처를 정확히 입력해주세요.'
+        : ''),
+    englishName: serverFieldErrors.englishName ?? '',
+    email:
+      serverFieldErrors.email ??
+      (!isEmailValid && checkShouldShowError('email')
+        ? '이메일을 정확히 입력해주세요.'
+        : ''),
+  }
 
   const markFieldTouched = (fieldName: string) => {
     setTouchedFields((currentTouchedFields) => {
@@ -220,7 +206,6 @@ export const useProfileForm = ({
 
   const createProfileDraft = (): ProfileDraft | undefined => {
     setHasSubmitAttempted(true)
-    setServerFieldErrors({})
     setFormError('')
 
     if (!canSubmit) {

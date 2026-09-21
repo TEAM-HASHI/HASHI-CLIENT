@@ -62,7 +62,7 @@ Jira: HASHI-120
 - [ ] 프로필 이미지와 `프로필 삭제` 액션은 4px 간격으로 배치한다.
 - [ ] 닉네임 입력 필드를 보여준다.
 - [ ] 닉네임은 필수값이며 local mock 기반 중복 차단은 하지 않는다.
-- [ ] 닉네임 중복 서버 응답이 오면 필드 아래에 `중복된 네이밍입니다.`를 `Body3 / error` 문구로 표시한다.
+- [ ] 닉네임 중복 서버 응답이 오면 필드 아래에 `중복된 닉네임입니다.`를 `Body3 / error` 문구로 표시한다.
 - [ ] 생년월일 입력 필드를 보여준다.
 - [ ] 생년월일은 필수값이며, 숫자 8자리를 `YYYYMMDD` 원본 값으로 관리한다.
 - [ ] 생년월일은 사용자가 입력하는 동안 `YYYY/MM/DD` 형태로 표시한다.
@@ -92,21 +92,8 @@ Jira: HASHI-120
 
 ### Query
 
-- query:
-  - 현재 확정 API 없음
-  - 추후 닉네임 중복 확인 API로 교체 예정
-- enabled condition:
-  - API 연동 시 닉네임 `trim()` 결과가 1글자 이상이고 debounce가 끝났을 때 활성화한다.
-- request params:
-  - `nickname`
-- loading state:
-  - API 연동 시 입력은 유지하고, 중복 확인 결과가 확정될 때까지 CTA는 비활성화한다.
-- error state:
-  - API 연동 시 중복 확인 실패를 field-level error 또는 재시도 가능한 form error로 표시한다.
-- empty state:
-  - none
-- refetch condition:
-  - API 연동 시 닉네임 값이 변경되고 debounce가 끝날 때
+- 별도 중복 확인 query는 사용하지 않는다.
+- 닉네임·이메일·연락처 중복은 온보딩 mutation 응답으로 검증한다.
 
 ### Mutation
 
@@ -215,7 +202,7 @@ Jira: HASHI-120
   - rule: `trim()` 결과가 1글자 이상
   - trigger: 입력값 변경 시마다 실시간 검증
   - 중복 닉네임은 local mock으로 제출을 막지 않고 온보딩 API의 `USER-001` field error를 표시한다.
-  - error message: 서버 중복 응답 시 `중복된 네이밍입니다.`
+  - error message: 필수값 누락 시 `닉네임을 입력해주세요.`, 서버 중복 응답 시 `중복된 닉네임입니다.`
 - `birthDate`
   - rule: 숫자 8자리, 실제 날짜, 과거 날짜, submit 시 `yyyy-MM-dd`로 변환 가능
   - error message: `생년월일을 정확히 입력해주세요.`
@@ -313,7 +300,7 @@ ProfileNewPage
   - `COMMON-401`, `COMMON-403`은 `clearAuthSession()` 후 `ROUTES.loginRequired`로 이동한다.
   - `COMMON-500`, 네트워크/타임아웃/최종 업로드 실패는 route ErrorBoundary로 전파한다.
 - validation error:
-  - 닉네임 중복 오류는 입력값 변경 시마다 표시한다.
+  - 닉네임 중복 오류는 서버 응답 후 표시하고, 사용자가 닉네임을 수정하면 해제한다.
   - 생년월일, 연락처, 이메일 오류는 blur 이후 또는 submit 시도 이후 표시한다.
 - exceptional case:
   - 파일 선택을 취소하면 기존 이미지 상태를 유지한다.
