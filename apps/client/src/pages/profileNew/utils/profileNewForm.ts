@@ -1,15 +1,6 @@
 import type { components } from '@/shared/api/generated/openapi'
 import { normalizeDigits } from '@/features/profile/utils/profileForm'
 
-export {
-  checkIsValidBirthDate,
-  checkIsValidEmail,
-  checkIsValidPhoneNumber,
-  formatBirthDateInput,
-  formatPhoneNumberInput,
-  normalizeDigits,
-} from '@/features/profile/utils/profileForm'
-
 type OnboardingRequestBody = components['schemas']['CompleteOnboardingRequest']
 
 interface OnboardingFormDraft {
