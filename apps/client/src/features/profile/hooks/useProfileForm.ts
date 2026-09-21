@@ -31,7 +31,6 @@ interface UseProfileFormOptions {
     englishName: string
     email: string
   }>
-  isSubmitting?: boolean
   requireChanges?: boolean
 }
 
@@ -49,7 +48,6 @@ const PROFILE_IMAGE_MAX_FILE_SIZE_ERROR_MESSAGE =
 
 export const useProfileForm = ({
   initialValues = {},
-  isSubmitting = false,
   requireChanges = false,
 }: UseProfileFormOptions = {}) => {
   const [profileImageFile, setProfileImageFile] = useState<File>()
@@ -102,10 +100,7 @@ export const useProfileForm = ({
     isNicknameValid && isBirthDateValid && isPhoneNumberValid && isEmailValid
   const hasServerFieldError = Object.keys(serverFieldErrors).length > 0
   const canSubmit =
-    isValid &&
-    !hasServerFieldError &&
-    !isSubmitting &&
-    (!requireChanges || hasChanges)
+    isValid && !hasServerFieldError && (!requireChanges || hasChanges)
 
   const checkShouldShowError = (fieldName: string) => {
     return hasSubmitAttempted || touchedFields.has(fieldName)
@@ -155,6 +150,10 @@ export const useProfileForm = ({
     })
   }
 
+  const clearFormError = () => {
+    setFormError('')
+  }
+
   const revokeProfileImagePreviewUrl = useCallback(() => {
     if (!profileImagePreviewUrlRef.current) {
       return
@@ -181,6 +180,7 @@ export const useProfileForm = ({
     setProfileImageFile(file)
     setIsProfileImageChanged(true)
     setProfileImageErrorMessage('')
+    clearFormError()
 
     if (typeof URL.createObjectURL === 'function') {
       const nextPreviewUrl = URL.createObjectURL(file)
@@ -192,10 +192,11 @@ export const useProfileForm = ({
 
   const handleProfileImageDelete = () => {
     setProfileImageFile(undefined)
-    setIsProfileImageChanged(true)
+    setIsProfileImageChanged(Boolean(initialValues.profileImageUrl))
     revokeProfileImagePreviewUrl()
     setProfileImagePreviewUrl(undefined)
     setProfileImageErrorMessage('')
+    clearFormError()
   }
 
   useEffect(() => {
@@ -244,6 +245,7 @@ export const useProfileForm = ({
         value: nickname,
         onValueChange: (value: string) => {
           clearServerFieldError('nickname')
+          clearFormError()
           setNickname(value)
         },
         onBlur: () => markFieldTouched('nickname'),
@@ -253,6 +255,7 @@ export const useProfileForm = ({
         value: formatBirthDateInput(normalizedBirthDate),
         onValueChange: (value: string) => {
           clearServerFieldError('birthDate')
+          clearFormError()
           setBirthDate(normalizeDigits(value).slice(0, 8))
         },
         onBlur: () => markFieldTouched('birthDate'),
@@ -262,6 +265,7 @@ export const useProfileForm = ({
         value: formatPhoneNumberInput(normalizedPhoneNumber),
         onValueChange: (value: string) => {
           clearServerFieldError('phoneNumber')
+          clearFormError()
           setPhoneNumber(normalizeDigits(value).slice(0, 11))
         },
         onBlur: () => markFieldTouched('phoneNumber'),
@@ -271,6 +275,7 @@ export const useProfileForm = ({
         value: englishName,
         onValueChange: (value: string) => {
           clearServerFieldError('englishName')
+          clearFormError()
           setEnglishName(value)
         },
         errorMessage: fieldErrors.englishName,
@@ -279,6 +284,7 @@ export const useProfileForm = ({
         value: email,
         onValueChange: (value: string) => {
           clearServerFieldError('email')
+          clearFormError()
           setEmail(value)
         },
         onBlur: () => markFieldTouched('email'),
@@ -289,7 +295,6 @@ export const useProfileForm = ({
     submit: {
       canSubmit,
       hasChanges,
-      isSubmitting,
       createProfileDraft,
       setFieldError: handleFieldServerError,
       setFormError,

@@ -142,35 +142,6 @@ describe('useProfileForm', () => {
     expect(profileDraft).not.toHaveProperty('isProfileImageDeleted')
   })
 
-  it('does not keep submitting state after creating a local profile draft', () => {
-    const { result } = renderHook(() => useProfileForm())
-    fillRequiredFields(result)
-
-    act(() => {
-      result.current.submit.createProfileDraft()
-    })
-
-    expect(result.current.submit.canSubmit).toBe(true)
-    expect(result.current.submit.isSubmitting).toBe(false)
-  })
-
-  it('uses external submitting state to block draft creation', () => {
-    const { result } = renderHook(() => useProfileForm({ isSubmitting: true }))
-    fillRequiredFields(result)
-
-    let profileDraft: ReturnType<
-      typeof result.current.submit.createProfileDraft
-    >
-
-    act(() => {
-      profileDraft = result.current.submit.createProfileDraft()
-    })
-
-    expect(result.current.submit.canSubmit).toBe(false)
-    expect(result.current.submit.isSubmitting).toBe(true)
-    expect(profileDraft).toBeUndefined()
-  })
-
   it('initializes fields and profile image from existing profile values', () => {
     const { result } = renderHook(() =>
       useProfileForm({
@@ -219,6 +190,41 @@ describe('useProfileForm', () => {
     expect(result.current.submit.canSubmit).toBe(true)
   })
 
+  it('restores the unchanged state after removing a newly selected image', () => {
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: vi.fn(() => 'blob:profile-preview'),
+      revokeObjectURL: vi.fn(),
+    })
+    const { result } = renderHook(() =>
+      useProfileForm({
+        initialValues: {
+          nickname: '하시',
+          birthDate: '20260708',
+          phoneNumber: '01012345678',
+          email: 'hashi@example.com',
+        },
+        requireChanges: true,
+      }),
+    )
+    const imageFile = new File(['profile'], 'profile.png', {
+      type: 'image/png',
+    })
+
+    act(() => {
+      result.current.profileImage.onChange(imageFile)
+    })
+
+    expect(result.current.submit.hasChanges).toBe(true)
+
+    act(() => {
+      result.current.profileImage.onDelete()
+    })
+
+    expect(result.current.submit.hasChanges).toBe(false)
+    expect(result.current.submit.canSubmit).toBe(false)
+  })
+
   it('shows required field errors after submit is attempted', () => {
     const { result } = renderHook(() => useProfileForm())
 
@@ -259,6 +265,22 @@ describe('useProfileForm', () => {
 
     expect(result.current.fields.nickname.errorMessage).toBe('')
     expect(result.current.submit.canSubmit).toBe(true)
+  })
+
+  it('clears a form error after a field changes', () => {
+    const { result } = renderHook(() => useProfileForm())
+
+    act(() => {
+      result.current.submit.setFormError('이미 사용 중인 가입 정보입니다')
+    })
+
+    expect(result.current.formError).toBe('이미 사용 중인 가입 정보입니다')
+
+    act(() => {
+      result.current.fields.nickname.onValueChange('새로운 닉네임')
+    })
+
+    expect(result.current.formError).toBe('')
   })
 
   it('creates a normalized profile draft from valid form values', () => {
