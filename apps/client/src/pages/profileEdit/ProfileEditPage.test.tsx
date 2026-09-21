@@ -40,6 +40,10 @@ describe('ProfileEditPage', () => {
   beforeEach(() => {
     mockRequest.mockResolvedValue({
       nickname: '하시',
+      nameEng: 'HASHI',
+      birthDate: '1998-05-12',
+      phone: '01012345678',
+      email: 'hashi@example.com',
       profileImageUrl: 'https://example.com/profile.png',
     })
   })
@@ -49,18 +53,22 @@ describe('ProfileEditPage', () => {
     vi.clearAllMocks()
   })
 
-  it('shows the current profile summary as initial values', async () => {
+  it('shows the current profile information as initial values', async () => {
     renderProfileEditPage()
 
     expect(
       await screen.findByRole('heading', { name: '내 정보 수정' }),
     ).toBeInTheDocument()
     expect(screen.getByLabelText('닉네임')).toHaveValue('하시')
+    expect(screen.getByLabelText('영문 이름 (선택)')).toHaveValue('HASHI')
+    expect(screen.getByLabelText('연락처')).toHaveValue('010-1234-5678')
+    expect(screen.getByLabelText('이메일')).toHaveValue('hashi@example.com')
+    expect(screen.getByLabelText('생년월일')).toHaveValue('1998/05/12')
     expect(screen.getByRole('img', { name: '프로필 이미지' })).toHaveAttribute(
       'src',
       'https://example.com/profile.png',
     )
-    expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '저장' })).toBeDisabled()
   })
 
   it('enables save after a valid change and explains that saving is not available yet', async () => {
@@ -68,17 +76,11 @@ describe('ProfileEditPage', () => {
 
     await screen.findByDisplayValue('하시')
 
-    fireEvent.change(screen.getByLabelText('연락처'), {
-      target: { value: '01012345678' },
-    })
-    fireEvent.change(screen.getByLabelText('이메일'), {
-      target: { value: 'hashi@example.com' },
-    })
-    fireEvent.change(screen.getByLabelText('생년월일'), {
-      target: { value: '20260708' },
+    fireEvent.change(screen.getByLabelText('닉네임'), {
+      target: { value: '하시 수정' },
     })
 
-    const saveButton = screen.getByRole('button', { name: '저장하기' })
+    const saveButton = screen.getByRole('button', { name: '저장' })
     expect(saveButton).toBeEnabled()
 
     fireEvent.click(saveButton)
