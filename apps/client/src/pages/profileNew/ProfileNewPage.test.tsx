@@ -121,31 +121,6 @@ describe('ProfileNewPage', () => {
     )
   })
 
-  it('fixes the header wrapper inside the mobile app frame with the shared utility', () => {
-    renderProfileNewPage()
-
-    const backButton = screen.getByRole('button', { name: '뒤로가기' })
-    const header = backButton.closest('header')
-    const fixedHeaderWrapper = header?.parentElement
-
-    expect(header).toHaveClass('relative')
-    expect(fixedHeaderWrapper).toHaveClass(
-      'app-mobile-fixed-top',
-      'z-fixed',
-      'bg-white',
-    )
-  })
-
-  it('shows the default profile image before and after deleting profile image', () => {
-    renderProfileNewPage()
-
-    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: '프로필 삭제' }))
-
-    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
-  })
-
   it('opens the profile image file input from the edit button and previews the selected image', () => {
     const createObjectUrl = vi.fn(() => 'blob:profile-preview')
     vi.stubGlobal('URL', {

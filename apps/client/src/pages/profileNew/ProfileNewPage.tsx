@@ -7,8 +7,14 @@ import { ProfileImageSection } from '@/features/profile/components/ProfileImageS
 import { useProfileNewPage } from '@/pages/profileNew/hooks/useProfileNewPage'
 
 export const ProfileNewPage = () => {
-  const { boundaryError, form, formId, handleBackClick, handleSubmit } =
-    useProfileNewPage()
+  const {
+    boundaryError,
+    form,
+    formId,
+    handleBackClick,
+    handleSubmit,
+    isSubmitting,
+  } = useProfileNewPage()
 
   if (boundaryError) {
     throw boundaryError
@@ -34,17 +40,14 @@ export const ProfileNewPage = () => {
 
       <form className="px-5 pt-[75px]" id={formId} onSubmit={handleSubmit}>
         <ProfileImageSection
-          disabled={form.submit.isSubmitting}
+          disabled={isSubmitting}
           errorMessage={form.profileImage.errorMessage}
           onImageChange={form.profileImage.onChange}
           onImageDelete={form.profileImage.onDelete}
           previewUrl={form.profileImage.previewUrl}
         />
 
-        <ProfileFields
-          disabled={form.submit.isSubmitting}
-          fields={form.fields}
-        />
+        <ProfileFields disabled={isSubmitting} fields={form.fields} />
 
         {form.formError ? (
           <p className="typo-body-5 text-primary-500 mt-4" role="alert">
@@ -54,10 +57,10 @@ export const ProfileNewPage = () => {
       </form>
 
       <ProfileFormBottomBar
-        disabled={!form.submit.canSubmit}
+        disabled={!form.submit.canSubmit || isSubmitting}
         formId={formId}
         label="완료"
-        loading={form.submit.isSubmitting}
+        loading={isSubmitting}
       />
     </div>
   )

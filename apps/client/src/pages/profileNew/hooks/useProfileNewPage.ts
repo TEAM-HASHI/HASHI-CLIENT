@@ -14,6 +14,7 @@ export const useProfileNewPage = () => {
   const [searchParams] = useSearchParams()
   const [boundaryError, setBoundaryError] = useState<unknown>()
   const { getUploadedProfileImageKey } = useUploadedProfileImageKey()
+  const form = useProfileForm()
 
   const handleBackClick = () => {
     navigate(-1)
@@ -28,12 +29,12 @@ export const useProfileNewPage = () => {
     setFieldError: (...args) => form.submit.setFieldError(...args),
     setFormError: (message) => form.submit.setFormError(message),
   })
-  const form = useProfileForm({
-    isSubmitting: profileNewMutation.isPending,
-  })
+  const isSubmitting = profileNewMutation.isPending
 
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    if (isSubmitting) return
 
     const profileDraft = form.submit.createProfileDraft()
 
@@ -50,5 +51,6 @@ export const useProfileNewPage = () => {
     formId: PROFILE_NEW_FORM_ID,
     handleBackClick,
     handleSubmit,
+    isSubmitting,
   }
 }
