@@ -164,7 +164,7 @@ Jira: HASHI-120
   - selected profile image preview URL
   - selected profile image file
   - profile image file error message
-  - form-level error message, API 연동 전에는 기본값 없음
+  - onboarding API의 form-level error message
   - owner: `useProfileForm`
 - form state:
   - `nickname`
@@ -274,11 +274,12 @@ ProfileNewPage
   - `useUploadedProfileImageKey`
 - feature hook:
   - `useProfileForm`
-- page-local utils:
+- feature utils:
   - `formatBirthDateInput`
   - `formatPhoneNumberInput`
   - `checkIsValidBirthDate`
   - `checkIsValidEmail`
+- page-local utils:
   - `getAllowedProfileNewRedirectPath`
   - `applyProfileNewOnboardingError`
 - page-local constants:
@@ -355,24 +356,23 @@ ProfileNewPage
   - content 좌우 padding은 기존 예약 페이지 패턴처럼 page level에서 관리한다.
 - responsive:
   - 앱 모바일 프레임 width를 따른다.
-- fixed area:
-  - 하단 CTA bar는 `app-mobile-fixed-bottom`
-  - fixed 영역은 `z-fixed`를 사용한다.
+- bottom action area:
+  - 하단 CTA는 문서 흐름 안에 배치하고 `mt-auto`로 짧은 화면에서도 하단에 위치시킨다.
   - 하단 padding은 `var(--safe-area-bottom,0px)`를 고려한다.
 - scroll area:
-  - 하단 CTA는 문서 흐름 안에 배치하고, 입력 영역과 70px 간격을 둔다.
   - 입력 필드와 오류 문구가 키보드에 가려지지 않는지 수동 확인한다.
 - empty/loading/error layout:
   - field error가 나타나도 input 자체 width가 변하지 않는다.
   - CTA disabled 상태는 HDS `Button` disabled 스타일을 사용한다.
-  - API 연동 시 CTA submitting 상태는 HDS `Button` loading 또는 disabled 상태를 사용한다.
+  - CTA submitting 상태는 HDS `Button` loading과 disabled 상태를 사용한다.
 
 ## Implementation Notes
 
 - `ProfileNewPage`는 화면 섹션 조합만 담당한다.
-- `useProfileNewPage`는 navigation, search param, form submit event, ErrorBoundary로 전달할 unhandled error 상태를 조합한다.
+- `useProfileNewPage`는 navigation, search param, form submit event, mutation pending 상태, ErrorBoundary로 전달할 unhandled error 상태를 조합한다.
 - form state, formatting, validation, submit draft 생성은 `features/profile`의 `useProfileForm`에서 소유한다.
-- `useProfileForm`은 form 값, formatting, validation, 서버 field error를 소유하고, submitting 상태는 mutation `isPending`을 주입받아 CTA 상태 계산에 사용한다.
+- `useProfileForm`은 form 값, formatting, validation, 서버 field/form error와 submit draft 생성을 소유한다.
+- submitting 상태는 `useProfileNewPage`가 mutation의 `isPending`으로 관리하며 CTA와 입력 잠금 상태에 반영한다.
 - `useProfileNewMutation`은 TanStack Query mutation, profile image key 확보, onboarding request body 생성, 성공 시 access token 저장과 redirect, auth failure redirect, handled/unhandled error 분기를 소유한다.
 - `useUploadedProfileImageKey`는 같은 `File` 객체로 재제출할 때 성공한 profile image `fileKey`를 재사용하는 정책을 소유한다.
 - `profileNewOnboardingError`는 onboarding API error code와 field error를 profile form의 field/form error로 반영하는 정책을 소유한다.
@@ -387,7 +387,7 @@ ProfileNewPage
 - `redirectTo`는 리뷰 작성/예약 플로우 복귀에 필요한 내부 route만 허용한다.
 - 공통 프로필 UI는 `@/features/profile/...`, 온보딩 전용 로직은 `@/pages/profileNew/...` alias를 사용한다.
 - HDS 컴포넌트에는 route, API, submit, tracking, 제품 검증 정책을 넣지 않는다.
-- `InputField`는 error UI를 소유하지 않으므로 `FieldError`를 page-local로 둔다.
+- `InputField`는 error UI를 소유하지 않으므로 프로필 폼에서 공유하는 `FieldError`를 `features/profile`에 둔다.
 - 프로필 이미지 수정 버튼은 텍스트 없는 버튼이므로 `aria-label`을 제공한다.
 
 ## Verification
