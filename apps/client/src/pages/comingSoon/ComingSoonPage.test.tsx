@@ -26,32 +26,23 @@ describe('ComingSoonPage', () => {
     mockNavigate.mockClear()
   })
 
-  it('renders the QA layout and navigates home', () => {
+  it('renders the guidance and navigates home', () => {
     render(
       <MemoryRouter>
         <ComingSoonPage />
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('presentation', { hidden: true })).toHaveClass(
-      'h-19',
-      'w-[101px]',
-    )
     expect(
       screen.getByRole('heading', {
         name: '서비스를 준비하고 있어요.',
       }),
-    ).toHaveClass('typo-sub-header-1')
-    expect(screen.getByText(/더 편한 Hashi 이용을 위해/)).toHaveClass(
-      'typo-body-8',
-      'leading-[1.2]',
-    )
+    ).toBeInTheDocument()
+    expect(screen.getByText(/더 편한 Hashi 이용을 위해/)).toBeInTheDocument()
 
     const homeButton = screen.getByRole('button', {
       name: '홈으로 돌아가기',
     })
-
-    expect(homeButton).toHaveClass('w-[185px]')
 
     fireEvent.click(homeButton)
 

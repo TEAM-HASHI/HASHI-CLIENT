@@ -23,9 +23,9 @@ export const NotFoundPage = () => {
           잘못된 경로로 이동했을 수 있어요.
         </p>
         <Button
-          className="typo-sub-header-3 w-[185px]"
+          className="w-46.25"
           onClick={() => navigate(ROUTES.home)}
-          size="md"
+          size="lg"
           type="button"
         >
           홈으로 돌아가기
