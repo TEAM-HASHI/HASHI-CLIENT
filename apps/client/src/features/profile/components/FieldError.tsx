@@ -9,7 +9,7 @@ export const FieldError = ({ id, message }: FieldErrorProps) => {
   }
 
   return (
-    <p className="typo-body-3 text-error mt-3" id={id} role="alert">
+    <p className="typo-body-7 text-error mt-2.25" id={id} role="alert">
       {message}
     </p>
   )

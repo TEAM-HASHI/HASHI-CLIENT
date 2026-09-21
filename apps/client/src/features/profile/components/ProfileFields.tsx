@@ -1,8 +1,10 @@
 import { InputField } from '@hashi/hds-ui'
 
-import { FieldError } from '@/pages/profileNew/components/FieldError'
+import { FieldError } from '@/features/profile/components/FieldError'
 
 const PROFILE_ENGLISH_NAME_MAX_LENGTH = 20
+const PROFILE_INPUT_CLASS_NAME =
+  'border-0 bg-primary-100 [&:has(>input:focus-visible)]:outline-none'
 
 interface ProfileFieldState {
   value: string
@@ -34,6 +36,7 @@ export const ProfileFields = ({
             fields.nickname.errorMessage ? 'profile-nickname-error' : undefined
           }
           autoComplete="nickname"
+          className={PROFILE_INPUT_CLASS_NAME}
           disabled={disabled}
           label="닉네임"
           onBlur={fields.nickname.onBlur}
@@ -52,58 +55,12 @@ export const ProfileFields = ({
       <div>
         <InputField
           aria-describedby={
-            fields.birthDate.errorMessage
-              ? 'profile-birth-date-error'
-              : undefined
-          }
-          inputMode="numeric"
-          disabled={disabled}
-          label="생년월일"
-          maxLength={10}
-          onBlur={fields.birthDate.onBlur}
-          onChange={(event) => {
-            fields.birthDate.onValueChange(event.target.value)
-          }}
-          placeholder="YYYYMMDD로 작성해주세요."
-          value={fields.birthDate.value}
-        />
-        <FieldError
-          id="profile-birth-date-error"
-          message={fields.birthDate.errorMessage}
-        />
-      </div>
-
-      <div>
-        <InputField
-          aria-describedby={
-            fields.phoneNumber.errorMessage ? 'profile-phone-error' : undefined
-          }
-          autoComplete="tel"
-          disabled={disabled}
-          inputMode="tel"
-          label="연락처"
-          maxLength={13}
-          onBlur={fields.phoneNumber.onBlur}
-          onChange={(event) => {
-            fields.phoneNumber.onValueChange(event.target.value)
-          }}
-          placeholder="숫자만 기입해주세요."
-          value={fields.phoneNumber.value}
-        />
-        <FieldError
-          id="profile-phone-error"
-          message={fields.phoneNumber.errorMessage}
-        />
-      </div>
-
-      <div>
-        <InputField
-          aria-describedby={
             fields.englishName.errorMessage
               ? 'profile-english-name-error'
               : undefined
           }
           autoComplete="name"
+          className={PROFILE_INPUT_CLASS_NAME}
           disabled={disabled}
           label="영문 이름 (선택)"
           maxLength={PROFILE_ENGLISH_NAME_MAX_LENGTH}
@@ -122,9 +79,34 @@ export const ProfileFields = ({
       <div>
         <InputField
           aria-describedby={
+            fields.phoneNumber.errorMessage ? 'profile-phone-error' : undefined
+          }
+          autoComplete="tel"
+          className={PROFILE_INPUT_CLASS_NAME}
+          disabled={disabled}
+          inputMode="tel"
+          label="연락처"
+          maxLength={13}
+          onBlur={fields.phoneNumber.onBlur}
+          onChange={(event) => {
+            fields.phoneNumber.onValueChange(event.target.value)
+          }}
+          placeholder="010-0000-0000"
+          value={fields.phoneNumber.value}
+        />
+        <FieldError
+          id="profile-phone-error"
+          message={fields.phoneNumber.errorMessage}
+        />
+      </div>
+
+      <div>
+        <InputField
+          aria-describedby={
             fields.email.errorMessage ? 'profile-email-error' : undefined
           }
           autoComplete="email"
+          className={PROFILE_INPUT_CLASS_NAME}
           disabled={disabled}
           inputMode="email"
           label="이메일"
@@ -139,6 +121,31 @@ export const ProfileFields = ({
         <FieldError
           id="profile-email-error"
           message={fields.email.errorMessage}
+        />
+      </div>
+
+      <div>
+        <InputField
+          aria-describedby={
+            fields.birthDate.errorMessage
+              ? 'profile-birth-date-error'
+              : undefined
+          }
+          className={PROFILE_INPUT_CLASS_NAME}
+          inputMode="numeric"
+          disabled={disabled}
+          label="생년월일"
+          maxLength={10}
+          onBlur={fields.birthDate.onBlur}
+          onChange={(event) => {
+            fields.birthDate.onValueChange(event.target.value)
+          }}
+          placeholder="YYYY/MM/DD"
+          value={fields.birthDate.value}
+        />
+        <FieldError
+          id="profile-birth-date-error"
+          message={fields.birthDate.errorMessage}
         />
       </div>
     </div>

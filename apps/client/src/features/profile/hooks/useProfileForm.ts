@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
   checkIsSupportedProfileImageMimeType,
   PROFILE_IMAGE_MAX_FILE_SIZE_BYTES,
-} from '@/pages/profileNew/constants/profileImage'
+} from '@/features/profile/constants/profileImage'
 import {
   checkIsValidBirthDate,
   checkIsValidEmail,
@@ -11,7 +11,7 @@ import {
   formatBirthDateInput,
   formatPhoneNumberInput,
   normalizeDigits,
-} from '@/pages/profileNew/utils/profileNewForm'
+} from '@/features/profile/utils/profileForm'
 
 export interface ProfileDraft {
   profileImageFile?: File
@@ -22,8 +22,16 @@ export interface ProfileDraft {
   email: string
 }
 
-interface UseProfileNewFormOptions {
-  isSubmitting?: boolean
+interface UseProfileFormOptions {
+  initialValues?: Partial<{
+    profileImageUrl: string
+    nickname: string
+    birthDate: string
+    phoneNumber: string
+    englishName: string
+    email: string
+  }>
+  requireChanges?: boolean
 }
 
 type ProfileFieldName =
@@ -38,18 +46,28 @@ const PROFILE_IMAGE_INVALID_FILE_TYPE_ERROR_MESSAGE =
 const PROFILE_IMAGE_MAX_FILE_SIZE_ERROR_MESSAGE =
   '5MB 이하의 이미지만 등록해주세요.'
 
-export const useProfileNewForm = ({
-  isSubmitting = false,
-}: UseProfileNewFormOptions = {}) => {
+export const useProfileForm = ({
+  initialValues = {},
+  requireChanges = false,
+}: UseProfileFormOptions = {}) => {
   const [profileImageFile, setProfileImageFile] = useState<File>()
-  const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<string>()
+  const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<
+    string | undefined
+  >(() => initialValues.profileImageUrl)
+  const [isProfileImageChanged, setIsProfileImageChanged] = useState(false)
   const profileImagePreviewUrlRef = useRef<string | undefined>(undefined)
   const [profileImageErrorMessage, setProfileImageErrorMessage] = useState('')
-  const [nickname, setNickname] = useState('')
-  const [birthDate, setBirthDate] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [englishName, setEnglishName] = useState('')
-  const [email, setEmail] = useState('')
+  const [nickname, setNickname] = useState(() => initialValues.nickname ?? '')
+  const [birthDate, setBirthDate] = useState(
+    () => initialValues.birthDate ?? '',
+  )
+  const [phoneNumber, setPhoneNumber] = useState(
+    () => initialValues.phoneNumber ?? '',
+  )
+  const [englishName, setEnglishName] = useState(
+    () => initialValues.englishName ?? '',
+  )
+  const [email, setEmail] = useState(() => initialValues.email ?? '')
   const [touchedFields, setTouchedFields] = useState<Set<string>>(
     () => new Set(),
   )
@@ -69,59 +87,48 @@ export const useProfileNewForm = ({
   const isBirthDateValid = checkIsValidBirthDate(normalizedBirthDate)
   const isPhoneNumberValid = checkIsValidPhoneNumber(normalizedPhoneNumber)
   const isEmailValid = checkIsValidEmail(trimmedEmail)
+  const hasChanges =
+    isProfileImageChanged ||
+    trimmedNickname !== (initialValues.nickname ?? '').trim() ||
+    normalizedBirthDate !==
+      normalizeDigits(initialValues.birthDate ?? '').slice(0, 8) ||
+    normalizedPhoneNumber !==
+      normalizeDigits(initialValues.phoneNumber ?? '').slice(0, 11) ||
+    trimmedEnglishName !== (initialValues.englishName ?? '').trim() ||
+    trimmedEmail !== (initialValues.email ?? '').trim()
+  const isValid =
+    isNicknameValid && isBirthDateValid && isPhoneNumberValid && isEmailValid
+  const hasServerFieldError = Object.keys(serverFieldErrors).length > 0
   const canSubmit =
-    isNicknameValid &&
-    isBirthDateValid &&
-    isPhoneNumberValid &&
-    isEmailValid &&
-    !isSubmitting
+    isValid && !hasServerFieldError && (!requireChanges || hasChanges)
 
   const checkShouldShowError = (fieldName: string) => {
     return hasSubmitAttempted || touchedFields.has(fieldName)
   }
 
-  const fieldErrors = useMemo(
-    () => ({
-      nickname: serverFieldErrors.nickname ?? '',
-      birthDate:
-        serverFieldErrors.birthDate ??
-        (normalizedBirthDate.length > 0 &&
-        !isBirthDateValid &&
-        checkShouldShowError('birthDate')
-          ? '생년월일을 정확히 입력해주세요.'
-          : ''),
-      phoneNumber:
-        serverFieldErrors.phoneNumber ??
-        (normalizedPhoneNumber.length > 0 &&
-        !isPhoneNumberValid &&
-        checkShouldShowError('phoneNumber')
-          ? '연락처를 정확히 입력해주세요.'
-          : ''),
-      englishName: serverFieldErrors.englishName ?? '',
-      email:
-        serverFieldErrors.email ??
-        (trimmedEmail.length > 0 &&
-        !isEmailValid &&
-        checkShouldShowError('email')
-          ? '이메일을 정확히 입력해주세요.'
-          : ''),
-    }),
-    [
-      hasSubmitAttempted,
-      isBirthDateValid,
-      isEmailValid,
-      isPhoneNumberValid,
-      normalizedBirthDate.length,
-      normalizedPhoneNumber.length,
-      serverFieldErrors.birthDate,
-      serverFieldErrors.email,
-      serverFieldErrors.englishName,
-      serverFieldErrors.nickname,
-      serverFieldErrors.phoneNumber,
-      touchedFields,
-      trimmedEmail.length,
-    ],
-  )
+  const fieldErrors = {
+    nickname:
+      serverFieldErrors.nickname ??
+      (!isNicknameValid && checkShouldShowError('nickname')
+        ? '닉네임을 입력해주세요.'
+        : ''),
+    birthDate:
+      serverFieldErrors.birthDate ??
+      (!isBirthDateValid && checkShouldShowError('birthDate')
+        ? '생년월일을 정확히 입력해주세요.'
+        : ''),
+    phoneNumber:
+      serverFieldErrors.phoneNumber ??
+      (!isPhoneNumberValid && checkShouldShowError('phoneNumber')
+        ? '연락처를 정확히 입력해주세요.'
+        : ''),
+    englishName: serverFieldErrors.englishName ?? '',
+    email:
+      serverFieldErrors.email ??
+      (!isEmailValid && checkShouldShowError('email')
+        ? '이메일을 정확히 입력해주세요.'
+        : ''),
+  }
 
   const markFieldTouched = (fieldName: string) => {
     setTouchedFields((currentTouchedFields) => {
@@ -141,6 +148,10 @@ export const useProfileNewForm = ({
       delete nextServerFieldErrors[fieldName]
       return nextServerFieldErrors
     })
+  }
+
+  const clearFormError = () => {
+    setFormError('')
   }
 
   const revokeProfileImagePreviewUrl = useCallback(() => {
@@ -167,7 +178,9 @@ export const useProfileNewForm = ({
     }
 
     setProfileImageFile(file)
+    setIsProfileImageChanged(true)
     setProfileImageErrorMessage('')
+    clearFormError()
 
     if (typeof URL.createObjectURL === 'function') {
       const nextPreviewUrl = URL.createObjectURL(file)
@@ -179,9 +192,11 @@ export const useProfileNewForm = ({
 
   const handleProfileImageDelete = () => {
     setProfileImageFile(undefined)
+    setIsProfileImageChanged(Boolean(initialValues.profileImageUrl))
     revokeProfileImagePreviewUrl()
     setProfileImagePreviewUrl(undefined)
     setProfileImageErrorMessage('')
+    clearFormError()
   }
 
   useEffect(() => {
@@ -192,7 +207,6 @@ export const useProfileNewForm = ({
 
   const createProfileDraft = (): ProfileDraft | undefined => {
     setHasSubmitAttempted(true)
-    setServerFieldErrors({})
     setFormError('')
 
     if (!canSubmit) {
@@ -231,6 +245,7 @@ export const useProfileNewForm = ({
         value: nickname,
         onValueChange: (value: string) => {
           clearServerFieldError('nickname')
+          clearFormError()
           setNickname(value)
         },
         onBlur: () => markFieldTouched('nickname'),
@@ -240,6 +255,7 @@ export const useProfileNewForm = ({
         value: formatBirthDateInput(normalizedBirthDate),
         onValueChange: (value: string) => {
           clearServerFieldError('birthDate')
+          clearFormError()
           setBirthDate(normalizeDigits(value).slice(0, 8))
         },
         onBlur: () => markFieldTouched('birthDate'),
@@ -249,6 +265,7 @@ export const useProfileNewForm = ({
         value: formatPhoneNumberInput(normalizedPhoneNumber),
         onValueChange: (value: string) => {
           clearServerFieldError('phoneNumber')
+          clearFormError()
           setPhoneNumber(normalizeDigits(value).slice(0, 11))
         },
         onBlur: () => markFieldTouched('phoneNumber'),
@@ -258,6 +275,7 @@ export const useProfileNewForm = ({
         value: englishName,
         onValueChange: (value: string) => {
           clearServerFieldError('englishName')
+          clearFormError()
           setEnglishName(value)
         },
         errorMessage: fieldErrors.englishName,
@@ -266,6 +284,7 @@ export const useProfileNewForm = ({
         value: email,
         onValueChange: (value: string) => {
           clearServerFieldError('email')
+          clearFormError()
           setEmail(value)
         },
         onBlur: () => markFieldTouched('email'),
@@ -275,7 +294,7 @@ export const useProfileNewForm = ({
     formError,
     submit: {
       canSubmit,
-      isSubmitting,
+      hasChanges,
       createProfileDraft,
       setFieldError: handleFieldServerError,
       setFormError,

@@ -58,11 +58,11 @@ Jira: HASHI-120
 - [ ] 5MB를 초과하는 프로필 이미지는 등록하지 않고 `5MB 이하의 이미지만 등록해주세요.` 오류 문구를 표시한다.
 - [ ] `프로필 삭제` 버튼은 선택한 이미지를 제거하고 기본 프로필 이미지 상태로 되돌린다.
 - [ ] 신규 프로필 생성 화면에서 `프로필 삭제`는 선택 파일 reset만 의미하며, 서버 이미지 삭제용 상태나 필드를 draft에 두지 않는다.
-- [ ] 프로필 이미지는 90px 원형으로 노출하고, 수정 아이콘은 `button_edit` 성격의 25px 아이콘을 사용한다.
-- [ ] 프로필 이미지와 `프로필 삭제` 텍스트 사이 간격은 16px이고, 텍스트는 `Body3 / primary-200`을 사용한다.
+- [ ] 프로필 이미지는 90px 원형으로 노출하고, 수정 버튼은 28px 영역 안에 20px 아이콘을 사용한다.
+- [ ] 프로필 이미지와 `프로필 삭제` 액션은 4px 간격으로 배치한다.
 - [ ] 닉네임 입력 필드를 보여준다.
 - [ ] 닉네임은 필수값이며 local mock 기반 중복 차단은 하지 않는다.
-- [ ] 닉네임 중복 서버 응답이 오면 필드 아래에 `중복된 네이밍입니다.`를 `Body3 / error` 문구로 표시한다.
+- [ ] 닉네임 중복 서버 응답이 오면 필드 아래에 `중복된 닉네임입니다.`를 `Body3 / error` 문구로 표시한다.
 - [ ] 생년월일 입력 필드를 보여준다.
 - [ ] 생년월일은 필수값이며, 숫자 8자리를 `YYYYMMDD` 원본 값으로 관리한다.
 - [ ] 생년월일은 사용자가 입력하는 동안 `YYYY/MM/DD` 형태로 표시한다.
@@ -92,21 +92,8 @@ Jira: HASHI-120
 
 ### Query
 
-- query:
-  - 현재 확정 API 없음
-  - 추후 닉네임 중복 확인 API로 교체 예정
-- enabled condition:
-  - API 연동 시 닉네임 `trim()` 결과가 1글자 이상이고 debounce가 끝났을 때 활성화한다.
-- request params:
-  - `nickname`
-- loading state:
-  - API 연동 시 입력은 유지하고, 중복 확인 결과가 확정될 때까지 CTA는 비활성화한다.
-- error state:
-  - API 연동 시 중복 확인 실패를 field-level error 또는 재시도 가능한 form error로 표시한다.
-- empty state:
-  - none
-- refetch condition:
-  - API 연동 시 닉네임 값이 변경되고 debounce가 끝날 때
+- 별도 중복 확인 query는 사용하지 않는다.
+- 닉네임·이메일·연락처 중복은 온보딩 mutation 응답으로 검증한다.
 
 ### Mutation
 
@@ -177,15 +164,15 @@ Jira: HASHI-120
   - selected profile image preview URL
   - selected profile image file
   - profile image file error message
-  - form-level error message, API 연동 전에는 기본값 없음
-  - owner: `useProfileNewForm`
+  - onboarding API의 form-level error message
+  - owner: `useProfileForm`
 - form state:
   - `nickname`
   - `birthDate`
   - `phoneNumber`
   - `englishName`
   - `email`
-  - owner: `useProfileNewForm`
+  - owner: `useProfileForm`
   - `react-hook-form`, `zod`는 이번 티켓에서 추가하지 않는다.
   - 추후 폼 표준화 시 `react-hook-form` + `zod resolver` 기반으로 validation, submit 가능 여부, payload 변환을 schema 중심으로 재검토한다.
 - URL state:
@@ -207,7 +194,7 @@ Jira: HASHI-120
   - `isPhoneNumberValid`
   - `isEmailValid`
   - `canSubmit`
-  - owner: `useProfileNewForm`
+  - owner: `useProfileForm`
 
 ## Validation
 
@@ -215,7 +202,7 @@ Jira: HASHI-120
   - rule: `trim()` 결과가 1글자 이상
   - trigger: 입력값 변경 시마다 실시간 검증
   - 중복 닉네임은 local mock으로 제출을 막지 않고 온보딩 API의 `USER-001` field error를 표시한다.
-  - error message: 서버 중복 응답 시 `중복된 네이밍입니다.`
+  - error message: 필수값 누락 시 `닉네임을 입력해주세요.`, 서버 중복 응답 시 `중복된 닉네임입니다.`
 - `birthDate`
   - rule: 숫자 8자리, 실제 날짜, 과거 날짜, submit 시 `yyyy-MM-dd`로 변환 가능
   - error message: `생년월일을 정확히 입력해주세요.`
@@ -258,7 +245,7 @@ ProfileNewPage
       InputField: email
       FieldError
     FormError
-  ProfileNewBottomBar
+  ProfileFormBottomBar
     CompleteButton
 ```
 
@@ -275,22 +262,24 @@ ProfileNewPage
 - app shared asset:
   - none
 - feature component:
-  - none
-- page-local component:
   - `ProfileImageSection`
   - `ProfileFields`
-  - `ProfileNewBottomBar`
+  - `ProfileFormBottomBar`
   - `FieldError`
+- page-local component:
+  - none
 - page-local hook:
   - `useProfileNewPage`
-  - `useProfileNewForm`
   - `useProfileNewMutation`
   - `useUploadedProfileImageKey`
-- page-local utils:
+- feature hook:
+  - `useProfileForm`
+- feature utils:
   - `formatBirthDateInput`
   - `formatPhoneNumberInput`
   - `checkIsValidBirthDate`
   - `checkIsValidEmail`
+- page-local utils:
   - `getAllowedProfileNewRedirectPath`
   - `applyProfileNewOnboardingError`
 - page-local constants:
@@ -312,7 +301,7 @@ ProfileNewPage
   - `COMMON-401`, `COMMON-403`은 `clearAuthSession()` 후 `ROUTES.loginRequired`로 이동한다.
   - `COMMON-500`, 네트워크/타임아웃/최종 업로드 실패는 route ErrorBoundary로 전파한다.
 - validation error:
-  - 닉네임 중복 오류는 입력값 변경 시마다 표시한다.
+  - 닉네임 중복 오류는 서버 응답 후 표시하고, 사용자가 닉네임을 수정하면 해제한다.
   - 생년월일, 연락처, 이메일 오류는 blur 이후 또는 submit 시도 이후 표시한다.
 - exceptional case:
   - 파일 선택을 취소하면 기존 이미지 상태를 유지한다.
@@ -367,24 +356,23 @@ ProfileNewPage
   - content 좌우 padding은 기존 예약 페이지 패턴처럼 page level에서 관리한다.
 - responsive:
   - 앱 모바일 프레임 width를 따른다.
-- fixed area:
-  - 하단 CTA bar는 `app-mobile-fixed-bottom`
-  - fixed 영역은 `z-fixed`를 사용한다.
+- bottom action area:
+  - 하단 CTA는 문서 흐름 안에 배치하고 `mt-auto`로 짧은 화면에서도 하단에 위치시킨다.
   - 하단 padding은 `var(--safe-area-bottom,0px)`를 고려한다.
 - scroll area:
-  - 본문은 fixed bottom bar에 가리지 않도록 `pb-32` 하단 padding을 가진다.
   - 입력 필드와 오류 문구가 키보드에 가려지지 않는지 수동 확인한다.
 - empty/loading/error layout:
   - field error가 나타나도 input 자체 width가 변하지 않는다.
   - CTA disabled 상태는 HDS `Button` disabled 스타일을 사용한다.
-  - API 연동 시 CTA submitting 상태는 HDS `Button` loading 또는 disabled 상태를 사용한다.
+  - CTA submitting 상태는 HDS `Button` loading과 disabled 상태를 사용한다.
 
 ## Implementation Notes
 
 - `ProfileNewPage`는 화면 섹션 조합만 담당한다.
-- `useProfileNewPage`는 navigation, search param, form submit event, ErrorBoundary로 전달할 unhandled error 상태를 조합한다.
-- form state, formatting, validation, submit draft 생성은 `useProfileNewForm`에서 소유한다.
-- `useProfileNewForm`은 form 값, formatting, validation, 서버 field error를 소유하고, submitting 상태는 mutation `isPending`을 주입받아 CTA 상태 계산에 사용한다.
+- `useProfileNewPage`는 navigation, search param, form submit event, mutation pending 상태, ErrorBoundary로 전달할 unhandled error 상태를 조합한다.
+- form state, formatting, validation, submit draft 생성은 `features/profile`의 `useProfileForm`에서 소유한다.
+- `useProfileForm`은 form 값, formatting, validation, 서버 field/form error와 submit draft 생성을 소유한다.
+- submitting 상태는 `useProfileNewPage`가 mutation의 `isPending`으로 관리하며 CTA와 입력 잠금 상태에 반영한다.
 - `useProfileNewMutation`은 TanStack Query mutation, profile image key 확보, onboarding request body 생성, 성공 시 access token 저장과 redirect, auth failure redirect, handled/unhandled error 분기를 소유한다.
 - `useUploadedProfileImageKey`는 같은 `File` 객체로 재제출할 때 성공한 profile image `fileKey`를 재사용하는 정책을 소유한다.
 - `profileNewOnboardingError`는 onboarding API error code와 field error를 profile form의 field/form error로 반영하는 정책을 소유한다.
@@ -394,12 +382,12 @@ ProfileNewPage
 - 온보딩 API 요청에 Authorization header를 임의로 추가하지 않는다.
 - 온보딩 API와 presigned URL 발급 요청은 `credentials: 'include'`를 명시한다.
 - presigned URL의 `uploadUrl`은 S3 업로드에만 사용하고, 온보딩 API에는 `fileKey`만 `profileImageKey`로 보낸다.
-- 프로필 이미지 MIME allowlist와 file input `accept` 값은 `constants/profileImage.ts`에서 단일 관리한다.
+- 프로필 이미지 MIME allowlist와 file input `accept` 값은 `features/profile/constants/profileImage.ts`에서 단일 관리한다.
 - 하단 CTA는 기존 예약 페이지처럼 `form` attribute와 `PROFILE_NEW_FORM_ID`를 연결해 submit한다.
 - `redirectTo`는 리뷰 작성/예약 플로우 복귀에 필요한 내부 route만 허용한다.
-- page-local 컴포넌트 import는 `@/pages/profileNew/...` alias를 사용한다.
+- 공통 프로필 UI는 `@/features/profile/...`, 온보딩 전용 로직은 `@/pages/profileNew/...` alias를 사용한다.
 - HDS 컴포넌트에는 route, API, submit, tracking, 제품 검증 정책을 넣지 않는다.
-- `InputField`는 error UI를 소유하지 않으므로 `FieldError`를 page-local로 둔다.
+- `InputField`는 error UI를 소유하지 않으므로 프로필 폼에서 공유하는 `FieldError`를 `features/profile`에 둔다.
 - 프로필 이미지 수정 버튼은 텍스트 없는 버튼이므로 `aria-label`을 제공한다.
 
 ## Verification

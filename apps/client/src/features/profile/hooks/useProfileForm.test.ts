@@ -1,15 +1,15 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { useProfileNewForm } from '@/pages/profileNew/hooks/useProfileNewForm'
+import { useProfileForm } from '@/features/profile/hooks/useProfileForm'
 
-describe('useProfileNewForm', () => {
+describe('useProfileForm', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
 
   const fillRequiredFields = (result: {
-    current: ReturnType<typeof useProfileNewForm>
+    current: ReturnType<typeof useProfileForm>
   }) => {
     act(() => {
       result.current.fields.nickname.onValueChange('하시')
@@ -36,7 +36,7 @@ describe('useProfileNewForm', () => {
       type: 'image/png',
     })
     const thirdFile = new File(['third'], 'third.png', { type: 'image/png' })
-    const { result, unmount } = renderHook(() => useProfileNewForm())
+    const { result, unmount } = renderHook(() => useProfileForm())
 
     act(() => {
       result.current.profileImage.onChange(firstFile)
@@ -73,7 +73,7 @@ describe('useProfileNewForm', () => {
       ...URL,
       createObjectURL: createObjectUrl,
     })
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
     const textFile = new File(['profile'], 'profile.txt', {
       type: 'text/plain',
     })
@@ -95,7 +95,7 @@ describe('useProfileNewForm', () => {
       ...URL,
       createObjectURL: createObjectUrl,
     })
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
     const gifFile = new File(['profile'], 'profile.gif', {
       type: 'image/gif',
     })
@@ -117,7 +117,7 @@ describe('useProfileNewForm', () => {
       createObjectURL: vi.fn(() => 'blob:profile-preview'),
       revokeObjectURL: vi.fn(),
     })
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
     const imageFile = new File(['profile'], 'profile.png', {
       type: 'image/png',
     })
@@ -142,39 +142,149 @@ describe('useProfileNewForm', () => {
     expect(profileDraft).not.toHaveProperty('isProfileImageDeleted')
   })
 
-  it('does not keep submitting state after creating a local profile draft', () => {
-    const { result } = renderHook(() => useProfileNewForm())
-    fillRequiredFields(result)
+  it('initializes fields and profile image from existing profile values', () => {
+    const { result } = renderHook(() =>
+      useProfileForm({
+        initialValues: {
+          profileImageUrl: 'https://example.com/profile.png',
+          nickname: '하시',
+          birthDate: '20260708',
+          phoneNumber: '01012345678',
+          englishName: 'Hashi',
+          email: 'hashi@example.com',
+        },
+      }),
+    )
+
+    expect(result.current.profileImage.previewUrl).toBe(
+      'https://example.com/profile.png',
+    )
+    expect(result.current.fields.nickname.value).toBe('하시')
+    expect(result.current.fields.birthDate.value).toBe('2026/07/08')
+    expect(result.current.fields.phoneNumber.value).toBe('010-1234-5678')
+    expect(result.current.fields.englishName.value).toBe('Hashi')
+    expect(result.current.fields.email.value).toBe('hashi@example.com')
+  })
+
+  it('requires a valid change when requireChanges is enabled', () => {
+    const { result } = renderHook(() =>
+      useProfileForm({
+        initialValues: {
+          nickname: '하시',
+          birthDate: '20260708',
+          phoneNumber: '01012345678',
+          email: 'hashi@example.com',
+        },
+        requireChanges: true,
+      }),
+    )
+
+    expect(result.current.submit.hasChanges).toBe(false)
+    expect(result.current.submit.canSubmit).toBe(false)
+
+    act(() => {
+      result.current.fields.nickname.onValueChange('하시 수정')
+    })
+
+    expect(result.current.submit.hasChanges).toBe(true)
+    expect(result.current.submit.canSubmit).toBe(true)
+  })
+
+  it('restores the unchanged state after removing a newly selected image', () => {
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: vi.fn(() => 'blob:profile-preview'),
+      revokeObjectURL: vi.fn(),
+    })
+    const { result } = renderHook(() =>
+      useProfileForm({
+        initialValues: {
+          nickname: '하시',
+          birthDate: '20260708',
+          phoneNumber: '01012345678',
+          email: 'hashi@example.com',
+        },
+        requireChanges: true,
+      }),
+    )
+    const imageFile = new File(['profile'], 'profile.png', {
+      type: 'image/png',
+    })
+
+    act(() => {
+      result.current.profileImage.onChange(imageFile)
+    })
+
+    expect(result.current.submit.hasChanges).toBe(true)
+
+    act(() => {
+      result.current.profileImage.onDelete()
+    })
+
+    expect(result.current.submit.hasChanges).toBe(false)
+    expect(result.current.submit.canSubmit).toBe(false)
+  })
+
+  it('shows required field errors after submit is attempted', () => {
+    const { result } = renderHook(() => useProfileForm())
 
     act(() => {
       result.current.submit.createProfileDraft()
     })
 
-    expect(result.current.submit.canSubmit).toBe(true)
-    expect(result.current.submit.isSubmitting).toBe(false)
+    expect(result.current.fields.nickname.errorMessage).toBe(
+      '닉네임을 입력해주세요.',
+    )
+    expect(result.current.fields.birthDate.errorMessage).toBe(
+      '생년월일을 정확히 입력해주세요.',
+    )
+    expect(result.current.fields.phoneNumber.errorMessage).toBe(
+      '연락처를 정확히 입력해주세요.',
+    )
+    expect(result.current.fields.email.errorMessage).toBe(
+      '이메일을 정확히 입력해주세요.',
+    )
   })
 
-  it('uses external submitting state to block draft creation', () => {
-    const { result } = renderHook(() =>
-      useProfileNewForm({ isSubmitting: true }),
-    )
+  it('blocks submit after a server field error until that field changes', () => {
+    const { result } = renderHook(() => useProfileForm())
     fillRequiredFields(result)
 
-    let profileDraft: ReturnType<
-      typeof result.current.submit.createProfileDraft
-    >
-
     act(() => {
-      profileDraft = result.current.submit.createProfileDraft()
+      result.current.submit.setFieldError('nickname', '중복된 닉네임입니다.')
     })
 
+    expect(result.current.fields.nickname.errorMessage).toBe(
+      '중복된 닉네임입니다.',
+    )
     expect(result.current.submit.canSubmit).toBe(false)
-    expect(result.current.submit.isSubmitting).toBe(true)
-    expect(profileDraft).toBeUndefined()
+
+    act(() => {
+      result.current.fields.nickname.onValueChange('새로운 닉네임')
+    })
+
+    expect(result.current.fields.nickname.errorMessage).toBe('')
+    expect(result.current.submit.canSubmit).toBe(true)
+  })
+
+  it('clears a form error after a field changes', () => {
+    const { result } = renderHook(() => useProfileForm())
+
+    act(() => {
+      result.current.submit.setFormError('이미 사용 중인 가입 정보입니다')
+    })
+
+    expect(result.current.formError).toBe('이미 사용 중인 가입 정보입니다')
+
+    act(() => {
+      result.current.fields.nickname.onValueChange('새로운 닉네임')
+    })
+
+    expect(result.current.formError).toBe('')
   })
 
   it('creates a normalized profile draft from valid form values', () => {
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
 
     act(() => {
       result.current.fields.nickname.onValueChange('  하시  ')
@@ -202,7 +312,7 @@ describe('useProfileNewForm', () => {
   })
 
   it('does not block submit with the old duplicated nickname mock list', () => {
-    const { result } = renderHook(() => useProfileNewForm())
+    const { result } = renderHook(() => useProfileForm())
 
     act(() => {
       result.current.fields.nickname.onValueChange('중복')
