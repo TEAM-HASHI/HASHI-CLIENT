@@ -14,9 +14,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ROUTES } from '@/app/router/path'
 import { cancelReservation } from '@/features/reservation/api/cancelReservation'
 import { getMyReservations } from '@/features/reservation/api/getMyReservations'
-import { getReservationDetail } from '@/pages/reservationDetail/api/getReservationDetail'
+import { getReservationDetail } from '@/features/reservation/api/getReservationDetail'
 import { ReservationDetailPage } from '@/pages/reservationDetail/ReservationDetailPage'
-import { reservationDetailQueryKey } from '@/pages/reservationDetail/hooks/useReservationDetailQuery'
+import { reservationDetailQueryKey } from '@/features/reservation/queries/useReservationDetailQuery'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 import { createQueryClient } from '@/shared/lib/queryClient'
@@ -52,7 +52,7 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
-vi.mock('@/pages/reservationDetail/api/getReservationDetail', () => ({
+vi.mock('@/features/reservation/api/getReservationDetail', () => ({
   getReservationDetail: vi.fn(),
 }))
 

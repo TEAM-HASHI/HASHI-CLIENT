@@ -4,16 +4,14 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useCancelReservationMutation } from '@/features/reservation'
+import { parseReservationId } from '@/features/reservation/utils/parseReservationId'
 import { reservationNotices } from '@/pages/reservationDetail/constants/reservationNotice'
 import {
   reservationDetailQueryKey,
   useReservationDetailQuery,
-} from '@/pages/reservationDetail/hooks/useReservationDetailQuery'
+} from '@/features/reservation/queries/useReservationDetailQuery'
 import { createReservationDetailViewModel } from '@/pages/reservationDetail/utils/createReservationDetailViewModel'
-import {
-  checkIsReservationDetailBlockedStatus,
-  parseReservationId,
-} from '@/pages/reservationDetail/utils/reservationDetailPolicy'
+import { checkIsReservationDetailBlockedStatus } from '@/pages/reservationDetail/utils/reservationDetailPolicy'
 import { checkIsNotFoundError } from '@/shared/api/apiError'
 
 type ReservationDetailLocationState = {
