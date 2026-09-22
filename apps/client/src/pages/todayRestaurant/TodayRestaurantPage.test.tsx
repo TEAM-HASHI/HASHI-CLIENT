@@ -441,6 +441,31 @@ describe('TodayRestaurantPage', () => {
     )
   })
 
+  it('uses route state to select the initial photo tab', async () => {
+    mockLocationStore.state = { activeTab: 'photo' }
+
+    renderTodayRestaurantPage()
+
+    expect(await screen.findByRole('tab', { name: '사진' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
+  })
+
+  it('smoothly scrolls to the tab position when entering with an initial menu, photo, or review tab', async () => {
+    mockLocationStore.state = { activeTab: 'photo' }
+
+    renderTodayRestaurantPage()
+
+    await screen.findByRole('tab', { name: '사진' })
+
+    expect(mockScrollTo).toHaveBeenCalledWith({
+      top: expect.any(Number),
+      behavior: 'smooth',
+    })
+  })
+
   it('opens login bottom sheet for unauthenticated reservation action', async () => {
     renderTodayRestaurantPage()
 
