@@ -195,9 +195,10 @@ ReservationDetailPage
 - page-local hook:
   - `useReservationDetailPage`
   - `useReservationDetailCancellation`
-  - `useReservationDetailQuery`
-- page-local api:
-  - `getReservationDetail`
+- feature query:
+  - `features/reservation/useReservationDetailQuery`
+- feature api:
+  - `features/reservation/getReservationDetail`
 - feature hook:
   - `features/reservation/useCancelReservationMutation`
 - feature api:
@@ -207,6 +208,8 @@ ReservationDetailPage
   - `features/reservation/formatReservationDateTime`
   - `features/reservation/formatReservationGuestSummary`
   - `features/reservation/formatReservationMonthDay`
+  - `features/reservation/createReservationReceiptInfoItems`
+  - `features/reservation/parseReservationId`
 - page-local util:
   - `createReservationDetailViewModel`
   - `reservationDetailPolicy`

@@ -2,9 +2,10 @@ import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import { generatePath, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { getReservationCompletePath } from '@/app/router/routePaths'
 import { myPointBalanceQueryOptions } from '@/features/point/queries/pointQueryOptions'
 import {
   formatReservationDraftDateTime,
@@ -74,12 +75,9 @@ const ReservationRequestContent = ({
       {
         onSuccess: ({ reservationId }) => {
           setIsConfirmOpen(false)
-          navigate(
-            generatePath(ROUTES.reservationDetail, {
-              reservationId: String(reservationId),
-            }),
-            { replace: true, state: { fromReservationRequest: true } },
-          )
+          navigate(getReservationCompletePath(String(reservationId)), {
+            replace: true,
+          })
         },
         onSettled: () => {
           isRequestLockedRef.current = false
