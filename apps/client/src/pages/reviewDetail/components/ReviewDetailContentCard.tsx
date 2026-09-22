@@ -1,4 +1,4 @@
-import { ExpandableText, StarRating } from '@hashi/hds-ui'
+import { StarRating } from '@hashi/hds-ui'
 
 import { ReviewKeywordBadge } from '@/features/review/components'
 import {
@@ -38,7 +38,9 @@ export const ReviewDetailContentCard = ({
             {writtenDate}
           </time>
         </div>
-        <ExpandableText className="break-words" text={content} />
+        <p className="typo-long-body-1 text-primary-200 w-full break-words whitespace-pre-wrap">
+          {content}
+        </p>
       </div>
 
       {visibleImages.length > 0 ? (
