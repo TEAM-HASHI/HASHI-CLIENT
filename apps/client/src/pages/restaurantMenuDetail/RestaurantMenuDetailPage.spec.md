@@ -26,7 +26,7 @@
 
 - [ ] Header는 77px 높이로 식당명을 한 줄 말줄임 처리하고 뒤로가기, 공유 액션을 제공합니다.
 - [ ] 공유 클릭 시 `ROUTES.restaurantMenuDetail` 기준 메뉴 상세 링크를 현재 origin 기준 absolute URL로 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
-- [ ] 매장 정보, 메뉴, 리뷰 탭을 표시하고 `메뉴` 탭을 선택 상태로 둡니다.
+- [ ] 매장 정보, 메뉴, 사진, 리뷰 탭을 표시하고 `메뉴` 탭을 선택 상태로 둡니다.
 - [ ] 메뉴 상세 route 진입 또는 `menuId` 변경 시 페이지 스크롤을 최상단으로 초기화합니다.
 - [ ] 메뉴 이미지는 실제 이미지가 있으면 `img`, 없거나 로딩 실패하면 HDS `ImageFallback`으로 표시합니다.
 - [ ] route param `restaurantId`, `menuId`가 유효한 양의 정수가 아니면 `NotFoundPage`를 표시합니다.
@@ -42,7 +42,7 @@
 - [ ] 로그인 사용자가 좋아요를 누르면 준비중 모달을 표시합니다.
 - [ ] `location.state.source`가 `today`이면 탭/뒤로가기 fallback은 `/restaurants/today`로 이동합니다.
 - [ ] `location.state.source`가 없거나 `detail`이면 탭/뒤로가기 fallback은 `/restaurants/:restaurantId`로 이동합니다.
-- [ ] 매장 정보/리뷰 탭 이동 시 destination route state에 `activeTab`을 넘깁니다.
+- [ ] 매장 정보/사진/리뷰 탭 이동 시 destination route state에 `activeTab`을 넘깁니다.
 - [ ] 서버/API 연동 기준으로 식당 요약, 메뉴 상세, 메뉴 목록 데이터를 조회합니다.
 
 ## Data Dependencies

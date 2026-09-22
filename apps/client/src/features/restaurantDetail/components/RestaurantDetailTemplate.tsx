@@ -16,6 +16,7 @@ import { RestaurantDetailHero } from '@/features/restaurantDetail/components/Res
 import { RestaurantDetailTabs } from '@/features/restaurantDetail/components/RestaurantDetailTabs'
 import { RestaurantInfoSection } from '@/features/restaurantDetail/components/RestaurantInfoSection'
 import { RestaurantMenuListSection } from '@/features/restaurantDetail/components/RestaurantMenuListSection'
+import { RestaurantPhotoSection } from '@/features/restaurantDetail/components/RestaurantPhotoSection'
 import { RestaurantReviewSection } from '@/features/restaurantDetail/components/RestaurantReviewSection'
 import { ReviewImageViewer } from '@/features/restaurantDetail/components/ReviewImageViewer'
 import { ReviewUnavailableModal } from '@/features/restaurantDetail/components/ReviewUnavailableModal'
@@ -157,6 +158,47 @@ export const RestaurantDetailTemplate = ({
     })
   }
 
+  const activeTabSection =
+    activeTab === 'info' ? (
+      <RestaurantInfoSection restaurant={restaurant} />
+    ) : activeTab === 'menu' ? (
+      <RestaurantMenuListSection
+        hasMoreMenus={hasMoreMenus}
+        isMenuListError={isMenuListError}
+        loadMoreRef={menuLoadMoreRef}
+        menus={restaurant.menus}
+        onPressMenuItem={onPressMenuItem}
+        onRetryMenuList={onRetryMenuList}
+      />
+    ) : activeTab === 'photo' ? (
+      <RestaurantPhotoSection />
+    ) : (
+      <RestaurantReviewSection
+        hasMoreReviews={hasMoreReviews}
+        isReviewListError={isReviewListError}
+        isReviewListLoading={isReviewListLoading}
+        loadMoreRef={reviewLoadMoreRef}
+        onPressReviewImage={onPressReviewImage}
+        onRetryReviewList={onRetryReviewList}
+        onPressWriteReview={onPressWriteReview}
+        onSelectSort={onSelectReviewSort}
+        rating={restaurant.rating}
+        ratingDistribution={restaurant.ratingDistribution}
+        restaurantName={restaurant.name}
+        reviewCount={restaurant.reviewCount}
+        reviews={restaurant.reviews}
+        selectedSort={selectedReviewSort}
+      />
+    )
+  const activeTabSectionStyle =
+    activeTab === 'info'
+      ? undefined
+      : {
+          minHeight: `calc(100dvh - ${
+            RESTAURANT_DETAIL_HEADER_HEIGHT + RESTAURANT_DETAIL_TAB_BAR_HEIGHT
+          }px)`,
+        }
+
   return (
     <main className="min-h-dvh bg-white pb-[calc(82px+var(--safe-area-bottom,0px))]">
       <h1 className="sr-only">{title}</h1>
@@ -268,35 +310,7 @@ export const RestaurantDetailTemplate = ({
         />
       ) : null}
 
-      {activeTab === 'info' ? (
-        <RestaurantInfoSection restaurant={restaurant} />
-      ) : activeTab === 'menu' ? (
-        <RestaurantMenuListSection
-          hasMoreMenus={hasMoreMenus}
-          isMenuListError={isMenuListError}
-          loadMoreRef={menuLoadMoreRef}
-          menus={restaurant.menus}
-          onPressMenuItem={onPressMenuItem}
-          onRetryMenuList={onRetryMenuList}
-        />
-      ) : (
-        <RestaurantReviewSection
-          hasMoreReviews={hasMoreReviews}
-          isReviewListError={isReviewListError}
-          isReviewListLoading={isReviewListLoading}
-          loadMoreRef={reviewLoadMoreRef}
-          onPressReviewImage={onPressReviewImage}
-          onRetryReviewList={onRetryReviewList}
-          onPressWriteReview={onPressWriteReview}
-          onSelectSort={onSelectReviewSort}
-          rating={restaurant.rating}
-          ratingDistribution={restaurant.ratingDistribution}
-          restaurantName={restaurant.name}
-          reviewCount={restaurant.reviewCount}
-          reviews={restaurant.reviews}
-          selectedSort={selectedReviewSort}
-        />
-      )}
+      <div style={activeTabSectionStyle}>{activeTabSection}</div>
 
       <ReviewImageViewer
         imageUrls={reviewImageViewerImageUrls}

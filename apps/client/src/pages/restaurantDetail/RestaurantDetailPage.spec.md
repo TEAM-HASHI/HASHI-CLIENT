@@ -2,7 +2,7 @@
 
 ## Purpose
 
-- 사용자가 특정 식당의 매장 정보, 메뉴, 리뷰를 확인하고 예약할 수 있는 모바일 웹 식당 상세 페이지입니다.
+- 사용자가 특정 식당의 매장 정보, 메뉴, 사진, 리뷰를 확인하고 예약할 수 있는 모바일 웹 식당 상세 페이지입니다.
 
 ## Route
 
@@ -31,9 +31,13 @@
 
 - [ ] Header title은 Figma 기준 `식당 상세 정보`로 표시합니다.
 - [ ] route param `restaurantId`를 page에서 읽고 식당 요약, 매장 정보, 메뉴 목록, 리뷰 목록 API를 조회합니다.
-- [ ] 매장 정보, 메뉴, 리뷰 탭을 같은 페이지 상태로 전환합니다.
+- [ ] 매장 정보, 메뉴, 사진, 리뷰 탭을 같은 페이지 상태로 전환합니다.
+- [ ] 현재 client는 탭 콘텐츠를 같은 상세 템플릿 안에서 전환하며, 전용 사진 화면/사진 API 연결은 후속 PR로 분리합니다.
+- [ ] 사진 탭은 이번 리디자인 PR에서 전용 API를 연결하지 않고 `등록된 사진이 없습니다.` empty state를 표시합니다.
+- [ ] 사진 탭 count는 사진 API의 total count 응답 정책이 확정된 뒤 후속 PR에서 표시합니다.
+- [ ] 매장 정보 탭의 `오시는 길` 지도 영역은 지도 연동 전까지 HDS `ImageFallback`으로 규격만 확보하고, 화면 내 별도 안내 문구 없이 접근성 라벨로 placeholder임을 식별합니다.
 - [ ] 탭바는 Header 아래에 sticky로 고정됩니다.
-- [ ] 메뉴/리뷰 탭 선택 시 탭바가 Header 바로 아래에 붙은 위치로 부드럽게 스크롤되어 해당 탭 콘텐츠를 초기 화면처럼 보여줍니다.
+- [ ] 메뉴/사진/리뷰 탭 선택 시 탭바가 Header 바로 아래에 붙은 위치로 부드럽게 스크롤되어 해당 탭 콘텐츠를 초기 화면처럼 보여줍니다.
 - [ ] 매장 정보 탭 선택 시 페이지 최상단으로 부드럽게 스크롤됩니다.
 - [ ] 탭 선택 시 active underline은 선택된 탭으로 부드럽게 이동합니다.
 - [ ] 하단 fixed bar에는 좋아요 영역과 `예약하기`가 표시됩니다.
@@ -111,6 +115,12 @@
   - `getNextPageParam`: `hasNext`가 true이면 `nextCursor`
   - next page trigger: 공통 `useInfiniteScrollTrigger` sentinel intersect
 
+- query: restaurant photos
+- endpoint: TBD
+- status: deferred
+- empty state: 이번 PR에서는 shared `ListEmptyState`로 `등록된 사진이 없습니다.` 문구 표시
+- count: API 응답의 total count 정책 확정 후 후속 PR에서 `사진` 탭 count에 연결
+
 ### Mutation
 
 - mutation: none
@@ -136,6 +146,7 @@
   - restaurant store information
   - restaurant menus infinite pages
   - restaurant reviews infinite pages
+  - restaurant photos: deferred
 - derived state:
   - bottom bar variant from page variant
   - `RestaurantMainResponse` + `RestaurantStoreInformationResponse` + menu/review pages to `RestaurantDetail`
@@ -151,6 +162,11 @@ RestaurantDetailPage
     Restaurant summary
     Sticky Tabs
     Active Tab Section
+      RestaurantInfoSection
+        Map ImageFallback
+      RestaurantMenuListSection
+      RestaurantPhotoSection
+      RestaurantReviewSection
     ReviewImageViewer
     ReviewUnavailableModal
     RestaurantBottomBar
@@ -182,6 +198,7 @@ RestaurantDetailPage
   - `RestaurantDetailTabs`
   - `RestaurantInfoSection`
   - `RestaurantMenuListSection`
+  - `RestaurantPhotoSection`
   - `RestaurantReviewSection`
   - `RestaurantBottomBar`
   - `ReviewImageViewer`
