@@ -6,8 +6,8 @@ Jira: HASHI-106
 
 - 로그인한 사용자가 마이 페이지에서 본인의 프로필, 사용 가능 포인트, 마이 리뷰 개수, 고객지원 메뉴를 확인할 수 있게 합니다.
 - 마이 페이지는 하단 네비게이션의 `마이` 탭 진입 화면입니다.
-- MVP 범위에서는 프로필 수정, 내가 찜한 식당, 로그아웃과 회원탈퇴의 실제 처리를 제외합니다.
-- 미연동 기능은 UI를 노출하되 클릭 시 공통 준비중 안내 모달을 띄웁니다.
+- MVP 범위에서는 프로필 수정, 내가 찜한 식당, 로그아웃과 회원탈퇴 API 연동을 제외합니다.
+- 미연동 기능은 UI를 노출하고, 각 기능의 준비 상태에 따라 안내 모달 또는 별도 페이지로 연결합니다.
 
 ## Route
 
@@ -115,7 +115,8 @@ apps/client/src/features/user/
 - [x] 공지사항과 이용약관은 Hashi 노션 페이지로 이동합니다.
 - [x] 문의하기와 개선 제안은 Hashi 공식 카카오톡 채널로 이동합니다.
 - [x] 계정 섹션에 로그아웃과 회원탈퇴 메뉴를 보여줍니다.
-- [x] 로그아웃과 회원탈퇴 클릭 시 shared `ComingSoonDialog`를 띄웁니다.
+- [x] 로그아웃 클릭 시 shared `ComingSoonDialog`를 띄웁니다.
+- [x] 회원탈퇴 클릭 시 `ROUTES.withdrawal`로 이동합니다.
 - [x] 하단 네비게이션은 고정으로 유지됩니다.
 
 ## MVP Scope
@@ -134,7 +135,8 @@ apps/client/src/features/user/
 - 개선 제안 외부 링크 이동
 - 이용약관 외부 링크 이동
 - 계정 섹션 UI 표시
-- 로그아웃과 회원탈퇴 클릭 시 준비중 모달 표시
+- 로그아웃 클릭 시 준비중 모달 표시
+- 회원탈퇴 페이지 이동
 
 ### Excluded
 
@@ -265,7 +267,8 @@ type ComingSoonDialogProps = {
 ### 5. Account Menu Section
 
 - 로그아웃과 회원탈퇴 메뉴를 표시합니다.
-- MVP에서는 실제 계정 처리 대신 `ComingSoonDialog`를 표시합니다.
+- 로그아웃은 실제 처리 대신 `ComingSoonDialog`를 표시합니다.
+- 회원탈퇴는 `ROUTES.withdrawal`로 이동하며 실제 탈퇴 API는 연결하지 않습니다.
 - 서비스 이용 영역과 같은 `MypageMenuSection` 레이아웃을 재사용합니다.
 
 ## Data Dependencies
@@ -448,7 +451,7 @@ MVP 제외:
 
 - 내가 찜한 식당: shared `ComingSoonDialog` open
 - 로그아웃: shared `ComingSoonDialog` open
-- 회원탈퇴: shared `ComingSoonDialog` open
+- 회원탈퇴: `ROUTES.withdrawal` 이동
 
 ## Component Mapping
 
@@ -569,7 +572,8 @@ types:
 - 공지사항/이용약관 클릭 시 노션 페이지가 새 탭으로 열리는지 확인
 - 프로필 수정 버튼이 disabled인지 확인
 - 계정 섹션에 로그아웃과 회원탈퇴가 노출되는지 확인
-- 계정의 준비 중 액션 클릭 시 모달이 열리는지 확인
+- 로그아웃 클릭 시 준비중 모달이 열리는지 확인
+- 회원탈퇴 클릭 시 `/withdrawal`로 이동하는지 확인
 - 각 query 실패 시 해당 오류를 `AsyncBoundary`로 전달하는지 확인
 
 ## Open Questions
