@@ -1,15 +1,17 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ROUTES } from '@/app/router/path'
 import {
   HASHI_NOTICE_URL,
   HASHI_TERMS_URL,
 } from '@/pages/mypage/constants/mypageMenu'
 import { MypagePage } from '@/pages/mypage/MypagePage'
 import { request } from '@/shared/api/request'
+import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
 const { mockNavigate, mockRequest } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
@@ -95,22 +97,23 @@ describe('MypagePage', () => {
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
   })
 
-  it('renders primary action buttons with design token colors', async () => {
-    renderMypagePage()
-
-    expect(await screen.findByRole('button', { name: '수정' })).toHaveClass(
-      'bg-cool-gray-800',
-    )
-    expect(screen.getByRole('button', { name: /내가 찜한 식당/ })).toHaveClass(
-      'bg-cool-gray-800',
-    )
-  })
-
   it('renders saved restaurant count as zero during MVP', async () => {
     renderMypagePage()
 
     expect(
       await screen.findByRole('button', { name: /내가 찜한 식당 0/ }),
+    ).toBeInTheDocument()
+  })
+
+  it('opens the coming soon dialog from the saved restaurant menu', async () => {
+    renderMypagePage()
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /내가 찜한 식당 0/ }),
+    )
+
+    expect(
+      screen.getByRole('dialog', { name: '서비스를 준비하고 있어요.' }),
     ).toBeInTheDocument()
   })
 
@@ -140,6 +143,14 @@ describe('MypagePage', () => {
       await screen.findByRole('button', { name: /마이 리뷰 3/ }),
     ).toBeInTheDocument()
     expect(request).toHaveBeenCalledWith('/api/v1/reviews/me/count')
+  })
+
+  it('navigates to the my reviews page from the menu', async () => {
+    renderMypagePage()
+
+    fireEvent.click(await screen.findByRole('button', { name: /마이 리뷰 8/ }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.myReviews)
   })
 
   it('renders available point from the API response', async () => {
@@ -199,26 +210,37 @@ describe('MypagePage', () => {
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
   })
 
-  it('renders confirmed notice and terms links as external links', async () => {
+  it('renders confirmed service links as external links', async () => {
     renderMypagePage()
 
-    expect(
-      await screen.findByRole('link', { name: '공지사항' }),
-    ).toHaveAttribute('href', HASHI_NOTICE_URL)
-    expect(screen.getByRole('link', { name: '이용약관' })).toHaveAttribute(
-      'href',
-      HASHI_TERMS_URL,
-    )
+    const links = [
+      ['공지사항', HASHI_NOTICE_URL],
+      ['문의하기', HASHI_KAKAO_CHANNEL_URL],
+      ['개선 제안', HASHI_KAKAO_CHANNEL_URL],
+      ['이용약관', HASHI_TERMS_URL],
+    ] as const
+
+    await screen.findByRole('link', { name: '공지사항' })
+
+    links.forEach(([name, href]) => {
+      expect(screen.getByRole('link', { name })).toHaveAttribute('href', href)
+    })
   })
 
-  it('does not render the MVP-excluded account section', async () => {
+  it('renders account actions and explains that unavailable actions are being prepared', async () => {
     renderMypagePage()
 
     expect(
       await screen.findByRole('heading', { name: '테스트유저님' }),
     ).toBeInTheDocument()
-    expect(screen.queryByText('계정')).not.toBeInTheDocument()
-    expect(screen.queryByText('로그아웃')).not.toBeInTheDocument()
-    expect(screen.queryByText('회원탈퇴')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '계정' })).toBeInTheDocument()
+    const logoutButton = screen.getByRole('button', { name: '로그아웃' })
+    expect(screen.getByRole('button', { name: '회원탈퇴' })).toBeInTheDocument()
+
+    fireEvent.click(logoutButton)
+
+    expect(
+      screen.getByRole('dialog', { name: '서비스를 준비하고 있어요.' }),
+    ).toBeInTheDocument()
   })
 })

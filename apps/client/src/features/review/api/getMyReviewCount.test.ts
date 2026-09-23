@@ -31,11 +31,14 @@ describe('getMyReviewCount', () => {
     )
   })
 
-  it('throws when review count is missing', async () => {
-    mockRequest.mockResolvedValue({})
+  it.each([{}, { reviewCount: null }, { reviewCount: '8' }])(
+    'throws when review count is invalid: %o',
+    async (response) => {
+      mockRequest.mockResolvedValue(response as never)
 
-    await expect(getMyReviewCount()).rejects.toThrow(
-      'Missing reviewCount: GET /api/v1/reviews/me/count',
-    )
-  })
+      await expect(getMyReviewCount()).rejects.toThrow(
+        'Invalid reviewCount: GET /api/v1/reviews/me/count',
+      )
+    },
+  )
 })

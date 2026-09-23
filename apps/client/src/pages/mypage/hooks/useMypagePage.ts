@@ -65,10 +65,6 @@ export const useMypagePage = () => {
       navigate(action.path)
       return
     }
-
-    if (!action.url) {
-      handleComingSoonPress()
-    }
   }
 
   return {
@@ -78,7 +74,6 @@ export const useMypagePage = () => {
     primaryMenuItems,
     setIsComingSoonOpen,
     summary,
-    handleComingSoonPress,
     handleMenuAction,
   }
 }

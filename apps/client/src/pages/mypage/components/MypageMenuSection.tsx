@@ -1,4 +1,4 @@
-import { MypageMenuItem } from '@/pages/mypage/components/MypageMenuItem'
+import { MenuItem } from '@/pages/mypage/components/MenuItem'
 import type {
   MypageMenuAction,
   MypageMenuSection as MypageMenuSectionType,
@@ -15,12 +15,12 @@ export const MypageMenuSection = ({
 }: MypageMenuSectionProps) => {
   return (
     <section>
-      <h2 className="typo-body-3 text-warm-gray-300 border-warm-gray-100 border-b pb-2.5">
+      <h2 className="typo-sub-header-2 text-warm-gray-300 border-warm-gray-100 border-b pb-1.25">
         {section.title}
       </h2>
-      <ul className="pt-3">
+      <ul className="flex flex-col gap-3 pt-3">
         {section.items.map((item) => (
-          <MypageMenuItem
+          <MenuItem
             action={item.action}
             key={item.id}
             label={item.label}
