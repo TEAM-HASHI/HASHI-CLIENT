@@ -105,9 +105,10 @@ export const InputReviewMain = ({
             aria-label="리뷰 내용"
             disabled={disabled}
             maxLength={maxLength}
+            maxLengthBehavior="allow"
             placeholder="리뷰를 작성해 주세요."
             showCounter={false}
-            textareaClassName="typo-long-body-1 min-h-57.5 focus-visible:border-warm-gray-100 focus-visible:outline-none"
+            textareaClassName="typo-long-body-1 min-h-57.5 p-5 focus-visible:border-warm-gray-100 focus-visible:outline-none"
             value={value}
             onBlur={() => setHasReviewTextBlurred(true)}
             onChange={handleReviewTextChange}

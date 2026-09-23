@@ -19,8 +19,10 @@
 
 ## Usage Location
 
-- route: `/restaurants/:restaurantId/reviews/new`, `/reviews/:reviewId/edit`
-- page: `reviewNew`, `reviewEdit`
+- current route: `/restaurants/:restaurantId/reviews/new`, `/reviews/:reviewId`
+- current page: `reviewNew`, `reviewDetail`
+- expected route: `/reviews/:reviewId/edit`
+- expected page: `reviewEdit`
 - feature: `review`
 - expected path: `apps/client/src/features/review/components/reviewReservationSummary/ReviewReservationSummary.tsx`
 
@@ -28,6 +30,7 @@
 
 ```tsx
 <ReviewReservationSummary
+  density="comfortable"
   restaurantName="야키토리 무사시"
   visitedAt="2026. 6. 22 17:00 방문"
   guestSummary="어른 2명"
@@ -44,6 +47,7 @@
 
 - [x] root는 부모 너비를 따르고 좌우 `20px` padding을 가집니다.
 - [x] 본문 row는 높이 `120px`, 하단 `Warm_Gray_50` border를 가집니다.
+- [x] `density="comfortable"`이면 고정 높이 대신 92px 썸네일 위아래에 각각 20px 여백을 둡니다.
 - [x] 썸네일은 `92px` 정사각형, `5px` radius, cover fit으로 표시합니다.
 - [x] 식당 대표 이미지는 HDS `Thumbnail`을 사용하며, `thumbnailSrc`가 없으면 내부 fallback을 표시합니다.
 - [x] 식당명은 `Sub Header 2`, `Cool_Gray_900` 스타일로 최대 2줄까지 표시합니다.
@@ -65,6 +69,13 @@ ReviewReservationSummary
 ```
 
 ## Props
+
+### `density`
+
+- type: `default | comfortable`
+- required: `false`
+- default: `default`
+- description: 기본값은 리뷰 상세의 기존 120px row를 유지합니다. 리뷰 작성은 `comfortable`로 20px 상하 여백을 사용하며, 리뷰 수정 폼 구현 시에도 같은 밀도를 사용합니다.
 
 ### `restaurantName`
 
@@ -128,7 +139,7 @@ ReviewReservationSummary
 
 - styling 기준: Tailwind CSS utility class와 HDS token class를 사용합니다.
 - layout: root `section`은 full width, row는 flex layout입니다.
-- spacing: root `px-5`, row `gap-3`, info `gap-2`를 사용합니다.
+- spacing: root `px-5`, row `gap-3`, info `gap-2`를 사용합니다. `comfortable` density의 row는 `py-5`를 사용합니다.
 - responsive: 부모 너비를 따르고 내부 텍스트는 `min-w-0`으로 overflow를 방지합니다.
 - hover/focus/active/disabled: 상호작용이 없으므로 별도 상태 없음.
 - layout shift 방지 조건: 썸네일은 `size-[92px]` 고정 크기를 유지합니다.
@@ -161,7 +172,7 @@ HDS component가 아니므로 Storybook story를 작성하지 않습니다.
 
 ## Verification
 
-- [x] `corepack pnpm --filter @hashi/client test -- src/pages/reviewNew/ReviewNewPage.test.tsx`
+- [x] `corepack pnpm --filter @hashi/client exec vitest run src/features/review/components/reviewReservationSummary/ReviewReservationSummary.test.tsx`
 - [x] `corepack pnpm --filter @hashi/client lint`
 - [x] `corepack pnpm --filter @hashi/client typecheck`
 - [x] `corepack pnpm --filter @hashi/client build`
