@@ -3,53 +3,77 @@ import { cva } from 'class-variance-authority'
 import { cn } from '../../utils'
 
 type BadgeBaseProps = {
-  label: ReactNode
+  label: string
   icon?: ReactNode
-  className?: string
 }
 
-type BadgeStaticProps = BadgeBaseProps & {
-  interactive?: false
-  selected?: never
-  onSelectedChange?: never
-}
+type BadgeStaticProps = Omit<ComponentPropsWithoutRef<'span'>, 'children'> &
+  BadgeBaseProps & {
+    interactive?: false
+    onSelectedChange?: never
+    selected?: never
+  }
 
-type BadgeInteractiveProps = BadgeBaseProps & {
-  interactive: true
-  selected?: boolean
-  onSelectedChange?: (selected: boolean) => void
-  'aria-disabled'?: ComponentPropsWithoutRef<'button'>['aria-disabled']
-}
+type BadgeInteractiveProps = Omit<
+  ComponentPropsWithoutRef<'button'>,
+  'aria-pressed' | 'children' | 'disabled' | 'onClick' | 'type'
+> &
+  BadgeBaseProps & {
+    interactive: true
+    onSelectedChange?: (selected: boolean) => void
+    selected?: boolean
+  }
 
 export type BadgeProps = BadgeStaticProps | BadgeInteractiveProps
 
 const badgeVariants = cva(
-  'typo-body-8 inline-flex max-w-full shrink-0 items-center gap-1 rounded-lg border-[1.4px] px-2.5 py-1 font-sans text-black whitespace-nowrap',
+  'typo-body-8 inline-flex h-9 max-w-full shrink-0 items-center justify-center gap-1 rounded-[5px] border px-2.5 py-1 font-sans text-black whitespace-nowrap transition-colors',
   {
     variants: {
       interactive: {
-        true: 'appearance-none focus-visible:outline-cool-gray-900 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2',
+        true: 'focus-visible:outline-cool-gray-900 cursor-pointer appearance-none focus-visible:outline-2 focus-visible:outline-offset-2',
         false: null,
       },
       selected: {
-        true: 'border-primary-400 bg-primary-400/20',
+        true: 'border-[1.4px] border-primary-400 bg-primary-400/20',
         false: 'border-warm-gray-100 bg-white',
       },
       disabled: {
-        true: 'cursor-not-allowed opacity-40',
+        true: 'cursor-not-allowed border-warm-gray-100 bg-primary-100 text-warm-gray-300',
         false: null,
       },
     },
+    compoundVariants: [
+      {
+        className: 'hover:bg-primary-100 active:bg-primary-400/20',
+        disabled: false,
+        interactive: true,
+        selected: false,
+      },
+      {
+        className: 'hover:bg-primary-400/30 active:bg-primary-400/50',
+        disabled: false,
+        interactive: true,
+        selected: true,
+      },
+    ],
   },
 )
 
-const BadgeContent = ({ icon, label }: Pick<BadgeProps, 'icon' | 'label'>) => {
+const BadgeContent = ({
+  disabled = false,
+  icon,
+  label,
+}: Pick<BadgeProps, 'icon' | 'label'> & { disabled?: boolean }) => {
   return (
     <>
       {icon ? (
         <span
           aria-hidden="true"
-          className="flex size-6 shrink-0 items-center justify-center text-[24px]"
+          className={cn(
+            'flex size-6 shrink-0 items-center justify-center text-[24px]',
+            disabled && 'opacity-40',
+          )}
         >
           {icon}
         </span>
@@ -59,45 +83,59 @@ const BadgeContent = ({ icon, label }: Pick<BadgeProps, 'icon' | 'label'>) => {
   )
 }
 
-export const Badge = (props: BadgeProps) => {
-  const { icon, label, className } = props
-  const selected = props.interactive ? (props.selected ?? false) : false
-
-  if (props.interactive) {
+export const Badge = ({ interactive, ...props }: BadgeProps) => {
+  if (interactive) {
     const {
       'aria-disabled': ariaDisabled,
+      className,
+      icon,
+      label,
       onSelectedChange,
-      selected: interactiveSelected = false,
+      selected = false,
+      ...buttonProps
     } = props
+
     const isDisabled = ariaDisabled === true || ariaDisabled === 'true'
+    const visualSelected = isDisabled ? false : selected
 
     const handleClick = () => {
       if (isDisabled) {
         return
       }
 
-      onSelectedChange?.(!interactiveSelected)
+      onSelectedChange?.(!selected)
     }
 
     return (
       <button
+        {...buttonProps}
         aria-disabled={ariaDisabled}
         aria-pressed={selected}
         className={cn(
-          badgeVariants({ disabled: isDisabled, interactive: true, selected }),
+          badgeVariants({
+            disabled: isDisabled,
+            interactive: true,
+            selected: visualSelected,
+          }),
           className,
         )}
         onClick={handleClick}
         type="button"
       >
-        <BadgeContent icon={icon} label={label} />
+        <BadgeContent disabled={isDisabled} icon={icon} label={label} />
       </button>
     )
   }
 
+  const { className, icon, label, ...spanProps } = props
+
   return (
     <span
-      className={cn(badgeVariants({ interactive: false, selected }), className)}
+      {...spanProps}
+      className={cn(
+        badgeVariants({ interactive: false, selected: false }),
+        className,
+      )}
     >
       <BadgeContent icon={icon} label={label} />
     </span>
