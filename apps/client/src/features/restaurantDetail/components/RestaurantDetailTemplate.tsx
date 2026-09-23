@@ -158,7 +158,7 @@ export const RestaurantDetailTemplate = ({
   }
 
   return (
-    <main className="min-h-dvh bg-white pb-[calc(82px+var(--safe-area-bottom,0px))]">
+    <main className="app-mobile-bottom-action-content min-h-dvh bg-white">
       <h1 className="sr-only">{title}</h1>
       <div
         className="z-fixed fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)]"

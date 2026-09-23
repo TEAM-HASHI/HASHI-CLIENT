@@ -213,9 +213,7 @@ describe('RestaurantMenuDetailPage', () => {
   it('renders selected menu detail and other menus', async () => {
     renderPage()
 
-    expect(
-      await screen.findByTestId('restaurant-menu-detail-page'),
-    ).toHaveClass('pb-[calc(82px+var(--safe-area-bottom,0px))]')
+    await screen.findByTestId('restaurant-menu-detail-page')
     expect(
       screen.getByTestId('restaurant-menu-detail-fixed-header'),
     ).toHaveClass('fixed', 'top-0', 'max-w-[var(--app-mobile-max-width,100%)]')

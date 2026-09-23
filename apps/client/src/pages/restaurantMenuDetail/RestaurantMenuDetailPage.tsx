@@ -56,7 +56,7 @@ export const RestaurantMenuDetailPage = () => {
 
   return (
     <div
-      className="min-h-dvh bg-white pb-[calc(82px+var(--safe-area-bottom,0px))]"
+      className="app-mobile-bottom-action-content min-h-dvh bg-white"
       data-testid="restaurant-menu-detail-page"
     >
       <div

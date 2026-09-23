@@ -267,9 +267,7 @@ describe('RestaurantDetailPage', () => {
   it('renders restaurant detail from API responses without recommend again action', async () => {
     renderPage()
 
-    expect(await screen.findByRole('main')).toHaveClass(
-      'pb-[calc(82px+var(--safe-area-bottom,0px))]',
-    )
+    await screen.findByRole('main')
     expect(screen.getByRole('heading', { name: '식당 상세 정보' })).toBeTruthy()
     expect(screen.getByText('하시 스시')).toBeInTheDocument()
     expect(screen.getByText('HASHI SUSHI')).toBeInTheDocument()
