@@ -364,6 +364,18 @@ describe('RestaurantMenuDetailPage', () => {
     })
   })
 
+  it('moves to restaurant detail photo tab from detail menu flow', async () => {
+    mockLocationStore.state = { source: 'detail' }
+
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/restaurants/10', {
+      state: { activeTab: 'photo' },
+    })
+  })
+
   it('moves to today restaurant review tab from today menu flow', async () => {
     mockLocationStore.state = { source: 'today' }
 
@@ -373,6 +385,18 @@ describe('RestaurantMenuDetailPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/restaurants/today', {
       state: { activeTab: 'review' },
+    })
+  })
+
+  it('moves to today restaurant photo tab from today menu flow', async () => {
+    mockLocationStore.state = { source: 'today' }
+
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/restaurants/today', {
+      state: { activeTab: 'photo' },
     })
   })
 

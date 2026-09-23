@@ -41,6 +41,13 @@ const { mockClipboardWriteText, mockShowToast, mockToastQueueClear } =
 const { mockExecCommand } = vi.hoisted(() => ({
   mockExecCommand: vi.fn(),
 }))
+const { mockRequestAnimationFrame, mockScrollTo } = vi.hoisted(() => ({
+  mockRequestAnimationFrame: vi.fn((callback: FrameRequestCallback) => {
+    callback(0)
+    return 0
+  }),
+  mockScrollTo: vi.fn(),
+}))
 
 vi.mock('react-router-dom', async () => {
   const actual =
@@ -250,6 +257,8 @@ describe('TodayRestaurantPage', () => {
       configurable: true,
       value: mockExecCommand,
     })
+    vi.stubGlobal('requestAnimationFrame', mockRequestAnimationFrame)
+    vi.stubGlobal('scrollTo', mockScrollTo)
   })
 
   afterEach(() => {
@@ -264,8 +273,11 @@ describe('TodayRestaurantPage', () => {
     mockShowToast.mockReset()
     mockToastQueueClear.mockReset()
     mockExecCommand.mockReset()
+    mockRequestAnimationFrame.mockClear()
+    mockScrollTo.mockClear()
     mockLocationStore.state = undefined
     mockAuthStore.isAuthenticated = false
+    vi.unstubAllGlobals()
   })
 
   it('renders today restaurant detail with recommend again action', async () => {
@@ -296,6 +308,10 @@ describe('TodayRestaurantPage', () => {
       'aria-selected',
       'true',
     )
+    expect(screen.getByText('오시는 길')).toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: '지도 연동 전 위치 영역' }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '다시 추천 받기' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '예약하기' })).toBeTruthy()
 
@@ -358,6 +374,21 @@ describe('TodayRestaurantPage', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('renders the photo tab empty state without a photo count', async () => {
+    renderTodayRestaurantPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
+
+    expect(screen.getByRole('tab', { name: '사진' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('tab', { name: /사진 \d+/ }),
+    ).not.toBeInTheDocument()
+  })
+
   it('opens login bottom sheet for unauthenticated review write action', async () => {
     renderTodayRestaurantPage()
 
@@ -408,6 +439,31 @@ describe('TodayRestaurantPage', () => {
       'aria-selected',
       'true',
     )
+  })
+
+  it('uses route state to select the initial photo tab', async () => {
+    mockLocationStore.state = { activeTab: 'photo' }
+
+    renderTodayRestaurantPage()
+
+    expect(await screen.findByRole('tab', { name: '사진' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
+  })
+
+  it('smoothly scrolls to the tab position when entering with an initial menu, photo, or review tab', async () => {
+    mockLocationStore.state = { activeTab: 'photo' }
+
+    renderTodayRestaurantPage()
+
+    await screen.findByRole('tab', { name: '사진' })
+
+    expect(mockScrollTo).toHaveBeenCalledWith({
+      top: expect.any(Number),
+      behavior: 'smooth',
+    })
   })
 
   it('opens login bottom sheet for unauthenticated reservation action', async () => {

@@ -1,4 +1,4 @@
-export type RestaurantDetailTab = 'info' | 'menu' | 'review'
+export type RestaurantDetailTab = 'info' | 'menu' | 'photo' | 'review'
 
 export type RestaurantDetailVariant = 'today' | 'detail'
 

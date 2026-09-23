@@ -140,6 +140,9 @@ export const TodayRestaurantPage = () => {
         reviewLoadMoreRef={detailContent.reviewLoadMoreRef}
         selectedReviewSort={detailContent.selectedReviewSort}
         shareUrl={ROUTES.todayRestaurant}
+        shouldScrollToInitialTab={
+          initialTab !== undefined && initialTab !== 'info'
+        }
         title="오늘의 식당"
         variant="today"
       />

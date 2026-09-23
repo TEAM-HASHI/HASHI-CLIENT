@@ -1,3 +1,5 @@
+import { ImageFallback } from '@hashi/hds-ui'
+
 import type { RestaurantDetail } from '@/features/restaurantDetail/types/restaurantDetail'
 
 interface RestaurantInfoSectionProps {
@@ -11,7 +13,7 @@ export const RestaurantInfoSection = ({
     <div className="px-5 pt-9 pb-9">
       <section aria-labelledby="restaurant-detail-description-heading">
         <h2
-          className="typo-sub-header-3 text-primary-200"
+          className="typo-sub-header-2 text-primary-200"
           id="restaurant-detail-description-heading"
         >
           가게 상세
@@ -26,7 +28,7 @@ export const RestaurantInfoSection = ({
         className="mt-9"
       >
         <h2
-          className="typo-sub-header-3 text-primary-200"
+          className="typo-sub-header-2 text-primary-200"
           id="restaurant-business-hours-heading"
         >
           영업 시간
@@ -46,7 +48,7 @@ export const RestaurantInfoSection = ({
         className="mt-9"
       >
         <h2
-          className="typo-sub-header-3 text-primary-200"
+          className="typo-sub-header-2 text-primary-200"
           id="restaurant-price-range-heading"
         >
           인당 가격대
@@ -54,6 +56,24 @@ export const RestaurantInfoSection = ({
         <p className="typo-body-5 text-primary-200 mt-3">
           {restaurant.priceRange}
         </p>
+      </section>
+
+      <section aria-labelledby="restaurant-map-heading" className="mt-9">
+        <h2
+          className="typo-sub-header-2 text-primary-200"
+          id="restaurant-map-heading"
+        >
+          오시는 길
+        </h2>
+        <p className="typo-body-5 text-primary-200 mt-3">
+          {restaurant.address}
+        </p>
+        <ImageFallback
+          aria-label="지도 연동 전 위치 영역"
+          className="mt-3 h-32 w-full rounded-[5px]"
+          markSize="lg"
+          role="img"
+        />
       </section>
     </div>
   )
