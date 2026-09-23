@@ -135,19 +135,20 @@ describe('Badge', () => {
     ).toBeInTheDocument()
   })
 
-  it('aria-disabled가 true이면 disabledIcon을 우선 표시합니다', () => {
+  it('aria-disabled가 true이면 기존 아이콘에 비활성 투명도를 적용합니다', () => {
     render(
       <Badge
         aria-disabled="true"
-        disabledIcon={<span data-testid="disabled-icon">비활성 아이콘</span>}
-        icon={<span data-testid="enabled-icon">아이콘</span>}
+        icon={<span data-testid="badge-icon">아이콘</span>}
         interactive
         label="선택 라벨"
       />,
     )
 
-    expect(screen.queryByTestId('enabled-icon')).not.toBeInTheDocument()
-    expect(screen.getByTestId('disabled-icon')).toBeInTheDocument()
+    expect(screen.getByTestId('badge-icon')).toBeInTheDocument()
+    expect(screen.getByTestId('badge-icon').parentElement).toHaveClass(
+      'opacity-40',
+    )
   })
 
   it('aria-disabled가 true이면 선택 상태여도 비활성 스타일을 우선 적용합니다', () => {

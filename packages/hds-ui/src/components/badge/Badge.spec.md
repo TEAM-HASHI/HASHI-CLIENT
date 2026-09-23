@@ -53,7 +53,6 @@ corepack pnpm gen:ds-component
   interactive
   selected={selectedKeywords.includes('kind')}
   icon={<SmileIcon />}
-  disabledIcon={<DisabledSmileIcon />}
   label="친절해요"
   onSelectedChange={(nextSelected) => {
     updateKeyword('kind', nextSelected)
@@ -96,7 +95,7 @@ Exported types:
 - [x] selectable mode에서 selected badge를 누르면 `onSelectedChange(false)`를 호출합니다.
 - [x] interactive badge는 `aria-disabled=true`일 때 선택 변경을 호출하지 않습니다.
 - [x] interactive badge는 `aria-disabled=true`일 때 비활성 fill, text, cursor를 표시합니다.
-- [x] interactive badge는 `aria-disabled=true`이고 `disabledIcon`이 있으면 비활성 아이콘을 우선 표시합니다.
+- [x] interactive badge는 `aria-disabled=true`일 때 기존 icon을 유지하되 icon slot에 opacity를 적용합니다.
 - [x] 긴 라벨이 들어와도 badge 바깥 layout을 깨지 않습니다.
 - [x] token 또는 Tailwind theme 기준을 우선 사용합니다.
 
@@ -122,12 +121,6 @@ Badge
 - type: `ReactNode`
 - required: `false`
 - description: 라벨 앞에 표시할 아이콘입니다. 아이콘 자체의 시각 디테일은 호출부가 주입합니다.
-
-### `disabledIcon`
-
-- type: `ReactNode`
-- required: `false`
-- description: interactive Badge가 `aria-disabled=true`일 때 표시할 별도 아이콘입니다. 기존 아이콘처럼 내부 색상이 고정된 SVG는 CSS color로 비활성 색상을 바꿀 수 없으므로, Figma disabled icon과 일치하는 별도 icon을 호출부가 주입합니다.
 
 ### `interactive`
 
@@ -177,7 +170,7 @@ Badge
 4. selectable badge를 누르면 현재 `selected`의 반대 값을 `onSelectedChange`에 전달합니다.
 5. selected 상태여도 같은 badge를 다시 눌러 해제할 수 있습니다.
 6. `aria-disabled=true`이면 click handler가 `onSelectedChange`를 호출하지 않습니다.
-7. `aria-disabled=true`이고 `disabledIcon`이 있으면 `icon` 대신 `disabledIcon`을 렌더링합니다.
+7. `aria-disabled=true`이면 기존 `icon`을 유지하고 icon slot에 opacity를 적용합니다.
 
 ## Validation
 
@@ -205,6 +198,7 @@ HDS는 validation을 수행하지 않습니다.
 - selected hover: `primary-400 / 30%`
 - selected pressed: `primary-400 / 50%`
 - aria-disabled: `cursor-not-allowed`, fill `primary-100`, border `warm-gray-100`, text `warm-gray-300`
+- aria-disabled icon: 기존 icon을 유지하고 icon slot에 `opacity-40`을 적용합니다.
 - label overflow: `min-w-0 truncate`
 - responsive: badge 자체는 layout을 소유하지 않습니다. 줄바꿈, horizontal scroll, grid 배치는 호출부 container가 처리합니다.
 
@@ -238,7 +232,7 @@ Figma 값과 token이 다를 때는 token을 우선합니다. 정확한 radius, 
 - [x] Selectable default
 - [x] Selectable selected
 - [x] Selectable aria-disabled
-- [x] Selectable aria-disabled with disabled icon
+- [x] Selectable aria-disabled with icon opacity
 - [x] Long label overflow
 - [x] Review keyword wrap example with multiple badges
 - [x] 393px mobile viewport wrapper
@@ -254,7 +248,7 @@ Storybook 예시는 HDS public API와 상태를 보여주기 위한 샘플이어
 - 선택 상태를 `aria-pressed`로 노출합니다.
 - `aria-disabled=true`이면 선택 변경 callback을 호출하지 않습니다.
 - `aria-disabled=true`이면 비활성 스타일을 적용합니다.
-- `aria-disabled=true`이고 `disabledIcon`이 있으면 비활성 아이콘을 우선 표시합니다.
+- `aria-disabled=true`이면 기존 아이콘에 비활성 투명도를 적용합니다.
 - 화면에 보이는 label을 accessible name으로 유지합니다.
 
 ## 범위 제외

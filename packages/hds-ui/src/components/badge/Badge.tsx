@@ -9,7 +9,6 @@ type BadgeBaseProps = {
 
 type BadgeStaticProps = Omit<ComponentPropsWithoutRef<'span'>, 'children'> &
   BadgeBaseProps & {
-    disabledIcon?: never
     interactive?: false
     onSelectedChange?: never
     selected?: never
@@ -20,7 +19,6 @@ type BadgeInteractiveProps = Omit<
   'aria-pressed' | 'children' | 'disabled' | 'onClick' | 'type'
 > &
   BadgeBaseProps & {
-    disabledIcon?: ReactNode
     interactive: true
     onSelectedChange?: (selected: boolean) => void
     selected?: boolean
@@ -62,13 +60,20 @@ const badgeVariants = cva(
   },
 )
 
-const BadgeContent = ({ icon, label }: Pick<BadgeProps, 'icon' | 'label'>) => {
+const BadgeContent = ({
+  disabled = false,
+  icon,
+  label,
+}: Pick<BadgeProps, 'icon' | 'label'> & { disabled?: boolean }) => {
   return (
     <>
       {icon ? (
         <span
           aria-hidden="true"
-          className="flex size-6 shrink-0 items-center justify-center text-[24px]"
+          className={cn(
+            'flex size-6 shrink-0 items-center justify-center text-[24px]',
+            disabled && 'opacity-40',
+          )}
         >
           {icon}
         </span>
@@ -83,7 +88,6 @@ export const Badge = ({ interactive, ...props }: BadgeProps) => {
     const {
       'aria-disabled': ariaDisabled,
       className,
-      disabledIcon,
       icon,
       label,
       onSelectedChange,
@@ -92,7 +96,6 @@ export const Badge = ({ interactive, ...props }: BadgeProps) => {
     } = props
 
     const isDisabled = ariaDisabled === true || ariaDisabled === 'true'
-    const displayIcon = isDisabled && disabledIcon ? disabledIcon : icon
     const visualSelected = isDisabled ? false : selected
 
     const handleClick = () => {
@@ -119,7 +122,7 @@ export const Badge = ({ interactive, ...props }: BadgeProps) => {
         onClick={handleClick}
         type="button"
       >
-        <BadgeContent icon={displayIcon} label={label} />
+        <BadgeContent disabled={isDisabled} icon={icon} label={label} />
       </button>
     )
   }
