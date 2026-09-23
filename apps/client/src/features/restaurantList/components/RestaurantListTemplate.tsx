@@ -22,23 +22,25 @@ const renderSkeletonItems = (count: number) => {
   return Array.from({ length: count }, (_, index) => (
     <li
       aria-hidden="true"
-      className="border-warm-gray-50 w-full border-b py-4.75 last:border-b-0"
+      className="border-warm-gray-50 flex w-full flex-col gap-3 border-b py-4 last:border-b-0"
       data-testid="restaurant-list-skeleton-item"
       key={index}
     >
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-3">
         <div className="bg-secondary-200 h-5 w-40 animate-pulse rounded" />
-        <div className="bg-secondary-200 mt-2 h-5 w-28 animate-pulse rounded" />
-        <div className="mt-2.75 flex gap-2">
+        <div className="bg-secondary-200 h-5 w-28 animate-pulse rounded" />
+        <div className="flex w-full gap-2 overflow-hidden">
           {Array.from({ length: 3 }, (_, imageIndex) => (
             <div
-              className="bg-secondary-200 h-[143px] w-[143px] shrink-0 animate-pulse rounded-[5px]"
+              className="bg-secondary-200 h-[135px] w-[135px] shrink-0 animate-pulse rounded-[5px]"
               key={imageIndex}
             />
           ))}
         </div>
-        <div className="bg-secondary-200 mt-3 h-4 w-full animate-pulse rounded" />
-        <div className="bg-secondary-200 mt-2 h-4 w-3/4 animate-pulse rounded" />
+        <div className="flex flex-col gap-2">
+          <div className="bg-secondary-200 h-4 w-full animate-pulse rounded" />
+          <div className="bg-secondary-200 h-4 w-3/4 animate-pulse rounded" />
+        </div>
       </div>
     </li>
   ))
@@ -119,7 +121,7 @@ export const RestaurantListTemplate = ({
         {isLoading ? (
           <ul
             aria-label={`${title} 식당 목록 로딩 중`}
-            className="mx-auto flex w-full flex-col gap-1 px-5"
+            className="mx-auto flex w-full flex-col gap-5 px-5"
             data-testid="restaurant-list"
           >
             {renderSkeletonItems(3)}
@@ -137,7 +139,7 @@ export const RestaurantListTemplate = ({
           <>
             {shouldRenderList ? (
               <ul
-                className="mx-auto flex w-full flex-col gap-1 px-5"
+                className="mx-auto flex w-full flex-col gap-5 px-5"
                 data-testid="restaurant-list"
               >
                 {visibleRestaurants.map((restaurant) => (

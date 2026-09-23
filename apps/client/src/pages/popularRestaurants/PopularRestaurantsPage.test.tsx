@@ -116,9 +116,40 @@ describe('PopularRestaurantsPage', () => {
     expect(
       screen.getByRole('button', { name: '정렬 필터: 기본순' }),
     ).toBeInTheDocument()
+    expect(screen.getByTestId('restaurant-filter-bar')).toHaveClass(
+      'gap-5',
+      'p-5',
+    )
+    expect(screen.getByTestId('restaurant-list')).toHaveClass('gap-5', 'px-5')
+
     expect(
       await screen.findAllByRole('button', { name: /히마와리 스시/ }),
     ).toHaveLength(3)
+    const firstRestaurantCard = screen
+      .getByRole('button', { name: /히마와리 스시 1/ })
+      .closest('li')
+
+    expect(firstRestaurantCard).toHaveClass(
+      'border-warm-gray-50',
+      'gap-3',
+      'py-4',
+    )
+    expect(
+      firstRestaurantCard?.querySelector('[data-slot="restaurant-name"]'),
+    ).toHaveClass('typo-body-3', 'text-cool-gray-900')
+    expect(
+      firstRestaurantCard?.querySelector(
+        '[data-slot="restaurant-description"]',
+      ),
+    ).toHaveClass(
+      'line-clamp-2',
+      'text-[15px]',
+      'leading-[1.5]',
+      'text-primary-200',
+    )
+    expect(
+      firstRestaurantCard?.querySelector('[data-slot="restaurant-hashtags"]'),
+    ).toHaveClass('gap-2')
     expect(
       screen.getByRole('button', { name: /히마와리 스시 3/ }).closest('li'),
     ).toHaveClass('last:border-b-0')
