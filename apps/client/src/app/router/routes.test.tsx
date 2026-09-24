@@ -71,4 +71,11 @@ describe('appRoutes', () => {
   it('registers Kakao OAuth callback as an app route', () => {
     expect(collectRoutePaths(appRoutes)).toContain(ROUTES.kakaoOAuthCallback)
   })
+
+  it('registers terms list and detail as app routes', () => {
+    const routePaths = collectRoutePaths(appRoutes)
+
+    expect(routePaths).toContain(ROUTES.terms)
+    expect(routePaths).toContain(ROUTES.termsDetail)
+  })
 })

@@ -18,6 +18,8 @@ export const ROUTES = {
   mypage: '/mypage',
   profileNew: '/profile/new',
   withdrawal: '/withdrawal',
+  terms: '/terms',
+  termsDetail: '/terms/:policyId',
   restaurantReservationNew: '/restaurants/:restaurantId/reservations/new',
   anywhereReservation: '/reservations/anywhere',
   reservationRequest: '/reservations/request',
