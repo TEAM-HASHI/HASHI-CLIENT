@@ -12,9 +12,9 @@ export const ReviewDetailActionBar = ({
   return (
     <footer
       aria-label="리뷰 상세 액션"
-      className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-4.25 pb-[calc(48px+var(--safe-area-bottom,0px))]"
+      className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-4 pb-[calc(48px+var(--safe-area-bottom,0px))]"
     >
-      <div className="grid grid-cols-2 gap-3.25">
+      <div className="grid grid-cols-2 gap-4">
         <Button
           onClick={onDeleteClick}
           size="lg"
