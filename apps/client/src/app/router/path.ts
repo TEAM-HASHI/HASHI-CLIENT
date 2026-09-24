@@ -19,6 +19,8 @@ export const ROUTES = {
   profileNew: '/profile/new',
   profileEdit: '/profile/edit',
   withdrawal: '/withdrawal',
+  terms: '/terms',
+  termsDetail: '/terms/:policyId',
   restaurantReservationNew: '/restaurants/:restaurantId/reservations/new',
   anywhereReservation: '/reservations/anywhere',
   reservationRequest: '/reservations/request',
