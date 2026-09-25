@@ -37,6 +37,7 @@ export interface RestaurantScalarFields {
   area: string
   genre: string
   foodCategory: string
+  placeType: string
   priceCurrency: string
   minPrice: string
   maxPrice: string
@@ -97,6 +98,7 @@ export const createRestaurantForm = (): RestaurantFormState => ({
   area: '',
   genre: 'sushi',
   foodCategory: 'sushi',
+  placeType: 'restaurant',
   priceCurrency: 'JPY',
   minPrice: '',
   maxPrice: '',
@@ -125,6 +127,8 @@ export const createRestaurantFormFromPrefill = (
     area: view.area,
     genre: view.genre,
     foodCategory: view.foodCategory,
+    // 공개 API가 placeType을 내려주지 않아 비워두고, 선택했을 때만 PATCH에 포함한다.
+    placeType: '',
     priceCurrency: view.priceCurrency || 'JPY',
     minPrice: view.minPrice == null ? '' : String(view.minPrice),
     maxPrice: view.maxPrice == null ? '' : String(view.maxPrice),
@@ -211,6 +215,7 @@ export const toCreateRestaurantBody = (
   area: form.area.trim(),
   genre: form.genre,
   foodCategory: form.foodCategory,
+  placeType: form.placeType,
   priceCurrency: form.priceCurrency,
   minPrice: parseMoney(form.minPrice, '최소 가격'),
   maxPrice: parseMoney(form.maxPrice, '최대 가격'),
@@ -325,6 +330,9 @@ export const validateRestaurantForm = (
   if (needsScalar('genre') && !form.genre) errors.genre = '장르를 선택해주세요.'
   if (needsScalar('foodCategory') && !form.foodCategory) {
     errors.foodCategory = '음식 카테고리를 선택해주세요.'
+  }
+  if (needsScalar('placeType') && !form.placeType) {
+    errors.placeType = '음식점 분류를 선택해주세요.'
   }
   if (needsScalar('priceCurrency') && form.priceCurrency.length !== 3) {
     errors.priceCurrency = '통화를 선택해주세요.'
