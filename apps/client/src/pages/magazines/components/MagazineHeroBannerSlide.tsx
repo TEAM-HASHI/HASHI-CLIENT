@@ -1,5 +1,7 @@
 import { Banner } from '@hashi/hds-ui'
+import { Link } from 'react-router-dom'
 
+import { getMagazineDetailPath } from '@/app/router/routePaths'
 import type { MagazineHeroBanner } from '@/pages/magazines/types'
 
 interface Props {
@@ -7,29 +9,19 @@ interface Props {
 }
 
 export const MagazineHeroBannerSlide = ({ banner }: Props) => {
-  const content = <Banner imageAlt="" imageSrc={banner.imageUrl} />
-
-  if (!banner.instagramUrl) {
-    return (
-      <div
-        aria-disabled="true"
-        aria-label={banner.accessibilityLabel}
-        className="bg-cool-gray-100 relative block size-full overflow-hidden opacity-60"
-      >
-        {content}
-      </div>
-    )
-  }
-
   return (
-    <a
-      aria-label={banner.accessibilityLabel}
+    <Link
+      aria-label={banner.title}
       className="bg-cool-gray-100 relative block size-full overflow-hidden"
-      href={banner.instagramUrl}
-      rel="noreferrer"
-      target="_blank"
+      state={{
+        magazinePreview: {
+          imageUrl: banner.imageUrl,
+          title: banner.title,
+        },
+      }}
+      to={getMagazineDetailPath(banner.id)}
     >
-      {content}
-    </a>
+      <Banner imageAlt="" imageSrc={banner.imageUrl} />
+    </Link>
   )
 }

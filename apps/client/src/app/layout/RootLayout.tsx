@@ -1,19 +1,31 @@
 import { ToastRegion } from '@hashi/hds-ui'
-import { useEffect } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { Outlet, useLocation, useNavigationType } from 'react-router-dom'
 
+import { ROUTES } from '@/app/router/path'
 import AsyncBoundary from '@/app/providers/AsyncBoundary'
 import { AuthSessionRestoreGate } from '@/app/providers/AuthSessionRestoreGate'
 import { trackPageView } from '@/shared/lib/analytics'
 
 export const RootLayout = () => {
   const { hash = '', pathname, search = '' } = useLocation()
+  const navigationType = useNavigationType()
   const pagePath = `${pathname}${search}${hash}`
   const routeResetKey = `${pathname}${search}`
+  const previousPathnameRef = useRef<string | null>(null)
 
   useEffect(() => {
+    const hasPathnameChanged = previousPathnameRef.current !== pathname
+    previousPathnameRef.current = pathname
+    const shouldPreserveMagazineScroll =
+      navigationType === 'POP' && pathname === ROUTES.magazines
+
+    if (!hasPathnameChanged || shouldPreserveMagazineScroll) {
+      return
+    }
+
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-  }, [pathname])
+  }, [navigationType, pathname])
 
   useEffect(() => {
     trackPageView(pagePath)

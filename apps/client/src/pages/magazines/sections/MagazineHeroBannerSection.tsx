@@ -20,7 +20,7 @@ export const MagazineHeroBannerSection = ({
     return (
       <section
         aria-label="대표 매거진 배너 로딩 중"
-        className="bg-secondary-200 mx-5 mt-[4px] aspect-[353/160] rounded-[5px]"
+        className="bg-secondary-200 mx-5 mt-1 aspect-353/160 rounded-[5px]"
       />
     )
   }
@@ -29,7 +29,7 @@ export const MagazineHeroBannerSection = ({
     return (
       <section
         aria-label="대표 매거진 배너"
-        className="bg-cool-gray-50 mx-5 mt-[4px] flex aspect-[353/160] flex-col items-center justify-center rounded-[5px] px-5 text-center"
+        className="bg-cool-gray-50 mx-5 mt-1 flex aspect-353/160 flex-col items-center justify-center rounded-[5px] px-5 text-center"
       >
         <p className="typo-body-3 text-cool-gray-600">
           매거진 배너를 불러오지 못했어요.
@@ -50,11 +50,8 @@ export const MagazineHeroBannerSection = ({
   }
 
   return (
-    <Carousel.Root
-      aria-label="대표 매거진 배너"
-      className="mx-5 mt-[4px] w-auto"
-    >
-      <Carousel.Viewport className="aspect-[353/160] overflow-y-hidden rounded-[5px]">
+    <Carousel.Root aria-label="대표 매거진 배너" className="mx-5 mt-1 w-auto">
+      <Carousel.Viewport className="aspect-353/160 overflow-y-hidden rounded-[5px]">
         <Carousel.Track>
           {banners.map((banner) => (
             <Carousel.Item key={banner.id}>
