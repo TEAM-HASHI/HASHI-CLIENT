@@ -60,8 +60,9 @@
 
 - 공개 식당은 검색·선택형 filter·cursor `더 보기`가 있는 table로 표시합니다.
 - 등록은 `기본 정보 → 가격·이미지 → 영업시간 → 메뉴·노출` 4단계 large drawer입니다.
-- `genre`, `foodCategory`, `priceCurrency`, `curationTypes`는 백엔드 값에 고정된 선택 control입니다.
-- 생성 body는 `name`, `localName`, `summary`, `description`, `address`, `area`, `genre`, `foodCategory`, `priceCurrency`, `minPrice`, `maxPrice`, `imageKeys`, `menus`, `hashtags`, `curationTypes`, `businessHours`를 사용합니다.
+- `genre`, `foodCategory`, `placeType`, `priceCurrency`, `curationTypes`는 백엔드 값에 고정된 선택 control입니다.
+- `placeType`(`restaurant`·`cafe`·`bar`)은 생성 시 필수이며 기본값은 `restaurant`입니다. 공개 API가 값을 내려주지 않아 수정 시에는 비워두고, 선택한 경우에만 PATCH에 포함합니다.
+- 생성 body는 `name`, `localName`, `summary`, `description`, `address`, `area`, `genre`, `foodCategory`, `placeType`, `priceCurrency`, `minPrice`, `maxPrice`, `imageKeys`, `menus`, `hashtags`, `curationTypes`, `businessHours`를 사용합니다.
 - 식당 이미지는 최소 1개이며 첫 이미지가 대표 이미지입니다. 영업시간은 중복 없는 7개 요일을 전송합니다.
 - PATCH scalar는 dirty field만 전송합니다. images, menus, hashtags, curationTypes, businessHours는 `전체 교체`를 명시적으로 켠 경우에만 전송합니다.
 - 해시태그 입력은 쉼표 구분 문자열을 그대로 유지하고, create/update payload 생성 시 trim한 string[]로 변환합니다. 빈 항목은 제외합니다.

@@ -30,6 +30,7 @@ describe('admin API contract', () => {
       area: '시부야',
       genre: 'sushi',
       foodCategory: 'sushi',
+      placeType: 'restaurant',
       priceCurrency: 'JPY',
       minPrice: 3000,
       maxPrice: 8000,

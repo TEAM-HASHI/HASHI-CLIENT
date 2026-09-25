@@ -21,6 +21,7 @@ import {
   CURRENCY_OPTIONS,
   FOOD_CATEGORY_OPTIONS,
   GENRE_OPTIONS,
+  PLACE_TYPE_OPTIONS,
 } from '@/pages/restaurants/restaurantOptions'
 import {
   useCreateRestaurantMutation,
@@ -177,6 +178,7 @@ export const RestaurantFormDrawer = ({
           'area',
           'genre',
           'foodCategory',
+          'placeType',
         ],
         ['priceCurrency', 'priceRange', 'images', 'uploads'],
         ['businessHours'],
@@ -353,6 +355,12 @@ const BasicStep = ({
         value={form.foodCategory}
         options={[...FOOD_CATEGORY_OPTIONS]}
         onChange={(value) => setScalar('foodCategory', value)}
+      />
+      <AdminSelect
+        label="음식점 분류"
+        value={form.placeType}
+        options={[...PLACE_TYPE_OPTIONS]}
+        onChange={(value) => setScalar('placeType', value)}
       />
     </div>
     <Field
