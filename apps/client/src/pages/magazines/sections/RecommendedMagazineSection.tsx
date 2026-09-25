@@ -40,10 +40,8 @@ export const RecommendedMagazineSection = ({
   magazines,
   onRetry,
 }: Props) => {
-  const shouldRenderList =
+  const hasListContent =
     magazines.length > 0 || hasNextPage || isFetchingNextPage
-  const shouldRenderEmptyState =
-    magazines.length === 0 && !hasNextPage && !isFetchingNextPage
 
   if (isLoading) {
     return (
@@ -74,30 +72,24 @@ export const RecommendedMagazineSection = ({
 
   return (
     <section aria-label="추천 매거진 목록" className="pt-4">
-      {shouldRenderList ? (
+      {hasListContent ? (
         <ul className="flex flex-col px-5">
           {magazines.map((magazine) => (
             <MagazineListItem key={magazine.id} magazine={magazine} />
           ))}
           {hasNextPage && (
-            <li
-              aria-hidden="true"
-              className="h-px"
-              data-testid="magazine-list-load-more"
-              ref={loadMoreRef}
-            />
+            <li aria-hidden="true" className="h-px" ref={loadMoreRef} />
           )}
           {isFetchingNextPage ? renderSkeletonItems().slice(0, 1) : null}
         </ul>
-      ) : null}
-      {shouldRenderEmptyState ? (
+      ) : (
         <div className="flex min-h-[calc(100dvh-75px)] items-center justify-center px-5 pb-20">
           <ListEmptyState
             className="min-h-0"
             description="매거진 리스트를 준비중이에요."
           />
         </div>
-      ) : null}
+      )}
     </section>
   )
 }

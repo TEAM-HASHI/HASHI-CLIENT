@@ -9,8 +9,6 @@ export const MagazinesPage = () => {
   const {
     handleBackClick,
     hasNextMagazinePage,
-    hasHeroBanners,
-    hasRecommendedMagazines,
     heroBanners,
     isFetchingNextMagazinePage,
     isHeroBannerError,
@@ -25,38 +23,37 @@ export const MagazinesPage = () => {
 
   return (
     <div className="min-h-dvh bg-white">
-      <Header
-        className="fixed top-0 right-0 left-0 z-20 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white"
-        leftAction={
-          <IconButton
-            aria-label="홈으로 돌아가기"
-            onClick={handleBackClick}
-            size="xs"
-          >
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        title="매거진"
-      />
+      <div className="app-mobile-fixed-top z-fixed bg-white">
+        <Header
+          leftAction={
+            <IconButton
+              aria-label="홈으로 돌아가기"
+              onClick={handleBackClick}
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          title="매거진"
+        />
+      </div>
 
       <main className="pt-[75px]">
-        {hasHeroBanners || isHeroBannerLoading || isHeroBannerError ? (
-          <MagazineHeroBannerSection
-            banners={heroBanners}
-            isError={isHeroBannerError}
-            isLoading={isHeroBannerLoading}
-            onRetry={() => {
-              void refetchHeroBanners()
-            }}
-          />
-        ) : null}
+        <MagazineHeroBannerSection
+          banners={heroBanners}
+          isError={isHeroBannerError}
+          isLoading={isHeroBannerLoading}
+          onRetry={() => {
+            void refetchHeroBanners()
+          }}
+        />
         <RecommendedMagazineSection
           hasNextPage={hasNextMagazinePage}
           isError={isRecommendedMagazineError}
           isFetchingNextPage={isFetchingNextMagazinePage}
           isLoading={isRecommendedMagazineLoading}
           loadMoreRef={loadMoreRef}
-          magazines={hasRecommendedMagazines ? recommendedMagazines : []}
+          magazines={recommendedMagazines}
           onRetry={() => {
             void refetchRecommendedMagazines()
           }}
