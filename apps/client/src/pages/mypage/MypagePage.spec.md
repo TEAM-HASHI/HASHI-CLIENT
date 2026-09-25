@@ -104,7 +104,7 @@ apps/client/src/features/user/
   - 문의하기
   - 개선 제안
   - 이용약관
-- [x] 공지사항과 이용약관은 Hashi 노션 페이지로 이동합니다.
+- [x] 공지사항은 Hashi 노션 페이지로 이동하고, 이용약관은 앱 내 `/terms` 페이지로 이동합니다.
 - [x] 문의하기와 개선 제안은 Hashi 공식 카카오톡 채널로 이동합니다.
 - [x] 계정 섹션은 MVP 제외 범위이므로 UI에서 제거합니다.
 - [x] 하단 네비게이션은 고정으로 유지됩니다.
@@ -123,7 +123,7 @@ apps/client/src/features/user/
 - 공지사항 외부 링크 이동
 - 문의하기 외부 링크 이동
 - 개선 제안 외부 링크 이동
-- 이용약관 외부 링크 이동
+- 이용약관 페이지(`/terms`) 이동
 
 ### Excluded
 
@@ -250,8 +250,7 @@ type ComingSoonDialogProps = {
 
 #### 이용약관
 
-- Hashi 서비스 이용약관 노션 페이지로 이동합니다.
-- 외부 URL은 상수로 관리합니다.
+- 앱 내 이용약관 페이지(`ROUTES.terms`)로 이동합니다.
 
 ## Data Dependencies
 
@@ -409,13 +408,13 @@ derived state:
 내부 이동:
 
 - 마이 리뷰: `ROUTES.myReviews`
+- 이용약관: `ROUTES.terms`
 
 외부 이동:
 
 - 공지사항: `HASHI_NOTICE_URL`
 - 문의하기: `HASHI_KAKAO_CHANNEL_URL`
 - 개선 제안: `HASHI_KAKAO_CHANNEL_URL`
-- 이용약관: `HASHI_TERMS_URL`
 
 외부 링크 처리 기준:
 
@@ -557,7 +556,8 @@ types:
 - 준비중 모달에서 확인 버튼 클릭 시 모달이 닫히는지 확인
 - 마이 리뷰 클릭 시 `/my-reviews`로 이동하는지 확인
 - 문의하기/개선 제안 클릭 시 카카오톡 채널이 열리는지 확인
-- 공지사항/이용약관 클릭 시 노션 페이지가 새 탭으로 열리는지 확인
+- 공지사항 클릭 시 노션 페이지가 새 탭으로 열리는지 확인
+- 이용약관 클릭 시 `/terms`로 이동하는지 확인
 - 프로필 수정 버튼이 disabled인지 확인
 - 로그아웃과 회원탈퇴가 화면에 노출되지 않는지 확인
 - 계정 섹션 title이 화면에 노출되지 않는지 확인
