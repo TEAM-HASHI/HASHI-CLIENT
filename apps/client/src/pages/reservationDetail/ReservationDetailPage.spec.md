@@ -189,9 +189,10 @@ ReservationDetailPage
   - `ReservationDetailActionBar`
 - page-local hook:
   - `useReservationDetailPage`
-  - `useReservationDetailQuery`
-- page-local api:
-  - `getReservationDetail`
+- feature query:
+  - `features/reservation/useReservationDetailQuery`
+- feature api:
+  - `features/reservation/getReservationDetail`
 - feature hook:
   - `features/reservation/useCancelReservationMutation`
 - feature api:
@@ -201,6 +202,8 @@ ReservationDetailPage
   - `features/reservation/formatReservationDateTime`
   - `features/reservation/formatReservationGuestSummary`
   - `features/reservation/formatReservationMonthDay`
+  - `features/reservation/createReservationReceiptInfoItems`
+  - `features/reservation/parseReservationId`
 - page-local util:
   - `createReservationDetailViewModel`
   - `reservationDetailPolicy`
@@ -231,7 +234,7 @@ ReservationDetailPage
 
 - entry:
   - 예약 정보 페이지의 상세보기 액션
-  - 예약 요청 성공 직후 진입점: `{ fromReservationRequest: true }` route state를 사용합니다.
+  - 예약 요청 완료 페이지(`/reservations/:reservationId/complete`)의 `확인 완료`: `{ fromReservationRequest: true }` route state를 사용합니다.
   - 예약 관련 진입점
 - links:
   - 홈: `ROUTES.home`

@@ -84,9 +84,9 @@ API integration tests must not depend on local `.env` values.
 Preferred page/component test pattern:
 
 ```ts
-import { getReservationDetail } from '@/pages/reservationDetail/api/getReservationDetail'
+import { getReservationDetail } from '@/features/reservation/api/getReservationDetail'
 
-vi.mock('@/pages/reservationDetail/api/getReservationDetail', () => ({
+vi.mock('@/features/reservation/api/getReservationDetail', () => ({
   getReservationDetail: vi.fn(),
 }))
 
