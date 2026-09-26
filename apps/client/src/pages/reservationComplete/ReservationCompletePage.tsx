@@ -61,14 +61,17 @@ export const ReservationCompletePage = () => {
         aria-labelledby="reservation-complete-heading"
         className="flex flex-col items-center px-10 text-center"
       >
-        <HashiPointMarkIcon aria-hidden="true" className="h-[33px] w-[30px]" />
+        <HashiPointMarkIcon
+          aria-hidden="true"
+          className="[&_path:first-child]:fill-primary-200 [&_path:nth-child(2)]:fill-primary-400 [&_path:last-child]:fill-primary-200 h-[32.667px] w-7.5"
+        />
         <h1
-          className="typo-header-3 text-primary-200 mt-4.5"
+          className="typo-header-3 text-primary-200 mt-3.75 leading-7.5"
           id="reservation-complete-heading"
         >
           식당 예약 요청 완료!
         </h1>
-        <p className="typo-body-5 text-cool-gray-500 mt-3 break-keep">
+        <p className="typo-body-5 text-cool-gray-500 mt-2 break-keep">
           접수 순으로 처리되며 검토 후 예약 확정 시
           <br />
           바로 알려드릴게요!
@@ -77,19 +80,19 @@ export const ReservationCompletePage = () => {
 
       <ReservationCompleteProgress className="mx-auto mt-12.5" />
 
-      <div aria-hidden="true" className="bg-cool-gray-50 mt-9.5 h-2" />
+      <div aria-hidden="true" className="bg-cool-gray-50 mt-10 h-2" />
 
       <section
         aria-labelledby="reservation-receipt-info-heading"
-        className="bg-cool-gray-50 mx-5 mt-7.75 rounded-[10px] px-5 pt-5 pb-12"
+        className="bg-cool-gray-50 mx-5 mt-7.75 rounded-[10px] pt-4.5 pr-5 pb-12 pl-4.5"
       >
         <h2
-          className="typo-sub-header-1 text-primary-200"
+          className="typo-sub-header-2 text-primary-200"
           id="reservation-receipt-info-heading"
         >
           예약 접수 정보
         </h2>
-        <dl className="mt-13.5 space-y-6.25">
+        <dl className="mt-14.5 space-y-6.25">
           {receiptInfoItems.map(({ label, value }) => (
             <div
               className="flex items-start justify-between gap-12"
@@ -98,7 +101,7 @@ export const ReservationCompletePage = () => {
               <dt className="typo-body-4 text-cool-gray-500 shrink-0">
                 {label}
               </dt>
-              <dd className="typo-body-3 text-primary-200 min-w-0 text-right break-keep">
+              <dd className="typo-sub-header-2 text-primary-200 min-w-0 text-right break-keep">
                 {value}
               </dd>
             </div>
@@ -106,13 +109,8 @@ export const ReservationCompletePage = () => {
         </dl>
       </section>
 
-      <div className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-4 pb-[calc(49px+var(--safe-area-bottom,0px))]">
-        <Button
-          className="h-[46px]"
-          onClick={handleConfirmClick}
-          size="lg"
-          width="full"
-        >
+      <div className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-7 pb-[calc(48px+var(--safe-area-bottom,0px))]">
+        <Button onClick={handleConfirmClick} size="lg" width="full">
           확인 완료
         </Button>
       </div>
