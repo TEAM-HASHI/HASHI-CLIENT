@@ -44,14 +44,13 @@
   - API가 한글 문구로 반환한 키워드는 알려진 review keyword ID로 변환하고, 알 수 없는 문구는 표시하지 않는다.
 - 하단에는 fixed action bar를 보여준다.
   - `삭제하기`: 삭제 확인 모달을 연다.
-  - `수정하기`: MVP 제외 기능이며, 공통 `ComingSoonDialog`를 연다.
+  - `수정하기`: `ROUTES.reviewEdit`으로 이동한다.
 - 삭제 확인 모달은 HDS `Dialog`를 사용한다.
   - `취소하기`를 누르면 모달만 닫힌다.
   - `삭제하기`를 누르면 `DELETE /api/v1/reviews/{reviewId}`를 호출한다.
   - 삭제 중에는 확인 버튼을 비활성화하고 `삭제 중`을 표시한다.
   - 삭제 성공 시 모달을 닫고 `ROUTES.myReviews`에 `tab=written` 검색 파라미터를 붙여 이동한다.
   - 삭제 실패 시 공통 mutation error toast를 표시하고 모달과 상세 내용을 유지한다.
-- 수정 준비중 안내 모달은 app shared `ComingSoonDialog`를 사용한다.
   - `확인`을 누르면 모달만 닫힌다.
   - route 이동이나 API 호출은 발생하지 않는다.
 
@@ -102,7 +101,6 @@
 - 리뷰 이미지 리스트는 접근 가능한 list label을 가진다.
 - 삭제 확인 모달은 `alertdialog`로 렌더링한다.
 - 모달의 `취소하기`/`삭제하기` 버튼은 각각 명확한 accessible name을 가진다.
-- 수정 준비중 안내 모달은 공통 `ComingSoonDialog`의 접근성 계약을 따른다.
 
 ## Verification
 
@@ -119,5 +117,5 @@
   - 삭제 모달의 `취소하기` 클릭 시 닫힘
   - 삭제 모달의 `삭제하기` 클릭 시 DELETE 성공 후 `/my-reviews?tab=written` 이동
   - DELETE 실패 시 모달과 상세 내용 유지
-  - `수정하기` 클릭 시 준비중 안내 모달 노출
+  - `수정하기` 클릭 시 `generatePath(ROUTES.reviewEdit, { reviewId })`로 이동
   - 준비중 안내 모달의 `확인` 클릭 시 닫힘

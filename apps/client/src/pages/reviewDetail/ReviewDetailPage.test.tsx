@@ -24,11 +24,17 @@ const { locationState, navigateMock, reviewIdParam } = vi.hoisted(() => ({
   reviewIdParam: { current: '5' },
 }))
 
-vi.mock('react-router-dom', () => ({
-  useLocation: () => ({ state: locationState.current }),
-  useNavigate: () => navigateMock,
-  useParams: () => ({ reviewId: reviewIdParam.current }),
-}))
+vi.mock('react-router-dom', async () => {
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
+
+  return {
+    ...actual,
+    useLocation: () => ({ state: locationState.current }),
+    useNavigate: () => navigateMock,
+    useParams: () => ({ reviewId: reviewIdParam.current }),
+  }
+})
 
 vi.mock('@/features/review/api/getMyReviewDetail', () => ({
   getMyReviewDetail: vi.fn(),
@@ -214,13 +220,13 @@ describe('ReviewDetailPage', () => {
     },
   )
 
-  it('opens the coming soon dialog from the edit button', async () => {
+  it('navigates to the review edit page from the edit button', async () => {
     renderPage()
 
     await screen.findByText('아키토리 라멘')
     fireEvent.click(screen.getByRole('button', { name: '수정하기' }))
 
-    expect(screen.getByText('서비스를 준비하고 있어요.')).toBeVisible()
+    expect(navigateMock).toHaveBeenCalledWith('/reviews/5/edit')
   })
 })
 
