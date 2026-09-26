@@ -1,12 +1,15 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ROUTES } from '@/app/router/path'
+import { HASHI_TERMS_URL } from '@/pages/mypage/constants/mypageMenu'
 import { MypagePage } from '@/pages/mypage/MypagePage'
 
-const { mockRequest } = vi.hoisted(() => ({
+const { mockNavigate, mockRequest } = vi.hoisted(() => ({
+  mockNavigate: vi.fn(),
   mockRequest: vi.fn(),
 }))
 
@@ -16,7 +19,7 @@ vi.mock('react-router-dom', async () => {
 
   return {
     ...actual,
-    useNavigate: () => vi.fn(),
+    useNavigate: () => mockNavigate,
   }
 })
 
@@ -110,5 +113,32 @@ describe('MypagePage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('boundary error')
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
+  })
+
+  it('renders the terms link as an external link', async () => {
+    renderMypagePage()
+
+    expect(
+      await screen.findByRole('link', { name: '이용약관' }),
+    ).toHaveAttribute('href', HASHI_TERMS_URL)
+  })
+
+  it('navigates to the notices page when the notice menu is pressed', async () => {
+    renderMypagePage()
+
+    fireEvent.click(await screen.findByRole('button', { name: '공지사항' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.notices)
+  })
+
+  it('preserves the account section after adding the service page', async () => {
+    renderMypagePage()
+
+    expect(
+      await screen.findByRole('heading', { name: '테스트유저님' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('계정')).toBeInTheDocument()
+    expect(screen.getByText('로그아웃')).toBeInTheDocument()
+    expect(screen.getByText('회원탈퇴')).toBeInTheDocument()
   })
 })

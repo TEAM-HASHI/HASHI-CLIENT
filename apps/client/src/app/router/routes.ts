@@ -36,6 +36,14 @@ export const appRoutes: RouteObject[] = [
             path: ROUTES.map,
             element: lazyPages.comingSoon(),
           },
+          {
+            path: ROUTES.notices,
+            element: lazyPages.notices(),
+          },
+          {
+            path: ROUTES.noticeDetail,
+            element: lazyPages.noticeDetail(),
+          },
         ],
       },
       {
