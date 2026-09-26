@@ -153,6 +153,30 @@ describe('InputReviewMain', () => {
     expect(handlePhotoUrlsChange).toHaveBeenCalledWith([])
   })
 
+  it('removes a local file without changing existing API photo URLs', () => {
+    const handlePhotoFilesChange = vi.fn()
+    const handlePhotoUrlsChange = vi.fn()
+    const localPhotoFile = new File(['image'], 'review.png', {
+      type: 'image/png',
+    })
+
+    render(
+      <InputReviewMain
+        photoFiles={[localPhotoFile]}
+        photoUrls={['https://cdn.hashi.kr/review-1.jpg']}
+        onPhotoFilesChange={handlePhotoFilesChange}
+        onPhotoUrlsChange={handlePhotoUrlsChange}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'review.png 사진 삭제' }),
+    )
+
+    expect(handlePhotoFilesChange).toHaveBeenCalledWith([])
+    expect(handlePhotoUrlsChange).not.toHaveBeenCalled()
+  })
+
   it('does not revoke an API photo URL when the input unmounts', () => {
     const { unmount } = render(
       <InputReviewMain photoUrls={['https://cdn.hashi.kr/review-1.jpg']} />,

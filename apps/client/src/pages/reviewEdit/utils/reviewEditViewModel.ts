@@ -1,6 +1,7 @@
 import type { MyReviewDetailData } from '@/features/review/api/getMyReviewDetail'
 import {
   getReviewKeywordByValue,
+  REVIEW_PHOTO_MAX_COUNT,
   type ReviewKeywordId,
 } from '@/features/review/constants'
 
@@ -76,7 +77,7 @@ export const toReviewEditViewModel = (
 
   return {
     guestSummary: formatGuestSummary(data),
-    photoUrls: data.imageUrls ?? [],
+    photoUrls: (data.imageUrls ?? []).slice(0, REVIEW_PHOTO_MAX_COUNT),
     rating: data.rating ?? 0,
     restaurantName,
     reviewText: data.content ?? '',
