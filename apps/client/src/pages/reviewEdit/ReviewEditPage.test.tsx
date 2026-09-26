@@ -101,6 +101,24 @@ describe('ReviewEditPage', () => {
     expect(screen.getByText('어른 2명 · 어린이 1명')).toBeVisible()
   })
 
+  it('limits server-provided photos to the supported maximum', async () => {
+    vi.mocked(getMyReviewDetail).mockResolvedValue({
+      ...reviewDetailResponse,
+      imageUrls: Array.from(
+        { length: 11 },
+        (_, index) => `https://cdn.hashi.kr/review-${index + 1}.jpg`,
+      ),
+    })
+    renderPage()
+
+    expect(
+      await screen.findAllByRole('img', {
+        name: /기존 리뷰 사진 \d+ 미리보기/,
+      }),
+    ).toHaveLength(10)
+    expect(screen.getByRole('button', { name: '저장하기' })).toBeEnabled()
+  })
+
   it('keeps the fourth keyword unavailable when three saved keywords are selected', async () => {
     renderPage()
 
