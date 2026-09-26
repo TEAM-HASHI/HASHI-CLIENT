@@ -18,6 +18,12 @@ const createImageFiles = (count: number) =>
       }),
   )
 
+const createPhotoUrls = (count: number) =>
+  Array.from(
+    { length: count },
+    (_, index) => `https://cdn.hashi.kr/review-${index + 1}.jpg`,
+  )
+
 const createLargeImageFile = (name = 'large-review.png') => {
   const largeImageFile = new File(['large-image'], name, {
     type: 'image/png',
@@ -125,6 +131,75 @@ describe('InputReviewMain', () => {
 
     expect(handlePhotoFilesChange).toHaveBeenCalledTimes(1)
     expect(handlePhotoFilesChange).toHaveBeenCalledWith([imageFile])
+  })
+
+  it('renders API photo URLs and removes only the selected existing image', () => {
+    const handlePhotoUrlsChange = vi.fn()
+
+    render(
+      <InputReviewMain
+        photoUrls={['https://cdn.hashi.kr/review-1.jpg']}
+        onPhotoUrlsChange={handlePhotoUrlsChange}
+      />,
+    )
+
+    expect(
+      screen.getByRole('img', { name: '기존 리뷰 사진 1 미리보기' }),
+    ).toHaveAttribute('src', 'https://cdn.hashi.kr/review-1.jpg')
+    fireEvent.click(
+      screen.getByRole('button', { name: '기존 리뷰 사진 1 사진 삭제' }),
+    )
+
+    expect(handlePhotoUrlsChange).toHaveBeenCalledWith([])
+  })
+
+  it('does not revoke an API photo URL when the input unmounts', () => {
+    const { unmount } = render(
+      <InputReviewMain photoUrls={['https://cdn.hashi.kr/review-1.jpg']} />,
+    )
+
+    unmount()
+
+    expect(revokeObjectURLMock).not.toHaveBeenCalled()
+  })
+
+  it('disables adding a photo when existing URLs and local files total ten', () => {
+    render(
+      <InputReviewMain
+        photoFiles={createImageFiles(1)}
+        photoUrls={createPhotoUrls(9)}
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: '사진을 첨부해 주세요. (선택)' }),
+    ).toBeDisabled()
+  })
+
+  it('limits local additions by the number of existing photo URLs', () => {
+    const handlePhotoFilesChange = vi.fn()
+    const firstPhotoFile = new File(['first'], 'first.png', {
+      type: 'image/png',
+    })
+    const secondPhotoFile = new File(['second'], 'second.png', {
+      type: 'image/png',
+    })
+
+    render(
+      <InputReviewMain
+        photoUrls={createPhotoUrls(9)}
+        onPhotoFilesChange={handlePhotoFilesChange}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('리뷰 사진 첨부'), {
+      target: { files: [firstPhotoFile, secondPhotoFile] },
+    })
+
+    expect(handlePhotoFilesChange).toHaveBeenCalledWith([firstPhotoFile])
+    expect(
+      screen.getByText('사진은 최대 10장까지 첨부할 수 있어요.'),
+    ).toBeVisible()
   })
 
   it('rejects photo files larger than the max size and shows an error message', () => {
