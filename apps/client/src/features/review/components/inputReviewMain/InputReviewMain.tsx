@@ -18,19 +18,24 @@ export interface InputReviewMainProps extends Omit<
 > {
   value?: string
   photoFiles?: File[]
+  photoUrls?: string[]
   onValueChange?: (value: string) => void
   onPhotoFilesChange?: (files: File[]) => void
+  onPhotoUrlsChange?: (urls: string[]) => void
   maxLength?: number
   disabled?: boolean
 }
 
 const EMPTY_PHOTO_FILES: File[] = []
+const EMPTY_PHOTO_URLS: string[] = []
 
 export const InputReviewMain = ({
   value = '',
   photoFiles = EMPTY_PHOTO_FILES,
+  photoUrls = EMPTY_PHOTO_URLS,
   onValueChange,
   onPhotoFilesChange,
+  onPhotoUrlsChange,
   maxLength = REVIEW_TEXT_MAX_LENGTH,
   disabled = false,
   className,
@@ -52,7 +57,9 @@ export const InputReviewMain = ({
   } = useReviewPhotoUploader({
     disabled,
     onPhotoFilesChange,
+    onPhotoUrlsChange,
     photoFiles,
+    photoUrls,
   })
   const reviewTextLength = value.length
   const hasStartedValidation = hasReviewTextBlurred || reviewTextLength > 0

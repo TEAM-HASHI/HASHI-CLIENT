@@ -249,6 +249,15 @@ describe('MyReviewsPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/reviews/31')
   })
 
+  it('navigates to the review edit page from the written review menu', async () => {
+    renderPage(`${ROUTES.myReviews}?tab=written`)
+
+    fireEvent.click((await screen.findAllByLabelText(/리뷰 메뉴 열기/))[0])
+    fireEvent.click(screen.getByRole('menuitem', { name: '수정하기' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/reviews/31/edit')
+  })
+
   it('deletes through the API and refreshes the written list', async () => {
     vi.mocked(getMyReviews)
       .mockResolvedValueOnce({ content: [writtenReviews[0]], hasNext: false })

@@ -46,7 +46,7 @@ Jira: HASHI-83, HASHI-114
 - [x] 더보기 메뉴는 `수정하기`, `삭제하기` 액션을 보여준다.
 - [x] 더보기 메뉴는 한 번에 하나만 열리며, 메뉴 바깥 영역을 누르면 닫힌다.
 - [x] 더보기 메뉴는 탭 전환 또는 `Escape` 입력 시 닫힌다.
-- [x] `수정하기`를 누르면 준비중 모달을 보여준다.
+- [x] `수정하기`를 누르면 해당 리뷰 수정 페이지로 이동한다.
 - [x] `삭제하기`를 누르면 삭제 확인 모달을 보여준다.
 - [x] 삭제 확인 모달에서 `삭제하기`를 누르면 삭제 API를 호출한다.
 - [x] 삭제 성공 후 작성 가능 예약 목록과 작성한 리뷰 목록을 갱신한다.
@@ -109,8 +109,6 @@ Jira: HASHI-83, HASHI-114
 - local state:
   - `openedMenuReviewId`
     - owner: `useMyReviewsPage`
-  - `isEditComingSoonDialogOpen`
-    - owner: `useMyReviewsPage`
   - `isDeleteDialogOpen`
     - owner: `WrittenReviewCard`
 - URL state:
@@ -142,7 +140,6 @@ MyReviewsPage
     ReviewMoreMenu
     ReviewDeleteConfirmDialog
       Dialog
-  ComingSoonDialog
 ```
 
 ## Component Mapping
@@ -157,9 +154,7 @@ MyReviewsPage
   - `Thumbnail`
 - feature component:
   - `ReviewDeleteConfirmDialog`
-- app shared component:
-  - `ComingSoonDialog`
-  - `Empty`
+- `Empty`
 - page-local component:
   - `MyReviewTotalCount`
   - `ReviewWritableCard`
@@ -180,7 +175,8 @@ MyReviewsPage
   - 리뷰 작성 페이지 이동 시 `reservationId`
 - links:
   - 리뷰 작성 CTA: `generatePath(ROUTES.reviewNew, { restaurantId })?reservationId={reservationId}`
-  - 작성한 리뷰 카드: `generatePath(ROUTES.reviewDetail, { reviewId })`
+- 작성한 리뷰 카드: `generatePath(ROUTES.reviewDetail, { reviewId })`
+  - 수정하기: `generatePath(ROUTES.reviewEdit, { reviewId })`
   - empty CTA: `ROUTES.todayRestaurant`
 - back behavior:
   - `ROUTES.mypage`
