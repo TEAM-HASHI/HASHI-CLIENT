@@ -8,3 +8,4 @@ apps/client/src/shared/api/generated/openapi.ts
 turbo/generators/templates/**/*.hbs
 .serena/
 .playwright-mcp/
+.superpowers/
