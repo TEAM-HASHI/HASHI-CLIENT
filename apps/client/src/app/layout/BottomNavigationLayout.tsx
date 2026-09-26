@@ -6,7 +6,7 @@ import {
   SaveIcon,
 } from '@hashi/hds-icons'
 import { BottomNavigation, type BottomNavigationItem } from '@hashi/hds-ui'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { matchPath, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 
@@ -59,7 +59,10 @@ const getBottomNavigationValue = (
     return 'map'
   }
 
-  if (targetPathname === ROUTES.mypage) {
+  if (
+    targetPathname === ROUTES.mypage ||
+    matchPath({ path: ROUTES.notices, end: false }, targetPathname)
+  ) {
     return 'mypage'
   }
 
