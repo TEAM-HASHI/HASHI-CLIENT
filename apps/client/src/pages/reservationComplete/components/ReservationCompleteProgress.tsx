@@ -45,16 +45,11 @@ export const ReservationCompleteProgress = ({
   return (
     <ol
       aria-label="예약 진행 단계"
-      className={cn('relative h-13 w-[256px]', className)}
+      className={cn(
+        "after:bg-warm-gray-50 relative h-13 w-[256px] before:absolute before:top-[13.5px] before:left-4.25 before:h-px before:w-26.5 before:bg-black before:content-[''] after:absolute after:top-[13.5px] after:left-31.25 after:h-px after:w-26.5 after:content-['']",
+        className,
+      )}
     >
-      <span
-        aria-hidden="true"
-        className="absolute top-[13.5px] left-4.25 h-px w-26.5 bg-black"
-      />
-      <span
-        aria-hidden="true"
-        className="bg-warm-gray-50 absolute top-[13.5px] left-31.25 h-px w-26.5"
-      />
       {RESERVATION_COMPLETE_STEPS.map(
         ({ id, label, positionClassName, status }) => (
           <li
