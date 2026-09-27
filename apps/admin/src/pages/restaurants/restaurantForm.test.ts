@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createRestaurantForm,
   createRestaurantFormFromPrefill,
+  getDuplicateRestaurantField,
   toCreateRestaurantBody,
   toUpdateRestaurantBody,
   validateRestaurantForm,
@@ -14,6 +15,7 @@ import {
   GENRE_OPTIONS,
   PLACE_TYPE_OPTIONS,
 } from '@/pages/restaurants/restaurantOptions'
+import { AdminApiRequestError } from '@/shared/api/request'
 
 const replacements: RestaurantReplacementFlags = {
   images: false,
@@ -241,5 +243,29 @@ describe('restaurant form validation', () => {
     expect(errors.priceRange).toBeDefined()
     expect(errors.businessHours).toBeDefined()
     expect(errors.uploads).toBeDefined()
+  })
+})
+
+describe('restaurant duplicate errors', () => {
+  const conflict = (code: string) =>
+    new AdminApiRequestError(409, {
+      success: false,
+      code,
+      message: '중복',
+      data: null,
+      timestamp: '2026-09-27T00:00:00',
+      path: '/api/v1/admin/restaurants',
+    })
+
+  it('maps duplicate conflict codes to the basic step field', () => {
+    expect(getDuplicateRestaurantField(conflict('RESTAURANT-020'))).toBe('name')
+    expect(getDuplicateRestaurantField(conflict('RESTAURANT-021'))).toBe(
+      'address',
+    )
+  })
+
+  it('ignores other errors', () => {
+    expect(getDuplicateRestaurantField(conflict('MEDIA-006'))).toBeUndefined()
+    expect(getDuplicateRestaurantField(new Error('network'))).toBeUndefined()
   })
 })

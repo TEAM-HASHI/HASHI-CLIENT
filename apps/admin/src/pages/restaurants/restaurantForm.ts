@@ -1,4 +1,5 @@
 import type { RestaurantPrefillView } from '@/pages/restaurants/restaurantViewModel'
+import { AdminApiRequestError } from '@/shared/api/request'
 import type {
   CreateRestaurantBody,
   UpdateRestaurantBody,
@@ -266,6 +267,19 @@ export const toUpdateRestaurantBody = (
 
   return body
 }
+
+// 서버 중복 검사(#230) 409 코드 → 기본 정보 단계에서 고칠 필드
+const DUPLICATE_FIELD_BY_CODE: Partial<
+  Record<string, keyof RestaurantScalarFields>
+> = {
+  'RESTAURANT-020': 'name',
+  'RESTAURANT-021': 'address',
+}
+
+export const getDuplicateRestaurantField = (error: unknown) =>
+  error instanceof AdminApiRequestError
+    ? DUPLICATE_FIELD_BY_CODE[error.responseBody?.code ?? '']
+    : undefined
 
 const hasInvalidLength = (value: string, max: number) =>
   value.trim().length === 0 || value.trim().length > max

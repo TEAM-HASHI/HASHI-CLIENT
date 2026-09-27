@@ -5,12 +5,14 @@ import { useRestaurantPrefillQuery } from '@/pages/restaurants/queries/useRestau
 import {
   createRestaurantForm,
   createRestaurantFormFromPrefill,
+  getDuplicateRestaurantField,
   toCreateRestaurantBody,
   toUpdateRestaurantBody,
   validateRestaurantForm,
   type FormUploadStatus,
   type RestaurantBusinessHourForm,
   type RestaurantDirtyFields,
+  type RestaurantFormErrors,
   type RestaurantFormState,
   type RestaurantMenuForm,
   type RestaurantReplacementFlags,
@@ -139,9 +141,19 @@ export const RestaurantFormDrawer = ({
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
+    // 식당명·주소 중복(409)은 입력한 기본 정보 단계로 돌려보내 해당 칸을 표시한다
+    const onError = (error: Error) => {
+      const field = getDuplicateRestaurantField(error)
+      if (!field) return
+      activeMutation.reset()
+      setErrors({ [field]: error.message })
+      setStep(0)
+    }
+
     if (mode === 'create') {
       createMutation.mutate(toCreateRestaurantBody(form), {
         onSuccess: onClose,
+        onError,
       })
       return
     }
@@ -152,7 +164,7 @@ export const RestaurantFormDrawer = ({
           restaurantId,
           input: toUpdateRestaurantBody(form, dirtyFields, replacements),
         },
-        { onSuccess: onClose },
+        { onSuccess: onClose, onError },
       )
     } catch (error) {
       setErrors({ submit: getErrorMessage(error) })
@@ -262,7 +274,9 @@ export const RestaurantFormDrawer = ({
               {getErrorMessage(activeMutation.error)}
             </p>
           ) : null}
-          {step === 0 ? <BasicStep form={form} setScalar={setScalar} /> : null}
+          {step === 0 ? (
+            <BasicStep form={form} errors={errors} setScalar={setScalar} />
+          ) : null}
           {step === 1 ? (
             <MediaStep
               mode={mode}
@@ -310,9 +324,11 @@ export const RestaurantFormDrawer = ({
 
 const BasicStep = ({
   form,
+  errors,
   setScalar,
 }: {
   form: RestaurantFormState
+  errors: RestaurantFormErrors
   setScalar: <TKey extends keyof RestaurantScalarFields>(
     key: TKey,
     value: RestaurantScalarFields[TKey],
@@ -324,6 +340,7 @@ const BasicStep = ({
         label="식당명"
         value={form.name}
         maxLength={100}
+        invalid={Boolean(errors.name)}
         onChange={(value) => setScalar('name', value)}
       />
       <Field
@@ -342,6 +359,7 @@ const BasicStep = ({
         label="주소"
         value={form.address}
         maxLength={255}
+        invalid={Boolean(errors.address)}
         onChange={(value) => setScalar('address', value)}
       />
       <AdminSelect
@@ -774,6 +792,7 @@ const Field = ({
   multiline = false,
   placeholder,
   disabled = false,
+  invalid = false,
   onChange,
 }: {
   label: string
@@ -783,6 +802,7 @@ const Field = ({
   multiline?: boolean
   placeholder?: string
   disabled?: boolean
+  invalid?: boolean
   onChange: (value: string) => void
 }) => (
   <label className="flex min-w-0 flex-col gap-1">
@@ -795,8 +815,9 @@ const Field = ({
         placeholder={placeholder}
         disabled={disabled}
         rows={5}
+        aria-invalid={invalid || undefined}
         onChange={(event) => onChange(event.target.value)}
-        className="border-cool-gray-100 focus:border-primary-200 disabled:bg-cool-gray-50 rounded-md border px-3 py-2 text-sm outline-none"
+        className="border-cool-gray-100 focus:border-primary-200 disabled:bg-cool-gray-50 aria-invalid:border-error rounded-md border px-3 py-2 text-sm outline-none"
       />
     ) : (
       <input
@@ -807,8 +828,9 @@ const Field = ({
         maxLength={maxLength}
         placeholder={placeholder}
         disabled={disabled}
+        aria-invalid={invalid || undefined}
         onChange={(event) => onChange(event.target.value)}
-        className="border-cool-gray-100 focus:border-primary-200 disabled:bg-cool-gray-50 h-10 rounded-md border px-3 text-sm outline-none"
+        className="border-cool-gray-100 focus:border-primary-200 disabled:bg-cool-gray-50 aria-invalid:border-error h-10 rounded-md border px-3 text-sm outline-none"
       />
     )}
   </label>

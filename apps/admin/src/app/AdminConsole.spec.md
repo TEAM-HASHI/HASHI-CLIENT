@@ -68,6 +68,7 @@
 - 해시태그 입력은 쉼표 구분 문자열을 그대로 유지하고, create/update payload 생성 시 trim한 string[]로 변환합니다. 빈 항목은 제외합니다.
 - 공개 목록에 없는 식당은 numeric ID로 직접 수정·비공개 처리할 수 있습니다.
 - delete는 백엔드 soft delete임을 확인 문구에 표시합니다.
+- 식당명·주소 중복 409(`RESTAURANT-020`·`RESTAURANT-021`)는 기본 정보 단계로 돌아가 해당 필드를 표시하고 서버 message를 보여줍니다.
 
 ## Magazines
 
