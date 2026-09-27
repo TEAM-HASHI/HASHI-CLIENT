@@ -30,7 +30,7 @@ export const Empty = ({
         className="mb-3 h-19 w-25.25 shrink-0"
         src={emptyImage}
       />
-      <p className="typo-header-3 text-primary-200 leading-normal">
+      <p className="typo-header-3 text-primary-200 leading-[1.5]">
         {description}
       </p>
       <Button
