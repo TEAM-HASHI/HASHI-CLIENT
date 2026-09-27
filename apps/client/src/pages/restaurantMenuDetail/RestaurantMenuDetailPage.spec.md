@@ -36,10 +36,10 @@
 - [ ] 다른 메뉴 목록은 식당 메뉴 목록 API에 `excludeMenuId`를 전달해 조회하고, 서버 `main` 값이 true인 메뉴에만 대표 배지를 표시합니다.
 - [ ] 다른 메뉴 총 개수는 메뉴 상세 API의 `otherMenuCount`를 기준으로 표시합니다.
 - [ ] 다른 메뉴 카드를 누르면 같은 route의 다른 `menuId`로 이동합니다.
-- [ ] 하단 fixed bar에는 좋아요 영역과 `예약하기`가 표시됩니다.
-- [ ] 비로그인 사용자가 예약하기 또는 좋아요를 누르면 로그인 유도 바텀시트를 표시합니다.
+- [ ] 하단 fixed bar에는 36px `SaveBlankIcon` 북마크와 저장 수, `예약하기`가 표시됩니다. 북마크 버튼의 접근성 이름은 `저장하기`입니다.
+- [ ] 비로그인 사용자가 예약하기 또는 저장하기를 누르면 로그인 유도 바텀시트를 표시합니다.
 - [ ] 로그인 사용자가 예약하기를 누르면 `ROUTES.restaurantReservationNew`로 이동합니다.
-- [ ] 로그인 사용자가 좋아요를 누르면 준비중 모달을 표시합니다.
+- [ ] 로그인 사용자가 저장하기를 누르면 준비중 모달을 표시합니다. 저장 API 연동은 후속 작업입니다.
 - [ ] `location.state.source`가 `today`이면 탭/뒤로가기 fallback은 `/restaurants/today`로 이동합니다.
 - [ ] `location.state.source`가 없거나 `detail`이면 탭/뒤로가기 fallback은 `/restaurants/:restaurantId`로 이동합니다.
 - [ ] 매장 정보/사진/리뷰 탭 이동 시 destination route state에 `activeTab`을 넘깁니다.
@@ -55,7 +55,7 @@
 - response usage:
   - Header 식당명
   - 리뷰 탭 count
-  - 하단 좋아요 count는 MVP 범위에서 `0` 고정
+  - 하단 저장 수는 API 연동 전 기존 임시 값 `0` 유지
 - loading state: page loading
 - error state: 404는 `NotFoundPage`, 나머지는 ErrorBoundary
 

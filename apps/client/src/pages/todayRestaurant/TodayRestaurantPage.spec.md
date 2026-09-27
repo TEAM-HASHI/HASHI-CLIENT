@@ -40,12 +40,12 @@
 - [ ] 메뉴/사진/리뷰 탭 선택 시 탭바가 Header 바로 아래에 붙은 위치로 부드럽게 스크롤되어 해당 탭 콘텐츠를 초기 화면처럼 보여줍니다.
 - [ ] 매장 정보 탭 선택 시 페이지 최상단으로 부드럽게 스크롤됩니다.
 - [ ] 탭 선택 시 active underline은 선택된 탭으로 부드럽게 이동합니다.
-- [ ] 하단 fixed bar에는 좋아요 영역, `다시 추천 받기`, `예약하기`가 표시됩니다.
-- [ ] 찜 기능은 MVP 범위에서 제외되므로 하트 수는 `0`으로 표시하고, 로그인 사용자가 좋아요를 누르면 준비중 모달을 표시합니다.
+- [ ] 하단 fixed bar에는 36px `SaveBlankIcon` 북마크와 저장 수, `다시 추천 받기`, `예약하기`가 표시됩니다. 북마크 버튼의 접근성 이름은 `저장하기`입니다.
+- [ ] 저장 API 연동은 후속 작업입니다. 기존 임시 건수 `0`을 유지하며, 로그인 사용자가 저장하기를 누르면 준비중 모달을 표시합니다.
 - [ ] 메뉴 카드 클릭 시 `ROUTES.restaurantMenuDetail`로 이동합니다.
 - [ ] 공유 클릭 시 오늘의 식당 대표 링크 `/restaurants/today`를 현재 origin 기준 absolute URL로 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
 - [ ] 식당명 복사 클릭 시 현재 표시 중인 한국어 식당명을 클립보드에 복사하고, 복사 아이콘과 `식당명이 복사되었어요` Toast를 표시합니다.
-- [ ] 비로그인 사용자가 예약하기 또는 좋아요를 누르면 로그인 유도 바텀시트를 표시합니다.
+- [ ] 비로그인 사용자가 예약하기 또는 저장하기를 누르면 로그인 유도 바텀시트를 표시합니다.
 - [ ] 로그인 사용자가 예약하기를 누르면 현재 오늘의 식당 `restaurantId`를 사용해 `ROUTES.restaurantReservationNew`로 이동합니다.
 - [ ] `다시 추천 받기`는 추후 API 연결 전까지 no-op handler로 둡니다.
 - [ ] 리뷰 작성 CTA 클릭 시 비방문자 안내 모달을 열 수 있습니다.
@@ -222,7 +222,7 @@ TodayRestaurantPage
 - shared hook:
   - `useInfiniteScrollTrigger`
 - icon:
-  - `BackIcon`, `HeartBlankIcon`, `LocationIcon`, `ClockIcon`, `MoneyIcon`, `PencilIcon`, `CloseSmallIcon`
+  - `BackIcon`, `SaveBlankIcon`, `LocationIcon`, `ClockIcon`, `MoneyIcon`, `PencilIcon`, `CloseSmallIcon`
 
 ## Navigation
 

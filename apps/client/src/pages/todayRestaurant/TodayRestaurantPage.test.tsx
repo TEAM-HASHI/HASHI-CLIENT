@@ -498,7 +498,7 @@ describe('TodayRestaurantPage', () => {
   it('opens login bottom sheet for unauthenticated like action', async () => {
     renderTodayRestaurantPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: '좋아요' }))
+    fireEvent.click(await screen.findByRole('button', { name: '저장하기' }))
 
     expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
     expect(
@@ -511,7 +511,7 @@ describe('TodayRestaurantPage', () => {
 
     renderTodayRestaurantPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: '좋아요' }))
+    fireEvent.click(await screen.findByRole('button', { name: '저장하기' }))
 
     expect(
       screen.getByRole('heading', { name: '서비스를 준비하고 있어요.' }),
