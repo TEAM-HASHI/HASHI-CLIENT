@@ -29,6 +29,10 @@ const API_DAY_BY_DATE_DAY = [
 ] as const
 
 type BusinessHoursViewModel = RestaurantDetail['businessHours'][number]
+type OpenBusinessHours = RestaurantStoreInformation['businessHours'][number] & {
+  closeTime: string
+  openTime: string
+}
 
 const formatNumber = (value: number) => value.toLocaleString('ko-KR')
 
@@ -68,22 +72,22 @@ const formatBusinessHours = (
     : null
 }
 
+const hasOpenBusinessHours = (
+  hours: RestaurantStoreInformation['businessHours'][number] | undefined,
+): hours is OpenBusinessHours =>
+  Boolean(hours && !hours.closed && hours.openTime && hours.closeTime)
+
 const formatBusinessHoursSummary = (
   businessHours: RestaurantStoreInformation['businessHours'],
+  now: Date,
 ) => {
-  const today = new Date()
-  const todayApiDay = API_DAY_BY_DATE_DAY[today.getDay()]
+  const todayApiDay = API_DAY_BY_DATE_DAY[now.getDay()]
   const todayHours = businessHours.find(
     (hours) => normalizeDayOfWeek(hours.dayOfWeek) === todayApiDay,
   )
-  const dateLabel = formatDateLabel(today)
+  const dateLabel = formatDateLabel(now)
 
-  if (
-    !todayHours ||
-    todayHours.closed ||
-    !todayHours.openTime ||
-    !todayHours.closeTime
-  ) {
+  if (!hasOpenBusinessHours(todayHours)) {
     return `${dateLabel} 휴무`
   }
 
@@ -92,13 +96,18 @@ const formatBusinessHoursSummary = (
 
 const formatLastOrderTime = (
   businessHours: RestaurantStoreInformation['businessHours'],
+  now: Date,
 ) => {
-  const todayApiDay = API_DAY_BY_DATE_DAY[new Date().getDay()]
+  const todayApiDay = API_DAY_BY_DATE_DAY[now.getDay()]
   const todayHours = businessHours.find(
     (hours) => normalizeDayOfWeek(hours.dayOfWeek) === todayApiDay,
   )
 
-  return todayHours?.closeTime ?? '영업시간 정보 없음'
+  if (!hasOpenBusinessHours(todayHours)) {
+    return '영업시간 정보 없음'
+  }
+
+  return todayHours.closeTime
 }
 
 const formatPriceRange = (
@@ -197,6 +206,7 @@ interface CreateRestaurantDetailViewModelParams {
   averageRating?: number
   reviewCount?: number
   ratingDistribution?: RatingDistributionResponse
+  now?: Date
 }
 
 export const createRestaurantDetailViewModel = ({
@@ -207,6 +217,7 @@ export const createRestaurantDetailViewModel = ({
   averageRating,
   reviewCount,
   ratingDistribution,
+  now = new Date(),
 }: CreateRestaurantDetailViewModelParams): RestaurantDetail => {
   const businessHours = storeInformation.businessHours.reduce<
     RestaurantDetail['businessHours']
@@ -232,10 +243,11 @@ export const createRestaurantDetailViewModel = ({
     address: summary.address,
     businessHoursSummary: formatBusinessHoursSummary(
       storeInformation.businessHours,
+      now,
     ),
     deposit: formatWon(summary.reservationFee),
     detailDescription: storeInformation.description ?? summary.summary ?? '',
-    lastOrderTime: formatLastOrderTime(storeInformation.businessHours),
+    lastOrderTime: formatLastOrderTime(storeInformation.businessHours, now),
     businessHours,
     priceRange: formatPriceRange(storeInformation.priceRange),
     heroImages: summary.imageUrls,

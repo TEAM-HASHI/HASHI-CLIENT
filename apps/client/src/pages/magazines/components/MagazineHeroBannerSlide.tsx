@@ -1,3 +1,5 @@
+import { Banner } from '@hashi/hds-ui'
+
 import type { MagazineHeroBanner } from '@/pages/magazines/types'
 
 interface Props {
@@ -5,9 +7,7 @@ interface Props {
 }
 
 export const MagazineHeroBannerSlide = ({ banner }: Props) => {
-  const content = (
-    <img alt="" className="size-full object-cover" src={banner.imageUrl} />
-  )
+  const content = <Banner imageAlt="" imageSrc={banner.imageUrl} />
 
   if (!banner.instagramUrl) {
     return (

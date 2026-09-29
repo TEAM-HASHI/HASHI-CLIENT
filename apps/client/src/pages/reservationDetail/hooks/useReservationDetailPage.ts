@@ -1,13 +1,9 @@
 import { useRef, useState } from 'react'
-import { showToast } from '@hashi/hds-ui'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import {
-  syncCanceledReservationCache,
-  useCancelReservationMutation,
-} from '@/features/reservation'
+import { useCancelReservationMutation } from '@/features/reservation'
 import { reservationNotices } from '@/pages/reservationDetail/constants/reservationNotice'
 import {
   reservationDetailQueryKey,
@@ -42,7 +38,21 @@ export const useReservationDetailPage = () => {
   const params = useParams<{ reservationId: string }>()
   const reservationId = parseReservationId(params.reservationId)
   const reservationDetailQuery = useReservationDetailQuery(reservationId)
-  const cancelReservationMutation = useCancelReservationMutation()
+  const cancelReservationMutation = useCancelReservationMutation({
+    onCanceled: ({ reservation }) => {
+      if (reservationId === null) {
+        return
+      }
+
+      const queryKey = reservationDetailQueryKey(reservationId)
+
+      queryClient.setQueryData(queryKey, reservation)
+      void queryClient.invalidateQueries({
+        queryKey,
+        refetchType: 'inactive',
+      })
+    },
+  })
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const isCancelRequestLockedRef = useRef(false)
   const reservationDetail = reservationDetailQuery.data
@@ -89,21 +99,8 @@ export const useReservationDetailPage = () => {
     isCancelRequestLockedRef.current = true
 
     try {
-      const canceledReservation =
-        await cancelReservationMutation.mutateAsync(reservationId)
-      const queryKey = reservationDetailQueryKey(reservationId)
+      await cancelReservationMutation.mutateAsync(reservationId)
 
-      queryClient.setQueryData(queryKey, canceledReservation.reservation)
-      void queryClient.invalidateQueries({
-        queryKey,
-        refetchType: 'inactive',
-      })
-      await syncCanceledReservationCache(
-        queryClient,
-        canceledReservation.reservation,
-      )
-
-      showToast({ children: canceledReservation.message })
       setIsCancelDialogOpen(false)
       navigate(`${ROUTES.myReservations}?status=CANCELED`)
     } catch {

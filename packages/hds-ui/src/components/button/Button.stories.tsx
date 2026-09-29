@@ -7,7 +7,7 @@ const meta = {
   component: Button,
   tags: ['autodocs'],
   args: {
-    children: '탈퇴하기',
+    children: '버튼',
     type: 'button',
     variant: 'primary',
     size: 'lg',
@@ -19,7 +19,7 @@ const meta = {
     },
     variant: {
       control: 'select',
-      options: ['primary', 'neutral'],
+      options: ['primary', 'neutral', 'destructive', 'ghost'],
     },
     size: {
       control: 'select',
@@ -57,8 +57,10 @@ export const Default: Story = {}
 export const Variants: Story = {
   render: () => (
     <div className="flex flex-wrap gap-3">
-      <Button variant="neutral">돌아가기</Button>
-      <Button variant="primary">탈퇴하기</Button>
+      <Button variant="primary">Primary</Button>
+      <Button variant="neutral">Neutral</Button>
+      <Button variant="destructive">Destructive</Button>
+      <Button variant="ghost">Ghost</Button>
     </div>
   ),
 }
@@ -76,7 +78,7 @@ export const Sizes: Story = {
 
 export const FullWidth: Story = {
   args: {
-    children: '탈퇴하기',
+    children: '전체 너비 버튼',
     width: 'full',
   },
   decorators: [
@@ -88,31 +90,55 @@ export const FullWidth: Story = {
   ],
 }
 
-export const WithdrawalActions: Story = {
+export const ActionPair: Story = {
   render: () => (
-    <div className="flex w-[25.125rem] max-w-full gap-[0.8125rem]">
-      <Button variant="neutral" size="lg" width="full">
-        돌아가기
+    <div className="flex w-[22.0625rem] max-w-full gap-4">
+      <Button variant="destructive" size="lg" width="full">
+        삭제하기
       </Button>
-      <Button variant="primary" size="lg" width="full">
-        탈퇴하기
+      <Button variant="neutral" size="lg" width="full">
+        수정하기
       </Button>
     </div>
   ),
 }
 
-export const Disabled: Story = {
-  args: {
-    children: 'Disabled',
-    disabled: true,
-  },
+export const DisabledVariants: Story = {
+  render: () => (
+    <div className="flex flex-wrap gap-3">
+      <Button disabled variant="primary">
+        Primary
+      </Button>
+      <Button disabled variant="neutral">
+        Neutral
+      </Button>
+      <Button disabled variant="destructive">
+        Destructive
+      </Button>
+      <Button disabled variant="ghost">
+        Ghost
+      </Button>
+    </div>
+  ),
 }
 
-export const Loading: Story = {
-  args: {
-    children: '처리 중',
-    loading: true,
-  },
+export const LoadingVariants: Story = {
+  render: () => (
+    <div className="flex flex-wrap gap-3">
+      <Button loading variant="primary">
+        처리 중
+      </Button>
+      <Button loading variant="neutral">
+        처리 중
+      </Button>
+      <Button loading variant="destructive">
+        처리 중
+      </Button>
+      <Button loading variant="ghost">
+        처리 중
+      </Button>
+    </div>
+  ),
 }
 
 export const WithLeftIcon: Story = {

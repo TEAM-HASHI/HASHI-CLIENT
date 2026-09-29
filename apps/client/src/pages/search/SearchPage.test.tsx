@@ -223,6 +223,27 @@ const renderSearchPageWithRoutes = (initialEntry: string = ROUTES.search) => {
   )
 }
 
+const renderSearchPageWithHistory = (
+  initialEntries: string[],
+  initialIndex: number,
+) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  })
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={initialEntries} initialIndex={initialIndex}>
+        <SearchPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+}
+
 const createDeferred = <T,>() => {
   let resolve!: (value: T) => void
   const promise = new Promise<T>((promiseResolve) => {
@@ -345,7 +366,7 @@ describe('SearchPage', () => {
     expect(screen.getAllByRole('listitem')).toHaveLength(10)
     expect(
       screen.getAllByRole('listitem')[0].querySelector('a')?.firstChild,
-    ).toHaveClass('bg-warm-gray-100')
+    ).toHaveClass('bg-warm-gray-50')
     expect(window.localStorage.getItem('hashi:search:recent-keywords')).toBe(
       JSON.stringify(['아끼소바']),
     )
@@ -403,6 +424,36 @@ describe('SearchPage', () => {
     expect(mockGetSearchKeywordRecommendations).not.toHaveBeenCalled()
   })
 
+  it('synchronizes the search input when history changes between search URLs', async () => {
+    const user = userEvent.setup()
+
+    renderSearchPageWithHistory(
+      [
+        `${ROUTES.search}?keyword=%EC%8A%A4%EC%8B%9C`,
+        `${ROUTES.search}?keyword=%EC%95%84%EB%81%BC%EC%86%8C%EB%B0%94`,
+      ],
+      1,
+    )
+
+    expect(
+      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+    ).toHaveValue('아끼소바')
+    expect(
+      await screen.findByText(
+        '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
+      ),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
+      ).toHaveValue('스시')
+    })
+    expect(await screen.findByText('스시 하루')).toBeInTheDocument()
+  })
+
   it('renders search result skeletons with secondary color while searching', async () => {
     const user = userEvent.setup()
     const searchDeferred =
@@ -456,7 +507,7 @@ describe('SearchPage', () => {
     expect(mockGetSearchKeywordRecommendations).toHaveBeenCalledTimes(1)
   })
 
-  it('shows DefaultImage when a search result image request fails', async () => {
+  it('shows ImageFallback when a search result image request fails', async () => {
     const user = userEvent.setup()
 
     renderSearchPage()
@@ -472,7 +523,9 @@ describe('SearchPage', () => {
 
     expect(image).not.toBeInTheDocument()
     expect(
-      screen.getAllByRole('listitem')[0].querySelector('.bg-warm-gray-100'),
+      screen
+        .getAllByRole('listitem')[0]
+        .querySelector('[data-slot="image-fallback"]'),
     ).toBeInTheDocument()
   })
 

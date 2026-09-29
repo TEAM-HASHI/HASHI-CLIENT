@@ -3,10 +3,10 @@ import { renderHook, waitFor } from '@testing-library/react'
 import type { PropsWithChildren } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMyReviews } from '@/pages/myReviews/api/myReviewsApi'
+import { getMyReviews } from '@/features/review/api/getMyReviews'
 import { useMyReviewsInfiniteQuery } from '@/pages/myReviews/queries/myReviewsQueries'
 
-vi.mock('@/pages/myReviews/api/myReviewsApi', () => ({
+vi.mock('@/features/review/api/getMyReviews', () => ({
   getMyReviews: vi.fn(),
 }))
 

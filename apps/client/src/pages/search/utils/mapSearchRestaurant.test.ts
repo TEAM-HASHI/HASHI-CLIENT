@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { mapSearchRestaurant } from '@/pages/search/utils/mapSearchRestaurant'
+import {
+  mapSearchRestaurant,
+  mapSearchRestaurantPages,
+} from '@/pages/search/utils/mapSearchRestaurant'
 
 describe('mapSearchRestaurant', () => {
   it('maps restaurant list response fields to search result view data', () => {
@@ -82,5 +85,39 @@ describe('mapSearchRestaurant', () => {
         summary: '상세 링크를 만들 수 없는 식당',
       }),
     ).toBeNull()
+  })
+
+  it('flattens query pages and drops results that cannot link to a detail page', () => {
+    expect(
+      mapSearchRestaurantPages([
+        {
+          hasNext: true,
+          restaurants: [
+            {
+              restaurantId: 1,
+              name: '스시 하루',
+              rating: 4.7,
+            },
+          ],
+        },
+        {
+          hasNext: false,
+          restaurants: [
+            {
+              name: '식별자 없는 식당',
+            },
+            {
+              restaurantId: 2,
+              name: '라멘 하시',
+              rating: 4.2,
+            },
+          ],
+        },
+      ]),
+    ).toMatchObject([
+      { id: '1', name: '스시 하루', rating: 4.7 },
+      { id: '2', name: '라멘 하시', rating: 4.2 },
+    ])
+    expect(mapSearchRestaurantPages(undefined)).toEqual([])
   })
 })

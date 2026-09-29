@@ -37,7 +37,9 @@ describe('Avatar', () => {
     render(<Avatar />)
 
     expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
-    expect(screen.getByTestId('avatar-placeholder')).toHaveClass('block')
+    expect(screen.getByTestId('avatar-placeholder')).toHaveClass(
+      'bg-warm-gray-50',
+    )
   })
 
   it('renders a placeholder when image loading fails', () => {
@@ -70,12 +72,13 @@ describe('Avatar', () => {
     )
   })
 
-  it('applies placeholder background class', () => {
+  it('renders the guest artwork as the placeholder', () => {
     render(<Avatar />)
 
-    expect(screen.getByTestId('avatar-placeholder')).toHaveClass(
-      'bg-cool-gray-100',
-    )
+    const mark = screen.getByTestId('avatar-placeholder').querySelector('svg')
+
+    expect(mark).toBeInTheDocument()
+    expect(mark).toHaveClass('h-[52.22%]', 'w-[47.78%]', 'text-primary-100')
   })
 
   it('hides placeholder from assistive technologies', () => {

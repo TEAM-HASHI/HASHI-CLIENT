@@ -82,7 +82,7 @@ describe('ReviewImageViewer', () => {
     )
   })
 
-  it('renders default image when viewer image fails to load', () => {
+  it('renders ImageFallback when viewer image fails to load', () => {
     render(
       <ReviewImageViewer
         imageUrls={['/review-1.jpg']}
@@ -91,17 +91,19 @@ describe('ReviewImageViewer', () => {
       />,
     )
 
-    expect(screen.queryByTestId('review-image-viewer-default-image')).toBeNull()
+    const viewerImageContainer = screen.getByTestId('review-image-viewer-image')
 
-    const viewerImage = screen
-      .getByTestId('review-image-viewer-image')
-      .querySelector('img')
+    expect(
+      viewerImageContainer.querySelector('[data-slot="image-fallback"]'),
+    ).toBeNull()
+
+    const viewerImage = viewerImageContainer.querySelector('img')
     expect(viewerImage).toBeInTheDocument()
 
     fireEvent.error(viewerImage as HTMLImageElement)
 
     expect(
-      screen.getByTestId('review-image-viewer-default-image'),
+      viewerImageContainer.querySelector('[data-slot="image-fallback"]'),
     ).toBeInTheDocument()
   })
 

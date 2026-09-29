@@ -1,5 +1,5 @@
 import type { VisitedReservation } from '@/features/review/api/getVisitedReservations'
-import type { MyReviewSummary } from '@/pages/myReviews/api/myReviewsApi'
+import type { MyReviewSummary } from '@/features/review/api/getMyReviews'
 import type {
   WritableReview,
   WrittenReview,

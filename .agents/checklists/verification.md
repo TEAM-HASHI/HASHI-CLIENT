@@ -2,6 +2,8 @@
 
 변경 범위에 맞는 검증만 실행하고, 실행하지 않은 검증은 최종 요약에 이유를 남깁니다.
 
+`apps/client/**` 코드 변경은 먼저 `docs/workflows/testing.md`로 테스트 필수 여부를 판단합니다. 테스트가 필수인 변경은 해당 동작을 재현하는 자동 테스트와 실행 결과를 남기고, 필수가 아닌 변경은 수동 확인 항목을 PR `Verification`에 적습니다.
+
 ## Documentation Or Harness Only
 
 ```bash

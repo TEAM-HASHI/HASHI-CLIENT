@@ -39,6 +39,22 @@ describe('IconButton', () => {
     expect(screen.getByRole('button').getAttribute('type')).toBe('submit')
   })
 
+  it('renders the 36px soft icon button surface', () => {
+    render(
+      <IconButton aria-label="수정하기" size="sm" variant="soft">
+        <TestIcon />
+      </IconButton>,
+    )
+
+    expect(screen.getByRole('button', { name: '수정하기' })).toHaveClass(
+      'size-9',
+      'rounded-full',
+      'bg-white',
+      'enabled:hover:bg-primary-100',
+      'enabled:active:bg-warm-gray-100',
+    )
+  })
+
   it('blocks interaction while loading and exposes busy state', () => {
     const handleClick = vi.fn()
 

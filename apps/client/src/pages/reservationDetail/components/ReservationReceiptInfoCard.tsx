@@ -1,9 +1,4 @@
-import type { ReactNode } from 'react'
-
-export type ReservationReceiptInfoItem = {
-  label: string
-  value: ReactNode
-}
+import type { ReservationReceiptInfoItem } from '@/pages/reservationDetail/types'
 
 export type ReservationReceiptInfoCardProps = {
   title: string

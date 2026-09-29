@@ -4,6 +4,7 @@ import {
   CopyIcon,
   LocationIcon,
   MoneySmallIcon,
+  ShareIcon,
   StarFillIcon,
 } from '@hashi/hds-icons'
 import { Header, IconButton, showToast, toastQueue } from '@hashi/hds-ui'
@@ -14,7 +15,7 @@ import { RestaurantBottomBar } from '@/features/restaurantDetail/components/Rest
 import { RestaurantDetailHero } from '@/features/restaurantDetail/components/RestaurantDetailHero'
 import { RestaurantDetailTabs } from '@/features/restaurantDetail/components/RestaurantDetailTabs'
 import { RestaurantInfoSection } from '@/features/restaurantDetail/components/RestaurantInfoSection'
-import { RestaurantMenuSection } from '@/features/restaurantDetail/components/RestaurantMenuSection'
+import { RestaurantMenuListSection } from '@/features/restaurantDetail/components/RestaurantMenuListSection'
 import { RestaurantReviewSection } from '@/features/restaurantDetail/components/RestaurantReviewSection'
 import { ReviewImageViewer } from '@/features/restaurantDetail/components/ReviewImageViewer'
 import { ReviewUnavailableModal } from '@/features/restaurantDetail/components/ReviewUnavailableModal'
@@ -29,7 +30,7 @@ import type {
   RestaurantDetailVariant,
 } from '@/features/restaurantDetail/types/restaurantDetail'
 import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
-import { ShareIconButton } from '@/shared/components/shareIconButton'
+import { useShareLink } from '@/shared/components/shareIconButton'
 import { cn, copyTextToClipboard } from '@/shared/utils'
 
 interface RestaurantDetailTemplateProps {
@@ -101,6 +102,7 @@ export const RestaurantDetailTemplate = ({
 }: RestaurantDetailTemplateProps) => {
   const { isTabBarFixed, markerRef } = useRestaurantDetailTabBarFixed()
   const hasScrolledToInitialTabRef = useRef(false)
+  const handleShare = useShareLink(shareUrl)
 
   const scrollToTabBarTop = useCallback(() => {
     const marker = markerRef.current
@@ -168,7 +170,12 @@ export const RestaurantDetailTemplate = ({
               <BackIcon className="size-6" />
             </IconButton>
           }
-          rightAction={<ShareIconButton shareUrl={shareUrl} />}
+          rightAction={{
+            type: 'icon',
+            icon: <ShareIcon className="size-6" />,
+            ariaLabel: '공유하기',
+            onClick: handleShare,
+          }}
           title={title}
         />
       </div>
@@ -264,7 +271,7 @@ export const RestaurantDetailTemplate = ({
       {activeTab === 'info' ? (
         <RestaurantInfoSection restaurant={restaurant} />
       ) : activeTab === 'menu' ? (
-        <RestaurantMenuSection
+        <RestaurantMenuListSection
           hasMoreMenus={hasMoreMenus}
           isMenuListError={isMenuListError}
           loadMoreRef={menuLoadMoreRef}

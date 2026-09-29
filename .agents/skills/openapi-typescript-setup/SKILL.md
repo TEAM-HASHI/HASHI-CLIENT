@@ -89,7 +89,7 @@ OPENAPI_SCHEMA_URL=<raw-openapi-schema-url>
 
 생성된 타입은 API boundary에서만 직접 참조합니다. page/component에서 `components`나 `paths`를 직접 import하지 말고, endpoint 함수 또는 page/feature-local type alias로 한 번 좁힌 뒤 사용합니다.
 
-API 연동 코드를 추가할 때는 아래처럼 owning page 또는 feature 가까이에 둡니다. 한 화면에서만 쓰면 page-local, 여러 화면이 같은 서버 상태를 공유하면 feature-local로 승격합니다.
+API 연동 코드를 추가할 때는 아래처럼 owning page 또는 feature 가까이에 둡니다. 한 화면에서만 쓰면 page-local로 시작하고, page 전용 의존성을 제거해도 API 계약이 유지되면서 여러 화면이 같은 서버 상태, query key, cache synchronization을 공유할 때 feature-local로 승격합니다.
 
 ```text
 apps/client/src/pages/{pageName}/

@@ -7,8 +7,10 @@ import json
 import os
 import re
 import shlex
+import subprocess
 import sys
 from dataclasses import dataclass
+from fnmatch import fnmatch
 
 
 BLOCKED_PACKAGE_MANAGERS = {"npm", "npx", "yarn", "bun", "bunx"}
@@ -23,6 +25,16 @@ GIT_OPTIONS_WITH_VALUE = {
     "--exec-path",
     "--config-env",
 }
+PROTECTED_BRANCHES = {"develop", "main", "master", "production"}
+STACKED_PR_BRANCH_PATTERNS = (
+    "chore/**",
+    "docs/**",
+    "feat/**",
+    "feature/**",
+    "fix/**",
+    "hotfix/**",
+    "refactor/**",
+)
 
 
 @dataclass(frozen=True)
@@ -176,7 +188,120 @@ def has_pnpm_workspace_scope(args: list[str]) -> bool:
 
 
 def is_force_push_token(token: str) -> bool:
-    return token in {"--force", "--force-with-lease", "-f"} or token.startswith("--force-with-lease=")
+    return token in {"--force", "--force-with-lease", "-f"} or token.startswith(
+        "--force-with-lease="
+    )
+
+
+def is_force_with_lease_token(token: str) -> bool:
+    return token == "--force-with-lease" or token.startswith("--force-with-lease=")
+
+
+def is_protected_branch(branch: str) -> bool:
+    normalized_branch = branch.removeprefix("refs/heads/")
+
+    return normalized_branch in PROTECTED_BRANCHES
+
+
+def is_stacked_pr_branch(branch: str) -> bool:
+    normalized_branch = branch.removeprefix("refs/heads/")
+
+    return any(
+        fnmatch(normalized_branch, pattern)
+        for pattern in STACKED_PR_BRANCH_PATTERNS
+    )
+
+
+def current_branch() -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "branch", "--show-current"],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except OSError:
+        return None
+
+    branch = result.stdout.strip()
+
+    return branch or None
+
+
+def push_refspecs(push_args: list[str]) -> list[str]:
+    positional_args = [
+        token
+        for token in push_args
+        if not token.startswith("-") and "=" not in token
+    ]
+
+    if len(positional_args) <= 1:
+        return []
+
+    return positional_args[1:]
+
+
+def target_branch_from_refspec(refspec: str) -> str:
+    refspec_without_force = refspec.removeprefix("+")
+
+    if ":" in refspec_without_force:
+        return refspec_without_force.rsplit(":", 1)[1]
+
+    return refspec_without_force
+
+
+def force_with_lease_option_target_branch(token: str) -> str | None:
+    if not token.startswith("--force-with-lease="):
+        return None
+
+    refname = token.split("=", 1)[1].split(":", 1)[0]
+
+    return refname or None
+
+
+def force_with_lease_target_branches(push_args: list[str]) -> list[str]:
+    option_targets = [
+        target
+        for token in push_args
+        if (target := force_with_lease_option_target_branch(token)) is not None
+    ]
+    refspecs = push_refspecs(push_args)
+
+    if not refspecs:
+        branch = current_branch()
+
+        return option_targets + ([branch] if branch else [])
+
+    return option_targets + [
+        target_branch_from_refspec(refspec) for refspec in refspecs
+    ]
+
+
+def check_force_push(push_args: list[str]) -> BlockDecision | None:
+    force_tokens = [token for token in push_args if is_force_push_token(token)]
+
+    if not force_tokens:
+        return None
+
+    if not all(is_force_with_lease_token(token) for token in force_tokens):
+        return BlockDecision(
+            "Destructive git command blocked: use --force-with-lease instead of --force or -f."
+        )
+
+    target_branches = force_with_lease_target_branches(push_args)
+
+    if any(is_protected_branch(branch) for branch in target_branches):
+        return BlockDecision(
+            "Destructive git command blocked: force-with-lease to a protected branch is not allowed."
+        )
+
+    if target_branches and all(is_stacked_pr_branch(branch) for branch in target_branches):
+        return None
+
+    return BlockDecision(
+        "Destructive git command blocked: force-with-lease is only allowed for stacked PR work branches."
+    )
 
 
 def check_git(args: list[str]) -> BlockDecision | None:
@@ -195,8 +320,8 @@ def check_git(args: list[str]) -> BlockDecision | None:
     if subcommand == "clean" and has_git_clean_force_directory(sub_args):
         return BlockDecision("Destructive git command blocked: git clean with force and directory flags.")
 
-    if subcommand == "push" and any(is_force_push_token(token) for token in sub_args):
-        return BlockDecision("Destructive git command blocked: force push requires explicit human intent.")
+    if subcommand == "push":
+        return check_force_push(sub_args)
 
     return None
 

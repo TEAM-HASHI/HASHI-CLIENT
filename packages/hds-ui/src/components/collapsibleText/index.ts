@@ -1,1 +1,0 @@
-export { CollapsibleText } from './CollapsibleText'

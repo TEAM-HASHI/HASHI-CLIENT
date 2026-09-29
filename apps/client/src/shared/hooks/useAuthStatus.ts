@@ -4,7 +4,7 @@ import {
   getAuthSessionStatus,
   subscribeAuthSession,
   type AuthSessionStatus,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 
 export type AuthStatus = AuthSessionStatus
 

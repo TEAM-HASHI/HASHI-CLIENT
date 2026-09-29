@@ -4,7 +4,7 @@ Jira: HASHI-54
 
 ## 목적
 
-`Avatar`는 사용자 프로필 이미지를 공통으로 렌더링하는 HDS UI primitive입니다.
+`Avatar`는 사용자 프로필 이미지와 이미지가 없는 경우의 guest fallback을 공통으로 렌더링하는 HDS UI primitive입니다.
 
 HDS는 이미지 표시, 원형 placeholder, size, 기본 접근성 계약만 담당합니다. 사용자 이름 해석, nickname 첫 글자 fallback, ProfileLabel 조합, route, API, analytics는 App 또는 page/feature가 처리합니다.
 
@@ -56,13 +56,11 @@ Figma에서 리뷰 프로필 Avatar는 40px, 프로필 수정 영역 Avatar는 4
 ## 상태
 
 - image: `src`가 있으면 원형 `img`를 렌더링합니다.
-- placeholder: `src`가 없으면 기본 원형 placeholder를 렌더링합니다.
+- placeholder: `src`가 없거나 이미지 로딩에 실패하면 HASHI 심볼이 포함된 원형 placeholder를 렌더링합니다.
 
 ## fallback 정책
 
-`src`가 없으면 기본 원형 placeholder를 렌더링합니다.
-
-이름 첫 글자 fallback은 기획/디자인 정책이 확정되지 않았으므로 구현하지 않습니다. Figma의 체크무늬 원형은 투명 배경 표시일 가능성이 있으므로 실제 fallback 디자인으로 단정하지 않습니다.
+`src`가 없거나 이미지 로딩에 실패하면 Figma의 guest 상태와 동일한 원형 placeholder를 렌더링합니다. 브랜드 심볼은 `@hashi/hds-icons`의 `HashiMarkIcon`을 사용하며, 이름 첫 글자 fallback은 제공하지 않습니다.
 
 ## 접근성
 

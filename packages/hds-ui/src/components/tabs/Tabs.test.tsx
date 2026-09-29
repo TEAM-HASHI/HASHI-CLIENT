@@ -48,8 +48,27 @@ describe('Tabs', () => {
   it('applies selected styles to the active item', () => {
     render(<Tabs items={items} value="written" onChange={() => undefined} />)
 
+    expect(screen.getByRole('tablist')).toHaveClass(
+      'relative',
+      'h-12.5',
+      'items-end',
+    )
+    expect(screen.getByRole('tablist')).not.toHaveClass('px-5')
+    expect(screen.getByRole('tab', { name: '작성한 리뷰 4' })).toHaveClass(
+      'border-warm-gray-100',
+      'py-2.5',
+    )
+    expect(screen.getByRole('tab', { name: '리뷰 쓰기 1' })).toHaveClass(
+      'border-warm-gray-100',
+      'border-b',
+    )
     expect(screen.getByText('작성한 리뷰')).toHaveClass(
       'typo-sub-header-2',
+      'text-primary-200',
+      'transition-colors',
+    )
+    expect(screen.getByText('4')).toHaveClass(
+      'typo-caption-2',
       'text-primary-200',
     )
     expect(screen.getByText('리뷰 쓰기')).toHaveClass(
@@ -58,15 +77,18 @@ describe('Tabs', () => {
     )
   })
 
-  it('moves the active indicator to the selected tab', () => {
+  it('slides the active indicator to the selected tab', () => {
     render(<Tabs items={items} value="written" onChange={() => undefined} />)
 
-    expect(document.querySelector('[data-hds-tabs-indicator]')).toHaveClass(
+    const indicator = document.querySelector('[data-hds-tabs-indicator]')
+
+    expect(indicator).toHaveClass(
       'transition-transform',
       'motion-reduce:transition-none',
     )
-    expect(document.querySelector('[data-hds-tabs-indicator]')).toHaveStyle({
-      width: `${100 / items.length}%`,
+    expect(indicator).not.toHaveClass('left-5')
+    expect(indicator).toHaveStyle({
+      width: `calc(100% / ${items.length})`,
       transform: 'translateX(100%)',
     })
   })

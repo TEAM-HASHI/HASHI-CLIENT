@@ -169,20 +169,26 @@ Refactor(auth): 인증 로직 분리
 Style(input): Input 컴포넌트 스타일 수정
 ```
 
-PR 설명에는 Jira 이슈 키 또는 링크를 포함합니다.
+PR 설명에는 Jira 이슈 키 또는 링크를 포함합니다. 실제 template과 테스트·리뷰 운영 기준은 `docs/workflows/pr-checklist.md`를 따릅니다.
 
 ```markdown
-## 📌 Summary
+## 📌 요약
 
 Tailwind CSS 초기 세팅을 진행했습니다.
 
 Jira: HASHI-17
 
-## 📚 Tasks
+## 📚 작업 내용
 
 - Tailwind CSS 설치 및 기본 설정
 - tailwind-merge 설정 및 유틸 함수 구성
 - prettier-plugin-tailwindcss 설정
+
+## ✅ 검증
+
+- [x] 자동 테스트: 해당 없음
+- [x] 수동 확인: `pnpm lint`, `pnpm typecheck`, `pnpm build`
+- [ ] 테스트 생략 사유:
 ```
 
 ## 전체 작업 흐름
@@ -221,17 +227,23 @@ Init(project): Tailwind CSS 초기 세팅
 
 PR 설명
 
-## 📌 Summary
+## 📌 요약
 
 Tailwind CSS 초기 세팅을 진행했습니다.
 
 Jira: HASHI-17
 
-## 📚 Tasks
+## 📚 작업 내용
 
 - Tailwind CSS 설치 및 기본 설정
 - tailwind-merge 설정 및 유틸 함수 구성
 - prettier-plugin-tailwindcss 설정
+
+## ✅ 검증
+
+- [x] 자동 테스트: 해당 없음
+- [x] 수동 확인: `pnpm lint`, `pnpm typecheck`, `pnpm build`
+- [ ] 테스트 생략 사유:
 ```
 
 ## Codex에 티켓 초안 요청하기

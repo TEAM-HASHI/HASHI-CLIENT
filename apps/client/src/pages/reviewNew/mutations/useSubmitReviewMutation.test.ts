@@ -3,6 +3,8 @@ import { act, renderHook } from '@testing-library/react'
 import { createElement, type PropsWithChildren } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
+import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
 import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 import {
   submitReview,
@@ -39,6 +41,7 @@ describe('submitReview', () => {
     await expect(
       submitReview({
         reservationId: 23,
+        restaurantId: 1,
         rating: 5,
         keywordCodes: ['FOOD_IS_DELICIOUS'],
         content: '음식도 맛있고 직원분도 친절했어요.',
@@ -60,6 +63,7 @@ describe('submitReview', () => {
     await expect(
       submitReview({
         reservationId: 23,
+        restaurantId: 1,
         rating: 5,
         keywordCodes: ['FOOD_IS_DELICIOUS'],
         content: '음식도 맛있고 직원분도 친절했어요.',
@@ -71,7 +75,7 @@ describe('submitReview', () => {
 })
 
 describe('useSubmitReviewMutation', () => {
-  it('invalidates review context and visited reservation caches after submitting a review', async () => {
+  it('invalidates review context and related review caches after submitting a review', async () => {
     uploadReviewImagesMock.mockResolvedValue([])
     createReviewMock.mockResolvedValue({ reviewId: 501, earnedPoint: 100 })
     const queryClient = new QueryClient()
@@ -85,6 +89,7 @@ describe('useSubmitReviewMutation', () => {
     await act(() =>
       result.current.mutateAsync({
         reservationId: 23,
+        restaurantId: 1,
         rating: 5,
         keywordCodes: ['FOOD_IS_DELICIOUS'],
         content: '음식도 맛있고 직원분도 친절했어요.',
@@ -97,8 +102,17 @@ describe('useSubmitReviewMutation', () => {
       refetchType: 'none',
     })
     expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: myReviewQueryKeys.count(),
+    })
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: myReviewQueryKeys.lists(),
+    })
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: restaurantDetailQueryKeys.detail(1),
+    })
+    expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: visitedReservationQueryKeys.all,
     })
-    expect(invalidateQueries).toHaveBeenCalledTimes(2)
+    expect(invalidateQueries).toHaveBeenCalledTimes(5)
   })
 })

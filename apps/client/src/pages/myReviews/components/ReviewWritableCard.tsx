@@ -1,6 +1,5 @@
-import { Button } from '@hashi/hds-ui'
+import { Button, Thumbnail } from '@hashi/hds-ui'
 
-import { ReviewImagePlaceholder } from '@/pages/myReviews/components/ReviewImagePlaceholder'
 import type { WritableReview } from '@/pages/myReviews/types/myReview'
 
 interface ReviewWritableCardProps {
@@ -15,7 +14,7 @@ export const ReviewWritableCard = ({
   return (
     <article className="flex min-w-0 flex-col gap-3">
       <div className="flex min-w-0 items-center gap-3">
-        <ReviewImagePlaceholder src={review.thumbnailUrl} />
+        <Thumbnail alt="" size="md" src={review.thumbnailUrl} />
         <div className="min-w-0 flex-1">
           <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2">
             {review.restaurantName}

@@ -14,14 +14,25 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+  TURBO_SCM_HEAD: ${{ github.sha }}
+
 jobs:
-  format:
-    name: Format Check
+  quality:
+    name: Quality & Build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect CI Scope
+        id: ci-scope
+        shell: bash
+        run: .github/scripts/detect-ci-scope.sh "${TURBO_SCM_BASE}" "${TURBO_SCM_HEAD}" >> "${GITHUB_OUTPUT}"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -34,98 +45,52 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Test CI Scope Detection
+        run: pnpm test:ci-scope
 
       - name: Format Check
         run: pnpm format:check
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: Lint
-        run: pnpm lint
+        run: pnpm turbo lint ${{ steps.ci-scope.outputs.turbo_args }}
 
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
+      - name: Type Check
+        run: pnpm turbo typecheck ${{ steps.ci-scope.outputs.turbo_args }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Typecheck
-        run: pnpm typecheck
+      - name: Build
+        run: pnpm turbo build ${{ steps.ci-scope.outputs.turbo_args }}
 
   test:
-    name: Test
+    name: Client & HDS Tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect CI Scope
+        id: ci-scope
+        shell: bash
+        run: .github/scripts/detect-ci-scope.sh "${TURBO_SCM_BASE}" "${TURBO_SCM_HEAD}" >> "${GITHUB_OUTPUT}"
 
       - name: Setup pnpm
+        if: steps.ci-scope.outputs.run_tests == 'true'
         uses: pnpm/action-setup@v4
 
       - name: Setup Node
+        if: steps.ci-scope.outputs.run_tests == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
       - name: Install Dependencies
+        if: steps.ci-scope.outputs.run_tests == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Test
+        if: steps.ci-scope.outputs.run_tests == 'true'
         run: pnpm test
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm build

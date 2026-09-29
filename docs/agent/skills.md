@@ -25,9 +25,9 @@ Repo-scoped Codex skills live in `.agents/skills`.
 
 ## Verify Skills
 
-| Skill                    | Purpose                                                                                                   | Covered files                                                                     |
-| ------------------------ | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `verify-api-integration` | Checks HASHI client API query, mutation, query key, cache synchronization, UI state, and docs sync rules. | `apps/client/src/pages`, `apps/client/src/features`, `apps/client/src/shared/api` |
+| Skill                    | Purpose                                                                                                   | Covered files                                                                                                                                             |
+| ------------------------ | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `verify-api-integration` | Checks HASHI client API query, mutation, query key, cache synchronization, UI state, and docs sync rules. | `apps/client/src/pages`, `apps/client/src/features`, `apps/client/src/shared/api`, `docs/architecture/data-layer.md`, `docs/workflows/api-integration.md` |
 
 ## Candidate Verify Skills
 

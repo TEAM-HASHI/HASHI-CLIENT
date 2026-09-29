@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { showToast } from '@hashi/hds-ui'
-import { useQueryClient } from '@tanstack/react-query'
 import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { getRestaurantReviewNewPath } from '@/app/router/routePaths'
 import {
   type MyReservationsApiStatus,
-  syncCanceledReservationCache,
   useCancelReservationMutation,
   useMyReservationsInfiniteQuery,
 } from '@/features/reservation'
@@ -50,7 +48,6 @@ const checkIsVisibleReservation = (
 
 export const useMyReservationsPage = () => {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const statusParam = searchParams.get('status')
   const selectedStatus = checkIsReservationStatusFilterValue(statusParam)
@@ -189,14 +186,8 @@ export const useMyReservationsPage = () => {
     isCancelRequestLockedRef.current = true
 
     try {
-      const canceledReservation =
-        await cancelReservationMutation.mutateAsync(reservationId)
+      await cancelReservationMutation.mutateAsync(reservationId)
 
-      showToast({ children: canceledReservation.message })
-      await syncCanceledReservationCache(
-        queryClient,
-        canceledReservation.reservation,
-      )
       setCancelReservationId(null)
       setSearchParams({ status: 'CANCELED' })
       window.scrollTo({ top: 0 })

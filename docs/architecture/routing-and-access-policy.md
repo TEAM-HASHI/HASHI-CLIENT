@@ -105,6 +105,8 @@
 - 가장 먼저 접근하는 홈 페이지(`/`)는 eager loading합니다.
 - 홈을 제외한 페이지 route는 lazy loading합니다.
 - 각 route는 `apps/client/src/pages/{pageName}`의 페이지 컴포넌트를 렌더링합니다.
+- lazy route의 chunk import 실패는 `RouteChunkLoadError`로 구분합니다.
+- 오류 화면의 `다시 시도` 버튼은 API 오류에서는 기존 ErrorBoundary reset을 실행하고, route chunk 오류에서는 페이지를 새로고침합니다.
 
 ## Bottom Navigation Policy
 

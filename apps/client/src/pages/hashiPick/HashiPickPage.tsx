@@ -1,11 +1,11 @@
 import {
   HASHI_PICK_SORT_OPTIONS,
-  RestaurantListPage,
+  RestaurantListTemplate,
 } from '@/features/restaurantList'
 
 export const HashiPickPage = () => {
   return (
-    <RestaurantListPage
+    <RestaurantListTemplate
       restaurantType="hashi-pick"
       sortOptions={HASHI_PICK_SORT_OPTIONS}
       title="하시 Pick"

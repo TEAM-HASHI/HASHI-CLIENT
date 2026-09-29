@@ -1,3 +1,4 @@
+import { HashiMarkIcon } from '@hashi/hds-icons'
 import { useEffect, useState } from 'react'
 import { cn } from '../../utils'
 
@@ -40,9 +41,14 @@ export const Avatar = ({
     return (
       <span
         aria-hidden="true"
-        className={cn('bg-cool-gray-100', avatarClassName)}
+        className={cn(
+          avatarClassName,
+          'bg-warm-gray-50 flex items-center justify-center',
+        )}
         data-testid="avatar-placeholder"
-      />
+      >
+        <HashiMarkIcon className="text-primary-100 h-[52.22%] w-[47.78%]" />
+      </span>
     )
   }
 

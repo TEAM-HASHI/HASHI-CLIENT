@@ -12,10 +12,7 @@ export const RestaurantDetailHero = ({
   const slideCount = imageUrls.length > 0 ? imageUrls.length : 1
 
   return (
-    <Carousel.Root
-      aria-label="식당 이미지"
-      className="bg-secondary-200 h-[234px]"
-    >
+    <Carousel.Root aria-label="식당 이미지" className="bg-secondary-200 h-58.5">
       <Carousel.Viewport className="size-full">
         <Carousel.Track>
           {Array.from({ length: slideCount }, (_, index) => {
@@ -28,8 +25,7 @@ export const RestaurantDetailHero = ({
               >
                 <RestaurantImage
                   className="size-full object-cover"
-                  defaultImageTestId="restaurant-detail-hero-default-image"
-                  logoSize="lg"
+                  markSize="lg"
                   src={imageUrl}
                 />
               </Carousel.Item>

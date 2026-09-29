@@ -1,6 +1,6 @@
 {
   "lookbackDays": 30,
-  "requiredReviewerCount": 2,
+  "requiredReviewerCount": 1,
   "reviewers": [
     {
       "enabled": true,
@@ -15,11 +15,6 @@
     {
       "enabled": true,
       "login": "gyeongbibin",
-      "weight": 1
-    },
-    {
-      "enabled": true,
-      "login": "MinseoSONG",
       "weight": 1
     },
     {

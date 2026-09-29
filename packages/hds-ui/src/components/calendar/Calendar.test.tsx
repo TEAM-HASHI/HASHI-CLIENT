@@ -7,27 +7,14 @@ afterEach(() => {
 })
 
 describe('Calendar', () => {
-  it('renders the visible month with weekday labels and month days', () => {
+  it('renders the visible month and its days without a weekday row', () => {
     render(<Calendar month={new Date(2026, 5, 1)} />)
 
     expect(screen.getByRole('heading', { name: '2026 6월' })).toBeTruthy()
     expect(screen.getByText('2026').className).toContain('typo-body-3')
     expect(screen.getByText('2026').className).toContain('text-cool-gray-900')
     expect(screen.getByText('6월').className).toContain('typo-sub-header-1')
-    expect(screen.getAllByText('S')).toHaveLength(2)
-    expect(screen.getAllByText('S')[0]?.className).toContain(
-      'typo-sub-header-3',
-    )
-    expect(screen.getAllByText('S')[1]?.className).toContain(
-      'typo-sub-header-3',
-    )
-    expect(screen.getAllByText('S')[0]?.getAttribute('aria-label')).toBe(
-      '일요일',
-    )
-    expect(screen.getAllByText('S')[1]?.getAttribute('aria-label')).toBe(
-      '토요일',
-    )
-    expect(screen.getAllByText('M')[0]?.className).toContain('typo-body-5')
+    expect(screen.queryByText(/^[SMTWF]$/)).toBeNull()
     expect(screen.getByRole('button', { name: '2026년 6월 1일' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '2026년 6월 30일' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: '2026년 6월 31일' })).toBeNull()
@@ -68,10 +55,6 @@ describe('Calendar', () => {
 
     expect(selectedDate.getAttribute('aria-pressed')).toBe('true')
     expect(selectedDate.hasAttribute('aria-selected')).toBe(false)
-    expect(selectedDate.className).toContain('size-8')
-    expect(
-      screen.getByRole('button', { name: '2026년 6월 7일' }).className,
-    ).toContain('h-8')
     expect((disabledDate as HTMLButtonElement).disabled).toBe(true)
 
     fireEvent.click(disabledDate)

@@ -11,6 +11,8 @@ HASHI 앱의 데이터 레이어는 앱 내부에서 먼저 조립하고, 실제
 - API base URL: `VITE_API_BASE_URL`
 - OpenAPI type generation: `openapi-typescript`
 - 공통 request helper: `apps/client/src/shared/api`
+- 인메모리 인증 세션: `apps/client/src/shared/auth/authSession.ts`
+- token 재발급 endpoint: `apps/client/src/shared/api/requestTokenReissue.ts`
 - API error model: `ApiError`와 `HttpStatusError`가 HTTP status를 보존
 - generated API type output: `apps/client/src/shared/api/generated/openapi.ts`
 - Query provider/client: `apps/client/src/app/providers/QueryProvider.tsx`, `apps/client/src/shared/lib/queryClient.ts`
@@ -67,7 +69,9 @@ apps/admin/src/shared/api/
 ```
 
 - base URL, timeout, retry, header, 인증 토큰 주입 지점은 한 곳에서 조립합니다.
-- client 액세스 토큰은 `localStorage`의 `accessToken`을 우선 사용하고, 로컬 개발에서만 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있습니다.
+- client access token은 `apps/client/src/shared/auth/authSession.ts`의 메모리 상태에서 조회하고, 로컬 개발에서만 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있습니다.
+- `requestTokenReissue`는 공통 request의 인증 복구에 필요한 기반 endpoint로 `apps/client/src/shared/api`가 소유합니다.
+- 공통 request는 인증 필요 오류에서 token 재발급을 한 번 수행하고 원 요청을 한 번 재시도합니다. 동시 인증 오류는 하나의 재발급 요청을 공유하며, 재발급 실패 시 인메모리 세션을 초기화합니다.
 - endpoint 함수는 `request` 같은 low-level helper를 사용합니다.
 - endpoint 함수는 React, TanStack Query, route, UI state를 알면 안 됩니다.
 - 인증, refresh, retry 정책은 실제 요구사항 없이 미리 복잡하게 만들지 않습니다.
@@ -90,11 +94,14 @@ apps/admin/src/shared/api/
 - mutation 오류는 공통 Sentry 필터를 거쳐 5xx status error, 405 integration error, 예상하지 못한 오류만 기록합니다.
 - page/form이 field error, NotFound, Forbidden, conflict UX를 소유하면 query/mutation option에서 전역 기본값을 명시적으로 override합니다.
 - ErrorBoundary가 소비한 오류는 공통 Sentry 필터를 거쳐 unknown/render error, 5xx status error, 405 integration error만 기록합니다.
-- 인증 token refresh, request replay, logout은 error boundary가 아니라 별도 auth flow가 소유합니다.
+- 인증 token refresh와 request replay는 error boundary가 아니라 `shared/api/request.ts`의 인증 복구 흐름이 소유하고, 인증 세션 상태 전이는 `shared/auth/authSession.ts`가 관리합니다.
 
 route content용 `AsyncBoundary`는 `RootLayout` 내부에서 `Outlet`을 감싸며,
 retry 시 React error state와 TanStack Query error state를 함께 reset합니다. 또한
-pathname이 변경되면 이전 route에서 잡힌 error state를 reset합니다.
+pathname 또는 search params가 변경되면 이전 route에서 잡힌 error state를
+reset합니다. hash만 변경되는 경우에는 route data가 바뀌지 않으므로 reset하지
+않습니다. `AsyncBoundary`는 기본적으로 `AsyncErrorFallback`을 사용하고, route나
+page에서 별도 error UX가 필요하면 `FallbackComponent`를 주입할 수 있습니다.
 
 ## API Integration Workflow
 
@@ -150,6 +157,100 @@ apps/client/src/shared/hooks/
 
 `apps/client/src/shared/api`에는 low-level client, request, error 처리만 둡니다.
 Admin console endpoint boundary는 `apps/admin/src/shared/api`에 두고 client generated type을 import하지 않습니다.
+
+### Page-local vs Feature-local API
+
+API 위치는 endpoint path만 보고 결정하지 않습니다. 실제 소유 화면, 재사용 범위,
+query key/cache 책임, request/response adapter 성격을 함께 보고 결정합니다.
+
+#### 위치별 역할
+
+`pages/{page}/api`
+
+- 특정 page의 진입, 제출, 화면 전용 adapter에 묶인 API를 둡니다.
+- 다른 page에서 같은 서버 상태를 공유하지 않는 경우 page-local로 유지합니다.
+- 예시:
+  - `pages/profileNew/api/requestOnboarding.ts`
+  - `pages/home/api/getHotSnsRestaurants.ts`
+  - `pages/search/api/getSearchKeywordRecommendations.ts`
+
+`features/{feature}/api`
+
+- 여러 page에서 같은 public API, 같은 서버 상태, 같은 cache synchronization 기준을
+  공유하는 API를 둡니다.
+- 예시:
+  - `features/restaurantList/api/getRestaurants.ts`
+  - `features/magazine/api/getMagazineBanners.ts`
+  - `features/review/api/deleteReview.ts`
+
+`shared/api`
+
+- 도메인 endpoint가 아니라 앱 공통 API 인프라만 둡니다.
+- HTTP client, request wrapper, response envelope, error model, generated OpenAPI
+  type이 여기에 해당합니다.
+- 예시:
+  - `shared/api/request.ts`
+  - `shared/api/apiError.ts`
+  - `shared/api/generated/openapi.ts`
+
+page-local API는 나쁜 구조가 아닙니다. 한 화면에서만 쓰는 API를 미리 feature로
+올리면 feature가 page 전용 흐름을 알게 되어 경계가 흐려질 수 있습니다. 반대로
+같은 API와 query key를 여러 page가 각자 page-local로 만들면 cache key,
+invalidation, error 처리 기준이 갈라질 수 있습니다.
+
+### Placement Decision Checklist
+
+새 endpoint 함수, query, mutation을 추가하거나 기존 위치를 바꿀 때는 아래 순서로
+판단합니다.
+
+1. 이 API가 현재 한 page에서만 사용되는지 확인합니다.
+2. 다른 page가 같은 서버 상태와 같은 cache key를 공유하는지 확인합니다.
+3. request body나 response mapping이 특정 page draft/view model에 강하게 묶여 있는지 확인합니다.
+4. mutation 성공 후 invalidate해야 하는 query key가 feature 전반에 걸쳐 있는지 확인합니다.
+5. 재사용 근거가 명확하면 feature로 두고, 근거가 아직 없으면 page-local에서 시작합니다.
+6. shared에는 endpoint 함수를 두지 않고 low-level API 인프라만 둡니다.
+
+### Promotion Rule
+
+page-local API를 feature로 승격할 때는 필수 조건과 승격 신호를 나누어
+판단합니다.
+
+필수 조건:
+
+- page 전용 draft, view model, route state, form state 의존성을 제거해도 API
+  함수의 의미와 request/response 계약이 유지됩니다.
+- feature로 이동한 뒤에도 특정 page의 제출 흐름이나 화면 adapter를 알지
+  않습니다.
+
+승격 신호:
+
+- 같은 endpoint 함수가 둘 이상의 page에서 필요해졌습니다.
+- 같은 query key factory를 여러 page가 공유해야 합니다.
+- mutation 성공 후 여러 page의 같은 도메인 cache를 일관되게 갱신해야 합니다.
+- feature 내부 component, hook, query가 같은 API 타입을 공통 계약으로 사용합니다.
+
+필수 조건을 만족하고 승격 신호가 명확할 때 feature로 승격합니다. 승격 신호가
+있어도 page 전용 의존성이 남아 있으면 page-local adapter를 유지하고, 공통
+endpoint나 query key만 feature로 분리할 수 있는지 검토합니다. 애매한 경우에는
+page-local에서 시작하고, page spec이나 PR에 "다른 page에서 재사용되면 feature로
+승격" 조건을 남깁니다.
+
+현재 코드 기준 예시는 다음과 같습니다.
+
+- `pages/home/api/getHotSnsRestaurants.ts`는 `getRestaurants`를 홈 전용
+  `type=sns-hot`, `size=5` 조건으로 감싼 adapter이므로 page-local에 둡니다.
+- `pages/magazines/api/getMagazines.ts`는 매거진 목록 page 전용 cursor list이므로
+  같은 목록 계약을 다른 page가 사용하기 전까지 page-local에 둡니다.
+- `features/magazine/api/getMagazineBanners.ts`는 Home과 Magazines가 공유하므로
+  feature-local에 둡니다.
+- `features/restaurantList/api/getRestaurants.ts`는 Search, HashiPick,
+  PopularRestaurants, Home adapter에서 공유하므로 feature-local에 둡니다.
+- `pages/reservationRequest/api/createReservation.ts`는 `ReservationRequestDraft`에
+  강하게 의존하는 제출 adapter이므로 page-local에 둡니다.
+- 리뷰 관련 `getMyReviews`, `getMyReviewDetail`은 삭제/수정/작성 후 같은
+  `myReviewQueryKeys` cache synchronization 기준을 공유하므로 `features/review`에
+  둡니다. `reviewNew`의 작성 context, 이미지 업로드, 제출 adapter는 작성 page
+  전용 흐름이므로 다른 리뷰 page와 공유되기 전까지 page-local에 둡니다.
 
 ## Query Key Rules
 

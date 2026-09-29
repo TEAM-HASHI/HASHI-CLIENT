@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom/vitest'
 
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { createRef } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ReviewPhotoUploader } from '@/features/review/components/inputReviewMain/ReviewPhotoUploader'
 
@@ -29,6 +29,10 @@ const renderReviewPhotoUploader = (
 }
 
 describe('ReviewPhotoUploader', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('renders the empty photo trigger with responsive width', () => {
     const { onPhotoTriggerClick } = renderReviewPhotoUploader()
 
@@ -72,8 +76,12 @@ describe('ReviewPhotoUploader', () => {
       'overflow-y-hidden',
     )
     expect(
+      screen.getByRole('button', { name: '사진을 첨부해 주세요. (선택)' }),
+    ).toHaveClass('size-[130px]', 'rounded-[5px]')
+    expect(screen.queryByText('사진 추가')).not.toBeInTheDocument()
+    expect(
       screen.getByRole('img', { name: 'review-1.png 미리보기' }),
-    ).toHaveClass('rounded-[10px]')
+    ).toHaveClass('rounded-[5px]')
 
     fireEvent.click(
       screen.getByRole('button', { name: 'review-1.png 사진 삭제' }),
@@ -90,6 +98,6 @@ describe('ReviewPhotoUploader', () => {
 
     expect(
       screen.getByText('사진은 최대 10장까지 첨부할 수 있어요.'),
-    ).toHaveClass('text-primary-400')
+    ).toHaveClass('typo-body-7', 'text-primary-400')
   })
 })

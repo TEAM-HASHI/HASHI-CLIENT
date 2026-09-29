@@ -1,7 +1,5 @@
 import { Avatar, Button } from '@hashi/hds-ui'
 
-import profileEmptyImage from '@/shared/assets/images/profile-empty.svg'
-
 type MypageProfileProps = {
   nickname: string
   profileImageUrl?: string | null
@@ -16,8 +14,8 @@ export const MypageProfile = ({
       <div className="flex min-w-0 items-center gap-2">
         <Avatar
           alt={`${nickname} 프로필 이미지`}
-          className="size-10.5"
-          src={profileImageUrl ?? profileEmptyImage}
+          size="md"
+          src={profileImageUrl ?? undefined}
         />
         <h1 className="typo-header-1 text-cool-gray-900 truncate">
           {nickname}님

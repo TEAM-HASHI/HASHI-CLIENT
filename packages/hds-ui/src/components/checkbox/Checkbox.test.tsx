@@ -67,6 +67,33 @@ describe('Checkbox', () => {
     expect(handleChange).not.toHaveBeenCalled()
   })
 
+  it('applies redesigned visual states when enabled', () => {
+    const { container } = render(<Checkbox>Checkbox</Checkbox>)
+    const icon = container.querySelector('svg')
+    const visualBox = icon?.parentElement
+
+    expect(visualBox).toHaveClass(
+      'bg-cool-gray-100',
+      'group-hover/checkbox:bg-cool-gray-200',
+      'group-active/checkbox:bg-cool-gray-300',
+      'peer-focus-visible:outline-cool-gray-800',
+      'peer-checked:text-cool-gray-900',
+    )
+    expect(icon).toHaveClass('h-[26px]', 'w-[26px]')
+  })
+
+  it('keeps disabled checkbox from applying hover and pressed visuals', () => {
+    const { container } = render(<Checkbox disabled>Checkbox</Checkbox>)
+    const icon = container.querySelector('svg')
+    const visualBox = icon?.parentElement
+
+    expect(visualBox).toHaveClass('bg-cool-gray-100')
+    expect(visualBox).not.toHaveClass(
+      'group-hover/checkbox:bg-cool-gray-200',
+      'group-active/checkbox:bg-cool-gray-300',
+    )
+  })
+
   it('hides CheckIcon from assistive technologies', () => {
     const { container } = render(<Checkbox>Checkbox</Checkbox>)
     const icon = container.querySelector('svg')

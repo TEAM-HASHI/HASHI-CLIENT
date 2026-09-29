@@ -35,6 +35,9 @@
 
 - route lazy loading fallback에서 사용합니다.
 - route lazy loading fallback은 route branch 단위 `Suspense`에서 렌더링합니다.
+  - lazy page 선언과 목록은 `apps/client/src/app/router/lazy.ts`가 소유합니다.
+  - fallback 노출 지연과 최소 표시 시간은 `apps/client/src/app/router/routeLoadingPolicy.ts`가 소유합니다.
+  - `Suspense` boundary와 `LoadingScreen` 렌더링은 `apps/client/src/app/router/RouteLoadingBoundary.tsx`가 소유합니다.
   - 앱 전체를 감싸는 전역 `Suspense` fallback으로 사용하지 않습니다.
   - lazy page가 `BottomNavigationLayout` 아래에 있더라도 fallback 중에는 하단 네비게이션을 함께 숨기고 `LoadingScreen`만 노출합니다.
   - page 또는 layout보다 바깥의 route branch에서 fallback 범위를 소유합니다.

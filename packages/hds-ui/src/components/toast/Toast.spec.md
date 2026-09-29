@@ -23,12 +23,12 @@ import { showToast, ToastRegion } from '@hashi/hds-ui'
 const App = () => {
   return (
     <>
-      <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
+      <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto w-full max-w-(--app-mobile-max-width,100%) px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
       <button
         type="button"
         onClick={() => {
           showToast({
-            icon: <LinkIcon className="size-6" />,
+            icon: <LinkIcon className="size-6.5" />,
             children: '링크가 복사 되었어요.',
           })
         }}
@@ -42,7 +42,6 @@ const App = () => {
 
 Exported values:
 
-- `Toast`
 - `ToastRegion`
 - `toastQueue`
 - `createToastQueue`
@@ -53,7 +52,6 @@ Exported types:
 
 - `ToastContent`
 - `ToastOptions`
-- `ToastProps`
 - `ToastRegionProps`
 
 ## Structure
@@ -63,7 +61,7 @@ React Aria Toast는 queue 기반으로 동작합니다.
 ```text
 showToast({ icon, children })
   -> ToastRegion
-    -> Toast
+    -> internal Toast renderer
       -> icon slot
       -> message
 ```
@@ -103,11 +101,11 @@ showToast({ icon, children })
 - value: `1500`
 - description: `showToast`의 고정 자동 닫힘 시간입니다.
 
-### `className`
+### `ToastRegion.className`
 
 - type: `string`
 - required: `false`
-- description: `Toast` 또는 `ToastRegion` root element에 병합할 class입니다.
+- description: `ToastRegion` root element에 병합할 class입니다.
 
 ## Requirements
 
@@ -123,7 +121,7 @@ showToast({ icon, children })
 
 ```text
 ToastRegion
-  Toast
+  internal Toast renderer
     ToastContent
       icon slot
       message
@@ -138,10 +136,10 @@ Toast:
 - padding: horizontal `20px`
 - gap: `11px`
 - radius: `10px`
-- background: `primary-200`
+- background: `dim`
 - text color: `white`
 - typography: `typo-long-body-1`
-- icon slot: `24px * 24px`, `shrink-0`
+- icon slot: `26px * 26px`, `shrink-0`
 - message: `min-w-0 line-clamp-2`
 - enter keyframe: `opacity: 0`, `translateY(-4px)`, `scale(0.98)`에서 `opacity: 1`, `translateY(0)`, `scale(1)`로 표시합니다.
 - exit keyframe: `timeout`이 있는 toast는 제거되기 직전에 `opacity: 1`, `translateY(0)`, `scale(1)`에서 `opacity: 0`, `translateY(-4px)`, `scale(0.98)`로 사라집니다.

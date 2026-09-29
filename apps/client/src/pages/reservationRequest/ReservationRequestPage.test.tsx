@@ -108,6 +108,29 @@ describe('ReservationRequestPage', () => {
     expect(screen.getByText('7,000원')).toBeInTheDocument()
   })
 
+  it('shows the zero-guest fallback in the page and confirm dialog', () => {
+    mockLocationState.current = {
+      ...reservationDraft,
+      guests: {
+        adult: 0,
+        teen: 0,
+        child: 0,
+      },
+    }
+
+    renderPage()
+
+    expect(screen.getByText('0명')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
+
+    expect(
+      within(
+        screen.getByRole('alertdialog', { name: '예약을 진행할까요?' }),
+      ).getByText('0명'),
+    ).toBeInTheDocument()
+  })
+
   it('shows the default image when the restaurant image fails to load', () => {
     renderPage()
 
@@ -119,11 +142,9 @@ describe('ReservationRequestPage', () => {
 
     fireEvent.error(restaurantImage)
 
-    expect(
-      screen.queryByRole('img', { name: restaurantImageName }),
-    ).not.toBeInTheDocument()
-    expect(screen.getByLabelText(restaurantImageName)).toHaveClass(
-      'bg-warm-gray-100',
+    expect(restaurantImage).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: restaurantImageName })).toHaveClass(
+      'bg-warm-gray-50',
     )
   })
 

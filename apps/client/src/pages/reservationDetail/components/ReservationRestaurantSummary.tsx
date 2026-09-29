@@ -1,6 +1,5 @@
 import { useState } from 'react'
-
-import { DefaultImage } from '@/shared/components/defaultImage'
+import { ImageFallback } from '@hashi/hds-ui'
 
 export type ReservationRestaurantSummaryProps = {
   requestedDate: string
@@ -12,15 +11,44 @@ export type ReservationRestaurantSummaryProps = {
   }
 }
 
+type RestaurantImageProps = {
+  name: string
+  src?: string
+}
+
+const RestaurantImageContent = ({ name, src }: RestaurantImageProps) => {
+  const [hasError, setHasError] = useState(false)
+
+  if (src && !hasError) {
+    return (
+      <img
+        alt={name}
+        className="size-17 shrink-0 rounded-[5px] object-cover"
+        onError={() => setHasError(true)}
+        src={src}
+      />
+    )
+  }
+
+  return (
+    <ImageFallback
+      aria-label={`${name} 이미지`}
+      className="size-17 shrink-0 rounded-[5px]"
+      markSize="sm"
+      role="img"
+    />
+  )
+}
+
+const RestaurantImage = (props: RestaurantImageProps) => {
+  return <RestaurantImageContent key={props.src} {...props} />
+}
+
 export const ReservationRestaurantSummary = ({
   requestedDate,
   requestedLabel,
   restaurant,
 }: ReservationRestaurantSummaryProps) => {
-  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null)
-  const shouldShowImage =
-    restaurant.imageSrc && failedImageSrc !== restaurant.imageSrc
-
   return (
     <>
       <h2 className="typo-body-3 mb-4">
@@ -29,23 +57,7 @@ export const ReservationRestaurantSummary = ({
       </h2>
 
       <div className="mb-6 flex gap-3">
-        {shouldShowImage ? (
-          <img
-            alt={restaurant.name}
-            className="size-17 shrink-0 rounded-[5px] object-cover"
-            onError={() => {
-              setFailedImageSrc(restaurant.imageSrc ?? null)
-            }}
-            src={restaurant.imageSrc}
-          />
-        ) : (
-          <DefaultImage
-            aria-label={`${restaurant.name} 이미지`}
-            className="size-17 shrink-0 rounded-[5px]"
-            logoSize="sm"
-            role="img"
-          />
-        )}
+        <RestaurantImage name={restaurant.name} src={restaurant.imageSrc} />
 
         <div className="min-w-0">
           <p className="typo-sub-header-1 text-cool-gray-900 line-clamp-2">

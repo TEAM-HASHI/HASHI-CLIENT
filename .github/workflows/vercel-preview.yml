@@ -4,13 +4,27 @@ on:
   pull_request:
     branches:
       - develop
+    paths:
+      - '.github/workflows/vercel-preview.yml'
+      - '.github/scripts/lighthouse-*.cjs'
+      - 'apps/client/**'
+      - 'configs/**'
+      - 'lighthouserc.cjs'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
+      - 'vercel.json'
   push:
     branches:
       - develop
     paths:
       - '.github/workflows/vercel-preview.yml'
+      - '.github/scripts/lighthouse-*.cjs'
       - 'apps/client/**'
       - 'configs/**'
+      - 'lighthouserc.cjs'
       - 'packages/**'
       - 'package.json'
       - 'pnpm-lock.yaml'

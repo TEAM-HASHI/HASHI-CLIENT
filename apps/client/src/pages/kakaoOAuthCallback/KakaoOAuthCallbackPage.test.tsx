@@ -10,7 +10,7 @@ import {
   clearAuthSession,
   setAccessToken,
   setOnboardingSession,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 import { consumeKakaoOAuthState } from '@/features/auth/utils/kakaoOAuth'
 
 import { KakaoOAuthCallbackPage } from '@/pages/kakaoOAuthCallback/KakaoOAuthCallbackPage'
@@ -41,7 +41,7 @@ vi.mock('@/features/auth/api/kakaoLogin', () => ({
   requestKakaoLogin: vi.fn(),
 }))
 
-vi.mock('@/features/auth/session/authSession', () => ({
+vi.mock('@/shared/auth/authSession', () => ({
   clearAuthSession: vi.fn(),
   setAccessToken: vi.fn(),
   setOnboardingSession: vi.fn(),

@@ -2,7 +2,7 @@ import {
   REVIEW_KEYWORDS,
   type ReviewKeywordId,
 } from '@/features/review/constants'
-import type { MyReviewDetailData } from '@/pages/reviewDetail/api/getMyReviewDetail'
+import type { MyReviewDetailData } from '@/features/review/api/getMyReviewDetail'
 import type { ReviewDetail } from '@/pages/reviewDetail/types'
 
 const keywordIdByLabel = new Map<string, ReviewKeywordId>([

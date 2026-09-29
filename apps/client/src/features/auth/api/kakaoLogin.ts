@@ -2,7 +2,7 @@ import type { components } from '@/shared/api/generated/openapi'
 import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { apiClient } from '@/shared/api/apiClient'
 import { isErrorResponse, type ApiResponse } from '@/shared/api/types'
-import { extractBearerToken } from '@/features/auth/utils/extractBearerToken'
+import { extractBearerToken } from '@/shared/api/extractBearerToken'
 
 type KakaoLoginRequest = components['schemas']['KakaoLoginRequest']
 type KakaoLoginData = components['schemas']['KakaoLoginResponse']

@@ -92,8 +92,8 @@ apps/client/src/pages/myReservations/
 - [ ] 조회된 리스트가 비어 있으면 shared `Empty` 컴포넌트를 사용합니다.
 - [ ] 하단 네비게이션은 고정으로 유지됩니다.
 - [ ] 카드 이미지는 식당/음식 이미지가 없을 경우 fallback 이미지를 보여줍니다.
-  - 현재 구현은 page-local `ReservationCardImage`의 임시 fallback을 사용합니다.
-  - `DefaultImage`가 머지되면 `ReservationCardImage` 내부 fallback을 `DefaultImage`로 교체합니다.
+  - 카드별 크기와 비활성 상태는 page-local `ReservationCardImage`가 관리합니다.
+  - 이미지 fallback은 HDS `ImageFallback`을 사용합니다.
 - [ ] 각 상태별 카드 UI를 분리합니다.
 - [ ] `진행 중`, `방문 예정`, `예약 취소` 탭은 `GET /api/v1/reservations/me` API로 조회합니다.
 - [ ] `방문 완료` 탭은 `GET /api/v1/reviews/visited-reservations` API로 조회합니다.
@@ -454,7 +454,7 @@ POST /api/v1/reservations/{reservationId}/cancel
 성공 시:
 
 - 현재 `방문 예정` 리스트에서 해당 예약을 제거하거나 refetch합니다.
-- `예약 취소` chip으로 이동하지는 않습니다.
+- `예약 취소` chip으로 이동해 취소된 예약 목록을 표시합니다.
 - 취소 성공 toast를 보여줍니다.
 - toast 문구는 예약 취소 API 성공 응답의 `message`를 사용합니다.
 
@@ -521,6 +521,7 @@ HDS component:
 - `Button`
 - `Dialog`
 - `BottomNavigation`
+- `ImageFallback`
 
 HDS icon:
 
@@ -559,6 +560,12 @@ feature api/hooks:
 
 - `features/user/useMyProfileSummaryQuery`
 - `features/reservation/useCancelReservationMutation`
+
+feature util:
+
+- `features/reservation/formatReservationDate`
+- `features/reservation/formatReservationDateTime`
+- `features/reservation/formatReservationGuestSummary`
 
 queries:
 
@@ -735,4 +742,4 @@ types:
 
 ## Open Questions
 
-- `DefaultImage`가 머지되면 `ReservationCardImage`의 임시 fallback을 교체해야 합니다.
+- `ReservationCardImage`는 HDS `ImageFallback`을 사용하되 카드별 크기와 비활성 상태를 직접 관리합니다.

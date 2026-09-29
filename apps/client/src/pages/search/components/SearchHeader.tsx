@@ -1,5 +1,5 @@
 import { BackIcon } from '@hashi/hds-icons'
-import { IconButton, SearchField } from '@hashi/hds-ui'
+import { IconButton, SearchBar } from '@hashi/hds-ui'
 import type { Ref } from 'react'
 import type { SyntheticEvent } from 'react'
 
@@ -37,7 +37,7 @@ export const SearchHeader = ({
       >
         <BackIcon className="size-6" />
       </IconButton>
-      <SearchField
+      <SearchBar
         ref={inputRef}
         aria-label="식당 또는 메뉴 검색"
         className="min-w-0 flex-1"

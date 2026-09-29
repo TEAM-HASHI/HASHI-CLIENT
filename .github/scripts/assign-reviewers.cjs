@@ -14,12 +14,11 @@ const readReviewerConfig = (configPath = DEFAULT_CONFIG_PATH) => {
 }
 
 const validateReviewerConfig = (config) => {
-  if (!Number.isInteger(config.requiredReviewerCount)) {
-    throw new Error('requiredReviewerCount must be an integer.')
-  }
-
-  if (config.requiredReviewerCount !== 2) {
-    throw new Error('requiredReviewerCount must be 2.')
+  if (
+    !Number.isInteger(config.requiredReviewerCount) ||
+    config.requiredReviewerCount <= 0
+  ) {
+    throw new Error('requiredReviewerCount must be a positive integer.')
   }
 
   if (!Number.isInteger(config.lookbackDays) || config.lookbackDays <= 0) {
@@ -61,7 +60,7 @@ const validateReviewerConfig = (config) => {
 
   if (enabledReviewers.length < config.requiredReviewerCount + 1) {
     throw new Error(
-      'At least 3 enabled reviewers are required to assign 2 reviewers while excluding the PR author.',
+      `At least ${config.requiredReviewerCount + 1} enabled reviewers are required to assign ${config.requiredReviewerCount} reviewer${config.requiredReviewerCount === 1 ? '' : 's'} while excluding the PR author.`,
     )
   }
 }

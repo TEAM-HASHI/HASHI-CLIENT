@@ -52,10 +52,11 @@
 - [ ] 예약 안내 문구는 고정 정책 문구로 표시합니다.
 - [ ] 하단 액션 영역은 스크롤해도 유지됩니다.
 - [ ] 하단 액션에는 `예약 취소하기`, `홈으로 돌아가기` 버튼을 표시합니다.
-- [ ] 식당 이미지가 없으면 공통 `DefaultImage`를 사용합니다.
+- [ ] 식당 이미지가 없으면 HDS `ImageFallback`을 사용합니다.
 - [ ] fixed Header와 fixed ActionBar는 z-index 토큰을 사용합니다.
 - [ ] 취소된 예약(`reservationStatus: CANCELED`)은 URL 직접 접근으로도 상세 화면을 표시하지 않고 `NotFoundPage`를 표시합니다.
 - [ ] 예약 취소 요청 중에는 취소 확인 버튼과 닫기 버튼을 비활성화해 중복 요청과 중간 닫기를 방지합니다.
+- [ ] `createReservationDetailViewModel`과 UI 컴포넌트가 공유하는 화면 데이터 타입은 page-local `types.ts`에서 관리하며, util은 `components/`를 import하지 않습니다.
 
 ## Data Dependencies
 
@@ -177,8 +178,7 @@ ReservationDetailPage
   - `Header`
   - `IconButton`
   - `Button`
-- app shared component:
-  - `DefaultImage`
+  - `ImageFallback`
 - feature component:
   - `ReservationCancelDialog`
 - page-local component:
@@ -196,9 +196,18 @@ ReservationDetailPage
   - `features/reservation/useCancelReservationMutation`
 - feature api:
   - `features/reservation/cancelReservation`
+- feature util:
+  - `features/reservation/formatReservationDate`
+  - `features/reservation/formatReservationDateTime`
+  - `features/reservation/formatReservationGuestSummary`
+  - `features/reservation/formatReservationMonthDay`
 - page-local util:
   - `createReservationDetailViewModel`
   - `reservationDetailPolicy`
+- page-local type:
+  - `ReservationProgressStatus`
+  - `ReservationProgressStep`
+  - `ReservationReceiptInfoItem`
 - page-local constants:
   - `reservationNotices`
 - icon:

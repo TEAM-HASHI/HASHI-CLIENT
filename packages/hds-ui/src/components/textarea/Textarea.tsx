@@ -31,6 +31,8 @@ export interface TextareaProps extends Omit<
   'children' | 'className'
 > {
   helperText?: string
+  errorMessage?: string
+  maxLengthBehavior?: 'prevent' | 'allow'
   showCounter?: boolean
   className?: string
   textareaClassName?: string
@@ -38,6 +40,8 @@ export interface TextareaProps extends Omit<
 
 export const Textarea = ({
   helperText,
+  errorMessage,
+  maxLengthBehavior = 'prevent',
   showCounter,
   className,
   textareaClassName,
@@ -45,10 +49,12 @@ export const Textarea = ({
   defaultValue,
   maxLength,
   disabled = false,
+  rows = 1,
   onBeforeInput,
   onChange,
   id,
   'aria-describedby': ariaDescribedBy,
+  'aria-invalid': ariaInvalid,
   ...props
 }: TextareaProps) => {
   const generatedId = useId()
@@ -57,15 +63,23 @@ export const Textarea = ({
   const counterId = `${textareaId}-counter`
 
   const isControlled = value !== undefined
-  const limitedValue = limitText(value, maxLength)
-  const limitedDefaultValue = limitText(defaultValue, maxLength)
+  const inputMaxLength = maxLengthBehavior === 'prevent' ? maxLength : undefined
+  const limitedValue = limitText(value, inputMaxLength)
+  const limitedDefaultValue = limitText(defaultValue, inputMaxLength)
   const [uncontrolledValue, setUncontrolledValue] = useState(
     () => limitedDefaultValue,
   )
   const currentValue = isControlled ? limitedValue : uncontrolledValue
   const count = getTextLength(currentValue)
   const shouldShowCounter = showCounter ?? maxLength !== undefined
-  const hasHelperText = helperText != null && helperText !== ''
+  const isOverLimit = maxLength !== undefined && count > maxLength
+  const isInvalid =
+    isOverLimit ||
+    (ariaInvalid !== undefined &&
+      ariaInvalid !== false &&
+      ariaInvalid !== 'false')
+  const supportText = isInvalid && errorMessage ? errorMessage : helperText
+  const hasHelperText = supportText != null && supportText !== ''
   const hasSupportRow = hasHelperText || shouldShowCounter
 
   const describedBy = [
@@ -79,7 +93,7 @@ export const Textarea = ({
   const handleBeforeInput = (event: ReactInputEvent<HTMLTextAreaElement>) => {
     onBeforeInput?.(event)
 
-    if (event.defaultPrevented || maxLength === undefined) {
+    if (event.defaultPrevented || inputMaxLength === undefined) {
       return
     }
 
@@ -89,7 +103,7 @@ export const Textarea = ({
 
     if (
       selectedLength === 0 &&
-      textarea.value.length >= maxLength &&
+      textarea.value.length >= inputMaxLength &&
       inputEvent.data
     ) {
       event.preventDefault()
@@ -98,9 +112,9 @@ export const Textarea = ({
 
   const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     const nextValue =
-      maxLength === undefined
+      inputMaxLength === undefined
         ? event.currentTarget.value
-        : event.currentTarget.value.slice(0, maxLength)
+        : event.currentTarget.value.slice(0, inputMaxLength)
 
     if (event.currentTarget.value !== nextValue) {
       event.currentTarget.value = nextValue
@@ -120,12 +134,14 @@ export const Textarea = ({
         id={textareaId}
         aria-describedby={describedBy || undefined}
         value={isControlled ? limitedValue : uncontrolledValue}
-        maxLength={maxLength}
+        maxLength={inputMaxLength}
+        aria-invalid={isOverLimit ? true : ariaInvalid}
+        rows={rows}
         disabled={disabled}
         onBeforeInput={handleBeforeInput}
         onChange={handleChange}
         className={cn(
-          'border-warm-gray-100 min-h-[230px] w-full resize-none rounded-[10px] border bg-white p-5',
+          'border-warm-gray-100 min-h-14 w-full resize-none rounded-[10px] border bg-white p-4.75',
           'typo-body-4 text-primary-200 placeholder:text-warm-gray-300 font-sans',
           'focus-visible:border-cool-gray-500 focus-visible:outline-cool-gray-500 focus-visible:outline-2 focus-visible:outline-offset-0',
           'disabled:bg-secondary-200 disabled:text-warm-gray-300 disabled:cursor-not-allowed',
@@ -133,13 +149,16 @@ export const Textarea = ({
         )}
       />
       {hasSupportRow ? (
-        <div className="typo-body-6 flex w-full items-center justify-between gap-3 font-sans leading-[1.36] whitespace-nowrap">
+        <div className="typo-body-6 flex w-full items-start justify-between gap-3 font-sans leading-[1.36]">
           {hasHelperText ? (
             <p
               id={helperTextId}
-              className="text-warm-gray-300 min-w-0 truncate"
+              className={cn(
+                'typo-body-7 min-w-0 break-words',
+                isInvalid ? 'text-primary-400' : 'text-warm-gray-300',
+              )}
             >
-              {helperText}
+              {supportText}
             </p>
           ) : (
             <span aria-hidden="true" />
@@ -148,9 +167,15 @@ export const Textarea = ({
             <p
               id={counterId}
               aria-live="polite"
-              className="flex shrink-0 items-end gap-[2px]"
+              className="flex shrink-0 items-end gap-0.5"
             >
-              <span className="text-primary-200">{count}</span>
+              <span
+                className={
+                  isOverLimit ? 'text-primary-400' : 'text-primary-200'
+                }
+              >
+                {count}
+              </span>
               {maxLength !== undefined ? (
                 <span className="text-warm-gray-300">/{maxLength}</span>
               ) : null}

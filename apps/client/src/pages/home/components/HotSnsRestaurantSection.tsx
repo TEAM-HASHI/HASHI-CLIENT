@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
+import { Thumbnail } from '@hashi/hds-ui'
 
 import type { HotSnsRestaurant } from '@/pages/home/homeContent'
-import { ImageWithDefaultFallback } from '@/shared/components/defaultImage'
 
 interface HotSnsRestaurantSectionProps {
   getRestaurantDetailPath: (restaurantId: string) => string
@@ -50,11 +50,7 @@ export const HotSnsRestaurantSection = ({
                     className="grid grid-cols-[60px_minmax(0,1fr)] gap-4"
                     to={getRestaurantDetailPath(restaurantId)}
                   >
-                    <ImageWithDefaultFallback
-                      alt={imageAlt}
-                      className="size-[60px] rounded-[5px] object-cover"
-                      src={imageUrl}
-                    />
+                    <Thumbnail alt={imageAlt} size="sm" src={imageUrl} />
                     <span className="flex min-w-0 flex-col justify-center gap-1.5">
                       <span className="typo-sub-header-2 text-primary-200 truncate">
                         {name}

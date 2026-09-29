@@ -270,11 +270,10 @@ describe('Carousel', () => {
     const dots = getIndicator().querySelectorAll('span')
 
     expect(dots[0]).toHaveClass(
-      'scale-100',
-      'opacity-100',
-      'transition-[width,height,opacity,transform,background-color]',
+      'w-3',
+      'transition-[width,background-color]',
       'motion-reduce:transition-none',
     )
-    expect(dots[1]).toHaveClass('scale-90', 'opacity-70')
+    expect(dots[1]).toHaveClass('w-1', 'h-1', 'bg-warm-gray-300')
   })
 })

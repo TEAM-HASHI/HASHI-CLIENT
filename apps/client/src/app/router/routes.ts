@@ -1,16 +1,24 @@
-import { createElement } from 'react'
+import { createElement, type ReactNode } from 'react'
 import type { RouteObject } from 'react-router-dom'
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import { RootLayout } from '@/app/layout/RootLayout'
-import {
-  lazyPages,
-  withLazyFallback,
-  withSilentLazyFallback,
-} from '@/app/router/lazy'
+import { lazyPages } from '@/app/router/lazy'
 import { ROUTES } from '@/app/router/path'
+import {
+  RouteLoadingBoundary,
+  SilentRouteLoadingBoundary,
+} from '@/app/router/RouteLoadingBoundary'
 import { AuthOnlyRoute, GuestOnlyRoute } from '@/app/router/RouteGuards'
 import { HomePage } from '@/pages/home'
+
+const withLazyFallback = (element: ReactNode) => {
+  return createElement(RouteLoadingBoundary, null, element)
+}
+
+const withSilentLazyFallback = (element: ReactNode) => {
+  return createElement(SilentRouteLoadingBoundary, null, element)
+}
 
 export const appRoutes: RouteObject[] = [
   {

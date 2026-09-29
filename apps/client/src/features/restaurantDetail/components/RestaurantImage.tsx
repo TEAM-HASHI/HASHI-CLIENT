@@ -1,23 +1,15 @@
+import { ImageFallback, type ImageFallbackMarkSize } from '@hashi/hds-ui'
 import { useState } from 'react'
 
-import {
-  DefaultImage,
-  type DefaultImageLogoSize,
-} from '@/shared/components/defaultImage'
-
 interface RestaurantImageProps {
-  alt?: string
   className: string
-  defaultImageTestId: string
-  logoSize: DefaultImageLogoSize
+  markSize: ImageFallbackMarkSize
   src?: string
 }
 
 const RestaurantImageContent = ({
-  alt = '',
   className,
-  defaultImageTestId,
-  logoSize,
+  markSize,
   src,
 }: RestaurantImageProps) => {
   const [hasError, setHasError] = useState(false)
@@ -25,7 +17,8 @@ const RestaurantImageContent = ({
   if (src && !hasError) {
     return (
       <img
-        alt={alt}
+        alt=""
+        aria-hidden="true"
         className={className}
         onError={() => setHasError(true)}
         src={src}
@@ -34,15 +27,14 @@ const RestaurantImageContent = ({
   }
 
   return (
-    <DefaultImage
+    <ImageFallback
       aria-hidden="true"
       className={className}
-      data-testid={defaultImageTestId}
-      logoSize={logoSize}
+      markSize={markSize}
     />
   )
 }
 
-export const RestaurantImage = (props: RestaurantImageProps) => {
-  return <RestaurantImageContent key={props.src ?? 'fallback'} {...props} />
-}
+export const RestaurantImage = (props: RestaurantImageProps) => (
+  <RestaurantImageContent key={props.src} {...props} />
+)

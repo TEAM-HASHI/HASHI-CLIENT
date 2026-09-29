@@ -47,6 +47,7 @@ export type CarouselTrackProps = ComponentPropsWithoutRef<'div'>
 export type CarouselItemProps = ComponentPropsWithoutRef<'div'>
 export type CarouselIndicatorProps = ComponentPropsWithoutRef<'div'> & {
   align?: CarouselIndicatorAlign
+  placement?: 'overlay' | 'inline'
   dotClassName?: string
   activeDotClassName?: string
 }
@@ -325,6 +326,7 @@ const Item = ({
 
 const Indicator = ({
   align = 'center',
+  placement = 'overlay',
   className,
   dotClassName,
   activeDotClassName,
@@ -341,11 +343,13 @@ const Indicator = ({
       {...props}
       aria-hidden="true"
       className={cn(
-        'z-raised pointer-events-none absolute bottom-5 flex items-center gap-[7px]',
-        indicatorAlignClassNames[align],
+        'z-raised pointer-events-none flex shrink-0 items-center gap-1.75',
+        placement === 'overlay' && 'absolute bottom-5',
+        placement === 'overlay' && indicatorAlignClassNames[align],
         className,
       )}
       data-align={align}
+      data-placement={placement}
       data-hds-carousel-indicator=""
     >
       {Array.from({ length: itemCount }, (_, itemIndex) => {
@@ -354,10 +358,8 @@ const Indicator = ({
         return (
           <span
             className={cn(
-              'block rounded-full transition-[width,height,opacity,transform,background-color] duration-150 ease-out motion-reduce:transition-none',
-              isActive
-                ? 'bg-warm-gray-300 h-1 w-[22px] scale-100 opacity-100'
-                : 'bg-warm-gray-100 size-1.5 scale-90 opacity-70',
+              'bg-warm-gray-300 block h-1 shrink-0 rounded-full transition-[width,background-color] duration-150 ease-out motion-reduce:transition-none',
+              isActive ? 'w-3' : 'w-1',
               dotClassName,
               isActive && activeDotClassName,
             )}

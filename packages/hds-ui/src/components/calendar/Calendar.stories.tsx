@@ -6,7 +6,7 @@ import { Calendar } from './Calendar'
 const JUNE_2026 = new Date(2026, 5, 1)
 
 const calendarDecorator = (Story: () => ReactNode) => (
-  <div className="w-[393px] max-w-full bg-white px-8 py-6">
+  <div className="w-102.5 max-w-full bg-white px-8 py-6">
     <Story />
   </div>
 )
@@ -15,6 +15,9 @@ const meta = {
   title: 'Components/Calendar',
   component: Calendar,
   tags: ['autodocs'],
+  parameters: {
+    layout: 'fullscreen',
+  },
   args: {
     month: JUNE_2026,
   },
@@ -44,12 +47,6 @@ const meta = {
       control: false,
     },
     disabledDates: {
-      control: false,
-    },
-    weekdayLabels: {
-      control: false,
-    },
-    weekdayAriaLabels: {
       control: false,
     },
   },
@@ -121,7 +118,6 @@ export const CustomLabels: Story = {
   args: {
     formatYearLabel: (month) => `${month.getFullYear()}년`,
     formatMonthLabel: (month) => String(month.getMonth() + 1).padStart(2, '0'),
-    weekdayLabels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
   },
 }
 
@@ -135,5 +131,24 @@ export const LabelledRegion: Story = {
   args: {
     'aria-label': '예약 가능한 날짜를 선택하는 달력',
     selectedDate: new Date(2026, 5, 7),
+  },
+}
+
+export const SixWeekMonth: Story = {
+  args: {
+    month: new Date(2026, 7, 1),
+    selectedDate: new Date(2026, 7, 31),
+  },
+}
+
+export const NarrowContainer: Story = {
+  render: (args) => (
+    <div className="w-64 max-w-full">
+      <Calendar {...args} />
+    </div>
+  ),
+  args: {
+    selectedDate: new Date(2026, 5, 7),
+    disabledDates: [new Date(2026, 5, 6)],
   },
 }

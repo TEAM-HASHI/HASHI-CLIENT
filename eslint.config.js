@@ -6,6 +6,24 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 import pluginQuery from '@tanstack/eslint-plugin-query'
 
+const appSourceRelativeImportPattern = {
+  group: ['./*', '../*'],
+  message:
+    'apps/*/src 내부 모듈은 상대 경로 대신 @/ alias import를 사용하세요. 같은 폴더 public barrel인 index.ts만 예외입니다.',
+}
+
+const sharedFeatureImportPattern = {
+  group: ['@/features', '@/features/*', '@/features/**'],
+  message:
+    'shared 레이어는 features를 import할 수 없습니다. 공통 기반으로 이동하거나 상위 레이어에서 조립하세요.',
+}
+
+const sharedIndexParentRelativeImportPattern = {
+  regex: '^\\.\\./',
+  message:
+    'shared index.ts는 같은 폴더의 public barrel export(./*)만 허용합니다. 상위 폴더를 참조하지 마세요.',
+}
+
 export default tseslint.config(
   {
     ignores: [
@@ -74,12 +92,35 @@ export default tseslint.config(
       'no-restricted-imports': [
         'error',
         {
+          patterns: [appSourceRelativeImportPattern],
+        },
+      ],
+    },
+  },
+  {
+    files: ['apps/client/src/shared/**/*.{ts,tsx}'],
+    ignores: ['apps/client/src/shared/**/index.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
           patterns: [
-            {
-              group: ['./*', '../*'],
-              message:
-                'apps/*/src 내부 모듈은 상대 경로 대신 @/ alias import를 사용하세요. 같은 폴더 public barrel인 index.ts만 예외입니다.',
-            },
+            appSourceRelativeImportPattern,
+            sharedFeatureImportPattern,
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['apps/client/src/shared/**/index.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            sharedFeatureImportPattern,
+            sharedIndexParentRelativeImportPattern,
           ],
         },
       ],

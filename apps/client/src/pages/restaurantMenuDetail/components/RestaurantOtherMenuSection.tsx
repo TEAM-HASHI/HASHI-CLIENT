@@ -1,6 +1,6 @@
 import type { Ref } from 'react'
 
-import { RestaurantMenuSection } from '@/features/restaurantDetail/components/RestaurantMenuSection'
+import { RestaurantMenuListSection } from '@/features/restaurantDetail/components/RestaurantMenuListSection'
 import type { RestaurantMenu } from '@/features/restaurantDetail/types/restaurantDetail'
 
 interface RestaurantOtherMenuSectionProps {
@@ -27,7 +27,7 @@ export const RestaurantOtherMenuSection = ({
         다른 메뉴 <span className="text-warm-gray-300">{totalCount}</span>
       </h2>
       <div className="mt-2">
-        <RestaurantMenuSection
+        <RestaurantMenuListSection
           hasMoreMenus={hasMoreMenus}
           loadMoreRef={loadMoreRef}
           menus={menus}

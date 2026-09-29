@@ -13,8 +13,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ROUTES } from '@/app/router/path'
 import { deleteReview } from '@/features/review/api/deleteReview'
 import { getMyReviewCount } from '@/features/review/api/getMyReviewCount'
+import { getMyReviews } from '@/features/review/api/getMyReviews'
 import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
-import { getMyReviews } from '@/pages/myReviews/api/myReviewsApi'
 import { MyReviewsPage } from '@/pages/myReviews/MyReviewsPage'
 import emptyImage from '@/shared/assets/images/empty.webp'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
@@ -33,7 +33,7 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
-vi.mock('@/pages/myReviews/api/myReviewsApi', () => ({
+vi.mock('@/features/review/api/getMyReviews', () => ({
   getMyReviews: vi.fn(),
 }))
 
@@ -131,6 +131,9 @@ describe('MyReviewsPage', () => {
     expect(
       await screen.findByRole('tab', { name: '리뷰 쓰기 2' }),
     ).toHaveAttribute('aria-selected', 'true')
+    expect(
+      document.querySelector('[data-hds-tabs-indicator]'),
+    ).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: '작성한 리뷰 4' })).toBeVisible()
     expect(getVisitedReservations).not.toHaveBeenCalledWith({
       reviewStatus: 'reviewed',

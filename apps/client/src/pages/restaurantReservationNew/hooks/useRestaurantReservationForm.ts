@@ -1,20 +1,10 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback } from 'react'
 
-import {
-  INITIAL_RESERVATION_GUEST_COUNTS,
-  RESERVATION_GUEST_COUNTERS,
-} from '@/features/reservation/constants/guest'
-import type {
-  ReservationGuestCounts,
-  ReservationGuestType,
-} from '@/features/reservation/constants/guest'
+import type { ReservationGuestCounts } from '@/features/reservation/constants/guest'
+import { useReservationFormControls } from '@/features/reservation/hooks/useReservationFormControls'
 import { createReservationTimeSlots } from '@/features/reservation/utils/createReservationTimeSlots'
-import {
-  checkIsTodayOrBefore,
-  createMonthStart,
-  formatDateToLocalDateString,
-} from '@/shared/utils/date'
 import type { ReservationRestaurant } from '@/pages/restaurantReservationNew/hooks/useReservationRestaurant'
+import { formatDateToLocalDateString } from '@/shared/utils/date'
 
 interface UseRestaurantReservationFormParams {
   restaurant: ReservationRestaurant
@@ -68,100 +58,59 @@ const checkIsReservableBusinessHours = (
 export const useRestaurantReservationForm = ({
   restaurant,
 }: UseRestaurantReservationFormParams) => {
-  const [guestName, setGuestName] = useState('')
-  const [guestCounts, setGuestCounts] = useState<ReservationGuestCounts>(
-    INITIAL_RESERVATION_GUEST_COUNTS,
-  )
-  const [visibleMonth, setVisibleMonth] = useState(() =>
-    createMonthStart(new Date()),
-  )
-  const [selectedDate, setSelectedDate] = useState<Date>()
-  const [selectedTime, setSelectedTime] = useState<string>()
-  const [requestNote, setRequestNote] = useState('')
-  const minMonth = createMonthStart(new Date())
-
-  const checkIsDateDisabled = useCallback(
-    (date: Date) => {
-      const businessHours = getBusinessHoursForDate(
-        date,
-        restaurant.businessHours,
-      )
-
-      return (
-        checkIsTodayOrBefore(date) ||
-        !checkIsReservableBusinessHours(businessHours)
-      )
-    },
+  const checkIsDateReservable = useCallback(
+    (date: Date) =>
+      checkIsReservableBusinessHours(
+        getBusinessHoursForDate(date, restaurant.businessHours),
+      ),
     [restaurant.businessHours],
   )
 
-  const timeSlots = useMemo(() => {
-    const businessHours = selectedDate
-      ? getBusinessHoursForDate(selectedDate, restaurant.businessHours)
-      : restaurant.businessHours.find(checkIsReservableBusinessHours)
+  const getTimeSlots = useCallback(
+    (selectedDate: Date | undefined) => {
+      const businessHours = selectedDate
+        ? getBusinessHoursForDate(selectedDate, restaurant.businessHours)
+        : restaurant.businessHours.find(checkIsReservableBusinessHours)
 
-    if (
-      !checkIsReservableBusinessHours(businessHours) ||
-      !businessHours?.open ||
-      !businessHours.close
-    ) {
-      return []
-    }
+      if (
+        !checkIsReservableBusinessHours(businessHours) ||
+        !businessHours?.open ||
+        !businessHours.close
+      ) {
+        return []
+      }
 
-    return createReservationTimeSlots(
-      {
-        open: businessHours.open,
-        close: businessHours.close,
-        breakStart: businessHours.breakStart,
-        breakEnd: businessHours.breakEnd,
-      },
-      restaurant.reservationIntervalMinutes,
-    )
-  }, [
-    restaurant.businessHours,
-    restaurant.reservationIntervalMinutes,
-    selectedDate,
-  ])
+      return createReservationTimeSlots(
+        {
+          open: businessHours.open,
+          close: businessHours.close,
+          breakStart: businessHours.breakStart,
+          breakEnd: businessHours.breakEnd,
+        },
+        restaurant.reservationIntervalMinutes,
+      )
+    },
+    [restaurant.businessHours, restaurant.reservationIntervalMinutes],
+  )
 
-  const totalGuestCount =
-    guestCounts.adult + guestCounts.teen + guestCounts.child
-  const isGuestNameValid = guestName.trim().length > 0
-  const isSelectedDateValid =
-    selectedDate !== undefined && !checkIsDateDisabled(selectedDate)
+  const formControls = useReservationFormControls({
+    checkIsDateReservable,
+    getTimeSlots,
+  })
+  const { fields, guestCounters, calendar, timeSelector, validity, values } =
+    formControls
   const canSubmit =
-    isGuestNameValid &&
-    totalGuestCount > 0 &&
-    isSelectedDateValid &&
-    selectedTime !== undefined
-
-  const handleGuestCountChange = (
-    guestType: ReservationGuestType,
-    amount: number,
-  ) => {
-    setGuestCounts((currentGuestCounts) => ({
-      ...currentGuestCounts,
-      [guestType]: Math.max(0, currentGuestCounts[guestType] + amount),
-    }))
-  }
-
-  const handleTimeSelect = (time: string) => {
-    if (!isSelectedDateValid) {
-      return
-    }
-
-    setSelectedTime(time)
-  }
-
-  const handleDateSelect = (nextDate: Date) => {
-    if (selectedDate?.getTime() !== nextDate.getTime()) {
-      setSelectedTime(undefined)
-    }
-
-    setSelectedDate(nextDate)
-  }
+    validity.isGuestNameValid &&
+    validity.totalGuestCount > 0 &&
+    validity.isSelectedDateValid &&
+    validity.hasSelectedTime
 
   const createReservationDraft = (): ReservationDraft | undefined => {
-    if (!canSubmit || selectedDate === undefined || !selectedTime) {
+    if (
+      !canSubmit ||
+      values.selectedDate === undefined ||
+      !values.selectedTime
+    ) {
       return undefined
     }
 
@@ -171,48 +120,19 @@ export const useRestaurantReservationForm = ({
       restaurantAddress: restaurant.address,
       restaurantImageUrl: restaurant.imageUrl,
       reservationFee: restaurant.reservationFee,
-      guestName: guestName.trim(),
-      guests: guestCounts,
-      date: formatDateToLocalDateString(selectedDate),
-      time: selectedTime,
-      requestNote,
+      guestName: fields.guestName.value.trim(),
+      guests: values.guestCounts,
+      date: formatDateToLocalDateString(values.selectedDate),
+      time: values.selectedTime,
+      requestNote: fields.requestNote.value,
     }
   }
 
   return {
-    fields: {
-      guestName: {
-        value: guestName,
-        onValueChange: setGuestName,
-      },
-      requestNote: {
-        value: requestNote,
-        onValueChange: setRequestNote,
-      },
-    },
-    guestCounters: RESERVATION_GUEST_COUNTERS.map(({ key, label }) => ({
-      key,
-      label,
-      value: guestCounts[key],
-      onDecrease: () => handleGuestCountChange(key, -1),
-      onIncrease: () => handleGuestCountChange(key, 1),
-    })),
-    calendar: {
-      isDateDisabled: checkIsDateDisabled,
-      minMonth,
-      visibleMonth,
-      selectedDate,
-      onDateSelect: handleDateSelect,
-      onMonthChange: (nextMonth: Date) => {
-        setVisibleMonth(createMonthStart(nextMonth))
-      },
-    },
-    timeSelector: {
-      timeSlots,
-      selectedTime,
-      disabled: !isSelectedDateValid,
-      onTimeSelect: handleTimeSelect,
-    },
+    fields,
+    guestCounters,
+    calendar,
+    timeSelector,
     submit: {
       canSubmit,
       createReservationDraft,

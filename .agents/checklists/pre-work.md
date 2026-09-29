@@ -10,12 +10,16 @@
 - 변경이 `apps/client`, `packages/hds-ui`, `packages/hds-icons`, `configs`, `turbo`, `docs`, `.agents` 중 어디에 속하는지 분류합니다.
 - 변경 범위에 맞는 `docs/conventions`, `docs/architecture`, `docs/workflows`, `docs/rules` 문서를 확인합니다.
 - 구현 기준 spec이 필요한 작업인지 `docs/workflows/spec-writing.md` 기준으로 판단합니다.
+- `apps/client/**` 코드 변경은 `docs/workflows/testing.md` 기준으로 자동 테스트 또는 수동 확인 범위를 판단합니다.
+- PR 생성 또는 코드리뷰 작업은 `docs/workflows/code-review.md`를 확인합니다.
 
 ## Routing
 
 | Work type                | Read first                                                                                                                                                  |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Jira, branch, commit, PR | `docs/conventions/jira-ticket.md`, `docs/conventions/git.md`, `.agents/recipes/jira-branch-pr.md`                                                           |
+| Client test decision     | `docs/workflows/testing.md`, `.agents/checklists/verification.md`                                                                                           |
+| Client code review       | `docs/workflows/code-review.md`, `docs/workflows/pr-checklist.md`                                                                                           |
 | Page or route            | `docs/architecture/app-structure.md`, `docs/architecture/routing-and-access-policy.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/page-feature.md` |
 | API query or mutation    | `docs/architecture/data-layer.md`, `docs/workflows/api-integration.md`, `.agents/recipes/api-integration.md`                                                |
 | Form or state flow       | `docs/conventions/coding.md`, `docs/workflows/spec-writing.md`, `.agents/recipes/form-flow.md`                                                              |

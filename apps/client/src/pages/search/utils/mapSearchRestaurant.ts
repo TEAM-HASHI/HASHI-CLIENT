@@ -1,4 +1,7 @@
-import type { RestaurantSummaryResponse } from '@/features/restaurantList/api/getRestaurants'
+import type {
+  RestaurantsResult,
+  RestaurantSummaryResponse,
+} from '@/features/restaurantList/api/getRestaurants'
 import type { FoodCategoryValue, SearchRestaurant } from '@/pages/search/types'
 
 const foodCategoryValues = [
@@ -123,4 +126,14 @@ export const mapSearchRestaurant = (
     rating: restaurant.rating ?? 0,
     tag,
   }
+}
+
+export const mapSearchRestaurantPages = (pages: RestaurantsResult[] = []) => {
+  return pages.flatMap((page) =>
+    page.restaurants.flatMap((restaurant) => {
+      const searchRestaurant = mapSearchRestaurant(restaurant)
+
+      return searchRestaurant ? [searchRestaurant] : []
+    }),
+  )
 }

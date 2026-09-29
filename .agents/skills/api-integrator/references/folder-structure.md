@@ -23,7 +23,9 @@ apps/client/src/pages/{page}/
 
 ## Feature Flow
 
-Use when the same business flow is reused by multiple pages or sections.
+Use only when page-specific draft, view model, route state, and form state dependencies can be removed without changing the API contract, and the same endpoint, query key, cache synchronization, or API type contract is shared by multiple pages.
+
+Do not promote only because a page has multiple sections. If page-specific adapters are still needed, keep those adapters page-local and extract only the reusable endpoint or query contract.
 
 ```text
 apps/client/src/features/{feature}/

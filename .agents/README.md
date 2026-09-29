@@ -12,8 +12,9 @@ Agent는 작업을 시작할 때 아래 순서로 필요한 문서만 확인합�
 2. 작업 유형에 맞는 `docs/` 문서
 3. `checklists/pre-work.md`
 4. 필요한 경우 `recipes/*`
-5. 작업 후 `checklists/verification.md`
-6. 최종 응답 전 `checklists/final-report.md`
+5. PR 또는 리뷰 작업이면 `docs/workflows/code-review.md`
+6. 작업 후 `checklists/verification.md`
+7. 최종 응답 전 `checklists/final-report.md`
 
 ## Structure
 

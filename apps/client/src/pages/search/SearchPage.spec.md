@@ -89,7 +89,7 @@
 - [x] 현재 식당 목록 API의 `summary`는 식당 소개 문구이므로 영업시간으로 매핑하지 않습니다.
 - [x] 식당 목록 API의 `todayBusinessHour`를 시간 영역에 표시합니다.
 - [x] `todayBusinessHour`가 없거나 영업시간 정보가 불완전하면 시간 영역에는 `영업시간 확인 필요`를 표시합니다.
-- [x] 식당 이미지가 없거나 이미지 로드에 실패하면 임시 placeholder 대신 공통 `DefaultImage` fallback을 사용합니다.
+- [x] 식당 이미지는 HDS `Thumbnail`을 사용하며, 이미지가 없거나 로드에 실패하면 내부 fallback을 표시합니다.
 - [x] 검색 결과가 없으면 결과 리스트 대신 shared `ListEmptyState`를 보여줍니다.
 - [x] empty state에서도 검색어와 적용된 필터값은 유지합니다.
 - [x] 좁은 viewport에서 긴 식당명은 최대 2줄까지 보여주고 카드 레이아웃을 깨지 않습니다.
@@ -262,8 +262,11 @@ export const searchRestaurantQueryKeys = {
 ## State
 
 - owner:
-  - `SearchPage`는 UI composition만 담당합니다.
-  - `useSearchPage`는 검색어 제출, 최근 검색어 저장, 필터 pending/apply/reset, 바텀시트 open state, navigation, query orchestration을 담당합니다.
+  - `SearchPage`는 UI composition, 검색어 제출, navigation, page-local hook 조립을 담당합니다.
+  - `useSearchUrlState`는 URL search param 파싱, 기본값 검증, 적용된 검색 상태 도출, URL 직렬화를 담당합니다.
+  - `useSearchFilterSheet`는 필터별 open, pending, apply, reset 상태를 담당합니다.
+  - `useRecentSearchKeywords`는 localStorage 기반 최근 검색어 상태를 담당합니다.
+  - `useSearchRestaurantResults`는 검색 infinite query, result mapping, infinite scroll trigger를 조립합니다.
 - local state:
   - search input value
   - sort bottom sheet open state
@@ -279,6 +282,7 @@ export const searchRestaurantQueryKeys = {
   - 음식 장르 필터가 기본값이 아니면 `category` search param을 갱신합니다.
   - `/search?keyword=...`로 진입하면 검색창과 검색 결과 상태를 URL에서 복원합니다.
   - 식당 상세로 이동한 뒤 브라우저 뒤로가기를 하면 직전 검색 URL이 복원되어 같은 검색 결과 상태로 돌아옵니다.
+  - 같은 `/search` route 안에서 browser history가 변경되면 검색창 draft도 URL keyword와 다시 동기화합니다.
 - server state:
   - 검색 결과 식당 목록
   - loading / error / empty state
@@ -326,10 +330,18 @@ export const searchRestaurantQueryKeys = {
 
 ```text
 SearchPage
-  useSearchPage
+  useSearchUrlState
+  useRecentSearchKeywords
+  useSearchKeywordRecommendationsQuery
+  useSearchFilterSheet(sort)
+  useSearchFilterSheet(foodCategory)
+  useSearchRestaurantResults
+    useSearchRestaurantsInfiniteQuery
+    useInfiniteScrollTrigger
+    mapSearchRestaurantPages
   SearchHeader
     BackButton
-    SearchField
+    SearchBar
   SearchIdlePanel
     RecentSearchKeywordSection
       KeywordChipList
@@ -350,11 +362,12 @@ SearchPage
 ## Component Mapping
 
 - HDS component:
-  - `SearchField`: 검색 input primitive
+  - `SearchBar`: 검색 input primitive
   - `IconButton`: 뒤로가기 icon-only button
   - `Chip`: 최근 검색어와 추천 검색어 keyword pill
   - `Button`: 바텀시트 footer의 `초기화`, `적용`
   - `BottomSheet`: 필터 바텀시트 shell
+  - `Thumbnail`: 검색 결과 이미지와 이미지 로드 실패 fallback
 - app shared component:
   - `FilterBottomSheet`: 정렬/음식 장르 단일 선택 바텀시트 조합
   - `ListEmptyState`: 검색 결과 없음 상태
@@ -367,29 +380,31 @@ SearchPage
   - `RestaurantResultItem`
   - `SearchErrorState`
 - page-local hook:
-  - `useSearchPage`
   - `useRecentSearchKeywords`
+  - `useSearchUrlState`
+  - `useSearchFilterSheet`
+  - `useSearchRestaurantResults`
 - icon:
   - `BackIcon`
   - `TapDownIcon`: 설계서의 `ic_chevron_down`에 해당하는 기존 HDS 아이콘
   - `CheckIcon`
-  - `SearchIcon`은 `SearchField` 내부에서 사용
+  - `SearchIcon`은 `SearchBar` 내부에서 사용
   - `StarFillIcon`: 결과 리스트의 단일 별점 아이콘
   - `ClockSmallIcon`
   - empty state graphic은 shared `ListEmptyState`가 소유하는 공통 이미지를 사용합니다.
 
 ## Reuse Audit
 
-- `SearchField`를 사용합니다. 검색 실행, 최근 검색어, 추천 검색어, query 동기화는 HDS 범위가 아니므로 page가 소유합니다.
+- `SearchBar`를 사용합니다. 검색 실행, 최근 검색어, 추천 검색어, query 동기화는 HDS 범위가 아니므로 page가 소유합니다.
 - `IconButton size="xs"`와 `BackIcon`을 조합해 뒤로가기 버튼을 구현합니다. 호출부에서 `44px` 터치 영역을 확보하고 아이콘은 `24px`로 유지합니다.
 - `Chip`을 최근 검색어와 추천 검색어 pill에 사용합니다. 칩 목록의 horizontal scroll과 키워드 선택 동작은 page-local `KeywordChipList`가 소유합니다.
-- `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 `useSearchPage`가 주입합니다.
-- 검색/필터/바텀시트 상태와 이동 로직은 `SearchPage`에 직접 두지 않고 `useSearchPage`가 주입합니다.
+- `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 page-local `useSearchFilterSheet`가 주입합니다.
+- URL 적용 상태, 필터 pending 상태, 최근 검색어, query 결과 상태는 각각의 page-local hook이 소유하고 `SearchPage`는 검색 제출과 화면 조립만 담당합니다.
 - API 연동된 검색 식당 데이터와 추천 검색어는 page-local mock data에 의존하지 않습니다.
 - `BottomSheet`를 직접 새로 만들지 않습니다. overlay click과 Escape close는 기존 `BottomSheet`의 접근성 계약을 따릅니다.
 - `Button`을 바텀시트 footer 액션에 사용합니다.
 - 검색 결과 없음 UI는 shared `ListEmptyState`를 사용합니다. 검색 페이지는 `description="검색된 식당이 없습니다."`와 결과 영역 중앙 정렬에 필요한 `className`만 주입합니다.
-- `Header`는 사용하지 않습니다. HDS `Header` spec에서 `bar_search_back_button`은 `IconButton` + `SearchField` 조합으로 분류되어 `Header` v1 범위에서 제외되어 있습니다.
+- `Header`는 사용하지 않습니다. HDS `Header` spec에서 `bar_search_back_button`은 `IconButton` + `SearchBar` 조합으로 분류되어 `Header` v1 범위에서 제외되어 있습니다.
 - `StarRating`은 사용하지 않습니다. 검색 결과 리스트 디자인은 5개 별 묶음이 아니라 단일 별 아이콘 + 숫자 텍스트이므로 `StarFillIcon`과 텍스트 조합이 더 정확합니다.
 - `Badge`는 사용하지 않습니다. 음식 종류는 pill/badge가 아니라 `# 아끼소바` 형태의 텍스트 태그로 보이므로 page-local 텍스트로 구현합니다.
 - 검색 전용 `SearchEmptyState`와 page-local empty asset은 사용하지 않습니다. list empty UI는 앱 공통 `ListEmptyState`로 통일합니다.
@@ -415,7 +430,7 @@ SearchPage
 ### Page-Local Files To Keep
 
 - `apps/client/src/pages/search/components/SearchHeader.tsx`
-  - 뒤로가기 `IconButton`과 `SearchField`를 조합합니다.
+  - 뒤로가기 `IconButton`과 `SearchBar`를 조합합니다.
 - `apps/client/src/pages/search/components/SearchIdlePanel.tsx`
   - 검색 전 최근 검색어와 추천 검색어 영역을 조립합니다.
 - `apps/client/src/pages/search/components/KeywordChipList.tsx`
@@ -432,8 +447,12 @@ SearchPage
   - 식당 결과 item 크기에 맞춘 loading skeleton을 렌더링합니다.
 - `apps/client/src/pages/search/hooks/useRecentSearchKeywords.ts`
   - localStorage 기반 최근 검색어 읽기/저장/중복 이동/최대 10개 제한을 담당합니다.
-- `apps/client/src/pages/search/hooks/useSearchPage.ts`
-  - 검색 page의 route-level orchestration, navigation, filter state, query params, 추천 키워드 query 주입을 담당합니다.
+- `apps/client/src/pages/search/hooks/useSearchUrlState.ts`
+  - URL search param과 적용된 검색 조건의 동기화를 담당합니다.
+- `apps/client/src/pages/search/hooks/useSearchFilterSheet.ts`
+  - 옵션 검증과 필터 바텀시트의 open, pending, apply, reset 상태를 담당합니다.
+- `apps/client/src/pages/search/hooks/useSearchRestaurantResults.ts`
+  - 검색 query, infinite scroll trigger, page mapping을 결과 영역에 필요한 형태로 조립합니다.
 - `apps/client/src/pages/search/constants/searchFilters.ts`
   - 정렬 옵션, 음식 장르 옵션을 둡니다.
 - `apps/client/src/pages/search/types.ts`
@@ -455,23 +474,23 @@ SearchPage
 - `apps/client/src/pages/search/queries/searchRestaurantQueryKeys.ts`
   - 추천 키워드 query key factory를 담당합니다.
 - `apps/client/src/pages/search/queries/useSearchRestaurantsInfiniteQuery.ts`
-  - 검색 화면의 필터 값을 공통 식당 목록 API params로 변환하고, local error policy를 적용합니다.
+  - 공통 식당 목록 infinite query options에 검색 params와 local error policy를 적용합니다.
 - `apps/client/src/pages/search/queries/useSearchKeywordRecommendationsQuery.ts`
   - 추천 검색어 query option/hook을 담당합니다.
 - `apps/client/src/pages/search/utils/mapSearchRestaurant.ts`
   - 공통 식당 목록 응답의 `RestaurantSummaryResponse`를 검색 결과 item view model로 변환합니다.
+  - infinite query pages를 단일 검색 결과 목록으로 펼칩니다.
   - 상세 이동에 필요한 `restaurantId`가 없으면 잘못된 `/restaurants/:restaurantId` 경로를 만들지 않도록 해당 항목을 검색 결과에서 제외합니다.
-
-### Optional Page-Local Files
-
+- `apps/client/src/pages/search/utils/searchUrlState.ts`
+  - URL search param을 적용 상태로 파싱하고 기본 필터를 생략한 URL로 직렬화합니다.
 - `apps/client/src/pages/search/utils/searchRestaurantParams.ts`
-  - sort/genre/type mapping이 길어지면 pure helper로 분리합니다.
+  - page filter 값을 공통 식당 목록 API request params로 변환합니다.
 
 ### Files Not To Add
 
 - 새 HDS component는 추가하지 않습니다.
 - 새 HDS icon은 추가하지 않습니다.
-- 검색 전용 app shared component는 추가하지 않습니다. 이미지 로드 실패 fallback은 기존 shared `DefaultImage` 계열의 `ImageWithDefaultFallback`을 사용합니다.
+- 검색 전용 이미지 컴포넌트를 추가하지 않고 HDS `Thumbnail`을 사용합니다.
 - 검색 전용 empty state component 또는 empty image asset은 추가하지 않습니다.
 - 검색 결과 식당 카드가 다른 페이지에서도 반복된다는 근거가 생기기 전까지 `shared/components`로 승격하지 않습니다.
 - `Header`, `StarRating`, `Badge`, `BottomNavigation`을 검색 페이지 요구사항에 맞추기 위해 수정하지 않습니다.
@@ -488,7 +507,7 @@ SearchPage
 - validation error:
   - 이번 범위에서는 검색어 validation error를 노출하지 않습니다.
 - exceptional case:
-  - 식당 이미지가 없거나 이미지 로드에 실패하면 공통 `DefaultImage` fallback을 사용합니다.
+  - 식당 이미지가 없거나 이미지 로드에 실패하면 `Thumbnail` 내부 fallback을 사용합니다.
   - API `summary`는 식당 소개 문구이므로 영업시간으로 사용하지 않습니다.
   - `todayBusinessHour`가 없거나 영업시간 정보가 불완전하면 `영업시간 확인 필요`를 표시합니다.
   - 별점, 태그가 없을 때 숨김 또는 대체 문구는 추가 확인 후 구현합니다.
@@ -542,10 +561,10 @@ SearchPage
   - bottom padding은 `9px`입니다.
   - 뒤로가기 아이콘은 `24px`입니다.
   - 뒤로가기 버튼 터치 영역은 `44px * 44px`입니다.
-  - 뒤로가기 버튼과 `SearchField` 사이 간격은 `10px`입니다.
+  - 뒤로가기 버튼과 `SearchBar` 사이 간격은 `10px`입니다.
 - filter bar:
   - filter trigger는 page-local component로 조합합니다.
-  - `SearchField`와 filter section 사이 간격은 fixed search header의 bottom padding `9px`로 확보합니다.
+  - `SearchBar`와 filter section 사이 간격은 fixed search header의 bottom padding `9px`로 확보합니다.
   - 검색 결과 상태에서 fixed search header 아래에 렌더링합니다.
   - filter section 내부 vertical padding은 `9px`입니다.
   - trigger text는 `typo-sub-header-3 text-primary-200`입니다.
@@ -556,7 +575,7 @@ SearchPage
   - list item 사이 간격은 `30px`입니다.
   - 결과 리스트 하단 padding은 `30px`입니다.
   - 식당 이미지는 `92px * 92px`, radius `5px`입니다.
-  - 식당 이미지가 없거나 이미지 로드에 실패하면 `DefaultImage`를 같은 크기와 radius로 렌더링합니다.
+  - 식당 이미지가 없거나 이미지 로드에 실패하면 `Thumbnail`이 같은 크기와 radius의 fallback을 렌더링합니다.
   - 이미지와 내용 사이 간격은 `12px`입니다.
   - 오른쪽 내용 영역은 이미지 높이 기준 vertical center로 정렬합니다.
   - title은 `typo-sub-header-2 text-cool-gray-900`이며 최대 2줄입니다.
@@ -582,7 +601,7 @@ SearchPage
   - unselected option text는 `typo-body-4 text-black`입니다.
   - selected option check icon은 `CheckIcon text-cool-gray-700`, `20px`입니다.
 - search idle state:
-  - `SearchField`와 검색어 section title 사이 총 간격은 `30px`입니다.
+  - `SearchBar`와 검색어 section title 사이 총 간격은 `30px`입니다.
   - fixed search header의 bottom padding `9px`를 제외한 idle panel top padding은 `21px`입니다.
   - 최근 검색어/추천 검색어 title은 `typo-sub-header-3 text-primary-200`입니다.
   - title과 chip 사이 간격은 `16px`입니다.
@@ -610,6 +629,7 @@ SearchPage
 - [ ] `/search` 직접 진입 확인
 - [ ] 홈 검색 CTA에서 `/search` 진입 확인
 - [ ] 뒤로가기 동작 확인
+- [x] 같은 `/search` route history 이동 시 검색창과 결과 URL 상태 동기화 자동 테스트
 - [ ] 검색창 focus 시 키보드 노출 확인
 - [ ] 검색 전 최근 검색어 / 추천 검색어 노출 확인
 - [ ] 최근 검색어 탭 시 해당 키워드로 검색 결과 상태 전환 확인

@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react'
+import { Thumbnail } from '@hashi/hds-ui'
 
-import { DefaultImage } from '@/shared/components/defaultImage'
 import { cn } from '@/shared/utils'
 
 export interface ReviewReservationSummaryProps extends Omit<
@@ -31,21 +31,7 @@ export const ReviewReservationSummary = ({
       className={cn('flex w-full flex-col items-start px-5', className)}
     >
       <div className="border-warm-gray-50 flex h-30 w-full items-center gap-3 border-b">
-        {thumbnailSrc ? (
-          <img
-            src={thumbnailSrc}
-            alt={thumbnailLabel}
-            className="size-23 shrink-0 rounded-[5px] object-cover"
-          />
-        ) : (
-          <DefaultImage
-            role="img"
-            aria-label={thumbnailLabel}
-            className="size-23 shrink-0 rounded-[5px]"
-            data-slot="thumbnail-default-image"
-            logoSize="sm"
-          />
-        )}
+        <Thumbnail alt={thumbnailLabel} size="md" src={thumbnailSrc} />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <p className="typo-sub-header-2 text-cool-gray-900 line-clamp-2 w-full break-words">
             {restaurantName}

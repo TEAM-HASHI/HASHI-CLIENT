@@ -13,7 +13,7 @@
 ## Workflow
 
 1. Swagger/OpenAPI/API 스펙이 있으면 `api-spec-intake`로 API Integration Map을 먼저 만듭니다.
-2. API 호출이 page-local인지 feature-local인지 shared helper인지 결정합니다.
+2. API 호출이 page-local인지 feature-local인지 shared helper인지 결정합니다. feature 승격은 page 전용 의존성을 제거해도 API 계약이 유지되고, 여러 page의 shared endpoint, query key, cache synchronization, API type 계약이 명확할 때만 선택합니다.
 3. `apps/client/src/shared/api`와 `apps/client/src/shared/lib/queryClient.ts`의 기존 helper를 확인합니다.
 4. server state는 TanStack Query 기준으로 query key, query options, mutation options, cache synchronization 책임을 분리합니다.
 5. `useSuspenseQuery`, `useQuery`, `useInfiniteQuery` 선택 기준을 `docs/workflows/api-integration.md`와 `api-integrator` reference에 맞춥니다.

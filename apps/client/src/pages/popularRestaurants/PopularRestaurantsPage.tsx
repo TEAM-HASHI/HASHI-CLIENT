@@ -1,11 +1,11 @@
 import {
   POPULAR_RESTAURANTS_SORT_OPTIONS,
-  RestaurantListPage,
+  RestaurantListTemplate,
 } from '@/features/restaurantList'
 
 export const PopularRestaurantsPage = () => {
   return (
-    <RestaurantListPage
+    <RestaurantListTemplate
       restaurantType="popular"
       sortOptions={POPULAR_RESTAURANTS_SORT_OPTIONS}
       title="인기 맛집"

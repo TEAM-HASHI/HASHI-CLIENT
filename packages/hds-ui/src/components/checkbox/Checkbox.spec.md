@@ -1,6 +1,6 @@
 # Component Spec: `Checkbox`
 
-Jira: HASHI-53
+Jira: HASHI-174
 
 ## Purpose
 
@@ -16,6 +16,7 @@ HDS가 담당하는 것:
 - native input ref 전달
 - checkbox icon의 시각 구조
 - checked 상태에 따른 CheckIcon 색상 표현
+- enabled 상태의 hover / pressed 배경 feedback
 - disabled 상태의 기본 interaction 차단
 - label 클릭과 keyboard interaction을 포함한 기본 접근성 계약
 
@@ -69,24 +70,30 @@ Exported types:
 
 ## States
 
-- unchecked: Cool_Gray_100 배경과 흰색 CheckIcon을 표시합니다.
-- checked: Cool_Gray_100 배경과 Cool_Gray_800 CheckIcon을 표시합니다.
-- disabled: native input disabled 상태를 사용하고 `cursor-not-allowed`만 적용합니다.
+- unchecked: 흰색 CheckIcon을 표시합니다.
+- checked: Cool_Gray_900 CheckIcon을 표시합니다.
+- rest: Cool_Gray_100 배경을 표시합니다.
+- hover: enabled 상태에서 Cool_Gray_200 배경을 표시합니다.
+- pressed: enabled 상태에서 Cool_Gray_300 배경을 표시합니다.
+- disabled: native input disabled 상태를 사용하고 `cursor-not-allowed`만 적용합니다. 리디자인에 별도 disabled visual variant가 없으므로 hover / pressed 배경 feedback은 적용하지 않습니다.
 - controlled: 호출부가 `checked`와 `onChange`로 상태를 관리합니다.
 - uncontrolled: native input이 `defaultChecked` 기반으로 상태를 관리합니다.
 
 ## Styling
 
 - box size: `26px * 26px`
-- icon size: `26px * 26px`
+- icon canvas size: `26px * 26px`
+- check vector size: SVG viewBox 내부 기준 약 `10px * 9.5px`
 - radius: `3px`
-- background: `bg-cool-gray-100`
+- rest background: `bg-cool-gray-100`
+- hover background: `group-hover/checkbox:bg-cool-gray-200`
+- pressed background: `group-active/checkbox:bg-cool-gray-300`
 - unchecked icon color: `text-white`
-- checked icon color: `peer-checked:text-cool-gray-800`
+- checked icon color: `peer-checked:text-cool-gray-900`
 - disabled: `cursor-not-allowed`
-- focus-visible: native input focus를 `peer-focus-visible` outline으로 visual box에 표시합니다.
+- focus-visible: native input focus를 `peer-focus-visible:outline-cool-gray-800` outline으로 visual box에 표시합니다.
 
-Figma Dev Mode의 `2.6rem` 값은 사용하지 않고 px 기준 `h-[26px] w-[26px]`를 사용합니다. `CheckIcon`은 `@hashi/hds-icons`에서 import하고, SVG viewBox가 26x26이므로 `h-[26px] w-[26px]`로 렌더링합니다.
+Figma Dev Mode의 `2.6rem` 값은 사용하지 않고 px 기준 `h-[26px] w-[26px]`를 사용합니다. `CheckIcon`은 `@hashi/hds-icons`에서 import합니다. `CheckIcon`의 SVG viewBox가 `0 0 26 26`이고 path 자체가 Figma의 check vector 크기를 가지므로, SVG 전체를 `26px * 26px`로 렌더링해 내부 check path가 의도한 크기로 보이게 합니다.
 
 ## Accessibility
 
@@ -119,6 +126,8 @@ Controls:
 - [x] native checkbox input ref 전달
 - [x] click 시 checked 상태 토글
 - [x] disabled 상태에서 click 시 checked 상태 유지
+- [x] enabled 상태에서 rest / hover / pressed visual class 적용
+- [x] disabled 상태에서 hover / pressed visual class 미적용
 - [x] CheckIcon `aria-hidden` 처리
 
 ## Verification

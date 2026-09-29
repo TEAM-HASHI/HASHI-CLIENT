@@ -5,7 +5,7 @@ import {
   clearAuthSession,
   setAccessToken,
   setOnboardingSession,
-} from '@/features/auth/session/authSession'
+} from '@/shared/auth/authSession'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 
 describe('useAuthStatus', () => {
