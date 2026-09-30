@@ -57,11 +57,11 @@ describe('TermsPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/terms/refund-policy')
   })
 
-  it('goes back when the back button is pressed', () => {
+  it('returns to mypage even when opened directly', () => {
     render(<TermsPage />)
 
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
-    expect(mockNavigate).toHaveBeenCalledWith(-1)
+    expect(mockNavigate).toHaveBeenCalledWith('/mypage', { replace: true })
   })
 })
