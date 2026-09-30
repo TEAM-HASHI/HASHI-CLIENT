@@ -1,4 +1,5 @@
 import type { RestaurantPrefillView } from '@/pages/restaurants/restaurantViewModel'
+import { AdminApiRequestError } from '@/shared/api/request'
 import type {
   CreateRestaurantBody,
   UpdateRestaurantBody,
@@ -37,6 +38,7 @@ export interface RestaurantScalarFields {
   area: string
   genre: string
   foodCategory: string
+  placeType: string
   priceCurrency: string
   minPrice: string
   maxPrice: string
@@ -97,6 +99,7 @@ export const createRestaurantForm = (): RestaurantFormState => ({
   area: '',
   genre: 'sushi',
   foodCategory: 'sushi',
+  placeType: 'restaurant',
   priceCurrency: 'JPY',
   minPrice: '',
   maxPrice: '',
@@ -125,6 +128,8 @@ export const createRestaurantFormFromPrefill = (
     area: view.area,
     genre: view.genre,
     foodCategory: view.foodCategory,
+    // 공개 API가 placeType을 내려주지 않아 비워두고, 선택했을 때만 PATCH에 포함한다.
+    placeType: '',
     priceCurrency: view.priceCurrency || 'JPY',
     minPrice: view.minPrice == null ? '' : String(view.minPrice),
     maxPrice: view.maxPrice == null ? '' : String(view.maxPrice),
@@ -211,6 +216,7 @@ export const toCreateRestaurantBody = (
   area: form.area.trim(),
   genre: form.genre,
   foodCategory: form.foodCategory,
+  placeType: form.placeType,
   priceCurrency: form.priceCurrency,
   minPrice: parseMoney(form.minPrice, '최소 가격'),
   maxPrice: parseMoney(form.maxPrice, '최대 가격'),
@@ -261,6 +267,19 @@ export const toUpdateRestaurantBody = (
 
   return body
 }
+
+// 서버 중복 검사(#230) 409 코드 → 기본 정보 단계에서 고칠 필드
+const DUPLICATE_FIELD_BY_CODE: Partial<
+  Record<string, keyof RestaurantScalarFields>
+> = {
+  'RESTAURANT-020': 'name',
+  'RESTAURANT-021': 'address',
+}
+
+export const getDuplicateRestaurantField = (error: unknown) =>
+  error instanceof AdminApiRequestError
+    ? DUPLICATE_FIELD_BY_CODE[error.responseBody?.code ?? '']
+    : undefined
 
 const hasInvalidLength = (value: string, max: number) =>
   value.trim().length === 0 || value.trim().length > max
@@ -325,6 +344,9 @@ export const validateRestaurantForm = (
   if (needsScalar('genre') && !form.genre) errors.genre = '장르를 선택해주세요.'
   if (needsScalar('foodCategory') && !form.foodCategory) {
     errors.foodCategory = '음식 카테고리를 선택해주세요.'
+  }
+  if (needsScalar('placeType') && !form.placeType) {
+    errors.placeType = '음식점 분류를 선택해주세요.'
   }
   if (needsScalar('priceCurrency') && form.priceCurrency.length !== 3) {
     errors.priceCurrency = '통화를 선택해주세요.'
