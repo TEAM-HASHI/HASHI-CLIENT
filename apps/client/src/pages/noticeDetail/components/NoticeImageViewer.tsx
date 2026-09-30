@@ -1,8 +1,9 @@
 import { CancelIcon } from '@hashi/hds-icons'
 import { Carousel, IconButton } from '@hashi/hds-ui'
+import { useState } from 'react'
 
 import type { NoticeImage } from '@/features/notice/types'
-import { NoticeAttachmentImage } from '@/pages/noticeDetail/components/NoticeAttachmentImage'
+import { NoticeZoomImage } from '@/pages/noticeDetail/components/NoticeZoomImage'
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
 
 interface NoticeImageViewerProps {
@@ -12,7 +13,6 @@ interface NoticeImageViewerProps {
   onClose: () => void
 }
 
-// ponytail: 좌우 스와이프까지만 지원한다. 핀치 확대·축소는 HASHI-213에서 공용 뷰어로 통합한다.
 export const NoticeImageViewer = ({
   images,
   initialIndex,
@@ -20,6 +20,7 @@ export const NoticeImageViewer = ({
   onClose,
 }: NoticeImageViewerProps) => {
   useBodyScrollLock(true)
+  const [currentIndex, setCurrentIndex] = useState(initialIndex)
 
   return (
     <div
@@ -40,13 +41,15 @@ export const NoticeImageViewer = ({
       <Carousel.Root
         aria-label="공지 첨부 이미지 목록"
         className="absolute inset-0"
-        defaultIndex={initialIndex}
+        index={currentIndex}
+        onIndexChange={setCurrentIndex}
       >
         <Carousel.Viewport className="absolute top-[139px] bottom-[139px] overflow-y-hidden">
           <Carousel.Track>
             {images.map((image, index) => (
               <Carousel.Item key={`${image.url}-${index}`}>
-                <NoticeAttachmentImage
+                <NoticeZoomImage
+                  key={`${image.url}-${currentIndex}`}
                   alt={`${title} 첨부 이미지 ${index + 1}`}
                   src={image.url}
                 />

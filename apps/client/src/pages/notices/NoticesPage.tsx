@@ -1,9 +1,10 @@
 import { BackIcon, NextIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useNavigationType } from 'react-router-dom'
 
+import { ROUTES } from '@/app/router/path'
 import { getNoticeDetailPath } from '@/app/router/routePaths'
 import { getNotices } from '@/features/notice/api/getNotices'
 import { noticeQueryKeys } from '@/features/notice/noticeQueryKeys'
@@ -15,27 +16,45 @@ const NOTICE_PAGE_SIZE = 10
 
 // ponytail: RootLayout이 경로가 바뀔 때마다 맨 위로 스크롤하므로, 공지 목록만 상세에서 돌아올 때
 // 마지막 위치를 되살린다. 여러 화면에 필요해지면 라우터 ScrollRestoration으로 옮긴다.
-const NOTICE_LIST_SCROLL_KEY = 'hashi:notice-list-scroll-y'
+const NOTICE_LIST_SCROLL_KEY = 'hashi:notice-list-state'
 
-const saveNoticeListScrollY = () => {
+const saveNoticeListState = (pageCount: number) => {
   try {
-    sessionStorage.setItem(NOTICE_LIST_SCROLL_KEY, String(window.scrollY))
+    sessionStorage.setItem(
+      NOTICE_LIST_SCROLL_KEY,
+      JSON.stringify({ scrollY: window.scrollY, pageCount }),
+    )
   } catch {
     // 저장소를 쓸 수 없으면 위치 복원만 건너뛴다.
   }
 }
 
-const readNoticeListScrollY = () => {
+const readNoticeListState = (): {
+  scrollY: number
+  pageCount: number
+} | null => {
   try {
-    return Number(sessionStorage.getItem(NOTICE_LIST_SCROLL_KEY)) || 0
+    const saved = sessionStorage.getItem(NOTICE_LIST_SCROLL_KEY)
+    if (!saved) return null
+    const state = JSON.parse(saved)
+    return Number.isFinite(state.scrollY) &&
+      state.scrollY >= 0 &&
+      Number.isInteger(state.pageCount) &&
+      state.pageCount >= 1
+      ? state
+      : null
   } catch {
-    return 0
+    return null
   }
 }
 
 export const NoticesPage = () => {
   const navigate = useNavigate()
   const navigationType = useNavigationType()
+  const [restoration, setRestoration] = useState(() =>
+    navigationType === 'POP' ? readNoticeListState() : null,
+  )
+  const isRestoring = Boolean(restoration)
   const noticesQuery = useInfiniteQuery({
     queryKey: noticeQueryKeys.infiniteList(NOTICE_PAGE_SIZE),
     queryFn: ({ pageParam }) =>
@@ -45,23 +64,42 @@ export const NoticesPage = () => {
       lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined,
   })
   const loadMoreRef = useInfiniteScrollTrigger<HTMLLIElement>({
-    enabled: noticesQuery.hasNextPage && !noticesQuery.isFetchNextPageError,
+    enabled:
+      !isRestoring &&
+      noticesQuery.hasNextPage &&
+      !noticesQuery.isFetchNextPageError,
     isLoading: noticesQuery.isFetchingNextPage,
     onIntersect: noticesQuery.fetchNextPage,
   })
-  const hasNotices = Boolean(noticesQuery.data)
-
+  const { data, hasNextPage, isFetching, isFetchNextPageError, fetchNextPage } =
+    noticesQuery
   useEffect(() => {
-    if (navigationType !== 'POP' || !hasNotices) {
-      return
-    }
-
+    const target = restoration
+    if (!target || !data || isFetching || isFetchNextPageError) return
     const frame = requestAnimationFrame(() => {
-      window.scrollTo({ top: readNoticeListScrollY() })
+      const maxScrollY = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight,
+      )
+      if (
+        hasNextPage &&
+        (data.pages.length < target.pageCount || maxScrollY < target.scrollY)
+      ) {
+        void fetchNextPage()
+        return
+      }
+      window.scrollTo({ top: target.scrollY })
+      setRestoration(null)
     })
-
     return () => cancelAnimationFrame(frame)
-  }, [hasNotices, navigationType])
+  }, [
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchNextPageError,
+    restoration,
+  ])
 
   if (noticesQuery.isError && !noticesQuery.data) {
     throw noticesQuery.error
@@ -70,8 +108,10 @@ export const NoticesPage = () => {
   const notices = noticesQuery.data?.pages.flatMap((page) => page.notices) ?? []
 
   const handleNoticeClick = (noticeId: number) => {
-    saveNoticeListScrollY()
-    navigate(getNoticeDetailPath(String(noticeId)))
+    saveNoticeListState(noticesQuery.data?.pages.length ?? 1)
+    navigate(getNoticeDetailPath(String(noticeId)), {
+      state: { fromNoticeList: true },
+    })
   }
 
   return (
@@ -81,7 +121,7 @@ export const NoticesPage = () => {
         leftAction={
           <IconButton
             aria-label="뒤로가기"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(ROUTES.mypage, { replace: true })}
             size="xs"
           >
             <BackIcon className="size-6" />
@@ -104,12 +144,11 @@ export const NoticesPage = () => {
                   <span className="typo-sub-header-2 truncate text-black">
                     {notice.title}
                   </span>
-                  {/* Figma 날짜 색상(#7B7B7B)에 대응하는 HDS 토큰이 없어 원본 값을 사용합니다. */}
-                  <span className="typo-body-6 text-[#7b7b7b]">
+                  <span className="typo-body-6 text-primary-200">
                     {formatNoticeLastUpdatedDate(notice)}
                   </span>
                 </span>
-                <NextIcon aria-hidden="true" className="size-4 shrink-0" />
+                <NextIcon aria-hidden="true" className="size-6 shrink-0" />
               </button>
             </li>
           ))}

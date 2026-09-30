@@ -77,7 +77,7 @@ Jira: HASHI-208
 
 ## Backend Contract (가계약)
 
-백엔드 공지사항 API가 dev-api OpenAPI와 서버 레포에 아직 없어 기존 cursor 목록 API 형식과 기획 명세를 따라 가정했다.
+공지사항 API는 기존 cursor 목록 형식과 기획 명세를 따르는 가계약이다. 2026-09-30 서버 `develop` (`053fdb3`) 및 열린 PR에서 endpoint를 찾지 못했고, dev-api OpenAPI 조회는 타임아웃이었다. 서버 계약과 실제 API 연결은 확인 대기다.
 Swagger가 확정되면 `features/notice/types.ts`를 generated 타입으로 교체하고 `features/notice/api`만 맞춘다.
 
 ```ts
@@ -96,8 +96,10 @@ interface NoticeListData {
 
 ## Scroll Restoration
 
-`RootLayout`이 pathname이 바뀔 때마다 맨 위로 스크롤한다. 공지 목록은 행을 선택할 때 `window.scrollY`를 sessionStorage(`hashi:notice-list-scroll-y`)에 저장하고,
-`POP` 내비게이션으로 다시 마운트되면 캐시된 목록을 그린 뒤 다음 프레임에 그 위치로 스크롤한다. 저장소를 쓸 수 없으면 복원만 건너뛴다.
+`RootLayout`이 pathname 변경 시 맨 위로 스크롤한다. 목록 행 선택 시 sessionStorage(`hashi:notice-list-state`)에 `{ scrollY, pageCount }`를 저장한다.
+`POP`으로 돌아오면 저장한 페이지 수와 스크롤 높이를 충족할 때까지 다음 페이지를 순서대로 조회한 후 위치를 복원한다.
+복원 중에는 무한 스크롤 observer를 중지하여 중복 조회를 막는다. 캐시가 만료돼도 같은 흐름으로 복원하며, 조회 실패 시 기존 목록과 목표 위치를 유지하고 다시 시도한다.
+저장소를 사용할 수 없거나 값이 유효하지 않으면 복원을 건너뛴다. 목록 헤더 뒤로가기는 마이페이지로 replace 이동한다.
 
 ## UI Structure
 
@@ -128,7 +130,9 @@ NoticesPage
 
 - 행: 좌우 20px, 상하 28px, 제목·날짜 간격 8px, `secondary-200` 하단 구분선
 - 제목: `typo-sub-header-2 text-black truncate` (Figma 16px/600 `#101010`)
-- 날짜: `typo-body-6` + `#7b7b7b` (Figma 14px/500, 대응 HDS 토큰 없음)
+- 날짜: `typo-body-6 text-primary-200` (Figma 목록 날짜의 `Primary_200` 적용, 2026-09-30 확인)
+
+- 다음 아이콘: 24px (`size-6`)
 
 ## Verification
 

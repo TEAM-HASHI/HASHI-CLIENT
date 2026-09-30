@@ -35,6 +35,7 @@ Jira: HASHI-208
   - `components/NoticeContent.tsx`
   - `components/NoticeAttachmentImage.tsx`
   - `components/NoticeImageViewer.tsx`
+  - `components/NoticeZoomImage.tsx`
 
 ## Requirements
 
@@ -46,9 +47,9 @@ Jira: HASHI-208
 - [x] 첨부 이미지(최대 10장)를 본문 아래에 등록 순서대로 세로로 보여준다. 가로폭은 콘텐츠 영역에 맞추고 API의 `width`/`height`로 원본 비율을 유지한다.
 - [x] 이미지 한 장을 불러오지 못하면 같은 비율 영역에 공통 `ImageFallback`을 보여주고 나머지는 그대로 보여준다.
 - [x] 이미지를 선택하면 전체 화면 뷰어를 선택한 이미지부터 열고, 여러 장이면 좌우로 넘겨 볼 수 있다.
-- [ ] 뷰어 핀치 확대·축소: HASHI-213에서 공용 이미지 뷰어로 구현한다.
+- [x] 뷰어는 핀치로 원본~4배 확대·축소하고 확대 상태에서 드래그로 이동한다. 원본 크기에서는 한 손가락 좌우 넘김을 허용한다. 이미지 전환·뷰어 재진입 시 확대를 초기화한다.
 - [x] `noticeId`가 양의 정수가 아니거나 존재하지 않는·삭제된 공지(404)면 `NotFoundPage`를 보여준다.
-- [x] 뒤로가기는 `navigate(-1)`로 목록으로 돌아가며, 목록은 스크롤 위치를 복원한다.
+- [x] 목록에서 온 경우 뒤로가기는 `navigate(-1)`로 목록과 스크롤을 복원한다. 직접 진입은 공지 목록으로 replace 이동한다.
 
 ## Data Dependencies
 
@@ -105,7 +106,7 @@ NoticeDetailPage
 ## Styling
 
 - 본문 영역 좌우 20px, 상단 24px
-- 제목 `typo-sub-header-2 text-black`, 날짜 `typo-body-6` + `#7b7b7b`
+- 제목 `typo-sub-header-2 text-black`, 날짜 `typo-body-6 text-primary-200` (Figma 날짜 레이어 `8317-34300`, 2026-09-30 확인)
 - 본문 `typo-caption-2` + 행간 150% + `text-black` (Figma Caption 2, `#000`), 목록 들여쓰기 18px
 - 첨부 이미지: 본문과 20px 간격, 이미지 사이 8px
 
@@ -116,3 +117,5 @@ NoticeDetailPage
 - [x] `pnpm --filter @hashi/client build`
 - [x] `pnpm --filter @hashi/client test`
 - [x] 서식 본문·링크·허용 외 태그 제거, 이미지 순서·비율·로드 실패, 뷰어 열기·닫기, 잘못된 id, 404, 뒤로가기 테스트
+
+- 핀치 확대·축소, 이동 경계, 원본 크기 스와이프 전달은 `NoticeZoomImage.test.tsx`로 검증한다. 실제 모바일 터치 검증은 대기 중이다.
