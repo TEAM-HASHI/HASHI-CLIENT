@@ -10,6 +10,13 @@ afterEach(() => {
 })
 
 describe('Chip', () => {
+  it.each([0, 12])('renders count %i beside the label', (count) => {
+    render(<Chip count={count}>사진</Chip>)
+    expect(
+      screen.getByRole('button', { name: `사진 ${count}` }),
+    ).toBeInTheDocument()
+  })
+
   it('renders a filter chip as a button', () => {
     render(<Chip selected>진행 중</Chip>)
 

@@ -8,6 +8,14 @@ import {
 } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { RestaurantPhotoRequest } from '@/features/restaurantDetail/types/restaurantPhoto'
+
+const { mockPhotoDataSource } = vi.hoisted(() => ({
+  mockPhotoDataSource: vi.fn(),
+}))
+vi.mock('@/features/restaurantDetail/api/restaurantPhotoSource', () => ({
+  getRestaurantPhotoDataSource: mockPhotoDataSource,
+}))
 
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
@@ -223,6 +231,7 @@ const renderPage = () => {
 
 describe('RestaurantDetailPage', () => {
   beforeEach(() => {
+    mockPhotoDataSource.mockReturnValue(null)
     mockedGetRestaurantSummary.mockResolvedValue(restaurantSummary)
     mockedGetRestaurantStoreInformation.mockResolvedValue(
       restaurantStoreInformation,
@@ -399,7 +408,38 @@ describe('RestaurantDetailPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('renders the photo tab empty state without a photo count', async () => {
+  it('renders photo counts and filters through the configured data source', async () => {
+    const getPage = vi.fn(async ({ filter }: RestaurantPhotoRequest) => ({
+      photos:
+        filter === 'menu'
+          ? []
+          : [
+              {
+                id: 'photo-1',
+                thumbnailUrl: '/photo.jpg',
+                imageUrl: '/photo.jpg',
+                width: 800,
+                height: 600,
+              },
+            ],
+      counts: { all: 1, representative: 1, menu: 0, review: 0 },
+    }))
+    mockPhotoDataSource.mockReturnValue({ key: 'test', source: { getPage } })
+    renderPage()
+    fireEvent.click(await screen.findByRole('tab', { name: /사진/ }))
+    expect(
+      await screen.findByRole('button', { name: '1번째 사진 보기' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /사진\s*1/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    fireEvent.click(screen.getByRole('button', { name: /메뉴사진/ }))
+    expect(await screen.findByText('등록된 사진이 없어요.')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /사진\s*1/ })).toBeInTheDocument()
+  })
+
+  it('renders the photo tab empty state without a photo count when the data source is unavailable', async () => {
     renderPage()
 
     fireEvent.click(await screen.findByRole('tab', { name: '사진' }))

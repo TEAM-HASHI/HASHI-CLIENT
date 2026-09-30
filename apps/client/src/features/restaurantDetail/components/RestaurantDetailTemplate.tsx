@@ -25,6 +25,7 @@ import {
   RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
 } from '@/features/restaurantDetail/constants/restaurantDetailLayout'
 import { useRestaurantDetailTabBarFixed } from '@/features/restaurantDetail/hooks/useRestaurantDetailTabBarFixed'
+import { useRestaurantPhotos } from '@/features/restaurantDetail/hooks/useRestaurantPhotos'
 import type {
   RestaurantDetail,
   RestaurantDetailTab,
@@ -104,6 +105,10 @@ export const RestaurantDetailTemplate = ({
   const { isTabBarFixed, markerRef } = useRestaurantDetailTabBarFixed()
   const hasScrolledToInitialTabRef = useRef(false)
   const handleShare = useShareLink(shareUrl)
+  const photos = useRestaurantPhotos(
+    Number(restaurant.id),
+    activeTab === 'photo',
+  )
 
   const scrollToTabBarTop = useCallback(() => {
     const marker = markerRef.current
@@ -171,7 +176,11 @@ export const RestaurantDetailTemplate = ({
         onRetryMenuList={onRetryMenuList}
       />
     ) : activeTab === 'photo' ? (
-      <RestaurantPhotoSection />
+      <RestaurantPhotoSection
+        key={restaurant.id}
+        model={photos}
+        onResetScroll={scrollToTabBarTop}
+      />
     ) : (
       <RestaurantReviewSection
         hasMoreReviews={hasMoreReviews}
@@ -303,6 +312,7 @@ export const RestaurantDetailTemplate = ({
           activeTab={activeTab}
           onTabChange={handleTabChange}
           reviewCount={restaurant.reviewCount}
+          photoCount={photos.enabled ? photos.counts?.all : undefined}
         />
       </div>
       {isTabBarFixed ? (

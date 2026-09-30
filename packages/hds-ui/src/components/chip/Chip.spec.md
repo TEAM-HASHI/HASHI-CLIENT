@@ -75,7 +75,7 @@ Exported types:
 - [x] 선택됨/선택 안 됨 상태를 동일한 shape 안에서 표현합니다.
 - [x] 칩은 button 기반 filter chip으로 동작합니다.
 - [x] 선택 상태는 controlled prop인 `selected`로 받습니다.
-- [x] 칩은 고정 width/height가 아니라 라벨 길이와 padding으로 크기를 정합니다.
+- [x] 칩은 높이 36px을 유지하고 라벨과 count에 따라 너비를 정합니다.
 - [x] 예외적으로 긴 라벨이 들어와도 부모 layout을 밀어내지 않도록 max-width와 overflow 정책을 정합니다.
 
 ## UI Structure
@@ -84,13 +84,14 @@ Exported types:
 Chip
   Root
     Label
+    Count(optional)
 ```
 
 ## Props
 
 ### `children`
 
-- type: `ReactNode`
+- type: `string`
 - required: `true`
 - description: 칩 안에 표시할 라벨입니다. 일반 사용은 짧은 텍스트를 권장합니다.
 
@@ -100,6 +101,12 @@ Chip
 - required: `false`
 - default: `false`
 - description: 선택된 시각 상태를 제어합니다.
+
+### `count`
+
+- type: `number`
+- required: `false`
+- description: 라벨 뒤의 개수입니다. 0도 표시하며 값이 없으면 생략합니다.
 
 ### `onSelectedChange`
 
@@ -156,9 +163,9 @@ Chip
 - spacing:
   - horizontal padding은 `12px`입니다.
   - vertical padding은 `8px`입니다.
-  - border radius는 `10rem`입니다.
+  - border radius는 `rounded-full`입니다.
 - typography:
-  - label은 `typo-body-7`을 사용합니다.
+  - label은 `typo-body-6`, count는 `typo-caption-1`을 사용합니다.
 - selected:
   - fill: `cool-gray-800`
   - text: `white`

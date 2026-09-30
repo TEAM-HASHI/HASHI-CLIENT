@@ -33,7 +33,7 @@
 - [ ] 오늘의 식당으로 노출할 `restaurantId`를 확보한 뒤 식당 요약, 매장 정보, 메뉴 목록, 리뷰 목록 API를 조회합니다.
 - [ ] 매장 정보, 메뉴, 사진, 리뷰 탭을 같은 페이지 상태로 전환합니다.
 - [ ] 사진 탭은 같은 상세 템플릿 안에서 전환하며, 일반 식당과 오늘의 식당 모두 아래 Photo Policy의 공통 기준을 따릅니다.
-- [ ] 사진 UI와 count는 이번 리디자인 리뷰에서 목데이터로 구현할 예정이며, 데이터 공급 부분을 분리해 실제 API 연결은 후속 작업으로 둡니다.
+- [ ] 사진 UI와 count는 개발·테스트 환경에서 목데이터로 구현하며, 데이터 공급 부분을 분리해 실제 API 연결은 후속 작업으로 둡니다. 운영 빌드에는 목데이터를 연결하지 않고 기존 빈 상태를 유지하며 확인되지 않은 count를 표시하지 않습니다.
 - [ ] 사진 필터 칩에는 각 분류의 공개 사진 수를 표시하고, 상단 `사진 N`은 선택한 필터와 무관한 해당 식당의 전체 공개 사진 수를 표시합니다.
 - [ ] 매장 정보 탭의 `오시는 길` 지도 영역은 지도 연동 전까지 HDS `ImageFallback`으로 규격만 확보하고, 화면 내 별도 안내 문구 없이 접근성 라벨로 placeholder임을 식별합니다.
 - [ ] 탭바는 Header 아래에 sticky로 고정됩니다.
@@ -60,7 +60,12 @@
 - 기준: 기획팀 확인 및 HASHI-PLAN `db27b1e4595b1d1976cedb17f840a7a0e207e5f6`.
 - 공통 원문: [RESTAURANT_PHOTO](https://github.com/TEAM-HASHI/HASHI-PLAN/blob/db27b1e4595b1d1976cedb17f840a7a0e207e5f6/02_PRODUCT_SPEC/RESTAURANT/RESTAURANT_PHOTO/RESTAURANT_PHOTO.md).
 - 오늘의 식당 원문: [RES_TODAY_RESTAURANT_PHOTOS](https://github.com/TEAM-HASHI/HASHI-PLAN/blob/db27b1e4595b1d1976cedb17f840a7a0e207e5f6/02_PRODUCT_SPEC/RESTAURANT/RES_TODAY_RESTAURANT_PHOTOS/RES_TODAY_RESTAURANT_PHOTOS.md).
-- 현재 구현: `RestaurantPhotoSection`은 빈 상태만 표시하며 필터, 목록, 사진 전용 뷰어, count는 미구현입니다. 아래 정책은 구현 목표이며 완료 표시가 아닙니다.
+- 현재 구현: 개발 환경에서는 `RestaurantPhotoSection`에 필터, 2열 목록, 추가 조회, 상태 처리와 사진 전용 뷰어를 연결합니다. 실제 API 연동과 실데이터 검증은 완료 범위에 포함하지 않습니다.
+- 디자인 기준: [사진 목록 및 뷰어](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=7573-79532). 사진 목록은 좌우 20px, 열 사이 21px, 세로 간격 20px, 모서리 5px을 적용합니다. Figma의 구 필터명 대신 확정된 기획 필터와 개수 정책을 적용합니다.
+- 목데이터는 Figma 체크무늬 자산을 사용하는 개발 전용 예시 45건이며 실제 식당 사진이나 건수가 아닙니다. `import.meta.env.DEV` 분기에서만 동적으로 불러옵니다.
+- 이미지 메타데이터는 PNG 실제 크기인 256x256과 일치시킵니다. 다양한 가로/세로 원본 샘플 검증은 별도로 남아 있으며, Figma의 예시 높이를 이미지 원본 크기로 사용하지 않습니다.
+- 필터 영역은 75px, 상단 여백 20px, 칩 높이 36px입니다. 데이터 공급 선택은 `api/restaurantPhotoSource.ts`에서 담당하고 화면 훅은 공급자의 활성 여부와 조회 인터페이스만 사용합니다.
+- 미확정: 현재 확대 2배/최대 4배, 로딩 스켈레톤, 오류 문구/배치, 뷰어 추가 조회 실패의 재시도 버튼은 기획/디자인 확인 전 임시 구현입니다. 확정 규격으로 간주하지 않습니다.
 - 기본 필터는 `전체`이며, `전체 / 대표사진 / 메뉴사진 / 리뷰사진` 칩과 각 분류의 공개 사진 수를 한 줄 가로 스크롤로 표시합니다. 동영상은 이번 스프린트에서 제외합니다.
 - 대표사진과 메뉴사진은 식당 등록 순서, 공개 리뷰의 첨부 사진은 최신 리뷰 순서로 표시합니다.
 - 전체 목록은 같은 원본을 중복 표시하지 않고 대표사진 1장과 리뷰사진 3장을 반복해 섞습니다. 대표사진과 리뷰사진이 모두 끝나면 메뉴사진을 표시하며, 한 출처가 없으면 남은 출처를 사용합니다.
@@ -145,10 +150,10 @@
 
 - query: restaurant photos
 - endpoint: TBD (서버 계약 확인 전 임의 확정하지 않음)
-- status: 현재 빈 상태만 구현됨. 이번 리뷰에서 목데이터 기반 UI 구현 예정, 실제 API 연동은 후속
-- data source: UI와 분리된 목데이터 공급 구조를 구현할 예정이며, 서버 응답 필드와 페이지네이션 계약 확인 후 실제 API로 교체
+- status: 개발·테스트 전용 목데이터 기반 UI 구현, 실제 API 연동은 후속
+- data source: `RestaurantPhotoSource`는 클라이언트 내부 인터페이스이며 서버 계약이 아닙니다. `createRestaurantPhotoSource`에서 목데이터를 제공하고 실제 API는 계약 확인 후 adapter로 연결합니다.
 - pagination: 최초 및 추가 조회 각각 20장, 필터 변경 시 목록과 스크롤 초기화
-- loading/empty/error: Photo Policy 기준으로 구분할 예정. 빈 상태 상시 표시는 최종 정책이 아님
+- loading/empty/error: 개발 UI에서 Photo Policy 기준으로 구분합니다. 공통 빈 상태·버튼·이미지 fallback을 사용하며 상태별 최종 시각 디자인 확인은 별도입니다.
 - count: 칩별 공개 사진 수 및 필터와 무관한 전체 공개 사진 수. 실제 응답 필드명은 서버 확인 대기
 
 ### Mutation
@@ -176,7 +181,7 @@
   - restaurant store information
   - restaurant menus infinite pages
   - restaurant reviews infinite pages
-  - restaurant photos: 실제 API 연동은 후속, 목데이터 기반 목록 및 count 구현 예정
+  - restaurant photos: 개발 전용 목록 페이지 및 count query, 실제 API 연동은 후속
 - derived state:
   - bottom bar variant from page variant
   - `RestaurantMainResponse` + `RestaurantStoreInformationResponse` + menu/review pages to `RestaurantDetail`
@@ -196,6 +201,8 @@ TodayRestaurantPage
         Map ImageFallback
       RestaurantMenuListSection
       RestaurantPhotoSection
+        RestaurantPhotoViewer
+          RestaurantPhotoZoomImage
       RestaurantReviewSection
     ReviewImageViewer
     ReviewUnavailableModal
@@ -229,6 +236,8 @@ TodayRestaurantPage
   - `RestaurantInfoSection`
   - `RestaurantMenuListSection`
   - `RestaurantPhotoSection`
+  - `RestaurantPhotoViewer`
+  - `RestaurantPhotoZoomImage`
   - `RestaurantReviewSection`
   - `RestaurantBottomBar`
   - `ReviewImageViewer`
@@ -301,4 +310,5 @@ TodayRestaurantPage
 - [ ] 사진 2열 원본 비율, 20장 추가 조회, 필터 변경 시 목록 및 스크롤 초기화 확인
 - [ ] 사진 뷰어 선택 위치, 확대, 스와이프, 인디케이터 및 닫기 후 위치 복원 확인
 - [ ] 사진 로딩, 빈 결과, 최초 및 추가 조회 재시도, 개별 이미지 실패 상태 확인
+- [ ] 운영 빌드에는 목데이터와 가짜 사진 count가 연결되지 않는지 확인
 - [ ] 사진 탭 재추천 성공 시 필터 및 목록 초기화, 실패 시 기존 상태 유지 확인
