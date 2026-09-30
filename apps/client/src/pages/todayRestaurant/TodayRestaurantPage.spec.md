@@ -32,9 +32,9 @@
 - [ ] Header title은 `오늘의 식당`으로 표시합니다.
 - [ ] 오늘의 식당으로 노출할 `restaurantId`를 확보한 뒤 식당 요약, 매장 정보, 메뉴 목록, 리뷰 목록 API를 조회합니다.
 - [ ] 매장 정보, 메뉴, 사진, 리뷰 탭을 같은 페이지 상태로 전환합니다.
-- [ ] 현재 client는 탭 콘텐츠를 같은 상세 템플릿 안에서 전환하며, 전용 사진 화면/사진 API 연결은 후속 PR로 분리합니다.
-- [ ] 사진 탭은 이번 리디자인 PR에서 전용 API를 연결하지 않고 `등록된 사진이 없습니다.` empty state를 표시합니다.
-- [ ] 사진 탭 count는 사진 API의 total count 응답 정책이 확정된 뒤 후속 PR에서 표시합니다.
+- [ ] 사진 탭은 같은 상세 템플릿 안에서 전환하며, 일반 식당과 오늘의 식당 모두 아래 Photo Policy의 공통 기준을 따릅니다.
+- [ ] 사진 UI와 count는 이번 리디자인 리뷰에서 목데이터로 구현할 예정이며, 데이터 공급 부분을 분리해 실제 API 연결은 후속 작업으로 둡니다.
+- [ ] 사진 필터 칩에는 각 분류의 공개 사진 수를 표시하고, 상단 `사진 N`은 선택한 필터와 무관한 해당 식당의 전체 공개 사진 수를 표시합니다.
 - [ ] 매장 정보 탭의 `오시는 길` 지도 영역은 지도 연동 전까지 HDS `ImageFallback`으로 규격만 확보하고, 화면 내 별도 안내 문구 없이 접근성 라벨로 placeholder임을 식별합니다.
 - [ ] 탭바는 Header 아래에 sticky로 고정됩니다.
 - [ ] 메뉴/사진/리뷰 탭 선택 시 탭바가 Header 바로 아래에 붙은 위치로 부드럽게 스크롤되어 해당 탭 콘텐츠를 초기 화면처럼 보여줍니다.
@@ -47,13 +47,31 @@
 - [ ] 식당명 복사 클릭 시 현재 표시 중인 한국어 식당명을 클립보드에 복사하고, 복사 아이콘과 `식당명이 복사되었어요` Toast를 표시합니다.
 - [ ] 비로그인 사용자가 예약하기 또는 저장하기를 누르면 로그인 유도 바텀시트를 표시합니다.
 - [ ] 로그인 사용자가 예약하기를 누르면 현재 오늘의 식당 `restaurantId`를 사용해 `ROUTES.restaurantReservationNew`로 이동합니다.
-- [ ] `다시 추천 받기`는 추후 API 연결 전까지 no-op handler로 둡니다.
+- [ ] 사진 탭의 `다시 추천 받기`는 아래 Photo Policy의 성공 시 초기화 및 실패 시 상태 유지 기준을 따르도록 구현하고 검증합니다.
 - [ ] 리뷰 작성 CTA 클릭 시 비방문자 안내 모달을 열 수 있습니다.
 - [ ] 리뷰 이미지 클릭 시 선택한 리뷰 이미지 목록과 선택 index를 이미지 뷰어에 전달합니다.
 - [ ] route state `activeTab`이 있으면 해당 탭을 초기 선택 상태로 표시합니다.
 - [ ] 직접 진입 상태에서 뒤로가기를 누르면 `ROUTES.home`으로 replace 이동합니다.
 - [ ] 메뉴 목록과 리뷰 목록은 커서 기반 무한스크롤로 조회하고, 리스트 하단 sentinel 감지는 공통 `useInfiniteScrollTrigger` 훅을 사용합니다.
 - [ ] 모바일 폭에서 horizontal overflow가 없어야 합니다.
+
+## Photo Policy
+
+- 기준: 기획팀 확인 및 HASHI-PLAN `db27b1e4595b1d1976cedb17f840a7a0e207e5f6`.
+- 공통 원문: [RESTAURANT_PHOTO](https://github.com/TEAM-HASHI/HASHI-PLAN/blob/db27b1e4595b1d1976cedb17f840a7a0e207e5f6/02_PRODUCT_SPEC/RESTAURANT/RESTAURANT_PHOTO/RESTAURANT_PHOTO.md).
+- 오늘의 식당 원문: [RES_TODAY_RESTAURANT_PHOTOS](https://github.com/TEAM-HASHI/HASHI-PLAN/blob/db27b1e4595b1d1976cedb17f840a7a0e207e5f6/02_PRODUCT_SPEC/RESTAURANT/RES_TODAY_RESTAURANT_PHOTOS/RES_TODAY_RESTAURANT_PHOTOS.md).
+- 현재 구현: `RestaurantPhotoSection`은 빈 상태만 표시하며 필터, 목록, 사진 전용 뷰어, count는 미구현입니다. 아래 정책은 구현 목표이며 완료 표시가 아닙니다.
+- 기본 필터는 `전체`이며, `전체 / 대표사진 / 메뉴사진 / 리뷰사진` 칩과 각 분류의 공개 사진 수를 한 줄 가로 스크롤로 표시합니다. 동영상은 이번 스프린트에서 제외합니다.
+- 대표사진과 메뉴사진은 식당 등록 순서, 공개 리뷰의 첨부 사진은 최신 리뷰 순서로 표시합니다.
+- 전체 목록은 같은 원본을 중복 표시하지 않고 대표사진 1장과 리뷰사진 3장을 반복해 섞습니다. 대표사진과 리뷰사진이 모두 끝나면 메뉴사진을 표시하며, 한 출처가 없으면 남은 출처를 사용합니다.
+- 사진은 원본 비율을 유지하는 2열 masonry로 표시하고 최초 및 추가 조회는 각각 20장씩 수행합니다.
+- 필터 변경 시 이전 목록과 스크롤을 초기화하고 첫 20장을 조회합니다. 리뷰 작성 후 돌아오면 목록을 갱신합니다.
+- 사진 선택 시 해당 사진부터 전체 화면으로 열고 현재 필터의 사진을 좌우 스와이프로 탐색합니다. 두 번 탭 또는 핀치로 확대하며 원래 크기로 돌아오면 사진 전환을 재개합니다.
+- 뷰어에는 사진, 닫기 아이콘, 인디케이터만 표시합니다. 1~5장은 실제 개수의 점, 6장 이상은 전체 사진을 6구간으로 나눈 점 6개를 표시합니다. 닫으면 선택 전 목록 위치를 복원합니다.
+- 로딩, 빈 결과, 최초 조회 실패, 추가 조회 실패를 구분합니다. 빈 결과와 오류에서도 필터를 유지하고, 빈 상태의 시각 디자인은 디자인 기준을 확인해 적용합니다.
+- 최초 및 추가 조회 실패 시 자동으로 한 번 재시도합니다. 이후 최초 조회 실패는 사진 영역에 오류와 재시도 버튼을, 추가 조회 실패는 기존 목록을 유지한 채 하단에 오류와 재시도 버튼을 표시합니다.
+- 개별 이미지 로드 실패는 공통 기본 이미지로 대체합니다. 삭제되거나 숨겨진 리뷰 사진은 제외하고 대표사진 및 메뉴사진 변경은 다음 조회에 반영합니다.
+- 오늘의 식당 전용 차이는 하단 `다시 추천 받기`입니다. 사진 탭에서 재추천 성공 시 사진 탭을 유지하고 전체 필터, 첫 페이지, 뷰어 닫힘 상태로 초기화합니다. 요청 중 중복 선택을 막고 실패 시 현재 식당, 목록, 필터, 스크롤을 유지합니다.
 
 ## Data Dependencies
 
@@ -126,10 +144,12 @@
   - next page trigger: 공통 `useInfiniteScrollTrigger` sentinel intersect
 
 - query: restaurant photos
-- endpoint: TBD
-- status: deferred
-- empty state: 이번 PR에서는 shared `ListEmptyState`로 `등록된 사진이 없습니다.` 문구 표시
-- count: API 응답의 total count 정책 확정 후 후속 PR에서 `사진` 탭 count에 연결
+- endpoint: TBD (서버 계약 확인 전 임의 확정하지 않음)
+- status: 현재 빈 상태만 구현됨. 이번 리뷰에서 목데이터 기반 UI 구현 예정, 실제 API 연동은 후속
+- data source: UI와 분리된 목데이터 공급 구조를 구현할 예정이며, 서버 응답 필드와 페이지네이션 계약 확인 후 실제 API로 교체
+- pagination: 최초 및 추가 조회 각각 20장, 필터 변경 시 목록과 스크롤 초기화
+- loading/empty/error: Photo Policy 기준으로 구분할 예정. 빈 상태 상시 표시는 최종 정책이 아님
+- count: 칩별 공개 사진 수 및 필터와 무관한 전체 공개 사진 수. 실제 응답 필드명은 서버 확인 대기
 
 ### Mutation
 
@@ -156,7 +176,7 @@
   - restaurant store information
   - restaurant menus infinite pages
   - restaurant reviews infinite pages
-  - restaurant photos: deferred
+  - restaurant photos: 실제 API 연동은 후속, 목데이터 기반 목록 및 count 구현 예정
 - derived state:
   - bottom bar variant from page variant
   - `RestaurantMainResponse` + `RestaurantStoreInformationResponse` + menu/review pages to `RestaurantDetail`
@@ -277,3 +297,8 @@ TodayRestaurantPage
 - [ ] `pnpm --filter @hashi/client test`
 - [ ] `/restaurants/today` 직접 접근 확인
 - [ ] 탭 전환, 리뷰 더보기, 리뷰 이미지 뷰어, 안내 모달, fixed bottom bar 확인
+- [ ] 사진 필터별 개수 및 필터와 무관한 상단 전체 개수 확인
+- [ ] 사진 2열 원본 비율, 20장 추가 조회, 필터 변경 시 목록 및 스크롤 초기화 확인
+- [ ] 사진 뷰어 선택 위치, 확대, 스와이프, 인디케이터 및 닫기 후 위치 복원 확인
+- [ ] 사진 로딩, 빈 결과, 최초 및 추가 조회 재시도, 개별 이미지 실패 상태 확인
+- [ ] 사진 탭 재추천 성공 시 필터 및 목록 초기화, 실패 시 기존 상태 유지 확인
