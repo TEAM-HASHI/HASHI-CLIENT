@@ -1,13 +1,11 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  HASHI_NOTICE_URL,
-  HASHI_TERMS_URL,
-} from '@/pages/mypage/constants/mypageMenu'
+import { ROUTES } from '@/app/router/path'
+import { HASHI_TERMS_URL } from '@/pages/mypage/constants/mypageMenu'
 import { MypagePage } from '@/pages/mypage/MypagePage'
 import { request } from '@/shared/api/request'
 
@@ -199,16 +197,20 @@ describe('MypagePage', () => {
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
   })
 
-  it('renders confirmed notice and terms links as external links', async () => {
+  it('renders the terms link as an external link', async () => {
     renderMypagePage()
 
     expect(
-      await screen.findByRole('link', { name: '공지사항' }),
-    ).toHaveAttribute('href', HASHI_NOTICE_URL)
-    expect(screen.getByRole('link', { name: '이용약관' })).toHaveAttribute(
-      'href',
-      HASHI_TERMS_URL,
-    )
+      await screen.findByRole('link', { name: '이용약관' }),
+    ).toHaveAttribute('href', HASHI_TERMS_URL)
+  })
+
+  it('navigates to the notices page when the notice menu is pressed', async () => {
+    renderMypagePage()
+
+    fireEvent.click(await screen.findByRole('button', { name: '공지사항' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.notices)
   })
 
   it('does not render the MVP-excluded account section', async () => {
