@@ -1178,7 +1178,11 @@ export const TERMS_POLICIES: readonly TermsPolicy[] = [
         blocks: [
           {
             type: 'paragraph',
-            text: '본 조항의 내용은 준비 중입니다.',
+            text: '이용자는 개인정보 제3자 제공에 대한 동의를 거부할 권리가 있습니다.',
+          },
+          {
+            type: 'paragraph',
+            text: '다만, 동의를 거부할 경우 식당 예약 대행 서비스 이용이 제한될 수 있습니다.',
           },
         ],
       },

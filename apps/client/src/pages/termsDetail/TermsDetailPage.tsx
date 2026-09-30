@@ -2,6 +2,7 @@ import { BackIcon } from '@hashi/hds-icons'
 import { Accordion, Header, IconButton } from '@hashi/hds-ui'
 import { useNavigate, useParams } from 'react-router-dom'
 
+import { ROUTES } from '@/app/router/path'
 import { findTermsPolicy } from '@/features/terms/constants/termsPolicies'
 import { NotFoundPage } from '@/pages/notFound'
 import { TermsClauseContent } from '@/pages/termsDetail/components/TermsClauseContent'
@@ -25,7 +26,7 @@ export const TermsDetailPage = () => {
         leftAction={
           <IconButton
             aria-label="뒤로가기"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(ROUTES.terms, { replace: true })}
             size="xs"
           >
             <BackIcon className="size-6" />

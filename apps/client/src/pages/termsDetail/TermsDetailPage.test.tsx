@@ -78,6 +78,22 @@ describe('TermsDetailPage', () => {
     ).toBeInTheDocument()
   })
 
+  it('shows the third-party consent refusal clause from Figma', () => {
+    mockParams.policyId = 'third-party-consent'
+    render(<TermsDetailPage />)
+    fireEvent.click(
+      screen.getByRole('button', { name: '제6조 (동의 거부 권리 및 불이익)' }),
+    )
+    expect(
+      screen.getByText(
+        '이용자는 개인정보 제3자 제공에 대한 동의를 거부할 권리가 있습니다.',
+      ),
+    ).toBeVisible()
+    expect(
+      screen.queryByText('본 조항의 내용은 준비 중입니다.'),
+    ).not.toBeInTheDocument()
+  })
+
   it('renders the not found page for an unknown policy id', () => {
     mockParams.policyId = 'unknown-policy'
 
@@ -88,11 +104,11 @@ describe('TermsDetailPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('goes back when the back button is pressed', () => {
+  it('returns to the terms list even when opened directly', () => {
     render(<TermsDetailPage />)
 
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
-    expect(mockNavigate).toHaveBeenCalledWith(-1)
+    expect(mockNavigate).toHaveBeenCalledWith('/terms', { replace: true })
   })
 })

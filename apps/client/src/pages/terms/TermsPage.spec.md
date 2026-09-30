@@ -44,7 +44,7 @@ Jira: HASHI-207
 ## Requirements
 
 - [x] 상단 Header에 뒤로가기 버튼과 `이용약관` 제목을 고정해 보여준다.
-- [x] 뒤로가기는 `navigate(-1)`을 실행한다.
+- [x] 뒤로가기는 `navigate(ROUTES.mypage, { replace: true })`을 실행한다.
 - [x] 현재 적용 중인 약관 8개를 Figma 순서로 표시한다: Hashi 이용약관, 개인정보처리방침, 개인정보 수집 및 이용 동의, 개인정보 제3자 제공 동의, 예약 및 취소·환불 정책, 리뷰 운영정책, 포인트 이용약관, 서비스 운영정책.
 - [x] 각 행은 `[약관 제목]`과 시행일을 표시하고, 선택 시 해당 약관 상세로 이동한다.
 - [x] 목록 아래에 이메일과 카카오톡 채널 문의 정보를 표시한다.
@@ -112,7 +112,7 @@ TermsPage
 - route params: none
 - search params: none
 - back behavior:
-  - `navigate(-1)`
+  - `navigate(ROUTES.mypage, { replace: true })`
 
 ## Styling
 
@@ -122,6 +122,10 @@ TermsPage
 - fixed area:
   - Header: `app-mobile-fixed-top`
   - 하단 네비게이션: `BottomNavigationLayout`
+
+## Known Gaps
+
+- 최신 게시 약관 조회 API 연결은 계약 확인 대기다. 2026-09-30 서버 `develop` (`053fdb3`) 및 열린 PR에서 약관 endpoint를 찾지 못했으며, dev-api OpenAPI 조회는 타임아웃이었다. 현재 Figma 정적 원문을 제공하고 서버 게시 상태·버전·조회 오류는 검증하지 못한다.
 
 ## Verification
 

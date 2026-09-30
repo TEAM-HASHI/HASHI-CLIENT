@@ -44,7 +44,7 @@ Jira: HASHI-207
 - [x] 조항은 HDS `Accordion`으로 표시하고 기본은 모두 접힌 상태다.
 - [x] 조항을 펼치면 문단과 번호/불릿 목록(중첩 포함)을 표시한다.
 - [x] 존재하지 않는 `policyId`는 `NotFoundPage`를 표시한다.
-- [x] 뒤로가기는 `navigate(-1)`로 목록으로 돌아간다.
+- [x] 뒤로가기는 `navigate(ROUTES.terms, { replace: true })`로 목록으로 돌아간다.
 
 ## Data Dependencies
 
@@ -95,16 +95,21 @@ TermsDetailPage
 - route params:
   - `policyId`: `TermsPolicyId`
 - back behavior:
-  - `navigate(-1)`
+  - `navigate(ROUTES.terms, { replace: true })`
 
 ## Styling
 
 - Accordion 본문은 `typo-body-5 text-cool-gray-500 leading-[1.5]`, 목록은 `list-decimal` / `list-disc`, 들여쓰기 20px
 - fixed area: Header `app-mobile-fixed-top`, 하단 네비게이션은 layout이 담당
 
+## Content Source
+
+- 개인정보 제3자 제공 동의 제6조는 Figma 이용약관 화면의 펼친 아코디언 원문(node `8317-34105`)을 사용한다. 동의 거부 권리와 예약 대행 서비스 이용 제한 안내를 표시한다. 원문 섹션의 닫힌 아코디언만으로 본문 부재를 판단하지 않는다.
+
 ## Known Gaps
 
-- Figma "이용약관 텍스트 전문"에서 `개인정보 제3자 제공 동의` 제6조(동의 거부 권리 및 불이익) 본문이 비어 있어 `본 조항의 내용은 준비 중입니다.`로 표시한다. 디자인/기획에서 본문이 확정되면 `termsPolicies.ts`를 갱신한다.
+- 최신 게시 약관 조회 API 연결은 계약 확인 대기다. 2026-09-30 서버 `develop` (`053fdb3`) 및 열린 PR에서 약관 endpoint를 찾지 못했으며, dev-api OpenAPI 조회는 타임아웃이었다. 현재 Figma 정적 원문을 제공하고 서버 게시 상태·버전·조회 오류는 검증하지 못한다.
+
 - Figma 상세 헤더의 `최종 업데이트: 2006. 06. 29`는 오타로 보고 목록의 시행일 `2026.06.29`를 사용한다.
 
 ## Verification
