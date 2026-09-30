@@ -57,6 +57,9 @@
 
 ## Photo Policy
 
+- 상단 대표 이미지는 전달 순서대로 최대 10장만 표시합니다. 1~5장은 실제 개수, 6~10장은 점 6개를 표시하며, 이미지가 없으면 대체 이미지 1개만 표시하고 점은 숨깁니다.
+- 대표 이미지의 활성 점은 사용자 합의로 1~6번째 사진은 같은 순번의 점을 활성화하고, 7~10번째 사진은 6번째 점을 유지합니다. 이는 대표 이미지 원문에 명시된 정책이 아닌 구현 결정으로 기획 확인 대상입니다. 사진 탭의 전체 사진 6구간 분할 정책과 공통 Carousel 기본 정책은 변경하지 않습니다.
+
 - 기준: 기획팀 확인 및 HASHI-PLAN `db27b1e4595b1d1976cedb17f840a7a0e207e5f6`.
 - 공통 원문: [RESTAURANT_PHOTO](https://github.com/TEAM-HASHI/HASHI-PLAN/blob/db27b1e4595b1d1976cedb17f840a7a0e207e5f6/02_PRODUCT_SPEC/RESTAURANT/RESTAURANT_PHOTO/RESTAURANT_PHOTO.md).
 - 오늘의 식당 원문: [RES_TODAY_RESTAURANT_PHOTOS](https://github.com/TEAM-HASHI/HASHI-PLAN/blob/db27b1e4595b1d1976cedb17f840a7a0e207e5f6/02_PRODUCT_SPEC/RESTAURANT/RES_TODAY_RESTAURANT_PHOTOS/RES_TODAY_RESTAURANT_PHOTOS.md).

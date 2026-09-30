@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { RestaurantPhotoZoomImage } from '@/features/restaurantDetail/components/RestaurantPhotoZoomImage'
 import type { RestaurantPhoto } from '@/features/restaurantDetail/types/restaurantPhoto'
+import { getPhotoIndicatorState } from '@/features/restaurantDetail/utils/getPhotoIndicatorState'
 import { cn } from '@/shared/utils'
 
 interface RestaurantPhotoViewerProps {
@@ -29,11 +30,7 @@ export const RestaurantPhotoViewer = ({
 }: RestaurantPhotoViewerProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [index, setIndex] = useState(initialIndex)
-  const dotCount = Math.min(total, 6)
-  const currentDot =
-    total > 0
-      ? Math.min(dotCount - 1, Math.floor((index * dotCount) / total))
-      : 0
+  const { dotCount, currentDot } = getPhotoIndicatorState(total, index)
 
   useEffect(() => {
     const dialog = dialogRef.current
