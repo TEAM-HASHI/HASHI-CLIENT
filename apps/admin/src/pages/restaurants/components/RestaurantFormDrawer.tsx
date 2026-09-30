@@ -593,7 +593,7 @@ const MenuAndExposureStep = ({
     <Field
       label="해시태그"
       value={form.hashtags}
-      placeholder="쉼표로 구분"
+      placeholder="최대 3개, 각 20자 이하 · # 없이 쉼표로 구분"
       onChange={(hashtags) => setForm((current) => ({ ...current, hashtags }))}
     />
   )

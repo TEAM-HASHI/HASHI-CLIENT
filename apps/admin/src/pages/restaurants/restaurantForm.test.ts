@@ -195,6 +195,41 @@ describe('restaurant form serializers', () => {
 })
 
 describe('restaurant form validation', () => {
+  it.each([
+    'a,b,c,d',
+    '#스시',
+    '스시 맛집',
+    '🍣',
+    'Sushi,sushi',
+    '스시, 스시',
+    '가'.repeat(21),
+  ])('rejects hashtags outside the product policy: %s', (hashtags) => {
+    const form = createValidForm()
+    form.hashtags = hashtags
+    expect(
+      validateRestaurantForm(form, 'create', replacements, {
+        pendingCount: 0,
+        failedCount: 0,
+      }).hashtags,
+    ).toBeDefined()
+  })
+
+  it('accepts three distinct trimmed Korean, English and numeric hashtags', () => {
+    const form = createValidForm()
+    form.hashtags = ' 스시 , Sushi123, 맛집2 '
+    expect(
+      validateRestaurantForm(form, 'create', replacements, {
+        pendingCount: 0,
+        failedCount: 0,
+      }).hashtags,
+    ).toBeUndefined()
+    expect(toCreateRestaurantBody(form).hashtags).toEqual([
+      '스시',
+      'Sushi123',
+      '맛집2',
+    ])
+  })
+
   it('rejects missing required create fields and uploads', () => {
     const errors = validateRestaurantForm(
       createRestaurantForm(),
