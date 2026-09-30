@@ -199,6 +199,8 @@ export const RestaurantDetailTemplate = ({
           }px)`,
         }
 
+  const headerTitle = activeTab === 'info' ? title : restaurant.name
+
   return (
     <main className="min-h-dvh bg-white pb-[calc(82px+var(--safe-area-bottom,0px))]">
       <h1 className="sr-only">{title}</h1>
@@ -218,7 +220,7 @@ export const RestaurantDetailTemplate = ({
             ariaLabel: '공유하기',
             onClick: handleShare,
           }}
-          title={title}
+          title={headerTitle}
         />
       </div>
       <div
