@@ -10,7 +10,7 @@ export const RestaurantInfoSection = ({
   restaurant,
 }: RestaurantInfoSectionProps) => {
   return (
-    <div className="px-5 pt-9 pb-9">
+    <div className="px-6 pt-9 pb-9">
       <section aria-labelledby="restaurant-detail-description-heading">
         <h2
           className="typo-sub-header-2 text-primary-200"
