@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getRestaurantMenu } from '@/features/restaurantDetail/api/getRestaurantMenu'
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
+import { getRestaurantPhotoDataSource } from '@/features/restaurantDetail/api/restaurantPhotoSource'
 import { RestaurantMenuDetailPage } from '@/pages/restaurantMenuDetail/RestaurantMenuDetailPage'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
@@ -91,6 +92,9 @@ vi.mock('@/features/restaurantDetail/api/getRestaurantMenus', () => ({
 vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
   getRestaurantSummary: vi.fn(),
 }))
+vi.mock('@/features/restaurantDetail/api/restaurantPhotoSource', () => ({
+  getRestaurantPhotoDataSource: vi.fn(),
+}))
 
 const mockedGetRestaurantMenu = vi.mocked(getRestaurantMenu)
 const mockedGetRestaurantMenus = vi.mocked(getRestaurantMenus)
@@ -157,6 +161,7 @@ const renderPage = () => {
 
 describe('RestaurantMenuDetailPage', () => {
   beforeEach(() => {
+    vi.mocked(getRestaurantPhotoDataSource).mockReturnValue(null)
     mockParams.menuId = '100'
     mockParams.restaurantId = '10'
     mockedGetRestaurantSummary.mockResolvedValue(restaurantSummary)
@@ -195,6 +200,36 @@ describe('RestaurantMenuDetailPage', () => {
         menuId: 100,
       })
     })
+  })
+
+  it.each([0, 45])('shows the shared public photo count %i', async (count) => {
+    const getPage = vi.fn().mockResolvedValue({
+      photos: [],
+      counts: { all: count, representative: count, menu: 0, review: 0 },
+    })
+    vi.mocked(getRestaurantPhotoDataSource).mockReturnValue({
+      key: 'test',
+      source: { getPage },
+    })
+
+    renderPage()
+
+    expect(
+      await screen.findByRole('tab', { name: `사진 ${count}` }),
+    ).toBeInTheDocument()
+    expect(getPage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        restaurantId: 10,
+        filter: 'all',
+      }),
+    )
+    expect(getPage).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not invent a photo count when the source is unavailable', async () => {
+    renderPage()
+
+    expect(await screen.findByRole('tab', { name: '사진' })).toBeInTheDocument()
   })
 
   it('requests other menus excluding selected menu', async () => {

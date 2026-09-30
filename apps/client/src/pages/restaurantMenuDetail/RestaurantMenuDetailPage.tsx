@@ -28,6 +28,7 @@ export const RestaurantMenuDetailPage = () => {
     otherMenuLoadMoreRef,
     otherMenusForDisplay,
     otherMenuTotalCount,
+    photoCount,
     restaurant,
     selectedMenu,
     shareUrl,
@@ -92,6 +93,7 @@ export const RestaurantMenuDetailPage = () => {
         <RestaurantDetailTabs
           activeTab="menu"
           onTabChange={onTabChange}
+          photoCount={photoCount}
           reviewCount={restaurant.reviewCount}
         />
       </div>

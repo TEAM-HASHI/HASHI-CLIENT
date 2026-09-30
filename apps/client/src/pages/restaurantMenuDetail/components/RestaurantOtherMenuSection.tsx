@@ -21,10 +21,11 @@ export const RestaurantOtherMenuSection = ({
   return (
     <section aria-labelledby="other-menu-heading">
       <h2
-        className="typo-sub-header-1 text-primary-200 px-5 pt-7"
+        className="typo-sub-header-1 text-primary-200 flex items-center gap-0.5 px-5 pt-7"
         id="other-menu-heading"
       >
-        다른 메뉴 <span className="text-warm-gray-300">{totalCount}</span>
+        <span>다른 메뉴</span>
+        <span>{totalCount}</span>
       </h2>
       <div className="mt-2">
         <RestaurantMenuListSection
