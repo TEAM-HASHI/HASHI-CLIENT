@@ -139,7 +139,9 @@ describe('NoticesPage', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /\[공지 3\]/ }))
 
-    expect(mockNavigate).toHaveBeenCalledWith('/notices/3')
+    expect(mockNavigate).toHaveBeenCalledWith('/notices/3', {
+      state: { fromNoticeList: true },
+    })
   })
 
   it('shows the common error screen when the first page fails and retries from the first page', async () => {
@@ -224,6 +226,56 @@ describe('NoticesPage', () => {
     })
   })
 
+  it('restores expired pages before scrolling and avoids duplicate observer requests', async () => {
+    sessionStorage.setItem(
+      'hashi:notice-list-state',
+      JSON.stringify({ scrollY: 480, pageCount: 3 }),
+    )
+    mockNavigationType.current = 'POP'
+    const { triggerAllIntersects } = mockIntersectionObserver()
+    mockedGetNotices.mockImplementation(async ({ cursor }) => ({
+      notices: [createNotice(cursor === null ? 3 : cursor - 1)],
+      hasNext: cursor !== 2,
+      nextCursor: cursor === null ? 3 : cursor - 1,
+    }))
+    renderNoticesPage()
+    triggerAllIntersects()
+    await screen.findByRole('button', { name: /\[공지 1\]/ })
+    await waitFor(() =>
+      expect(window.scrollTo).toHaveBeenCalledWith({ top: 480 }),
+    )
+    expect(
+      mockedGetNotices.mock.calls.map(([params]) => params.cursor),
+    ).toEqual([null, 3, 2])
+  })
+
+  it('keeps loaded notices and resumes restoration after a next-page retry', async () => {
+    sessionStorage.setItem(
+      'hashi:notice-list-state',
+      JSON.stringify({ scrollY: 480, pageCount: 2 }),
+    )
+    mockNavigationType.current = 'POP'
+    mockedGetNotices.mockResolvedValueOnce({
+      notices: [createNotice(3)],
+      hasNext: true,
+      nextCursor: 3,
+    })
+    mockedGetNotices.mockRejectedValueOnce(badRequest)
+    mockedGetNotices.mockResolvedValueOnce({
+      notices: [createNotice(2)],
+      hasNext: false,
+      nextCursor: null,
+    })
+    renderNoticesPage()
+    fireEvent.click(
+      await screen.findByRole('button', { name: '다음 공지 다시 불러오기' }),
+    )
+    await screen.findByRole('button', { name: /\[공지 2\]/ })
+    await waitFor(() =>
+      expect(window.scrollTo).toHaveBeenCalledWith({ top: 480 }),
+    )
+  })
+
   it('goes back when the back button is pressed', async () => {
     mockedGetNotices.mockResolvedValue({
       notices: [],
@@ -235,6 +287,6 @@ describe('NoticesPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
-    expect(mockNavigate).toHaveBeenCalledWith(-1)
+    expect(mockNavigate).toHaveBeenCalledWith('/mypage', { replace: true })
   })
 })

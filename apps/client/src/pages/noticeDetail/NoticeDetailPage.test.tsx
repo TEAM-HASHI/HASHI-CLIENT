@@ -51,10 +51,10 @@ const noticeDetailFixture: NoticeDetail = {
   ],
 }
 
-const renderNoticeDetailPage = () =>
+const renderNoticeDetailPage = (state: unknown = null) =>
   render(
     <QueryClientProvider client={createQueryClient()}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[{ pathname: '/notices/3', state }]}>
         <NoticeDetailPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -183,10 +183,17 @@ describe('NoticeDetailPage', () => {
     ).toBeInTheDocument()
   })
 
+  it('returns direct entry to the notice list instead of browser history', async () => {
+    mockedGetNoticeDetail.mockResolvedValue(noticeDetailFixture)
+    renderNoticeDetailPage()
+    fireEvent.click(await screen.findByRole('button', { name: '뒤로가기' }))
+    expect(mockNavigate).toHaveBeenCalledWith('/notices', { replace: true })
+  })
+
   it('goes back when the back button is pressed', async () => {
     mockedGetNoticeDetail.mockResolvedValue(noticeDetailFixture)
 
-    renderNoticeDetailPage()
+    renderNoticeDetailPage({ fromNoticeList: true })
 
     fireEvent.click(await screen.findByRole('button', { name: '뒤로가기' }))
 

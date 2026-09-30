@@ -2,8 +2,9 @@ import { BackIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
+import { ROUTES } from '@/app/router/path'
 import { getNoticeDetail } from '@/features/notice/api/getNoticeDetail'
 import { noticeQueryKeys } from '@/features/notice/noticeQueryKeys'
 import { formatNoticeLastUpdatedDate } from '@/features/notice/utils/formatNoticeDate'
@@ -22,6 +23,10 @@ const parseNoticeId = (value: string | undefined) => {
 
 export const NoticeDetailPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const fromNoticeList =
+    (location.state as { fromNoticeList?: boolean } | null)?.fromNoticeList ===
+    true
   const params = useParams<{ noticeId: string }>()
   const noticeId = parseNoticeId(params.noticeId)
   const [viewerIndex, setViewerIndex] = useState<number | null>(null)
@@ -48,7 +53,11 @@ export const NoticeDetailPage = () => {
         leftAction={
           <IconButton
             aria-label="뒤로가기"
-            onClick={() => navigate(-1)}
+            onClick={() =>
+              fromNoticeList
+                ? navigate(-1)
+                : navigate(ROUTES.notices, { replace: true })
+            }
             size="xs"
           >
             <BackIcon className="size-6" />
@@ -61,8 +70,7 @@ export const NoticeDetailPage = () => {
           <h1 className="typo-sub-header-2 break-keep text-black">
             {notice.title}
           </h1>
-          {/* Figma 날짜 색상(#7B7B7B)에 대응하는 HDS 토큰이 없어 원본 값을 사용합니다. */}
-          <p className="typo-body-6 mt-2 text-[#7b7b7b]">
+          <p className="typo-body-6 text-primary-200 mt-2">
             {formatNoticeLastUpdatedDate(notice)}
           </p>
           <div className="mt-7">
