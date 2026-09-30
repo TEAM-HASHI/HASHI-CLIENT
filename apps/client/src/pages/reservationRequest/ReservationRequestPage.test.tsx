@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
+import { reservationCompletionQueryKeys } from '@/features/reservation/queries/reservationCompletion'
 import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { createReservation } from '@/pages/reservationRequest/api/createReservation'
 import { ReservationRequestPage } from '@/pages/reservationRequest/ReservationRequestPage'
@@ -61,6 +62,18 @@ const reservationDraft = {
   requestNote: '',
 }
 
+const completionResponse = {
+  reservationId: 31,
+  reserverName: '김하시',
+  restaurantName: '리키마루',
+  restaurantAddress: '도쿄도 주오구 긴자 1-1',
+  reservedAt: '2026-06-01T11:00:00',
+  adultCount: 2,
+  teenCount: 0,
+  childCount: 0,
+  reservationStatus: 'REQUESTED' as const,
+}
+
 const renderPage = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -73,18 +86,19 @@ const renderPage = () => {
     availablePoint: 7_000,
   })
 
-  return render(
+  render(
     <QueryClientProvider client={queryClient}>
       <ReservationRequestPage />
     </QueryClientProvider>,
   )
+  return queryClient
 }
 
 describe('ReservationRequestPage', () => {
   beforeEach(() => {
     mockLocationState.current = reservationDraft
     mockedCreateReservation.mockReset()
-    mockedCreateReservation.mockResolvedValue({ reservationId: 31 })
+    mockedCreateReservation.mockResolvedValue(completionResponse)
   })
 
   afterEach(() => {
@@ -284,8 +298,8 @@ describe('ReservationRequestPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('creates the reservation and replaces the request page with the complete page', async () => {
-    renderPage()
+  it('caches the whole creation response and replaces the request page with the complete page', async () => {
+    const queryClient = renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
 
@@ -300,6 +314,9 @@ describe('ReservationRequestPage', () => {
         draft: reservationDraft,
         usedPoint: 0,
       })
+      expect(
+        queryClient.getQueryData(reservationCompletionQueryKeys.detail(31)),
+      ).toEqual(completionResponse)
       expect(mockNavigate).toHaveBeenCalledWith('/reservations/31/complete', {
         replace: true,
       })

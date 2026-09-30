@@ -8,8 +8,12 @@ import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/r
 
 import { RestaurantReservationNewPage } from '@/pages/restaurantReservationNew/RestaurantReservationNewPage'
 
-const { mockNavigate } = vi.hoisted(() => ({
+const { mockNavigate, mockLocation } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
+  mockLocation: {
+    pathname: '/restaurants/10/reservations/new',
+    state: null as unknown,
+  },
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -19,6 +23,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useLocation: () => mockLocation,
     useParams: () => ({ restaurantId: '10' }),
   }
 })
@@ -113,6 +118,7 @@ describe('RestaurantReservationNewPage', () => {
   afterEach(() => {
     cleanup()
     mockNavigate.mockClear()
+    mockLocation.state = null
     vi.useRealTimers()
   })
 

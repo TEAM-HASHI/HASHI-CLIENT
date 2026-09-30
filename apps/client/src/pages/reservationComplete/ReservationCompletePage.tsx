@@ -1,58 +1,51 @@
 import { HashiPointMarkIcon } from '@hashi/hds-icons'
 import { Button } from '@hashi/hds-ui'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
+import { Navigate, useBlocker, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { getReservationDetailPath } from '@/app/router/routePaths'
-import { useReservationDetailQuery } from '@/features/reservation/queries/useReservationDetailQuery'
+import {
+  checkIsReservationCompletionResponse,
+  reservationCompletionQueryKeys,
+} from '@/features/reservation/queries/reservationCompletion'
+import type { ReservationCompletionResponse } from '@/features/reservation/queries/reservationCompletion'
 import { createReservationReceiptInfoItems } from '@/features/reservation/utils/createReservationReceiptInfoItems'
 import { parseReservationId } from '@/features/reservation/utils/parseReservationId'
-import { NotFoundPage } from '@/pages/notFound'
 import { ReservationCompleteProgress } from '@/pages/reservationComplete/components/ReservationCompleteProgress'
-import { checkIsNotFoundError } from '@/shared/api/apiError'
-import { Empty } from '@/shared/components/empty'
-import { LoadingScreen } from '@/shared/components/loadingScreen'
 
 export const ReservationCompletePage = () => {
   const navigate = useNavigate()
   const params = useParams<{ reservationId: string }>()
   const reservationId = parseReservationId(params.reservationId)
-  const {
-    data: reservationDetail,
-    error,
-    isPending,
-  } = useReservationDetailQuery(reservationId)
+  const queryClient = useQueryClient()
+  const queryKey = reservationCompletionQueryKeys.detail(reservationId)
+  const response =
+    queryClient.getQueryData<ReservationCompletionResponse>(queryKey)
+  const hasCompletion = checkIsReservationCompletionResponse(
+    response,
+    reservationId,
+  )
+  const blocker = useBlocker(
+    ({ historyAction }) => hasCompletion && historyAction === 'POP',
+  )
 
-  if (reservationId === null) {
-    return <NotFoundPage />
-  }
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      queryClient.removeQueries({
+        queryKey: reservationCompletionQueryKeys.detail(reservationId),
+        exact: true,
+      })
+      navigate(ROUTES.home, { replace: true })
+    }
+  }, [blocker.state, navigate, queryClient, reservationId])
 
-  if (checkIsNotFoundError(error)) {
-    return (
-      <Empty
-        actionLabel="홈으로 돌아가기"
-        className="min-h-dvh bg-white px-6"
-        description="예약 정보를 찾을 수 없습니다."
-        onAction={() => navigate(ROUTES.home, { replace: true })}
-      />
-    )
-  }
+  if (!hasCompletion) return <Navigate to={ROUTES.home} replace />
 
-  if (error) {
-    throw error
-  }
-
-  if (isPending || !reservationDetail) {
-    return <LoadingScreen />
-  }
-
-  const receiptInfoItems = createReservationReceiptInfoItems(reservationDetail)
-
+  const receiptInfoItems = createReservationReceiptInfoItems(response)
   const handleConfirmClick = () => {
-    navigate(getReservationDetailPath(String(reservationId)), {
-      replace: true,
-      state: { fromReservationRequest: true },
-    })
+    queryClient.removeQueries({ queryKey, exact: true })
+    navigate(ROUTES.home, { replace: true })
   }
 
   return (

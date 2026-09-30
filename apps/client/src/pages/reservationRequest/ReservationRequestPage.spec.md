@@ -43,7 +43,7 @@ interface ReservationRequestDraftBase {
   }
   date: string
   time: string
-  requestNote: string
+  requestNote?: string
 }
 
 interface RestaurantReservationRequestDraft extends ReservationRequestDraftBase {
@@ -86,10 +86,10 @@ POST /api/v1/reservations/anywhere
 - 어디든 예약은 draft의 `restaurantName`, `restaurantAddress`를 전송한다.
 - 빈 요청사항은 생략한다.
 - 성공 응답에 `reservationId`가 없으면 실패로 처리한다.
-- 생성 응답은 `reservationId`만 보장하고 최신 포인트 잔액이나 완전한 예약 상세 객체를 제공하지 않는다.
-- 같은 화면에 즉시 반영할 완전한 객체가 없고 성공 후 상세 화면으로 이동하므로 `setQueryData`는 사용하지 않는다.
-- 생성 성공 시 `pointQueryKeys.myBalance()`를 무효화한 뒤 `/reservations/{reservationId}/complete` 예약 요청 완료 화면으로 replace 이동한다. `{ fromReservationRequest: true }` route state는 완료 화면이 예약 상세로 이동할 때 전달한다.
-- 예약 상세/목록 API query는 아직 없으므로 speculative cache key나 cache write를 추가하지 않는다.
+- 생성 API의 `ReservationResponse` 전체를 `reservationCompletionQueryKeys.detail(reservationId)`에 메모리로 저장한다.
+- 생성 성공 시 포인트와 내 예약 목록 캐시를 무효화하고 `/reservations/{reservationId}/complete`로 replace 이동한다.
+- 완료 응답은 화면에서 소비하는 임시 메모리이며 예약 상세를 조회하거나 브라우저 저장소에 보존하지 않는다.
+- 이전 입력 화면은 이동 전에 같은 history entry에 draft를 저장하여 확인 화면에서 뒤로가면 모든 입력을 복원한다.
 
 공통 request는 로그인 후 메모리에 저장된 `accessToken`을 우선 사용한다. 로컬 개발에서는 ignored `.env.local`의 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있으며 운영 빌드에서는 이 fallback을 사용하지 않는다.
 

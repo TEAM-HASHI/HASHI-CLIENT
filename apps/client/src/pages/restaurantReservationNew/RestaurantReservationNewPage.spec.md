@@ -42,17 +42,17 @@ Jira: HASHI-78
 ## Requirements
 
 - [x] 상단에 `예약하기` 제목과 뒤로가기 버튼을 모바일 프레임 상단에 고정해 보여준다.
-- [x] 뒤로가기 버튼은 `navigate(-1)`을 실행한다.
+- [x] 뒤로가기 버튼은 입력이 있으면 나가기 확인 모달을 연다. 계속 작성은 입력을 유지하고, 나가기는 history의 draft를 지우고 이전 화면으로 돌아간다.
 - [x] 식당 이미지는 HDS `Thumbnail`을 사용하고, 이미지 URL이 없거나 로드에 실패하면 내부 fallback을 표시한다.
-- [x] 예약자명 입력 필드를 보여준다.
+- [x] 예약자명은 trim 기준 1~50자로 입력한다.
 - [x] 인원 선택은 어른, 청소년, 어린이 카운터를 보여준다.
-- [x] 인원 수는 0명 아래로 내려가지 않는다.
+- [x] 각 유형 인원은 초기 0명, 0~100명으로 제한하고 총 인원은 1명 이상이어야 한다.
 - [x] 날짜 달력은 현재 월을 초기 표시 월로 사용한다.
 - [x] 날짜 달력 헤더는 연도와 월을 2줄로 보여준다.
 - [x] 오늘 및 오늘 이전 날짜는 선택할 수 없다.
-- [x] 내일 이후 날짜를 선택하면 선택 상태를 표시한다.
+- [x] 내일부터 오늘의 3개월 후까지 선택할 수 있다. 해당 월에 같은 날짜가 없으면 월말까지 허용한다.
 - [x] 날짜를 변경하면 이전에 선택한 시간은 해제한다.
-- [x] 시간 목록은 선택 날짜에 해당하는 식당 영업시간과 30분 예약 간격으로 생성한다.
+- [x] 시간은 선택 날짜의 개점부터 폐점 60분 전까지 30분 간격으로 생성한다. 슬롯이 없으면 해당 날짜도 비활성화한다.
 - [x] 휴무이거나 영업시간이 없는 날짜는 선택할 수 없다.
 - [x] 브레이크 타임에 포함되는 시간은 예약 시간 목록에서 제외한다.
 - [x] 날짜가 선택되기 전에는 시간 버튼을 비활성화한다.
@@ -84,12 +84,13 @@ Jira: HASHI-78
 - mutation: none
 - request data: none
 - submit enabled condition:
-  - 예약자명 `trim()` 결과가 1글자 이상
+  - 예약자명 `trim()` 결과가 1~50글자
   - 총 인원 수가 1명 이상
   - 내일 이후 날짜 선택
   - 시간 선택
 - success handling:
-  - `navigate(ROUTES.reservationRequest, { state: reservationDraft })`
+  - 현재 입력 화면의 history entry에 draft를 replace 저장한 뒤 예약 확인 화면으로 이동한다. 확인 화면에서 뒤로가면 전체 입력을 복원한다.
+  - 빈 요청사항은 draft에서 생략한다.
 - failure handling:
   - none, disabled CTA prevents invalid submit
 
@@ -121,16 +122,16 @@ Jira: HASHI-78
 ## Validation
 
 - `guestName`
-  - rule: `trim()` 결과가 1글자 이상
+  - rule: `trim()` 결과가 1~50글자
   - error message: none
 - `guestCounts`
-  - rule: 총합 1명 이상
+  - rule: 각 유형 0~100명, 총합 1명 이상
   - error message: none
 - `selectedDate`
-  - rule: 내일 이후이며 해당 요일에 유효한 영업시간이 있는 날짜
+  - rule: 내일~오늘의 3개월 후이며 해당 요일에 예약 슬롯이 있는 날짜
   - error message: none
 - `selectedTime`
-  - rule: 시간 선택됨
+  - rule: 해당 날짜의 유효한 시간 슬롯 선택
   - error message: none
 - submit enabled condition:
   - 모든 필수 rule이 true
@@ -202,7 +203,7 @@ RestaurantReservationNewPage
 - failure redirect:
   - none
 - back behavior:
-  - `navigate(-1)`
+  - 입력이 있으면 나가기 확인. 계속 작성은 유지, 나가기는 draft 제거 후 `navigate(-1)`.
 - auth redirect:
   - unauthenticated users redirect to `ROUTES.loginRequired` through `AuthOnlyRoute`
 

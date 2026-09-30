@@ -1,8 +1,10 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Calendar, Header, IconButton } from '@hashi/hds-ui'
+import { useState } from 'react'
 import type { SyntheticEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
+import { ReservationExitDialog } from '@/features/reservation/components/ReservationExitDialog'
 import { ROUTES } from '@/app/router/path'
 import {
   GuestCounter,
@@ -20,13 +22,16 @@ const RESERVATION_FORM_ID = 'restaurant-reservation-new-form'
 
 export const RestaurantReservationNewPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [isExitOpen, setIsExitOpen] = useState(false)
   const { restaurantId } = useParams()
   const restaurant = useReservationRestaurant(restaurantId)
-  const { calendar, fields, guestCounters, submit, timeSelector } =
+  const { calendar, fields, guestCounters, submit, timeSelector, hasChanges } =
     useRestaurantReservationForm({ restaurant })
 
   const handleBackClick = () => {
-    navigate(-1)
+    if (hasChanges) setIsExitOpen(true)
+    else navigate(-1)
   }
 
   const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
@@ -38,6 +43,7 @@ export const RestaurantReservationNewPage = () => {
       return
     }
 
+    navigate(location.pathname, { replace: true, state: reservationDraft })
     navigate(ROUTES.reservationRequest, {
       state: reservationDraft,
     })
@@ -78,6 +84,7 @@ export const RestaurantReservationNewPage = () => {
             autoComplete="name"
             label="예약자명"
             name="guestName"
+            maxLength={50}
             onValueChange={fields.guestName.onValueChange}
             placeholder="예약자 성함을 입력해주세요."
             value={fields.guestName.value}
@@ -142,6 +149,14 @@ export const RestaurantReservationNewPage = () => {
         </form>
       </div>
 
+      <ReservationExitDialog
+        open={isExitOpen}
+        onOpenChange={setIsExitOpen}
+        onExit={() => {
+          navigate(location.pathname, { replace: true, state: null })
+          navigate(-1)
+        }}
+      />
       <ReservationBottomBar
         disabled={!submit.canSubmit}
         formId={RESERVATION_FORM_ID}

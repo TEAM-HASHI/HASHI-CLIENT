@@ -6,8 +6,9 @@ import { ROUTES } from '@/app/router/path'
 
 import { AnywhereReservationPage } from '@/pages/anywhereReservation/AnywhereReservationPage'
 
-const { mockNavigate } = vi.hoisted(() => ({
+const { mockNavigate, mockLocation } = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
+  mockLocation: { pathname: '/reservations/anywhere', state: null as unknown },
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -17,6 +18,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useLocation: () => mockLocation,
   }
 })
 
@@ -29,6 +31,7 @@ describe('AnywhereReservationPage', () => {
   afterEach(() => {
     cleanup()
     mockNavigate.mockClear()
+    mockLocation.state = null
     vi.useRealTimers()
   })
 
@@ -177,7 +180,7 @@ describe('AnywhereReservationPage', () => {
 
     expect(screen.getByRole('button', { name: '11:00' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '11:30' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: '20:00' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '23:30' })).toBeTruthy()
   })
 
   it('does not require request note for submit', () => {
@@ -216,6 +219,42 @@ describe('AnywhereReservationPage', () => {
     expect(
       screen.getByRole('button', { name: '2026년 6월 16일' }),
     ).toBeEnabled()
+  })
+
+  it('confirms exit after editing and keeps values when continuing', () => {
+    render(<AnywhereReservationPage />)
+    fireEvent.change(screen.getByLabelText('식당명'), {
+      target: { value: '키츠라멘' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    expect(mockNavigate).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: '계속 작성' }))
+    expect(screen.getByLabelText('식당명')).toHaveValue('키츠라멘')
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+    fireEvent.click(screen.getByRole('button', { name: '나가기' }))
+    expect(mockNavigate).toHaveBeenCalledWith(-1)
+  })
+
+  it('restores every field when returning with the saved draft', () => {
+    mockLocation.state = {
+      source: 'anywhere',
+      restaurantId: null,
+      restaurantName: '키츠라멘',
+      restaurantAddress: '도쿄',
+      restaurantImageUrl: null,
+      guestName: '김하시',
+      guests: { adult: 2, teen: 1, child: 0 },
+      date: '2026-06-02',
+      time: '23:30',
+      requestNote: '창가 자리',
+    }
+    render(<AnywhereReservationPage />)
+    expect(screen.getByLabelText('식당명')).toHaveValue('키츠라멘')
+    expect(screen.getByLabelText('식당 주소')).toHaveValue('도쿄')
+    expect(screen.getByLabelText('예약자명')).toHaveValue('김하시')
+    expect(screen.getByLabelText('요청사항 (선택)')).toHaveValue('창가 자리')
+    expect(screen.getByRole('button', { name: '다음' })).toBeEnabled()
   })
 
   it('moves back to the previous history entry from the header action', () => {
