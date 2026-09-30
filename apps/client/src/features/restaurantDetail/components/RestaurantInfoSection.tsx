@@ -70,7 +70,7 @@ export const RestaurantInfoSection = ({
         </p>
         <ImageFallback
           aria-label="지도 연동 전 위치 영역"
-          className="mt-3 h-32 w-full rounded-[5px]"
+          className="mt-3 h-36.25 w-full rounded-[5px]"
           markSize="lg"
           role="img"
         />
