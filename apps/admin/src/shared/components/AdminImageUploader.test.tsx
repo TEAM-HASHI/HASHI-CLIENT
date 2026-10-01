@@ -15,6 +15,10 @@ const Harness = () => {
       label="식당 이미지"
       usage="restaurant"
       value={value}
+      previewFrames={[
+        { label: '상세', aspectRatio: '393 / 234' },
+        { label: '목록', aspectRatio: '1 / 1' },
+      ]}
       multiple
       representativeLabel
       onChange={setValue}
@@ -53,11 +57,23 @@ describe('AdminImageUploader', () => {
     })
 
     await waitFor(() => expect(screen.getByText('대표 이미지')).toBeVisible())
+    const detailPreview = screen.getByAltText('a.webp 상세 미리보기')
+    expect(detailPreview.parentElement).toHaveStyle({
+      aspectRatio: '393 / 234',
+    })
+    expect(screen.getByAltText('a.webp 목록 미리보기')).toHaveStyle({
+      aspectRatio: '1 / 1',
+    })
     expect(
       screen.getByRole('button', { name: 'b.webp 앞으로 이동' }),
     ).toBeVisible()
 
     fireEvent.click(screen.getByRole('button', { name: 'a.webp 삭제' }))
-    expect(screen.queryByAltText('a.webp 미리보기')).not.toBeInTheDocument()
+    expect(
+      screen.queryByAltText('a.webp 상세 미리보기'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByAltText('a.webp 목록 미리보기'),
+    ).not.toBeInTheDocument()
   })
 })

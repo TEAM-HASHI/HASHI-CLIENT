@@ -17,6 +17,14 @@ import { AdminImageUploader } from '@/shared/components/AdminImageUploader'
 import { Drawer } from '@/shared/components/Drawer'
 import type { AdminImageUploadStatus } from '@/shared/hooks/useAdminImageUpload'
 
+// 앱에서 잘려 보이는 비율: 배너는 홈·매거진 배너(353:160), 썸네일은 매거진 목록(156:88)
+const MAGAZINE_BANNER_FRAMES = [
+  { label: '배너', aspectRatio: '353 / 160' },
+] as const
+const MAGAZINE_THUMBNAIL_FRAMES = [
+  { label: '목록', aspectRatio: '156 / 88' },
+] as const
+
 export const MagazineFormDrawer = ({
   open,
   mode,
@@ -146,6 +154,7 @@ export const MagazineFormDrawer = ({
               src={form.existingBannerUrl}
               alt="현재 매거진 배너"
               className="w-full rounded-lg object-cover"
+              style={{ aspectRatio: MAGAZINE_BANNER_FRAMES[0].aspectRatio }}
             />
           </div>
         ) : null}
@@ -153,6 +162,7 @@ export const MagazineFormDrawer = ({
           label={mode === 'create' ? '배너 이미지 선택' : '새 배너로 교체'}
           usage="magazine"
           value={form.banner ? [form.banner] : []}
+          previewFrames={MAGAZINE_BANNER_FRAMES}
           onChange={(images) =>
             setForm((current) => ({ ...current, banner: images[0] ?? null }))
           }
@@ -165,6 +175,7 @@ export const MagazineFormDrawer = ({
               src={form.existingThumbnailUrl}
               alt="현재 매거진 썸네일"
               className="w-full rounded-lg object-cover"
+              style={{ aspectRatio: MAGAZINE_THUMBNAIL_FRAMES[0].aspectRatio }}
             />
           </div>
         ) : null}
@@ -172,6 +183,7 @@ export const MagazineFormDrawer = ({
           label={mode === 'create' ? '썸네일 이미지 선택' : '새 썸네일로 교체'}
           usage="magazine"
           value={form.thumbnail ? [form.thumbnail] : []}
+          previewFrames={MAGAZINE_THUMBNAIL_FRAMES}
           onChange={(images) =>
             setForm((current) => ({
               ...current,
