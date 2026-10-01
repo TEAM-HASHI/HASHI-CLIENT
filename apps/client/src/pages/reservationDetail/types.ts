@@ -10,7 +10,4 @@ export interface ReservationProgressStep {
   status: ReservationProgressStatus
 }
 
-export interface ReservationReceiptInfoItem {
-  label: string
-  value: string
-}
+export type { ReservationReceiptInfoItem } from '@/features/reservation/utils/createReservationReceiptInfoItems'

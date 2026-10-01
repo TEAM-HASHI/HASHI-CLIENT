@@ -1,10 +1,12 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import { generatePath, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { getReservationCompletePath } from '@/app/router/routePaths'
+import { reservationCompletionQueryKeys } from '@/features/reservation/queries/reservationCompletion'
 import { myPointBalanceQueryOptions } from '@/features/point/queries/pointQueryOptions'
 import {
   formatReservationDraftDateTime,
@@ -29,6 +31,7 @@ const ReservationRequestContent = ({
   reservationDraft,
 }: ReservationRequestContentProps) => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const isRequestLockedRef = useRef(false)
   const { data: pointBalance } = useSuspenseQuery(myPointBalanceQueryOptions)
@@ -72,14 +75,16 @@ const ReservationRequestContent = ({
         usedPoint: reservationPoint.usedPoint,
       },
       {
-        onSuccess: ({ reservationId }) => {
-          setIsConfirmOpen(false)
-          navigate(
-            generatePath(ROUTES.reservationDetail, {
-              reservationId: String(reservationId),
-            }),
-            { replace: true, state: { fromReservationRequest: true } },
+        onSuccess: (response) => {
+          const { reservationId } = response
+          queryClient.setQueryData(
+            reservationCompletionQueryKeys.detail(reservationId),
+            response,
           )
+          setIsConfirmOpen(false)
+          navigate(getReservationCompletePath(String(reservationId)), {
+            replace: true,
+          })
         },
         onSettled: () => {
           isRequestLockedRef.current = false

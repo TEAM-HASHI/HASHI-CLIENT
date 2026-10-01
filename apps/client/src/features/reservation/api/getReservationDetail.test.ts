@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { getReservationDetail } from '@/pages/reservationDetail/api/getReservationDetail'
+import { getReservationDetail } from '@/features/reservation/api/getReservationDetail'
 import { request } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({

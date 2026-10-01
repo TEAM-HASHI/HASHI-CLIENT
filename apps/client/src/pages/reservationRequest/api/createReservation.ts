@@ -34,8 +34,8 @@ const createCommonRequest = (
     adultCount: draft.guests.adult,
     teenCount: draft.guests.teen,
     childCount: draft.guests.child,
-    ...(draft.requestNote.trim()
-      ? { requestNote: draft.requestNote.trim() }
+    ...(draft.requestNote?.trim()
+      ? { requestNote: draft.requestNote?.trim() }
       : {}),
     usedPoint,
     amount: reservationFee - usedPoint,

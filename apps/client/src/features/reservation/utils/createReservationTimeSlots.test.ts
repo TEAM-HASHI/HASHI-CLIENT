@@ -13,11 +13,12 @@ describe('createReservationTimeSlots', () => {
     const slots = createReservationTimeSlots(
       { open: '11:00', close: '20:00' },
       30,
+      60,
     )
 
     expect(slots[0]).toBe('11:00')
     expect(slots[1]).toBe('11:30')
-    expect(slots.at(-1)).toBe('20:00')
+    expect(slots.at(-1)).toBe('19:00')
   })
 
   it('excludes time slots inside the restaurant break', () => {
@@ -44,5 +45,22 @@ describe('createReservationTimeSlots', () => {
       '17:30',
       '18:00',
     ])
+  })
+  it('disables a day without a slot before the restaurant cutoff', () => {
+    expect(
+      createReservationTimeSlots({ open: '19:30', close: '20:00' }, 30, 60),
+    ).toEqual([])
+    expect(
+      createReservationTimeSlots(
+        {
+          open: '11:00',
+          close: '12:00',
+          breakStart: '11:00',
+          breakEnd: '12:00',
+        },
+        30,
+        60,
+      ),
+    ).toEqual([])
   })
 })

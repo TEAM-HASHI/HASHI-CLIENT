@@ -1,10 +1,9 @@
+import type { ReservationDetailResponse } from '@/features/reservation/api/getReservationDetail'
+import { createReservationReceiptInfoItems } from '@/features/reservation/utils/createReservationReceiptInfoItems'
 import {
   formatReservationDate,
-  formatReservationDateTime,
-  formatReservationGuestSummary,
   formatReservationMonthDay,
 } from '@/features/reservation/utils/formatReservation'
-import type { ReservationDetailResponse } from '@/pages/reservationDetail/api/getReservationDetail'
 import type {
   ReservationProgressStep,
   ReservationReceiptInfoItem,
@@ -13,23 +12,6 @@ import type {
 type ReservationStatus = NonNullable<
   ReservationDetailResponse['reservationStatus']
 >
-
-const formatReservationGuestSummaryWithFallback = ({
-  adultCount,
-  teenCount,
-  childCount,
-}: Pick<
-  ReservationDetailResponse,
-  'adultCount' | 'teenCount' | 'childCount'
->) => {
-  return (
-    formatReservationGuestSummary({
-      adult: adultCount ?? 0,
-      teen: teenCount ?? 0,
-      child: childCount ?? 0,
-    }) ?? '-'
-  )
-}
 
 const formatAmount = (amount: number | undefined) => {
   if (amount === undefined) {
@@ -104,22 +86,7 @@ const createReservationProgressSteps = (
 const createReceiptInfoItems = (
   reservationDetail: ReservationDetailResponse,
 ): ReservationReceiptInfoItem[] => [
-  {
-    label: '예약자',
-    value: reservationDetail.reserverName ?? '-',
-  },
-  {
-    label: '인원',
-    value: formatReservationGuestSummaryWithFallback(reservationDetail),
-  },
-  {
-    label: '식당 주소',
-    value: reservationDetail.restaurantAddress ?? '-',
-  },
-  {
-    label: '식당 방문 일정',
-    value: formatReservationDateTime(reservationDetail.reservedAt) ?? '-',
-  },
+  ...createReservationReceiptInfoItems(reservationDetail),
   {
     label: '수수료',
     value: formatAmount(reservationDetail.amount),

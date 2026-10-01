@@ -17,6 +17,7 @@ export const GuestCounter = ({
   onIncrease,
 }: GuestCounterProps) => {
   const isDecreaseDisabled = disabled || value <= 0
+  const isIncreaseDisabled = disabled || value >= 100
 
   return (
     <div
@@ -47,9 +48,9 @@ export const GuestCounter = ({
             aria-label={`${label} 인원 늘리기`}
             className={cn(
               'active:border-primary-400 active:text-primary-400 flex size-6 shrink-0 appearance-none items-center justify-center rounded-full border-[1.4px] border-black text-black disabled:cursor-not-allowed',
-              disabled && 'active:border-black active:text-black',
+              isIncreaseDisabled && 'active:border-black active:text-black',
             )}
-            disabled={disabled}
+            disabled={isIncreaseDisabled}
             onClick={onIncrease}
             type="button"
           >

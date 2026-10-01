@@ -20,7 +20,7 @@ Jira: HASHI-86
 ## Requirements
 
 - 상단 Header는 고정한다.
-- 뒤로가기 버튼 클릭 시 `navigate(-1)`을 호출한다.
+- 뒤로가기 버튼은 입력이 있으면 나가기 확인 모달을 연다. 계속 작성은 유지, 나가기는 저장된 draft를 지우고 `navigate(-1)`로 돌아간다.
 - 사용자가 아래 값을 직접 입력할 수 있다.
   - 식당명
   - 식당 주소
@@ -36,7 +36,7 @@ Jira: HASHI-86
 - 날짜를 선택하기 전에는 시간 버튼을 disabled 처리한다.
 - 날짜 선택 후 예약 시간을 선택할 수 있다.
 - 시간 슬롯은 예약 플로우 공통 정책을 사용한다.
-  - `11:00`부터 `20:00`까지
+  - `11:00`부터 `23:30`까지
   - 30분 간격
   - 종료 시각 포함
 - 필수값이 모두 확정되기 전까지 하단 `다음` CTA는 disabled 상태다.
@@ -46,11 +46,11 @@ Jira: HASHI-86
 
 CTA 활성 조건은 아래 값을 모두 만족해야 한다.
 
-- `restaurantName.trim().length > 0`
-- `restaurantAddress.trim().length > 0`
-- `guestName.trim().length > 0`
-- 총 인원 수가 1명 이상
-- 내일 이후 날짜가 선택됨
+- `restaurantName.trim().length`가 1~200
+- `restaurantAddress.trim().length`가 1~200
+- `guestName.trim().length`가 1~50
+- 각 유형 0~100명, 초기 0명이며 총 인원 수가 1명 이상
+- 내일부터 오늘의 3개월 후(해당 날짜가 없으면 월말)까지 선택됨
 - 예약 시간이 선택됨
 
 요청사항은 선택값이므로 CTA 활성 조건에 포함하지 않는다.
@@ -73,7 +73,7 @@ CTA 활성 조건은 아래 값을 모두 만족해야 한다.
 
 ## Submit Draft
 
-CTA submit 시 `location.state`로 아래 draft를 전달한다.
+CTA submit 시 현재 입력 화면의 history entry에 draft를 replace 저장한 뒤 확인 화면의 `location.state`로 전달한다. 확인 화면에서 뒤로가면 식당명·주소·예약자명·인원·날짜·시간·요청사항을 모두 복원한다. 빈 요청사항은 draft에서 생략한다.
 
 ```ts
 interface AnywhereReservationDraft {
@@ -90,7 +90,7 @@ interface AnywhereReservationDraft {
   }
   date: string
   time: string
-  requestNote: string
+  requestNote?: string
 }
 ```
 
