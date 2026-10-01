@@ -288,9 +288,12 @@ describe('RestaurantDetailPage', () => {
       'true',
     )
     expect(screen.getByText('오시는 길')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '오시는 길' })).toHaveTextContent(
+      '도쿄도 주오구 긴자 1-1',
+    )
     expect(
-      screen.getByRole('img', { name: '지도 연동 전 위치 영역' }),
-    ).toBeInTheDocument()
+      screen.queryByRole('img', { name: '지도 연동 전 위치 영역' }),
+    ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: '다시 추천 받기' }),
     ).not.toBeInTheDocument()

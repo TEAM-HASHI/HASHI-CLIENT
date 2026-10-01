@@ -318,9 +318,12 @@ describe('TodayRestaurantPage', () => {
       'true',
     )
     expect(screen.getByText('오시는 길')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '오시는 길' })).toHaveTextContent(
+      '도쿄도 도시마구 남이케부쿠로 1-22-2',
+    )
     expect(
-      screen.getByRole('img', { name: '지도 연동 전 위치 영역' }),
-    ).toBeInTheDocument()
+      screen.queryByRole('img', { name: '지도 연동 전 위치 영역' }),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '다시 추천 받기' })).toBeTruthy()
     expect(screen.getByRole('button', { name: '예약하기' })).toBeTruthy()
 

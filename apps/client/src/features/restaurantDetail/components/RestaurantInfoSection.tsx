@@ -1,5 +1,3 @@
-import { ImageFallback } from '@hashi/hds-ui'
-
 import type { RestaurantDetail } from '@/features/restaurantDetail/types/restaurantDetail'
 
 interface RestaurantInfoSectionProps {
@@ -68,12 +66,6 @@ export const RestaurantInfoSection = ({
         <p className="typo-body-5 text-primary-200 mt-3">
           {restaurant.address}
         </p>
-        <ImageFallback
-          aria-label="지도 연동 전 위치 영역"
-          className="mt-3 h-36.25 w-full rounded-[5px]"
-          markSize="lg"
-          role="img"
-        />
       </section>
     </div>
   )
