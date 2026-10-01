@@ -55,18 +55,27 @@ export const TodayRestaurantPage = () => {
     restaurantId,
   })
   const recommendAgainMutation = useMutation({
-    mutationFn: ({ excludeRestaurantId }: { excludeRestaurantId?: number }) =>
+    mutationFn: ({
+      excludeRestaurantId,
+    }: {
+      excludeRestaurantId?: number
+      fromPhotoTab: boolean
+    }) =>
       getRandomRestaurantRecommendation(
         excludeRestaurantId === undefined ? undefined : { excludeRestaurantId },
       ),
     onSuccess: (nextSummary) => {
       setRecommendedSummary(nextSummary)
+      const wasPhotoTab = detailContent.activeTab === 'photo'
       detailContent.resetDetailState()
+      if (wasPhotoTab) detailContent.onTabChange('photo')
     },
   })
   const requestError =
     randomRecommendationQuery.error ??
-    recommendAgainMutation.error ??
+    (recommendAgainMutation.variables?.fromPhotoTab
+      ? null
+      : recommendAgainMutation.error) ??
     detailContent.error ??
     reviewWriteNavigation.error
 
@@ -100,6 +109,7 @@ export const TodayRestaurantPage = () => {
 
     recommendAgainMutation.mutate({
       excludeRestaurantId: restaurant.id ? Number(restaurant.id) : undefined,
+      fromPhotoTab: detailContent.activeTab === 'photo',
     })
   }
 
@@ -140,6 +150,9 @@ export const TodayRestaurantPage = () => {
         reviewLoadMoreRef={detailContent.reviewLoadMoreRef}
         selectedReviewSort={detailContent.selectedReviewSort}
         shareUrl={ROUTES.todayRestaurant}
+        shouldScrollToInitialTab={
+          initialTab !== undefined && initialTab !== 'info'
+        }
         title="오늘의 식당"
         variant="today"
       />

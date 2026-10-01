@@ -16,6 +16,7 @@ import { RestaurantDetailHero } from '@/features/restaurantDetail/components/Res
 import { RestaurantDetailTabs } from '@/features/restaurantDetail/components/RestaurantDetailTabs'
 import { RestaurantInfoSection } from '@/features/restaurantDetail/components/RestaurantInfoSection'
 import { RestaurantMenuListSection } from '@/features/restaurantDetail/components/RestaurantMenuListSection'
+import { RestaurantPhotoSection } from '@/features/restaurantDetail/components/RestaurantPhotoSection'
 import { RestaurantReviewSection } from '@/features/restaurantDetail/components/RestaurantReviewSection'
 import { ReviewImageViewer } from '@/features/restaurantDetail/components/ReviewImageViewer'
 import { ReviewUnavailableModal } from '@/features/restaurantDetail/components/ReviewUnavailableModal'
@@ -24,6 +25,7 @@ import {
   RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
 } from '@/features/restaurantDetail/constants/restaurantDetailLayout'
 import { useRestaurantDetailTabBarFixed } from '@/features/restaurantDetail/hooks/useRestaurantDetailTabBarFixed'
+import { useRestaurantPhotos } from '@/features/restaurantDetail/hooks/useRestaurantPhotos'
 import type {
   RestaurantDetail,
   RestaurantDetailTab,
@@ -103,6 +105,10 @@ export const RestaurantDetailTemplate = ({
   const { isTabBarFixed, markerRef } = useRestaurantDetailTabBarFixed()
   const hasScrolledToInitialTabRef = useRef(false)
   const handleShare = useShareLink(shareUrl)
+  const photos = useRestaurantPhotos(
+    Number(restaurant.id),
+    activeTab === 'photo',
+  )
 
   const scrollToTabBarTop = useCallback(() => {
     const marker = markerRef.current
@@ -157,6 +163,53 @@ export const RestaurantDetailTemplate = ({
     })
   }
 
+  const activeTabSection =
+    activeTab === 'info' ? (
+      <RestaurantInfoSection restaurant={restaurant} />
+    ) : activeTab === 'menu' ? (
+      <RestaurantMenuListSection
+        hasMoreMenus={hasMoreMenus}
+        isMenuListError={isMenuListError}
+        loadMoreRef={menuLoadMoreRef}
+        menus={restaurant.menus}
+        onPressMenuItem={onPressMenuItem}
+        onRetryMenuList={onRetryMenuList}
+      />
+    ) : activeTab === 'photo' ? (
+      <RestaurantPhotoSection
+        key={restaurant.id}
+        model={photos}
+        onResetScroll={scrollToTabBarTop}
+      />
+    ) : (
+      <RestaurantReviewSection
+        hasMoreReviews={hasMoreReviews}
+        isReviewListError={isReviewListError}
+        isReviewListLoading={isReviewListLoading}
+        loadMoreRef={reviewLoadMoreRef}
+        onPressReviewImage={onPressReviewImage}
+        onRetryReviewList={onRetryReviewList}
+        onPressWriteReview={onPressWriteReview}
+        onSelectSort={onSelectReviewSort}
+        rating={restaurant.rating}
+        ratingDistribution={restaurant.ratingDistribution}
+        restaurantName={restaurant.name}
+        reviewCount={restaurant.reviewCount}
+        reviews={restaurant.reviews}
+        selectedSort={selectedReviewSort}
+      />
+    )
+  const activeTabSectionStyle =
+    activeTab === 'info'
+      ? undefined
+      : {
+          minHeight: `calc(100dvh - ${
+            RESTAURANT_DETAIL_HEADER_HEIGHT + RESTAURANT_DETAIL_TAB_BAR_HEIGHT
+          }px)`,
+        }
+
+  const headerTitle = activeTab === 'info' ? title : restaurant.name
+
   return (
     <main className="min-h-dvh bg-white pb-[calc(82px+var(--safe-area-bottom,0px))]">
       <h1 className="sr-only">{title}</h1>
@@ -176,7 +229,7 @@ export const RestaurantDetailTemplate = ({
             ariaLabel: '공유하기',
             onClick: handleShare,
           }}
-          title={title}
+          title={headerTitle}
         />
       </div>
       <div
@@ -259,6 +312,7 @@ export const RestaurantDetailTemplate = ({
           activeTab={activeTab}
           onTabChange={handleTabChange}
           reviewCount={restaurant.reviewCount}
+          photoCount={photos.enabled ? photos.counts?.all : undefined}
         />
       </div>
       {isTabBarFixed ? (
@@ -268,35 +322,7 @@ export const RestaurantDetailTemplate = ({
         />
       ) : null}
 
-      {activeTab === 'info' ? (
-        <RestaurantInfoSection restaurant={restaurant} />
-      ) : activeTab === 'menu' ? (
-        <RestaurantMenuListSection
-          hasMoreMenus={hasMoreMenus}
-          isMenuListError={isMenuListError}
-          loadMoreRef={menuLoadMoreRef}
-          menus={restaurant.menus}
-          onPressMenuItem={onPressMenuItem}
-          onRetryMenuList={onRetryMenuList}
-        />
-      ) : (
-        <RestaurantReviewSection
-          hasMoreReviews={hasMoreReviews}
-          isReviewListError={isReviewListError}
-          isReviewListLoading={isReviewListLoading}
-          loadMoreRef={reviewLoadMoreRef}
-          onPressReviewImage={onPressReviewImage}
-          onRetryReviewList={onRetryReviewList}
-          onPressWriteReview={onPressWriteReview}
-          onSelectSort={onSelectReviewSort}
-          rating={restaurant.rating}
-          ratingDistribution={restaurant.ratingDistribution}
-          restaurantName={restaurant.name}
-          reviewCount={restaurant.reviewCount}
-          reviews={restaurant.reviews}
-          selectedSort={selectedReviewSort}
-        />
-      )}
+      <div style={activeTabSectionStyle}>{activeTabSection}</div>
 
       <ReviewImageViewer
         imageUrls={reviewImageViewerImageUrls}

@@ -56,7 +56,7 @@ Exported types:
 
 - 필터 값, 정렬 값 같은 도메인 enum 정의
 - 현재 필터 상태를 `selected`로 매핑
-- count에 표시할 숫자 또는 짧은 보조 라벨 계산
+- count에 표시할 숫자 계산
 - 단일 선택, 다중 선택, 토글 해제 가능 여부 같은 그룹 정책
 - 클릭 이후 query, mutation, route update, analytics 실행
 
@@ -91,9 +91,9 @@ Chip
 
 ### `children`
 
-- type: `ReactNode`
+- type: `string`
 - required: `true`
-- description: 칩 안에 표시할 짧은 라벨입니다. 일반 사용은 문자열을 권장합니다.
+- description: 칩 안에 표시할 짧은 문자열 라벨입니다.
 
 ### `selected`
 
@@ -104,9 +104,9 @@ Chip
 
 ### `count`
 
-- type: `ReactNode`
+- type: `number`
 - required: `false`
-- description: 라벨 뒤에 표시할 짧은 보조 값입니다. 숫자 카운트를 주 용도로 하지만 HDS는 값의 도메인 의미를 해석하지 않습니다.
+- description: 라벨 뒤에 표시할 숫자 카운트입니다. HDS는 값의 도메인 의미를 해석하지 않습니다.
 
 ### `onSelectedChange`
 
