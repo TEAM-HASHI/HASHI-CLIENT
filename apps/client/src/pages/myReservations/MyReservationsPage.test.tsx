@@ -9,11 +9,18 @@ import {
   waitFor,
   within,
 } from '@testing-library/react'
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
 import { cancelReservation } from '@/features/reservation/api/cancelReservation'
+import { myReservationsQueryKeys } from '@/features/reservation/queries/myReservationsQueryKeys'
 import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
 import { useMyProfileSummaryQuery } from '@/features/user'
 import { getMyReservations } from '@/features/reservation/api/getMyReservations'
@@ -61,11 +68,20 @@ const LocationPath = () => {
   return <div data-testid="location-path">{location.pathname}</div>
 }
 
+const ReservationDetailBack = () => {
+  const navigate = useNavigate()
+
+  return (
+    <button onClick={() => navigate(-1)} type="button">
+      뒤로
+    </button>
+  )
+}
+
 const renderMyReservationsPage = (
   initialEntry: string = ROUTES.myReservations,
+  queryClient = createQueryClient(),
 ) => {
-  const queryClient = createQueryClient()
-
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialEntry]}>
@@ -78,6 +94,10 @@ const renderMyReservationsPage = (
               </>
             }
             path={ROUTES.myReservations}
+          />
+          <Route
+            element={<ReservationDetailBack />}
+            path={ROUTES.reservationDetail}
           />
         </Routes>
       </MemoryRouter>
@@ -146,6 +166,87 @@ describe('MyReservationsPage', () => {
     vi.restoreAllMocks()
     mockShowToast.mockClear()
   })
+
+  it('resets the list scroll position when the reservation status changes', async () => {
+    renderMyReservationsPage()
+
+    await screen.findByText('스시 하시')
+    const list = screen.getByRole('region', { name: '예약 목록' })
+    list.scrollTop = 240
+
+    fireEvent.click(screen.getByRole('button', { name: '방문 예정' }))
+
+    expect(list.scrollTop).toBe(0)
+  })
+
+  it.each([false, true])(
+    'restores loaded pages and list position after detail even when cache is cleared: %s',
+    async (clearCache) => {
+      const { triggerIntersect } = mockIntersectionObserver()
+      const queryClient = createQueryClient()
+
+      mockedGetMyReservations.mockImplementation(async ({ cursor }) =>
+        cursor === null
+          ? {
+              reservations: [
+                {
+                  reservationId: 21,
+                  restaurantId: 34,
+                  restaurantName: '스시 하시',
+                  reservedAt: '2026-07-20T18:30:00',
+                  adultCount: 2,
+                  reservationStatus: 'CONFIRMED',
+                },
+              ],
+              nextCursor: 20,
+              hasNext: true,
+              totalCount: 2,
+            }
+          : {
+              reservations: [
+                {
+                  reservationId: 22,
+                  restaurantId: 35,
+                  restaurantName: '라멘 하시',
+                  reservedAt: '2026-07-21T12:00:00',
+                  adultCount: 1,
+                  reservationStatus: 'CONFIRMED',
+                },
+              ],
+              hasNext: false,
+              totalCount: 2,
+            },
+      )
+
+      renderMyReservationsPage(
+        `${ROUTES.myReservations}?status=UPCOMING`,
+        queryClient,
+      )
+
+      await screen.findByText('스시 하시')
+      triggerIntersect()
+      await screen.findByText('라멘 하시')
+
+      const list = screen.getByRole('region', { name: '예약 목록' })
+      list.scrollTop = 280
+      fireEvent.click(screen.getByRole('button', { name: /스시 하시/ }))
+      if (clearCache) {
+        queryClient.removeQueries({
+          queryKey: myReservationsQueryKeys.infiniteList('UPCOMING'),
+        })
+      }
+      fireEvent.click(screen.getByRole('button', { name: '뒤로' }))
+
+      expect(await screen.findByText('라멘 하시')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '방문 예정' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      expect(screen.getByRole('region', { name: '예약 목록' }).scrollTop).toBe(
+        280,
+      )
+    },
+  )
 
   it('loads the next reservation page when the bottom sentinel intersects', async () => {
     const { triggerIntersect } = mockIntersectionObserver()
@@ -402,7 +503,12 @@ describe('MyReservationsPage', () => {
 
     renderMyReservationsPage(`${ROUTES.myReservations}?status=UPCOMING`)
 
-    fireEvent.click(await screen.findByRole('button', { name: '취소하기' }))
+    const cancelButton = await screen.findByRole('button', {
+      name: '취소하기',
+    })
+    const list = screen.getByRole('region', { name: '예약 목록' })
+    list.scrollTop = 240
+    fireEvent.click(cancelButton)
     const dialog = screen.getByRole('alertdialog')
     fireEvent.click(
       within(dialog).getByRole('button', {
@@ -421,6 +527,7 @@ describe('MyReservationsPage', () => {
         size: 10,
         status: 'CANCELED',
       })
+      expect(list.scrollTop).toBe(0)
     })
   })
 

@@ -17,6 +17,7 @@ export const MyReservationsPage = () => {
     isFetchingNextPage,
     isCancelingReservation,
     loadMoreRef,
+    listScrollRef,
     isCancelDialogOpen,
     handleStatusChange,
     handleCancelPress,
@@ -41,7 +42,12 @@ export const MyReservationsPage = () => {
           onStatusChange={handleStatusChange}
         />
       </div>
-      <div className="flex min-h-0 flex-1 [scrollbar-width:none] flex-col overflow-y-auto overscroll-contain px-5 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        ref={listScrollRef}
+        aria-label="예약 목록"
+        role="region"
+        className="flex min-h-0 flex-1 [scrollbar-width:none] flex-col overflow-y-auto overscroll-contain px-5 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
         <ReservationListSection
           reservations={reservations}
           selectedStatus={selectedStatus}

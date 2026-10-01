@@ -55,6 +55,7 @@ apps/client/src/pages/myReservations/
 │   ├── VisitedReservationCard.tsx
 │   └── CanceledReservationCard.tsx
 ├── hooks/
+│   ├── useMyReservationsList.ts
 │   └── useMyReservationsPage.ts
 ├── api/
 │   └── getMyReservations.ts
@@ -81,6 +82,8 @@ apps/client/src/pages/myReservations/
 - [ ] 선택된 chip은 active 스타일로 표시합니다.
 - [ ] chip 변경 시 해당 상태의 예약 목록을 조회합니다.
 - [ ] chip 변경 시 리스트 스크롤 위치를 맨 위로 이동합니다.
+- [ ] 방문 예정 예약 상세에서 뒤로 돌아오면 기존 필터, 불러온 목록, 스크롤 위치를 복원합니다.
+  - 목록 캐시가 만료된 경우에는 상세 진입 시 보관한 페이지 데이터를 초기값으로 복원한 뒤 서버와 다시 동기화합니다.
 - [ ] chip 변경 시 URL query의 `status` 값을 갱신합니다.
 - [ ] 브라우저 뒤로가기/앞으로가기 시 이전 `status` 필터 상태를 복원합니다.
 - [ ] 상단 고정 영역은 스크롤해도 고정됩니다.
@@ -465,7 +468,7 @@ POST /api/v1/reservations/{reservationId}/cancel
 
 ## State
 
-`useMyReservationsPage`에서 관리합니다.
+`useMyReservationsPage`는 필터 전환, 취소, 화면 이동을 관리합니다. `useMyReservationsList`는 목록 조회, 페이지 추가, 상세 복귀 시 목록 복원을 관리합니다.
 
 local state:
 
@@ -574,7 +577,9 @@ queries:
 
 hooks:
 
+- `useMyReservationsList`
 - `useMyReservationsPage`
+- `shared/hooks/useListReturnRestoration`
 
 constants:
 
@@ -610,7 +615,7 @@ types:
 - fixed 영역의 elevation은 `shadow-header` 토큰을 사용하고 status filter 하단 `border-b`를 중복 적용하지 않습니다.
 - fixed 영역은 모바일 프레임 너비를 벗어나지 않아야 합니다.
 - z-index는 하드코딩하지 않고 `z-fixed` 토큰을 사용합니다.
-- status chip 변경 시 리스트 컨테이너 또는 window 스크롤을 맨 위로 이동합니다.
+- status chip 변경 또는 예약 취소 성공 시 리스트 컨테이너 스크롤을 맨 위로 이동합니다.
 
 하단 네비게이션:
 
