@@ -33,7 +33,7 @@ export const ReviewDetailPage = () => {
       className="min-h-dvh min-w-0 overflow-x-hidden bg-white pt-18.75 pb-[calc(111px+var(--safe-area-bottom,0px))]"
     >
       <div className="app-mobile-fixed-top z-fixed">
-        <ReviewHeader title="리뷰 상세" onBackClick={handleBackClick} />
+        <ReviewHeader title="마이 리뷰" onBackClick={handleBackClick} />
       </div>
       {isPending ? (
         <p className="typo-body-4 text-primary-200 flex min-h-[360px] items-center justify-center px-5 text-center">
@@ -55,6 +55,7 @@ export const ReviewDetailPage = () => {
       ) : (
         <>
           <ReviewReservationSummary
+            density="compact"
             restaurantName={reviewDetail.restaurantName}
             visitedAt={reviewDetail.visitedAt}
             guestSummary={reviewDetail.guestSummary}

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`ReviewReservationSummary`는 리뷰 작성/수정 흐름에서 사용자가 어떤 예약 방문에 대해 리뷰를 작성하는지 확인할 수 있도록 식당 이미지, 식당명, 방문 일시, 방문 인원 요약을 보여주는 review feature 전용 컴포넌트입니다.
+`ReviewReservationSummary`는 리뷰 작성/수정/상세 흐름에서 사용자가 어떤 예약 방문에 대해 리뷰를 작성하거나 확인하는지 알 수 있도록 식당 이미지, 식당명, 방문 일시, 방문 인원 요약을 보여주는 review feature 전용 컴포넌트입니다.
 
 이 컴포넌트는 표시 UI만 담당합니다. 예약 상세 조회, 날짜 포맷 변환, route param 해석, 리뷰 작성 가능 여부 판단은 호출부가 소유합니다.
 
@@ -19,8 +19,8 @@
 
 ## Usage Location
 
-- route: `/restaurants/:restaurantId/reviews/new`, `/reviews/:reviewId/edit`
-- page: `reviewNew`, `reviewEdit`
+- route: `/restaurants/:restaurantId/reviews/new`, `/reviews/:reviewId`, `/reviews/:reviewId/edit`
+- page: `reviewNew`, `reviewDetail`, `reviewEdit`
 - feature: `review`
 - expected path: `apps/client/src/features/review/components/reviewReservationSummary/ReviewReservationSummary.tsx`
 
@@ -28,6 +28,7 @@
 
 ```tsx
 <ReviewReservationSummary
+  density="compact"
   restaurantName="야키토리 무사시"
   visitedAt="2026. 6. 22 17:00 방문"
   guestSummary="어른 2명"
@@ -43,7 +44,8 @@
 ## Requirements
 
 - [x] root는 부모 너비를 따르고 좌우 `20px` padding을 가집니다.
-- [x] 본문 row는 높이 `120px`, 하단 `Warm_Gray_50` border를 가집니다.
+- [x] `density="comfortable"`(기본값) 본문 row는 높이 `120px`, 하단 `Warm_Gray_50` border를 가집니다.
+- [x] `density="compact"` 본문 row는 상하 `12px` 여백과 `92px` 썸네일로 높이 `116px`을 유지합니다.
 - [x] 썸네일은 `92px` 정사각형, `5px` radius, cover fit으로 표시합니다.
 - [x] 식당 대표 이미지는 HDS `Thumbnail`을 사용하며, `thumbnailSrc`가 없으면 내부 fallback을 표시합니다.
 - [x] 식당명은 `Sub Header 2`, `Cool_Gray_900` 스타일로 최대 2줄까지 표시합니다.
@@ -71,6 +73,13 @@ ReviewReservationSummary
 - type: `string`
 - required: `true`
 - description: 리뷰 대상 식당명입니다.
+
+### `density`
+
+- type: `'comfortable' | 'compact'`
+- required: `false`
+- default: `'comfortable'`
+- description: 호출 화면의 카드 세로 여백을 정합니다. 리뷰 상세는 Figma의 compact 카드에 맞춰 `'compact'`을 전달합니다.
 
 ### `visitedAt`
 
@@ -128,7 +137,7 @@ ReviewReservationSummary
 
 - styling 기준: Tailwind CSS utility class와 HDS token class를 사용합니다.
 - layout: root `section`은 full width, row는 flex layout입니다.
-- spacing: root `px-5`, row `gap-3`, info `gap-2`를 사용합니다.
+- spacing: root `px-5`, row `gap-3`, info `gap-2`를 사용합니다. compact row는 `py-3`, comfortable row는 `h-30`을 사용합니다.
 - responsive: 부모 너비를 따르고 내부 텍스트는 `min-w-0`으로 overflow를 방지합니다.
 - hover/focus/active/disabled: 상호작용이 없으므로 별도 상태 없음.
 - layout shift 방지 조건: 썸네일은 `size-[92px]` 고정 크기를 유지합니다.
