@@ -13,6 +13,8 @@ export const MyReservationsPage = () => {
     error,
     isLoading,
     hasNextPage,
+    isFetchNextPageError,
+    isFetchingNextPage,
     isCancelingReservation,
     loadMoreRef,
     isCancelDialogOpen,
@@ -24,8 +26,8 @@ export const MyReservationsPage = () => {
     handleDetailPress,
     handleEmptyActionPress,
     handleReviewPress,
+    handleRetryLoadMore,
   } = useMyReservationsPage()
-
   if (error) {
     throw error
   }
@@ -45,6 +47,8 @@ export const MyReservationsPage = () => {
           selectedStatus={selectedStatus}
           totalCount={totalCount}
           hasNextPage={hasNextPage}
+          isFetchNextPageError={isFetchNextPageError}
+          isFetchingNextPage={isFetchingNextPage}
           isLoading={isLoading}
           loadMoreRef={loadMoreRef}
           onCancelPress={handleCancelPress}
@@ -52,6 +56,7 @@ export const MyReservationsPage = () => {
           onDetailPress={handleDetailPress}
           onEmptyActionPress={handleEmptyActionPress}
           onReviewPress={handleReviewPress}
+          onRetryLoadMore={handleRetryLoadMore}
         />
       </div>
       <ReservationCancelDialog

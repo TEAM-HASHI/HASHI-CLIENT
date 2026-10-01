@@ -1,4 +1,5 @@
 import type { Ref } from 'react'
+import { Button } from '@hashi/hds-ui'
 
 import { ReservationCardsByStatus } from '@/pages/myReservations/components/ReservationCardsByStatus'
 import { ReservationListSummary } from '@/pages/myReservations/components/ReservationListSummary'
@@ -16,6 +17,8 @@ type ReservationListSectionProps = {
   reservations: MyReservation[]
   totalCount: number
   hasNextPage: boolean
+  isFetchNextPageError: boolean
+  isFetchingNextPage: boolean
   isLoading: boolean
   loadMoreRef: Ref<HTMLDivElement>
   onCancelPress: (reservationId: string) => void
@@ -23,6 +26,7 @@ type ReservationListSectionProps = {
   onDetailPress: (reservationId: string) => void
   onEmptyActionPress: () => void
   onReviewPress: (reservation: VisitedReservation) => void
+  onRetryLoadMore: () => void
 }
 
 export const ReservationListSection = ({
@@ -30,6 +34,8 @@ export const ReservationListSection = ({
   reservations,
   totalCount,
   hasNextPage,
+  isFetchNextPageError,
+  isFetchingNextPage,
   isLoading,
   loadMoreRef,
   onCancelPress,
@@ -37,6 +43,7 @@ export const ReservationListSection = ({
   onDetailPress,
   onEmptyActionPress,
   onReviewPress,
+  onRetryLoadMore,
 }: ReservationListSectionProps) => {
   const hasReservations = reservations.length > 0
 
@@ -63,7 +70,21 @@ export const ReservationListSection = ({
             onDetailPress={onDetailPress}
             onReviewPress={onReviewPress}
           />
-          {hasNextPage ? (
+          {isFetchNextPageError ? (
+            <div className="flex flex-col items-center gap-3 py-5 text-center">
+              <p className="typo-body-7 text-cool-gray-600">
+                예약 정보를 더 불러오지 못했습니다.
+              </p>
+              <Button
+                disabled={isFetchingNextPage}
+                onClick={onRetryLoadMore}
+                size="sm"
+                variant="neutral"
+              >
+                다시 시도
+              </Button>
+            </div>
+          ) : hasNextPage ? (
             <div
               ref={loadMoreRef}
               aria-hidden="true"

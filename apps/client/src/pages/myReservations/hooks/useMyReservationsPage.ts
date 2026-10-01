@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { showToast } from '@hashi/hds-ui'
+import { useMemo, useRef, useState } from 'react'
 import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -57,7 +56,6 @@ export const useMyReservationsPage = () => {
     null,
   )
   const isCancelRequestLockedRef = useRef(false)
-  const lastNextPageErrorUpdatedAtRef = useRef(0)
   const apiStatus = getMyReservationsApiStatus(selectedStatus)
   const profileSummaryQuery = useMyProfileSummaryQuery()
   const cancelReservationMutation = useCancelReservationMutation()
@@ -109,28 +107,10 @@ export const useMyReservationsPage = () => {
         reservations.length)
       : (reservationsQuery.data?.pages[0]?.totalCount ?? reservations.length)
 
-  useEffect(() => {
-    if (
-      !activeReservationsQuery.isFetchNextPageError ||
-      !activeReservationsQuery.error ||
-      activeReservationsQuery.errorUpdatedAt ===
-        lastNextPageErrorUpdatedAtRef.current
-    ) {
-      return
-    }
-
-    lastNextPageErrorUpdatedAtRef.current =
-      activeReservationsQuery.errorUpdatedAt
-    showToast({ children: '예약 정보를 더 불러오지 못했습니다.' })
-  }, [
-    activeReservationsQuery.error,
-    activeReservationsQuery.errorUpdatedAt,
-    activeReservationsQuery.isFetchNextPageError,
-  ])
-
   const loadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled:
       activeReservationsQuery.hasNextPage &&
+      !activeReservationsQuery.isFetchNextPageError &&
       !activeReservationsQuery.isFetchingNextPage,
     isLoading: activeReservationsQuery.isFetchingNextPage,
     onIntersect: () => {
@@ -144,6 +124,10 @@ export const useMyReservationsPage = () => {
       return activeReservationsQuery.fetchNextPage().catch(() => {})
     },
   })
+
+  const handleRetryLoadMore = () => {
+    void activeReservationsQuery.fetchNextPage().catch(() => {})
+  }
 
   const handleStatusChange = (status: ReservationStatusFilterValue) => {
     setSearchParams({ status })
@@ -242,6 +226,8 @@ export const useMyReservationsPage = () => {
     error: profileSummaryQuery.error ?? activeInitialLoadError,
     isLoading: activeReservationsQuery.isPending,
     hasNextPage: activeReservationsQuery.hasNextPage,
+    isFetchNextPageError: activeReservationsQuery.isFetchNextPageError,
+    isFetchingNextPage: activeReservationsQuery.isFetchingNextPage,
     isCancelingReservation: cancelReservationMutation.isPending,
     loadMoreRef,
     isCancelDialogOpen: cancelReservationId !== null,
@@ -253,5 +239,6 @@ export const useMyReservationsPage = () => {
     handleDetailPress,
     handleEmptyActionPress,
     handleReviewPress,
+    handleRetryLoadMore,
   }
 }

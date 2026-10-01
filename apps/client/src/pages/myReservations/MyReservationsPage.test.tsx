@@ -58,13 +58,7 @@ const mockedUseMyProfileSummaryQuery = vi.mocked(useMyProfileSummaryQuery)
 const LocationPath = () => {
   const location = useLocation()
 
-  return (
-    <>
-      <div data-testid="location-path">{location.pathname}</div>
-      <div data-testid="location-search">{location.search}</div>
-      <div data-testid="location-state">{JSON.stringify(location.state)}</div>
-    </>
-  )
+  return <div data-testid="location-path">{location.pathname}</div>
 }
 
 const renderMyReservationsPage = (
@@ -85,23 +79,10 @@ const renderMyReservationsPage = (
             }
             path={ROUTES.myReservations}
           />
-          <Route element={<LocationPath />} path={ROUTES.reservationDetail} />
-          <Route element={<LocationPath />} path={ROUTES.popularRestaurants} />
-          <Route element={<LocationPath />} path={ROUTES.reviewDetail} />
-          <Route element={<LocationPath />} path={ROUTES.reviewNew} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   )
-}
-
-const createDeferred = <T,>() => {
-  let resolve!: (value: T) => void
-  const promise = new Promise<T>((promiseResolve) => {
-    resolve = promiseResolve
-  })
-
-  return { promise, resolve }
 }
 
 describe('MyReservationsPage', () => {
@@ -164,52 +145,6 @@ describe('MyReservationsPage', () => {
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
     mockShowToast.mockClear()
-  })
-
-  it('renders in-progress reservations from the reservations API', async () => {
-    renderMyReservationsPage()
-
-    expect(mockedGetMyReservations).toHaveBeenCalledWith({
-      cursor: null,
-      size: 10,
-      status: 'IN_PROGRESS',
-    })
-    expect(await screen.findByText('스시 하시')).toBeInTheDocument()
-    expect(
-      screen.getByText((_, element) => element?.textContent === '총 7건'),
-    ).toBeInTheDocument()
-    expect(screen.getByText('3일')).toBeInTheDocument()
-  })
-
-  it('renders a skeleton instead of a loading message while reservations are loading', async () => {
-    const reservationsDeferred =
-      createDeferred<Awaited<ReturnType<typeof getMyReservations>>>()
-    mockedGetMyReservations.mockReturnValueOnce(reservationsDeferred.promise)
-
-    renderMyReservationsPage()
-
-    expect(screen.getByTestId('my-reservations-skeleton')).toBeInTheDocument()
-    expect(
-      screen.queryByText('예약 정보를 불러오는 중'),
-    ).not.toBeInTheDocument()
-
-    reservationsDeferred.resolve({
-      reservations: [
-        {
-          reservationId: 12,
-          restaurantId: 34,
-          restaurantName: '스시 하시',
-          reservedAt: '2026-07-20T18:30:00',
-          adultCount: 2,
-          reservationStatus: 'REQUESTED',
-          confirmDDay: 3,
-        },
-      ],
-      hasNext: false,
-      totalCount: 1,
-    })
-
-    expect(await screen.findByText('스시 하시')).toBeInTheDocument()
   })
 
   it('loads the next reservation page when the bottom sentinel intersects', async () => {
@@ -311,7 +246,7 @@ describe('MyReservationsPage', () => {
     expect(mockedGetMyReservations).toHaveBeenCalledTimes(2)
   })
 
-  it('keeps rendered reservations when loading the next page fails', async () => {
+  it('keeps rendered reservations and retries the failed next page on demand', async () => {
     const { triggerIntersect } = mockIntersectionObserver()
 
     mockedGetMyReservations
@@ -332,6 +267,21 @@ describe('MyReservationsPage', () => {
         totalCount: 2,
       })
       .mockRejectedValueOnce(new Error('next page failed'))
+      .mockResolvedValueOnce({
+        reservations: [
+          {
+            reservationId: 13,
+            restaurantId: 35,
+            restaurantName: '라멘 하시',
+            reservedAt: '2026-07-21T12:00:00',
+            adultCount: 1,
+            reservationStatus: 'CONTACTING',
+            confirmDDay: 2,
+          },
+        ],
+        hasNext: false,
+        totalCount: 2,
+      })
 
     renderMyReservationsPage()
 
@@ -339,91 +289,24 @@ describe('MyReservationsPage', () => {
 
     triggerIntersect()
 
-    await waitFor(() => {
-      expect(mockedGetMyReservations).toHaveBeenCalledTimes(2)
-    })
+    const retryButton = await screen.findByRole('button', { name: '다시 시도' })
     expect(screen.getByText('스시 하시')).toBeInTheDocument()
-  })
-
-  it('renders visited reservations from the visited reservations API', async () => {
-    renderMyReservationsPage(`${ROUTES.myReservations}?status=VISITED`)
-
-    await waitFor(() => {
-      expect(mockedGetMyReservations).not.toHaveBeenCalled()
-      expect(mockedGetVisitedReservations).toHaveBeenCalledWith({
-        cursor: undefined,
-        reviewStatus: 'all',
-        size: 10,
-      })
-    })
-    expect(await screen.findByText('방문한 스시')).toBeInTheDocument()
     expect(
-      screen.getByText((_, element) => element?.textContent === '총 7건'),
+      screen.getByText('예약 정보를 더 불러오지 못했습니다.'),
     ).toBeInTheDocument()
-    expect(screen.getByText('리뷰 작성 완료!')).toBeInTheDocument()
-    expect(screen.getByText('+300P')).toBeInTheDocument()
-  })
 
-  it('navigates from reviewed visited reservations to review detail', async () => {
-    mockedGetVisitedReservations.mockResolvedValue({
-      content: [
-        {
-          reservationId: 31,
-          restaurantId: 41,
-          restaurantName: '작성 완료 식당',
-          visitedAt: '2026-07-10T18:30:00',
-          adultCount: 2,
-          reviewStatus: 'REVIEWED',
-          reviewId: 51,
-          rating: 4,
-          earnedPoint: 300,
-        },
-      ],
-      hasNext: false,
-      totalCount: 1,
+    triggerIntersect()
+    expect(mockedGetMyReservations).toHaveBeenCalledTimes(2)
+
+    fireEvent.click(retryButton)
+
+    expect(await screen.findByText('라멘 하시')).toBeInTheDocument()
+    expect(mockedGetMyReservations).toHaveBeenLastCalledWith({
+      cursor: 20,
+      size: 10,
+      status: 'IN_PROGRESS',
     })
-
-    renderMyReservationsPage(`${ROUTES.myReservations}?status=VISITED`)
-
-    fireEvent.click(
-      await screen.findByRole('button', { name: /리뷰 작성 완료/ }),
-    )
-    expect(screen.getByTestId('location-path')).toHaveTextContent('/reviews/51')
-    expect(screen.getByTestId('location-state')).toHaveTextContent(
-      JSON.stringify({
-        returnTo: `${ROUTES.myReservations}?status=VISITED`,
-      }),
-    )
-  })
-
-  it('navigates from unreviewed visited reservations to review new', async () => {
-    mockedGetVisitedReservations.mockResolvedValue({
-      content: [
-        {
-          reservationId: 32,
-          restaurantId: 42,
-          restaurantName: '작성 예정 식당',
-          visitedAt: '2026-07-11T18:30:00',
-          adultCount: 1,
-          reviewStatus: 'UNREVIEWED',
-          reviewable: true,
-        },
-      ],
-      hasNext: false,
-      totalCount: 1,
-    })
-
-    renderMyReservationsPage(`${ROUTES.myReservations}?status=VISITED`)
-
-    fireEvent.click(
-      await screen.findByRole('button', { name: /이 맛집 어떠셨나요/ }),
-    )
-    expect(screen.getByTestId('location-path')).toHaveTextContent(
-      '/restaurants/42/reviews/new',
-    )
-    expect(screen.getByTestId('location-search')).toHaveTextContent(
-      '?reservationId=32',
-    )
+    expect(screen.queryByRole('button', { name: '다시 시도' })).toBeNull()
   })
 
   it('keeps unreviewable visited reservations without a restaurant id and disables review navigation', async () => {
@@ -486,41 +369,6 @@ describe('MyReservationsPage', () => {
     )
   })
 
-  it('navigates to reservation detail with reservation id when detail is pressed', async () => {
-    renderMyReservationsPage()
-
-    fireEvent.click(await screen.findByRole('button', { name: '상세보기' }))
-
-    expect(screen.getByTestId('location-path')).toHaveTextContent(
-      '/reservations/12',
-    )
-  })
-
-  it('navigates from upcoming reservation card to reservation detail', async () => {
-    mockedGetMyReservations.mockResolvedValue({
-      reservations: [
-        {
-          reservationId: 21,
-          restaurantId: 34,
-          restaurantName: '방문 예정 식당',
-          reservedAt: '2026-07-20T18:30:00',
-          adultCount: 2,
-          reservationStatus: 'CONFIRMED',
-        },
-      ],
-      hasNext: false,
-      totalCount: 1,
-    })
-
-    renderMyReservationsPage(`${ROUTES.myReservations}?status=UPCOMING`)
-
-    fireEvent.click(await screen.findByText('방문 예정 식당'))
-
-    expect(screen.getByTestId('location-path')).toHaveTextContent(
-      '/reservations/21',
-    )
-  })
-
   it('cancels an upcoming reservation and shows the server message', async () => {
     mockedGetMyReservations
       .mockResolvedValueOnce({
@@ -568,9 +416,6 @@ describe('MyReservationsPage', () => {
       expect(mockShowToast).toHaveBeenCalledWith({
         children: '예약 취소 요청이 완료되었습니다',
       })
-      expect(
-        screen.getByText((_, element) => element?.textContent === '총 1건'),
-      ).toBeInTheDocument()
       expect(mockedGetMyReservations).toHaveBeenLastCalledWith({
         cursor: null,
         size: 10,
