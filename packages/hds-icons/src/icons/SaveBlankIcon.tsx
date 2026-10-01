@@ -1,0 +1,18 @@
+import type { SVGProps } from 'react'
+const SaveBlankIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg
+    width="1em"
+    height="1em"
+    viewBox="0 0 36 36"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M7.57129 6.17871C10.0054 6.43302 14.6402 6.86621 18 6.86621C21.3598 6.86621 25.9946 6.43302 28.4287 6.17871C28.7366 6.14659 28.9999 6.38789 29 6.68848V29.3213L18.4766 23.6211L18 23.3623L17.5234 23.6211L7 29.3213V6.68848L7.01172 6.5791C7.0663 6.3319 7.30185 6.1506 7.57129 6.17871Z"
+      stroke="currentColor"
+      strokeWidth={2}
+    />
+  </svg>
+)
+export default SaveBlankIcon

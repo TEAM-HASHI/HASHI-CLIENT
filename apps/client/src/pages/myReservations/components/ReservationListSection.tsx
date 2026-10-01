@@ -96,11 +96,11 @@ export const ReservationListSection = ({
         <Empty
           actionLabel="일본 맛집 추천받기"
           description={
-            <>
+            <span className="block py-1.25">
               가고 싶은 맛집을 찾아
               <br />
               Hashi에게 예약을 맡겨보세요!
-            </>
+            </span>
           }
           onAction={onEmptyActionPress}
         />

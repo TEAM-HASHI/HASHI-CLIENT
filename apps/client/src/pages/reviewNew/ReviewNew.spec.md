@@ -34,7 +34,7 @@
 - 모든 이미지 업로드가 성공하면 `fileKey` 목록을 `imageFileKeys`로 `POST /api/v1/reviews`에 전달한다.
 - 사진이 없으면 presigned API를 생략하고 빈 `imageFileKeys`로 리뷰를 작성한다.
 - 리뷰 작성 성공 후 작성 context cache는 재사용되지 않도록 refetch 없이 무효화한다.
-- 리뷰 작성 성공 후 내 리뷰 개수, 내 리뷰 목록, 식당 상세, 작성 가능 예약 목록 cache를 무효화한다.
+- 리뷰 작성 성공 후 내 리뷰 개수, 내 리뷰 목록, 식당 상세, 작성 가능 예약 목록 cache를 무효화한다. 식당 ID가 있으면 해당 식당의 사진 목록과 사진 개수 cache도 함께 무효화한다. 개발 목데이터 자체에 새 사진을 추가하거나 실제 API가 연결되었다고 가정하지 않는다.
 
 ## Interaction
 
