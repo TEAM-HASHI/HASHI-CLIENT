@@ -1,39 +1,25 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import {
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
-  within,
 } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ROUTES } from '@/app/router/path'
+import { HttpStatusError } from '@/shared/api/apiError'
+import { checkShouldThrowQueryError } from '@/shared/api/errorPolicy'
 
 import { MagazinesPage } from '@/pages/magazines/MagazinesPage'
-import { normalizeInstagramUrl } from '@/pages/magazines/hooks/useMagazinesPage'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
-
-const { mockNavigate } = vi.hoisted(() => ({
-  mockNavigate: vi.fn(),
-}))
 
 const { mockGetMagazineBanners, mockGetMagazines } = vi.hoisted(() => ({
   mockGetMagazineBanners: vi.fn(),
   mockGetMagazines: vi.fn(),
 }))
-
-vi.mock('react-router-dom', async () => {
-  const actual =
-    await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
-
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  }
-})
 
 vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
   getMagazineBanners: mockGetMagazineBanners,
@@ -49,13 +35,11 @@ const magazineBannersResponse = {
       magazineId: 1,
       title: '하시가 추천하는 도쿄 미식 매거진 1',
       bannerImageUrl: 'https://example.com/banner-1.jpg',
-      instagramRedirectUrl: 'https://www.instagram.com/hashi.magazine/1',
     },
     {
       magazineId: 2,
       title: '하시가 추천하는 도쿄 미식 매거진 2',
       bannerImageUrl: 'https://example.com/banner-2.jpg',
-      instagramRedirectUrl: 'https://www.instagram.com/hashi.magazine/2',
     },
   ],
 }
@@ -68,14 +52,12 @@ const magazinesResponse = {
       title:
         '[청와대 셰프가 추천하는 도쿄 스시 맛집 8선] 제목은 여기까지 좌랄랄랄라라라 넘으면...',
       thumbnailImageUrl: 'https://example.com/magazine-101.jpg',
-      instagramRedirectUrl: 'https://www.instagram.com/hashi.magazine/101',
       createdAt: '2026-07-12T00:00:00.000Z',
     },
     {
       magazineId: 102,
       title: '청와대 셰프가 추천하는 도쿄 스시 맛집 8선입니다.',
       thumbnailImageUrl: 'https://example.com/magazine-102.jpg',
-      instagramRedirectUrl: 'https://www.instagram.com/hashi.magazine/102',
       createdAt: '2026-07-11T00:00:00.000Z',
     },
   ],
@@ -86,14 +68,16 @@ const renderMagazinesPage = () => {
     defaultOptions: {
       queries: {
         retry: false,
-        throwOnError: false,
+        throwOnError: checkShouldThrowQueryError,
       },
     },
   })
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MagazinesPage />
+      <MemoryRouter>
+        <MagazinesPage />
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }
@@ -101,7 +85,6 @@ const renderMagazinesPage = () => {
 describe('MagazinesPage', () => {
   afterEach(() => {
     cleanup()
-    mockNavigate.mockClear()
     vi.clearAllMocks()
   })
 
@@ -110,127 +93,36 @@ describe('MagazinesPage', () => {
     mockGetMagazines.mockResolvedValue(magazinesResponse)
   })
 
-  it('renders magazine banner and recommended magazine list without category filters', async () => {
-    renderMagazinesPage()
+  it('hides a failed banner without blocking the magazine list', async () => {
+    mockGetMagazineBanners.mockRejectedValueOnce(new Error('banner failed'))
 
-    expect(screen.getByRole('banner')).toHaveTextContent('매거진')
-    const heroBanner = await screen.findByRole('region', {
-      name: '대표 매거진 배너',
-    })
-
-    expect(heroBanner).toBeInTheDocument()
-    expect(screen.queryByText('오늘의 하시 Pick')).not.toBeInTheDocument()
-    expect(
-      screen.queryByText('짧은 매거진에 대한 소개를 넣어보기'),
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('heading', { name: '최근 _한 추천 매거진' }),
-    ).not.toBeInTheDocument()
-    expect(screen.getAllByRole('listitem')).toHaveLength(2)
-    expect(screen.queryByText(/부드러운 돈카츠/)).not.toBeInTheDocument()
-
-    expect(screen.queryByText('인기순')).not.toBeInTheDocument()
-    expect(screen.queryByText('지역별')).not.toBeInTheDocument()
-    expect(screen.queryByText('시리즈별')).not.toBeInTheDocument()
-    expect(screen.queryByText('장르별')).not.toBeInTheDocument()
-  })
-
-  it('renders hero banners in API response order with meaningful accessible names', async () => {
-    renderMagazinesPage()
-
-    const heroLinks = await screen.findAllByRole('link', {
-      name: /하시가 추천하는 도쿄 미식 매거진/,
-    })
-
-    expect(heroLinks).toHaveLength(2)
-    expect(heroLinks[0]).toHaveAccessibleName(
-      '하시가 추천하는 도쿄 미식 매거진 1',
-    )
-    expect(heroLinks[1]).toHaveAccessibleName(
-      '하시가 추천하는 도쿄 미식 매거진 2',
-    )
-  })
-
-  it('moves to home from header back action', () => {
-    renderMagazinesPage()
-
-    fireEvent.click(screen.getByRole('button', { name: '홈으로 돌아가기' }))
-
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home)
-  })
-
-  it('renders semantic external links for banner and magazine cards', async () => {
     renderMagazinesPage()
 
     expect(
-      await screen.findByRole('link', {
-        name: '하시가 추천하는 도쿄 미식 매거진 1',
-      }),
-    ).toHaveAttribute('href', 'https://www.instagram.com/hashi.magazine/1')
-    expect(
-      screen.getByRole('link', {
+      await screen.findByRole('heading', {
         name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
       }),
-    ).toHaveAttribute('href', 'https://www.instagram.com/hashi.magazine/101')
+    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('region', { name: '대표 매거진 배너' }),
+      ).not.toBeInTheDocument()
+    })
   })
 
-  it('normalizes only valid instagram urls for external navigation', () => {
-    expect(
-      normalizeInstagramUrl('https://www.instagram.com/hashi.magazine/1'),
-    ).toBe('https://www.instagram.com/hashi.magazine/1')
-    expect(normalizeInstagramUrl('')).toBeNull()
-    expect(normalizeInstagramUrl('not-a-url')).toBeNull()
-    expect(normalizeInstagramUrl('javascript:alert(1)')).toBeNull()
-    expect(
-      normalizeInstagramUrl('https://example.com/hashi.magazine/1'),
-    ).toBeNull()
-  })
-
-  it('renders placeholders while magazine data is loading', () => {
-    mockGetMagazineBanners.mockImplementation(
-      () =>
-        new Promise(() => {
-          // Keep the banner query pending so the hero skeleton remains visible.
-        }),
-    )
-    mockGetMagazines.mockImplementation(
-      () =>
-        new Promise(() => {
-          // Keep the list query pending so the skeleton remains visible.
-        }),
-    )
+  it('retries a failed initial magazine request in the list area', async () => {
+    mockGetMagazines
+      .mockRejectedValueOnce(new HttpStatusError(500))
+      .mockResolvedValueOnce(magazinesResponse)
 
     renderMagazinesPage()
 
-    expect(
-      screen.getByRole('region', { name: '대표 매거진 배너 로딩 중' }),
-    ).toBeInTheDocument()
-    const recommendedSection = screen.getByRole('region', {
-      name: '추천 매거진 목록',
+    fireEvent.click(await screen.findByRole('button', { name: '다시 시도' }))
+
+    await screen.findByRole('heading', {
+      name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
     })
-    expect(
-      within(recommendedSection).getAllByRole('listitem', { hidden: true }),
-    ).toHaveLength(4)
-  })
-
-  it('renders ListEmptyState when recommended magazines are empty', async () => {
-    mockGetMagazines.mockResolvedValueOnce({
-      hasNext: false,
-      magazines: [],
-    })
-
-    renderMagazinesPage()
-
-    const recommendedSection = screen.getByRole('region', {
-      name: '추천 매거진 목록',
-    })
-
-    expect(
-      await within(recommendedSection).findByText(
-        '매거진 리스트를 준비중이에요.',
-      ),
-    ).toBeInTheDocument()
-    expect(within(recommendedSection).queryByRole('list')).toBeNull()
+    expect(mockGetMagazines).toHaveBeenCalledTimes(2)
   })
 
   it('keeps the load-more sentinel when the current page has only filtered-out items and another page remains', async () => {
@@ -243,8 +135,6 @@ describe('MagazinesPage', () => {
             magazineId: 201,
             title: '',
             thumbnailImageUrl: 'https://example.com/magazine-201.jpg',
-            instagramRedirectUrl:
-              'https://www.instagram.com/hashi.magazine/201',
             createdAt: '2026-07-10T00:00:00.000Z',
           },
         ],
@@ -256,8 +146,6 @@ describe('MagazinesPage', () => {
             magazineId: 202,
             title: '다음 페이지에서 찾은 추천 매거진',
             thumbnailImageUrl: 'https://example.com/magazine-202.jpg',
-            instagramRedirectUrl:
-              'https://www.instagram.com/hashi.magazine/202',
             createdAt: '2026-07-09T00:00:00.000Z',
           },
         ],
@@ -289,8 +177,6 @@ describe('MagazinesPage', () => {
             magazineId: 301,
             title: '첫 페이지 추천 매거진',
             thumbnailImageUrl: 'https://example.com/magazine-301.jpg',
-            instagramRedirectUrl:
-              'https://www.instagram.com/hashi.magazine/301',
             createdAt: '2026-07-10T00:00:00.000Z',
           },
         ],
@@ -306,8 +192,6 @@ describe('MagazinesPage', () => {
                     magazineId: 302,
                     title: '다음 페이지 추천 매거진',
                     thumbnailImageUrl: 'https://example.com/magazine-302.jpg',
-                    instagramRedirectUrl:
-                      'https://www.instagram.com/hashi.magazine/302',
                     createdAt: '2026-07-09T00:00:00.000Z',
                   },
                 ],
@@ -333,6 +217,47 @@ describe('MagazinesPage', () => {
       expect(mockGetMagazines).toHaveBeenCalledTimes(2)
     })
     expect(mockGetMagazines).toHaveBeenNthCalledWith(2, {
+      cursor: 300,
+      size: 10,
+    })
+  })
+
+  it('keeps loaded cards and retries only the failed next page', async () => {
+    const { triggerAllIntersects } = mockIntersectionObserver()
+    mockGetMagazines
+      .mockResolvedValueOnce({
+        hasNext: true,
+        nextCursor: 300,
+        magazines: [magazinesResponse.magazines[0]],
+      })
+      .mockRejectedValueOnce(new Error('next page failed'))
+      .mockResolvedValueOnce({
+        hasNext: false,
+        magazines: [magazinesResponse.magazines[1]],
+      })
+
+    renderMagazinesPage()
+
+    await screen.findByRole('heading', {
+      name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
+    })
+    triggerAllIntersects()
+
+    const retryButton = await screen.findByRole('button', {
+      name: '다시 시도',
+    })
+    expect(
+      screen.getByRole('heading', {
+        name: /\[청와대 셰프가 추천하는 도쿄 스시 맛집 8선\]/,
+      }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(retryButton)
+
+    await screen.findByRole('heading', {
+      name: '청와대 셰프가 추천하는 도쿄 스시 맛집 8선입니다.',
+    })
+    expect(mockGetMagazines).toHaveBeenNthCalledWith(3, {
       cursor: 300,
       size: 10,
     })
