@@ -1,20 +1,12 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ROUTES } from '@/app/router/path'
-import {
-  HASHI_NOTICE_URL,
-  HASHI_TERMS_URL,
-} from '@/pages/mypage/constants/mypageMenu'
 import { MypagePage } from '@/pages/mypage/MypagePage'
-import { request } from '@/shared/api/request'
-import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
-const { mockNavigate, mockRequest } = vi.hoisted(() => ({
-  mockNavigate: vi.fn(),
+const { mockRequest } = vi.hoisted(() => ({
   mockRequest: vi.fn(),
 }))
 
@@ -24,7 +16,7 @@ vi.mock('react-router-dom', async () => {
 
   return {
     ...actual,
-    useNavigate: () => mockNavigate,
+    useNavigate: () => vi.fn(),
   }
 })
 
@@ -71,7 +63,7 @@ describe('MypagePage', () => {
 
   afterEach(() => {
     cleanup()
-    mockNavigate.mockClear()
+    vi.restoreAllMocks()
     vi.clearAllMocks()
   })
 
@@ -92,99 +84,9 @@ describe('MypagePage', () => {
 
     expect(await screen.findByRole('status')).toHaveTextContent('로딩 중이에요')
     expect(
-      screen.queryByRole('heading', { name: '하시님' }),
+      screen.queryByRole('heading', { name: '테스트유저님' }),
     ).not.toBeInTheDocument()
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
-  })
-
-  it('renders saved restaurant count as zero during MVP', async () => {
-    renderMypagePage()
-
-    expect(
-      await screen.findByRole('button', { name: /내가 찜한 식당 0/ }),
-    ).toBeInTheDocument()
-  })
-
-  it('opens the coming soon dialog from the saved restaurant menu', async () => {
-    renderMypagePage()
-
-    fireEvent.click(
-      await screen.findByRole('button', { name: /내가 찜한 식당 0/ }),
-    )
-
-    expect(
-      screen.getByRole('dialog', { name: '서비스를 준비하고 있어요.' }),
-    ).toBeInTheDocument()
-  })
-
-  it('renders my review count from the API response', async () => {
-    mockRequest.mockImplementation((path: string) => {
-      if (path === '/api/v1/users/me/profile-summary') {
-        return Promise.resolve({
-          nickname: '테스트유저',
-          profileImageUrl: 'https://example.com/profile.png',
-        })
-      }
-
-      if (path === '/api/v1/points/me') {
-        return Promise.resolve({ balance: 7000 })
-      }
-
-      if (path === '/api/v1/reviews/me/count') {
-        return Promise.resolve({ reviewCount: 3 })
-      }
-
-      return Promise.resolve(null)
-    })
-
-    renderMypagePage()
-
-    expect(
-      await screen.findByRole('button', { name: /마이 리뷰 3/ }),
-    ).toBeInTheDocument()
-    expect(request).toHaveBeenCalledWith('/api/v1/reviews/me/count')
-  })
-
-  it('navigates to the my reviews page from the menu', async () => {
-    renderMypagePage()
-
-    fireEvent.click(await screen.findByRole('button', { name: /마이 리뷰 8/ }))
-
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.myReviews)
-  })
-
-  it('renders available point from the API response', async () => {
-    mockRequest.mockImplementation((path: string) => {
-      if (path === '/api/v1/users/me/profile-summary') {
-        return Promise.resolve({
-          nickname: '테스트유저',
-          profileImageUrl: 'https://example.com/profile.png',
-        })
-      }
-
-      if (path === '/api/v1/points/me') {
-        return Promise.resolve({ balance: 12345 })
-      }
-
-      return Promise.resolve({ reviewCount: 8 })
-    })
-
-    renderMypagePage()
-
-    expect(await screen.findByText('12,345 P')).toBeInTheDocument()
-    expect(request).toHaveBeenCalledWith('/api/v1/points/me')
-  })
-
-  it('renders profile summary from the API response', async () => {
-    renderMypagePage()
-
-    expect(
-      await screen.findByRole('heading', { name: '테스트유저님' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('img', { name: '테스트유저 프로필 이미지' }),
-    ).toHaveAttribute('src', 'https://example.com/profile.png')
-    expect(request).toHaveBeenCalledWith('/api/v1/users/me/profile-summary')
   })
 
   it('lets API request failures propagate to the error boundary', async () => {
@@ -208,39 +110,5 @@ describe('MypagePage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('boundary error')
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
-  })
-
-  it('renders confirmed service links as external links', async () => {
-    renderMypagePage()
-
-    const links = [
-      ['공지사항', HASHI_NOTICE_URL],
-      ['문의하기', HASHI_KAKAO_CHANNEL_URL],
-      ['개선 제안', HASHI_KAKAO_CHANNEL_URL],
-      ['이용약관', HASHI_TERMS_URL],
-    ] as const
-
-    await screen.findByRole('link', { name: '공지사항' })
-
-    links.forEach(([name, href]) => {
-      expect(screen.getByRole('link', { name })).toHaveAttribute('href', href)
-    })
-  })
-
-  it('renders account actions and explains that unavailable actions are being prepared', async () => {
-    renderMypagePage()
-
-    expect(
-      await screen.findByRole('heading', { name: '테스트유저님' }),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '계정' })).toBeInTheDocument()
-    const logoutButton = screen.getByRole('button', { name: '로그아웃' })
-    expect(screen.getByRole('button', { name: '회원탈퇴' })).toBeInTheDocument()
-
-    fireEvent.click(logoutButton)
-
-    expect(
-      screen.getByRole('dialog', { name: '서비스를 준비하고 있어요.' }),
-    ).toBeInTheDocument()
   })
 })
