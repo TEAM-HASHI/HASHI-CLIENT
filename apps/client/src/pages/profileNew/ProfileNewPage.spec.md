@@ -57,12 +57,13 @@ Jira: HASHI-120
 - [ ] 허용되지 않는 파일은 등록하지 않고 `이미지 파일만 등록해주세요.` 오류 문구를 표시한다.
 - [ ] 5MB를 초과하는 프로필 이미지는 등록하지 않고 `5MB 이하의 이미지만 등록해주세요.` 오류 문구를 표시한다.
 - [ ] `프로필 삭제` 버튼은 선택한 이미지를 제거하고 기본 프로필 이미지 상태로 되돌린다.
-- [ ] 신규 프로필 생성 화면에서 `프로필 삭제`는 선택 파일 reset만 의미하며, 서버 이미지 삭제용 상태나 필드를 draft에 두지 않는다.
+- [ ] 신규 프로필 생성 화면에서 `프로필 삭제`는 선택 파일 reset만 의미한다. 공통 draft의 이미지 상태는 `keep`으로 돌아가며, 가입 요청에는 이미지 삭제 필드를 보내지 않는다.
 - [ ] 프로필 이미지는 90px 원형으로 노출하고, 수정 버튼은 28px 영역 안에 20px 아이콘을 사용한다.
 - [ ] 프로필 이미지와 `프로필 삭제` 액션은 4px 간격으로 배치한다.
 - [ ] 닉네임 입력 필드를 보여준다.
 - [ ] 닉네임은 필수값이며 local mock 기반 중복 차단은 하지 않는다.
-- [ ] 닉네임 중복 서버 응답이 오면 필드 아래에 `중복된 닉네임입니다.`를 `Body3 / error` 문구로 표시한다.
+- [ ] 닉네임 중복 서버 응답이 오면 필드 아래에 `중복된 닉네임입니다.`를 `Body 7 / error` 문구로 표시한다.
+- [ ] 닉네임 중복·익명 닉네임 예약어 여부는 서버가 판단한다. 프론트는 예약어 목록을 관리하지 않고 서버에서 내려준 오류 메시지를 표시한다.
 - [ ] 생년월일 입력 필드를 보여준다.
 - [ ] 생년월일은 필수값이며, 숫자 8자리를 `YYYYMMDD` 원본 값으로 관리한다.
 - [ ] 생년월일은 사용자가 입력하는 동안 `YYYY/MM/DD` 형태로 표시한다.
@@ -86,14 +87,14 @@ Jira: HASHI-120
 - [ ] field error로 매핑 가능한 제출 실패는 해당 input 아래에 표시한다.
 - [ ] field error로 매핑할 수 없는 예상 가능한 conflict는 form 하단에 사용자 메시지로 표시한다.
 - [ ] 인증/권한 오류는 온보딩 세션을 정리하고 `ROUTES.loginRequired`로 이동한다.
-- [ ] 서버/네트워크 오류와 계약 위반 응답은 route ErrorBoundary로 전파한다.
+- [ ] 이미지 업로드 및 가입 요청 실패는 입력값과 미리보기를 유지하고 폼 안에 공통 오류 안내를 표시한다. 오류 수정 또는 재시도가 가능해야 한다.
 
 ## Data Dependencies
 
 ### Query
 
-- 별도 중복 확인 query는 사용하지 않는다.
-- 닉네임·이메일·연락처 중복은 온보딩 mutation 응답으로 검증한다.
+- 현재는 별도 중복 확인 API가 연결되지 않아 온보딩 mutation 응답의 중복 오류를 표시한다.
+- 후속 연동: 형식 검증 통과 후 500ms 추가 입력이 없거나 blur 시 중복 검사한다. 검사 중 및 값 변경 후 재검사 전에는 제출을 차단한다.
 
 ### Mutation
 
@@ -140,7 +141,7 @@ Jira: HASHI-120
   - `USER-003`은 phone field error로 표시한다.
   - `USER-004`는 form-level error로 표시한다.
   - `COMMON-401`, `COMMON-403`은 온보딩 세션을 정리하고 `ROUTES.loginRequired`로 이동한다.
-  - `COMMON-500`, 최종 업로드 실패, 계약 위반 응답은 ErrorBoundary로 전파한다.
+  - `COMMON-500`, 최종 업로드 실패, 계약 위반 응답은 폼에 오류를 표시하고 입력값·이미지 미리보기를 유지한다.
 
 ## User Flow
 
@@ -156,7 +157,7 @@ Jira: HASHI-120
 10. 프로필 이미지가 선택되어 있으면 presigned URL 발급과 S3 업로드를 먼저 수행합니다.
 11. 온보딩 request body를 만들고 `POST /api/v1/users/onboarding`을 호출합니다.
 12. 온보딩 API가 성공하면 access token을 저장하고 온보딩 이후 화면으로 이동합니다.
-13. 제출 실패 시 입력값을 유지하고 오류 메시지를 표시하거나 인증 실패 정책/ErrorBoundary로 처리합니다.
+13. 제출 실패 시 입력값과 이미지 미리보기를 유지하고 오류 메시지를 표시합니다. 인증 실패는 세션을 정리하고 로그인 필요 화면으로 이동합니다.
 
 ## State
 
@@ -202,7 +203,7 @@ Jira: HASHI-120
   - rule: `trim()` 결과가 1글자 이상
   - trigger: 입력값 변경 시마다 실시간 검증
   - 중복 닉네임은 local mock으로 제출을 막지 않고 온보딩 API의 `USER-001` field error를 표시한다.
-  - error message: 필수값 누락 시 `닉네임을 입력해주세요.`, 서버 중복 응답 시 `중복된 닉네임입니다.`
+  - error message: 필수값 누락 시 `닉네임을 입력해주세요.`, 중복·예약어 서버 응답 시 서버에서 내려준 `중복된 닉네임입니다.`
 - `birthDate`
   - rule: 숫자 8자리, 실제 날짜, 과거 날짜, submit 시 `yyyy-MM-dd`로 변환 가능
   - error message: `생년월일을 정확히 입력해주세요.`
@@ -299,7 +300,7 @@ ProfileNewPage
   - `USER-001`, `USER-002`, `USER-003`은 각각 닉네임, 이메일, 연락처 field error로 표시한다.
   - `USER-004`는 form-level error로 표시한다.
   - `COMMON-401`, `COMMON-403`은 `clearAuthSession()` 후 `ROUTES.loginRequired`로 이동한다.
-  - `COMMON-500`, 네트워크/타임아웃/최종 업로드 실패는 route ErrorBoundary로 전파한다.
+  - `COMMON-500`, 네트워크/타임아웃/최종 업로드 실패는 폼에 오류를 표시하고 다시 제출할 수 있게 한다.
 - validation error:
   - 닉네임 중복 오류는 서버 응답 후 표시하고, 사용자가 닉네임을 수정하면 해제한다.
   - 생년월일, 연락처, 이메일 오류는 blur 이후 또는 submit 시도 이후 표시한다.
@@ -358,6 +359,7 @@ ProfileNewPage
   - 앱 모바일 프레임 width를 따른다.
 - bottom action area:
   - 하단 CTA는 문서 흐름 안에 배치하고 `mt-auto`로 짧은 화면에서도 하단에 위치시킨다.
+  - 입력 영역과 하단 버튼 사이에는 최소 70px의 여백과 액션바 상단 45px의 여백을 합산해 확보한다. 버튼 아래 여백은 48px이다.
   - 하단 padding은 `var(--safe-area-bottom,0px)`를 고려한다.
 - scroll area:
   - 입력 필드와 오류 문구가 키보드에 가려지지 않는지 수동 확인한다.
@@ -369,7 +371,7 @@ ProfileNewPage
 ## Implementation Notes
 
 - `ProfileNewPage`는 화면 섹션 조합만 담당한다.
-- `useProfileNewPage`는 navigation, search param, form submit event, mutation pending 상태, ErrorBoundary로 전달할 unhandled error 상태를 조합한다.
+- `useProfileNewPage`는 navigation, search param, form submit event, mutation pending 상태를 조합한다. 요청 실패는 공통 폼의 오류 상태로 전달한다.
 - form state, formatting, validation, submit draft 생성은 `features/profile`의 `useProfileForm`에서 소유한다.
 - `useProfileForm`은 form 값, formatting, validation, 서버 field/form error와 submit draft 생성을 소유한다.
 - submitting 상태는 `useProfileNewPage`가 mutation의 `isPending`으로 관리하며 CTA와 입력 잠금 상태에 반영한다.
@@ -418,5 +420,5 @@ ProfileNewPage
 - [ ] 온보딩 validation 실패 후 동일 이미지 재제출 시 기존 `fileKey` 재사용 확인
 - [ ] `COMMON-400`, `USER-001`, `USER-002`, `USER-003`, `USER-004` 처리 확인
 - [ ] `COMMON-401`, `COMMON-403` 세션 정리 및 `ROUTES.loginRequired` 이동 확인
-- [ ] `COMMON-500` ErrorBoundary 전파 확인
+- [ ] `COMMON-500` 및 업로드 실패 시 입력·이미지 유지와 재시도 확인
 - [ ] 키보드 표시 상태에서 입력 필드, 오류 메시지, 하단 CTA가 가려지지 않는지 확인

@@ -50,6 +50,7 @@ const ProfileEditForm = ({
 
     if (!form.submit.createProfileDraft()) return
 
+    // TODO: 프로필 수정 API 연동 시 이미지 유지·교체·삭제를 저장하고 내 정보·프로필 요약 캐시를 무효화합니다.
     setIsComingSoonOpen(true)
   }
 
