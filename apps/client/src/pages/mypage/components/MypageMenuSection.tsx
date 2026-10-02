@@ -15,7 +15,7 @@ export const MypageMenuSection = ({
 }: MypageMenuSectionProps) => {
   return (
     <section>
-      <h2 className="typo-sub-header-2 text-warm-gray-300 border-warm-gray-100 border-b pb-1.25">
+      <h2 className="typo-sub-header-2 text-warm-gray-300 border-warm-gray-100 flex h-7.5 items-center border-b">
         {section.title}
       </h2>
       <ul className="flex flex-col gap-3 pt-3">
