@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
+import { restaurantPhotoQueryKeys } from '@/features/restaurantDetail/queries/restaurantPhotoQueryOptions'
 import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
 import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 import {
@@ -60,6 +61,11 @@ export const useSubmitReviewMutation = () => {
         invalidateTasks.push(
           queryClient.invalidateQueries({
             queryKey: restaurantDetailQueryKeys.detail(variables.restaurantId),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: restaurantPhotoQueryKeys.restaurant(
+              variables.restaurantId,
+            ),
           }),
         )
       }

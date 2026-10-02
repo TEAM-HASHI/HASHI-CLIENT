@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
 import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
+import { restaurantPhotoQueryKeys } from '@/features/restaurantDetail/queries/restaurantPhotoQueryOptions'
 import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 import {
   submitReview,
@@ -218,6 +219,9 @@ describe('useSubmitReviewMutation', () => {
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: pointQueryKeys.myBalance(),
     })
-    expect(invalidateQueries).toHaveBeenCalledTimes(6)
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: restaurantPhotoQueryKeys.restaurant(1),
+    })
+    expect(invalidateQueries).toHaveBeenCalledTimes(7)
   })
 })
