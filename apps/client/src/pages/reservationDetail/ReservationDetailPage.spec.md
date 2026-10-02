@@ -44,14 +44,15 @@
 ## Requirements
 
 - [ ] 상단 Header는 스크롤해도 유지됩니다.
-- [ ] Header의 뒤로가기 버튼은 이전 페이지로 이동합니다.
-- [ ] 예약 요청 성공 직후 예약 상세로 진입한 경우 Header의 뒤로가기 버튼은 표시하지 않습니다.
+- [ ] Header의 뒤로가기 버튼은 이전 예약 목록으로 이동합니다.
+- [ ] 예약 요청 성공 직후 진입한 경우 뒤로가기 버튼은 진행 중 예약 목록으로 이동하며 예약 요청 화면으로 돌아가지 않습니다.
+- [ ] 상세 조회 중에는 Header와 예약 상세 구조의 skeleton을 표시합니다.
 - [ ] 예약 신청일과 식당 요약 정보를 표시합니다.
 - [ ] 예약 진행 상태는 `completed`, `current`, `pending` 상태를 구분해서 표시합니다.
 - [ ] 예약 접수 정보 카드는 예약자, 인원, 식당 주소, 식당 방문 일정, 수수료를 표시합니다. 수수료는 예약 상세 응답의 `amount` 값을 사용합니다.
 - [ ] 예약 안내 문구는 고정 정책 문구로 표시합니다.
 - [ ] 하단 액션 영역은 스크롤해도 유지됩니다.
-- [ ] 하단 액션에는 `예약 취소하기`, `문의하기` 버튼을 표시합니다.
+- [ ] 진행 중·방문 예정 예약에는 `예약 취소하기`, `문의하기` 버튼을 표시합니다. 방문 완료 예약에는 `문의하기`만 표시합니다.
 - [ ] `문의하기` 버튼은 Hashi 공식 카카오톡 채널을 새 창으로 엽니다.
 - [ ] 식당 이미지가 없으면 HDS `ImageFallback`을 사용합니다.
 - [ ] fixed Header와 fixed ActionBar는 z-index 토큰을 사용합니다.
@@ -70,10 +71,10 @@
 - request params:
   - `reservationId`
 - loading state:
-  - `LoadingScreen`
+  - `ReservationDetailSkeleton`
 - error state:
   - 공통 query error policy를 따릅니다.
-  - 예약 상세 API가 404를 응답하면 `NotFoundPage`를 표시합니다.
+  - 예약 상세 API가 403 또는 404를 응답하면 `NotFoundPage`를 표시합니다.
   - 예약 상세 API가 `reservationStatus: CANCELED` 데이터를 응답하면 `NotFoundPage`를 표시합니다.
 - empty state:
   - 응답 `data`가 없으면 API 계약 오류로 처리합니다.
@@ -87,7 +88,7 @@
 - request data:
   - 예약 취소: `reservationId`
 - submit enabled condition:
-  - `reservationId`가 양의 정수로 파싱된 경우에만 예약 취소 API를 호출합니다.
+  - `reservationId`가 양의 정수로 파싱되고 예약 상태가 `REQUESTED`, `CONTACTING`, `CONFIRMED` 중 하나일 때만 예약 취소 API를 호출합니다.
   - 예약 취소 요청 중에는 취소 확인 버튼과 닫기 버튼을 비활성화합니다.
   - 예약 취소 요청 중 닫힘 요청이 발생해도 모달을 유지합니다.
 - success handling:
@@ -105,7 +106,7 @@
 3. 비회원이면 `AuthOnlyRoute`에 의해 `/login-required`로 이동합니다.
 4. 회원이면 예약 상세 페이지를 렌더링합니다.
 5. 사용자는 예약 진행 상태, 예약 접수 정보, 안내 문구를 확인합니다.
-6. 사용자가 뒤로가기 버튼을 누르면 이전 페이지로 이동합니다. 단, 예약 요청 성공 직후 진입한 경우에는 예약 요청 페이지로 되돌아가지 않도록 뒤로가기 버튼을 표시하지 않습니다.
+6. 사용자가 뒤로가기 버튼을 누르면 진입했던 예약 목록으로 돌아갑니다. 예약 요청 성공 직후 진입한 경우에는 예약 요청 화면 대신 진행 중 예약 목록으로 이동합니다.
 7. 사용자가 예약 취소 버튼을 누르면 예약 취소 확인 모달이 열립니다.
 8. 사용자가 모달에서 취소하기를 누르면 예약 취소 API를 호출합니다.
 9. 예약 취소에 성공하면 서버 응답 `message`로 성공 toast를 표시하고 예약 정보 페이지의 예약 취소 상태로 이동합니다.
@@ -151,8 +152,7 @@
 - `reservationId`를 예약 상세 조회 API의 request param으로 사용합니다.
 - `reservationId`가 없거나 양의 정수가 아니면 예약 상세 query를 실행하지 않고 `NotFoundPage`를 표시합니다.
 - `reservationId`는 형식 검증을 먼저 수행하고, 실제 존재 여부와 접근 권한은 서버 응답을 기준으로 처리합니다.
-- 서버에서 예약 없음 응답을 내려주면 공통 API error policy를 따릅니다.
-- 서버에서 권한 없음 응답을 내려주면 인증/권한 정책에 맞는 화면으로 이동합니다.
+- 서버에서 예약 없음(404) 또는 권한 없음(403) 응답을 내려주면 `NotFoundPage`를 표시합니다.
 - 서버에서 취소된 예약(`reservationStatus: CANCELED`)을 정상 응답하더라도 상세 화면 대신 `NotFoundPage`를 표시합니다.
 
 ## UI Structure
@@ -162,6 +162,7 @@ ReservationDetailPage
   Header
     BackAction
     Title
+  ReservationDetailSkeleton (조회 중)
   ReservationProgressSection
     ReservationRestaurantSummary
     ProgressSteps
@@ -190,8 +191,10 @@ ReservationDetailPage
   - `ReservationReceiptInfoCard`
   - `ReservationNoticeSection`
   - `ReservationDetailActionBar`
+  - `ReservationDetailSkeleton`
 - page-local hook:
   - `useReservationDetailPage`
+  - `useReservationDetailCancellation`
   - `useReservationDetailQuery`
 - page-local api:
   - `getReservationDetail`
@@ -234,6 +237,7 @@ ReservationDetailPage
 
 - entry:
   - 예약 정보 페이지의 상세보기 액션
+  - 예약 목록 진입점: `{ fromReservationList: true }` route state를 전달합니다.
   - 예약 요청 성공 직후 진입점: `{ fromReservationRequest: true }` route state를 사용합니다.
   - 예약 관련 진입점
 - external links:
@@ -247,8 +251,9 @@ ReservationDetailPage
 - failure redirect:
   - 비회원 접근 시 `/login-required`
 - back behavior:
-  - `navigate(-1)`
-  - 예약 요청 성공 직후 진입 state가 있으면 뒤로가기 버튼 숨김
+  - 예약 목록에서 진입했으면 바로 이전 목록 이력으로 돌아가 선택했던 상태 필터를 유지합니다.
+  - 직접 링크 등 진입 상태가 없으면 기본 진행 중 예약 목록으로 `replace` 이동합니다.
+  - 예약 요청 성공 직후 진입 state가 있으면 진행 중 예약 목록으로 `replace` 이동합니다.
 - auth redirect:
   - `AuthOnlyRoute`가 처리
 
@@ -267,7 +272,7 @@ ReservationDetailPage
   - Header와 ActionBar를 제외한 본문 영역이 스크롤됩니다.
   - fixed Header와 ActionBar에 가려지지 않도록 본문 상단/하단 여백을 둡니다.
 - empty/loading/error layout:
-  - loading: `LoadingScreen`
+  - loading: `ReservationDetailSkeleton`
   - not found: `NotFoundPage`
   - error: 공통 query error policy
 
