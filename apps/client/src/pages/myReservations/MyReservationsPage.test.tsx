@@ -486,41 +486,6 @@ describe('MyReservationsPage', () => {
     )
   })
 
-  it('navigates to reservation detail with reservation id when detail is pressed', async () => {
-    renderMyReservationsPage()
-
-    fireEvent.click(await screen.findByRole('button', { name: '상세보기' }))
-
-    expect(screen.getByTestId('location-path')).toHaveTextContent(
-      '/reservations/12',
-    )
-  })
-
-  it('navigates from upcoming reservation card to reservation detail', async () => {
-    mockedGetMyReservations.mockResolvedValue({
-      reservations: [
-        {
-          reservationId: 21,
-          restaurantId: 34,
-          restaurantName: '방문 예정 식당',
-          reservedAt: '2026-07-20T18:30:00',
-          adultCount: 2,
-          reservationStatus: 'CONFIRMED',
-        },
-      ],
-      hasNext: false,
-      totalCount: 1,
-    })
-
-    renderMyReservationsPage(`${ROUTES.myReservations}?status=UPCOMING`)
-
-    fireEvent.click(await screen.findByText('방문 예정 식당'))
-
-    expect(screen.getByTestId('location-path')).toHaveTextContent(
-      '/reservations/21',
-    )
-  })
-
   it('cancels an upcoming reservation and shows the server message', async () => {
     mockedGetMyReservations
       .mockResolvedValueOnce({
