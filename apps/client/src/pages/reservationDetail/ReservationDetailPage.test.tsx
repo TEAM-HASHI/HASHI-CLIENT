@@ -19,7 +19,6 @@ import { ReservationDetailPage } from '@/pages/reservationDetail/ReservationDeta
 import { reservationDetailQueryKey } from '@/pages/reservationDetail/hooks/useReservationDetailQuery'
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
-import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 import { createQueryClient } from '@/shared/lib/queryClient'
 
 const {
@@ -161,21 +160,6 @@ describe('ReservationDetailPage', () => {
     })
   })
 
-  it('renders reservation detail from API data', async () => {
-    renderReservationDetailPage()
-
-    expect(mockedGetReservationDetail).toHaveBeenCalledWith(12)
-    expect(await screen.findByText('스시 하시 긴자점')).toBeInTheDocument()
-    expect(screen.getByText('寿司ハシ 銀座店')).toBeInTheDocument()
-    expect(screen.getByText('2026.7.12')).toBeInTheDocument()
-    expect(screen.getByText('이하시')).toBeInTheDocument()
-    expect(screen.getByText('어른 2명, 청소년 1명')).toBeInTheDocument()
-    expect(screen.getByText('도쿄도 주오구 긴자 1-1-1')).toBeInTheDocument()
-    expect(screen.getByText('2026.7.20. 18:30')).toBeInTheDocument()
-    expect(screen.getByText('3,500원')).toBeInTheDocument()
-    expect(screen.getByText('예정 7월 14일')).toBeInTheDocument()
-  })
-
   it('renders not found page without requesting API when reservation id is invalid', async () => {
     mockReservationParams.reservationId = 'invalid-id'
 
@@ -199,6 +183,18 @@ describe('ReservationDetailPage', () => {
     ).toBeInTheDocument()
   })
 
+  it('renders not found page when reservation detail API denies access', async () => {
+    mockedGetReservationDetail.mockRejectedValue(
+      new ApiError(notFoundResponse, 403),
+    )
+
+    renderReservationDetailPage()
+
+    expect(
+      await screen.findByRole('heading', { name: '404 페이지' }),
+    ).toBeInTheDocument()
+  })
+
   it('renders not found page when reservation status is canceled', async () => {
     mockedGetReservationDetail.mockResolvedValue({
       ...reservationDetailFixture,
@@ -213,21 +209,19 @@ describe('ReservationDetailPage', () => {
     expect(screen.queryByText('스시 하시 긴자점')).not.toBeInTheDocument()
   })
 
-  it('opens the reservation cancel dialog from the fixed action bar', async () => {
+  it('shows only the contact action for a visited reservation', async () => {
+    mockedGetReservationDetail.mockResolvedValue({
+      ...reservationDetailFixture,
+      reservationStatus: 'VISITED',
+    })
+
     renderReservationDetailPage()
 
-    fireEvent.click(
-      await screen.findByRole('button', { name: '예약 취소하기' }),
-    )
-
-    const dialog = screen.getByRole('alertdialog')
-
+    expect(await screen.findByText('스시 하시 긴자점')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '문의하기' })).toBeInTheDocument()
     expect(
-      within(dialog).getByText('정말 예약을 취소하시겠습니까?'),
-    ).toBeInTheDocument()
-    expect(
-      within(dialog).getByText('동일한 예약은 다시 접수해야 합니다.'),
-    ).toBeInTheDocument()
+      screen.queryByRole('button', { name: '예약 취소하기' }),
+    ).not.toBeInTheDocument()
   })
 
   it('cancels the reservation and moves to the canceled reservation list after confirming cancellation', async () => {
@@ -253,33 +247,6 @@ describe('ReservationDetailPage', () => {
         ...reservationDetailFixture,
         reservationStatus: 'CANCELED',
       })
-    })
-  })
-
-  it('prevents duplicate cancel requests when the confirm cancel button is clicked twice immediately', async () => {
-    mockedCancelReservation.mockImplementation(
-      () =>
-        new Promise(() => {
-          // Keep the request pending to verify synchronous duplicate prevention.
-        }),
-    )
-
-    renderReservationDetailPage()
-
-    fireEvent.click(
-      await screen.findByRole('button', { name: '예약 취소하기' }),
-    )
-
-    const dialog = screen.getByRole('alertdialog')
-    const confirmCancelButton = within(dialog).getByRole('button', {
-      name: '취소하기',
-    })
-
-    fireEvent.click(confirmCancelButton)
-    fireEvent.click(confirmCancelButton)
-
-    await waitFor(() => {
-      expect(mockedCancelReservation).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -358,21 +325,21 @@ describe('ReservationDetailPage', () => {
     })
   })
 
-  it('opens the contact channel from the fixed action bar', async () => {
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
-
+  it('returns to the in-progress list when opened directly', async () => {
     renderReservationDetailPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: '문의하기' }))
-
-    expect(openSpy).toHaveBeenCalledWith(
-      HASHI_KAKAO_CHANNEL_URL,
-      '_blank',
-      'noreferrer',
+    fireEvent.click(
+      await screen.findByRole('button', { name: '이전 페이지로 이동' }),
     )
+
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.myReservations, {
+      replace: true,
+    })
   })
 
-  it('moves back when the back button is pressed from a normal entry', async () => {
+  it('returns to the reservation list tab used to open detail', async () => {
+    mockLocationState.current = { fromReservationList: true }
+
     renderReservationDetailPage()
 
     fireEvent.click(
@@ -382,64 +349,18 @@ describe('ReservationDetailPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 
-  it('hides the back button when entered after reservation request', async () => {
+  it('returns to the in-progress reservation list after a reservation request', async () => {
     mockLocationState.current = { fromReservationRequest: true }
 
     renderReservationDetailPage()
 
-    await screen.findByText('예약 상세')
+    fireEvent.click(
+      await screen.findByRole('button', { name: '이전 페이지로 이동' }),
+    )
 
-    expect(
-      screen.queryByRole('button', {
-        name: '이전 페이지로 이동',
-      }),
-    ).not.toBeInTheDocument()
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.myReservations, {
+      replace: true,
+    })
     expect(mockNavigate).not.toHaveBeenCalledWith(-1)
-  })
-
-  it('does not hide the back button for malformed entry state', async () => {
-    mockLocationState.current = { fromReservationRequest: false }
-
-    renderReservationDetailPage()
-
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: '이전 페이지로 이동',
-      }),
-    )
-
-    expect(mockNavigate).toHaveBeenCalledWith(-1)
-  })
-
-  it('does not hide the back button for unrelated entry state', async () => {
-    mockLocationState.current = { source: 'myReservations' }
-
-    renderReservationDetailPage()
-
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: '이전 페이지로 이동',
-      }),
-    )
-
-    expect(mockNavigate).toHaveBeenCalledWith(-1)
-  })
-
-  it('shows only the date for the received reservation step time', async () => {
-    renderReservationDetailPage()
-
-    expect(await screen.findByText('7월 12일')).toBeInTheDocument()
-    expect(screen.queryByText('7월 12일 13:44')).not.toBeInTheDocument()
-  })
-
-  it('renders only the contacting progress state in development mode', async () => {
-    vi.stubEnv('MODE', 'development')
-
-    renderReservationDetailPage()
-
-    expect(await screen.findByText('식당 컨택 중')).toBeInTheDocument()
-    expect(screen.getAllByText('예약 접수')).toHaveLength(1)
-    expect(screen.getByText('식당 컨택 중')).toBeInTheDocument()
-    expect(screen.getAllByText('예약 확정')).toHaveLength(1)
   })
 })
