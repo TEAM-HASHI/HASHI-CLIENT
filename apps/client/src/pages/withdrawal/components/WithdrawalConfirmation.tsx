@@ -12,7 +12,7 @@ export const WithdrawalConfirmation = ({
   return (
     <Checkbox
       checked={checked}
-      className="typo-body-5 text-cool-gray-700 mt-auto ml-1 gap-2.25"
+      className="typo-body-5 text-cool-gray-700 mt-auto ml-1 gap-2.25 [&>input+span]:shrink-0"
       onChange={(event) => {
         onCheckedChange(event.target.checked)
       }}

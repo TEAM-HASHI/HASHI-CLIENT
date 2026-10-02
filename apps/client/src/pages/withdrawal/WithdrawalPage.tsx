@@ -35,13 +35,13 @@ export const WithdrawalPage = () => {
         />
       </div>
 
-      <main className="flex min-h-dvh flex-col px-7.5 pt-23.75 pb-[calc(134px+var(--safe-area-bottom,0px))]">
+      <div className="flex min-h-dvh flex-col px-7.5 pt-23.75 pb-[calc(134px+var(--safe-area-bottom,0px))]">
         <WithdrawalNoticeSection />
         <WithdrawalConfirmation
           checked={isConfirmed}
           onCheckedChange={setIsConfirmed}
         />
-      </main>
+      </div>
 
       <WithdrawalBottomBar
         canWithdraw={isConfirmed}
