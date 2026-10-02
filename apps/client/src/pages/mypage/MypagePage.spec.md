@@ -2,6 +2,17 @@
 
 Jira: HASHI-106
 
+리디자인: HASHI-200
+
+## 현재 브랜치 범위와 후속 작업
+
+- 이 브랜치는 마이페이지의 프로필, 주요 메뉴 버튼, 서비스 이용 및 계정 메뉴의 리디자인을 반영합니다.
+- 아래 MVP 제외 항목은 현재 구현 상태를 설명하며, 최신 기획에서 기능을 제외한다는 의미는 아닙니다.
+- 프로필 수정, 회원탈퇴, 내부 공지사항 화면 연결은 각각의 기능 브랜치 병합 시 유지합니다.
+- 저장 식당 수 조회 및 화면 이동, 포인트 화면 이동, 로그아웃 처리는 후속 기능 작업으로 남아 있습니다.
+- 조회 캐시는 공통 30초 정책을 유지하며, 리뷰 작성 및 예약 생성·취소 성공 시 포인트 잔액을 무효화합니다. 리뷰 작성·삭제 성공 시 작성한 리뷰 수를 무효화합니다.
+- 프로필 수정 API 연동 시 수정 성공 처리에서 `MY_PROFILE_SUMMARY_QUERY_KEY`를 무효화해야 합니다. 다른 기기나 서버에서 변경된 정보를 진입 즉시 반영할지는 별도의 최신 조회 정책으로 확정해야 합니다.
+
 ## Purpose
 
 - 로그인한 사용자가 마이 페이지에서 본인의 프로필, 사용 가능 포인트, 마이 리뷰 개수, 고객지원 메뉴를 확인할 수 있게 합니다.
@@ -40,7 +51,6 @@ apps/client/src/pages/mypage/
 ├── MypagePage.spec.md
 ├── components/
 │   ├── MypageProfile.tsx
-│   ├── MypageProfile.test.tsx
 │   ├── MypagePointSummary.tsx
 │   ├── MenuButton.tsx
 │   ├── MypageMenuSection.tsx
@@ -553,7 +563,7 @@ types:
 
 - `pnpm --filter @hashi/client typecheck`
 - `pnpm --filter @hashi/client lint`
-- `pnpm --filter @hashi/client exec vitest run src/pages/mypage/MypagePage.test.tsx src/pages/mypage/components/MypageProfile.test.tsx`
+- `pnpm --filter @hashi/client exec vitest run src/pages/mypage/MypagePage.test.tsx`
 - 마이 페이지가 `/mypage`에서 렌더링되는지 확인
 - 하단 네비게이션의 `마이` 탭이 active인지 확인
 - `GET /api/v1/users/me/profile-summary` 결과의 닉네임과 프로필 이미지가 표시되는지 확인
