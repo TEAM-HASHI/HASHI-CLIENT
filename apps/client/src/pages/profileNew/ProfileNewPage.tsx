@@ -7,18 +7,8 @@ import { ProfileImageSection } from '@/features/profile/components/ProfileImageS
 import { useProfileNewPage } from '@/pages/profileNew/hooks/useProfileNewPage'
 
 export const ProfileNewPage = () => {
-  const {
-    boundaryError,
-    form,
-    formId,
-    handleBackClick,
-    handleSubmit,
-    isSubmitting,
-  } = useProfileNewPage()
-
-  if (boundaryError) {
-    throw boundaryError
-  }
+  const { form, formId, handleBackClick, handleSubmit, isSubmitting } =
+    useProfileNewPage()
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
@@ -50,7 +40,7 @@ export const ProfileNewPage = () => {
         <ProfileFields disabled={isSubmitting} fields={form.fields} />
 
         {form.formError ? (
-          <p className="typo-body-5 text-primary-500 mt-4" role="alert">
+          <p className="typo-body-7 text-error mt-4" role="alert">
             {form.formError}
           </p>
         ) : null}

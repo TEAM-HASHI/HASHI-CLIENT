@@ -10,12 +10,12 @@ import {
   type ProfileNewOnboardingErrorHandlers,
 } from '@/pages/profileNew/utils/profileNewOnboardingError'
 import { checkHasHttpStatus } from '@/shared/api/apiError'
+import { getErrorPresentation } from '@/shared/api/errorPresentation'
 
 interface UseProfileNewMutationOptions {
   getRedirectPath: () => string
   getUploadedProfileImageKey: (file: File) => Promise<string>
   navigateTo: (to: string, options?: { replace?: boolean }) => void
-  onUnhandledError: (error: unknown) => void
   setFieldError: ProfileNewOnboardingErrorHandlers['setFieldError']
   setFormError: ProfileNewOnboardingErrorHandlers['setFormError']
 }
@@ -24,13 +24,15 @@ export const useProfileNewMutation = ({
   getRedirectPath,
   getUploadedProfileImageKey,
   navigateTo,
-  onUnhandledError,
   setFieldError,
   setFormError,
 }: UseProfileNewMutationOptions) => {
   return useMutation({
     mutationFn: async (profileDraft: ProfileDraft) => {
-      const profileImageFile = profileDraft.profileImageFile
+      const profileImageFile =
+        profileDraft.profileImageChange.type === 'replace'
+          ? profileDraft.profileImageChange.file
+          : undefined
       const profileImageKey = profileImageFile
         ? await getUploadedProfileImageKey(profileImageFile)
         : undefined
@@ -59,7 +61,7 @@ export const useProfileNewMutation = ({
           setFormError,
         })
       ) {
-        onUnhandledError(error)
+        setFormError(getErrorPresentation(error).message)
       }
     },
   })

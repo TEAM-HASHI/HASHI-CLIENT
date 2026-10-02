@@ -1,5 +1,4 @@
 import type { SyntheticEvent } from 'react'
-import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { useProfileForm } from '@/features/profile/hooks/useProfileForm'
@@ -12,7 +11,6 @@ export const PROFILE_NEW_FORM_ID = 'profile-new-form'
 export const useProfileNewPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [boundaryError, setBoundaryError] = useState<unknown>()
   const { getUploadedProfileImageKey } = useUploadedProfileImageKey()
   const form = useProfileForm()
 
@@ -25,7 +23,6 @@ export const useProfileNewPage = () => {
       getAllowedProfileNewRedirectPath(searchParams.get('redirectTo')),
     getUploadedProfileImageKey,
     navigateTo: navigate,
-    onUnhandledError: setBoundaryError,
     setFieldError: (...args) => form.submit.setFieldError(...args),
     setFormError: (message) => form.submit.setFormError(message),
   })
@@ -46,7 +43,6 @@ export const useProfileNewPage = () => {
   }
 
   return {
-    boundaryError,
     form,
     formId: PROFILE_NEW_FORM_ID,
     handleBackClick,

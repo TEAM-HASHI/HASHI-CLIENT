@@ -13,8 +13,13 @@ import {
   normalizeDigits,
 } from '@/features/profile/utils/profileForm'
 
+type ProfileImageChange =
+  | { type: 'keep' }
+  | { type: 'replace'; file: File }
+  | { type: 'delete' }
+
 export interface ProfileDraft {
-  profileImageFile?: File
+  profileImageChange: ProfileImageChange
   nickname: string
   birthDate: string
   phoneNumber: string
@@ -50,24 +55,26 @@ export const useProfileForm = ({
   initialValues = {},
   requireChanges = false,
 }: UseProfileFormOptions = {}) => {
-  const [profileImageFile, setProfileImageFile] = useState<File>()
+  // 재조회된 응답은 작성 중인 입력과 변경 비교 기준을 덮어쓰지 않습니다.
+  const [initialProfile] = useState(() => ({ ...initialValues }))
+  const [profileImageChange, setProfileImageChange] =
+    useState<ProfileImageChange>({ type: 'keep' })
   const [profileImagePreviewUrl, setProfileImagePreviewUrl] = useState<
     string | undefined
-  >(() => initialValues.profileImageUrl)
-  const [isProfileImageChanged, setIsProfileImageChanged] = useState(false)
+  >(() => initialProfile.profileImageUrl)
   const profileImagePreviewUrlRef = useRef<string | undefined>(undefined)
   const [profileImageErrorMessage, setProfileImageErrorMessage] = useState('')
-  const [nickname, setNickname] = useState(() => initialValues.nickname ?? '')
+  const [nickname, setNickname] = useState(() => initialProfile.nickname ?? '')
   const [birthDate, setBirthDate] = useState(
-    () => initialValues.birthDate ?? '',
+    () => initialProfile.birthDate ?? '',
   )
   const [phoneNumber, setPhoneNumber] = useState(
-    () => initialValues.phoneNumber ?? '',
+    () => initialProfile.phoneNumber ?? '',
   )
   const [englishName, setEnglishName] = useState(
-    () => initialValues.englishName ?? '',
+    () => initialProfile.englishName ?? '',
   )
-  const [email, setEmail] = useState(() => initialValues.email ?? '')
+  const [email, setEmail] = useState(() => initialProfile.email ?? '')
   const [touchedFields, setTouchedFields] = useState<Set<string>>(
     () => new Set(),
   )
@@ -88,19 +95,20 @@ export const useProfileForm = ({
   const isPhoneNumberValid = checkIsValidPhoneNumber(normalizedPhoneNumber)
   const isEmailValid = checkIsValidEmail(trimmedEmail)
   const hasChanges =
-    isProfileImageChanged ||
-    trimmedNickname !== (initialValues.nickname ?? '').trim() ||
+    profileImageChange.type !== 'keep' ||
+    trimmedNickname !== (initialProfile.nickname ?? '').trim() ||
     normalizedBirthDate !==
-      normalizeDigits(initialValues.birthDate ?? '').slice(0, 8) ||
+      normalizeDigits(initialProfile.birthDate ?? '').slice(0, 8) ||
     normalizedPhoneNumber !==
-      normalizeDigits(initialValues.phoneNumber ?? '').slice(0, 11) ||
-    trimmedEnglishName !== (initialValues.englishName ?? '').trim() ||
-    trimmedEmail !== (initialValues.email ?? '').trim()
+      normalizeDigits(initialProfile.phoneNumber ?? '').slice(0, 11) ||
+    trimmedEnglishName !== (initialProfile.englishName ?? '').trim() ||
+    trimmedEmail !== (initialProfile.email ?? '').trim()
   const isValid =
     isNicknameValid && isBirthDateValid && isPhoneNumberValid && isEmailValid
   const hasServerFieldError = Object.keys(serverFieldErrors).length > 0
   const canSubmit =
     isValid && !hasServerFieldError && (!requireChanges || hasChanges)
+  // TODO: 중복 확인 API 연동 시 500ms debounce·blur 검사 상태를 포함하고, 수정 전 값은 검사에서 제외합니다.
 
   const checkShouldShowError = (fieldName: string) => {
     return hasSubmitAttempted || touchedFields.has(fieldName)
@@ -177,8 +185,7 @@ export const useProfileForm = ({
       return
     }
 
-    setProfileImageFile(file)
-    setIsProfileImageChanged(true)
+    setProfileImageChange({ type: 'replace', file })
     setProfileImageErrorMessage('')
     clearFormError()
 
@@ -191,8 +198,9 @@ export const useProfileForm = ({
   }
 
   const handleProfileImageDelete = () => {
-    setProfileImageFile(undefined)
-    setIsProfileImageChanged(Boolean(initialValues.profileImageUrl))
+    setProfileImageChange({
+      type: initialProfile.profileImageUrl ? 'delete' : 'keep',
+    })
     revokeProfileImagePreviewUrl()
     setProfileImagePreviewUrl(undefined)
     setProfileImageErrorMessage('')
@@ -214,7 +222,7 @@ export const useProfileForm = ({
     }
 
     return {
-      profileImageFile,
+      profileImageChange,
       nickname: trimmedNickname,
       birthDate: normalizedBirthDate,
       phoneNumber: normalizedPhoneNumber,
