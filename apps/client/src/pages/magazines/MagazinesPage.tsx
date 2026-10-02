@@ -9,18 +9,16 @@ export const MagazinesPage = () => {
   const {
     handleBackClick,
     hasNextMagazinePage,
-    hasHeroBanners,
-    hasRecommendedMagazines,
     heroBanners,
     isFetchingNextMagazinePage,
-    isHeroBannerError,
     isHeroBannerLoading,
     isRecommendedMagazineError,
     isRecommendedMagazineLoading,
+    isNextMagazinePageError,
     loadMoreRef,
-    refetchHeroBanners,
     refetchRecommendedMagazines,
     recommendedMagazines,
+    retryNextMagazinePage,
   } = useMagazinesPage()
 
   return (
@@ -40,25 +38,23 @@ export const MagazinesPage = () => {
       />
 
       <main className="pt-[75px]">
-        {hasHeroBanners || isHeroBannerLoading || isHeroBannerError ? (
-          <MagazineHeroBannerSection
-            banners={heroBanners}
-            isError={isHeroBannerError}
-            isLoading={isHeroBannerLoading}
-            onRetry={() => {
-              void refetchHeroBanners()
-            }}
-          />
-        ) : null}
+        <MagazineHeroBannerSection
+          banners={heroBanners}
+          isLoading={isHeroBannerLoading}
+        />
         <RecommendedMagazineSection
           hasNextPage={hasNextMagazinePage}
           isError={isRecommendedMagazineError}
           isFetchingNextPage={isFetchingNextMagazinePage}
           isLoading={isRecommendedMagazineLoading}
+          isNextPageError={isNextMagazinePageError}
           loadMoreRef={loadMoreRef}
-          magazines={hasRecommendedMagazines ? recommendedMagazines : []}
+          magazines={recommendedMagazines}
           onRetry={() => {
             void refetchRecommendedMagazines()
+          }}
+          onRetryNextPage={() => {
+            void retryNextMagazinePage()
           }}
         />
       </main>

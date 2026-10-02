@@ -9,16 +9,18 @@ interface Props {
   isError: boolean
   isFetchingNextPage: boolean
   isLoading: boolean
+  isNextPageError: boolean
   loadMoreRef: Ref<HTMLLIElement>
   magazines: RecommendedMagazine[]
   onRetry: () => void
+  onRetryNextPage: () => void
 }
 
 const renderSkeletonItems = () => {
   return Array.from({ length: 4 }, (_, index) => (
     <li
       aria-hidden="true"
-      className="border-warm-gray-50 grid grid-cols-[1fr_156px] gap-[21px] border-b py-4 last:border-b-0"
+      className="border-warm-gray-50 grid min-h-[136px] grid-cols-[minmax(0,1fr)_156px] gap-[29px] border-b pt-4 pb-3 last:border-b-0"
       key={index}
     >
       <div className="flex min-w-0 flex-col gap-3">
@@ -36,9 +38,11 @@ export const RecommendedMagazineSection = ({
   isError,
   isFetchingNextPage,
   isLoading,
+  isNextPageError,
   loadMoreRef,
   magazines,
   onRetry,
+  onRetryNextPage,
 }: Props) => {
   const shouldRenderList =
     magazines.length > 0 || hasNextPage || isFetchingNextPage
@@ -79,7 +83,7 @@ export const RecommendedMagazineSection = ({
           {magazines.map((magazine) => (
             <MagazineListItem key={magazine.id} magazine={magazine} />
           ))}
-          {hasNextPage && (
+          {hasNextPage && !isNextPageError && (
             <li
               aria-hidden="true"
               className="h-px"
@@ -88,6 +92,20 @@ export const RecommendedMagazineSection = ({
             />
           )}
           {isFetchingNextPage ? renderSkeletonItems().slice(0, 1) : null}
+          {isNextPageError ? (
+            <li className="py-4 text-center">
+              <p className="typo-body-6 text-cool-gray-600">
+                다음 매거진을 불러오지 못했어요.
+              </p>
+              <button
+                className="typo-body-6 text-primary-200 mt-2"
+                onClick={onRetryNextPage}
+                type="button"
+              >
+                다시 시도
+              </button>
+            </li>
+          ) : null}
         </ul>
       ) : null}
       {shouldRenderEmptyState ? (
