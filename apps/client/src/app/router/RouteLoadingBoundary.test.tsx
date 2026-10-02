@@ -63,6 +63,20 @@ vi.mock(
     }),
 )
 
+vi.mock(
+  '@/pages/reservationDetail',
+  () =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          default: () => (
+            <main role="status" aria-label="예약 상세 정보를 불러오는 중" />
+          ),
+        })
+      }, 200)
+    }),
+)
+
 const createSignalCompatibleRequest = (NativeRequest: typeof Request) =>
   function SignalCompatibleRequest(
     input: RequestInfo | URL,
@@ -153,6 +167,31 @@ describe('route loading boundary', () => {
     })
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('shows the reservation detail skeleton without a preceding LoadingScreen', async () => {
+    vi.useFakeTimers()
+    isAuthenticated = true
+
+    const router = createMemoryRouter(appRoutes, {
+      initialEntries: ['/reservations/12'],
+    })
+
+    render(<RouterProvider router={router} />)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(150)
+    })
+
+    expect(screen.queryByText('로딩 중이에요')).not.toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50)
+    })
+
+    expect(
+      screen.getByRole('status', { name: '예약 상세 정보를 불러오는 중' }),
+    ).toBeInTheDocument()
   })
 
   it('renders the next page as soon as the chunk resolves when the fallback is not shown during an AuthOnly boundary navigation', async () => {
