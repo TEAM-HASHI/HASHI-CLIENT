@@ -26,26 +26,31 @@
 
 - [ ] Header는 77px 높이로 식당명을 한 줄 말줄임 처리하고 뒤로가기, 공유 액션을 제공합니다.
 - [ ] 공유 클릭 시 `ROUTES.restaurantMenuDetail` 기준 메뉴 상세 링크를 현재 origin 기준 absolute URL로 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
-- [ ] 매장 정보, 메뉴, 리뷰 탭을 표시하고 `메뉴` 탭을 선택 상태로 둡니다.
+- [ ] 매장 정보, 메뉴, 사진, 리뷰 탭을 표시하고 `메뉴` 탭을 선택 상태로 둡니다.
+- [ ] 사진 탭은 식당 상세와 동일한 사진 source/cache의 전체 공개 사진 수를 표시합니다. source 미연결 또는 개수 조회 실패 시 임의의 숫자를 표시하지 않습니다. 목데이터는 개발 환경에만 적용합니다.
 - [ ] 메뉴 상세 route 진입 또는 `menuId` 변경 시 페이지 스크롤을 최상단으로 초기화합니다.
 - [ ] 메뉴 이미지는 실제 이미지가 있으면 `img`, 없거나 로딩 실패하면 HDS `ImageFallback`으로 표시합니다.
 - [ ] route param `restaurantId`, `menuId`가 유효한 양의 정수가 아니면 `NotFoundPage`를 표시합니다.
 - [ ] 메뉴 상세 API가 404를 반환하거나 성공 응답에 메뉴 데이터가 없으면 `NotFoundPage`를 표시합니다.
 - [ ] 선택한 메뉴 이름, 가격, 설명을 표시합니다.
+- [ ] 선택 메뉴 제목은 20px/600, 줄 높이 30px이며 가격의 통화는 18px/400, 금액은 18px/600입니다.
+- [ ] 다른 메뉴 제목과 개수는 동일한 `primary-200` 색상, 18px/600과 2px 간격을 사용합니다. 대표 배지는 10px, 줄 높이 1.38, 상하 패딩 2px이며 공통 Badge의 고정 높이를 적용하지 않습니다.
 - [ ] 다른 메뉴 목록은 현재 선택 메뉴를 제외하고 반복 렌더링합니다.
 - [ ] 다른 메뉴 목록은 식당 메뉴 목록 API에 `excludeMenuId`를 전달해 조회하고, 서버 `main` 값이 true인 메뉴에만 대표 배지를 표시합니다.
 - [ ] 다른 메뉴 총 개수는 메뉴 상세 API의 `otherMenuCount`를 기준으로 표시합니다.
 - [ ] 다른 메뉴 카드를 누르면 같은 route의 다른 `menuId`로 이동합니다.
-- [ ] 하단 fixed bar에는 좋아요 영역과 `예약하기`가 표시됩니다.
-- [ ] 비로그인 사용자가 예약하기 또는 좋아요를 누르면 로그인 유도 바텀시트를 표시합니다.
+- [ ] 하단 fixed bar에는 36px `SaveBlankIcon` 북마크와 저장 수, `예약하기`가 표시됩니다. 북마크 버튼의 접근성 이름은 `저장하기`입니다.
+- [ ] 비로그인 사용자가 예약하기 또는 저장하기를 누르면 로그인 유도 바텀시트를 표시합니다.
 - [ ] 로그인 사용자가 예약하기를 누르면 `ROUTES.restaurantReservationNew`로 이동합니다.
-- [ ] 로그인 사용자가 좋아요를 누르면 준비중 모달을 표시합니다.
+- [ ] 로그인 사용자가 저장하기를 누르면 준비중 모달을 표시합니다. 저장 API 연동은 후속 작업입니다.
 - [ ] `location.state.source`가 `today`이면 탭/뒤로가기 fallback은 `/restaurants/today`로 이동합니다.
 - [ ] `location.state.source`가 없거나 `detail`이면 탭/뒤로가기 fallback은 `/restaurants/:restaurantId`로 이동합니다.
-- [ ] 매장 정보/리뷰 탭 이동 시 destination route state에 `activeTab`을 넘깁니다.
+- [ ] 매장 정보/사진/리뷰 탭 이동 시 destination route state에 `activeTab`을 넘깁니다.
 - [ ] 서버/API 연동 기준으로 식당 요약, 메뉴 상세, 메뉴 목록 데이터를 조회합니다.
 
 ## Data Dependencies
+
+- 사진 개수는 기존 `useRestaurantPhotos(restaurantId, false)`의 counts query를 재사용합니다. 메뉴 상세에서는 사진 목록 infinite query를 실행하지 않습니다.
 
 - query: restaurant summary
 - endpoint: `GET /api/v1/restaurants/{restaurantId}/summary`
@@ -55,7 +60,7 @@
 - response usage:
   - Header 식당명
   - 리뷰 탭 count
-  - 하단 좋아요 count는 MVP 범위에서 `0` 고정
+  - 하단 저장 수는 API 연동 전 기존 임시 값 `0` 유지
 - loading state: page loading
 - error state: 404는 `NotFoundPage`, 나머지는 ErrorBoundary
 

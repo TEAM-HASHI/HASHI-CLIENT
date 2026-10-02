@@ -8,6 +8,14 @@ import {
 } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { RestaurantPhotoRequest } from '@/features/restaurantDetail/types/restaurantPhoto'
+
+const { mockPhotoDataSource } = vi.hoisted(() => ({
+  mockPhotoDataSource: vi.fn(),
+}))
+vi.mock('@/features/restaurantDetail/api/restaurantPhotoSource', () => ({
+  getRestaurantPhotoDataSource: mockPhotoDataSource,
+}))
 
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
@@ -223,6 +231,7 @@ const renderPage = () => {
 
 describe('RestaurantDetailPage', () => {
   beforeEach(() => {
+    mockPhotoDataSource.mockReturnValue(null)
     mockedGetRestaurantSummary.mockResolvedValue(restaurantSummary)
     mockedGetRestaurantStoreInformation.mockResolvedValue(
       restaurantStoreInformation,
@@ -276,6 +285,13 @@ describe('RestaurantDetailPage', () => {
       'aria-selected',
       'true',
     )
+    expect(screen.getByText('오시는 길')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '오시는 길' })).toHaveTextContent(
+      '도쿄도 주오구 긴자 1-1',
+    )
+    expect(
+      screen.queryByRole('img', { name: '지도 연동 전 위치 영역' }),
+    ).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: '다시 추천 받기' }),
     ).not.toBeInTheDocument()
@@ -393,6 +409,52 @@ describe('RestaurantDetailPage', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('renders photo counts and filters through the configured data source', async () => {
+    const getPage = vi.fn(async ({ filter }: RestaurantPhotoRequest) => ({
+      photos:
+        filter === 'menu'
+          ? []
+          : [
+              {
+                id: 'photo-1',
+                thumbnailUrl: '/photo.jpg',
+                imageUrl: '/photo.jpg',
+                width: 800,
+                height: 600,
+              },
+            ],
+      counts: { all: 1, representative: 1, menu: 0, review: 0 },
+    }))
+    mockPhotoDataSource.mockReturnValue({ key: 'test', source: { getPage } })
+    renderPage()
+    fireEvent.click(await screen.findByRole('tab', { name: /사진/ }))
+    expect(
+      await screen.findByRole('button', { name: '1번째 사진 보기' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /사진\s*1/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    fireEvent.click(screen.getByRole('button', { name: /메뉴사진/ }))
+    expect(await screen.findByText('등록된 사진이 없어요.')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /사진\s*1/ })).toBeInTheDocument()
+  })
+
+  it('renders the photo tab empty state without a photo count when the data source is unavailable', async () => {
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
+
+    expect(screen.getByRole('tab', { name: '사진' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('tab', { name: /사진 \d+/ }),
+    ).not.toBeInTheDocument()
+  })
+
   it('refetches reviews with selected sort option', async () => {
     renderPage()
 
@@ -479,12 +541,24 @@ describe('RestaurantDetailPage', () => {
     )
   })
 
-  it('smoothly scrolls to the tab position when entering with an initial menu or review tab', async () => {
-    mockLocationStore.state = { activeTab: 'review' }
+  it('uses route state to select the initial photo tab', async () => {
+    mockLocationStore.state = { activeTab: 'photo' }
 
     renderPage()
 
-    await screen.findByRole('tab', { name: /리뷰/ })
+    expect(await screen.findByRole('tab', { name: '사진' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
+  })
+
+  it('smoothly scrolls to the tab position when entering with an initial menu, photo, or review tab', async () => {
+    mockLocationStore.state = { activeTab: 'photo' }
+
+    renderPage()
+
+    await screen.findByRole('tab', { name: '사진' })
 
     expect(mockScrollTo).toHaveBeenCalledWith({
       top: expect.any(Number),
@@ -540,7 +614,7 @@ describe('RestaurantDetailPage', () => {
   it('opens login bottom sheet for unauthenticated like action', async () => {
     renderPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: '좋아요' }))
+    fireEvent.click(await screen.findByRole('button', { name: '저장하기' }))
 
     expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
     expect(
@@ -553,7 +627,7 @@ describe('RestaurantDetailPage', () => {
 
     renderPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: '좋아요' }))
+    fireEvent.click(await screen.findByRole('button', { name: '저장하기' }))
 
     expect(
       screen.getByRole('heading', { name: '서비스를 준비하고 있어요.' }),
@@ -644,14 +718,15 @@ describe('RestaurantDetailPage', () => {
     )
   })
 
-  it('smoothly scrolls to the tab position for menu or review and to the top for info', async () => {
+  it('smoothly scrolls to the tab position for menu, photo, or review and to the top for info', async () => {
     renderPage()
 
     fireEvent.click(await screen.findByRole('tab', { name: '메뉴' }))
+    fireEvent.click(screen.getByRole('tab', { name: '사진' }))
     fireEvent.click(screen.getByRole('tab', { name: /리뷰/ }))
     fireEvent.click(screen.getByRole('tab', { name: '매장 정보' }))
 
-    expect(mockScrollTo).toHaveBeenCalledTimes(3)
+    expect(mockScrollTo).toHaveBeenCalledTimes(4)
     expect(mockScrollTo).toHaveBeenNthCalledWith(1, {
       top: expect.any(Number),
       behavior: 'smooth',
@@ -661,6 +736,10 @@ describe('RestaurantDetailPage', () => {
       behavior: 'smooth',
     })
     expect(mockScrollTo).toHaveBeenNthCalledWith(3, {
+      top: expect.any(Number),
+      behavior: 'smooth',
+    })
+    expect(mockScrollTo).toHaveBeenNthCalledWith(4, {
       top: 0,
       behavior: 'smooth',
     })

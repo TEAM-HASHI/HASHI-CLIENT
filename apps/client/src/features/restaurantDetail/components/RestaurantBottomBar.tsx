@@ -1,4 +1,4 @@
-import { HeartBlankIcon } from '@hashi/hds-icons'
+import { SaveBlankIcon } from '@hashi/hds-icons'
 import { Button, IconButton } from '@hashi/hds-ui'
 
 import type { RestaurantDetailVariant } from '@/features/restaurantDetail/types/restaurantDetail'
@@ -24,10 +24,11 @@ export const RestaurantBottomBar = ({
   return (
     <BottomActionBar
       aria-label="식당 상세 액션"
+      layout="compact"
       leadingAction={
-        <div className="text-primary-200 flex w-9 flex-col items-center gap-1">
-          <IconButton aria-label="좋아요" onClick={onPressLike} size="xs">
-            <HeartBlankIcon className="size-7" />
+        <div className="text-primary-200 flex w-9 shrink-0 flex-col items-center">
+          <IconButton aria-label="저장하기" onClick={onPressLike} size="sm">
+            <SaveBlankIcon className="text-warm-gray-100 size-9" />
           </IconButton>
           <span className="typo-caption-3">{likeCount}</span>
         </div>
