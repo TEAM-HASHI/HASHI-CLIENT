@@ -66,7 +66,7 @@ export const ProfileImageSection = ({
         type="file"
       />
       <Button
-        className="mt-1"
+        className="mt-1 leading-[1.36]"
         disabled={disabled || !previewUrl}
         onClick={onImageDelete}
         size="md"

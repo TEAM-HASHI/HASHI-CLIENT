@@ -4,7 +4,7 @@ import { FieldError } from '@/features/profile/components/FieldError'
 
 const PROFILE_ENGLISH_NAME_MAX_LENGTH = 20
 const PROFILE_INPUT_CLASS_NAME =
-  'border-0 bg-primary-100 [&:has(>input:focus-visible)]:outline-none'
+  'border-0 bg-primary-100 px-3 [&>input:not(:disabled)]:text-primary-200 [&:has(>input:focus-visible)]:outline-none'
 
 interface ProfileFieldState {
   value: string
@@ -32,6 +32,7 @@ export const ProfileFields = ({
     <div className="flex flex-col gap-5">
       <div>
         <InputField
+          aria-invalid={Boolean(fields.nickname.errorMessage)}
           aria-describedby={
             fields.nickname.errorMessage ? 'profile-nickname-error' : undefined
           }
@@ -43,7 +44,7 @@ export const ProfileFields = ({
           onChange={(event) => {
             fields.nickname.onValueChange(event.target.value)
           }}
-          placeholder="이름을 입력해주세요."
+          placeholder="닉네임을 입력해주세요."
           value={fields.nickname.value}
         />
         <FieldError
@@ -54,6 +55,7 @@ export const ProfileFields = ({
 
       <div>
         <InputField
+          aria-invalid={Boolean(fields.englishName.errorMessage)}
           aria-describedby={
             fields.englishName.errorMessage
               ? 'profile-english-name-error'
@@ -85,6 +87,7 @@ export const ProfileFields = ({
           className={PROFILE_INPUT_CLASS_NAME}
           disabled={disabled}
           inputMode="tel"
+          aria-invalid={Boolean(fields.phoneNumber.errorMessage)}
           label="연락처"
           maxLength={13}
           onBlur={fields.phoneNumber.onBlur}
@@ -109,12 +112,13 @@ export const ProfileFields = ({
           className={PROFILE_INPUT_CLASS_NAME}
           disabled={disabled}
           inputMode="email"
+          aria-invalid={Boolean(fields.email.errorMessage)}
           label="이메일"
           onBlur={fields.email.onBlur}
           onChange={(event) => {
             fields.email.onValueChange(event.target.value)
           }}
-          placeholder="메일을 입력해주세요."
+          placeholder="이메일을 입력해주세요."
           type="email"
           value={fields.email.value}
         />
@@ -133,6 +137,7 @@ export const ProfileFields = ({
           }
           className={PROFILE_INPUT_CLASS_NAME}
           inputMode="numeric"
+          aria-invalid={Boolean(fields.birthDate.errorMessage)}
           disabled={disabled}
           label="생년월일"
           maxLength={10}
