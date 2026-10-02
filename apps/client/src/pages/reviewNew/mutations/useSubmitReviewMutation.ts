@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
+import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
 import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
 import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
@@ -43,6 +44,7 @@ export const useSubmitReviewMutation = () => {
     mutationFn: submitReview,
     onSuccess: (_, variables) => {
       const invalidateTasks = [
+        queryClient.invalidateQueries({ queryKey: pointQueryKeys.myBalance() }),
         queryClient.invalidateQueries({
           queryKey: reviewNewQueryKeys.context(variables.reservationId),
           refetchType: 'none',
