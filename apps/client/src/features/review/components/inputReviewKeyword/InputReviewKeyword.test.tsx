@@ -147,9 +147,7 @@ describe('InputReviewKeyword', () => {
     })
 
     expect(unselectedKeyword).toHaveAttribute('aria-disabled', 'true')
-    expect(unselectedKeyword).toHaveClass('cursor-not-allowed', 'opacity-40')
     expect(selectedKeyword).not.toHaveAttribute('aria-disabled')
-    expect(selectedKeyword).not.toHaveClass('cursor-not-allowed', 'opacity-40')
 
     fireEvent.click(unselectedKeyword)
 

@@ -12,7 +12,7 @@ export const ComingSoonPage = () => {
         <img
           alt=""
           aria-hidden="true"
-          className="mb-[25px] h-19 w-[101px]"
+          className="mb-6 h-19 w-25.25"
           src={emptyImage}
         />
         <h1 className="typo-sub-header-1 text-cool-gray-900 mb-2">
@@ -24,9 +24,9 @@ export const ComingSoonPage = () => {
           현재 기능을 준비하고 있어요.
         </p>
         <Button
-          className="typo-sub-header-3 w-[185px]"
+          className="w-[185px]"
           onClick={() => navigate(ROUTES.home)}
-          size="md"
+          size="lg"
           type="button"
         >
           홈으로 돌아가기

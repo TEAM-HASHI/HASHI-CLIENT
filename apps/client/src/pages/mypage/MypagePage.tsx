@@ -44,7 +44,7 @@ export const MypagePage = () => {
           ))}
         </div>
 
-        <div className="mb-4 flex flex-col gap-5">
+        <div className="relative left-1 flex flex-col gap-4.5">
           {menuSections.map((section) => (
             <MypageMenuSection
               key={section.id}

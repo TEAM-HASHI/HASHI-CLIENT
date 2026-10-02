@@ -38,7 +38,6 @@ export const useMypagePage = () => {
     myReviewCountQuery.isPending
 
   const summary = {
-    ...DEFAULT_MYPAGE_SUMMARY,
     nickname:
       profileSummaryQuery.data?.nickname ?? DEFAULT_MYPAGE_SUMMARY.nickname,
     profileImageUrl:
@@ -51,13 +50,9 @@ export const useMypagePage = () => {
     myReviewCount: summary.myReviewCount,
   })
 
-  const handleComingSoonPress = () => {
-    setIsComingSoonOpen(true)
-  }
-
   const handleMenuAction = (action: MypageMenuAction) => {
     if (action.type === 'comingSoon') {
-      handleComingSoonPress()
+      setIsComingSoonOpen(true)
       return
     }
 

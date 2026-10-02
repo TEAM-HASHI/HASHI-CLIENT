@@ -21,7 +21,10 @@ export const getRestaurantDetailTabState = (
 
   const activeTab = (state as RestaurantDetailLocationState).activeTab
 
-  return activeTab === 'info' || activeTab === 'menu' || activeTab === 'review'
+  return activeTab === 'info' ||
+    activeTab === 'menu' ||
+    activeTab === 'photo' ||
+    activeTab === 'review'
     ? { activeTab }
     : {}
 }
