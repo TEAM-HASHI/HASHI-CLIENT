@@ -26,7 +26,7 @@ export const BottomActionBar = ({
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        'app-mobile-fixed-bottom z-fixed bg-white px-5 pt-4 pb-[calc(48px+var(--safe-area-bottom,0px))]',
+        'app-mobile-fixed-bottom z-fixed min-h-[calc(var(--app-mobile-bottom-action-height)+var(--safe-area-bottom,0px))] bg-white px-5 pt-4',
         className,
       )}
     >
