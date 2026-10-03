@@ -19,38 +19,38 @@ export const RestaurantCard = ({
   }
 
   return (
-    <li className="border-warm-gray-50 w-full border-b py-4.75 last:border-b-0">
+    <li className="border-warm-gray-50 w-full border-b py-4 last:border-b-0">
       <button
         className="flex w-full flex-col text-left"
         onClick={handleClickRestaurant}
         type="button"
       >
-        <span className="typo-sub-header-2 text-cool-gray-900 line-clamp-1">
+        <span className="typo-body-3 text-cool-gray-900 line-clamp-1 font-medium">
           {restaurant.name}
         </span>
-        <span className="text-primary-200 mt-1 flex h-5 items-center">
+        <span className="text-primary-200 mt-0.5 flex h-6 items-center">
           <StarFillIcon
             aria-hidden="true"
             className="text-primary-400 size-4.5 shrink-0"
           />
-          <span className="typo-body-3 ml-px">{ratingLabel}</span>
-          <span className="typo-body-7 ml-1.25">
+          <span className="typo-body-3 ml-0.5">{ratingLabel}</span>
+          <span className="typo-body-7 ml-1">
             {restaurant.region} · {restaurant.category}
           </span>
         </span>
-        <span className="mt-2.75 w-full">
+        <span className="mt-2 w-full">
           <RestaurantImageList
             images={restaurant.images}
             restaurantName={restaurant.name}
           />
         </span>
-        <span className="typo-body-7 text-primary-200 mt-3 line-clamp-2 w-full">
+        <span className="typo-long-body-1 text-primary-200 mt-3 line-clamp-2 w-full">
           {restaurant.description}
         </span>
-        <span className="mt-0.5 flex flex-wrap gap-2">
+        <span className="mt-0.5 flex min-w-0 flex-nowrap gap-2 overflow-hidden">
           {restaurant.hashtags.map((hashtag, index) => (
             <span
-              className="typo-body-7 text-cool-gray-400"
+              className="typo-body-7 text-cool-gray-400 shrink-0 whitespace-nowrap"
               key={`${hashtag}-${index}`}
             >
               {hashtag}
