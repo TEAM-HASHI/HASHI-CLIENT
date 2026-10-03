@@ -1,6 +1,6 @@
 # MapPage
 
-Jira: HASHI-215. Status: implementation in progress, sample-data publishing only.
+Jira: HASHI-215. Status: sample-data publishing only; SDK/API integration deferred.
 
 ## Purpose / Route
 
@@ -40,7 +40,8 @@ Jira: HASHI-215. Status: implementation in progress, sample-data publishing only
 
 ## Component Mapping / Public API
 
-- HDS DragPanel (HASHI-214), SearchBar, Chip, IconButton, Button, Thumbnail, Tabs, Carousel.
+- HDS DragPanel (HASHI-214), Dialog, SearchBar, Chip, IconButton, Button, Thumbnail, Tabs, Carousel.
+- Normal panels stay nonmodal. Expanded details and photos use HDS Dialog for focus containment and background isolation.
 - Reuse HDS icons and app ComingSoonDialog. RestaurantDetailTemplate is not used because it owns window scrolling and photo API queries.
 - Page-local toolbar, map preview, cards, list, detail and photo viewer; no new package public API.
 - Static Figma map/pin assets live under shared/assets/images/map; restaurant images are props on preview records.
