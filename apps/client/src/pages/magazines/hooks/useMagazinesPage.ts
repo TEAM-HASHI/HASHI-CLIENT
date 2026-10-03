@@ -6,6 +6,7 @@ import { ROUTES } from '@/app/router/path'
 import { magazineBannerQueryOptions } from '@/features/magazine/queries/magazineBannerQueryOptions'
 import { normalizeInstagramUrl } from '@/features/magazine/utils/normalizeInstagramUrl'
 import { magazineListInfiniteQueryOptions } from '@/pages/magazines/queries/magazineListQueryOptions'
+import { useMagazineListRestoration } from '@/pages/magazines/hooks/useMagazineListRestoration'
 import type {
   MagazineHeroBanner,
   RecommendedMagazine,
@@ -37,14 +38,23 @@ export const useMagazinesPage = () => {
   const magazinesQuery = useInfiniteQuery(
     magazineListInfiniteQueryOptions({ size: MAGAZINE_LIST_PAGE_SIZE }),
   )
+  const { fetchNextPage } = magazinesQuery
+  const isRestoring = useMagazineListRestoration({
+    pageCount: magazinesQuery.data?.pages.length ?? 0,
+    hasNextPage: Boolean(magazinesQuery.hasNextPage),
+    isFetching: magazinesQuery.isFetching || magazineBannersQuery.isPending,
+    isError: magazinesQuery.isError,
+    fetchNextPage,
+  })
   const canFetchNextPage =
     magazinesQuery.hasNextPage &&
-    !magazinesQuery.isFetchingNextPage &&
-    !magazinesQuery.isFetchNextPageError
+    !magazinesQuery.isFetching &&
+    !magazinesQuery.isError &&
+    !isRestoring
   const loadMoreRef = useInfiniteScrollTrigger<HTMLLIElement>({
     enabled: Boolean(canFetchNextPage),
     isLoading: magazinesQuery.isFetchingNextPage,
-    onIntersect: magazinesQuery.fetchNextPage,
+    onIntersect: fetchNextPage,
   })
 
   const heroBanners = useMemo<MagazineHeroBanner[]>(() => {
@@ -108,12 +118,8 @@ export const useMagazinesPage = () => {
       return
     }
 
-    void magazinesQuery.fetchNextPage()
-  }, [
-    canFetchNextPage,
-    magazinesQuery.fetchNextPage,
-    normalizedRecommendedMagazines.length,
-  ])
+    void fetchNextPage({ cancelRefetch: false })
+  }, [canFetchNextPage, fetchNextPage, normalizedRecommendedMagazines.length])
 
   const isHeroBannerLoading = magazineBannersQuery.isLoading
   const isRecommendedMagazineLoading = magazinesQuery.isLoading
@@ -137,7 +143,7 @@ export const useMagazinesPage = () => {
     isRecommendedMagazineLoading,
     loadMoreRef,
     refetchRecommendedMagazines: magazinesQuery.refetch,
-    retryNextMagazinePage: magazinesQuery.fetchNextPage,
+    retryNextMagazinePage: fetchNextPage,
     recommendedMagazines: normalizedRecommendedMagazines,
   }
 }
