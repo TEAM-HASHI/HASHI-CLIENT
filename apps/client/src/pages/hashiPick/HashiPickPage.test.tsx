@@ -276,14 +276,17 @@ describe('HashiPickPage', () => {
         }),
       )
       .mockResolvedValueOnce(createRestaurantsResult({ count: 2, startId: 11 }))
-    const { triggerIntersect } = mockIntersectionObserver()
+    const { observe, triggerIntersect } = mockIntersectionObserver()
 
     renderHashiPickPage()
 
     expect(
       await screen.findAllByRole('button', { name: /히마와리 스시/ }),
     ).toHaveLength(10)
-    await screen.findByTestId('restaurant-list-load-more')
+    const sentinel = await screen.findByTestId('restaurant-list-load-more')
+    await waitFor(() => {
+      expect(observe).toHaveBeenCalledWith(sentinel)
+    })
 
     triggerIntersect()
 
