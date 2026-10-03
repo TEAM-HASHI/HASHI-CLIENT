@@ -3,6 +3,7 @@ import { Button, Header, IconButton } from '@hashi/hds-ui'
 
 import { RestaurantCard } from '@/features/restaurantList/components/RestaurantCard'
 import { RestaurantFilterBar } from '@/features/restaurantList/components/RestaurantFilterBar'
+import { RestaurantSortChipGroup } from '@/features/restaurantList/components/RestaurantSortChipGroup'
 import { CATEGORY_OPTIONS } from '@/features/restaurantList/constants'
 import { useRestaurantListContent } from '@/features/restaurantList/hooks/useRestaurantListContent'
 import type {
@@ -13,6 +14,7 @@ import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
 
 type RestaurantListTemplateProps = {
+  filterMode?: 'bottom-sheet' | 'inline-sort'
   title: string
   restaurantType: RestaurantListCurationType
   sortOptions: FilterOption[]
@@ -22,22 +24,22 @@ const renderSkeletonItems = (count: number) => {
   return Array.from({ length: count }, (_, index) => (
     <li
       aria-hidden="true"
-      className="border-warm-gray-50 w-full border-b py-4.75 last:border-b-0"
+      className="border-warm-gray-50 w-full border-b py-4 last:border-b-0"
       data-testid="restaurant-list-skeleton-item"
       key={index}
     >
       <div className="flex flex-col">
         <div className="bg-secondary-200 h-5 w-40 animate-pulse rounded" />
-        <div className="bg-secondary-200 mt-2 h-5 w-28 animate-pulse rounded" />
-        <div className="mt-2.75 flex gap-2">
+        <div className="bg-secondary-200 mt-0.5 h-6 w-28 animate-pulse rounded" />
+        <div className="mt-2 flex gap-2 overflow-hidden">
           {Array.from({ length: 3 }, (_, imageIndex) => (
             <div
-              className="bg-secondary-200 h-[143px] w-[143px] shrink-0 animate-pulse rounded-[5px]"
+              className="bg-secondary-200 size-33.75 shrink-0 animate-pulse rounded-[5px]"
               key={imageIndex}
             />
           ))}
         </div>
-        <div className="bg-secondary-200 mt-3 h-4 w-full animate-pulse rounded" />
+        <div className="bg-secondary-200 mt-3 h-5.5 w-full animate-pulse rounded" />
         <div className="bg-secondary-200 mt-2 h-4 w-3/4 animate-pulse rounded" />
       </div>
     </li>
@@ -45,6 +47,7 @@ const renderSkeletonItems = (count: number) => {
 }
 
 export const RestaurantListTemplate = ({
+  filterMode = 'bottom-sheet',
   title,
   restaurantType,
   sortOptions,
@@ -54,8 +57,9 @@ export const RestaurantListTemplate = ({
     categoryLabel,
     draftCategory,
     draftSort,
+    hasInitialLoadError,
     hasMoreRestaurants,
-    isError,
+    hasNextPageError,
     isFetchingNextPage,
     isLoading,
     loadMoreRef,
@@ -65,12 +69,14 @@ export const RestaurantListTemplate = ({
     handleApplySort,
     handleBackClick,
     handleClickRestaurant,
+    handleChangeSort,
     handleCloseBottomSheet,
     handleOpenCategorySheet,
     handleOpenSortSheet,
     handleResetCategory,
     handleResetSort,
     handleRetry,
+    handleRetryNextPage,
     handleSelectCategory,
     handleSelectSort,
   } = useRestaurantListContent({
@@ -92,6 +98,7 @@ export const RestaurantListTemplate = ({
       >
         <Header
           className="text-primary-200"
+          elevated={restaurantType !== 'sns-hot'}
           leftAction={
             <IconButton
               aria-label="뒤로가기"
@@ -109,22 +116,32 @@ export const RestaurantListTemplate = ({
         className="flex flex-1 flex-col pt-[75px]"
         data-testid="restaurant-list-scroll-content"
       >
-        <RestaurantFilterBar
-          categoryLabel={categoryLabel}
-          onClickCategory={handleOpenCategorySheet}
-          onClickSort={handleOpenSortSheet}
-          sortLabel={selectedSort.label}
-        />
+        <div className="sticky top-[75px] z-10 bg-white">
+          {filterMode === 'inline-sort' ? (
+            <RestaurantSortChipGroup
+              onValueChange={handleChangeSort}
+              options={sortOptions}
+              selectedValue={selectedSort.value}
+            />
+          ) : (
+            <RestaurantFilterBar
+              categoryLabel={categoryLabel}
+              onClickCategory={handleOpenCategorySheet}
+              onClickSort={handleOpenSortSheet}
+              sortLabel={selectedSort.label}
+            />
+          )}
+        </div>
 
         {isLoading ? (
           <ul
             aria-label={`${title} 식당 목록 로딩 중`}
-            className="mx-auto flex w-full flex-col gap-1 px-5"
+            className="mx-auto flex w-full flex-col gap-2 px-5"
             data-testid="restaurant-list"
           >
             {renderSkeletonItems(3)}
           </ul>
-        ) : isError ? (
+        ) : hasInitialLoadError ? (
           <div className="flex min-h-[360px] flex-col items-center justify-center gap-4 px-5 text-center">
             <p className="typo-body-4 text-primary-200">
               식당 목록을 불러오지 못했습니다.
@@ -137,7 +154,7 @@ export const RestaurantListTemplate = ({
           <>
             {shouldRenderList ? (
               <ul
-                className="mx-auto flex w-full flex-col gap-1 px-5"
+                className="mx-auto flex w-full flex-col gap-2 px-5"
                 data-testid="restaurant-list"
               >
                 {visibleRestaurants.map((restaurant) => (
@@ -147,15 +164,29 @@ export const RestaurantListTemplate = ({
                     restaurant={restaurant}
                   />
                 ))}
-                {hasMoreRestaurants && (
+                {hasMoreRestaurants && !hasNextPageError ? (
                   <li
                     aria-hidden="true"
                     className="h-px"
                     data-testid="restaurant-list-load-more"
                     ref={loadMoreRef}
                   />
-                )}
+                ) : null}
                 {isFetchingNextPage ? renderSkeletonItems(1) : null}
+                {hasNextPageError ? (
+                  <li className="flex flex-col items-center gap-3 py-6 text-center">
+                    <p className="typo-body-4 text-primary-200">
+                      식당을 더 불러오지 못했습니다.
+                    </p>
+                    <Button
+                      onClick={handleRetryNextPage}
+                      size="sm"
+                      variant="neutral"
+                    >
+                      다시 시도
+                    </Button>
+                  </li>
+                ) : null}
               </ul>
             ) : null}
             {shouldRenderEmptyState ? (
@@ -167,26 +198,30 @@ export const RestaurantListTemplate = ({
         )}
       </div>
 
-      <FilterBottomSheet
-        onApply={handleApplySort}
-        onOpenChange={handleCloseBottomSheet}
-        onReset={handleResetSort}
-        onSelect={handleSelectSort}
-        open={activeBottomSheet === 'sort'}
-        options={sortOptions}
-        selectedValue={draftSort.value}
-        title="정렬 순서"
-      />
-      <FilterBottomSheet
-        onApply={handleApplyCategory}
-        onOpenChange={handleCloseBottomSheet}
-        onReset={handleResetCategory}
-        onSelect={handleSelectCategory}
-        open={activeBottomSheet === 'category'}
-        options={CATEGORY_OPTIONS}
-        selectedValue={draftCategory.value}
-        title="음식 장르 선택"
-      />
+      {filterMode === 'bottom-sheet' ? (
+        <>
+          <FilterBottomSheet
+            onApply={handleApplySort}
+            onOpenChange={handleCloseBottomSheet}
+            onReset={handleResetSort}
+            onSelect={handleSelectSort}
+            open={activeBottomSheet === 'sort'}
+            options={sortOptions}
+            selectedValue={draftSort.value}
+            title="정렬 순서"
+          />
+          <FilterBottomSheet
+            onApply={handleApplyCategory}
+            onOpenChange={handleCloseBottomSheet}
+            onReset={handleResetCategory}
+            onSelect={handleSelectCategory}
+            open={activeBottomSheet === 'category'}
+            options={CATEGORY_OPTIONS}
+            selectedValue={draftCategory.value}
+            title="음식 장르 선택"
+          />
+        </>
+      ) : null}
     </div>
   )
 }
