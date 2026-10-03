@@ -18,12 +18,12 @@ export const MagazineRestaurantCard = ({
       className="focus-visible:outline-cool-gray-900 block focus-visible:outline-2 focus-visible:outline-offset-2"
       to={getRestaurantDetailPath(restaurant.id)}
     >
-      <article className="border-warm-gray-50 mt-4 flex flex-col justify-center gap-3.25 border-b">
+      <article className="border-warm-gray-50 flex min-h-67 flex-col justify-center gap-2 border-b py-3">
         <div className="flex min-w-0 flex-col gap-0.75">
           <h3 className="typo-body-3 text-cool-gray-900 truncate">
             {restaurant.name}
           </h3>
-          <div className="text-primary-200 mt-2 flex items-center gap-1">
+          <div className="text-primary-200 flex min-h-6 items-center gap-1">
             <span className="typo-body-4 inline-flex items-center gap-0.5">
               <StarFillIcon
                 aria-hidden="true"
@@ -37,9 +37,9 @@ export const MagazineRestaurantCard = ({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3.5">
+        <div className="flex flex-col gap-3">
           {restaurant.imageUrls.length > 0 ? (
-            <div className="scrollbar-none overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="[scrollbar-width:none] overflow-x-auto [&::-webkit-scrollbar]:hidden">
               <div className="flex w-max gap-2">
                 {restaurant.imageUrls.map((imageUrl, index) => (
                   <MagazineImage
@@ -53,7 +53,7 @@ export const MagazineRestaurantCard = ({
             </div>
           ) : null}
 
-          <dl className="typo-body-7 text-primary-200 mb-[14.5px] flex flex-col gap-1.75">
+          <dl className="typo-body-7 text-primary-200 flex flex-col gap-0.5">
             <div className="flex items-center gap-1">
               <ClockSmallIcon
                 aria-hidden="true"
@@ -62,7 +62,7 @@ export const MagazineRestaurantCard = ({
               <dt className="sr-only">영업시간</dt>
               <dd>{restaurant.openingHours}</dd>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex min-h-5 items-center gap-1">
               <MoneySmallIcon
                 aria-hidden="true"
                 className="text-cool-gray-900 size-4 shrink-0"

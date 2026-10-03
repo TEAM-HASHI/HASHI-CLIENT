@@ -29,9 +29,11 @@ export const MagazineRestaurantSection = ({
           해보세요!
         </span>
       </h2>
-      {restaurants.map((restaurant) => (
-        <MagazineRestaurantCard key={restaurant.id} restaurant={restaurant} />
-      ))}
+      <div className="mt-4">
+        {restaurants.map((restaurant) => (
+          <MagazineRestaurantCard key={restaurant.id} restaurant={restaurant} />
+        ))}
+      </div>
     </section>
   )
 }
