@@ -328,6 +328,11 @@ This branch keeps native external links only when `instagramUrl` is valid. The d
   - none
 - back behavior:
   - `navigate(ROUTES.home)`
+  - 스크롤 중에는 메모리에 최신 위치만 기록하고, 페이지 해제 또는 `pagehide` 시 조회한 페이지 수와 위치를 방문 기록의 location key별로 `sessionStorage`에 저장한다.
+  - `POP` 복귀 시 `useMagazineListRestoration`이 저장된 상태를 읽는다. 캐시가 만료됐다면 필요한 페이지를 순차 조회하고, 배너와 목록 렌더링이 완료된 다음 프레임에서 위치를 복원한다.
+  - 복원 중에는 일반 무한스크롤 및 빈 페이지 자동 조회를 중단한다. 조회 실패 시 저장한 위치를 유지하고 기존 재시도 버튼으로 복원을 이어간다.
+  - 새로 진입한 방문 기록에는 이전 기록의 위치를 적용하지 않는다. 저장소가 차단되면 복원 없이 일반 목록 조회를 유지한다.
+  - 상세 내부 링크 연결은 상세 브랜치에서 담당하며, 이번 변경은 전역 `RootLayout`의 스크롤 정책을 바꾸지 않는다.
 - auth redirect:
   - none
 - external navigation: native anchor with a validated Instagram URL
