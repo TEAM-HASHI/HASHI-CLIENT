@@ -4,6 +4,11 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const routeParams = vi.hoisted(() => ({ magazineId: '1' }))
+const authStatus = vi.hoisted(() => ({ isAuthenticated: true }))
+
+vi.mock('@/shared/hooks/useAuthStatus', () => ({
+  useAuthStatus: () => authStatus,
+}))
 
 vi.mock('react-router-dom', async () => {
   const actual =
@@ -17,34 +22,51 @@ vi.mock('react-router-dom', async () => {
 
 import { MagazineDetailPage } from '@/pages/magazineDetail/MagazineDetailPage'
 import { MagazineImage } from '@/pages/magazineDetail/components/MagazineImage'
-import { MagazineRestaurantCard } from '@/pages/magazineDetail/components/MagazineRestaurantCard'
 
 describe('MagazineDetailPage', () => {
-  afterEach(cleanup)
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllEnvs()
+  })
   beforeEach(() => {
     routeParams.magazineId = '1'
+    authStatus.isAuthenticated = true
   })
 
-  it('falls back safely when location preview fields have invalid types', () => {
+  it('never exposes publishing data in the production route', () => {
+    vi.stubEnv('DEV', false)
     render(
-      <MemoryRouter
-        initialEntries={[
-          {
-            pathname: '/magazines/1',
-            state: {
-              magazinePreview: {
-                imageUrl: 123,
-                title: 456,
-              },
-            },
-          },
-        ]}
-      >
+      <MemoryRouter>
+        <MagazineDetailPage />
+      </MemoryRouter>,
+    )
+    expect(
+      screen.getByRole('heading', { name: '서비스를 준비하고 있어요.' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /매거진 좋아요/ }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: /히마와리/ }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('opens the login gate without changing likes for an anonymous user', () => {
+    authStatus.isAuthenticated = false
+    render(
+      <MemoryRouter>
         <MagazineDetailPage />
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('banner')).toHaveTextContent('매거진 상세')
+    const button = screen.getByRole('button', { name: /매거진 좋아요/ })
+    const count = button.textContent
+    fireEvent.click(button)
+    expect(button).toHaveAttribute('aria-pressed', 'false')
+    expect(button.textContent).toBe(count)
+    expect(
+      screen.getByRole('dialog', { name: '로그인 안내' }),
+    ).toBeInTheDocument()
   })
 
   it('resets local like state when the magazine id changes', () => {
@@ -70,34 +92,6 @@ describe('MagazineDetailPage', () => {
     expect(
       screen.getByRole('button', { name: /매거진 좋아요/ }),
     ).toHaveAttribute('aria-pressed', 'false')
-  })
-})
-
-describe('MagazineRestaurantCard', () => {
-  afterEach(cleanup)
-
-  it('does not fabricate an image slot when the restaurant has no images', () => {
-    const { container } = render(
-      <MemoryRouter>
-        <MagazineRestaurantCard
-          restaurant={{
-            category: '초밥',
-            id: '1',
-            imageUrls: [],
-            name: '식당명',
-            openingHours: '평일 · 12:00~19:00',
-            priceRange: 'JPY 1,000~2,000',
-            rating: 4.5,
-            region: '도쿄',
-          }}
-        />
-      </MemoryRouter>,
-    )
-
-    expect(container.querySelector('img')).not.toBeInTheDocument()
-    expect(
-      container.querySelector('[data-slot="image-fallback"]'),
-    ).not.toBeInTheDocument()
   })
 })
 

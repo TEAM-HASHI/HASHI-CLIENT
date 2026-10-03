@@ -11,7 +11,6 @@ interface MagazineArticleProps {
   isLiked: boolean
   likeCount: number
   magazine: MagazineArticleData
-  magazineId: string
   onLikeToggle: () => void
 }
 
@@ -19,14 +18,12 @@ export const MagazineArticle = ({
   isLiked,
   likeCount,
   magazine,
-  magazineId,
   onLikeToggle,
 }: MagazineArticleProps) => {
   return (
     <article>
       <MagazineCoverCarousel
         imageUrls={magazine.coverImageUrls}
-        key={magazineId}
         title={magazine.title}
       />
 
