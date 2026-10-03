@@ -1,10 +1,12 @@
 import { useEffect, useMemo } from 'react'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import { useMagazineBannersQuery } from '@/features/magazine/hooks/useMagazineBannersQuery'
+import { magazineBannerQueryOptions } from '@/features/magazine/queries/magazineBannerQueryOptions'
 import { normalizeInstagramUrl } from '@/features/magazine/utils/normalizeInstagramUrl'
-import { useMagazinesInfiniteQuery } from '@/pages/magazines/hooks/useMagazinesInfiniteQuery'
+import { magazineListInfiniteQueryOptions } from '@/pages/magazines/queries/magazineListQueryOptions'
+import { useMagazineListRestoration } from '@/pages/magazines/hooks/useMagazineListRestoration'
 import type {
   MagazineHeroBanner,
   RecommendedMagazine,
@@ -29,19 +31,37 @@ const formatMagazinePublishedDate = (createdAt: string) => {
 
 export const useMagazinesPage = () => {
   const navigate = useNavigate()
-  const magazineBannersQuery = useMagazineBannersQuery()
-  const magazinesQuery = useMagazinesInfiniteQuery({
-    size: MAGAZINE_LIST_PAGE_SIZE,
+  const magazineBannersQuery = useQuery({
+    ...magazineBannerQueryOptions(),
+    throwOnError: false,
+  })
+  const magazinesQuery = useInfiniteQuery(
+    magazineListInfiniteQueryOptions({ size: MAGAZINE_LIST_PAGE_SIZE }),
+  )
+  const { fetchNextPage } = magazinesQuery
+  const isRestoring = useMagazineListRestoration({
+    pageCount: magazinesQuery.data?.pages.length ?? 0,
+    hasNextPage: Boolean(magazinesQuery.hasNextPage),
+    isFetching: magazinesQuery.isFetching || magazineBannersQuery.isPending,
+    isError: magazinesQuery.isError,
+    fetchNextPage,
   })
   const canFetchNextPage =
-    magazinesQuery.hasNextPage && !magazinesQuery.isFetchingNextPage
+    magazinesQuery.hasNextPage &&
+    !magazinesQuery.isFetching &&
+    !magazinesQuery.isError &&
+    !isRestoring
   const loadMoreRef = useInfiniteScrollTrigger<HTMLLIElement>({
-    enabled: Boolean(magazinesQuery.hasNextPage),
+    enabled: Boolean(canFetchNextPage),
     isLoading: magazinesQuery.isFetchingNextPage,
-    onIntersect: magazinesQuery.fetchNextPage,
+    onIntersect: fetchNextPage,
   })
 
   const heroBanners = useMemo<MagazineHeroBanner[]>(() => {
+    if (magazineBannersQuery.isError) {
+      return []
+    }
+
     return (magazineBannersQuery.data?.banners ?? []).flatMap((banner) => {
       const { bannerImageUrl, magazineId, title } = banner
 
@@ -58,7 +78,7 @@ export const useMagazinesPage = () => {
         accessibilityLabel,
       }
     })
-  }, [magazineBannersQuery.data?.banners])
+  }, [magazineBannersQuery.data?.banners, magazineBannersQuery.isError])
 
   const normalizedRecommendedMagazines = useMemo<RecommendedMagazine[]>(() => {
     return (magazinesQuery.data?.pages ?? []).flatMap((page) =>
@@ -98,19 +118,13 @@ export const useMagazinesPage = () => {
       return
     }
 
-    void magazinesQuery.fetchNextPage()
-  }, [
-    canFetchNextPage,
-    magazinesQuery.fetchNextPage,
-    normalizedRecommendedMagazines.length,
-  ])
+    void fetchNextPage({ cancelRefetch: false })
+  }, [canFetchNextPage, fetchNextPage, normalizedRecommendedMagazines.length])
 
-  const hasHeroBanners = heroBanners.length > 0
-  const hasRecommendedMagazines = normalizedRecommendedMagazines.length > 0
   const isHeroBannerLoading = magazineBannersQuery.isLoading
   const isRecommendedMagazineLoading = magazinesQuery.isLoading
-  const isHeroBannerError = magazineBannersQuery.isError
-  const isRecommendedMagazineError = magazinesQuery.isError
+  const isRecommendedMagazineError = magazinesQuery.isLoadingError
+  const isNextMagazinePageError = magazinesQuery.isFetchNextPageError
   const isFetchingNextMagazinePage = magazinesQuery.isFetchingNextPage
   const hasNextMagazinePage = magazinesQuery.hasNextPage
 
@@ -120,18 +134,16 @@ export const useMagazinesPage = () => {
 
   return {
     handleBackClick,
-    hasHeroBanners,
     hasNextMagazinePage,
-    hasRecommendedMagazines,
     heroBanners,
     isFetchingNextMagazinePage,
-    isHeroBannerError,
     isHeroBannerLoading,
     isRecommendedMagazineError,
+    isNextMagazinePageError,
     isRecommendedMagazineLoading,
     loadMoreRef,
-    refetchHeroBanners: magazineBannersQuery.refetch,
     refetchRecommendedMagazines: magazinesQuery.refetch,
+    retryNextMagazinePage: fetchNextPage,
     recommendedMagazines: normalizedRecommendedMagazines,
   }
 }
