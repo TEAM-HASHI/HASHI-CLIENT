@@ -86,11 +86,81 @@ describe('MagazinesPage', () => {
   afterEach(() => {
     cleanup()
     vi.clearAllMocks()
+    vi.restoreAllMocks()
   })
 
   beforeEach(() => {
+    sessionStorage.clear()
     mockGetMagazineBanners.mockResolvedValue(magazineBannersResponse)
     mockGetMagazines.mockResolvedValue(magazinesResponse)
+  })
+
+  it('reloads expired pages before restoring the history entry scroll position', async () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    sessionStorage.setItem(
+      'magazine-list:default',
+      JSON.stringify({ pageCount: 3, scrollY: 1800 }),
+    )
+    mockGetMagazines.mockImplementation(({ cursor }) =>
+      Promise.resolve({
+        hasNext: cursor !== 20,
+        nextCursor: cursor === undefined ? 10 : 20,
+        magazines: [
+          {
+            ...magazinesResponse.magazines[0],
+            magazineId: cursor ?? 0,
+            title: `페이지 ${cursor ?? 0}`,
+          },
+        ],
+      }),
+    )
+    renderMagazinesPage()
+    await waitFor(() =>
+      expect(scrollTo).toHaveBeenCalledWith({ top: 1800, behavior: 'auto' }),
+    )
+    expect(
+      mockGetMagazines.mock.calls.map(([params]) => params.cursor),
+    ).toEqual([undefined, 10, 20])
+    expect(
+      screen.getByRole('heading', { name: '페이지 20' }),
+    ).toBeInTheDocument()
+  })
+
+  it('pauses restoration after a failed page and resumes through explicit retry', async () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    sessionStorage.setItem(
+      'magazine-list:default',
+      JSON.stringify({ pageCount: 2, scrollY: 1800 }),
+    )
+    mockGetMagazines
+      .mockResolvedValueOnce({
+        ...magazinesResponse,
+        hasNext: true,
+        nextCursor: 10,
+      })
+      .mockRejectedValueOnce(new Error('restoration failed'))
+      .mockResolvedValueOnce({
+        hasNext: false,
+        magazines: [
+          {
+            ...magazinesResponse.magazines[0],
+            magazineId: 103,
+            title: '복원된 다음 페이지',
+          },
+        ],
+      })
+    renderMagazinesPage()
+    const retry = await screen.findByRole('button', { name: '다시 시도' })
+    expect(mockGetMagazines).toHaveBeenCalledTimes(2)
+    expect(scrollTo).not.toHaveBeenCalled()
+    expect(
+      JSON.parse(sessionStorage.getItem('magazine-list:default')!),
+    ).toEqual({ pageCount: 2, scrollY: 1800 })
+    fireEvent.click(retry)
+    await waitFor(() =>
+      expect(scrollTo).toHaveBeenCalledWith({ top: 1800, behavior: 'auto' }),
+    )
+    expect(mockGetMagazines).toHaveBeenLastCalledWith({ cursor: 10, size: 10 })
   })
 
   it('hides a failed banner without blocking the magazine list', async () => {
