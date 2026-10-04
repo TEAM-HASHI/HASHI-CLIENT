@@ -30,6 +30,8 @@ const ReviewEditPage = lazyRoute(() => import('@/pages/reviewEdit'))
 const MypagePage = lazyRoute(() => import('@/pages/mypage'))
 const ProfileNewPage = lazyRoute(() => import('@/pages/profileNew'))
 const WithdrawalPage = lazyRoute(() => import('@/pages/withdrawal'))
+const TermsPage = lazyRoute(() => import('@/pages/terms'))
+const TermsDetailPage = lazyRoute(() => import('@/pages/termsDetail'))
 const RestaurantReservationNewPage = lazyRoute(
   () => import('@/pages/restaurantReservationNew'),
 )
@@ -70,6 +72,8 @@ export const lazyPages = {
   mypage: () => lazyPage(MypagePage),
   profileNew: () => lazyPage(ProfileNewPage),
   withdrawal: () => lazyPage(WithdrawalPage),
+  terms: () => lazyPage(TermsPage),
+  termsDetail: () => lazyPage(TermsDetailPage),
   restaurantReservationNew: () => lazyPage(RestaurantReservationNewPage),
   anywhereReservation: () => lazyPage(AnywhereReservationPage),
   reservationRequest: () => lazyPage(ReservationRequestPage),

@@ -22,3 +22,6 @@ export const getRestaurantReviewNewPath = (
 
   return `${pathname}?${searchParams.toString()}`
 }
+
+export const getTermsDetailPath = (policyId: string) =>
+  generatePath(ROUTES.termsDetail, { policyId })

@@ -5,6 +5,7 @@ import {
   getRestaurantMenuDetailPath,
   getRestaurantReservationNewPath,
   getRestaurantReviewNewPath,
+  getTermsDetailPath,
 } from '@/app/router/routePaths'
 
 describe('routePaths', () => {
@@ -27,5 +28,9 @@ describe('routePaths', () => {
     expect(getRestaurantReviewNewPath('tokyo/sushi', 'reservation/1')).toBe(
       '/restaurants/tokyo%2Fsushi/reviews/new?reservationId=reservation%2F1',
     )
+  })
+
+  it('creates an encoded terms detail path from a policy id', () => {
+    expect(getTermsDetailPath('hashi terms')).toBe('/terms/hashi%20terms')
   })
 })
