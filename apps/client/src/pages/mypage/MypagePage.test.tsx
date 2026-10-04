@@ -1,9 +1,10 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ROUTES } from '@/app/router/path'
 import {
   HASHI_NOTICE_URL,
   HASHI_TERMS_URL,
@@ -174,6 +175,14 @@ describe('MypagePage', () => {
       screen.getByRole('img', { name: '테스트유저 프로필 이미지' }),
     ).toHaveAttribute('src', 'https://example.com/profile.png')
     expect(request).toHaveBeenCalledWith('/api/v1/users/me/profile-summary')
+  })
+
+  it('navigates to profile edit from the profile action', async () => {
+    renderMypagePage()
+
+    fireEvent.click(await screen.findByRole('button', { name: '수정' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.profileEdit)
   })
 
   it('lets API request failures propagate to the error boundary', async () => {
