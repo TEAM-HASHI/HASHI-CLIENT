@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useMagazineBannersQuery } from '@/features/magazine/hooks/useMagazineBannersQuery'
-import { normalizeInstagramUrl } from '@/features/magazine/utils/normalizeInstagramUrl'
 import { useMagazinesInfiniteQuery } from '@/pages/magazines/hooks/useMagazinesInfiniteQuery'
 import type {
   MagazineHeroBanner,
@@ -12,8 +11,6 @@ import type {
 import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const MAGAZINE_LIST_PAGE_SIZE = 10
-
-export { normalizeInstagramUrl }
 
 const formatMagazinePublishedDate = (createdAt: string) => {
   const dateParts = /^(\d{4})-(\d{2})-(\d{2})/.exec(createdAt)
@@ -33,6 +30,7 @@ export const useMagazinesPage = () => {
   const magazinesQuery = useMagazinesInfiniteQuery({
     size: MAGAZINE_LIST_PAGE_SIZE,
   })
+  const { fetchNextPage } = magazinesQuery
   const canFetchNextPage =
     magazinesQuery.hasNextPage && !magazinesQuery.isFetchingNextPage
   const loadMoreRef = useInfiniteScrollTrigger<HTMLLIElement>({
@@ -49,13 +47,10 @@ export const useMagazinesPage = () => {
         return []
       }
 
-      const accessibilityLabel = title || '매거진 배너'
-
       return {
         id: String(magazineId),
+        title: title || '매거진 배너',
         imageUrl: bannerImageUrl,
-        instagramUrl: normalizeInstagramUrl(banner.instagramRedirectUrl ?? ''),
-        accessibilityLabel,
       }
     })
   }, [magazineBannersQuery.data?.banners])
@@ -85,9 +80,6 @@ export const useMagazinesPage = () => {
           title,
           imageUrl: thumbnailImageUrl,
           publishedDate,
-          instagramUrl: normalizeInstagramUrl(
-            magazine.instagramRedirectUrl ?? '',
-          ),
         }
       }),
     )
@@ -98,15 +90,9 @@ export const useMagazinesPage = () => {
       return
     }
 
-    void magazinesQuery.fetchNextPage()
-  }, [
-    canFetchNextPage,
-    magazinesQuery.fetchNextPage,
-    normalizedRecommendedMagazines.length,
-  ])
+    void fetchNextPage()
+  }, [canFetchNextPage, fetchNextPage, normalizedRecommendedMagazines.length])
 
-  const hasHeroBanners = heroBanners.length > 0
-  const hasRecommendedMagazines = normalizedRecommendedMagazines.length > 0
   const isHeroBannerLoading = magazineBannersQuery.isLoading
   const isRecommendedMagazineLoading = magazinesQuery.isLoading
   const isHeroBannerError = magazineBannersQuery.isError
@@ -120,9 +106,7 @@ export const useMagazinesPage = () => {
 
   return {
     handleBackClick,
-    hasHeroBanners,
     hasNextMagazinePage,
-    hasRecommendedMagazines,
     heroBanners,
     isFetchingNextMagazinePage,
     isHeroBannerError,
