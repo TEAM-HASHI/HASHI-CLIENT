@@ -29,6 +29,7 @@ export const WrittenReviewCard = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const menuId = useId()
   const menuContainerRef = useRef<HTMLDivElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -48,7 +49,9 @@ export const WrittenReviewCard = ({
         return
       }
 
+      event.preventDefault()
       onCloseMenu()
+      menuButtonRef.current?.focus()
     }
 
     document.addEventListener('mousedown', handleMouseDown)
@@ -103,15 +106,27 @@ export const WrittenReviewCard = ({
       </div>
       <div
         ref={menuContainerRef}
-        className="z-raised absolute top-3 right-0 flex size-[18px] items-center justify-center"
+        className="z-raised absolute -top-px -right-[13px] flex size-11 items-center justify-center"
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            onCloseMenu()
+          }
+        }}
       >
         <button
+          ref={menuButtonRef}
           aria-controls={isMenuOpen ? menuId : undefined}
           aria-expanded={isMenuOpen}
           aria-haspopup="menu"
           aria-label={`${review.restaurantName} 리뷰 메뉴 열기`}
-          className="text-warm-gray-300 flex size-[18px] items-center justify-center"
+          className="text-warm-gray-300 focus-visible:outline-cool-gray-500 flex size-11 items-center justify-center rounded-[5px] focus-visible:outline-2"
           onClick={onToggleMenu}
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowDown' && !isMenuOpen) {
+              event.preventDefault()
+              onToggleMenu()
+            }
+          }}
           type="button"
         >
           <MenuIcon className="size-[18px]" />
@@ -145,24 +160,49 @@ interface ReviewMoreMenuProps {
 }
 
 const ReviewMoreMenu = ({ id, onDelete, onEdit }: ReviewMoreMenuProps) => {
+  const editButtonRef = useRef<HTMLButtonElement>(null)
+  const deleteButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    editButtonRef.current?.focus()
+  }, [])
+
   return (
     <div
-      className="border-warm-gray-100 z-floating absolute top-[22px] right-[7px] h-20 w-[140px] rounded-[10px] border bg-white px-2.5"
+      className="border-warm-gray-100 z-floating absolute top-[35px] right-5 h-20 w-[140px] rounded-[10px] border bg-white px-2.5"
       id={id}
+      onKeyDown={(event) => {
+        if (event.key === 'Home' || event.key === 'End') {
+          event.preventDefault()
+          const target = event.key === 'Home' ? editButtonRef : deleteButtonRef
+          target.current?.focus()
+        } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault()
+          const target =
+            event.target === editButtonRef.current
+              ? deleteButtonRef
+              : editButtonRef
+          target.current?.focus()
+        }
+      }}
       role="menu"
     >
       <button
+        ref={editButtonRef}
         className="typo-sub-header-2 border-warm-gray-50 text-primary-200 h-10 w-full border-b text-center"
         onClick={onEdit}
         role="menuitem"
+        tabIndex={-1}
         type="button"
       >
         수정하기
       </button>
       <button
+        ref={deleteButtonRef}
         className="typo-sub-header-2 text-primary-400 h-10 w-full text-center"
         onClick={onDelete}
         role="menuitem"
+        tabIndex={-1}
         type="button"
       >
         삭제하기
