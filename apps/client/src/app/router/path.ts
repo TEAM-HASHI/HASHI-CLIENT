@@ -18,6 +18,7 @@ export const ROUTES = {
   reviewEdit: '/reviews/:reviewId/edit',
   mypage: '/mypage',
   profileNew: '/profile/new',
+  profileEdit: '/profile/edit',
   withdrawal: '/withdrawal',
   restaurantReservationNew: '/restaurants/:restaurantId/reservations/new',
   anywhereReservation: '/reservations/anywhere',

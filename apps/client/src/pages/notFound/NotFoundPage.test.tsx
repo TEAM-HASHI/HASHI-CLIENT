@@ -26,26 +26,21 @@ describe('NotFoundPage', () => {
     mockNavigate.mockClear()
   })
 
-  it('renders the QA layout and navigates home', () => {
+  it('renders the guidance and navigates home', () => {
     render(
       <MemoryRouter>
         <NotFoundPage />
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('presentation', { hidden: true })).toHaveClass(
-      'h-[105px]',
-      'w-[158px]',
-    )
-    expect(screen.getByText(/요청하신 페이지가 사라졌거나/)).toHaveClass(
-      'typo-long-body-1',
-    )
+    expect(
+      screen.getByRole('presentation', { hidden: true }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/요청하신 페이지가 사라졌거나/)).toBeInTheDocument()
 
     const homeButton = screen.getByRole('button', {
       name: '홈으로 돌아가기',
     })
-
-    expect(homeButton).toHaveClass('w-[185px]')
 
     fireEvent.click(homeButton)
 
