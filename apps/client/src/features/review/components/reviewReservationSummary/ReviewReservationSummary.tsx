@@ -3,11 +3,16 @@ import { Thumbnail } from '@hashi/hds-ui'
 
 import { cn } from '@/shared/utils'
 
+export type ReviewReservationSummaryDensity =
+  | 'default'
+  | 'comfortable'
+  | 'compact'
+
 export interface ReviewReservationSummaryProps extends Omit<
   ComponentPropsWithoutRef<'section'>,
   'children'
 > {
-  density?: 'default' | 'comfortable'
+  density?: ReviewReservationSummaryDensity
   restaurantName: string
   visitedAt: string
   guestSummary: string
@@ -35,7 +40,11 @@ export const ReviewReservationSummary = ({
       <div
         className={cn(
           'border-warm-gray-50 flex w-full items-center gap-3 border-b',
-          density === 'comfortable' ? 'py-5' : 'h-30',
+          {
+            default: 'h-30',
+            comfortable: 'py-5',
+            compact: 'h-[116px] py-3',
+          }[density],
         )}
       >
         <Thumbnail alt={thumbnailLabel} size="md" src={thumbnailSrc} />

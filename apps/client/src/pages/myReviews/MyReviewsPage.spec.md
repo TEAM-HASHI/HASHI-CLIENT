@@ -1,6 +1,6 @@
 # Page Spec: `MyReviews`
 
-Jira: HASHI-83, HASHI-114
+Jira: HASHI-83, HASHI-114, HASHI-196
 
 ## Purpose
 
@@ -38,7 +38,7 @@ Jira: HASHI-83, HASHI-114
 - [x] 작성한 리뷰 개수는 리뷰 count API 응답을 표시한다.
 - [x] `리뷰 쓰기` 탭은 최근 방문했지만 아직 리뷰를 쓰지 않은 예약 목록을 보여준다.
 - [x] `리뷰 쓰기` 카드 이미지는 HDS `Thumbnail`을 사용하고, 값이 없거나 로딩에 실패하면 내부 fallback을 표시한다.
-- [x] `리뷰 쓰기` 카드의 CTA를 누르면 해당 식당의 리뷰 작성 페이지로 이동한다.
+- [x] `리뷰 쓰기` 카드 전체를 누르면 해당 식당의 리뷰 작성 페이지로 이동한다.
 - [x] `작성한 리뷰` 탭은 사용자가 작성한 리뷰 목록을 보여준다.
 - [x] `작성한 리뷰` 카드 이미지는 HDS `Thumbnail`을 사용하고, 값이 없거나 로딩에 실패하면 내부 fallback을 표시한다.
 - [x] `작성한 리뷰` 카드 본문을 누르면 해당 리뷰 상세 페이지로 이동한다.
@@ -46,7 +46,10 @@ Jira: HASHI-83, HASHI-114
 - [x] 더보기 메뉴는 `수정하기`, `삭제하기` 액션을 보여준다.
 - [x] 더보기 메뉴는 한 번에 하나만 열리며, 메뉴 바깥 영역을 누르면 닫힌다.
 - [x] 더보기 메뉴는 탭 전환 또는 `Escape` 입력 시 닫힌다.
-- [x] `수정하기`를 누르면 준비중 모달을 보여준다.
+- [x] 더보기 아이콘은 18px을 유지하고 실제 클릭 영역은 44×44px로 확장한다. 아이콘과 메뉴의 기존 시각적 위치는 유지한다.
+- [x] 더보기 메뉴를 열면 첫 항목으로 포커스를 이동하고 위/아래 방향키로 항목을 순환한다. Home/End는 첫/마지막 항목으로 이동한다.
+- [x] Escape로 닫으면 더보기 버튼으로 포커스를 복귀한다. Tab이나 외부 클릭으로 메뉴를 벗어날 때는 닫되 이동한 포커스를 빼앗지 않는다.
+- [x] `수정하기`를 누르면 해당 리뷰의 수정 페이지로 이동한다.
 - [x] `삭제하기`를 누르면 삭제 확인 모달을 보여준다.
 - [x] 삭제 확인 모달에서 `삭제하기`를 누르면 삭제 API를 호출한다.
 - [x] 삭제 성공 후 작성 가능 예약 목록과 작성한 리뷰 목록을 갱신한다.
@@ -109,8 +112,6 @@ Jira: HASHI-83, HASHI-114
 - local state:
   - `openedMenuReviewId`
     - owner: `useMyReviewsPage`
-  - `isEditComingSoonDialogOpen`
-    - owner: `useMyReviewsPage`
   - `isDeleteDialogOpen`
     - owner: `WrittenReviewCard`
 - URL state:
@@ -142,7 +143,6 @@ MyReviewsPage
     ReviewMoreMenu
     ReviewDeleteConfirmDialog
       Dialog
-  ComingSoonDialog
 ```
 
 ## Component Mapping
@@ -158,7 +158,6 @@ MyReviewsPage
 - feature component:
   - `ReviewDeleteConfirmDialog`
 - app shared component:
-  - `ComingSoonDialog`
   - `Empty`
 - page-local component:
   - `MyReviewTotalCount`
@@ -167,7 +166,6 @@ MyReviewsPage
 - icon:
   - `BackIcon`
   - `MenuIcon`
-  - `SmileIcon`
 
 ## Navigation
 
@@ -179,8 +177,9 @@ MyReviewsPage
   - 마이 리뷰 탭: `tab=written`
   - 리뷰 작성 페이지 이동 시 `reservationId`
 - links:
-  - 리뷰 작성 CTA: `generatePath(ROUTES.reviewNew, { restaurantId })?reservationId={reservationId}`
+  - 리뷰 작성 카드: `generatePath(ROUTES.reviewNew, { restaurantId })?reservationId={reservationId}`
   - 작성한 리뷰 카드: `generatePath(ROUTES.reviewDetail, { reviewId })`
+  - 작성한 리뷰 수정: `generatePath(ROUTES.reviewEdit, { reviewId })`
   - empty CTA: `ROUTES.todayRestaurant`
 - back behavior:
   - `ROUTES.mypage`
@@ -192,8 +191,9 @@ MyReviewsPage
 - Tailwind layout:
   - mobile-first, `RootLayout` mobile frame 기준
   - 리스트 본문 좌우 20px padding
-  - `리뷰 쓰기` 카드 리스트 간격은 카드 내부 상하 여백이 더해지지 않는 12px(`gap-3`)로 표시한다.
-  - `리뷰 쓰기` 카드의 `리뷰 작성` CTA 배경은 `bg-cool-gray-800` 토큰을 사용한다.
+  - 리뷰 카드 프레임은 92px 썸네일을 포함하고 상하 12px 여백을 적용해 총 116px 높이로 표시한다.
+  - `리뷰 쓰기`, `작성한 리뷰` 카드 리스트 간격은 12px(`gap-3`)로 표시한다.
+  - 작성한 리뷰의 긴 식당 이름은 두 줄까지만 표시한다.
   - empty state의 `일본 맛집 추천받기` CTA 배경은 `bg-cool-gray-800` 토큰을 사용한다.
   - Header 바로 아래에 tab underline이 붙어 있어 `elevated={false}`로 Header의 기본 shadow를 제거한다.
 - responsive:

@@ -10,6 +10,19 @@ afterEach(() => {
 })
 
 describe('ReviewReservationSummary', () => {
+  it('keeps compact spacing for redesigned review details', () => {
+    render(
+      <ReviewReservationSummary
+        density="compact"
+        guestSummary="어른 2명"
+        restaurantName="하시 식당"
+        visitedAt="2026. 6. 28 19:00 방문"
+      />,
+    )
+    const summary = screen.getByRole('region', { name: '리뷰 대상 예약 정보' })
+    expect(summary.firstElementChild).toHaveClass('h-[116px]', 'py-3')
+    expect(summary.firstElementChild).not.toHaveClass('py-5', 'h-30')
+  })
   it('keeps the default density for existing detail callers', () => {
     render(
       <ReviewReservationSummary

@@ -29,6 +29,7 @@ export const WrittenReviewCard = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const menuId = useId()
   const menuContainerRef = useRef<HTMLDivElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -48,7 +49,9 @@ export const WrittenReviewCard = ({
         return
       }
 
+      event.preventDefault()
       onCloseMenu()
+      menuButtonRef.current?.focus()
     }
 
     document.addEventListener('mousedown', handleMouseDown)
@@ -80,35 +83,50 @@ export const WrittenReviewCard = ({
   }
 
   return (
-    <article className="border-warm-gray-50 flex h-[120px] min-w-0 items-center gap-3 border-b">
+    <article className="border-warm-gray-50 relative h-29 min-w-0 border-b">
       <button
         aria-label={`${review.restaurantName} 리뷰 상세 보기`}
-        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        className="focus-visible:outline-cool-gray-500 absolute inset-0 rounded-[5px] focus-visible:outline-2 focus-visible:outline-offset-2"
         onClick={onOpenDetail}
         type="button"
-      >
+      />
+      <div className="pointer-events-none flex h-full min-w-0 items-start gap-3 py-3">
         <Thumbnail alt="" size="md" src={review.thumbnailUrl} />
-        <div className="min-w-0 flex-1">
-          <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2 min-w-0 flex-1">
-            {review.restaurantName}
-          </h2>
-          <p className="typo-body-7 text-cool-gray-500 mt-2">
-            {review.visitedAt}
-          </p>
-          <StarRating className="mt-0.5" size="sm" value={review.rating} />
+        <div className="flex h-full min-w-0 flex-1 flex-col gap-2 pr-7">
+          <div className="flex h-[38px] items-center">
+            <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2 min-w-0 flex-1">
+              {review.restaurantName}
+            </h2>
+          </div>
+          <div className="flex h-[46px] flex-col gap-0.5">
+            <p className="typo-body-7 text-cool-gray-600">{review.visitedAt}</p>
+            <StarRating size="sm" value={review.rating} />
+          </div>
         </div>
-      </button>
+      </div>
       <div
         ref={menuContainerRef}
-        className="relative mt-3.5 flex size-[18px] shrink-0 items-center justify-center self-start"
+        className="z-raised absolute -top-px -right-[13px] flex size-11 items-center justify-center"
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            onCloseMenu()
+          }
+        }}
       >
         <button
+          ref={menuButtonRef}
           aria-controls={isMenuOpen ? menuId : undefined}
           aria-expanded={isMenuOpen}
           aria-haspopup="menu"
           aria-label={`${review.restaurantName} 리뷰 메뉴 열기`}
-          className="text-warm-gray-300 flex size-[18px] items-center justify-center"
+          className="text-warm-gray-300 focus-visible:outline-cool-gray-500 flex size-11 items-center justify-center rounded-[5px] focus-visible:outline-2"
           onClick={onToggleMenu}
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowDown' && !isMenuOpen) {
+              event.preventDefault()
+              onToggleMenu()
+            }
+          }}
           type="button"
         >
           <MenuIcon className="size-[18px]" />
@@ -142,24 +160,49 @@ interface ReviewMoreMenuProps {
 }
 
 const ReviewMoreMenu = ({ id, onDelete, onEdit }: ReviewMoreMenuProps) => {
+  const editButtonRef = useRef<HTMLButtonElement>(null)
+  const deleteButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    editButtonRef.current?.focus()
+  }, [])
+
   return (
     <div
-      className="border-warm-gray-100 z-floating absolute top-[calc(100%+12px)] right-0 h-20 w-[140px] rounded-[10px] border bg-white px-2.5"
+      className="border-warm-gray-100 z-floating absolute top-[35px] right-5 h-20 w-[140px] rounded-[10px] border bg-white px-2.5"
       id={id}
+      onKeyDown={(event) => {
+        if (event.key === 'Home' || event.key === 'End') {
+          event.preventDefault()
+          const target = event.key === 'Home' ? editButtonRef : deleteButtonRef
+          target.current?.focus()
+        } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault()
+          const target =
+            event.target === editButtonRef.current
+              ? deleteButtonRef
+              : editButtonRef
+          target.current?.focus()
+        }
+      }}
       role="menu"
     >
       <button
+        ref={editButtonRef}
         className="typo-sub-header-2 border-warm-gray-50 text-primary-200 h-10 w-full border-b text-center"
         onClick={onEdit}
         role="menuitem"
+        tabIndex={-1}
         type="button"
       >
         수정하기
       </button>
       <button
+        ref={deleteButtonRef}
         className="typo-sub-header-2 text-primary-400 h-10 w-full text-center"
         onClick={onDelete}
         role="menuitem"
+        tabIndex={-1}
         type="button"
       >
         삭제하기
