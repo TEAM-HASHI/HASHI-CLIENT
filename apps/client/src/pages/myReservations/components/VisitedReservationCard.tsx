@@ -51,14 +51,14 @@ const ReviewAction = ({
       return null
     case 'DELETED':
       return (
-        <p className="typo-body-3 border-warm-gray-100 text-warm-gray-300 mt-4 w-full rounded-[5px] border bg-white py-3.25 text-center">
+        <p className="typo-sub-header-2 border-warm-gray-100 text-warm-gray-300 mb-[21.5px] w-full rounded-[5px] border bg-white py-3.25 text-center">
           리뷰가 삭제된 예약입니다
         </p>
       )
     case 'WRITTEN':
       return (
         <button
-          className="typo-body-3 border-warm-gray-100 text-cool-gray-600 mt-4 w-full rounded-[5px] border bg-white py-3.25"
+          className="typo-sub-header-2 border-warm-gray-100 text-cool-gray-600 mb-[21.5px] w-full rounded-[5px] border bg-white py-3.25"
           onClick={() => onReviewPress(reservation)}
           type="button"
         >
@@ -69,12 +69,12 @@ const ReviewAction = ({
     case 'WRITABLE':
       return (
         <button
-          className="border-secondary-200 mt-4 flex w-full flex-col items-center border-t pt-1.5"
+          className="border-secondary-200 flex w-full flex-col items-center border-t pt-1 pb-2"
           onClick={() => onReviewPress(reservation)}
           type="button"
         >
           <RatingStars gapClassName="gap-2.5" sizeClassName="size-7.25" />
-          <span className="typo-body-7 text-cool-gray-700 mt-0.5">
+          <span className="typo-body-7 text-cool-gray-700 mt-1">
             이 맛집 어떠셨나요?
           </span>
         </button>
@@ -82,7 +82,7 @@ const ReviewAction = ({
     case 'UNAVAILABLE':
       return (
         <button
-          className="border-secondary-200 mt-4 flex w-full flex-col items-center border-t pt-1.5"
+          className="border-secondary-200 flex w-full flex-col items-center border-t pt-1 pb-2"
           disabled
           type="button"
         >
@@ -101,8 +101,8 @@ export const VisitedReservationCard = ({
   const hasWrittenReview = reservation.reviewActionState === 'WRITTEN'
 
   return (
-    <article className="border-warm-gray-50 border-b pb-6.25 last:border-0">
-      <div className="flex gap-3">
+    <article className="border-warm-gray-50 border-b last:border-0">
+      <div className="flex gap-3 py-3.5">
         <ReservationCardImage
           className="size-23"
           imageUrl={reservation.restaurantImageUrl}
@@ -112,24 +112,21 @@ export const VisitedReservationCard = ({
           <h2 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2">
             {reservation.restaurantName}
           </h2>
+          <p className="typo-body-7 text-cool-gray-600 mt-2">
+            {reservation.visitDateTime}
+          </p>
           {hasWrittenReview ? (
-            <p className="typo-body-7 text-cool-gray-600 mt-2">
-              {reservation.visitDateTime} {reservation.guestSummary}
-            </p>
-          ) : (
-            <div className="typo-body-7 text-cool-gray-600 mt-2">
-              <p>{reservation.visitDateTime}</p>
-              <p className="mt-0.5">{reservation.guestSummary}</p>
-            </div>
-          )}
-          {hasWrittenReview ? (
-            <div className="mt-1 flex items-center">
+            <div className="mt-0.5 flex items-center">
               <RatingStars
                 rating={reservation.rating}
                 sizeClassName="size-4.5"
               />
             </div>
-          ) : null}
+          ) : (
+            <p className="typo-body-7 text-cool-gray-600 mt-0.5">
+              {reservation.guestSummary}
+            </p>
+          )}
         </div>
       </div>
 

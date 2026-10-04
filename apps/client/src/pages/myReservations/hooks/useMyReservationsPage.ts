@@ -1,53 +1,29 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { showToast } from '@hashi/hds-ui'
-import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
+import { useRef, useState } from 'react'
+import {
+  generatePath,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { getRestaurantReviewNewPath } from '@/app/router/routePaths'
-import {
-  type MyReservationsApiStatus,
-  useCancelReservationMutation,
-  useMyReservationsInfiniteQuery,
-} from '@/features/reservation'
-import { useVisitedReservationsInfiniteQuery } from '@/features/review/queries/visitedReservations'
+import { useCancelReservationMutation } from '@/features/reservation'
 import { useMyProfileSummaryQuery } from '@/features/user'
 import {
   checkIsReservationStatusFilterValue,
   DEFAULT_RESERVATION_STATUS,
   type ReservationStatusFilterValue,
 } from '@/pages/myReservations/constants/reservationStatus'
-import type {
-  MyReservation,
-  VisitedReservation,
-} from '@/pages/myReservations/types'
-import {
-  createMyReservationViewModel,
-  createMyVisitedReservationViewModel,
-} from '@/pages/myReservations/utils/createMyReservationViewModel'
+import { useMyReservationsList } from '@/pages/myReservations/hooks/useMyReservationsList'
+import type { VisitedReservation } from '@/pages/myReservations/types'
 import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
-import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const DEFAULT_USER_NAME = '하시'
 
-const getMyReservationsApiStatus = (
-  status: ReservationStatusFilterValue,
-): MyReservationsApiStatus | null => {
-  if (status === 'VISITED') {
-    return null
-  }
-
-  return status
-}
-
-const checkIsVisibleReservation = (
-  status: ReservationStatusFilterValue,
-  reservation: ReturnType<typeof createMyReservationViewModel>,
-): reservation is MyReservation => {
-  return reservation !== null && reservation.status === status
-}
-
 export const useMyReservationsPage = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const statusParam = searchParams.get('status')
   const selectedStatus = checkIsReservationStatusFilterValue(statusParam)
@@ -57,97 +33,17 @@ export const useMyReservationsPage = () => {
     null,
   )
   const isCancelRequestLockedRef = useRef(false)
-  const lastNextPageErrorUpdatedAtRef = useRef(0)
-  const apiStatus = getMyReservationsApiStatus(selectedStatus)
   const profileSummaryQuery = useMyProfileSummaryQuery()
   const cancelReservationMutation = useCancelReservationMutation()
-  const reservationsQuery = useMyReservationsInfiniteQuery({
-    status: apiStatus,
-  })
-  const visitedReservationsQuery = useVisitedReservationsInfiniteQuery(
-    { reviewStatus: 'all', size: 10 },
-    selectedStatus === 'VISITED',
-  )
+  const reservationList = useMyReservationsList(selectedStatus, location.key)
 
-  const reservations = useMemo(() => {
-    if (selectedStatus === 'VISITED') {
-      return (
-        visitedReservationsQuery.data?.pages
-          .flatMap((page) => page.content ?? [])
-          .map(createMyVisitedReservationViewModel)
-          .filter((reservation): reservation is MyReservation => {
-            return reservation !== null
-          }) ?? []
-      )
-    }
-
-    return (
-      reservationsQuery.data?.pages
-        .flatMap((page) => page.reservations ?? [])
-        .map(createMyReservationViewModel)
-        .filter((reservation) =>
-          checkIsVisibleReservation(selectedStatus, reservation),
-        ) ?? []
-    )
-  }, [
-    reservationsQuery.data?.pages,
-    selectedStatus,
-    visitedReservationsQuery.data?.pages,
-  ])
-
-  const activeReservationsQuery =
-    selectedStatus === 'VISITED' ? visitedReservationsQuery : reservationsQuery
-  const activeInitialLoadError =
-    activeReservationsQuery.isError &&
-    reservations.length === 0 &&
-    !activeReservationsQuery.isPending
-      ? activeReservationsQuery.error
-      : null
-  const totalCount =
-    selectedStatus === 'VISITED'
-      ? (visitedReservationsQuery.data?.pages[0]?.totalCount ??
-        reservations.length)
-      : (reservationsQuery.data?.pages[0]?.totalCount ?? reservations.length)
-
-  useEffect(() => {
-    if (
-      !activeReservationsQuery.isFetchNextPageError ||
-      !activeReservationsQuery.error ||
-      activeReservationsQuery.errorUpdatedAt ===
-        lastNextPageErrorUpdatedAtRef.current
-    ) {
+  const handleStatusChange = (status: ReservationStatusFilterValue) => {
+    if (status === selectedStatus) {
       return
     }
 
-    lastNextPageErrorUpdatedAtRef.current =
-      activeReservationsQuery.errorUpdatedAt
-    showToast({ children: '예약 정보를 더 불러오지 못했습니다.' })
-  }, [
-    activeReservationsQuery.error,
-    activeReservationsQuery.errorUpdatedAt,
-    activeReservationsQuery.isFetchNextPageError,
-  ])
-
-  const loadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
-    enabled:
-      activeReservationsQuery.hasNextPage &&
-      !activeReservationsQuery.isFetchingNextPage,
-    isLoading: activeReservationsQuery.isFetchingNextPage,
-    onIntersect: () => {
-      if (
-        !activeReservationsQuery.hasNextPage ||
-        activeReservationsQuery.isFetchingNextPage
-      ) {
-        return
-      }
-
-      return activeReservationsQuery.fetchNextPage().catch(() => {})
-    },
-  })
-
-  const handleStatusChange = (status: ReservationStatusFilterValue) => {
+    reservationList.resetListScroll()
     setSearchParams({ status })
-    window.scrollTo({ top: 0 })
   }
 
   const handleContactPress = () => {
@@ -189,8 +85,8 @@ export const useMyReservationsPage = () => {
       await cancelReservationMutation.mutateAsync(reservationId)
 
       setCancelReservationId(null)
+      reservationList.resetListScroll()
       setSearchParams({ status: 'CANCELED' })
-      window.scrollTo({ top: 0 })
     } catch {
       // 실패 toast는 공통 mutation error handler에서 처리합니다.
     } finally {
@@ -199,6 +95,7 @@ export const useMyReservationsPage = () => {
   }
 
   const handleDetailPress = (reservationId: string) => {
+    reservationList.captureDetailReturn()
     navigate(generatePath(ROUTES.reservationDetail, { reservationId }))
   }
 
@@ -237,13 +134,16 @@ export const useMyReservationsPage = () => {
   return {
     userName: profileSummaryQuery.data?.nickname ?? DEFAULT_USER_NAME,
     selectedStatus,
-    reservations,
-    totalCount,
-    error: profileSummaryQuery.error ?? activeInitialLoadError,
-    isLoading: activeReservationsQuery.isPending,
-    hasNextPage: activeReservationsQuery.hasNextPage,
+    reservations: reservationList.reservations,
+    totalCount: reservationList.totalCount,
+    error: profileSummaryQuery.error ?? reservationList.error,
+    isLoading: reservationList.isLoading,
+    hasNextPage: reservationList.hasNextPage,
+    isFetchNextPageError: reservationList.isFetchNextPageError,
+    isFetchingNextPage: reservationList.isFetchingNextPage,
     isCancelingReservation: cancelReservationMutation.isPending,
-    loadMoreRef,
+    loadMoreRef: reservationList.loadMoreRef,
+    listScrollRef: reservationList.listScrollRef,
     isCancelDialogOpen: cancelReservationId !== null,
     handleStatusChange,
     handleCancelPress,
@@ -253,5 +153,6 @@ export const useMyReservationsPage = () => {
     handleDetailPress,
     handleEmptyActionPress,
     handleReviewPress,
+    handleRetryLoadMore: reservationList.handleRetryLoadMore,
   }
 }
