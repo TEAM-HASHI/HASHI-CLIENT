@@ -76,6 +76,8 @@ describe('InputReviewMain', () => {
     expect(screen.getByLabelText('리뷰 내용')).toHaveClass(
       'typo-long-body-1',
       'text-primary-200',
+      'min-h-57.5',
+      'p-5',
     )
     expect(screen.getByLabelText('리뷰 내용')).toHaveAttribute(
       'maxlength',
@@ -101,7 +103,7 @@ describe('InputReviewMain', () => {
     expect(handleValueChange).toHaveBeenCalledWith('정말 맛있었어요')
   })
 
-  it('limits the next review text to maxLength before calling onValueChange', () => {
+  it('limits the next review text to the maximum length before notifying the caller', () => {
     const handleValueChange = vi.fn()
 
     render(<InputReviewMain maxLength={3} onValueChange={handleValueChange} />)
@@ -406,16 +408,17 @@ describe('InputReviewMain', () => {
     )
   })
 
-  it('shows helper text based on text length after text is provided', () => {
+  it('limits an externally supplied review text without showing an over-limit error', () => {
     render(<InputReviewMain maxLength={3} value="abcd" />)
 
     const textarea = screen.getByLabelText('리뷰 내용')
 
     expect(textarea).toHaveValue('abc')
-    expect(screen.getByText('글자 수 제한을 초과했어요.')).toHaveClass(
-      'text-primary-400',
-    )
-    expect(screen.getByText('4')).toHaveClass('text-primary-400')
+    expect(textarea).not.toHaveAttribute('aria-invalid')
+    expect(
+      screen.queryByText('글자 수 제한을 초과했어요.'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('3')).toHaveClass('text-primary-200')
     expect(screen.getByText('/3')).toHaveClass('text-warm-gray-300')
   })
 
