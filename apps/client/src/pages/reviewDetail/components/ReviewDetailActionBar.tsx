@@ -1,5 +1,7 @@
 import { Button } from '@hashi/hds-ui'
 
+import { BottomActionBar } from '@/shared/components/bottomActionBar'
+
 interface ReviewDetailActionBarProps {
   onDeleteClick: () => void
   onEditClick: () => void
@@ -10,11 +12,9 @@ export const ReviewDetailActionBar = ({
   onEditClick,
 }: ReviewDetailActionBarProps) => {
   return (
-    <footer
+    <BottomActionBar
       aria-label="리뷰 상세 액션"
-      className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-4.25 pb-[calc(48px+var(--safe-area-bottom,0px))]"
-    >
-      <div className="grid grid-cols-2 gap-3.25">
+      startAction={
         <Button
           onClick={onDeleteClick}
           size="lg"
@@ -23,6 +23,8 @@ export const ReviewDetailActionBar = ({
         >
           삭제하기
         </Button>
+      }
+      endAction={
         <Button
           className="text-black"
           onClick={onEditClick}
@@ -32,7 +34,7 @@ export const ReviewDetailActionBar = ({
         >
           수정하기
         </Button>
-      </div>
-    </footer>
+      }
+    />
   )
 }

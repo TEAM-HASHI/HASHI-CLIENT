@@ -96,7 +96,9 @@ export const useMyReservationsPage = () => {
 
   const handleDetailPress = (reservationId: string) => {
     reservationList.captureDetailReturn()
-    navigate(generatePath(ROUTES.reservationDetail, { reservationId }))
+    navigate(generatePath(ROUTES.reservationDetail, { reservationId }), {
+      state: { fromReservationList: true },
+    })
   }
 
   const handleReviewPress = (reservation: VisitedReservation) => {

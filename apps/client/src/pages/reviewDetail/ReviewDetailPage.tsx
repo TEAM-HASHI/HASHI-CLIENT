@@ -30,7 +30,7 @@ export const ReviewDetailPage = () => {
   return (
     <section
       aria-label="리뷰 상세"
-      className="min-h-dvh min-w-0 overflow-x-hidden bg-white pt-18.75 pb-[calc(111px+var(--safe-area-bottom,0px))]"
+      className="app-mobile-bottom-action-content min-h-dvh min-w-0 overflow-x-hidden bg-white pt-18.75"
     >
       <div className="app-mobile-fixed-top z-fixed">
         <ReviewHeader title="리뷰 상세" onBackClick={handleBackClick} />
