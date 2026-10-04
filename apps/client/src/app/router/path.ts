@@ -9,6 +9,7 @@ export const ROUTES = {
   restaurantMenuDetail: '/restaurants/:restaurantId/menus/:menuId',
   hashiPickRestaurants: '/restaurants/hashi-pick',
   popularRestaurants: '/restaurants/popular',
+  hotSnsRestaurants: '/restaurants/sns-hot',
   magazines: '/magazines',
   magazineDetail: '/magazines/:magazineId',
   reviewNew: '/restaurants/:restaurantId/reviews/new',

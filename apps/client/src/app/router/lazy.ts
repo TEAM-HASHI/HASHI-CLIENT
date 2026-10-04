@@ -21,6 +21,9 @@ const HashiPickPage = lazyRoute(() => import('@/pages/hashiPick'))
 const PopularRestaurantsPage = lazyRoute(
   () => import('@/pages/popularRestaurants'),
 )
+const HotSnsRestaurantsPage = lazyRoute(
+  () => import('@/pages/hotSnsRestaurants'),
+)
 const MagazinesPage = lazyRoute(() => import('@/pages/magazines'))
 const MagazineDetailPage = lazyRoute(() => import('@/pages/magazineDetail'))
 const ReviewNewPage = lazyRoute(() => import('@/pages/reviewNew'))
@@ -61,6 +64,7 @@ export const lazyPages = {
   restaurantMenuDetail: () => lazyPage(RestaurantMenuDetailPage),
   hashiPick: () => lazyPage(HashiPickPage),
   popularRestaurants: () => lazyPage(PopularRestaurantsPage),
+  hotSnsRestaurants: () => lazyPage(HotSnsRestaurantsPage),
   magazines: () => lazyPage(MagazinesPage),
   magazineDetail: () => lazyPage(MagazineDetailPage),
   reviewNew: () => lazyPage(ReviewNewPage),

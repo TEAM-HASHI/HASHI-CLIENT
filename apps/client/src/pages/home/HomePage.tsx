@@ -1,3 +1,4 @@
+import { ROUTES } from '@/app/router/path'
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
 import { AnywhereReservationCta } from '@/pages/home/components/AnywhereReservationCta'
 import { HomeCurationSection } from '@/pages/home/components/HomeCurationSection'
@@ -46,6 +47,7 @@ export const HomePage = () => {
         <HotSnsRestaurantSection
           getRestaurantDetailPath={getRestaurantDetailPath}
           isLoading={hotSnsRestaurantsQuery.isLoading}
+          listPath={ROUTES.hotSnsRestaurants}
           restaurants={hotSnsRestaurants}
         />
       </div>
