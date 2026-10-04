@@ -120,9 +120,43 @@ describe('HashiPickPage', () => {
       screen.getByRole('button', { name: '음식 장르 필터: 음식 장르 선택' }),
     ).toBeInTheDocument()
 
+    expect(screen.getByTestId('restaurant-filter-bar')).toHaveClass(
+      'gap-5',
+      'p-5',
+    )
+    expect(screen.getByTestId('restaurant-list')).toHaveClass('gap-5', 'px-5')
+
     expect(
       await screen.findAllByRole('button', { name: /히마와리 스시/ }),
     ).toHaveLength(3)
+    const firstRestaurantCard = screen
+      .getByRole('button', { name: /히마와리 스시 1/ })
+      .closest('li')
+
+    expect(firstRestaurantCard).toHaveClass(
+      'border-warm-gray-50',
+      'gap-3',
+      'py-4',
+    )
+    expect(
+      firstRestaurantCard?.querySelector('[data-slot="restaurant-name"]'),
+    ).toHaveClass('typo-body-3', 'text-cool-gray-900')
+    expect(
+      firstRestaurantCard?.querySelector('[data-slot="restaurant-rating"]'),
+    ).toHaveClass('text-primary-200', 'h-5')
+    expect(
+      firstRestaurantCard?.querySelector(
+        '[data-slot="restaurant-description"]',
+      ),
+    ).toHaveClass(
+      'line-clamp-2',
+      'text-[15px]',
+      'leading-[1.5]',
+      'text-primary-200',
+    )
+    expect(
+      firstRestaurantCard?.querySelector('[data-slot="restaurant-hashtags"]'),
+    ).toHaveClass('gap-2')
     expect(
       screen.getByRole('button', { name: /히마와리 스시 3/ }).closest('li'),
     ).toHaveClass('last:border-b-0')
@@ -241,8 +275,8 @@ describe('HashiPickPage', () => {
     await screen.findByRole('button', { name: /히마와리 스시 1/ })
     const imageList = screen.getAllByTestId('restaurant-image-list')[0]
 
-    expect(imageList).toHaveClass('w-full', 'overflow-x-auto')
-    expect(imageList).not.toHaveClass('max-w-[353px]')
+    expect(imageList).toHaveClass('w-full', 'overflow-hidden')
+    expect(imageList).not.toHaveClass('overflow-x-auto')
     expect(screen.getAllByRole('img')).toHaveLength(3)
     expect(imageList.querySelector('[data-slot="image-fallback"]')).toBeNull()
   })

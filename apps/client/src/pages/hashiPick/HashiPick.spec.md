@@ -43,8 +43,13 @@
 - [x] 옵션 선택만으로 실제 필터 label을 바꾸지 않고 `적용` 버튼에서 반영합니다.
 - [x] `초기화`는 현재 열린 sheet 값을 기본값으로 적용하고 BottomSheet를 닫습니다.
 - [x] 필터 BottomSheet는 X 버튼으로만 닫힙니다.
+- [x] Figma 리디자인 기준으로 FilterBar는 Header 아래 `20px` padding과 `20px` gap을 적용합니다.
 - [x] RestaurantCard는 반복 렌더링되고 카드 클릭 시 식당 상세 route로 이동합니다.
+- [x] RestaurantCard는 카드 간 `20px` gap, 카드 내부 `12px` gap, 상하 `16px` padding, 하단 border를 적용합니다.
+- [x] 식당명은 1줄 말줄임, 식당 소개는 최대 2줄 말줄임으로 표시합니다.
+- [x] 식당 소개는 Figma 리디자인 기준 `15px`, `line-height: 1.5` 스타일을 적용합니다.
 - [x] 식당 이미지는 HDS `Thumbnail`로 표시하며, 서버가 내려준 이미지보다 부족한 슬롯을 추가하지 않습니다.
+- [x] 식당 이미지 행은 HDS `Thumbnail` `lg` 크기(`135px`)를 사용하고, 행 너비를 넘어가는 이미지는 Figma처럼 클리핑합니다.
 - [x] 서버 이미지(`imageUrls`, fallback `thumbnailUrl`)가 하나도 없으면 `Thumbnail`의 fallback을 1개만 표시합니다.
 - [x] 기존 shared 식당 목록 조회 API(`getRestaurants`, `restaurantsInfiniteQueryOptions`)를 사용해 `GET /api/v1/restaurants` 응답을 커서 기반 무한스크롤로 렌더링합니다.
 - [x] 현재 page의 정적 restaurant fixture prop 주입은 production render path에서 제거했습니다.
@@ -167,7 +172,7 @@
 | `area`                              | 지역 label                    | generated optional | 서버 명세상 필수입니다. 카드의 `{region} · {category}` 중 region으로 사용합니다.                                                                                     |
 | `foodCategory`                      | 음식 카테고리 label           | generated optional | 서버 명세상 필수입니다. category 우선값입니다. 없으면 `genre`를 fallback으로 사용합니다.                                                                             |
 | `genre`                             | 음식 카테고리 fallback/filter | generated optional | 서버가 한글 label 또는 API code를 줄 수 있으므로 mapper에서 label 변환을 흡수합니다.                                                                                 |
-| `imageUrls`                         | 가로 스크롤 이미지 리스트     | generated optional | 서버 명세상 최대 3개입니다. 서버가 내려준 이미지만 표시하고 부족한 슬롯을 추가하지 않습니다. 없으면 `thumbnailUrl`을 fallback으로 봅니다.                            |
+| `imageUrls`                         | 클리핑되는 이미지 행          | generated optional | 서버 명세상 최대 3개입니다. 서버가 내려준 이미지만 표시하고 부족한 슬롯을 추가하지 않습니다. 없으면 `thumbnailUrl`을 fallback으로 봅니다.                            |
 | `thumbnailUrl`                      | 이미지 fallback               | generated optional | 서버 명세상 필수입니다. `imageUrls`가 없을 때만 리스트 이미지로 사용합니다. `imageUrls`와 `thumbnailUrl`이 모두 없으면 UI에서 `Thumbnail` fallback 1개를 표시합니다. |
 | `summary`                           | 식당 소개                     | generated optional | 서버 명세상 필수입니다. 카드 설명 문구로 사용합니다. 영업시간으로 매핑하지 않습니다.                                                                                 |
 | `hashtags`                          | 관련 해시태그                 | generated optional | 서버 명세상 필수입니다. `#` prefix가 없으면 UI mapper에서 붙여 표시합니다.                                                                                           |
@@ -207,7 +212,7 @@ HashiPickPage
     RestaurantFilterBar
     RestaurantCard list
       RestaurantImageList
-        server images or single Thumbnail fallback
+        server images clipped to the list width or single Thumbnail fallback
     FilterBottomSheet(sort)
     FilterBottomSheet(category)
 ```

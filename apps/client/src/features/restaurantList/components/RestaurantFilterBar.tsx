@@ -8,7 +8,7 @@ type RestaurantFilterBarProps = {
 }
 
 const filterButtonClassName =
-  'typo-sub-header-3 text-primary-200 flex h-10 items-center gap-0.5 rounded-[5px] text-left'
+  'text-cool-gray-600 flex items-center gap-0.5 rounded-[5px] text-left text-[14px] leading-[1.36] font-medium'
 
 export const RestaurantFilterBar = ({
   sortLabel,
@@ -17,7 +17,10 @@ export const RestaurantFilterBar = ({
   onClickCategory,
 }: RestaurantFilterBarProps) => {
   return (
-    <div className="flex h-12 items-center gap-5 px-6">
+    <div
+      className="flex items-center gap-5 p-5"
+      data-testid="restaurant-filter-bar"
+    >
       <button
         aria-label={`정렬 필터: ${sortLabel}`}
         className={filterButtonClassName}
@@ -27,7 +30,7 @@ export const RestaurantFilterBar = ({
         <span>{sortLabel}</span>
         <TapDownIcon
           aria-hidden="true"
-          className="size-5 shrink-0 text-black"
+          className="text-cool-gray-600 size-5 shrink-0"
         />
       </button>
       <button
@@ -39,7 +42,7 @@ export const RestaurantFilterBar = ({
         <span>{categoryLabel}</span>
         <TapDownIcon
           aria-hidden="true"
-          className="size-5 shrink-0 text-black"
+          className="text-cool-gray-600 size-5 shrink-0"
         />
       </button>
     </div>

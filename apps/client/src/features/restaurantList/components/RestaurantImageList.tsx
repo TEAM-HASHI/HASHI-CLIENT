@@ -11,7 +11,7 @@ export const RestaurantImageList = ({
 }: RestaurantImageListProps) => {
   return (
     <span
-      className="block w-full scrollbar-none overflow-x-auto overflow-y-hidden [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      className="block w-full overflow-hidden"
       data-testid="restaurant-image-list"
     >
       <span className="flex w-max gap-2">
