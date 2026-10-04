@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { ROUTES } from '@/app/router/path'
 import { useMyPointBalanceQuery } from '@/features/point'
 import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
 import { useMyProfileSummaryQuery } from '@/features/user'
@@ -50,6 +51,10 @@ export const useMypagePage = () => {
     myReviewCount: summary.myReviewCount,
   })
 
+  const handleProfileEdit = () => {
+    navigate(ROUTES.profileEdit)
+  }
+
   const handleMenuAction = (action: MypageMenuAction) => {
     if (action.type === 'comingSoon') {
       setIsComingSoonOpen(true)
@@ -69,6 +74,7 @@ export const useMypagePage = () => {
     primaryMenuItems,
     setIsComingSoonOpen,
     summary,
+    handleProfileEdit,
     handleMenuAction,
   }
 }

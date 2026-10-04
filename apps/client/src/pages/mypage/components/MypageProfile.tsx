@@ -2,11 +2,13 @@ import { Avatar, Button } from '@hashi/hds-ui'
 
 type MypageProfileProps = {
   nickname: string
+  onEdit: () => void
   profileImageUrl?: string | null
 }
 
 export const MypageProfile = ({
   nickname,
+  onEdit,
   profileImageUrl,
 }: MypageProfileProps) => {
   return (
@@ -21,7 +23,12 @@ export const MypageProfile = ({
           {nickname}님
         </h1>
       </div>
-      <Button className="shrink-0 px-[12.5px]" disabled size="sm" type="button">
+      <Button
+        className="shrink-0 px-[12.5px]"
+        onClick={onEdit}
+        size="sm"
+        type="button"
+      >
         수정
       </Button>
     </section>
