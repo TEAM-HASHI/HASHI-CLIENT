@@ -10,6 +10,7 @@ type FilterOption = {
 type FilterBottomSheetProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  closeOnReset?: boolean
   maxHeightClassName?: string
   title: string
   options: readonly FilterOption[]
@@ -22,6 +23,7 @@ type FilterBottomSheetProps = {
 export const FilterBottomSheet = ({
   open,
   onOpenChange,
+  closeOnReset = true,
   maxHeightClassName,
   title,
   options,
@@ -32,7 +34,10 @@ export const FilterBottomSheet = ({
 }: FilterBottomSheetProps) => {
   const handleResetClick = () => {
     onReset()
-    onOpenChange(false)
+
+    if (closeOnReset) {
+      onOpenChange(false)
+    }
   }
 
   const sheetFooter = (

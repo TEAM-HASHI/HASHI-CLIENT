@@ -13,6 +13,7 @@ export const RestaurantCard = ({
   onClick,
 }: RestaurantCardProps) => {
   const ratingLabel = restaurant.rating.toFixed(1)
+  const visibleHashtags = restaurant.hashtags.slice(0, 3)
 
   const handleClickRestaurant = () => {
     onClick(restaurant.id)
@@ -61,12 +62,12 @@ export const RestaurantCard = ({
           {restaurant.description}
         </span>
         <span
-          className="flex h-5 flex-wrap gap-2 overflow-hidden"
+          className="flex h-5 w-full flex-nowrap gap-2 overflow-hidden"
           data-slot="restaurant-hashtags"
         >
-          {restaurant.hashtags.map((hashtag, index) => (
+          {visibleHashtags.map((hashtag, index) => (
             <span
-              className="typo-body-7 text-cool-gray-400"
+              className="typo-body-7 text-cool-gray-400 min-w-0 truncate"
               key={`${hashtag}-${index}`}
             >
               {hashtag}

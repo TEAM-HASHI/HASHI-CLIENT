@@ -170,6 +170,7 @@ export const RestaurantListTemplate = ({
       </div>
 
       <FilterBottomSheet
+        closeOnReset={false}
         onApply={handleApplySort}
         onOpenChange={handleCloseBottomSheet}
         onReset={handleResetSort}
@@ -180,6 +181,7 @@ export const RestaurantListTemplate = ({
         title="정렬 순서"
       />
       <FilterBottomSheet
+        closeOnReset={false}
         onApply={handleApplyCategory}
         onOpenChange={handleCloseBottomSheet}
         onReset={handleResetCategory}

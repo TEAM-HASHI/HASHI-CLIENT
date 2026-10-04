@@ -30,6 +30,7 @@ const LocationPath = () => {
 
 const createRestaurantsResult = ({
   count,
+  hashtags = ['해시태그'],
   hasNext = false,
   imageUrls = [],
   nextCursor,
@@ -37,6 +38,7 @@ const createRestaurantsResult = ({
   startId = 1,
 }: {
   count: number
+  hashtags?: string[]
   hasNext?: boolean
   imageUrls?: string[]
   nextCursor?: string
@@ -52,7 +54,7 @@ const createRestaurantsResult = ({
       return {
         area: '도쿄',
         foodCategory: '초밥',
-        hashtags: ['해시태그'],
+        hashtags,
         imageUrls,
         name: `히마와리 스시 ${restaurantId}`,
         rating,
@@ -198,7 +200,7 @@ describe('PopularRestaurantsPage', () => {
     expect(screen.getByTestId('location-path')).toHaveTextContent(ROUTES.home)
   })
 
-  it('resets sort to default and closes the bottom sheet when reset is pressed', async () => {
+  it('resets only the draft sort and keeps the bottom sheet open until apply is pressed', async () => {
     renderPopularRestaurantsPage()
     await screen.findByRole('button', { name: /히마와리 스시 1/ })
 
@@ -211,11 +213,26 @@ describe('PopularRestaurantsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '초기화' }))
 
     expect(
+      screen.getByRole('dialog', { name: '정렬 순서' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '정렬 필터: 별점순' }),
+    ).toBeInTheDocument()
+    expect(mockedGetRestaurants).toHaveBeenCalledTimes(2)
+
+    fireEvent.click(screen.getByRole('button', { name: '적용' }))
+
+    expect(
       screen.getByRole('button', { name: '정렬 필터: 기본순' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('dialog', { name: '정렬 순서' })).toHaveClass(
-      'animate-bottom-sheet-panel-out',
-    )
+    await waitFor(() => {
+      expect(mockedGetRestaurants).toHaveBeenLastCalledWith({
+        genre: 'all',
+        size: 10,
+        sort: 'basic',
+        type: 'popular',
+      })
+    })
   })
 
   it('fetches next page when the bottom sentinel enters the viewport', async () => {
@@ -253,26 +270,62 @@ describe('PopularRestaurantsPage', () => {
     ).toHaveLength(12)
   })
 
-  it('renders only image urls returned by the server', async () => {
+  it('renders up to five image urls returned by the server', async () => {
     mockedGetRestaurants.mockResolvedValueOnce(
       createRestaurantsResult({
         count: 1,
         imageUrls: [
           'https://example.com/restaurant-1.jpg',
           'https://example.com/restaurant-2.jpg',
+          'https://example.com/restaurant-3.jpg',
+          'https://example.com/restaurant-4.jpg',
+          'https://example.com/restaurant-5.jpg',
+          'https://example.com/restaurant-6.jpg',
         ],
       }),
     )
 
     renderPopularRestaurantsPage()
     await screen.findByRole('button', { name: /히마와리 스시 1/ })
+    const imageList = screen.getAllByTestId('restaurant-image-list')[0]
 
-    expect(screen.getAllByRole('img')).toHaveLength(2)
+    expect(imageList).toHaveClass('w-full', 'overflow-x-auto')
+    expect(screen.getAllByRole('img')).toHaveLength(5)
     expect(
       screen
         .getAllByTestId('restaurant-image-list')[0]
         .querySelector('[data-slot="image-fallback"]'),
     ).toBeNull()
+  })
+
+  it('renders up to three hashtags in one row and truncates long hashtag labels', async () => {
+    mockedGetRestaurants.mockResolvedValueOnce(
+      createRestaurantsResult({
+        count: 1,
+        hashtags: [
+          '일이삼사오육칠팔구십일이삼사오칠',
+          '가나다라마바사아자차카타파',
+          'ABCDEFGHIJKLMN',
+          '네번째',
+        ],
+      }),
+    )
+
+    renderPopularRestaurantsPage()
+    await screen.findByRole('button', { name: /히마와리 스시 1/ })
+    const hashtagGroup = screen
+      .getByRole('button', { name: /히마와리 스시 1/ })
+      .querySelector('[data-slot="restaurant-hashtags"]')
+    const renderedHashtags = Array.from(
+      hashtagGroup?.querySelectorAll('span') ?? [],
+    )
+
+    expect(hashtagGroup).toHaveClass('flex-nowrap')
+    expect(renderedHashtags).toHaveLength(3)
+    renderedHashtags.forEach((hashtag) => {
+      expect(hashtag).toHaveClass('min-w-0', 'truncate')
+    })
+    expect(screen.queryByText('#네번째')).not.toBeInTheDocument()
   })
 
   it('renders one image fallback when no image is returned by the server', async () => {

@@ -102,6 +102,30 @@ describe('FilterBottomSheet', () => {
     expect(handleApply).toHaveBeenCalled()
   })
 
+  it('can keep the bottom sheet open when reset is pressed', () => {
+    const handleReset = vi.fn()
+    const handleOpenChange = vi.fn()
+
+    render(
+      <FilterBottomSheet
+        open
+        closeOnReset={false}
+        onApply={vi.fn()}
+        onOpenChange={handleOpenChange}
+        onReset={handleReset}
+        onSelect={vi.fn()}
+        options={options}
+        selectedValue="sushi"
+        title="음식 장르 선택"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '초기화' }))
+
+    expect(handleReset).toHaveBeenCalled()
+    expect(handleOpenChange).not.toHaveBeenCalled()
+  })
+
   it('requests close from overlay click and escape key through BottomSheet', async () => {
     const handleOpenChange = vi.fn()
 

@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -8,6 +8,7 @@ import {
   CATEGORY_OPTIONS,
   DEFAULT_CATEGORY_OPTION,
 } from '@/features/restaurantList/constants'
+import { restaurantListQueryKeys } from '@/features/restaurantList/queries/restaurantListQueryKeys'
 import { restaurantsInfiniteQueryOptions } from '@/features/restaurantList/queries/useRestaurantsInfiniteQuery'
 import type {
   FilterOption,
@@ -35,6 +36,7 @@ export const useRestaurantListContent = ({
   sortOptions,
 }: UseRestaurantListContentParams) => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const defaultSortOption = sortOptions[0]
   const [activeBottomSheet, setActiveBottomSheet] =
     useState<ActiveBottomSheet>(null)
@@ -114,20 +116,44 @@ export const useRestaurantListContent = ({
 
   const handleResetSort = () => {
     setDraftSort(defaultSortOption)
-    setSelectedSort(defaultSortOption)
   }
 
   const handleResetCategory = () => {
     setDraftCategory(DEFAULT_CATEGORY_OPTION)
-    setSelectedCategory(DEFAULT_CATEGORY_OPTION)
   }
 
   const handleApplySort = () => {
+    if (draftSort.value !== selectedSort.value) {
+      const nextParams = createRestaurantListRequestParams({
+        category: selectedCategory,
+        sort: draftSort,
+        type: restaurantType,
+      })
+
+      queryClient.removeQueries({
+        exact: true,
+        queryKey: restaurantListQueryKeys.infiniteList(nextParams),
+      })
+    }
+
     setSelectedSort(draftSort)
     setActiveBottomSheet(null)
   }
 
   const handleApplyCategory = () => {
+    if (draftCategory.value !== selectedCategory.value) {
+      const nextParams = createRestaurantListRequestParams({
+        category: draftCategory,
+        sort: selectedSort,
+        type: restaurantType,
+      })
+
+      queryClient.removeQueries({
+        exact: true,
+        queryKey: restaurantListQueryKeys.infiniteList(nextParams),
+      })
+    }
+
     setSelectedCategory(draftCategory)
     setActiveBottomSheet(null)
   }
