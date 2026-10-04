@@ -54,15 +54,12 @@ export const InputReviewMain = ({
     onPhotoFilesChange,
     photoFiles,
   })
-  const reviewTextLength = value.length
+  const reviewTextLength = Math.min(value.length, maxLength)
   const hasStartedValidation = hasReviewTextBlurred || reviewTextLength > 0
   const hasInvalidReviewLength =
-    hasStartedValidation &&
-    (reviewTextLength < REVIEW_TEXT_MIN_LENGTH || reviewTextLength > maxLength)
-  const hasExceededMaxLength = reviewTextLength > maxLength
+    hasStartedValidation && reviewTextLength < REVIEW_TEXT_MIN_LENGTH
   const helperText = getReviewTextHelperText(
     reviewTextLength,
-    maxLength,
     hasStartedValidation,
   )
 
@@ -105,7 +102,6 @@ export const InputReviewMain = ({
             aria-label="리뷰 내용"
             disabled={disabled}
             maxLength={maxLength}
-            maxLengthBehavior="allow"
             placeholder="리뷰를 작성해 주세요."
             showCounter={false}
             textareaClassName="typo-long-body-1 min-h-57.5 p-5 focus-visible:border-warm-gray-100 focus-visible:outline-none"
@@ -130,15 +126,7 @@ export const InputReviewMain = ({
               aria-live="polite"
               className="flex shrink-0 items-end gap-[2px]"
             >
-              <span
-                className={cn(
-                  hasExceededMaxLength
-                    ? 'text-primary-400'
-                    : 'text-primary-200',
-                )}
-              >
-                {reviewTextLength}
-              </span>
+              <span className="text-primary-200">{reviewTextLength}</span>
               <span className="text-warm-gray-300">/{maxLength}</span>
             </p>
           </div>

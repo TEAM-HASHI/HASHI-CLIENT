@@ -59,11 +59,10 @@
 - [x] 이미지 삭제 버튼을 누르면 기존 사진 오류 메시지를 초기화합니다.
 - [x] 리뷰 본문 textarea는 HDS `Textarea`를 사용하며, 공통 Input 리디자인 이후에도 `min-h-57.5`로 기존 최소 높이 `230px`를 유지합니다.
 - [x] textarea placeholder는 `리뷰를 작성해 주세요.`입니다.
-- [x] textarea에는 `maxLengthBehavior="allow"`를 사용해 최대 글자 수를 넘어선 값도 표시하고 오류 상태로 안내합니다.
+- [x] textarea는 기본 `maxLengthBehavior="prevent"`로 최대 글자 수까지만 입력받습니다.
 - [x] textarea 본문은 Figma `Long Body 1` 기준인 `typo-long-body-1`을 사용합니다.
 - [x] 입력하지 않은 빈 상태의 helper text는 `10자 이상`입니다.
 - [x] textarea가 blur되었거나 본문이 입력된 뒤 10자 미만이면 helper text를 `10자 이상 작성해주세요.`로 표시합니다.
-- [x] 호출부에서 전달한 본문 값이 최대 글자 수를 초과한 상태면 helper text를 `글자 수 제한을 초과했어요.`로 표시합니다.
 - [x] 글자 수 counter는 기본 `0/1000`을 표시합니다.
 - [x] textarea가 변경되면 `onValueChange`에 다음 문자열을 전달합니다.
 - [x] `disabled`이면 사진 트리거와 textarea가 비활성화됩니다.
@@ -100,7 +99,7 @@ InputReviewMain
 
 - type: `(value: string) => void`
 - required: `false`
-- description: textarea 변경 시 최대 글자 수를 넘어선 값도 그대로 호출부에 전달합니다.
+- description: textarea 변경 시 최대 글자 수로 제한한 값을 호출부에 전달합니다.
 
 ### `photoFiles`
 
@@ -120,7 +119,7 @@ InputReviewMain
 - type: `number`
 - required: `false`
 - default: `1000`
-- description: 리뷰 본문 최대 글자 수 기준입니다. 입력 자체를 자르지 않고 helper text, counter, invalid 상태 판단에 사용합니다.
+- description: 리뷰 본문 최대 글자 수입니다. textarea는 이 길이에 도달하면 이후 입력을 받지 않습니다.
 
 ### `disabled`
 
@@ -139,7 +138,7 @@ InputReviewMain
 
 - local state: generated id, textarea blur 여부를 사용합니다.
 - photo uploader local state: file input ref, photo object URL 목록, 사진 형식/용량/개수 오류 메시지를 사용합니다.
-- derived state: `hasReviewTextBlurred || value.length > 0`, `value.length < 10`, `value.length > maxLength`
+- derived state: `hasReviewTextBlurred || value.length > 0`, `value.length < 10`
 - controlled state: `value`
 - uncontrolled state: 없음
 - loading state: 없음
@@ -157,16 +156,15 @@ InputReviewMain
 7. 선택된 사진이 10장이면 사진 추가 버튼과 file input은 비활성화됩니다.
 8. 선택된 `photoFiles`가 있으면 사진 추가 버튼과 이미지 미리보기를 `overflow-x-auto` 가로 스크롤 목록으로 표시합니다.
 9. 이미지 미리보기의 삭제 버튼을 누르면 사진 오류 메시지를 초기화하고, 해당 file index를 제외한 다음 `photoFiles` 배열을 `onPhotoFilesChange`에 전달합니다.
-10. 사용자가 textarea를 변경하면 최대 글자 수를 넘어선 값도 `onValueChange?.(nextValue)`로 전달합니다.
+10. 사용자가 textarea를 변경하면 최대 글자 수까지만 `onValueChange?.(nextValue)`로 전달합니다.
 11. 입력하지 않은 빈 상태에서는 helper text를 `10자 이상`으로 표시합니다.
 12. textarea가 blur되었거나 본문이 입력된 뒤 `value.length < 10`이면 helper text는 `10자 이상 작성해주세요.`입니다.
-13. 호출부에서 전달한 `value.length > maxLength`이면 helper text는 `글자 수 제한을 초과했어요.`입니다.
-14. `disabled=true`이면 사진 첨부 트리거, 이미지 삭제 버튼, textarea는 입력을 받지 않습니다.
+13. `disabled=true`이면 사진 첨부 트리거, 이미지 삭제 버튼, textarea는 입력을 받지 않습니다.
 
 ## Validation
 
 - 리뷰 본문 최소 10자 helper text는 컴포넌트가 표시합니다.
-- 리뷰 본문 최대 글자 수 초과 입력은 유지하며 `글자 수 제한을 초과했어요.` helper text와 초과 counter를 표시합니다.
+- 리뷰 본문은 최대 글자 수에 도달하면 이후 입력을 받지 않습니다.
 - submit 가능 여부는 호출부가 처리합니다.
 - 사진 MIME 타입 검증은 컴포넌트가 처리하고, JPEG, PNG, WEBP가 아닌 파일은 호출부 상태로 전달하지 않습니다.
 - 사진 장당 5MB 검증은 컴포넌트가 처리하고, 초과 파일은 호출부 상태로 전달하지 않습니다.
