@@ -163,6 +163,32 @@ describe('ReviewNewPage', () => {
     expect(navigateMock).toHaveBeenCalledWith(-1)
   })
 
+  it('keeps save disabled before the required review fields are valid', async () => {
+    renderReviewNewPage()
+    await findReviewContext()
+
+    expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
+  })
+
+  it('limits a 1,001-character attempt to 1,000 characters and keeps save enabled', async () => {
+    renderReviewNewPage()
+    await findReviewContext()
+    fireEvent.click(screen.getByRole('radio', { name: '4점' }))
+    fireEvent.click(screen.getByRole('button', { name: '직원분이 친절해요' }))
+    const overLimitReviewText = '가'.repeat(1001)
+
+    fireEvent.change(screen.getByLabelText('리뷰 내용'), {
+      target: { value: overLimitReviewText },
+    })
+
+    expect(screen.getByLabelText('리뷰 내용')).toHaveValue('가'.repeat(1000))
+    expect(
+      screen.queryByText('글자 수 제한을 초과했어요.'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('1000')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '저장하기' })).toBeEnabled()
+  })
+
   it('submits review fields and navigates to the created detail', async () => {
     renderReviewNewPage()
     await findReviewContext()
