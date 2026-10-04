@@ -6,12 +6,14 @@ import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/rest
 interface RestaurantDetailTabsProps {
   activeTab: RestaurantDetailTab
   reviewCount: number
+  photoCount?: number
   onTabChange: (tab: RestaurantDetailTab) => void
 }
 
 export const RestaurantDetailTabs = ({
   activeTab,
   reviewCount,
+  photoCount,
   onTabChange,
 }: RestaurantDetailTabsProps) => {
   const handleChange = (value: string) => {
@@ -19,7 +21,11 @@ export const RestaurantDetailTabs = ({
   }
 
   const tabItems = RESTAURANT_DETAIL_TABS.map((item) =>
-    item.value === 'review' ? { ...item, count: reviewCount } : item,
+    item.value === 'review'
+      ? { ...item, count: reviewCount }
+      : item.value === 'photo'
+        ? { ...item, count: photoCount }
+        : item,
   )
 
   return (

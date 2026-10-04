@@ -70,7 +70,7 @@ export const RestaurantMenuListSection = ({
             <span className="flex min-w-0 flex-1 flex-col gap-1.5 pr-5">
               {menu.isRepresentative ? (
                 <Badge
-                  className="typo-caption-5 border-primary-400 text-primary-400 w-fit rounded-full px-1 py-0.5"
+                  className="typo-caption-5 border-primary-400 text-primary-400 h-auto w-fit rounded-full px-1 py-0.5 leading-[1.38]"
                   label="대표"
                 />
               ) : null}
