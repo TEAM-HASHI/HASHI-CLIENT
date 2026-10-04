@@ -17,7 +17,7 @@ export const UpcomingReservationCard = ({
   onDetailPress,
 }: UpcomingReservationCardProps) => {
   return (
-    <article className="border-secondary-200 border-b pb-4 last:border-b-0 last:pb-0">
+    <article className="border-secondary-200 border-b py-3.5 last:border-b-0 last:pb-0">
       <button
         className="flex w-full gap-3 text-left"
         onClick={() => onDetailPress(reservation.reservationId)}
@@ -44,7 +44,7 @@ export const UpcomingReservationCard = ({
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Button
           onClick={() => onCancelPress(reservation.reservationId)}
-          size="sm"
+          size="md"
           variant="neutral"
           width="full"
         >
@@ -52,7 +52,7 @@ export const UpcomingReservationCard = ({
         </Button>
         <Button
           onClick={() => onContactPress(reservation.reservationId)}
-          size="sm"
+          size="md"
           width="full"
         >
           문의하기

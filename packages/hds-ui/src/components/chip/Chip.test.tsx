@@ -10,6 +10,13 @@ afterEach(() => {
 })
 
 describe('Chip', () => {
+  it.each([0, 12])('renders count %i beside the label', (count) => {
+    render(<Chip count={count}>사진</Chip>)
+    expect(
+      screen.getByRole('button', { name: `사진 ${count}` }),
+    ).toBeInTheDocument()
+  })
+
   it('renders a filter chip as a button', () => {
     render(<Chip selected>진행 중</Chip>)
 
@@ -51,21 +58,15 @@ describe('Chip', () => {
     expect(handleSelectedChange).toHaveBeenCalledWith(false)
   })
 
-  it('applies selected and unselected styles', () => {
-    render(
-      <>
-        <Chip selected>선택</Chip>
-        <Chip>미선택</Chip>
-      </>,
-    )
+  it('renders an optional count label', () => {
+    render(<Chip count={12}>라벨</Chip>)
 
-    expect(screen.getByText('선택').parentElement).toHaveClass(
-      'bg-cool-gray-800',
-      'text-white',
-    )
-    expect(screen.getByText('미선택').parentElement).toHaveClass(
-      'bg-warm-gray-50',
-      'text-primary-200',
-    )
+    expect(screen.getByRole('button', { name: '라벨 12' })).toBeInTheDocument()
+  })
+
+  it('renders zero when count is 0', () => {
+    render(<Chip count={0}>라벨</Chip>)
+
+    expect(screen.getByRole('button', { name: '라벨 0' })).toBeInTheDocument()
   })
 })

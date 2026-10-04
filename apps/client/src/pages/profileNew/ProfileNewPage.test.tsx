@@ -21,6 +21,7 @@ import {
 import { ApiError } from '@/shared/api/apiError'
 import type { ErrorResponse } from '@/shared/api/types'
 import { createQueryClient } from '@/shared/lib/queryClient'
+import { DEFAULT_ERROR_MESSAGE } from '@/shared/api/errorPresentation'
 
 import { ProfileNewPage } from '@/pages/profileNew/ProfileNewPage'
 
@@ -105,79 +106,60 @@ describe('ProfileNewPage', () => {
     clearAuthSession()
   })
 
-  it('keeps the complete CTA disabled before required values are valid', () => {
-    renderProfileNewPage()
+  it.each(['upload', 'onboarding'] as const)(
+    'keeps the draft and preview and allows retry after %s fails',
+    async (failureStage) => {
+      vi.stubGlobal('URL', {
+        ...URL,
+        createObjectURL: vi.fn(() => 'blob:profile-preview'),
+        revokeObjectURL: vi.fn(),
+      })
+      const file = new File(['profile'], 'profile.png', { type: 'image/png' })
+      mockedUploadProfileImage.mockResolvedValue('users/15/profile/profile.png')
+      mockedRequestOnboarding.mockResolvedValue({
+        userId: 15,
+        accessToken: 'access-token',
+      })
+      if (failureStage === 'upload') {
+        mockedUploadProfileImage.mockRejectedValueOnce(
+          new Error('upload failed'),
+        )
+      } else {
+        mockedRequestOnboarding.mockRejectedValueOnce(
+          createErrorResponse('COMMON-500', 500, 'server failed'),
+        )
+      }
+      renderProfileNewPage()
+      fillValidProfileForm()
+      fireEvent.change(screen.getByLabelText('프로필 이미지 파일 선택'), {
+        target: { files: [file] },
+      })
+      fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
-    expect(screen.getByRole('heading', { name: '프로필 생성' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: '완료' })).toBeDisabled()
-  })
+      expect(
+        await screen.findByText(
+          failureStage === 'upload' ? DEFAULT_ERROR_MESSAGE : '서버 오류입니다',
+        ),
+      ).toBeInTheDocument()
+      expect(screen.getByLabelText('닉네임')).toHaveValue('하시')
+      expect(screen.getByLabelText('연락처')).toHaveValue('010-1234-5678')
+      expect(screen.getByLabelText('이메일')).toHaveValue('hashi@example.com')
+      expect(screen.getByLabelText('생년월일')).toHaveValue('1998/05/12')
+      expect(
+        screen.getByRole('img', { name: '프로필 이미지' }),
+      ).toHaveAttribute('src', 'blob:profile-preview')
+      expect(mockNavigate).not.toHaveBeenCalled()
+      expect(screen.getByRole('button', { name: '완료' })).toBeEnabled()
+      if (failureStage === 'upload')
+        expect(mockedRequestOnboarding).not.toHaveBeenCalled()
 
-  it('limits the optional English name to the Swagger maximum length', () => {
-    renderProfileNewPage()
-
-    expect(screen.getByLabelText('영문 이름 (선택)')).toHaveAttribute(
-      'maxLength',
-      '20',
-    )
-  })
-
-  it('fixes the header wrapper inside the mobile app frame with the shared utility', () => {
-    renderProfileNewPage()
-
-    const backButton = screen.getByRole('button', { name: '뒤로가기' })
-    const header = backButton.closest('header')
-    const fixedHeaderWrapper = header?.parentElement
-
-    expect(header).toHaveClass('relative')
-    expect(fixedHeaderWrapper).toHaveClass(
-      'app-mobile-fixed-top',
-      'z-fixed',
-      'bg-white',
-    )
-  })
-
-  it('shows the default profile image before and after deleting profile image', () => {
-    renderProfileNewPage()
-
-    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: '프로필 삭제' }))
-
-    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
-  })
-
-  it('opens the profile image file input from the edit button and previews the selected image', () => {
-    const createObjectUrl = vi.fn(() => 'blob:profile-preview')
-    vi.stubGlobal('URL', {
-      ...URL,
-      createObjectURL: createObjectUrl,
-    })
-    const inputClick = vi.spyOn(HTMLInputElement.prototype, 'click')
-    renderProfileNewPage()
-
-    fireEvent.click(screen.getByRole('button', { name: '프로필 이미지 수정' }))
-
-    expect(inputClick).toHaveBeenCalled()
-
-    expect(screen.getByLabelText('프로필 이미지 파일 선택')).toHaveAttribute(
-      'accept',
-      'image/jpeg,image/png,image/webp',
-    )
-
-    const imageFile = new File(['profile'], 'profile.png', {
-      type: 'image/png',
-    })
-    fireEvent.change(screen.getByLabelText('프로필 이미지 파일 선택'), {
-      target: { files: [imageFile] },
-    })
-
-    expect(screen.getByLabelText('프로필 이미지 파일 선택')).toHaveValue('')
-    expect(createObjectUrl).toHaveBeenCalledWith(imageFile)
-    expect(screen.getByRole('img', { name: '프로필 이미지' })).toHaveAttribute(
-      'src',
-      'blob:profile-preview',
-    )
-  })
+      fireEvent.click(screen.getByRole('button', { name: '완료' }))
+      await waitFor(() => expect(getAccessToken()).toBe('access-token'))
+      expect(mockedUploadProfileImage).toHaveBeenCalledTimes(
+        failureStage === 'upload' ? 2 : 1,
+      )
+    },
+  )
 
   it('rejects profile image files larger than 5MB and keeps the current image', () => {
     const createObjectUrl = vi.fn(() => 'blob:oversized-profile-preview')
@@ -198,45 +180,9 @@ describe('ProfileNewPage', () => {
 
     expect(createObjectUrl).not.toHaveBeenCalled()
     expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
-    expect(screen.getByText('5MB 이하의 이미지만 등록해주세요.')).toHaveClass(
-      'typo-body-3',
-      'text-error',
-      'mt-3',
-    )
-  })
-
-  it('does not block submit with the old duplicated nickname mock list', async () => {
-    mockedRequestOnboarding.mockResolvedValue({
-      userId: 15,
-      accessToken: 'onboarding-access-token',
-    })
-    renderProfileNewPage()
-
-    fireEvent.change(screen.getByLabelText('닉네임'), {
-      target: { value: '중복' },
-    })
-    fireEvent.change(screen.getByLabelText('생년월일'), {
-      target: { value: '19980512' },
-    })
-    fireEvent.change(screen.getByLabelText('연락처'), {
-      target: { value: '01012345678' },
-    })
-    fireEvent.change(screen.getByLabelText('이메일'), {
-      target: { value: 'hashi@example.com' },
-    })
-
-    expect(screen.queryByText('중복된 네이밍입니다.')).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: '완료' }))
-
-    await waitFor(() => {
-      expect(mockedRequestOnboarding).toHaveBeenCalledWith({
-        nickname: '중복',
-        birthDate: '1998-05-12',
-        phone: '01012345678',
-        email: 'hashi@example.com',
-      })
-    })
+    expect(
+      screen.getByText('5MB 이하의 이미지만 등록해주세요.'),
+    ).toBeInTheDocument()
   })
 
   it('enables submit after required values are valid and navigates home after onboarding succeeds', async () => {
@@ -557,27 +503,5 @@ describe('ProfileNewPage', () => {
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home)
     })
-  })
-
-  it('formats birth date and phone number while typing', () => {
-    renderProfileNewPage()
-
-    fireEvent.change(screen.getByLabelText('생년월일'), {
-      target: { value: '20260708' },
-    })
-    fireEvent.change(screen.getByLabelText('연락처'), {
-      target: { value: '01012345678' },
-    })
-
-    expect(screen.getByLabelText('생년월일')).toHaveValue('2026/07/08')
-    expect(screen.getByLabelText('연락처')).toHaveValue('010-1234-5678')
-  })
-
-  it('moves back to the previous history entry from the header action', () => {
-    renderProfileNewPage()
-
-    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
-
-    expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 })

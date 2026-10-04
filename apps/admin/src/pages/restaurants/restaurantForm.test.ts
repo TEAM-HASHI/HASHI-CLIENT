@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createRestaurantForm,
   createRestaurantFormFromPrefill,
+  getDuplicateRestaurantField,
   toCreateRestaurantBody,
   toUpdateRestaurantBody,
   validateRestaurantForm,
@@ -12,7 +13,9 @@ import {
   CURATION_OPTIONS,
   CURRENCY_OPTIONS,
   GENRE_OPTIONS,
+  PLACE_TYPE_OPTIONS,
 } from '@/pages/restaurants/restaurantOptions'
+import { AdminApiRequestError } from '@/shared/api/request'
 
 const replacements: RestaurantReplacementFlags = {
   images: false,
@@ -32,6 +35,7 @@ const createValidForm = () => {
   form.area = '시부야'
   form.genre = 'sushi'
   form.foodCategory = 'sushi'
+  form.placeType = 'cafe'
   form.priceCurrency = 'JPY'
   form.minPrice = '3000'
   form.maxPrice = '8000'
@@ -63,6 +67,11 @@ describe('restaurant options', () => {
       'JPY',
       'KRW',
       'USD',
+    ])
+    expect(PLACE_TYPE_OPTIONS.map(({ value }) => value)).toEqual([
+      'restaurant',
+      'cafe',
+      'bar',
     ])
     expect(CURATION_OPTIONS.map(({ value }) => value)).toEqual([
       'sns-hot',
@@ -97,6 +106,7 @@ describe('restaurant form serializers', () => {
 
     expect(form.genre).toBe('')
     expect(form.foodCategory).toBe('')
+    expect(form.placeType).toBe('')
   })
 
   it('serializes create fields using only the current backend names', () => {
@@ -109,6 +119,7 @@ describe('restaurant form serializers', () => {
       area: '시부야',
       genre: 'sushi',
       foodCategory: 'sushi',
+      placeType: 'cafe',
       priceCurrency: 'JPY',
       minPrice: 3000,
       maxPrice: 8000,
@@ -174,6 +185,9 @@ describe('restaurant form serializers', () => {
     expect(toUpdateRestaurantBody(form, dirtyFields, replacements)).toEqual({
       name: '하시 스시',
     })
+    expect(
+      toUpdateRestaurantBody(form, new Set(['placeType']), replacements),
+    ).toEqual({ placeType: 'cafe' })
   })
 
   it('sends only uploaded keys when image replacement is enabled', () => {
@@ -205,6 +219,7 @@ describe('restaurant form validation', () => {
 
     expect(errors.name).toBeDefined()
     expect(errors.images).toBeDefined()
+    expect(errors.placeType).toBeUndefined()
     expect(errors.hashtags).toBeDefined()
   })
 
@@ -228,5 +243,29 @@ describe('restaurant form validation', () => {
     expect(errors.priceRange).toBeDefined()
     expect(errors.businessHours).toBeDefined()
     expect(errors.uploads).toBeDefined()
+  })
+})
+
+describe('restaurant duplicate errors', () => {
+  const conflict = (code: string) =>
+    new AdminApiRequestError(409, {
+      success: false,
+      code,
+      message: '중복',
+      data: null,
+      timestamp: '2026-09-27T00:00:00',
+      path: '/api/v1/admin/restaurants',
+    })
+
+  it('maps duplicate conflict codes to the basic step field', () => {
+    expect(getDuplicateRestaurantField(conflict('RESTAURANT-020'))).toBe('name')
+    expect(getDuplicateRestaurantField(conflict('RESTAURANT-021'))).toBe(
+      'address',
+    )
+  })
+
+  it('ignores other errors', () => {
+    expect(getDuplicateRestaurantField(conflict('MEDIA-006'))).toBeUndefined()
+    expect(getDuplicateRestaurantField(new Error('network'))).toBeUndefined()
   })
 })

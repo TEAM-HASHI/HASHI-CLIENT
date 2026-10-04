@@ -46,14 +46,17 @@ Jira: HASHI-77
 - [x] 뒤로가기 버튼 클릭 시 `ROUTES.home`으로 이동한다.
 - [x] 상단 대표 매거진 배너 영역을 보여준다.
 - [x] 대표 매거진 배너는 이미지와 페이지 인디케이터를 포함한다.
-- [x] 대표 매거진 배너 데이터는 이미지와 인스타 게시글 URL을 포함한다.
+- [x] 대표 매거진 배너 데이터는 상세 이동에 필요한 `magazineId`와 이미지를 포함한다.
+- [x] 대표 매거진 배너는 이미지에 포함된 문구만 노출하고 별도 텍스트를 겹치지 않는다.
 - [x] 대표 매거진 배너는 홈 메인 배너와 같은 `353:160` 이미지 비율을 사용한다.
-- [x] 대표 매거진 배너를 탭하면 해당 매거진의 외부 인스타 게시글로 이동한다.
+- [x] 대표 매거진 배너를 탭하면 해당 매거진의 내부 상세로 이동한다.
 - [x] 카테고리 필터는 MVP 범위에서 제외하므로 화면에 렌더링하지 않는다.
 - [x] 추천 매거진 목록은 제목, 이미지, 발행일을 포함한다.
-- [x] 추천 매거진 카드를 탭하면 해당 매거진의 외부 인스타 게시글로 이동한다.
+- [x] 추천 매거진 카드를 탭하면 해당 매거진의 내부 상세로 이동한다.
 - [x] 목록 아이템 사이에는 구분선을 보여주되 마지막 아이템에는 불필요한 구분선을 넣지 않는다.
-- [x] 추천 매거진 아이템은 상/하 `16px` padding을 동일하게 사용한다.
+- [x] 추천 매거진 아이템은 피그마 기준 최소 높이 `136px`, 상단 `16px`·하단 `12px` 간격을 사용한다.
+- [x] 배너 조회 실패 시 배너만 숨기고 목록은 유지한다.
+- [x] 다음 목록 조회 실패 시 이미 조회한 카드를 유지하고 실패한 다음 페이지만 재시도한다.
 - [x] 긴 제목은 모바일 폭에서 레이아웃을 깨지 않도록 줄 수를 제한한다.
 - [x] 배너 링크의 접근성 이름은 호출부 데이터에서 제공한다.
 - [x] 추천 매거진 썸네일은 링크 텍스트와 중복되지 않도록 장식 이미지로 처리한다.
@@ -82,7 +85,7 @@ Jira: HASHI-77
 - notes:
   - `/api/v1/magazines` is latest-first cursor pagination.
   - `/api/v1/magazines/banners` returns the latest 5 magazine banners.
-  - banner/card click opens `instagramRedirectUrl`.
+  - banner/card click opens `/magazines/:magazineId`.
 
 #### Queries
 
@@ -97,13 +100,12 @@ Jira: HASHI-77
   - `apps/client/src/features/magazine/api/getMagazineBanners.ts`
   - `apps/client/src/features/magazine/queries/magazineQueryKeys.ts`
   - `apps/client/src/features/magazine/queries/magazineBannerQueryOptions.ts`
-  - `apps/client/src/features/magazine/hooks/useMagazineBannersQuery.ts`
+  - magazine list page calls `useQuery(magazineBannerQueryOptions())` with page-local `throwOnError: false`; Home may use the shared hook.
   - `apps/client/src/features/magazine/types.ts` if OpenAPI aliases or shared banner view model types are reused across Home and Magazines
 - magazine list endpoint/query stays page-local until another screen uses the same cursor list contract:
   - `apps/client/src/pages/magazines/api/getMagazines.ts`
   - `apps/client/src/pages/magazines/queries/magazineListQueryKeys.ts`
   - `apps/client/src/pages/magazines/queries/magazineListQueryOptions.ts`
-  - `apps/client/src/pages/magazines/hooks/useMagazinesInfiniteQuery.ts`
   - `apps/client/src/pages/magazines/types.ts` if OpenAPI aliases or page-local list view model types are shared by multiple page files
 - `useMagazinesPage` remains the page orchestration boundary.
 - `MagazinesPage`, section components, and list item components do not import `request`, query keys, or generated API types directly.
@@ -124,19 +126,17 @@ Jira: HASHI-77
 
 #### Type Mapping
 
-| API field                                      | UI use                           | Nullable/optional          | Transform                                                                                     |
-| ---------------------------------------------- | -------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
-| `MagazineBannerResponse.magazineId`            | banner `id`, React key           | optional in generated type | convert to string; item is unusable if missing                                                |
-| `MagazineBannerResponse.title`                 | banner accessible label fallback | optional                   | fallback to `매거진 배너`                                                                     |
-| `MagazineBannerResponse.bannerImageUrl`        | banner image `src`               | optional                   | item is unusable if missing                                                                   |
-| `MagazineBannerResponse.instagramRedirectUrl`  | banner external link             | optional                   | validate through `normalizeInstagramUrl`; invalid value becomes `null`                        |
-| `MagazineSummaryResponse.magazineId`           | list item `id`, React key        | optional in generated type | convert to string; item is unusable if missing                                                |
-| `MagazineSummaryResponse.title`                | list item title/link name        | optional                   | item is unusable if missing                                                                   |
-| `MagazineSummaryResponse.thumbnailImageUrl`    | list item thumbnail `src`        | optional                   | item is unusable if missing                                                                   |
-| `MagazineSummaryResponse.instagramRedirectUrl` | list item external link          | optional                   | validate through `normalizeInstagramUrl`; invalid value becomes `null`                        |
-| `MagazineSummaryResponse.createdAt`            | published date                   | optional, `date-time`      | use the server date part and format as `YYYY. MM.DD.`; item is unusable if missing or invalid |
-| `MagazineListResponse.nextCursor`              | next page cursor                 | optional                   | pass as next page param only when `hasNext` is true                                           |
-| `MagazineListResponse.hasNext`                 | load-more availability           | optional                   | omitted value means no next page in the first implementation                                  |
+| API field                                   | UI use                           | Nullable/optional          | Transform                                                                                     |
+| ------------------------------------------- | -------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
+| `MagazineBannerResponse.magazineId`         | banner `id`, React key           | optional in generated type | convert to string; item is unusable if missing                                                |
+| `MagazineBannerResponse.title`              | banner accessible label fallback | optional                   | fallback to `매거진 배너`                                                                     |
+| `MagazineBannerResponse.bannerImageUrl`     | banner image `src`               | optional                   | item is unusable if missing                                                                   |
+| `MagazineSummaryResponse.magazineId`        | list item `id`, React key        | optional in generated type | convert to string; item is unusable if missing                                                |
+| `MagazineSummaryResponse.title`             | list item title/link name        | optional                   | item is unusable if missing                                                                   |
+| `MagazineSummaryResponse.thumbnailImageUrl` | list item thumbnail `src`        | optional                   | item is unusable if missing                                                                   |
+| `MagazineSummaryResponse.createdAt`         | published date                   | optional, `date-time`      | use the server date part and format as `YYYY. MM.DD.`; item is unusable if missing or invalid |
+| `MagazineListResponse.nextCursor`           | next page cursor                 | optional                   | pass as next page param only when `hasNext` is true                                           |
+| `MagazineListResponse.hasNext`              | load-more availability           | optional                   | omitted value means no next page in the first implementation                                  |
 
 #### UI States
 
@@ -151,8 +151,9 @@ Jira: HASHI-77
   - if all magazine pages are empty, show shared `ListEmptyState` with `매거진 리스트를 준비중이에요.`
   - if no usable list item is rendered yet but `hasNextPage` is true, do not show the empty state until the next page fetch resolves.
 - error:
-  - expected `4xx` stays local to the page/query state.
-  - `5xx`, network, and timeout errors follow the global QueryClient `throwOnError` policy and may be caught by `AsyncBoundary`.
+  - banner errors stay local and hide only the banner.
+  - first-page list errors stay in the list area and show the local retry UI regardless of error type.
+  - next-page errors keep loaded cards visible and show a retry action for that page, including when the shared policy would otherwise throw.
   - retry UI should call the query refetch/reset path rather than bypass TanStack Query.
 - success:
   - normalize API data to existing `MagazineHeroBanner` and `RecommendedMagazine` UI types before rendering sections.
@@ -167,8 +168,8 @@ Jira: HASHI-77
 - Auto-fetch additional pages with an IntersectionObserver bottom sentinel.
 - Drop list items that miss `magazineId`, `title`, `thumbnailImageUrl`, or valid `createdAt`.
 - Drop banner items that miss `magazineId` or `bannerImageUrl`; use `매거진 배너` when `title` is missing.
-- Treat non-Instagram or malformed `instagramRedirectUrl` as `null`; render the item without native link navigation instead of crashing.
-- Keep banner/list failures local to the section for expected `4xx`; shared QueryClient/AsyncBoundary handles `5xx`, network, timeout, and unexpected errors.
+- Use `magazineId` to build the internal `/magazines/:magazineId` detail path for banners and list items.
+- Keep banner errors local and hide the banner; keep next-page list errors local so existing cards remain visible.
 
 ### Mutation
 
@@ -186,10 +187,11 @@ Jira: HASHI-77
   - `apps/client/src/pages/magazines/hooks/useMagazinesPage.ts`
   - shared banner query와 page-local infinite list query를 조합한다.
   - 뒤로가기 이동 로직을 소유한다.
-  - 외부 인스타 URL 정규화와 검증 로직을 소유한다.
+  - 목록 API 응답을 목록 전용 view model로 정규화한다.
+  - banner 실패와 최초/다음 목록 실패를 각각 구분한다.
 - page:
   - `MagazinesPage.tsx`는 hook 호출, Header 배치, 섹션 조합만 담당한다.
-  - mock 배열이나 외부 URL 이동 로직을 직접 들지 않는다.
+  - mock 배열이나 API 요청 로직을 직접 들지 않는다.
 - API:
   - `GET /api/v1/magazines/banners`는 홈에서도 사용하므로 `features/magazine`의 shared feature query로 시작한다.
   - `GET /api/v1/magazines` 목록 query는 매거진 리스트 페이지 전용이므로 page-local에서 시작한다.
@@ -211,8 +213,8 @@ Jira: HASHI-77
     - banner endpoint/query: `features/magazine`
     - list endpoint/query: page-local `api/`, `queries/`, `hooks/`, composed by `useMagazinesPage`
 - derived state:
-  - `hasHeroBanners`
-  - `hasRecommendedMagazines`
+  - normalized hero banner and recommended magazine arrays
+  - `isNextMagazinePageError`
   - owner: `useMagazinesPage`
 
 ## UI Structure
@@ -273,9 +275,8 @@ Recommended page hook return shape:
 ```ts
 type MagazineHeroBanner = {
   id: string
+  title: string
   imageUrl: string
-  instagramUrl: string | null
-  accessibilityLabel: string
 }
 
 type RecommendedMagazine = {
@@ -283,29 +284,26 @@ type RecommendedMagazine = {
   title: string
   imageUrl: string
   publishedDate: string
-  instagramUrl: string | null
 }
 
 type UseMagazinesPageReturn = {
   heroBanners: MagazineHeroBanner[]
   recommendedMagazines: RecommendedMagazine[]
-  hasHeroBanners: boolean
-  hasRecommendedMagazines: boolean
   handleBackClick: () => void
 }
 ```
 
-Hero banners and magazine cards render semantic `<a>` elements only when the hook returns a valid `instagramUrl`. The hook owns the data boundary, Instagram URL normalization, and back navigation, while valid link activation stays native.
+Hero banners and magazine cards render React Router `Link` elements using `getMagazineDetailPath`. The selected title and image URL are passed as preview location state so the detail publishing screen can render available list data until the detail API is connected.
 
 ## Error Handling
 
 - API error:
-  - `ApiError` and `HttpStatusError` keep HTTP status through the shared `request` helper.
-  - expected `4xx` errors should be handled locally if the endpoint remains public.
-  - `5xx`, timeout, network, and unexpected errors may go to `AsyncBoundary` according to shared QueryClient policy.
+  - 배너 실패는 오류 종류와 관계없이 배너만 숨긴다.
+  - 목록 최초 조회 오류는 종류와 관계없이 목록 영역의 오류/재시도로 처리한다.
+  - 다음 페이지 실패는 기존 카드를 유지하고 다음 페이지 재시도 버튼을 표시한다.
 - validation error: none
 - exceptional case:
-  - missing or invalid external URL: normalize to `null` in `useMagazinesPage`, then render the item as disabled-looking text content; do not crash the page.
+  - missing `magazineId`: drop the unusable item at the page hook boundary.
   - broken image URL: rely on browser image behavior unless product approves a page-local or shared fallback.
 - user-facing message:
   - empty recommended list: `매거진 리스트를 준비중이에요.`
@@ -317,8 +315,8 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
 - entry:
   - home page or any link to `ROUTES.magazines`
 - links:
-  - hero banner external Instagram post URL
-  - magazine card external Instagram post URL
+  - hero banner internal magazine detail route
+  - magazine card internal magazine detail route
 - route params:
   - none
 - search params:
@@ -329,24 +327,28 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
   - none
 - back behavior:
   - `navigate(ROUTES.home)`
+  - 스크롤 중에는 메모리에 최신 위치만 기록하고, 페이지 해제 또는 `pagehide` 시 조회한 페이지 수와 위치를 방문 기록의 location key별로 `sessionStorage`에 저장한다.
+  - `POP` 복귀 시 `useMagazineListRestoration`이 저장된 상태를 읽는다. 캐시가 만료됐다면 필요한 페이지를 순차 조회하고, 배너와 목록 렌더링이 완료된 다음 프레임에서 위치를 복원한다.
+  - 복원 중에는 일반 무한스크롤 및 빈 페이지 자동 조회를 중단한다. 조회 실패 시 저장한 위치를 유지하고 기존 재시도 버튼으로 복원을 이어간다.
+  - 새로 진입한 방문 기록에는 이전 기록의 위치를 적용하지 않는다. 저장소가 차단되면 복원 없이 일반 목록 조회를 유지한다.
+  - 배너와 카드의 내부 상세 링크 연결을 포함하며, 전역 `RootLayout`의 스크롤 정책은 바꾸지 않는다.
 - auth redirect:
   - none
-- external navigation:
-  - use semantic `<a href={instagramUrl}>` when possible.
-  - use disabled-looking non-anchor content when `instagramUrl` is missing or invalid.
-  - if app/WebView policy later requires bridge handling, keep that behavior inside `useMagazinesPage` or a page-local helper, not inside HDS.
+- internal navigation:
+  - use `getMagazineDetailPath(magazineId)` and React Router `Link`.
+  - pass only title and representative image as optional preview state; route params remain the source of identity after API integration.
 
 ## Styling
 
 - Tailwind layout:
   - mobile-first, `RootLayout` mobile frame 기준
   - root background `bg-white`
-  - header는 모바일 프레임 상단에 `fixed top-0 right-0 left-0 z-20 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white`로 고정한다.
+  - header는 `app-mobile-fixed-top z-fixed bg-white` wrapper로 모바일 프레임 상단에 고정한다.
   - header는 캐러셀 인디케이터보다 높은 layer에 있어야 하므로 콘텐츠 layer보다 높은 z-index를 사용한다.
   - fixed header가 콘텐츠를 덮지 않도록 본문에 header height만큼 top padding을 둔다.
 - representative banner:
   - visual area below header uses horizontal page padding `px-5`.
-  - visual area starts `4px` below the fixed header content offset.
+  - visual area starts `18px` below the fixed header content offset.
   - viewport keeps the shared magazine image ratio `353:160`.
   - image uses `object-cover`.
   - title/description overlay is not rendered because those are included in the banner image.
@@ -354,11 +356,12 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
   - 모서리는 `5px`, indicator는 카드 오른쪽 `20px`/아래 `23px`, 활성 `12×4px`/비활성 `4×4px`, 간격 `7px`입니다.
 - recommendation section:
   - horizontal padding uses `px-5`.
+  - section starts `10px` below the preceding content.
   - large section heading such as `최근 _한 추천 매거진` is not rendered.
   - list item uses text column and fixed image area.
-  - list item vertical padding uses `py-4` so top and bottom are both `16px`.
+  - list item minimum height is `136px`; top padding is `16px`, bottom padding is `12px`, and column gap is `29px` at the design width.
   - list item title uses `typo-body-6 text-black`.
-  - list item date uses `typo-caption-1 font-medium text-warm-gray-300`.
+  - list item title line height is `1.36`; date uses `typo-caption-1 font-medium leading-[1.5] text-warm-gray-300`.
   - list item divider uses `border-b border-warm-gray-50`.
   - hero banner and list skeleton placeholder blocks use `bg-secondary-200`, matching the shared restaurant list skeleton used by Hashi Pick and Popular Restaurants.
   - image keeps `w-[156px]` and `aspect-[156/88]` so text loading and long copy do not shift layout.
@@ -368,7 +371,7 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
   - app mobile frame width를 따른다.
   - narrow mobile viewport에서 image와 text가 겹치지 않아야 한다.
 - fixed area:
-  - none
+  - 상단 `Header`를 모바일 프레임 상단에 고정한다.
 - scroll area:
   - whole page scrolls vertically.
 - empty/loading/error layout:
@@ -380,12 +383,12 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
 
 - `Header` left action uses `IconButton aria-label="홈으로 돌아가기"`.
 - `Carousel.Root` receives an accessible label such as `aria-label="대표 매거진 배너"`.
-- carousel slide links have meaningful accessible names through `accessibilityLabel`.
+- carousel slide links use the normalized magazine title as their accessible name.
 - recommended magazine section does not use a visible heading; if the section needs an accessible name, use `aria-label="추천 매거진 목록"` instead of an off-design visible title.
 - magazine list is rendered as a semantic list.
 - each magazine item is a single interactive target.
 - magazine thumbnail images use empty `alt` because the surrounding link is already named by title and date text.
-- external links should preserve native link behavior.
+- detail links use semantic React Router links and preserve native link behavior.
 - text-only icon buttons are not introduced.
 - filter controls are not rendered, so there are no hidden or disabled category filter controls.
 
@@ -393,10 +396,6 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
 
 - API integration spec update:
   - [x] implementation decisions are reflected in the spec
-  - [ ] `corepack pnpm --filter @hashi/client lint`
-  - [ ] `corepack pnpm --filter @hashi/client typecheck`
-  - [ ] `corepack pnpm --filter @hashi/client test`
-  - [ ] `corepack pnpm --filter @hashi/client build`
   - [ ] API success: banners render latest 5 items
   - [ ] API success: magazines render first page and next page according to chosen pagination UI
   - [ ] API empty: banner section hides when no usable banners exist
@@ -412,6 +411,6 @@ Hero banners and magazine cards render semantic `<a>` elements only when the hoo
 - [ ] bottom navigation layout 미포함 확인
 - [x] 뒤로가기 버튼이 홈으로 이동하는지 확인
 - [ ] 대표 배너 swipe와 indicator 확인
-- [x] 대표 배너/매거진 카드 외부 링크 이동 확인
+- [x] 대표 배너/매거진 카드 내부 상세 링크 이동 확인
 - [x] 카테고리 필터 UI가 렌더링되지 않는지 확인
 - [ ] 긴 제목과 좁은 viewport에서 텍스트와 이미지가 겹치지 않는지 확인
