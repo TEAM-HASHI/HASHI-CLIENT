@@ -117,6 +117,7 @@
   - `Dialog`
   - `ImageFallback`
 - app shared component:
+  - `BottomActionBar`
   - `ShareIconButton`
   - `ComingSoonDialog`
   - `LoadingScreen`
