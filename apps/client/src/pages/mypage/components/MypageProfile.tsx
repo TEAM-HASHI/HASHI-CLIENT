@@ -12,8 +12,8 @@ export const MypageProfile = ({
   profileImageUrl,
 }: MypageProfileProps) => {
   return (
-    <section className="mb-8 flex items-center justify-between">
-      <div className="flex min-w-0 items-center gap-2">
+    <section className="mx-1.5 mb-8 flex items-center justify-between gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <Avatar
           alt={`${nickname} 프로필 이미지`}
           size="md"
@@ -23,7 +23,12 @@ export const MypageProfile = ({
           {nickname}님
         </h1>
       </div>
-      <Button className="h-7 px-3" onClick={onEdit} size="sm" type="button">
+      <Button
+        className="shrink-0 px-[12.5px]"
+        onClick={onEdit}
+        size="sm"
+        type="button"
+      >
         수정
       </Button>
     </section>

@@ -8,10 +8,10 @@ export const MagazineListItem = ({ magazine }: Props) => {
   const content = (
     <>
       <div className="flex min-w-0 flex-col">
-        <h3 className="typo-body-6 line-clamp-3 text-black">
+        <h3 className="typo-body-6 line-clamp-3 leading-[1.36] text-black">
           {magazine.title}
         </h3>
-        <time className="typo-caption-1 text-warm-gray-300 mt-auto pt-5 font-medium">
+        <time className="typo-caption-1 text-warm-gray-300 mt-auto leading-[1.5] font-medium">
           {magazine.publishedDate}
         </time>
       </div>
@@ -22,12 +22,14 @@ export const MagazineListItem = ({ magazine }: Props) => {
       />
     </>
   )
+  const layoutClassName =
+    'grid min-h-[136px] grid-cols-[minmax(0,1fr)_156px] gap-[29px] pt-4 pb-3'
 
   return (
     <li className="border-warm-gray-50 border-b last:border-b-0">
       {magazine.instagramUrl ? (
         <a
-          className="grid grid-cols-[1fr_156px] gap-[21px] py-4"
+          className={layoutClassName}
           href={magazine.instagramUrl}
           rel="noreferrer"
           target="_blank"
@@ -35,10 +37,7 @@ export const MagazineListItem = ({ magazine }: Props) => {
           {content}
         </a>
       ) : (
-        <div
-          aria-disabled="true"
-          className="grid grid-cols-[1fr_156px] gap-[21px] py-4 opacity-60"
-        >
+        <div aria-disabled="true" className={`${layoutClassName} opacity-60`}>
           {content}
         </div>
       )}
