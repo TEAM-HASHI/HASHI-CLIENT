@@ -86,7 +86,8 @@ export const mypageMenuSections: MypageMenuSection[] = [
         id: 'withdrawal',
         label: '회원탈퇴',
         action: {
-          type: 'comingSoon',
+          type: 'navigate',
+          path: ROUTES.withdrawal,
         },
       },
     ],
