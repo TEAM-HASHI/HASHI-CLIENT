@@ -13,11 +13,31 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ROUTES } from '@/app/router/path'
 import { getMyReviewDetail } from '@/features/review/api/getMyReviewDetail'
 import { ReviewEditPage } from '@/pages/reviewEdit/ReviewEditPage'
+import { HttpStatusError } from '@/shared/api/apiError'
 
-const { navigateMock, reviewIdParam } = vi.hoisted(() => ({
+const {
+  createObjectURLMock,
+  navigateMock,
+  reviewIdParam,
+  revokeObjectURLMock,
+  showToastMock,
+} = vi.hoisted(() => ({
+  createObjectURLMock: vi.fn((file: File) => `blob:${file.name}`),
   navigateMock: vi.fn(),
   reviewIdParam: { current: '5' },
+  revokeObjectURLMock: vi.fn(),
+  showToastMock: vi.fn(),
 }))
+
+vi.mock('@hashi/hds-ui', async () => {
+  const actual =
+    await vi.importActual<typeof import('@hashi/hds-ui')>('@hashi/hds-ui')
+
+  return {
+    ...actual,
+    showToast: showToastMock,
+  }
+})
 
 vi.mock('react-router-dom', async () => {
   const actual =
@@ -48,6 +68,15 @@ const reviewDetailResponse = {
   visitedAt: '2026-06-12T18:30:00',
 }
 
+const reviewDetailResponseForSix = {
+  ...reviewDetailResponse,
+  content: '여섯 번째 리뷰의 서버 본문입니다.',
+  imageUrls: ['https://cdn.hashi.kr/review-6.jpg'],
+  keywords: ['재료가 신선해요'],
+  rating: 2,
+  reviewId: 6,
+}
+
 const writtenReviewsLocation = {
   pathname: ROUTES.myReviews,
   search: '?tab=written',
@@ -69,12 +98,23 @@ const renderPage = () => {
 
 beforeEach(() => {
   reviewIdParam.current = '5'
+  Object.defineProperty(URL, 'createObjectURL', {
+    configurable: true,
+    value: createObjectURLMock,
+  })
+  Object.defineProperty(URL, 'revokeObjectURL', {
+    configurable: true,
+    value: revokeObjectURLMock,
+  })
   vi.mocked(getMyReviewDetail).mockResolvedValue(reviewDetailResponse)
 })
 
 afterEach(() => {
   cleanup()
+  createObjectURLMock.mockClear()
   navigateMock.mockClear()
+  revokeObjectURLMock.mockClear()
+  showToastMock.mockClear()
   vi.clearAllMocks()
 })
 
@@ -132,7 +172,7 @@ describe('ReviewEditPage', () => {
     expect(unselectedKeyword).toHaveAttribute('aria-pressed', 'false')
   })
 
-  it('enables save for a valid form without navigating or issuing an update request', async () => {
+  it('shows a preparation toast when a valid edit form is saved', async () => {
     renderPage()
 
     await screen.findByDisplayValue(/정말 맛있습니다/)
@@ -140,6 +180,10 @@ describe('ReviewEditPage', () => {
 
     expect(saveButton).toBeEnabled()
     fireEvent.click(saveButton)
+
+    expect(showToastMock).toHaveBeenCalledWith({
+      children: '리뷰 수정 저장 기능을 준비 중입니다.',
+    })
     expect(navigateMock).not.toHaveBeenCalled()
     expect(getMyReviewDetail).toHaveBeenCalledTimes(1)
   })
@@ -156,6 +200,42 @@ describe('ReviewEditPage', () => {
 
     await waitFor(() => expect(getMyReviewDetail).toHaveBeenCalledTimes(2))
     expect(textarea).toHaveValue('수정 중인 리뷰 본문입니다.')
+  })
+
+  it('clears newly selected photos when the review id changes', async () => {
+    vi.mocked(getMyReviewDetail).mockImplementation(async (reviewId) =>
+      reviewId === 6 ? reviewDetailResponseForSix : reviewDetailResponse,
+    )
+    const { queryClient, rerender } = renderPage()
+
+    await screen.findByDisplayValue(/정말 맛있습니다/)
+    const photoFile = new File(['image'], 'review-five.png', {
+      type: 'image/png',
+    })
+    fireEvent.change(screen.getByLabelText('리뷰 사진 첨부'), {
+      target: { files: [photoFile] },
+    })
+
+    expect(
+      await screen.findByRole('img', { name: 'review-five.png 미리보기' }),
+    ).toBeVisible()
+
+    reviewIdParam.current = '6'
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <ReviewEditPage />
+      </QueryClientProvider>,
+    )
+
+    expect(
+      await screen.findByDisplayValue('여섯 번째 리뷰의 서버 본문입니다.'),
+    ).toBeVisible()
+    expect(
+      screen.queryByRole('img', { name: 'review-five.png 미리보기' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('img', { name: '기존 리뷰 사진 1 미리보기' }),
+    ).toHaveAttribute('src', 'https://cdn.hashi.kr/review-6.jpg')
   })
 
   it('shows an invalid route state without requesting review detail', async () => {
@@ -184,6 +264,20 @@ describe('ReviewEditPage', () => {
 
     expect(await screen.findByDisplayValue(/정말 맛있습니다/)).toBeVisible()
     expect(getMyReviewDetail).toHaveBeenCalledTimes(2)
+  })
+
+  it('returns to written reviews when the review detail is not found', async () => {
+    vi.mocked(getMyReviewDetail).mockRejectedValue(new HttpStatusError(404))
+    renderPage()
+
+    expect(
+      await screen.findByText('리뷰 수정 정보를 찾을 수 없습니다.'),
+    ).toBeVisible()
+    fireEvent.click(
+      screen.getByRole('button', { name: '마이 리뷰로 돌아가기' }),
+    )
+
+    expect(navigateMock).toHaveBeenCalledWith(writtenReviewsLocation)
   })
 
   it('returns to the previous location from the back button', async () => {

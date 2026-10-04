@@ -2,7 +2,7 @@
 
 ## Purpose
 
-작성한 리뷰를 조회해 별점, 키워드, 사진, 본문을 수정 화면에서 확인하고 편집한다. 수정 API가 제공되기 전까지 저장 버튼은 입력 유효성에 따른 시각 상태만 제공하며 서버 상태를 변경하지 않는다.
+작성한 리뷰를 조회해 별점, 키워드, 사진, 본문을 수정 화면에서 확인하고 편집한다. 수정 API가 제공되기 전까지 저장 버튼은 입력 유효성에 따른 시각 상태와 준비 중 toast를 제공하며 서버 상태를 변경하지 않는다.
 
 ## Route
 
@@ -25,14 +25,15 @@
 - [x] 키워드는 1~3개이며, 이미 3개가 선택된 상태에서는 추가 선택을 막는다.
 - [x] 본문은 10~1000자 안내·오류 상태를 유지하고, textarea 최소 높이 230px을 사용한다.
 - [x] 저장 버튼은 별점·키워드·본문·새 파일 제한이 유효할 때 활성화한다.
-- [x] 저장 버튼 클릭은 수정 API, 이미지 업로드, cache invalidation, navigation을 실행하지 않는다.
+- [x] 저장 버튼 클릭은 `리뷰 수정 저장 기능을 준비 중입니다.` toast를 표시하고, 수정 API, 이미지 업로드, cache invalidation, navigation을 실행하지 않는다.
 
 ## Data Dependencies
 
 - query: `useMyReviewDetailQuery(reviewId)` / `GET /api/v1/reviews/me/{reviewId}`
 - enabled: 유효한 양의 안전 정수 `reviewId`일 때만 요청한다.
 - loading: `리뷰 수정 정보를 불러오는 중입니다.`
-- error: `리뷰 수정 정보를 불러오지 못했습니다.`와 `다시 시도` 버튼을 표시한다.
+- not found: 유효한 ID의 요청이 404이면 `리뷰 수정 정보를 찾을 수 없습니다.`와 `마이 리뷰로 돌아가기` 버튼을 표시한다.
+- error: 404 이외의 조회 실패에는 `리뷰 수정 정보를 불러오지 못했습니다.`와 `다시 시도` 버튼을 표시한다.
 - invalid route: API 호출 없이 `리뷰 수정 정보를 확인할 수 없습니다.`와 `마이 리뷰로 돌아가기`를 표시한다.
 - mutation: 없음. Swagger에 리뷰 수정 endpoint가 없으므로 API boundary를 만들지 않는다.
 
@@ -41,7 +42,7 @@
 - route state: `reviewId`
 - server state: 기존 리뷰 detail query
 - page-local form state: rating, selected keyword IDs, review text, new `File[]`, existing photo URL `string[]`
-- initialization: 같은 `reviewId`의 최초 성공 응답만 form state에 반영한다. 이후 refetch는 사용자가 편집 중인 draft를 덮어쓰지 않는다.
+- initialization: 같은 `reviewId`의 최초 성공 응답만 form state에 반영한다. 이후 refetch는 사용자가 편집 중인 draft를 덮어쓰지 않는다. `reviewId`가 바뀌면 새 서버 응답으로 별점·키워드·본문·기존 사진 URL을 다시 채우고, 이전 리뷰에서 새로 첨부한 `File[]`은 비운다.
 - derived state: `isSaveDisabled`, view model, invalid/pending/error state
 
 ## Component Mapping
@@ -55,6 +56,7 @@
 - entry: 리뷰 상세의 `수정하기`, 마이 리뷰의 작성한 리뷰 더보기 메뉴 `수정하기`
 - back: `navigate(-1)`
 - invalid route return: `{ pathname: ROUTES.myReviews, search: '?tab=written' }`
+- not found return: `{ pathname: ROUTES.myReviews, search: '?tab=written' }`
 
 ## Non-goals
 

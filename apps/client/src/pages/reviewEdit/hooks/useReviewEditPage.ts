@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { showToast } from '@hashi/hds-ui'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useReviewForm } from '@/features/review/hooks'
 import { useMyReviewDetailQuery } from '@/features/review/queries/useMyReviewDetailQuery'
 import { toReviewEditViewModel } from '@/pages/reviewEdit/utils/reviewEditViewModel'
+import { checkIsNotFoundError } from '@/shared/api/apiError'
 
 const POSITIVE_INTEGER_PATTERN = /^[1-9]\d*$/
 
@@ -62,6 +64,7 @@ export const useReviewEditPage = () => {
     handleRatingChange(reviewEdit.rating)
     handleSelectedKeywordIdsChange(reviewEdit.selectedKeywordIds)
     handleReviewTextChange(reviewEdit.reviewText)
+    handlePhotoFilesChange([])
     setPhotoUrls(reviewEdit.photoUrls)
     initializedReviewIdRef.current = validReviewId
   }, [
@@ -84,9 +87,14 @@ export const useReviewEditPage = () => {
     void reviewDetailQuery.refetch()
   }
 
+  const handleSaveClick = () => {
+    showToast({ children: '리뷰 수정 저장 기능을 준비 중입니다.' })
+  }
+
   return {
     isError: validReviewId === null || reviewDetailQuery.isError || !reviewEdit,
     isInvalidReviewId: validReviewId === null,
+    isNotFound: checkIsNotFoundError(reviewDetailQuery.error),
     isPending: validReviewId !== null && reviewDetailQuery.isPending,
     isSaveDisabled: !canSubmitReview,
     maxReviewTextLength,
@@ -102,6 +110,7 @@ export const useReviewEditPage = () => {
     handleRatingChange,
     handleRetryClick,
     handleReviewTextChange,
+    handleSaveClick,
     handleSelectedKeywordIdsChange,
     setPhotoUrls,
   }
