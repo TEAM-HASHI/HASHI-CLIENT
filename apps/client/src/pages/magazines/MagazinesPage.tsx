@@ -11,51 +11,50 @@ export const MagazinesPage = () => {
     hasNextMagazinePage,
     heroBanners,
     isFetchingNextMagazinePage,
-    isHeroBannerError,
     isHeroBannerLoading,
     isRecommendedMagazineError,
     isRecommendedMagazineLoading,
+    isNextMagazinePageError,
     loadMoreRef,
-    refetchHeroBanners,
     refetchRecommendedMagazines,
     recommendedMagazines,
+    retryNextMagazinePage,
   } = useMagazinesPage()
 
   return (
     <div className="min-h-dvh bg-white">
-      <div className="app-mobile-fixed-top z-fixed bg-white">
-        <Header
-          leftAction={
-            <IconButton
-              aria-label="홈으로 돌아가기"
-              onClick={handleBackClick}
-              size="xs"
-            >
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-          title="매거진"
-        />
-      </div>
+      <Header
+        className="fixed top-0 right-0 left-0 z-20 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white"
+        leftAction={
+          <IconButton
+            aria-label="홈으로 돌아가기"
+            onClick={handleBackClick}
+            size="xs"
+          >
+            <BackIcon className="size-6" />
+          </IconButton>
+        }
+        title="매거진"
+      />
 
       <main className="pt-[75px]">
         <MagazineHeroBannerSection
           banners={heroBanners}
-          isError={isHeroBannerError}
           isLoading={isHeroBannerLoading}
-          onRetry={() => {
-            void refetchHeroBanners()
-          }}
         />
         <RecommendedMagazineSection
           hasNextPage={hasNextMagazinePage}
           isError={isRecommendedMagazineError}
           isFetchingNextPage={isFetchingNextMagazinePage}
           isLoading={isRecommendedMagazineLoading}
+          isNextPageError={isNextMagazinePageError}
           loadMoreRef={loadMoreRef}
           magazines={recommendedMagazines}
           onRetry={() => {
             void refetchRecommendedMagazines()
+          }}
+          onRetryNextPage={() => {
+            void retryNextMagazinePage()
           }}
         />
       </main>

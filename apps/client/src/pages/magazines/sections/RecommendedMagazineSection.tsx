@@ -9,16 +9,18 @@ interface Props {
   isError: boolean
   isFetchingNextPage: boolean
   isLoading: boolean
+  isNextPageError: boolean
   loadMoreRef: Ref<HTMLLIElement>
   magazines: RecommendedMagazine[]
   onRetry: () => void
+  onRetryNextPage: () => void
 }
 
 const renderSkeletonItems = () => {
   return Array.from({ length: 4 }, (_, index) => (
     <li
       aria-hidden="true"
-      className="border-warm-gray-50 grid grid-cols-[1fr_156px] gap-[21px] border-b py-4 last:border-b-0"
+      className="border-warm-gray-50 grid min-h-[136px] grid-cols-[minmax(0,1fr)_156px] gap-[29px] border-b pt-4 pb-3 last:border-b-0"
       key={index}
     >
       <div className="flex min-w-0 flex-col gap-3">
@@ -36,16 +38,20 @@ export const RecommendedMagazineSection = ({
   isError,
   isFetchingNextPage,
   isLoading,
+  isNextPageError,
   loadMoreRef,
   magazines,
   onRetry,
+  onRetryNextPage,
 }: Props) => {
-  const hasListContent =
+  const shouldRenderList =
     magazines.length > 0 || hasNextPage || isFetchingNextPage
+  const shouldRenderEmptyState =
+    magazines.length === 0 && !hasNextPage && !isFetchingNextPage
 
   if (isLoading) {
     return (
-      <section aria-label="추천 매거진 목록" className="pt-4">
+      <section aria-label="추천 매거진 목록" className="pt-2.5">
         <ul className="flex flex-col px-5">{renderSkeletonItems()}</ul>
       </section>
     )
@@ -53,8 +59,8 @@ export const RecommendedMagazineSection = ({
 
   if (isError) {
     return (
-      <section aria-label="추천 매거진 목록" className="px-5 pt-5">
-        <div className="bg-cool-gray-50 rounded-[8px] px-5 py-8 text-center">
+      <section aria-label="추천 매거진 목록" className="px-5 pt-2.5">
+        <div className="bg-cool-gray-50 rounded-lg px-5 py-8 text-center">
           <p className="typo-body-3 text-cool-gray-600">
             매거진을 불러오지 못했어요.
           </p>
@@ -71,25 +77,45 @@ export const RecommendedMagazineSection = ({
   }
 
   return (
-    <section aria-label="추천 매거진 목록" className="pt-4">
-      {hasListContent ? (
+    <section aria-label="추천 매거진 목록" className="pt-2.5">
+      {shouldRenderList ? (
         <ul className="flex flex-col px-5">
           {magazines.map((magazine) => (
             <MagazineListItem key={magazine.id} magazine={magazine} />
           ))}
-          {hasNextPage && (
-            <li aria-hidden="true" className="h-px" ref={loadMoreRef} />
+          {hasNextPage && !isNextPageError && (
+            <li
+              aria-hidden="true"
+              className="h-px"
+              data-testid="magazine-list-load-more"
+              ref={loadMoreRef}
+            />
           )}
           {isFetchingNextPage ? renderSkeletonItems().slice(0, 1) : null}
+          {isNextPageError ? (
+            <li className="py-4 text-center">
+              <p className="typo-body-6 text-cool-gray-600">
+                다음 매거진을 불러오지 못했어요.
+              </p>
+              <button
+                className="typo-body-6 text-primary-200 mt-2"
+                onClick={onRetryNextPage}
+                type="button"
+              >
+                다시 시도
+              </button>
+            </li>
+          ) : null}
         </ul>
-      ) : (
+      ) : null}
+      {shouldRenderEmptyState ? (
         <div className="flex min-h-[calc(100dvh-75px)] items-center justify-center px-5 pb-20">
           <ListEmptyState
             className="min-h-0"
             description="매거진 리스트를 준비중이에요."
           />
         </div>
-      )}
+      ) : null}
     </section>
   )
 }

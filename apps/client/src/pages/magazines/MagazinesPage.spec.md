@@ -47,13 +47,16 @@ Jira: HASHI-77
 - [x] 상단 대표 매거진 배너 영역을 보여준다.
 - [x] 대표 매거진 배너는 이미지와 페이지 인디케이터를 포함한다.
 - [x] 대표 매거진 배너 데이터는 상세 이동에 필요한 `magazineId`와 이미지를 포함한다.
+- [x] 대표 매거진 배너는 이미지에 포함된 문구만 노출하고 별도 텍스트를 겹치지 않는다.
 - [x] 대표 매거진 배너는 홈 메인 배너와 같은 `353:160` 이미지 비율을 사용한다.
 - [x] 대표 매거진 배너를 탭하면 해당 매거진의 내부 상세로 이동한다.
 - [x] 카테고리 필터는 MVP 범위에서 제외하므로 화면에 렌더링하지 않는다.
 - [x] 추천 매거진 목록은 제목, 이미지, 발행일을 포함한다.
 - [x] 추천 매거진 카드를 탭하면 해당 매거진의 내부 상세로 이동한다.
 - [x] 목록 아이템 사이에는 구분선을 보여주되 마지막 아이템에는 불필요한 구분선을 넣지 않는다.
-- [x] 추천 매거진 아이템은 상/하 `16px` padding을 동일하게 사용한다.
+- [x] 추천 매거진 아이템은 피그마 기준 최소 높이 `136px`, 상단 `16px`·하단 `12px` 간격을 사용한다.
+- [x] 배너 조회 실패 시 배너만 숨기고 목록은 유지한다.
+- [x] 다음 목록 조회 실패 시 이미 조회한 카드를 유지하고 실패한 다음 페이지만 재시도한다.
 - [x] 긴 제목은 모바일 폭에서 레이아웃을 깨지 않도록 줄 수를 제한한다.
 - [x] 배너 링크의 접근성 이름은 호출부 데이터에서 제공한다.
 - [x] 추천 매거진 썸네일은 링크 텍스트와 중복되지 않도록 장식 이미지로 처리한다.
@@ -97,13 +100,12 @@ Jira: HASHI-77
   - `apps/client/src/features/magazine/api/getMagazineBanners.ts`
   - `apps/client/src/features/magazine/queries/magazineQueryKeys.ts`
   - `apps/client/src/features/magazine/queries/magazineBannerQueryOptions.ts`
-  - `apps/client/src/features/magazine/hooks/useMagazineBannersQuery.ts`
+  - magazine list page calls `useQuery(magazineBannerQueryOptions())` with page-local `throwOnError: false`; Home may use the shared hook.
   - `apps/client/src/features/magazine/types.ts` if OpenAPI aliases or shared banner view model types are reused across Home and Magazines
 - magazine list endpoint/query stays page-local until another screen uses the same cursor list contract:
   - `apps/client/src/pages/magazines/api/getMagazines.ts`
   - `apps/client/src/pages/magazines/queries/magazineListQueryKeys.ts`
   - `apps/client/src/pages/magazines/queries/magazineListQueryOptions.ts`
-  - `apps/client/src/pages/magazines/hooks/useMagazinesInfiniteQuery.ts`
   - `apps/client/src/pages/magazines/types.ts` if OpenAPI aliases or page-local list view model types are shared by multiple page files
 - `useMagazinesPage` remains the page orchestration boundary.
 - `MagazinesPage`, section components, and list item components do not import `request`, query keys, or generated API types directly.
@@ -149,8 +151,9 @@ Jira: HASHI-77
   - if all magazine pages are empty, show shared `ListEmptyState` with `매거진 리스트를 준비중이에요.`
   - if no usable list item is rendered yet but `hasNextPage` is true, do not show the empty state until the next page fetch resolves.
 - error:
-  - expected `4xx` stays local to the page/query state.
-  - `5xx`, network, and timeout errors follow the global QueryClient `throwOnError` policy and may be caught by `AsyncBoundary`.
+  - banner errors stay local and hide only the banner.
+  - first-page list errors stay in the list area and show the local retry UI regardless of error type.
+  - next-page errors keep loaded cards visible and show a retry action for that page, including when the shared policy would otherwise throw.
   - retry UI should call the query refetch/reset path rather than bypass TanStack Query.
 - success:
   - normalize API data to existing `MagazineHeroBanner` and `RecommendedMagazine` UI types before rendering sections.
@@ -166,7 +169,7 @@ Jira: HASHI-77
 - Drop list items that miss `magazineId`, `title`, `thumbnailImageUrl`, or valid `createdAt`.
 - Drop banner items that miss `magazineId` or `bannerImageUrl`; use `매거진 배너` when `title` is missing.
 - Use `magazineId` to build the internal `/magazines/:magazineId` detail path for banners and list items.
-- Keep banner/list failures local to the section for expected `4xx`; shared QueryClient/AsyncBoundary handles `5xx`, network, timeout, and unexpected errors.
+- Keep banner errors local and hide the banner; keep next-page list errors local so existing cards remain visible.
 
 ### Mutation
 
@@ -185,9 +188,10 @@ Jira: HASHI-77
   - shared banner query와 page-local infinite list query를 조합한다.
   - 뒤로가기 이동 로직을 소유한다.
   - 목록 API 응답을 목록 전용 view model로 정규화한다.
+  - banner 실패와 최초/다음 목록 실패를 각각 구분한다.
 - page:
   - `MagazinesPage.tsx`는 hook 호출, Header 배치, 섹션 조합만 담당한다.
-  - mock 배열이나 외부 URL 이동 로직을 직접 들지 않는다.
+  - mock 배열이나 API 요청 로직을 직접 들지 않는다.
 - API:
   - `GET /api/v1/magazines/banners`는 홈에서도 사용하므로 `features/magazine`의 shared feature query로 시작한다.
   - `GET /api/v1/magazines` 목록 query는 매거진 리스트 페이지 전용이므로 page-local에서 시작한다.
@@ -210,6 +214,7 @@ Jira: HASHI-77
     - list endpoint/query: page-local `api/`, `queries/`, `hooks/`, composed by `useMagazinesPage`
 - derived state:
   - normalized hero banner and recommended magazine arrays
+  - `isNextMagazinePageError`
   - owner: `useMagazinesPage`
 
 ## UI Structure
@@ -293,9 +298,9 @@ Hero banners and magazine cards render React Router `Link` elements using `getMa
 ## Error Handling
 
 - API error:
-  - `ApiError` and `HttpStatusError` keep HTTP status through the shared `request` helper.
-  - expected `4xx` errors should be handled locally if the endpoint remains public.
-  - `5xx`, timeout, network, and unexpected errors may go to `AsyncBoundary` according to shared QueryClient policy.
+  - 배너 실패는 오류 종류와 관계없이 배너만 숨긴다.
+  - 목록 최초 조회 오류는 종류와 관계없이 목록 영역의 오류/재시도로 처리한다.
+  - 다음 페이지 실패는 기존 카드를 유지하고 다음 페이지 재시도 버튼을 표시한다.
 - validation error: none
 - exceptional case:
   - missing `magazineId`: drop the unusable item at the page hook boundary.
@@ -322,6 +327,11 @@ Hero banners and magazine cards render React Router `Link` elements using `getMa
   - none
 - back behavior:
   - `navigate(ROUTES.home)`
+  - 스크롤 중에는 메모리에 최신 위치만 기록하고, 페이지 해제 또는 `pagehide` 시 조회한 페이지 수와 위치를 방문 기록의 location key별로 `sessionStorage`에 저장한다.
+  - `POP` 복귀 시 `useMagazineListRestoration`이 저장된 상태를 읽는다. 캐시가 만료됐다면 필요한 페이지를 순차 조회하고, 배너와 목록 렌더링이 완료된 다음 프레임에서 위치를 복원한다.
+  - 복원 중에는 일반 무한스크롤 및 빈 페이지 자동 조회를 중단한다. 조회 실패 시 저장한 위치를 유지하고 기존 재시도 버튼으로 복원을 이어간다.
+  - 새로 진입한 방문 기록에는 이전 기록의 위치를 적용하지 않는다. 저장소가 차단되면 복원 없이 일반 목록 조회를 유지한다.
+  - 배너와 카드의 내부 상세 링크 연결을 포함하며, 전역 `RootLayout`의 스크롤 정책은 바꾸지 않는다.
 - auth redirect:
   - none
 - internal navigation:
@@ -338,7 +348,7 @@ Hero banners and magazine cards render React Router `Link` elements using `getMa
   - fixed header가 콘텐츠를 덮지 않도록 본문에 header height만큼 top padding을 둔다.
 - representative banner:
   - visual area below header uses horizontal page padding `px-5`.
-  - visual area starts `4px` below the fixed header content offset.
+  - visual area starts `18px` below the fixed header content offset.
   - viewport keeps the shared magazine image ratio `353:160`.
   - image uses `object-cover`.
   - title/description overlay is not rendered because those are included in the banner image.
@@ -346,11 +356,12 @@ Hero banners and magazine cards render React Router `Link` elements using `getMa
   - 모서리는 `5px`, indicator는 카드 오른쪽 `20px`/아래 `23px`, 활성 `12×4px`/비활성 `4×4px`, 간격 `7px`입니다.
 - recommendation section:
   - horizontal padding uses `px-5`.
+  - section starts `10px` below the preceding content.
   - large section heading such as `최근 _한 추천 매거진` is not rendered.
   - list item uses text column and fixed image area.
-  - list item vertical padding uses `py-4` so top and bottom are both `16px`.
+  - list item minimum height is `136px`; top padding is `16px`, bottom padding is `12px`, and column gap is `29px` at the design width.
   - list item title uses `typo-body-6 text-black`.
-  - list item date uses `typo-caption-1 font-medium text-warm-gray-300`.
+  - list item title line height is `1.36`; date uses `typo-caption-1 font-medium leading-[1.5] text-warm-gray-300`.
   - list item divider uses `border-b border-warm-gray-50`.
   - hero banner and list skeleton placeholder blocks use `bg-secondary-200`, matching the shared restaurant list skeleton used by Hashi Pick and Popular Restaurants.
   - image keeps `w-[156px]` and `aspect-[156/88]` so text loading and long copy do not shift layout.

@@ -5,43 +5,16 @@ import type { MagazineHeroBanner } from '@/pages/magazines/types'
 
 interface Props {
   banners: MagazineHeroBanner[]
-  isError: boolean
   isLoading: boolean
-  onRetry: () => void
 }
 
-export const MagazineHeroBannerSection = ({
-  banners,
-  isError,
-  isLoading,
-  onRetry,
-}: Props) => {
+export const MagazineHeroBannerSection = ({ banners, isLoading }: Props) => {
   if (isLoading) {
     return (
       <section
         aria-label="대표 매거진 배너 로딩 중"
-        className="bg-secondary-200 mx-5 mt-1 aspect-353/160 rounded-[5px]"
+        className="bg-secondary-200 mx-5 mt-4.5 aspect-[353/160] rounded-[5px]"
       />
-    )
-  }
-
-  if (isError) {
-    return (
-      <section
-        aria-label="대표 매거진 배너"
-        className="bg-cool-gray-50 mx-5 mt-1 flex aspect-353/160 flex-col items-center justify-center rounded-[5px] px-5 text-center"
-      >
-        <p className="typo-body-3 text-cool-gray-600">
-          매거진 배너를 불러오지 못했어요.
-        </p>
-        <button
-          className="typo-body-6 text-primary-200 mt-3"
-          onClick={onRetry}
-          type="button"
-        >
-          다시 시도
-        </button>
-      </section>
     )
   }
 
@@ -50,8 +23,8 @@ export const MagazineHeroBannerSection = ({
   }
 
   return (
-    <Carousel.Root aria-label="대표 매거진 배너" className="mx-5 mt-1 w-auto">
-      <Carousel.Viewport className="aspect-353/160 overflow-y-hidden rounded-[5px]">
+    <Carousel.Root aria-label="대표 매거진 배너" className="mx-5 mt-4.5 w-auto">
+      <Carousel.Viewport className="aspect-[353/160] overflow-y-hidden rounded-[5px]">
         <Carousel.Track>
           {banners.map((banner) => (
             <Carousel.Item key={banner.id}>

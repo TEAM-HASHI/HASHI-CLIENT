@@ -11,7 +11,7 @@ export const MagazineListItem = ({ magazine }: Props) => {
   return (
     <li className="border-warm-gray-50 border-b last:border-b-0">
       <Link
-        className="grid grid-cols-[1fr_156px] gap-5.25 py-4"
+        className="grid min-h-[136px] grid-cols-[minmax(0,1fr)_156px] gap-[29px] pt-4 pb-3"
         state={{
           magazinePreview: {
             imageUrl: magazine.imageUrl,
@@ -21,16 +21,16 @@ export const MagazineListItem = ({ magazine }: Props) => {
         to={getMagazineDetailPath(magazine.id)}
       >
         <div className="flex min-w-0 flex-col">
-          <h3 className="typo-body-6 line-clamp-3 text-black">
+          <h3 className="typo-body-6 line-clamp-3 leading-[1.36] text-black">
             {magazine.title}
           </h3>
-          <time className="typo-caption-1 text-warm-gray-300 mt-auto pt-5 font-medium">
+          <time className="typo-caption-1 text-warm-gray-300 mt-auto leading-[1.5] font-medium">
             {magazine.publishedDate}
           </time>
         </div>
         <img
           alt=""
-          className="aspect-156/88 w-39 rounded-[5px] object-cover"
+          className="aspect-[156/88] w-[156px] rounded-[5px] object-cover"
           src={magazine.imageUrl}
         />
       </Link>

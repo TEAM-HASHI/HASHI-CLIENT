@@ -132,6 +132,10 @@ export const appRoutes: RouteObject[] = [
             element: lazyPages.profileNew(),
           },
           {
+            path: ROUTES.profileEdit,
+            element: lazyPages.profileEdit(),
+          },
+          {
             path: ROUTES.withdrawal,
             element: lazyPages.withdrawal(),
           },
@@ -149,7 +153,7 @@ export const appRoutes: RouteObject[] = [
           },
           {
             path: ROUTES.reservationDetail,
-            element: lazyPages.reservationDetail(),
+            element: withSilentLazyFallback(lazyPages.reservationDetail()),
           },
         ],
       },
