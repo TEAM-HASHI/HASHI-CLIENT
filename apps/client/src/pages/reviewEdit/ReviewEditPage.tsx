@@ -14,6 +14,7 @@ export const ReviewEditPage = () => {
   const {
     isError,
     isInvalidReviewId,
+    isNotFound,
     isPending,
     isSaveDisabled,
     maxReviewTextLength,
@@ -29,6 +30,7 @@ export const ReviewEditPage = () => {
     handleRatingChange,
     handleRetryClick,
     handleReviewTextChange,
+    handleSaveClick,
     handleSelectedKeywordIdsChange,
     setPhotoUrls,
   } = useReviewEditPage()
@@ -65,12 +67,18 @@ export const ReviewEditPage = () => {
   }
 
   if (isError || !reviewEdit) {
+    const shouldReturnToWrittenReviews = isInvalidReviewId || isNotFound
+
     return renderStatus(
       isInvalidReviewId
         ? '리뷰 수정 정보를 확인할 수 없습니다.'
-        : '리뷰 수정 정보를 불러오지 못했습니다.',
-      isInvalidReviewId ? '마이 리뷰로 돌아가기' : '다시 시도',
-      isInvalidReviewId ? handleInvalidReviewIdBackClick : handleRetryClick,
+        : isNotFound
+          ? '리뷰 수정 정보를 찾을 수 없습니다.'
+          : '리뷰 수정 정보를 불러오지 못했습니다.',
+      shouldReturnToWrittenReviews ? '마이 리뷰로 돌아가기' : '다시 시도',
+      shouldReturnToWrittenReviews
+        ? handleInvalidReviewIdBackClick
+        : handleRetryClick,
     )
   }
 
@@ -118,6 +126,7 @@ export const ReviewEditPage = () => {
             className="shrink-0 bg-white pb-12"
             disabled={isSaveDisabled}
             type="button"
+            onSubmit={handleSaveClick}
           />
         </form>
       </div>
