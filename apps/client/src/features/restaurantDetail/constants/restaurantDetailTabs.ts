@@ -5,5 +5,6 @@ import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/rest
 export const RESTAURANT_DETAIL_TABS = [
   { value: 'info', label: '매장 정보' },
   { value: 'menu', label: '메뉴' },
+  { value: 'photo', label: '사진' },
   { value: 'review', label: '리뷰' },
 ] satisfies (TabsItem & { value: RestaurantDetailTab })[]

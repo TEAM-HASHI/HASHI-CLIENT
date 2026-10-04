@@ -176,7 +176,7 @@ UI 변경:
 - `vercel-admin-preview.yml`: admin preview 배포만 담당합니다.
 - `vercel-admin-production.yml`: admin production 배포만 담당합니다.
 - `chromatic.yml`: HDS Storybook/Chromatic 검증만 담당하며, HDS 관련 경로가 바뀐 PR에서 실행됩니다.
-- auto-label, auto-assign, Discord workflow는 PR 운영 자동화를 담당합니다.
+- auto-label, auto-assign workflow는 PR 운영 자동화를 담당합니다.
 
 ## Before Merge
 

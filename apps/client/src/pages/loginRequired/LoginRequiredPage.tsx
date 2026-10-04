@@ -16,16 +16,16 @@ export const LoginRequiredPage = () => {
         <img
           alt=""
           aria-hidden="true"
-          className="mb-[29px] h-19 w-[101px]"
+          className="mb-7 h-19 w-25.25"
           src={emptyImage}
         />
         <h1 className="typo-sub-header-1 text-cool-gray-900 mb-3 whitespace-nowrap">
           Hashi와 함께 예약을 시작해보세요!
         </h1>
         <p className="typo-body-8 text-cool-gray-500 mb-5 leading-[1.2]">
-          로그인하면 예약 현황을
+          더 편한 Hashi 이용을 위해
           <br />
-          한눈에 확인할 수 있어요.
+          현재 기능을 준비하고 있어요.
         </p>
         <KakaoStartButton
           onPress={() => {

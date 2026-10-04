@@ -153,7 +153,7 @@ export const appRoutes: RouteObject[] = [
           },
           {
             path: ROUTES.reservationDetail,
-            element: lazyPages.reservationDetail(),
+            element: withSilentLazyFallback(lazyPages.reservationDetail()),
           },
         ],
       },

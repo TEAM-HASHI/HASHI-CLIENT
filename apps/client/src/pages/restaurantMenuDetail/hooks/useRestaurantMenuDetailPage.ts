@@ -11,6 +11,7 @@ import {
 import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
 import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import type { RestaurantMenuListData } from '@/features/restaurantDetail/api/getRestaurantMenus'
+import { useRestaurantPhotos } from '@/features/restaurantDetail/hooks/useRestaurantPhotos'
 import {
   restaurantMenuQueryOptions,
   restaurantMenusInfiniteQueryOptions,
@@ -49,6 +50,10 @@ export const useRestaurantMenuDetailPage = () => {
   const parsedRestaurantId = parsePositiveIntegerParam(restaurantId)
   const parsedMenuId = parsePositiveIntegerParam(menuId)
   const hasValidParams = parsedRestaurantId !== null && parsedMenuId !== null
+  const photos = useRestaurantPhotos(
+    hasValidParams ? parsedRestaurantId : 0,
+    false,
+  )
   const currentRestaurantId = String(parsedRestaurantId ?? '')
   const currentMenuId = String(parsedMenuId ?? '')
   const sourceState = getRestaurantMenuDetailSourceState(location.state)
@@ -181,6 +186,7 @@ export const useRestaurantMenuDetailPage = () => {
     otherMenusForDisplay: menus,
     otherMenuLoadMoreRef,
     otherMenuTotalCount,
+    photoCount: photos.enabled ? photos.counts?.all : undefined,
     restaurant,
     selectedMenu,
     shareUrl,

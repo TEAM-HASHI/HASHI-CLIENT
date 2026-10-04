@@ -28,6 +28,7 @@ export const RestaurantMenuDetailPage = () => {
     otherMenuLoadMoreRef,
     otherMenusForDisplay,
     otherMenuTotalCount,
+    photoCount,
     restaurant,
     selectedMenu,
     shareUrl,
@@ -56,7 +57,7 @@ export const RestaurantMenuDetailPage = () => {
 
   return (
     <div
-      className="min-h-dvh bg-white pb-[calc(82px+var(--safe-area-bottom,0px))]"
+      className="app-mobile-bottom-action-compact-content min-h-dvh bg-white"
       data-testid="restaurant-menu-detail-page"
     >
       <div
@@ -92,6 +93,7 @@ export const RestaurantMenuDetailPage = () => {
         <RestaurantDetailTabs
           activeTab="menu"
           onTabChange={onTabChange}
+          photoCount={photoCount}
           reviewCount={restaurant.reviewCount}
         />
       </div>

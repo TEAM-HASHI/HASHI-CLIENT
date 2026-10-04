@@ -18,6 +18,12 @@ export const FOOD_CATEGORY_OPTIONS = [
   { value: 'etc', label: '기타' },
 ] as const
 
+export const PLACE_TYPE_OPTIONS = [
+  { value: 'restaurant', label: '음식점' },
+  { value: 'cafe', label: '카페' },
+  { value: 'bar', label: '주점' },
+] as const
+
 const normalizeOptionValue = (
   value: string | null | undefined,
   options: readonly { value: string; label: string }[],
