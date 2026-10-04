@@ -46,12 +46,13 @@ Jira: HASHI-77
 - [x] 뒤로가기 버튼 클릭 시 `ROUTES.home`으로 이동한다.
 - [x] 상단 대표 매거진 배너 영역을 보여준다.
 - [x] 대표 매거진 배너는 이미지와 페이지 인디케이터를 포함한다.
+- [x] 대표 매거진 배너 데이터는 상세 이동에 필요한 `magazineId`와 이미지를 포함한다.
 - [x] 대표 매거진 배너는 이미지에 포함된 문구만 노출하고 별도 텍스트를 겹치지 않는다.
 - [x] 대표 매거진 배너는 홈 메인 배너와 같은 `353:160` 이미지 비율을 사용한다.
-- [ ] 대표 매거진 배너를 탭하면 `magazineId`의 내부 상세로 이동한다. (`feat/HASHI-209-magazine-detail-page`에서 반영)
+- [x] 대표 매거진 배너를 탭하면 해당 매거진의 내부 상세로 이동한다.
 - [x] 카테고리 필터는 MVP 범위에서 제외하므로 화면에 렌더링하지 않는다.
 - [x] 추천 매거진 목록은 제목, 이미지, 발행일을 포함한다.
-- [ ] 추천 매거진 카드를 탭하면 `magazineId`의 내부 상세로 이동한다. (`feat/HASHI-209-magazine-detail-page`에서 반영)
+- [x] 추천 매거진 카드를 탭하면 해당 매거진의 내부 상세로 이동한다.
 - [x] 목록 아이템 사이에는 구분선을 보여주되 마지막 아이템에는 불필요한 구분선을 넣지 않는다.
 - [x] 추천 매거진 아이템은 피그마 기준 최소 높이 `136px`, 상단 `16px`·하단 `12px` 간격을 사용한다.
 - [x] 배너 조회 실패 시 배너만 숨기고 목록은 유지한다.
@@ -84,7 +85,7 @@ Jira: HASHI-77
 - notes:
   - `/api/v1/magazines` is latest-first cursor pagination.
   - `/api/v1/magazines/banners` returns the latest 5 magazine banners.
-  - 현재 브랜치는 기존 Instagram 링크를 유지한다. 내부 상세 링크와 미리보기 상태 전달은 `feat/HASHI-209-magazine-detail-page`에서 담당한다.
+  - banner/card click opens `/magazines/:magazineId`.
 
 #### Queries
 
@@ -125,19 +126,17 @@ Jira: HASHI-77
 
 #### Type Mapping
 
-| API field                                      | UI use                           | Nullable/optional          | Transform                                                                                     |
-| ---------------------------------------------- | -------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
-| `MagazineBannerResponse.magazineId`            | banner `id`, React key           | optional in generated type | convert to string; item is unusable if missing                                                |
-| `MagazineBannerResponse.title`                 | banner accessible label fallback | optional                   | fallback to `매거진 배너`                                                                     |
-| `MagazineBannerResponse.bannerImageUrl`        | banner image `src`               | optional                   | item is unusable if missing                                                                   |
-| `MagazineBannerResponse.instagramRedirectUrl`  | banner external link             | optional                   | normalize with `normalizeInstagramUrl`; invalid value becomes `null`                          |
-| `MagazineSummaryResponse.magazineId`           | list item `id`, React key        | optional in generated type | convert to string; item is unusable if missing                                                |
-| `MagazineSummaryResponse.title`                | list item title/link name        | optional                   | item is unusable if missing                                                                   |
-| `MagazineSummaryResponse.thumbnailImageUrl`    | list item thumbnail `src`        | optional                   | item is unusable if missing                                                                   |
-| `MagazineSummaryResponse.instagramRedirectUrl` | list item external link          | optional                   | normalize with `normalizeInstagramUrl`; invalid value becomes `null`                          |
-| `MagazineSummaryResponse.createdAt`            | published date                   | optional, `date-time`      | use the server date part and format as `YYYY. MM.DD.`; item is unusable if missing or invalid |
-| `MagazineListResponse.nextCursor`              | next page cursor                 | optional                   | pass as next page param only when `hasNext` is true                                           |
-| `MagazineListResponse.hasNext`                 | load-more availability           | optional                   | omitted value means no next page in the first implementation                                  |
+| API field                                   | UI use                           | Nullable/optional          | Transform                                                                                     |
+| ------------------------------------------- | -------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
+| `MagazineBannerResponse.magazineId`         | banner `id`, React key           | optional in generated type | convert to string; item is unusable if missing                                                |
+| `MagazineBannerResponse.title`              | banner accessible label fallback | optional                   | fallback to `매거진 배너`                                                                     |
+| `MagazineBannerResponse.bannerImageUrl`     | banner image `src`               | optional                   | item is unusable if missing                                                                   |
+| `MagazineSummaryResponse.magazineId`        | list item `id`, React key        | optional in generated type | convert to string; item is unusable if missing                                                |
+| `MagazineSummaryResponse.title`             | list item title/link name        | optional                   | item is unusable if missing                                                                   |
+| `MagazineSummaryResponse.thumbnailImageUrl` | list item thumbnail `src`        | optional                   | item is unusable if missing                                                                   |
+| `MagazineSummaryResponse.createdAt`         | published date                   | optional, `date-time`      | use the server date part and format as `YYYY. MM.DD.`; item is unusable if missing or invalid |
+| `MagazineListResponse.nextCursor`           | next page cursor                 | optional                   | pass as next page param only when `hasNext` is true                                           |
+| `MagazineListResponse.hasNext`              | load-more availability           | optional                   | omitted value means no next page in the first implementation                                  |
 
 #### UI States
 
@@ -169,7 +168,7 @@ Jira: HASHI-77
 - Auto-fetch additional pages with an IntersectionObserver bottom sentinel.
 - Drop list items that miss `magazineId`, `title`, `thumbnailImageUrl`, or valid `createdAt`.
 - Drop banner items that miss `magazineId` or `bannerImageUrl`; use `매거진 배너` when `title` is missing.
-- Keep the existing `instagramRedirectUrl` navigation in this branch; the detail branch replaces it with `magazineId` navigation and preview state.
+- Use `magazineId` to build the internal `/magazines/:magazineId` detail path for banners and list items.
 - Keep banner errors local and hide the banner; keep next-page list errors local so existing cards remain visible.
 
 ### Mutation
@@ -188,6 +187,7 @@ Jira: HASHI-77
   - `apps/client/src/pages/magazines/hooks/useMagazinesPage.ts`
   - shared banner query와 page-local infinite list query를 조합한다.
   - 뒤로가기 이동 로직을 소유한다.
+  - 목록 API 응답을 목록 전용 view model로 정규화한다.
   - banner 실패와 최초/다음 목록 실패를 각각 구분한다.
 - page:
   - `MagazinesPage.tsx`는 hook 호출, Header 배치, 섹션 조합만 담당한다.
@@ -213,6 +213,7 @@ Jira: HASHI-77
     - banner endpoint/query: `features/magazine`
     - list endpoint/query: page-local `api/`, `queries/`, `hooks/`, composed by `useMagazinesPage`
 - derived state:
+  - normalized hero banner and recommended magazine arrays
   - `isNextMagazinePageError`
   - owner: `useMagazinesPage`
 
@@ -274,9 +275,8 @@ Recommended page hook return shape:
 ```ts
 type MagazineHeroBanner = {
   id: string
+  title: string
   imageUrl: string
-  instagramUrl: string | null
-  accessibilityLabel: string
 }
 
 type RecommendedMagazine = {
@@ -284,7 +284,6 @@ type RecommendedMagazine = {
   title: string
   imageUrl: string
   publishedDate: string
-  instagramUrl: string | null
 }
 
 type UseMagazinesPageReturn = {
@@ -294,7 +293,7 @@ type UseMagazinesPageReturn = {
 }
 ```
 
-This branch keeps native external links only when `instagramUrl` is valid. The detail branch owns the internal links and preview state passed to `/magazines/:magazineId`.
+Hero banners and magazine cards render React Router `Link` elements using `getMagazineDetailPath`. The selected title and image URL are passed as preview location state so the detail publishing screen can render available list data until the detail API is connected.
 
 ## Error Handling
 
@@ -304,8 +303,7 @@ This branch keeps native external links only when `instagramUrl` is valid. The d
   - 다음 페이지 실패는 기존 카드를 유지하고 다음 페이지 재시도 버튼을 표시한다.
 - validation error: none
 - exceptional case:
-  - missing `magazineId`: do not render an item without a stable identifier.
-  - missing or invalid Instagram URL: render the item as disabled content without navigation.
+  - missing `magazineId`: drop the unusable item at the page hook boundary.
   - broken image URL: rely on browser image behavior unless product approves a page-local or shared fallback.
 - user-facing message:
   - empty recommended list: `매거진 리스트를 준비중이에요.`
@@ -317,7 +315,8 @@ This branch keeps native external links only when `instagramUrl` is valid. The d
 - entry:
   - home page or any link to `ROUTES.magazines`
 - links:
-  - hero banner and magazine card: valid Instagram post URL until the detail branch is integrated
+  - hero banner internal magazine detail route
+  - magazine card internal magazine detail route
 - route params:
   - none
 - search params:
@@ -332,17 +331,19 @@ This branch keeps native external links only when `instagramUrl` is valid. The d
   - `POP` 복귀 시 `useMagazineListRestoration`이 저장된 상태를 읽는다. 캐시가 만료됐다면 필요한 페이지를 순차 조회하고, 배너와 목록 렌더링이 완료된 다음 프레임에서 위치를 복원한다.
   - 복원 중에는 일반 무한스크롤 및 빈 페이지 자동 조회를 중단한다. 조회 실패 시 저장한 위치를 유지하고 기존 재시도 버튼으로 복원을 이어간다.
   - 새로 진입한 방문 기록에는 이전 기록의 위치를 적용하지 않는다. 저장소가 차단되면 복원 없이 일반 목록 조회를 유지한다.
-  - 상세 내부 링크 연결은 상세 브랜치에서 담당하며, 이번 변경은 전역 `RootLayout`의 스크롤 정책을 바꾸지 않는다.
+  - 배너와 카드의 내부 상세 링크 연결을 포함하며, 전역 `RootLayout`의 스크롤 정책은 바꾸지 않는다.
 - auth redirect:
   - none
-- external navigation: native anchor with a validated Instagram URL
+- internal navigation:
+  - use `getMagazineDetailPath(magazineId)` and React Router `Link`.
+  - pass only title and representative image as optional preview state; route params remain the source of identity after API integration.
 
 ## Styling
 
 - Tailwind layout:
   - mobile-first, `RootLayout` mobile frame 기준
   - root background `bg-white`
-  - header는 모바일 프레임 상단에 `fixed top-0 right-0 left-0 z-20 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white`로 고정한다.
+  - header는 `app-mobile-fixed-top z-fixed bg-white` wrapper로 모바일 프레임 상단에 고정한다.
   - header는 캐러셀 인디케이터보다 높은 layer에 있어야 하므로 콘텐츠 layer보다 높은 z-index를 사용한다.
   - fixed header가 콘텐츠를 덮지 않도록 본문에 header height만큼 top padding을 둔다.
 - representative banner:
@@ -370,7 +371,7 @@ This branch keeps native external links only when `instagramUrl` is valid. The d
   - app mobile frame width를 따른다.
   - narrow mobile viewport에서 image와 text가 겹치지 않아야 한다.
 - fixed area:
-  - none
+  - 상단 `Header`를 모바일 프레임 상단에 고정한다.
 - scroll area:
   - whole page scrolls vertically.
 - empty/loading/error layout:
@@ -382,12 +383,12 @@ This branch keeps native external links only when `instagramUrl` is valid. The d
 
 - `Header` left action uses `IconButton aria-label="홈으로 돌아가기"`.
 - `Carousel.Root` receives an accessible label such as `aria-label="대표 매거진 배너"`.
-- carousel slide links have meaningful accessible names through `accessibilityLabel`.
+- carousel slide links use the normalized magazine title as their accessible name.
 - recommended magazine section does not use a visible heading; if the section needs an accessible name, use `aria-label="추천 매거진 목록"` instead of an off-design visible title.
 - magazine list is rendered as a semantic list.
 - each magazine item is a single interactive target.
 - magazine thumbnail images use empty `alt` because the surrounding link is already named by title and date text.
-- this branch retains native external links; the detail branch switches them to React Router `Link`.
+- detail links use semantic React Router links and preserve native link behavior.
 - text-only icon buttons are not introduced.
 - filter controls are not rendered, so there are no hidden or disabled category filter controls.
 
@@ -395,10 +396,6 @@ This branch keeps native external links only when `instagramUrl` is valid. The d
 
 - API integration spec update:
   - [x] implementation decisions are reflected in the spec
-  - [ ] `corepack pnpm --filter @hashi/client lint`
-  - [ ] `corepack pnpm --filter @hashi/client typecheck`
-  - [ ] `corepack pnpm --filter @hashi/client test`
-  - [ ] `corepack pnpm --filter @hashi/client build`
   - [ ] API success: banners render latest 5 items
   - [ ] API success: magazines render first page and next page according to chosen pagination UI
   - [ ] API empty: banner section hides when no usable banners exist
@@ -414,6 +411,6 @@ This branch keeps native external links only when `instagramUrl` is valid. The d
 - [ ] bottom navigation layout 미포함 확인
 - [x] 뒤로가기 버튼이 홈으로 이동하는지 확인
 - [ ] 대표 배너 swipe와 indicator 확인
-- [ ] 대표 배너/매거진 카드 내부 상세 링크 확인 (`feat/HASHI-209-magazine-detail-page` 통합 후)
+- [x] 대표 배너/매거진 카드 내부 상세 링크 이동 확인
 - [x] 카테고리 필터 UI가 렌더링되지 않는지 확인
 - [ ] 긴 제목과 좁은 viewport에서 텍스트와 이미지가 겹치지 않는지 확인

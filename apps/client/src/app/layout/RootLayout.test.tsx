@@ -40,14 +40,17 @@ const {
   )),
   mockTrackPageView: vi.fn(),
 }))
-const { mockLocationStore, mockScrollTo } = vi.hoisted(() => ({
-  mockLocationStore: {
-    hash: '',
-    pathname: '/',
-    search: '',
-  },
-  mockScrollTo: vi.fn(),
-}))
+const { mockLocationStore, mockNavigationType, mockScrollTo } = vi.hoisted(
+  () => ({
+    mockLocationStore: {
+      hash: '',
+      pathname: '/',
+      search: '',
+    },
+    mockNavigationType: { value: 'PUSH' as 'POP' | 'PUSH' | 'REPLACE' },
+    mockScrollTo: vi.fn(),
+  }),
+)
 
 vi.mock('@hashi/hds-ui', () => ({
   ToastRegion: mockToastRegion,
@@ -68,6 +71,7 @@ vi.mock('@/shared/lib/analytics', () => ({
 vi.mock('react-router-dom', () => ({
   Outlet: () => <div data-testid="route-outlet" />,
   useLocation: () => mockLocationStore,
+  useNavigationType: () => mockNavigationType.value,
 }))
 
 describe('RootLayout', () => {
@@ -86,6 +90,7 @@ describe('RootLayout', () => {
     mockLocationStore.hash = ''
     mockLocationStore.pathname = '/'
     mockLocationStore.search = ''
+    mockNavigationType.value = 'PUSH'
   })
 
   it('positions the toast region at the top of the mobile frame with 20px horizontal padding', () => {
@@ -139,6 +144,43 @@ describe('RootLayout', () => {
       left: 0,
       behavior: 'auto',
     })
+  })
+
+  it('preserves the browser scroll position when returning to the magazine list', () => {
+    const { rerender } = render(<RootLayout />)
+
+    mockScrollTo.mockClear()
+    mockNavigationType.value = 'POP'
+    mockLocationStore.pathname = '/magazines'
+    rerender(<RootLayout />)
+
+    expect(mockScrollTo).not.toHaveBeenCalled()
+  })
+
+  it('scrolls to the top on history navigation to another page', () => {
+    const { rerender } = render(<RootLayout />)
+
+    mockScrollTo.mockClear()
+    mockNavigationType.value = 'POP'
+    mockLocationStore.pathname = '/restaurants/restaurant-1'
+    rerender(<RootLayout />)
+
+    expect(mockScrollTo).toHaveBeenCalledWith({
+      top: 0,
+      left: 0,
+      behavior: 'auto',
+    })
+  })
+
+  it('does not reset scroll when only the navigation type changes', () => {
+    mockNavigationType.value = 'POP'
+    const { rerender } = render(<RootLayout />)
+
+    mockScrollTo.mockClear()
+    mockNavigationType.value = 'PUSH'
+    rerender(<RootLayout />)
+
+    expect(mockScrollTo).not.toHaveBeenCalled()
   })
 
   it('uses the current pathname and search as the AsyncBoundary reset key', () => {

@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { magazineBannerQueryOptions } from '@/features/magazine/queries/magazineBannerQueryOptions'
-import { normalizeInstagramUrl } from '@/features/magazine/utils/normalizeInstagramUrl'
 import { magazineListInfiniteQueryOptions } from '@/pages/magazines/queries/magazineListQueryOptions'
 import { useMagazineListRestoration } from '@/pages/magazines/hooks/useMagazineListRestoration'
 import type {
@@ -14,8 +13,6 @@ import type {
 import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const MAGAZINE_LIST_PAGE_SIZE = 10
-
-export { normalizeInstagramUrl }
 
 const formatMagazinePublishedDate = (createdAt: string) => {
   const dateParts = /^(\d{4})-(\d{2})-(\d{2})/.exec(createdAt)
@@ -69,13 +66,10 @@ export const useMagazinesPage = () => {
         return []
       }
 
-      const accessibilityLabel = title || '매거진 배너'
-
       return {
         id: String(magazineId),
+        title: title || '매거진 배너',
         imageUrl: bannerImageUrl,
-        instagramUrl: normalizeInstagramUrl(banner.instagramRedirectUrl ?? ''),
-        accessibilityLabel,
       }
     })
   }, [magazineBannersQuery.data?.banners, magazineBannersQuery.isError])
@@ -105,9 +99,6 @@ export const useMagazinesPage = () => {
           title,
           imageUrl: thumbnailImageUrl,
           publishedDate,
-          instagramUrl: normalizeInstagramUrl(
-            magazine.instagramRedirectUrl ?? '',
-          ),
         }
       }),
     )
