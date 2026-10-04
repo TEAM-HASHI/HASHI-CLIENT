@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getRestaurantMenu } from '@/features/restaurantDetail/api/getRestaurantMenu'
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
+import { getRestaurantPhotoDataSource } from '@/features/restaurantDetail/api/restaurantPhotoSource'
 import { RestaurantMenuDetailPage } from '@/pages/restaurantMenuDetail/RestaurantMenuDetailPage'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
@@ -91,6 +92,9 @@ vi.mock('@/features/restaurantDetail/api/getRestaurantMenus', () => ({
 vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
   getRestaurantSummary: vi.fn(),
 }))
+vi.mock('@/features/restaurantDetail/api/restaurantPhotoSource', () => ({
+  getRestaurantPhotoDataSource: vi.fn(),
+}))
 
 const mockedGetRestaurantMenu = vi.mocked(getRestaurantMenu)
 const mockedGetRestaurantMenus = vi.mocked(getRestaurantMenus)
@@ -157,6 +161,7 @@ const renderPage = () => {
 
 describe('RestaurantMenuDetailPage', () => {
   beforeEach(() => {
+    vi.mocked(getRestaurantPhotoDataSource).mockReturnValue(null)
     mockParams.menuId = '100'
     mockParams.restaurantId = '10'
     mockedGetRestaurantSummary.mockResolvedValue(restaurantSummary)
@@ -197,6 +202,36 @@ describe('RestaurantMenuDetailPage', () => {
     })
   })
 
+  it.each([0, 45])('shows the shared public photo count %i', async (count) => {
+    const getPage = vi.fn().mockResolvedValue({
+      photos: [],
+      counts: { all: count, representative: count, menu: 0, review: 0 },
+    })
+    vi.mocked(getRestaurantPhotoDataSource).mockReturnValue({
+      key: 'test',
+      source: { getPage },
+    })
+
+    renderPage()
+
+    expect(
+      await screen.findByRole('tab', { name: `사진 ${count}` }),
+    ).toBeInTheDocument()
+    expect(getPage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        restaurantId: 10,
+        filter: 'all',
+      }),
+    )
+    expect(getPage).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not invent a photo count when the source is unavailable', async () => {
+    renderPage()
+
+    expect(await screen.findByRole('tab', { name: '사진' })).toBeInTheDocument()
+  })
+
   it('requests other menus excluding selected menu', async () => {
     renderPage()
 
@@ -213,9 +248,7 @@ describe('RestaurantMenuDetailPage', () => {
   it('renders selected menu detail and other menus', async () => {
     renderPage()
 
-    expect(
-      await screen.findByTestId('restaurant-menu-detail-page'),
-    ).toHaveClass('pb-[calc(82px+var(--safe-area-bottom,0px))]')
+    await screen.findByTestId('restaurant-menu-detail-page')
     expect(
       screen.getByTestId('restaurant-menu-detail-fixed-header'),
     ).toHaveClass('fixed', 'top-0', 'max-w-[var(--app-mobile-max-width,100%)]')
@@ -364,6 +397,18 @@ describe('RestaurantMenuDetailPage', () => {
     })
   })
 
+  it('moves to restaurant detail photo tab from detail menu flow', async () => {
+    mockLocationStore.state = { source: 'detail' }
+
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/restaurants/10', {
+      state: { activeTab: 'photo' },
+    })
+  })
+
   it('moves to today restaurant review tab from today menu flow', async () => {
     mockLocationStore.state = { source: 'today' }
 
@@ -373,6 +418,18 @@ describe('RestaurantMenuDetailPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/restaurants/today', {
       state: { activeTab: 'review' },
+    })
+  })
+
+  it('moves to today restaurant photo tab from today menu flow', async () => {
+    mockLocationStore.state = { source: 'today' }
+
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/restaurants/today', {
+      state: { activeTab: 'photo' },
     })
   })
 
@@ -426,7 +483,7 @@ describe('RestaurantMenuDetailPage', () => {
   it('opens login bottom sheet for unauthenticated like action', async () => {
     renderPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: '좋아요' }))
+    fireEvent.click(await screen.findByRole('button', { name: '저장하기' }))
 
     expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
     expect(
@@ -439,7 +496,7 @@ describe('RestaurantMenuDetailPage', () => {
 
     renderPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: '좋아요' }))
+    fireEvent.click(await screen.findByRole('button', { name: '저장하기' }))
 
     expect(
       screen.getByRole('heading', { name: '서비스를 준비하고 있어요.' }),

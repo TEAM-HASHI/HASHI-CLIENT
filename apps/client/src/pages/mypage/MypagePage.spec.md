@@ -2,13 +2,24 @@
 
 Jira: HASHI-106
 
+리디자인: HASHI-200
+
+## 현재 브랜치 범위와 후속 작업
+
+- 이 브랜치는 마이페이지의 프로필, 주요 메뉴 버튼, 서비스 이용 및 계정 메뉴의 리디자인을 반영합니다.
+- 아래 MVP 제외 항목은 현재 구현 상태를 설명하며, 최신 기획에서 기능을 제외한다는 의미는 아닙니다.
+- 프로필 수정, 회원탈퇴, 내부 공지사항 화면 연결은 각각의 기능 브랜치 병합 시 유지합니다.
+- 저장 식당 수 조회 및 화면 이동, 포인트 화면 이동, 로그아웃 처리는 후속 기능 작업으로 남아 있습니다.
+- 조회 캐시는 공통 30초 정책을 유지하며, 리뷰 작성 및 예약 생성·취소 성공 시 포인트 잔액을 무효화합니다. 리뷰 작성·삭제 성공 시 작성한 리뷰 수를 무효화합니다.
+- 프로필 수정 API 연동 시 수정 성공 처리에서 `MY_PROFILE_SUMMARY_QUERY_KEY`를 무효화해야 합니다. 다른 기기나 서버에서 변경된 정보를 진입 즉시 반영할지는 별도의 최신 조회 정책으로 확정해야 합니다.
+
 ## Purpose
 
 - 로그인한 사용자가 마이 페이지에서 본인의 프로필, 사용 가능 포인트, 마이 리뷰 개수, 고객지원 메뉴를 확인할 수 있게 합니다.
 - 마이 페이지는 하단 네비게이션의 `마이` 탭 진입 화면입니다.
-- MVP 범위에서는 프로필 수정, 내가 찜한 식당, 계정 관련 기능을 제외합니다.
-- MVP 제외 기능 중 프로필 수정 버튼은 disabled 처리하고, 내가 찜한 식당은 count를 `0`으로 표시한 뒤 클릭 시 공통 준비중 안내 모달을 띄웁니다.
-- 로그아웃과 회원탈퇴는 계정 섹션 자체가 MVP에서 제외되었으므로 UI에서 노출하지 않습니다.
+- 내가 찜한 식당, 로그아웃과 회원탈퇴 API 연동은 MVP 범위에서 제외합니다.
+- 프로필 수정 버튼은 `/profile/edit`로 이동하고, 저장 API는 후속 작업으로 남깁니다.
+- 미연동 기능은 UI를 노출하고, 각 기능의 준비 상태에 따라 안내 모달 또는 별도 페이지로 연결합니다.
 
 ## Route
 
@@ -37,13 +48,14 @@ Jira: HASHI-106
 ```txt
 apps/client/src/pages/mypage/
 ├── MypagePage.tsx
+├── MypagePage.test.tsx
 ├── MypagePage.spec.md
 ├── components/
 │   ├── MypageProfile.tsx
 │   ├── MypagePointSummary.tsx
-│   ├── MypageMenuCard.tsx
+│   ├── MenuButton.tsx
 │   ├── MypageMenuSection.tsx
-│   └── MypageMenuItem.tsx
+│   └── MenuItem.tsx
 ├── constants/
 │   └── mypageMenu.ts
 ├── hooks/
@@ -60,7 +72,15 @@ apps/client/src/features/point/
 │   └── getMyPointBalance.ts
 ├── hooks/
 │   └── useMyPointBalanceQuery.ts
+├── queries/
+│   └── pointQueryOptions.ts
 └── index.ts
+
+apps/client/src/features/review/
+├── api/
+│   └── getMyReviewCount.ts
+└── queries/
+    └── useMyReviewCountQuery.ts
 
 apps/client/src/features/user/
 ├── api/
@@ -75,9 +95,8 @@ apps/client/src/features/user/
 - `request`와 공통 response 처리는 `shared/api`를 사용합니다.
 - API 응답 타입은 `shared/api/generated/openapi.ts`의 `components['schemas']` 타입을 참조합니다.
 - `request<T>()`는 성공 응답의 `data`가 비어 있을 수 있으므로 endpoint 함수에서 UI view type으로 정규화합니다.
-- 마이페이지에서만 사용하는 endpoint 함수와 query key는 `pages/mypage` 내부에 둡니다.
 - 다른 페이지에서도 재사용되는 포인트 잔액 조회는 `features/point`에서 관리합니다.
-- 다른 페이지에서도 재사용되는 사용자 프로필 요약 조회는 `features/user`에서 관리합니다.
+- 리뷰 개수 조회는 `features/review`, 사용자 프로필 요약 조회는 `features/user`에서 관리합니다.
 - API 연동 전후 테스트 fixture가 필요하면 해당 테스트 파일 안에서 endpoint별 mock으로 둡니다.
 
 ## Requirements
@@ -87,8 +106,7 @@ apps/client/src/features/user/
   - 닉네임
   - 수정 버튼
 - [x] 프로필 정보는 `GET /api/v1/users/me/profile-summary`로 조회합니다.
-- [x] 프로필 수정 버튼은 MVP 구현에서 제외합니다.
-- [x] 프로필 수정 버튼은 disabled 처리합니다.
+- [x] 프로필 수정 버튼은 `/profile/edit`로 이동합니다.
 - [x] 사용 가능 포인트를 보여줍니다.
 - [x] 포인트는 `GET /api/v1/points/me`로 조회합니다.
 - [x] 예약/리뷰 관련 주요 메뉴를 보여줍니다.
@@ -106,7 +124,9 @@ apps/client/src/features/user/
   - 이용약관
 - [x] 공지사항과 이용약관은 Hashi 노션 페이지로 이동합니다.
 - [x] 문의하기와 개선 제안은 Hashi 공식 카카오톡 채널로 이동합니다.
-- [x] 계정 섹션은 MVP 제외 범위이므로 UI에서 제거합니다.
+- [x] 계정 섹션에 로그아웃과 회원탈퇴 메뉴를 보여줍니다.
+- [x] 로그아웃 클릭 시 shared `ComingSoonDialog`를 띄웁니다.
+- [x] 회원탈퇴 클릭 시 `ROUTES.withdrawal`로 이동합니다.
 - [x] 하단 네비게이션은 고정으로 유지됩니다.
 
 ## MVP Scope
@@ -124,19 +144,20 @@ apps/client/src/features/user/
 - 문의하기 외부 링크 이동
 - 개선 제안 외부 링크 이동
 - 이용약관 외부 링크 이동
+- 계정 섹션 UI 표시
+- 로그아웃 클릭 시 준비중 모달 표시
+- 회원탈퇴 페이지 이동
 
 ### Excluded
 
-- 프로필 수정 기능
+- 프로필 수정 API 연동
 - 내가 찜한 식당 기능 및 count API 연동
-- 계정 섹션 UI
-- 로그아웃
-- 회원탈퇴
+- 로그아웃 API 연동 및 세션 종료 처리
+- 회원탈퇴 API 연동 및 탈퇴 처리
 
 MVP 제외 항목은 디자인에 노출되는 범위와 노출되지 않는 범위를 구분합니다.
 
-- 노출 유지: 프로필 수정 버튼, 내가 찜한 식당
-- 노출 제거: 계정 섹션, 로그아웃, 회원탈퇴
+- 노출 유지: 프로필 수정 버튼, 내가 찜한 식당, 계정 섹션, 로그아웃, 회원탈퇴
 
 ## Shared Component: `ComingSoonDialog`
 
@@ -191,8 +212,7 @@ type ComingSoonDialogProps = {
 
 동작:
 
-- 수정 버튼은 MVP 제외입니다.
-- MVP에서는 버튼을 노출하되 disabled 처리합니다.
+- 수정 버튼을 누르면 `ROUTES.profileEdit`로 이동합니다.
 - 프로필 이미지가 없으면 HDS `Avatar`의 guest fallback을 사용합니다.
 
 ### 2. Point Section
@@ -211,7 +231,7 @@ type ComingSoonDialogProps = {
 포인트 값은 서버에서 내려주는 숫자를 화면 표시용 문자열로 포맷합니다.
 `{ balance: 0 }`은 `0 P`로 표시하고, 응답 data가 `null`이거나 `balance`가 숫자가 아니면 `AsyncBoundary`로 오류를 전파합니다.
 
-### 3. Primary Menu Cards
+### 3. Primary Menu Buttons
 
 예약/리뷰 관련 주요 메뉴를 카드 형태로 보여줍니다.
 
@@ -252,6 +272,13 @@ type ComingSoonDialogProps = {
 
 - Hashi 서비스 이용약관 노션 페이지로 이동합니다.
 - 외부 URL은 상수로 관리합니다.
+
+### 5. Account Menu Section
+
+- 로그아웃과 회원탈퇴 메뉴를 표시합니다.
+- 로그아웃은 실제 처리 대신 `ComingSoonDialog`를 표시합니다.
+- 회원탈퇴는 `ROUTES.withdrawal`로 이동하며 실제 탈퇴 API는 연결하지 않습니다.
+- 서비스 이용 영역과 같은 `MypageMenuSection` 레이아웃을 재사용합니다.
 
 ## Data Dependencies
 
@@ -343,13 +370,14 @@ type MyReviewCountData = {
 }
 ```
 
-fallback:
+validation:
 
-- `myReviewCount`: `0`
+- `reviewCount`가 숫자로 제공되면 `myReviewCount`로 매핑합니다.
+- API data가 `null`이거나 `reviewCount`가 없으면 계약 위반 오류를 발생시킵니다.
 
 notes:
 
-- `request<MyReviewCountResponse>()` 결과가 `null`이거나 `reviewCount`가 없으면 `0`으로 정규화합니다.
+- 서버가 `reviewCount: 0`을 반환하면 유효한 리뷰 없음 상태로 처리합니다.
 
 ### View Model
 
@@ -372,7 +400,7 @@ MVP 범위에서는 mutation이 없습니다.
 
 추후 확장 후보:
 
-- 프로필 수정
+- 프로필 수정 API 연동
 - 내가 찜한 식당 목록
 - 로그아웃
 - 회원탈퇴
@@ -400,8 +428,7 @@ derived state:
 
 - 포인트 표시 문자열
 - primary menu item 목록
-- service menu section 목록
-- 외부 링크 open handler
+- menu section 목록
 - 내부 route navigation handler
 
 ## Navigation
@@ -409,6 +436,7 @@ derived state:
 내부 이동:
 
 - 마이 리뷰: `ROUTES.myReviews`
+- 프로필 수정: `ROUTES.profileEdit`
 
 외부 이동:
 
@@ -424,15 +452,16 @@ derived state:
 
 MVP 제외:
 
-- 프로필 수정
+- 프로필 수정 API 연동
 - 내가 찜한 식당
-- 계정 섹션
-- 로그아웃
-- 회원탈퇴
+- 로그아웃 실제 처리
+- 회원탈퇴 실제 처리
 
 상호작용 가능한 MVP 제외 기능 클릭:
 
 - 내가 찜한 식당: shared `ComingSoonDialog` open
+- 로그아웃: shared `ComingSoonDialog` open
+- 회원탈퇴: `ROUTES.withdrawal` 이동
 
 ## Component Mapping
 
@@ -441,24 +470,24 @@ HDS component:
 - `Avatar`: 프로필 이미지와 guest fallback을 담당합니다.
 - `Button`
 - `Dialog`
-- 필요한 경우 `IconButton`
 
 HDS icon:
 
-- 우측 이동 chevron icon
+- `NextIcon`
 - `SmileIcon`
 
 shared component:
 
 - `ComingSoonDialog`
+- `LoadingScreen`
 
 page-local components:
 
 - `MypageProfile`
 - `MypagePointSummary`
-- `MypageMenuCard`
+- `MenuButton`
 - `MypageMenuSection`
-- `MypageMenuItem`
+- `MenuItem`
 
 page-local api:
 
@@ -496,15 +525,14 @@ types:
 - 본문은 하단 네비게이션에 가려지지 않도록 `app-mobile-bottom-nav-content` 기준을 사용합니다.
 - 화면 좌우 padding은 디자인 기준에 맞춰 page root에서 관리합니다.
 - 상단 별도 Header는 없습니다.
-- 계정 섹션을 제거해도 하단 네비게이션과 본문 spacing은 어색하게 붙지 않도록 유지합니다.
+- 서비스 이용과 계정 영역은 같은 `MypageMenuSection` 레이아웃을 재사용합니다.
 
 ## Empty / Loading / Error State
 
 ### Loading
 
-- 프로필, 포인트, 리뷰 count 조회 중에는 각 값의 fallback을 먼저 표시하거나 skeleton을 표시합니다.
-- 메뉴 목록은 고정 항목이므로 먼저 렌더링할 수 있습니다.
-- 세 query가 독립적이므로 한 query의 loading이 다른 영역 렌더링을 막지 않게 합니다.
+- 마이페이지 필수 query 중 하나라도 pending 상태이면 `LoadingScreen`을 표시합니다.
+- API 응답이 오기 전에는 `DEFAULT_MYPAGE_SUMMARY`를 실제 사용자 데이터처럼 렌더링하지 않습니다.
 
 ### Error
 
@@ -515,18 +543,13 @@ types:
 - endpoint 함수의 fallback 정규화는 API 요청이 성공했지만 응답 값이 비어 있는 경우에만 사용합니다.
 - 내가 찜한 식당 count `0`은 API 실패 fallback이 아니라 MVP 제외 범위에 따른 고정 표시입니다.
 
-### Loading
-
-- 마이페이지 필수 query 중 하나라도 pending 상태이면 `LoadingScreen`을 표시합니다.
-- API 응답이 오기 전에는 `DEFAULT_MYPAGE_SUMMARY`를 실제 사용자 데이터처럼 렌더링하지 않습니다.
-
 ### Empty
 
 - 마이 페이지 자체 empty state는 없습니다.
 - 값이 없는 항목은 아래처럼 처리합니다.
   - 프로필 이미지 없음: HDS `Avatar`의 guest fallback
   - 포인트 이력 없음: 유효한 `{ balance: 0 }` 응답을 `0 P`로 표시
-  - 리뷰 개수 없음: `0`
+  - 리뷰 없음: 서버의 유효한 `reviewCount: 0` 응답을 `0`으로 표시
   - 찜한 식당 개수: MVP 고정값 `0`
 
 ## Accessibility
@@ -537,13 +560,13 @@ types:
 - 내부 route 이동은 `button` + navigate 또는 `Link`를 사용합니다.
 - 외부 링크는 `a`를 사용하고, 새 탭으로 열 경우 `rel="noreferrer"`를 포함합니다.
 - 메뉴의 우측 카운트는 시각 정보뿐 아니라 텍스트와 함께 읽혀도 의미가 통하도록 구성합니다.
-- disabled 프로필 수정 버튼은 실제로 클릭 동작이 없어야 합니다.
+- 프로필 수정 버튼은 `/profile/edit`로 이동해야 합니다.
 
 ## Test Plan
 
 - `pnpm --filter @hashi/client typecheck`
 - `pnpm --filter @hashi/client lint`
-- `pnpm --filter @hashi/client test -- MypagePage apiClient`
+- `pnpm --filter @hashi/client exec vitest run src/pages/mypage/MypagePage.test.tsx`
 - 마이 페이지가 `/mypage`에서 렌더링되는지 확인
 - 하단 네비게이션의 `마이` 탭이 active인지 확인
 - `GET /api/v1/users/me/profile-summary` 결과의 닉네임과 프로필 이미지가 표시되는지 확인
@@ -554,13 +577,13 @@ types:
 - `GET /api/v1/reviews/me/count` 결과의 `reviewCount`가 마이 리뷰 count로 표시되는지 확인
 - 내가 찜한 식당 count가 API 없이 `0`으로 표시되는지 확인
 - 내가 찜한 식당 클릭 시 준비중 모달이 열리는지 확인
-- 준비중 모달에서 확인 버튼 클릭 시 모달이 닫히는지 확인
 - 마이 리뷰 클릭 시 `/my-reviews`로 이동하는지 확인
 - 문의하기/개선 제안 클릭 시 카카오톡 채널이 열리는지 확인
 - 공지사항/이용약관 클릭 시 노션 페이지가 새 탭으로 열리는지 확인
-- 프로필 수정 버튼이 disabled인지 확인
-- 로그아웃과 회원탈퇴가 화면에 노출되지 않는지 확인
-- 계정 섹션 title이 화면에 노출되지 않는지 확인
+- 프로필 수정 버튼 클릭 시 `/profile/edit`로 이동하는지 확인
+- 계정 섹션에 로그아웃과 회원탈퇴가 노출되는지 확인
+- 로그아웃 클릭 시 준비중 모달이 열리는지 확인
+- 회원탈퇴 클릭 시 `/withdrawal`로 이동하는지 확인
 - 각 query 실패 시 해당 오류를 `AsyncBoundary`로 전달하는지 확인
 
 ## Open Questions

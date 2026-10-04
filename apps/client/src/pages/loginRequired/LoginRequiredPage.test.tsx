@@ -22,7 +22,7 @@ describe('LoginRequiredPage', () => {
     mockStartKakaoOAuth.mockClear()
   })
 
-  it('keeps the login guidance copy in the QA layout and starts OAuth', () => {
+  it('renders the login guidance and starts OAuth', () => {
     render(
       <MemoryRouter>
         <LoginRequiredPage />
@@ -32,16 +32,12 @@ describe('LoginRequiredPage', () => {
     const graphic = screen.getByRole('presentation', { hidden: true })
 
     expect(graphic).toHaveAttribute('src', emptyImage)
-    expect(graphic).toHaveClass('h-19', 'w-[101px]')
     expect(
       screen.getByRole('heading', {
         name: 'Hashi와 함께 예약을 시작해보세요!',
       }),
-    ).toHaveClass('typo-sub-header-1')
-    expect(screen.getByText(/로그인하면 예약 현황을/)).toHaveClass(
-      'typo-body-8',
-      'leading-[1.2]',
-    )
+    ).toBeInTheDocument()
+    expect(screen.getByText(/더 편한 Hashi 이용을 위해/)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: '카카오로 로그인하기' }))
 

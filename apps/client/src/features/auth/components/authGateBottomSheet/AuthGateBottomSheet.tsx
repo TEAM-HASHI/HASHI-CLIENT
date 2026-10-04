@@ -23,7 +23,7 @@ export const AuthGateBottomSheet = ({
       showCloseButton={false}
       showHandle={false}
     >
-      <div className="relative h-[387px]" data-testid="auth-gate-content">
+      <div className="relative h-96.75">
         <p className="absolute inset-x-[5px] top-[33px] text-black">
           <span className="typo-body-1 block leading-[29px] font-normal">
             간편하게 로그인하고
