@@ -24,6 +24,7 @@ const apiSortByValue: Record<
   NonNullable<GetRestaurantsParams['sort']>
 > = {
   default: 'basic',
+  latest: 'basic',
   popular: 'popular',
   rating: 'rating',
 }
