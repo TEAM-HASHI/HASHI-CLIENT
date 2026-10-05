@@ -49,6 +49,9 @@ jobs:
       - name: Test CI Scope Detection
         run: pnpm test:ci-scope
 
+      - name: Test Slack Notification Policies
+        run: pnpm test:slack-notify
+
       - name: Format Check
         run: pnpm format:check
 
