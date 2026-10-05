@@ -18,7 +18,7 @@ export const RestaurantFilterBar = ({
 }: RestaurantFilterBarProps) => {
   return (
     <div
-      className="flex items-center gap-5 p-5"
+      className="flex h-15 items-center gap-5 p-5"
       data-testid="restaurant-filter-bar"
     >
       <button

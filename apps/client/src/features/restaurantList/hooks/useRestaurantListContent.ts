@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -9,7 +9,11 @@ import {
   DEFAULT_CATEGORY_OPTION,
 } from '@/features/restaurantList/constants'
 import { restaurantListQueryKeys } from '@/features/restaurantList/queries/restaurantListQueryKeys'
-import { restaurantsInfiniteQueryOptions } from '@/features/restaurantList/queries/useRestaurantsInfiniteQuery'
+import { useRestaurantListRestoration } from '@/features/restaurantList/hooks/useRestaurantListRestoration'
+import {
+  restaurantsInfiniteQueryOptions,
+  type RestaurantsInfiniteData,
+} from '@/features/restaurantList/queries/useRestaurantsInfiniteQuery'
 import type {
   FilterOption,
   RestaurantListCurationType,
@@ -38,12 +42,21 @@ export const useRestaurantListContent = ({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const defaultSortOption = sortOptions[0]
+  const { snapshot, saveSnapshot, clearSnapshot, restoreScroll } =
+    useRestaurantListRestoration(restaurantType)
+  const resetScrollPending = useRef(false)
+  const didHydrateSnapshot = useRef(false)
   const [activeBottomSheet, setActiveBottomSheet] =
     useState<ActiveBottomSheet>(null)
-  const [selectedSort, setSelectedSort] = useState(defaultSortOption)
+  const [selectedSort, setSelectedSort] = useState(
+    () =>
+      getOptionByValue(sortOptions, snapshot?.sort ?? '') ?? defaultSortOption,
+  )
   const [draftSort, setDraftSort] = useState(defaultSortOption)
   const [selectedCategory, setSelectedCategory] = useState(
-    DEFAULT_CATEGORY_OPTION,
+    () =>
+      getOptionByValue(CATEGORY_OPTIONS, snapshot?.category ?? '') ??
+      DEFAULT_CATEGORY_OPTION,
   )
   const [draftCategory, setDraftCategory] = useState(DEFAULT_CATEGORY_OPTION)
 
@@ -56,12 +69,80 @@ export const useRestaurantListContent = ({
       }),
     [restaurantType, selectedCategory, selectedSort],
   )
+  const isRestoredFilter =
+    snapshot?.sort === selectedSort.value &&
+    snapshot.category === selectedCategory.value
+
+  useEffect(() => {
+    if (!resetScrollPending.current || activeBottomSheet !== null) return
+
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      resetScrollPending.current = false
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [activeBottomSheet, requestParams])
+
   const restaurantsQuery = useInfiniteQuery({
     ...restaurantsInfiniteQueryOptions(requestParams),
     throwOnError: false,
+    initialData: isRestoredFilter ? snapshot.data : undefined,
+    refetchOnMount: !isRestoredFilter,
   })
+
+  useLayoutEffect(() => {
+    if (!isRestoredFilter || !snapshot.data || didHydrateSnapshot.current)
+      return
+
+    queryClient.setQueryData(
+      restaurantListQueryKeys.infiniteList(requestParams),
+      snapshot.data,
+    )
+    didHydrateSnapshot.current = true
+  }, [isRestoredFilter, snapshot, queryClient, requestParams])
+
+  const isRestoringPages =
+    Boolean(snapshot) &&
+    (restaurantsQuery.data?.pages.length ?? 0) < (snapshot?.pageCount ?? 0) &&
+    (restaurantsQuery.isPending || Boolean(restaurantsQuery.hasNextPage))
+
+  const { fetchNextPage, isFetching, isError } = restaurantsQuery
+  useEffect(() => {
+    if (
+      isRestoringPages &&
+      !isFetching &&
+      !isError &&
+      restaurantsQuery.hasNextPage
+    ) {
+      const cachedData = queryClient.getQueryData<RestaurantsInfiniteData>(
+        restaurantListQueryKeys.infiniteList(requestParams),
+      )
+      if ((cachedData?.pages.length ?? 0) >= (snapshot?.pageCount ?? 0)) return
+
+      void fetchNextPage({ cancelRefetch: false })
+    }
+  }, [
+    isRestoringPages,
+    isFetching,
+    isError,
+    restaurantsQuery.hasNextPage,
+    restaurantsQuery.data?.pages.length,
+    fetchNextPage,
+    queryClient,
+    requestParams,
+    snapshot?.pageCount,
+  ])
+
+  useEffect(() => {
+    if (restaurantsQuery.data && !isRestoringPages && !isFetching)
+      return restoreScroll()
+  }, [restaurantsQuery.data, isRestoringPages, isFetching, restoreScroll])
+
   const loadMoreRef = useInfiniteScrollTrigger<HTMLLIElement>({
-    enabled: Boolean(restaurantsQuery.hasNextPage),
+    enabled:
+      Boolean(restaurantsQuery.hasNextPage) &&
+      !isRestoringPages &&
+      !restaurantsQuery.isFetchNextPageError,
     isLoading: restaurantsQuery.isFetchingNextPage,
     onIntersect: restaurantsQuery.fetchNextPage,
   })
@@ -122,48 +203,45 @@ export const useRestaurantListContent = ({
     setDraftCategory(DEFAULT_CATEGORY_OPTION)
   }
 
-  const handleApplySort = () => {
-    if (draftSort.value !== selectedSort.value) {
-      const nextParams = createRestaurantListRequestParams({
-        category: selectedCategory,
-        sort: draftSort,
-        type: restaurantType,
-      })
+  const applyFilters = (sort: FilterOption, category: FilterOption) => {
+    resetScrollPending.current = true
+    clearSnapshot()
+    const nextParams = createRestaurantListRequestParams({
+      category,
+      sort,
+      type: restaurantType,
+    })
 
-      queryClient.removeQueries({
-        exact: true,
-        queryKey: restaurantListQueryKeys.infiniteList(nextParams),
-      })
-    }
+    queryClient.removeQueries({
+      exact: true,
+      queryKey: restaurantListQueryKeys.infiniteList(nextParams),
+    })
 
-    setSelectedSort(draftSort)
+    setSelectedSort(sort)
+    setSelectedCategory(category)
     setActiveBottomSheet(null)
   }
 
-  const handleApplyCategory = () => {
-    if (draftCategory.value !== selectedCategory.value) {
-      const nextParams = createRestaurantListRequestParams({
-        category: draftCategory,
-        sort: selectedSort,
-        type: restaurantType,
-      })
-
-      queryClient.removeQueries({
-        exact: true,
-        queryKey: restaurantListQueryKeys.infiniteList(nextParams),
-      })
-    }
-
-    setSelectedCategory(draftCategory)
-    setActiveBottomSheet(null)
-  }
+  const handleApplySort = () => applyFilters(draftSort, selectedCategory)
+  const handleApplyCategory = () => applyFilters(selectedSort, draftCategory)
 
   const handleClickRestaurant = (restaurantId: string) => {
+    if (restaurantsQuery.data) {
+      saveSnapshot({
+        sort: selectedSort.value,
+        category: selectedCategory.value,
+        data: restaurantsQuery.data,
+      })
+    }
     navigate(getRestaurantDetailPath(restaurantId))
   }
 
   const handleRetry = () => {
-    void restaurantsQuery.refetch()
+    if (restaurantsQuery.isFetchNextPageError) {
+      void restaurantsQuery.fetchNextPage()
+    } else {
+      void restaurantsQuery.refetch()
+    }
   }
 
   return {
@@ -174,7 +252,8 @@ export const useRestaurantListContent = ({
     hasMoreRestaurants,
     isFetchingNextPage: restaurantsQuery.isFetchingNextPage,
     isLoading: restaurantsQuery.isLoading,
-    isError: restaurantsQuery.isError,
+    isError: restaurantsQuery.isError && !restaurantsQuery.data,
+    isFetchNextPageError: restaurantsQuery.isFetchNextPageError,
     loadMoreRef,
     selectedSort,
     visibleRestaurants,
