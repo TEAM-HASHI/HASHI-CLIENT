@@ -13,7 +13,7 @@ export const RestaurantImageList = ({
 
   return (
     <span
-      className="block w-full overflow-x-auto overflow-y-hidden"
+      className="block w-full [scrollbar-width:none] overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden"
       data-testid="restaurant-image-list"
     >
       <span className="flex w-max gap-2">
