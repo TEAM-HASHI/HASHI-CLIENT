@@ -94,8 +94,8 @@ export interface paths {
     get?: never
     put?: never
     /**
-     * 매거진 등록 — bannerKey·thumbnailKey는 presigned URL로 업로드를 마친 S3 키.
-     * @description 매거진 등록 — bannerKey·thumbnailKey는 presigned URL로 업로드를 마친 S3 키.
+     * 매거진 등록 — 슬롯별 legacy key 또는 READY public asset ID를 받는다.
+     * @description 매거진 등록 — 슬롯별 legacy key 또는 READY public asset ID를 받는다.
      */
     post: operations['create_1']
     delete?: never
@@ -150,6 +150,27 @@ export interface paths {
      * @description 매거진 부분 수정 — 보낸 필드만 변경된다.
      */
     patch: operations['update_1']
+    trace?: never
+  }
+  '/api/v1/admin/users': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * 회원 목록 조회 — offset 페이지네이션(page는 0부터).
+     * @description 회원 목록 조회 — offset 페이지네이션(page는 0부터).
+     *      기본 정렬은 닉네임 가나다순, sort=CREATED_AT이면 가입일 최신순. keyword는 닉네임 부분 일치 검색.
+     */
+    get: operations['getUsers']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/v1/admin/reservations': {
@@ -263,6 +284,7 @@ export interface components {
     /**
      * @description 어드민 식당 등록 요청. imageKeys·메뉴 imageKey는 presigned URL로 업로드 완료된 S3 object key다.
      *      genre·curationTypes는 사용자 API와 같은 소문자 케밥 값이고, foodCategory는 카드 표시용 자유 텍스트다(#145).
+     *      placeType(음식점 분류, #211)은 "restaurant"·"cafe"·"bar" 중 하나로 필수다.
      *      businessHours는 7개 요일(MONDAY~SUNDAY)을 중복 없이 모두 포함해야 한다(시간은 "HH:mm").
      */
     CreateRestaurantRequest: {
@@ -307,6 +329,11 @@ export interface components {
        */
       foodCategory: string
       /**
+       * @description 음식점 분류(restaurant·cafe·bar)
+       * @example restaurant
+       */
+      placeType: string
+      /**
        * @description 통화 코드
        * @example JPY
        */
@@ -327,7 +354,9 @@ export interface components {
        *       "restaurants/a1b2c3-1.jpg"
        *     ]
        */
-      imageKeys: string[]
+      imageKeys?: string[]
+      /** @description 식당 이미지 asset ID 목록 */
+      imageAssetIds?: string[]
       menus?: components['schemas']['MenuRequest'][]
       /**
        * @description 해시태그 목록
@@ -363,6 +392,11 @@ export interface components {
        */
       imageKey?: string
       /**
+       * Format: uuid
+       * @description 메뉴 이미지 asset ID(선택)
+       */
+      imageAssetId?: string
+      /**
        * @description 통화 코드
        * @example JPY
        */
@@ -393,13 +427,15 @@ export interface components {
       name?: string
       description?: string
       imageUrl?: string
+      listImage?: components['schemas']['MediaImage']
       priceCurrency?: string
       priceAmount?: number
       main?: boolean
     }
     /**
-     * @description 어드민 식당 단건 응답(등록·수정 결과). thumbnailUrl·imageUrls·메뉴 imageUrl은 저장된 키를
-     *      변환한 조회 URL이다. genre·curationTypes는 사용자 API와 같은 소문자 케밥 값이다.
+     * @description 어드민 식당 단건 응답(등록·수정 결과). 기존 URL 필드는 legacy 또는 READY media 호환용이며,
+     *      신규 이미지 필드는 상태와 반응형 후보를 전달한다. genre·curationTypes는 사용자 API와 같은
+     *      소문자 케밥 값이고, placeType(음식점 분류, #211)은 restaurant·cafe·bar다.
      */
     AdminRestaurantResponse: {
       /** Format: int64 */
@@ -412,18 +448,70 @@ export interface components {
       area?: string
       genre?: string
       foodCategory?: string
+      placeType?: string
       thumbnailUrl?: string
+      thumbnailImage?: components['schemas']['RestaurantImageInfo']
       priceCurrency?: string
       minPrice?: number
       maxPrice?: number
       deleted?: boolean
       imageUrls?: string[]
+      heroImages?: components['schemas']['RestaurantImageInfo'][]
       menus?: components['schemas']['AdminRestaurantMenuResponse'][]
       hashtags?: string[]
       curationTypes?: string[]
       businessHours?: components['schemas']['AdminRestaurantBusinessHourResponse'][]
       /** Format: date-time */
       createdAt?: string
+    }
+    Candidate: {
+      url?: string
+      /** Format: int32 */
+      width?: number
+      /** Format: int32 */
+      height?: number
+    }
+    /** @description 클라이언트가 반응형 이미지 후보를 선택할 수 있는 공통 이미지 응답. */
+    MediaImage: {
+      /** Format: uuid */
+      assetId?: string
+      /** @enum {string} */
+      role?:
+        | 'PROFILE_AVATAR'
+        | 'RESTAURANT_THUMBNAIL'
+        | 'RESTAURANT_CARD'
+        | 'RESTAURANT_HERO'
+        | 'MENU_LIST'
+        | 'MENU_DETAIL'
+        | 'REVIEW_PREVIEW'
+        | 'REVIEW_DETAIL'
+        | 'MAGAZINE_BANNER'
+        | 'MAGAZINE_THUMBNAIL'
+      /** @enum {string} */
+      status?: 'PROCESSING' | 'READY' | 'FAILED'
+      defaultSource?: components['schemas']['Source']
+      sourceSets?: components['schemas']['SourceSet'][]
+    }
+    /** @description 식당 Aggregate가 소유하는 stable 이미지 association과 media projection. */
+    RestaurantImageInfo: {
+      /** Format: int64 */
+      restaurantImageId?: number
+      /** Format: int32 */
+      displayOrder?: number
+      image?: components['schemas']['MediaImage']
+      legacyUrl?: string
+    }
+    Source: {
+      url?: string
+      /** Format: int32 */
+      width?: number
+      /** Format: int32 */
+      height?: number
+      mimeType?: string
+    }
+    SourceSet: {
+      mimeType?: string
+      candidates?: components['schemas']['Candidate'][]
     }
     /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
     SuccessResponseAdminRestaurantResponse: {
@@ -457,6 +545,7 @@ export interface components {
       restaurantId?: number
       restaurantName?: string
       restaurantImageUrl?: string
+      restaurantThumbnailImage?: components['schemas']['MediaImage']
       restaurantAddress?: string
       /** Format: date-time */
       reservedAt?: string
@@ -489,7 +578,7 @@ export interface components {
       message?: string
       data?: components['schemas']['AdminReservationResponse']
     }
-    /** @description 어드민 매거진 등록 요청. bannerKey·thumbnailKey는 presigned URL로 업로드 완료된 S3 object key다. */
+    /** @description 어드민 매거진 등록 요청. 각 슬롯은 legacy key 또는 public asset ID 중 하나를 받는다. */
     CreateMagazineRequest: {
       /**
        * @description 매거진 제목
@@ -500,25 +589,41 @@ export interface components {
        * @description 배너 이미지 S3 key(업로드 완료본)
        * @example magazines/a1b2c3-banner.jpg
        */
-      bannerKey: string
+      bannerKey?: string
+      /**
+       * Format: uuid
+       * @description 배너 이미지 public asset ID
+       * @example a3af06f1-4ef2-46f8-a489-2347fb840447
+       */
+      bannerImageAssetId?: string
       /**
        * @description 썸네일 이미지 S3 key(업로드 완료본)
        * @example magazines/a1b2c3-thumbnail.jpg
        */
-      thumbnailKey: string
+      thumbnailKey?: string
+      /**
+       * Format: uuid
+       * @description 썸네일 이미지 public asset ID
+       * @example c5f7c106-d92d-4823-a612-2e9221e8e689
+       */
+      thumbnailImageAssetId?: string
       /**
        * @description 배너 탭 시 이동할 인스타그램 URL
        * @example https://www.instagram.com/p/abc123/
        */
       instagramRedirectUrl: string
+      bannerImageSourceValid?: boolean
+      thumbnailImageSourceValid?: boolean
     }
-    /** @description 어드민 매거진 단건 응답(등록·수정 결과). bannerImageUrl·thumbnailImageUrl은 저장된 키를 변환한 조회 URL이다. */
+    /** @description 어드민 매거진 단건 응답. 기존 URL 필드를 유지하면서 슬롯별 최적화 이미지 응답을 추가한다. */
     AdminMagazineResponse: {
       /** Format: int64 */
       magazineId?: number
       title?: string
       bannerImageUrl?: string
+      bannerImage?: components['schemas']['MediaImage']
       thumbnailImageUrl?: string
+      thumbnailImage?: components['schemas']['MediaImage']
       instagramRedirectUrl?: string
       /** Format: date-time */
       createdAt?: string
@@ -529,6 +634,12 @@ export interface components {
       code?: string
       message?: string
       data?: components['schemas']['AdminMagazineResponse']
+    }
+    ImageRequest: {
+      /** Format: int64 */
+      restaurantImageId?: number
+      /** Format: uuid */
+      imageAssetId?: string
     }
     /**
      * @description 어드민 식당 부분 수정(PATCH) 요청 — null 필드는 변경하지 않는다(값 비우기 불가).
@@ -577,6 +688,11 @@ export interface components {
        */
       foodCategory?: string
       /**
+       * @description 음식점 분류(restaurant·cafe·bar, 선택, 공백 불가)
+       * @example cafe
+       */
+      placeType?: string
+      /**
        * @description 통화 코드(선택)
        * @example JPY
        */
@@ -598,6 +714,8 @@ export interface components {
        *     ]
        */
       imageKeys?: string[]
+      /** @description 식당 이미지 ordered wrapper(선택) — 보내면 전체 교체 */
+      images?: components['schemas']['ImageRequest'][]
       menus?: components['schemas']['MenuRequest'][]
       /**
        * @description 해시태그 목록(선택) — 보내면 전체 교체, 최소 1개
@@ -628,15 +746,63 @@ export interface components {
        */
       bannerKey?: string
       /**
+       * Format: uuid
+       * @description 새 배너 이미지 public asset ID(선택)
+       * @example a3af06f1-4ef2-46f8-a489-2347fb840447
+       */
+      bannerImageAssetId?: string
+      /**
        * @description 새 썸네일 이미지 S3 key(선택, 보내면 교체)
        * @example magazines/a1b2c3-new-thumbnail.jpg
        */
       thumbnailKey?: string
       /**
+       * Format: uuid
+       * @description 새 썸네일 이미지 public asset ID(선택)
+       * @example c5f7c106-d92d-4823-a612-2e9221e8e689
+       */
+      thumbnailImageAssetId?: string
+      /**
        * @description 인스타그램 URL(선택)
        * @example https://www.instagram.com/p/def456/
        */
       instagramRedirectUrl?: string
+      bannerImageSourceValid?: boolean
+      thumbnailImageSourceValid?: boolean
+    }
+    /** @description 어드민 회원 목록 응답 — offset 페이지네이션 메타(page·size·totalCount·totalPages) 포함. */
+    AdminUserListResponse: {
+      users?: components['schemas']['AdminUserResponse'][]
+      /** Format: int32 */
+      page?: number
+      /** Format: int32 */
+      size?: number
+      /** Format: int64 */
+      totalCount?: number
+      /** Format: int32 */
+      totalPages?: number
+    }
+    /** @description 어드민 회원 응답 — 연락·식별 정보와 가입 시각. 프로필 이미지가 없으면 <code>profileImageUrl</code>은 null. */
+    AdminUserResponse: {
+      /** Format: int64 */
+      userId?: number
+      nickname?: string
+      nameEng?: string
+      /** Format: date */
+      birthDate?: string
+      phone?: string
+      email?: string
+      profileImageUrl?: string
+      profileImage?: components['schemas']['MediaImage']
+      /** Format: date-time */
+      createdAt?: string
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseAdminUserListResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['AdminUserListResponse']
     }
     /** @description 어드민 예약 목록 응답 — offset 페이지네이션 메타(page·size·totalCount·totalPages) 포함. */
     AdminReservationListResponse: {
@@ -818,6 +984,24 @@ export interface operations {
           'application/json': unknown
         }
       }
+      /** @description 에러 응답 */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
     }
   }
   changeStatus: {
@@ -917,6 +1101,24 @@ export interface operations {
       }
       /** @description 에러 응답 */
       403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      409: {
         headers: {
           [name: string]: unknown
         }
@@ -1028,6 +1230,15 @@ export interface operations {
           'application/json': unknown
         }
       }
+      /** @description 에러 응답 */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
     }
   }
   delete_1: {
@@ -1069,6 +1280,15 @@ export interface operations {
           'application/json': unknown
         }
       }
+      /** @description 에러 응답 */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
     }
   }
   update_1: {
@@ -1102,6 +1322,68 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  getUsers: {
+    parameters: {
+      query?: {
+        sort?: 'NICKNAME' | 'CREATED_AT'
+        keyword?: string
+        page?: number
+        size?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminUserListResponse']
           'application/json': unknown
         }
       }

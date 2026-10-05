@@ -26,7 +26,7 @@ export const ReviewSubmitBar = ({
     <footer
       {...props}
       aria-label={ariaLabel}
-      className={cn('flex w-full justify-center px-5 pt-[17px]', className)}
+      className={cn('flex w-full justify-center px-5 pt-11.25', className)}
     >
       <Button
         disabled={disabled}

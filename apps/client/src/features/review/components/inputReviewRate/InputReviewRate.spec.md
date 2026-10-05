@@ -118,7 +118,7 @@ InputReviewRate
 - selected star fill: Figma `Primary_400` 값인 `#FF5D5D`에 매핑되는 `text-primary-400`을 사용합니다.
 - responsive: 부모 너비를 따르고 별점 row는 콘텐츠 너비만 차지합니다.
 - hover/focus/active/disabled: focus-visible outline을 제공합니다. hover/active/disabled 별도 시각 상태는 현재 scope가 아닙니다.
-- layout shift 방지 조건: 별 버튼은 `size-[29px]` 고정 크기를 유지합니다.
+- layout shift 방지 조건: 별 버튼은 `36px` 고정 크기를 유지합니다.
 
 ## Accessibility
 
