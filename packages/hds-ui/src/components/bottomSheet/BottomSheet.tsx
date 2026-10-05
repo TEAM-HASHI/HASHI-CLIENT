@@ -14,6 +14,8 @@ export type BottomSheetProps = {
   children: ReactNode
   footer?: ReactNode
   className?: string
+  headerClassName?: string
+  footerClassName?: string
   showHandle?: boolean
   showCloseButton?: boolean
   'aria-label'?: string
@@ -49,6 +51,8 @@ export const BottomSheet = ({
   showHandle = true,
   showCloseButton = true,
   className,
+  headerClassName,
+  footerClassName,
   'aria-label': ariaLabel = '바텀시트',
 }: BottomSheetProps) => {
   const titleId = useId()
@@ -116,7 +120,12 @@ export const BottomSheet = ({
         tabIndex={-1}
       >
         {hasHeader && (
-          <div className="relative flex min-h-12.75 items-center justify-center px-5 pt-4">
+          <div
+            className={cn(
+              'relative flex min-h-12.75 items-center justify-center px-5 pt-4',
+              headerClassName,
+            )}
+          >
             {showHandle && (
               <span
                 aria-hidden="true"
@@ -141,7 +150,9 @@ export const BottomSheet = ({
           </div>
         )}
         <div className="px-5">{children}</div>
-        {footer && <div className="px-5 pt-4 pb-5">{footer}</div>}
+        {footer && (
+          <div className={cn('px-5 pt-4 pb-5', footerClassName)}>{footer}</div>
+        )}
       </div>
     </div>,
     document.body,
