@@ -386,11 +386,20 @@ export const validateRestaurantForm = (
   if ((mode === 'create' || replacements.images) && form.images.length === 0) {
     errors.images = '식당 이미지를 한 장 이상 업로드해주세요.'
   }
-  if (
-    (mode === 'create' || replacements.hashtags) &&
-    (hashtags.length === 0 || hashtags.some((hashtag) => hashtag.length > 20))
-  ) {
-    errors.hashtags = '해시태그를 1개 이상, 각 20자 이하로 입력해주세요.'
+  if (mode === 'create' || replacements.hashtags) {
+    const normalizedHashtags = hashtags.map((hashtag) => hashtag.toLowerCase())
+    if (
+      hashtags.length === 0 ||
+      hashtags.length > 3 ||
+      hashtags.some(
+        (hashtag) =>
+          hashtag.length > 20 || !/^[가-힣a-zA-Z0-9]+$/.test(hashtag),
+      ) ||
+      new Set(normalizedHashtags).size !== hashtags.length
+    ) {
+      errors.hashtags =
+        '해시태그는 중복 없이 최대 3개, 각 20자 이하의 한글·영문·숫자로 입력해주세요. (# 제외)'
+    }
   }
   if (
     (mode === 'create' || replacements.businessHours) &&
