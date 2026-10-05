@@ -12,12 +12,16 @@ import {
 import { restaurantListQueryKeys } from '@/features/restaurantList/queries/restaurantListQueryKeys'
 
 type RestaurantsPageParam = NonNullable<GetRestaurantsParams['cursor']> | null
+export type RestaurantsInfiniteData = InfiniteData<
+  RestaurantsResult,
+  RestaurantsPageParam
+>
 
 export const restaurantsInfiniteQueryOptions = (params: GetRestaurantsParams) =>
   infiniteQueryOptions<
     RestaurantsResult,
     Error,
-    InfiniteData<RestaurantsResult>,
+    RestaurantsInfiniteData,
     ReturnType<typeof restaurantListQueryKeys.infiniteList>,
     RestaurantsPageParam
   >({

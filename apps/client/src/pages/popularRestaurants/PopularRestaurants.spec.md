@@ -36,15 +36,24 @@
 
 - [x] `인기 맛집` title을 Header에 표시합니다.
 - [x] Header는 `app-mobile-fixed-top` 고정 영역으로 동작합니다.
-- [x] FilterBar는 Header 아래의 일반 스크롤 콘텐츠로 동작합니다.
+- [x] FilterBar는 Header 아래에 고정되며, 목록을 스크롤해도 표시됩니다.
 - [x] 정렬 옵션은 `기본순`, `별점순`입니다.
 - [x] 음식 장르 기본 적용값은 `전체`이고, 필터바 기본 label은 `음식 장르 선택`입니다.
 - [x] 정렬/음식 장르 BottomSheet는 `draft`와 `selected` 상태를 분리합니다.
 - [x] 옵션 선택만으로 실제 필터 label을 바꾸지 않고 `적용` 버튼에서 반영합니다.
-- [x] `초기화`는 현재 열린 sheet 값을 기본값으로 적용하고 BottomSheet를 닫습니다.
-- [x] 필터 BottomSheet는 X 버튼으로만 닫힙니다.
+- [x] `초기화`는 현재 열린 sheet의 draft 값만 기본값으로 되돌리고, 목록에는 바로 반영하지 않으며 BottomSheet를 유지합니다.
+- [x] `적용`은 draft 값을 실제 조건으로 반영하고 BottomSheet를 닫으며, 조건이 같아도 기존 목록을 비우고 첫 페이지를 다시 조회한 뒤 스크롤을 맨 위로 이동합니다.
+- [x] 상세 복귀 시 적용한 필터, 조회한 전체 페이지, 스크롤 위치를 복원합니다. Query 캐시가 제거되어도 같은 브라우저 세션의 저장된 목록을 사용하며, 목록 본문이 저장되지 않은 경우 필요한 페이지를 다시 조회한 뒤 스크롤을 복원합니다.
+- [x] 추가 조회 실패 시 기존 카드를 유지하고 하단에 재시도를 표시합니다. 재시도는 실패한 다음 페이지만 요청합니다.
+- [x] 필터 BottomSheet는 X 버튼 또는 외부 선택으로 닫히며, 적용 전 draft 값은 버립니다.
+- [x] Figma 리디자인 기준으로 FilterBar는 Header 아래 `20px` padding과 `20px` gap을 적용합니다.
 - [x] RestaurantCard는 반복 렌더링되고 카드 클릭 시 식당 상세 route로 이동합니다.
-- [x] 식당 이미지는 HDS `Thumbnail`로 표시하며, 서버가 내려준 이미지보다 부족한 슬롯을 추가하지 않습니다.
+- [x] RestaurantCard는 카드 간 `20px`, 상단·하단 묶음 사이 `12px`, 이름·평점 묶음과 이미지 사이 `8px`, 이름·평점 및 소개·해시태그 사이 `2px` 간격과 상하 `16px` padding을 적용합니다.
+- [x] 식당명은 1줄 말줄임, 식당 소개는 최대 2줄 말줄임으로 표시합니다.
+- [x] 식당 소개는 Figma 리디자인 기준 `15px`, `line-height: 1.5` 스타일을 적용합니다.
+- [x] 식당 이미지는 HDS `Thumbnail`로 최대 5장까지 표시하며, 서버가 내려준 이미지보다 부족한 슬롯을 추가하지 않습니다.
+- [x] 식당 이미지 행은 HDS `Thumbnail` `lg` 크기(`135px`)를 사용하고, 처음 3장이 보이는 가로 스크롤 영역으로 표시합니다.
+- [x] 해시태그는 최대 3개를 한 줄로 표시합니다.
 - [x] 서버 이미지(`imageUrls`, fallback `thumbnailUrl`)가 하나도 없으면 `Thumbnail`의 fallback을 1개만 표시합니다.
 - [x] 기존 shared 식당 목록 조회 API(`getRestaurants`, `restaurantsInfiniteQueryOptions`)를 사용해 `GET /api/v1/restaurants` 응답을 커서 기반 무한스크롤로 렌더링합니다.
 - [x] 현재 page의 정적 restaurant fixture prop 주입은 production render path에서 제거했습니다.
@@ -141,14 +150,14 @@
 - error state:
   - 예상 가능한 400 계열 API error는 리스트 영역 local error UI로 표시하고 재시도 버튼을 제공합니다.
   - Header와 FilterBar를 유지해야 하므로 인기 맛집 page query wrapper는 `throwOnError: false`를 명시하고 리스트 영역 local error UI를 유지합니다.
-  - 5xx, network, timeout, unexpected non-API error도 queryClient 기본 retry 정책으로 최대 1회 retry하되 ErrorBoundary로 throw하지 않습니다.
+  - 5xx, network, timeout은 queryClient 기본 retry 정책으로 최대 1회 재시도합니다. 그 외 오류는 자동 재시도하지 않으며, 모든 조회 오류를 ErrorBoundary로 throw하지 않고 목록 영역에서 처리합니다.
 - empty state:
   - API content가 비어 있고 다음 페이지가 없으면 빈 목록 안내를 표시합니다.
 - refetch condition:
   - 정렬 `적용`
   - 음식 장르 `적용`
   - Error UI의 재시도
-  - 같은 params 재적용 시 TanStack Query cache/stale 정책을 따릅니다.
+  - 같은 params 재적용 시에도 기존 목록 캐시를 제거하고 첫 페이지부터 다시 조회합니다.
 
 ### Mutation
 
@@ -167,10 +176,10 @@
 | `area`                              | 지역 label                    | generated optional | 서버 명세상 필수입니다. 카드의 `{region} · {category}` 중 region으로 사용합니다.                                                                                     |
 | `foodCategory`                      | 음식 카테고리 label           | generated optional | 서버 명세상 필수입니다. category 우선값입니다. 없으면 `genre`를 fallback으로 사용합니다.                                                                             |
 | `genre`                             | 음식 카테고리 fallback/filter | generated optional | 서버가 한글 label 또는 API code를 줄 수 있으므로 mapper에서 label 변환을 흡수합니다.                                                                                 |
-| `imageUrls`                         | 가로 스크롤 이미지 리스트     | generated optional | 서버 명세상 최대 3개입니다. 서버가 내려준 이미지만 표시하고 부족한 슬롯을 추가하지 않습니다. 없으면 `thumbnailUrl`을 fallback으로 봅니다.                            |
+| `imageUrls`                         | 가로 스크롤 이미지 행         | generated optional | 서버 명세상 최대 5개입니다. 서버가 내려준 이미지 중 최대 5개만 표시하고 부족한 슬롯을 추가하지 않습니다. 없으면 `thumbnailUrl`을 fallback으로 봅니다.                |
 | `thumbnailUrl`                      | 이미지 fallback               | generated optional | 서버 명세상 필수입니다. `imageUrls`가 없을 때만 리스트 이미지로 사용합니다. `imageUrls`와 `thumbnailUrl`이 모두 없으면 UI에서 `Thumbnail` fallback 1개를 표시합니다. |
 | `summary`                           | 식당 소개                     | generated optional | 서버 명세상 필수입니다. 카드 설명 문구로 사용합니다. 영업시간으로 매핑하지 않습니다.                                                                                 |
-| `hashtags`                          | 관련 해시태그                 | generated optional | 서버 명세상 필수입니다. `#` prefix가 없으면 UI mapper에서 붙여 표시합니다.                                                                                           |
+| `hashtags`                          | 관련 해시태그                 | generated optional | 서버 명세상 필수입니다. `#` prefix가 없으면 UI mapper에서 붙여 표시하고, 카드에서는 최대 3개만 표시합니다.                                                           |
 | `todayBusinessHour`                 | 사용 안 함                    | yes                | 인기 맛집 카드 UI에는 영업시간 영역이 없으므로 매핑하지 않습니다.                                                                                                    |
 
 ### Missing Server Questions
@@ -185,7 +194,11 @@
   - active bottom sheet: `sort | category | null`
   - selected/draft sort option
   - selected/draft category option
-  - local retry trigger only when query option override가 필요한 경우
+  - 필터 적용 후 스크롤 초기화 여부
+- session state:
+  - `hashi:restaurant-list:{type}:{location.key}`: 상세 이동 직전의 적용 필터, 조회한 페이지 및 스크롤 위치
+  - 저장된 목록 본문이 있으면 같은 필터의 기존 Query 캐시보다 해당 방문의 목록을 우선 복원합니다.
+  - 방문 이력 개수에 임의 제한을 두지 않습니다. 저장 공간이 부족하면 이력의 목록 본문만 제거하고 필터·페이지 수·스크롤 위치는 유지합니다. 복귀 시 필요한 페이지를 다시 조회하며, 다른 기능의 sessionStorage는 변경하지 않습니다.
 - form state: none
 - URL state: none
 - server state:
@@ -207,7 +220,7 @@ PopularRestaurantsPage
     RestaurantFilterBar
     RestaurantCard list
       RestaurantImageList
-        server images or single Thumbnail fallback
+        최대 5장의 가로 스크롤 이미지 또는 단일 Thumbnail fallback
     FilterBottomSheet(sort)
     FilterBottomSheet(category)
 ```
@@ -267,7 +280,7 @@ PopularRestaurantsPage
 
 ## Verification
 
-- [x] `corepack pnpm --filter @hashi/client test -- src/app/router/routes.test.tsx src/features/restaurantList/utils/createRestaurantListRequestParams.test.ts src/features/restaurantList/utils/mapRestaurantSummaryToRestaurant.test.ts src/features/restaurantList/api/getRestaurants.test.ts src/pages/search/queries/useSearchRestaurantsInfiniteQuery.test.tsx`
+- [x] `pnpm --filter @hashi/client test src/pages/hashiPick/HashiPickPage.test.tsx src/pages/popularRestaurants/PopularRestaurantsPage.test.tsx`
 - [x] `corepack pnpm --filter @hashi/client lint`
 - [x] `corepack pnpm --filter @hashi/client typecheck`
 - [x] `corepack pnpm --filter @hashi/client build`
