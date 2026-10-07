@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 
 type CollectionDropdownProps<T extends string> = {
   label: string
-  options: readonly { value: T; label: string }[]
+  options: readonly { value: T; label: string; destructive?: boolean }[]
   value: T
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -171,9 +171,11 @@ export const CollectionDropdown = <T extends string>({
                 aria-checked={action ? undefined : value === option.value}
                 className={[
                   'border-primary-100 h-10 border-b text-center last:border-b-0 [&>span]:justify-center',
-                  value === option.value
-                    ? 'text-primary-200'
-                    : 'text-warm-gray-300',
+                  option.destructive
+                    ? 'text-primary-400'
+                    : action || value === option.value
+                      ? 'text-primary-200'
+                      : 'text-warm-gray-300',
                 ].join(' ')}
                 onClick={() => {
                   onChange(option.value)
@@ -194,20 +196,62 @@ const EDIT_OPTION = [{ value: 'edit', label: '수정하기' }] as const
 export const CollectionEditMenu = ({
   name,
   onEdit,
+  onShare,
+  onDelete,
 }: {
   name: string
   onEdit: () => void
+  onShare?: () => void
+  onDelete?: () => void
 }) => {
   const [open, setOpen] = useState(false)
   return (
     <CollectionDropdown
       action
       label={`${name} 더보기`}
-      options={EDIT_OPTION}
+      options={[
+        ...(onShare ? [{ value: 'share', label: '링크 복사' }] : []),
+        ...EDIT_OPTION,
+        ...(onDelete
+          ? [{ value: 'delete', label: '삭제하기', destructive: true }]
+          : []),
+      ]}
       value="edit"
       open={open}
       onOpenChange={setOpen}
-      onChange={onEdit}
+      onChange={(value) => {
+        if (value === 'share') onShare?.()
+        else if (value === 'delete') onDelete?.()
+        else onEdit()
+      }}
+    />
+  )
+}
+
+export const CollectionActionMenu = ({
+  label,
+  onManage,
+  onDelete,
+  restaurant = false,
+}: {
+  label: string
+  onManage: () => void
+  onDelete: () => void
+  restaurant?: boolean
+}) => {
+  const [open, setOpen] = useState(false)
+  return (
+    <CollectionDropdown
+      action
+      label={label}
+      value="manage"
+      open={open}
+      onOpenChange={setOpen}
+      options={[
+        { value: 'manage', label: restaurant ? '이동하기' : '편집하기' },
+        { value: 'delete', label: '삭제하기', destructive: true },
+      ]}
+      onChange={(value) => (value === 'manage' ? onManage() : onDelete())}
     />
   )
 }
