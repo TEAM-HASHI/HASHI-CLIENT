@@ -4,20 +4,16 @@ import { cn } from '@/shared/utils'
 
 import type { SavedCollection } from '@/pages/saved/types'
 
-// Figma collection_cover, 8317:37718/37731/37744/37757.
-// 공통 토큰에 없는 컬렉션 팔레트는 확인된 값만 페이지 내부에서 관리한다.
-const COLLECTION_COVER_COLORS = {
-  red: { background: 'var(--color-primary-400)', color: '#bf2e2e' },
-  yellow: { background: '#fdec82', color: '#efc53a' },
-  green: { background: '#dedc5f', color: 'var(--color-secondary-500)' },
-  purple: { background: '#c7afda', color: '#a383c7' },
-} as const
+import { COLLECTION_COVER_COLORS } from '@/pages/saved/data/collectionPalette'
 
 export const CollectionCover = ({
   collection,
   compact = false,
 }: {
-  collection: SavedCollection
+  collection: {
+    color: SavedCollection['color'] | null
+    coverImages: SavedCollection['coverImages']
+  }
   compact?: boolean
 }) => (
   <div
@@ -29,12 +25,16 @@ export const CollectionCover = ({
         : 'size-25 gap-1 rounded-[10px]',
     )}
   >
-    <div
-      className="flex items-center justify-center rounded-xs"
-      style={COLLECTION_COVER_COLORS[collection.color]}
-    >
-      <SaveIcon className={compact ? 'size-5' : 'size-10'} />
-    </div>
+    {collection.color ? (
+      <div
+        className="flex items-center justify-center rounded-xs"
+        style={COLLECTION_COVER_COLORS[collection.color]}
+      >
+        <SaveIcon className={compact ? 'size-5' : 'size-10'} />
+      </div>
+    ) : (
+      <Thumbnail alt="" className={compact ? 'size-6' : 'size-12 rounded-xs'} />
+    )}
     {collection.coverImages.map((src, index) => (
       <div key={index} className={compact ? 'size-6' : 'size-12'}>
         <Thumbnail

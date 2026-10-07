@@ -10,6 +10,9 @@ import {
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import '@/app/styles/global.css'
 import { SavedPage } from '@/pages/saved/SavedPage'
+import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
+import { useCollectionData } from '@/pages/saved/data/useCollectionData'
+import { CollectionSaveDialog } from '@/pages/saved/components/CollectionSaveDialog'
 import { CollectionDragPanelContent } from '@/pages/saved/components/CollectionDragPanelContent'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import type { CollectionData, CollectionViewState } from '@/pages/saved/types'
@@ -48,6 +51,7 @@ const data: CollectionData =
       : collectionMocks
 
 const PanelFixture = () => {
+  const { data, setData } = useCollectionData()
   const location = useLocation()
   const navigate = useNavigate()
   const [view, setView] = useState<CollectionViewState>(() =>
@@ -79,6 +83,7 @@ const PanelFixture = () => {
       {!closed && (
         <CollectionDragPanelContent
           data={data}
+          onDataChange={setData}
           view={view}
           onViewChange={(next) => {
             setView(next)
@@ -96,12 +101,27 @@ const PanelFixture = () => {
   )
 }
 
+const SavedFixture = () => {
+  const [saving, setSaving] = useState(params.get('save'))
+  return (
+    <>
+      <SavedPage />
+      {saving && (
+        <CollectionSaveDialog
+          restaurantId={saving}
+          onClose={() => setSaving(null)}
+        />
+      )}
+    </>
+  )
+}
+
 const router = createMemoryRouter(
   [
     {
       element: <BottomNavigationLayout />,
       children: [
-        { path: '/saved', element: <SavedPage data={data} /> },
+        { path: '/saved', element: <SavedFixture /> },
         { path: '/map', element: <PanelFixture /> },
       ],
     },
@@ -123,6 +143,8 @@ const router = createMemoryRouter(
 
 createRoot(document.getElementById('root')!).render(
   <main className="app-mobile-frame min-h-dvh bg-white">
-    <RouterProvider router={router} />
+    <CollectionDataProvider initialData={data}>
+      <RouterProvider router={router} />
+    </CollectionDataProvider>
   </main>,
 )

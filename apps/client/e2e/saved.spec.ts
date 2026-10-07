@@ -25,7 +25,9 @@ for (const viewport of [
       path: testInfo.outputPath('list.png'),
       fullPage: true,
     })
-    await page.getByRole('button', { name: /2026 도쿄 봄 여행/ }).click()
+    await page
+      .getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' })
+      .click()
     await expect(page.getByText('총 4곳')).toBeVisible()
     await page.getByRole('button', { name: '정렬 선택' }).click()
     await page.getByRole('menuitemradio', { name: '별점순' }).click()
@@ -132,7 +134,7 @@ test('지도 목록은 작은 커버를 사용하고 저장 탭을 유지한다'
   expect(thumbnail?.width).toBe(24)
   expect(thumbnail?.height).toBe(24)
   await page.screenshot({ path: testInfo.outputPath('compact-list.png') })
-  await row.getByRole('button').click()
+  await row.getByRole('button', { name: /컬렉션 열기$/ }).click()
   await expect(page.getByRole('list', { name: '저장 식당' })).toBeVisible()
   await expect(
     page.getByRole('button', { name: '저장', exact: true }),
@@ -153,4 +155,103 @@ test('낮은 패널의 드롭다운과 긴 콘텐츠', async ({ page }, testInfo
   await page.getByRole('menuitemradio', { name: '전체' }).click()
   await page.locator('[data-restaurant-id]').last().scrollIntoViewIfNeeded()
   await expect(page.locator('[data-restaurant-id]').last()).toBeInViewport()
+})
+
+for (const viewport of [
+  { width: 393, height: 852 },
+  { width: 320, height: 568 },
+  { width: 820, height: 1180 },
+]) {
+  test(`PR2 생성·수정·폐기 ${viewport.width}`, async ({ page }, testInfo) => {
+    await page.setViewportSize(viewport)
+    await openFixture(page)
+    await page.getByRole('button', { name: '새 컬렉션 만들기' }).click()
+    await expect(
+      page.getByRole('button', { name: '만들기', exact: true }),
+    ).toBeDisabled()
+    await expect(page.getByRole('radio', { checked: true })).toHaveCount(0)
+    await page.getByLabel('컬렉션명', { exact: true }).fill('  새 여행  ')
+    await page.getByLabel('설명', { exact: true }).fill('  여행 설명  ')
+    await page.getByRole('radio', { name: '파랑' }).check()
+    await page.getByRole('button', { name: '비공개', exact: true }).click()
+    await page.screenshot({ path: testInfo.outputPath('create.png') })
+    const submit = await page
+      .getByRole('button', { name: '만들기', exact: true })
+      .boundingBox()
+    expect(submit!.y + submit!.height).toBeLessThanOrEqual(viewport.height)
+    await page.getByRole('button', { name: '만들기', exact: true }).click()
+    await expect(page.getByText('총 5개')).toBeVisible()
+    await page.getByRole('button', { name: /새 여행.*더보기/ }).click()
+    await page.getByRole('menuitem', { name: '수정하기' }).click()
+    await expect(page.getByLabel('컬렉션명', { exact: true })).toHaveValue(
+      '  새 여행  ',
+    )
+    await page.getByLabel('컬렉션명', { exact: true }).fill('  수정 이름  ')
+    await page.getByRole('button', { name: '뒤로가기', exact: true }).click()
+    await expect(page.getByRole('alertdialog')).toBeVisible()
+    await page.screenshot({ path: testInfo.outputPath('discard.png') })
+    await page.getByRole('button', { name: '계속하기' }).click()
+    await expect(page.getByLabel('컬렉션명', { exact: true })).toHaveValue(
+      '  수정 이름  ',
+    )
+    await page.getByRole('button', { name: '저장하기' }).click()
+    await page.getByRole('button', { name: '수정 이름 컬렉션 열기' }).click()
+    await expect(page.getByRole('heading', { name: '수정 이름' })).toBeVisible()
+    await page.getByRole('button', { name: '지도로 보기' }).click()
+    await expect(page.getByRole('heading', { name: '수정 이름' })).toBeVisible()
+    await expect(page.getByText('여행 설명', { exact: true })).toBeVisible()
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true)
+  })
+}
+
+test('PR2 저장 대상 선택·생성 복귀·중복 저장 방지', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  await openFixture(page, '?save=sushi')
+  const dialog = page.getByRole('dialog', { name: '컬렉션 저장' })
+  await expect(
+    dialog.getByRole('button', { name: '저장', exact: true }),
+  ).toBeDisabled()
+  await expect(
+    page.getByRole('radio', { name: /봄 여행.*저장됨/ }),
+  ).toBeDisabled()
+  await page.screenshot({ path: testInfo.outputPath('save-targets.png') })
+  await dialog.getByRole('button', { name: '새 컬렉션 만들기' }).click()
+  await page.getByLabel('컬렉션명', { exact: true }).fill('저장 대상')
+  await page.getByRole('radio', { name: '주황' }).check()
+  await page.getByRole('button', { name: '만들기', exact: true }).click()
+  await expect(page.getByRole('radio', { checked: true })).toHaveCount(0)
+  await expect(
+    dialog.getByRole('button', { name: '저장', exact: true }),
+  ).toBeDisabled()
+  await page.getByRole('radio', { name: '저장 대상', exact: true }).click()
+  await dialog.getByRole('button', { name: '저장', exact: true }).click()
+  await page.getByRole('button', { name: '저장 대상 컬렉션 열기' }).click()
+  await expect(page.getByText('총 1곳')).toBeVisible()
+  await expect(page.locator('[data-restaurant-id="sushi"]')).toBeVisible()
+  await page.reload()
+  await expect(
+    page.getByRole('radio', { name: '저장 대상', exact: true }),
+  ).toHaveCount(0)
+})
+
+test('PR2 작은 저장 모달에서 목록만 스크롤', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 320, height: 400 })
+  await openFixture(page, '?save=sushi&scenario=long')
+  const dialog = page.getByRole('dialog', { name: '컬렉션 저장' })
+  const footer = dialog.getByRole('button', { name: '저장', exact: true })
+  const before = await footer.boundingBox()
+  await page.getByRole('radio').last().scrollIntoViewIfNeeded()
+  await expect(
+    dialog.getByRole('button', { name: '새 컬렉션 만들기' }),
+  ).toBeVisible()
+  const after = await footer.boundingBox()
+  expect(after!.y).toBe(before!.y)
+  expect(after!.y + after!.height).toBeLessThanOrEqual(400)
+  await page.screenshot({ path: testInfo.outputPath('short-save.png') })
 })

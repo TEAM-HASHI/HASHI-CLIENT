@@ -1,7 +1,13 @@
 export type CollectionSort = 'latest' | 'rating' | 'reviews'
 export type RestaurantCategory = 'restaurant' | 'cafe' | 'bar'
 export type CollectionCategory = 'all' | RestaurantCategory
-export type CollectionColor = 'red' | 'yellow' | 'green' | 'purple'
+export type CollectionColor =
+  | 'red'
+  | 'orange'
+  | 'yellow'
+  | 'green'
+  | 'blue'
+  | 'purple'
 
 export type SavedRestaurant = {
   id: string

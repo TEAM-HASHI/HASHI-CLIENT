@@ -1,6 +1,6 @@
 import { CancelIcon, MenuIcon, PlusIcon, SaveIcon } from '@hashi/hds-icons'
 import { DragPanel, IconButton } from '@hashi/hds-ui'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 import {
   COLLECTION_CATEGORY_OPTIONS,
@@ -12,7 +12,15 @@ import {
   selectCollections,
   selectRestaurants,
 } from '@/pages/saved/utils/collectionSelectors'
-import { CollectionDropdown } from '@/pages/saved/components/CollectionDropdown'
+import {
+  CollectionDropdown,
+  CollectionEditMenu,
+} from '@/pages/saved/components/CollectionDropdown'
+import { CollectionForm } from '@/pages/saved/components/CollectionForm'
+import {
+  createCollection,
+  updateCollection,
+} from '@/pages/saved/utils/collectionMutations'
 import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 
@@ -32,6 +40,7 @@ export type CollectionDragPanelContentProps = {
   availableHeight: number
   onRestaurantSelect: (restaurantId: string) => void
   onClose: () => void
+  onDataChange?: (data: CollectionData) => void
 }
 
 /** 지도 담당자가 내비게이션을 제외한 relative 컨테이너에 배치한다. */
@@ -42,7 +51,11 @@ export const CollectionDragPanelContent = ({
   availableHeight,
   onRestaurantSelect,
   onClose,
+  onDataChange,
 }: CollectionDragPanelContentProps) => {
+  const id = useId()
+  const [creationCount, setCreationCount] = useState(0)
+  const [form, setForm] = useState<'create' | { id: string } | null>(null)
   const collection = data.collections.find(
     (item) => item.id === view.collectionId,
   )
@@ -167,7 +180,8 @@ export const CollectionDragPanelContent = ({
             <div className="px-5">
               <button
                 type="button"
-                disabled
+                disabled={!onDataChange}
+                onClick={() => setForm('create')}
                 className="border-warm-gray-50 flex w-full items-center gap-3 border-b py-4.5 text-left"
               >
                 <span className="bg-primary-100 flex size-12.5 shrink-0 items-center justify-center rounded-[5px]">
@@ -186,6 +200,14 @@ export const CollectionDragPanelContent = ({
                     key={item.id}
                     compact
                     collection={item}
+                    moreAction={
+                      onDataChange ? (
+                        <CollectionEditMenu
+                          name={item.name}
+                          onEdit={() => setForm({ id: item.id })}
+                        />
+                      ) : undefined
+                    }
                     restaurantCount={
                       selectRestaurants(item, data.restaurants).length
                     }
@@ -203,6 +225,31 @@ export const CollectionDragPanelContent = ({
           </>
         )}
       </DragPanel>
+      {form && onDataChange && (
+        <CollectionForm
+          collections={data.collections}
+          collection={
+            form === 'create'
+              ? undefined
+              : data.collections.find((item) => item.id === form.id)
+          }
+          onClose={() => setForm(null)}
+          onSubmit={(draft) => {
+            if (form === 'create') {
+              onDataChange(
+                createCollection(
+                  data,
+                  draft,
+                  `mock-${id}-${creationCount}`,
+                  new Date().toISOString(),
+                ),
+              )
+              setCreationCount((count) => count + 1)
+            } else onDataChange(updateCollection(data, form.id, draft))
+            setForm(null)
+          }}
+        />
+      )}
     </>
   )
 }
