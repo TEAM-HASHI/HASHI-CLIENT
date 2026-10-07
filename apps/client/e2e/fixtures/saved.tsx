@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { ToastRegion } from '@hashi/hds-ui'
 import {
   createMemoryRouter,
   RouterProvider,
@@ -145,6 +146,7 @@ createRoot(document.getElementById('root')!).render(
   <main className="app-mobile-frame min-h-dvh bg-white">
     <CollectionDataProvider initialData={data}>
       <RouterProvider router={router} />
+      <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto max-w-[var(--app-mobile-max-width,100%)] px-5 pt-8" />
     </CollectionDataProvider>
   </main>,
 )

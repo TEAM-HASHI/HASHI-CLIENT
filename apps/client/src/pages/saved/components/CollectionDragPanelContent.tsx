@@ -1,6 +1,12 @@
-import { CancelIcon, MenuIcon, PlusIcon, SaveIcon } from '@hashi/hds-icons'
+import {
+  CancelIcon,
+  MenuIcon,
+  PlusIcon,
+  SaveIcon,
+  ShareIcon,
+} from '@hashi/hds-icons'
 import { DragPanel, IconButton } from '@hashi/hds-ui'
-import { useId, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 
 import {
   COLLECTION_CATEGORY_OPTIONS,
@@ -15,6 +21,7 @@ import {
 import {
   CollectionDropdown,
   CollectionEditMenu,
+  CollectionActionMenu,
 } from '@/pages/saved/components/CollectionDropdown'
 import { CollectionForm } from '@/pages/saved/components/CollectionForm'
 import {
@@ -23,11 +30,16 @@ import {
 } from '@/pages/saved/utils/collectionMutations'
 import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
+import { CollectionEditor } from '@/pages/saved/components/CollectionEditor'
+import type { CollectionManagementAction } from '@/pages/saved/components/CollectionEditor'
 
-// Figma 8317:37386 / 8317:40088. 손잡이 포함, 내비게이션 제외.
+// 목록 318~458px(사용자 확정), 상세 477px(Figma 8317:40117). 모두 내비게이션 포함.
 const COLLECTION_PANEL_HEIGHT = {
-  list: 234,
-  detail: 393,
+  listMin: 318,
+  listMax: 458,
+  detail: 477,
+  navigation: 84,
+  handle: 30,
   topGap: 12,
   closeGap: 20,
   closeSize: 44,
@@ -56,26 +68,44 @@ export const CollectionDragPanelContent = ({
   const id = useId()
   const [creationCount, setCreationCount] = useState(0)
   const [form, setForm] = useState<'create' | { id: string } | null>(null)
+  const [management, setManagement] =
+    useState<CollectionManagementAction | null>(null)
   const collection = data.collections.find(
     (item) => item.id === view.collectionId,
   )
+  const listContentRef = useRef<HTMLDivElement>(null)
+  const [listContentHeight, setListContentHeight] = useState(0)
+  const isList = !collection
+  useLayoutEffect(() => {
+    const content = listContentRef.current
+    if (!content) return
+    const measure = () =>
+      setListContentHeight(content.getBoundingClientRect().height)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(content)
+    return () => observer.disconnect()
+  }, [isList])
   const normalHeight = collection
-    ? COLLECTION_PANEL_HEIGHT.detail
-    : COLLECTION_PANEL_HEIGHT.list
+    ? COLLECTION_PANEL_HEIGHT.detail - COLLECTION_PANEL_HEIGHT.navigation
+    : Math.min(
+        COLLECTION_PANEL_HEIGHT.listMax - COLLECTION_PANEL_HEIGHT.navigation,
+        Math.max(
+          COLLECTION_PANEL_HEIGHT.listMin - COLLECTION_PANEL_HEIGHT.navigation,
+          listContentHeight + COLLECTION_PANEL_HEIGHT.handle,
+        ),
+      )
   const [panel, setPanel] = useState<{
     collectionId: string | null
     height: number
-  }>({
-    collectionId: view.collectionId,
-    height: normalHeight,
-  })
+  } | null>(null)
   const [menu, setMenu] = useState<'sort' | 'category' | null>(null)
   const maxHeight = Math.max(
     0,
     availableHeight - COLLECTION_PANEL_HEIGHT.topGap,
   )
   const height =
-    panel.collectionId === view.collectionId ? panel.height : normalHeight
+    panel?.collectionId === view.collectionId ? panel.height : normalHeight
   const restaurants = collection
     ? selectRestaurants(collection, data.restaurants, view.sort, view.category)
     : []
@@ -102,6 +132,7 @@ export const CollectionDragPanelContent = ({
         </IconButton>
       )}
       <DragPanel
+        key={view.collectionId ?? 'list'}
         aria-label="저장 컬렉션 패널"
         handleLabel="컬렉션 패널 높이"
         height={height}
@@ -119,10 +150,42 @@ export const CollectionDragPanelContent = ({
                 <h2 className="typo-sub-header-1 text-primary-200 min-w-0 flex-1 [overflow-wrap:anywhere] break-words">
                   {collection.name}
                 </h2>
-                <MenuIcon
-                  aria-hidden="true"
-                  className="text-warm-gray-300 size-4.5 shrink-0"
-                />
+                {onDataChange ? (
+                  <>
+                    <IconButton
+                      size="xs"
+                      aria-label="컬렉션 공유"
+                      onClick={() =>
+                        setManagement({
+                          collectionId: collection.id,
+                          type: 'share',
+                        })
+                      }
+                    >
+                      <ShareIcon className="size-6" />
+                    </IconButton>
+                    <CollectionActionMenu
+                      label="컬렉션 더보기"
+                      onManage={() =>
+                        setManagement({
+                          collectionId: collection.id,
+                          type: 'edit',
+                        })
+                      }
+                      onDelete={() =>
+                        setManagement({
+                          collectionId: collection.id,
+                          type: 'delete',
+                        })
+                      }
+                    />
+                  </>
+                ) : (
+                  <MenuIcon
+                    aria-hidden="true"
+                    className="text-warm-gray-300 size-4.5 shrink-0"
+                  />
+                )}
               </div>
               {collection.description && (
                 <p className="typo-body-6 text-cool-gray-400 mt-2 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
@@ -163,12 +226,34 @@ export const CollectionDragPanelContent = ({
                   key={restaurant.id}
                   restaurant={restaurant}
                   onSelect={onRestaurantSelect}
+                  moreAction={
+                    onDataChange && (
+                      <CollectionActionMenu
+                        restaurant
+                        label={`${restaurant.name} 더보기`}
+                        onManage={() =>
+                          setManagement({
+                            collectionId: collection.id,
+                            type: 'move',
+                            restaurantIds: [restaurant.id],
+                          })
+                        }
+                        onDelete={() =>
+                          setManagement({
+                            collectionId: collection.id,
+                            type: 'remove',
+                            restaurantIds: [restaurant.id],
+                          })
+                        }
+                      />
+                    )
+                  }
                 />
               ))}
             </ul>
           </>
         ) : (
-          <>
+          <div ref={listContentRef}>
             <div className="flex items-center justify-between px-5 pt-2 pb-1">
               <h2 className="typo-body-3 text-primary-200">
                 컬렉션{' '}
@@ -205,6 +290,18 @@ export const CollectionDragPanelContent = ({
                         <CollectionEditMenu
                           name={item.name}
                           onEdit={() => setForm({ id: item.id })}
+                          onShare={() =>
+                            setManagement({
+                              collectionId: item.id,
+                              type: 'share',
+                            })
+                          }
+                          onDelete={() =>
+                            setManagement({
+                              collectionId: item.id,
+                              type: 'delete',
+                            })
+                          }
                         />
                       ) : undefined
                     }
@@ -222,7 +319,7 @@ export const CollectionDragPanelContent = ({
                 ))}
               </ul>
             </div>
-          </>
+          </div>
         )}
       </DragPanel>
       {form && onDataChange && (
@@ -248,6 +345,16 @@ export const CollectionDragPanelContent = ({
             } else onDataChange(updateCollection(data, form.id, draft))
             setForm(null)
           }}
+        />
+      )}
+      {management && onDataChange && (
+        <CollectionEditor
+          action={management}
+          data={data}
+          onDataChange={onDataChange}
+          view={view}
+          onClose={() => setManagement(null)}
+          onDeleted={() => onViewChange(INITIAL_COLLECTION_VIEW)}
         />
       )}
     </>
