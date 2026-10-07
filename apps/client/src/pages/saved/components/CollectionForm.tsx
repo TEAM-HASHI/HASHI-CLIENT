@@ -222,7 +222,7 @@ export const CollectionForm = ({
               <InputField
                 id={`${id}-description`}
                 aria-label="설명"
-                placeholder="지유롭게 작성해보세요"
+                placeholder="자유롭게 작성해보세요"
                 value={draft.description}
                 {...compositionProps(
                   'description',

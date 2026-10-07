@@ -8,12 +8,16 @@ type SavedRestaurantRowProps = {
   restaurant: SavedRestaurant
   onSelect?: (restaurantId: string) => void
   moreAction?: ReactNode
+  selection?: ReactNode
+  editing?: boolean
 }
 
 export const SavedRestaurantRow = ({
   restaurant,
   onSelect,
   moreAction,
+  selection,
+  editing,
 }: SavedRestaurantRowProps) => {
   const content = (
     <>
@@ -43,6 +47,7 @@ export const SavedRestaurantRow = ({
       className="border-warm-gray-50 flex items-start gap-4 border-b py-4"
       data-restaurant-id={restaurant.id}
     >
+      {selection}
       {onSelect ? (
         <button
           type="button"
@@ -54,12 +59,13 @@ export const SavedRestaurantRow = ({
       ) : (
         <div className="flex min-w-0 flex-1 items-start gap-4">{content}</div>
       )}
-      {moreAction ?? (
-        <MenuIcon
-          aria-hidden="true"
-          className="text-warm-gray-300 size-4.5 shrink-0"
-        />
-      )}
+      {!editing &&
+        (moreAction ?? (
+          <MenuIcon
+            aria-hidden="true"
+            className="text-warm-gray-300 size-4.5 shrink-0"
+          />
+        ))}
     </li>
   )
 }

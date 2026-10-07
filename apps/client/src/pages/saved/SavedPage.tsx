@@ -1,6 +1,6 @@
-import { BackIcon, MapIcon, MenuIcon, PlusIcon } from '@hashi/hds-icons'
+import { BackIcon, MapIcon, ShareIcon, PlusIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
-import { useId, useState } from 'react'
+import { useId, useLayoutEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -8,6 +8,7 @@ import { ROUTES } from '@/app/router/path'
 import {
   CollectionDropdown,
   CollectionEditMenu,
+  CollectionActionMenu,
 } from '@/pages/saved/components/CollectionDropdown'
 import { CollectionForm } from '@/pages/saved/components/CollectionForm'
 import { useCollectionData } from '@/pages/saved/data/useCollectionData'
@@ -31,6 +32,8 @@ import {
   selectRestaurants,
 } from '@/pages/saved/utils/collectionSelectors'
 import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
+import { CollectionEditor } from '@/pages/saved/components/CollectionEditor'
+import type { CollectionManagementAction } from '@/pages/saved/components/CollectionEditor'
 
 export type SavedPageProps = {
   onRestaurantSelect?: (restaurantId: string) => void
@@ -41,6 +44,8 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
   const id = useId()
   const [creationCount, setCreationCount] = useState(0)
   const [form, setForm] = useState<'create' | { id: string } | null>(null)
+  const [management, setManagement] =
+    useState<CollectionManagementAction | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const [view, setView] = useState<CollectionViewState>(() =>
@@ -55,6 +60,10 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
   const restaurants = collection
     ? selectRestaurants(collection, data.restaurants, view.sort, view.category)
     : []
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [view.collectionId])
 
   return (
     <>
@@ -83,14 +92,38 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
                 ) : undefined
               }
               contentClassName={
-                collection ? '[&>div:first-child]:typo-sub-header-2' : undefined
+                collection
+                  ? '[&>div:first-child]:typo-sub-header-2 inset-x-20'
+                  : undefined
               }
             />
             {collection && (
-              <MenuIcon
-                aria-hidden="true"
-                className="text-warm-gray-300 absolute top-8.25 right-5 size-4.5"
-              />
+              <div className="absolute top-7 right-3 flex items-center gap-1">
+                <IconButton
+                  size="xs"
+                  aria-label="컬렉션 공유"
+                  onClick={() =>
+                    setManagement({
+                      collectionId: collection.id,
+                      type: 'share',
+                    })
+                  }
+                >
+                  <ShareIcon className="size-6" />
+                </IconButton>
+                <CollectionActionMenu
+                  label="컬렉션 더보기"
+                  onManage={() =>
+                    setManagement({ collectionId: collection.id, type: 'edit' })
+                  }
+                  onDelete={() =>
+                    setManagement({
+                      collectionId: collection.id,
+                      type: 'delete',
+                    })
+                  }
+                />
+              </div>
             )}
           </div>
           <div className="flex h-11.5 items-center justify-between gap-2 px-5">
@@ -134,6 +167,26 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
                   key={restaurant.id}
                   restaurant={restaurant}
                   onSelect={onRestaurantSelect}
+                  moreAction={
+                    <CollectionActionMenu
+                      restaurant
+                      label={`${restaurant.name} 더보기`}
+                      onManage={() =>
+                        setManagement({
+                          collectionId: collection.id,
+                          type: 'move',
+                          restaurantIds: [restaurant.id],
+                        })
+                      }
+                      onDelete={() =>
+                        setManagement({
+                          collectionId: collection.id,
+                          type: 'remove',
+                          restaurantIds: [restaurant.id],
+                        })
+                      }
+                    />
+                  }
                 />
               ))}
             </ul>
@@ -181,6 +234,12 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
                     <CollectionEditMenu
                       name={item.name}
                       onEdit={() => setForm({ id: item.id })}
+                      onShare={() =>
+                        setManagement({ collectionId: item.id, type: 'share' })
+                      }
+                      onDelete={() =>
+                        setManagement({ collectionId: item.id, type: 'delete' })
+                      }
                     />
                   }
                   restaurantCount={
@@ -223,6 +282,16 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
               setData((current) => updateCollection(current, form.id, draft))
             setForm(null)
           }}
+        />
+      )}
+      {management && (
+        <CollectionEditor
+          action={management}
+          data={data}
+          onDataChange={setData}
+          view={view}
+          onClose={() => setManagement(null)}
+          onDeleted={() => setView(INITIAL_COLLECTION_VIEW)}
         />
       )}
     </>
