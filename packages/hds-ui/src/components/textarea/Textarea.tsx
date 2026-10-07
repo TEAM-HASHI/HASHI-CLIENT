@@ -128,7 +128,7 @@ export const Textarea = ({
   }
 
   return (
-    <div className={cn('flex w-full flex-col gap-2', className)}>
+    <div className={cn('flex w-full flex-col gap-3', className)}>
       <textarea
         {...props}
         id={textareaId}
@@ -141,7 +141,7 @@ export const Textarea = ({
         onBeforeInput={handleBeforeInput}
         onChange={handleChange}
         className={cn(
-          'border-warm-gray-100 min-h-14 w-full resize-none rounded-[10px] border bg-white p-4.75',
+          'border-warm-gray-100 min-h-12.75 w-full resize-none rounded-[10px] border bg-white px-5 py-4',
           'typo-body-4 text-primary-200 placeholder:text-warm-gray-300 font-sans',
           'focus-visible:border-cool-gray-500 focus-visible:outline-cool-gray-500 focus-visible:outline-2 focus-visible:outline-offset-0',
           'disabled:bg-secondary-200 disabled:text-warm-gray-300 disabled:cursor-not-allowed',
