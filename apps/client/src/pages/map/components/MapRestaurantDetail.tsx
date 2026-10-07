@@ -9,11 +9,9 @@ import {
 } from '@hashi/hds-ui'
 import { useLayoutEffect, useRef, useState } from 'react'
 
-import {
-  MapRestaurantImages,
-  MapRestaurantMeta,
-  MapSaveAction,
-} from '@/pages/map/components/MapRestaurantCard'
+import { MapRestaurantImages } from '@/pages/map/components/MapRestaurantImages'
+import { MapRestaurantMeta } from '@/pages/map/components/MapRestaurantMeta'
+import { MapSaveAction } from '@/pages/map/components/MapSaveAction'
 import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
 import type { MapPanelStage, MapRestaurant } from '@/pages/map/types'
 import { cn } from '@/shared/utils'

@@ -37,19 +37,19 @@
 
 ## Public Routes
 
-| Page                  | Path                                       | Notes                                                                        |
-| --------------------- | ------------------------------------------ | ---------------------------------------------------------------------------- |
-| 홈 페이지             | `/`                                        | 첫 진입 페이지입니다.                                                        |
-| 검색 페이지           | `/search`                                  |                                                                              |
-| 오늘의 식당 페이지    | `/restaurants/today`                       | 매장 정보, 메뉴, 사진, 리뷰 탭을 가집니다.                                   |
-| 식당 상세 페이지      | `/restaurants/:restaurantId`               | 매장 정보, 메뉴, 사진, 리뷰 탭을 가집니다.                                   |
-| 메뉴 상세 페이지      | `/restaurants/:restaurantId/menus/:menuId` | 식당 메뉴 카드에서 진입하는 메뉴 상세 화면입니다.                            |
-| hashi 픽 페이지       | `/restaurants/hashi-pick`                  |                                                                              |
-| 인기 맛집 페이지      | `/restaurants/popular`                     |                                                                              |
-| 지도 페이지           | `/map`                                     | 샘플 데이터 기반 지도 퍼블리싱 화면입니다. 실제 지도 SDK/API는 미연동입니다. |
-| 매거진 리스트 페이지  | `/magazines`                               | 유지 여부 논의 중입니다.                                                     |
-| 매거진 상세 페이지    | `/magazines/:magazineId`                   | 유지 여부 논의 중입니다.                                                     |
-| 카카오 OAuth callback | `/oauth/callback/kakao`                    | 카카오 인가 code/state 처리 후 기존/신규 회원 흐름으로 분기합니다.           |
+| Page                  | Path                                       | Notes                                                                 |
+| --------------------- | ------------------------------------------ | --------------------------------------------------------------------- |
+| 홈 페이지             | `/`                                        | 첫 진입 페이지입니다.                                                 |
+| 검색 페이지           | `/search`                                  |                                                                       |
+| 오늘의 식당 페이지    | `/restaurants/today`                       | 매장 정보, 메뉴, 사진, 리뷰 탭을 가집니다.                            |
+| 식당 상세 페이지      | `/restaurants/:restaurantId`               | 매장 정보, 메뉴, 사진, 리뷰 탭을 가집니다.                            |
+| 메뉴 상세 페이지      | `/restaurants/:restaurantId/menus/:menuId` | 식당 메뉴 카드에서 진입하는 메뉴 상세 화면입니다.                     |
+| hashi 픽 페이지       | `/restaurants/hashi-pick`                  |                                                                       |
+| 인기 맛집 페이지      | `/restaurants/popular`                     |                                                                       |
+| 지도 페이지           | `/map`                                     | Google Maps SDK 연동. 식당 데이터는 샘플이며 식당 API는 미연동입니다. |
+| 매거진 리스트 페이지  | `/magazines`                               | 유지 여부 논의 중입니다.                                              |
+| 매거진 상세 페이지    | `/magazines/:magazineId`                   | 유지 여부 논의 중입니다.                                              |
+| 카카오 OAuth callback | `/oauth/callback/kakao`                    | 카카오 인가 code/state 처리 후 기존/신규 회원 흐름으로 분기합니다.    |
 
 ## Auth Only Routes
 
@@ -125,4 +125,4 @@
 
 저장(`/saved`)은 실제 화면이 구현되기 전까지 준비중 페이지를 렌더링합니다.
 지도(`/map`)는 샘플 지도·검색·필터·목록·상세·사진 보기 화면을 제공합니다.
-지도 SDK, 실제 위치, 저장/예약 API는 연결하지 않으며 화면에 샘플임을 표시합니다.
+지도 SDK는 Google Maps를 사용합니다. 식당 데이터와 좌표는 샘플임을 표시하며 실제 식당 검색·저장/예약 API는 연결하지 않습니다.

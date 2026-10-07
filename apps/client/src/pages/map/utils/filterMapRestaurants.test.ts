@@ -20,7 +20,7 @@ const restaurants: MapRestaurant[] = [
     price: '',
     description: '',
     address: '',
-    marker: { x: 50, y: 40 },
+    position: { lat: 50, lng: 40 },
   },
   {
     id: 'b',
@@ -38,7 +38,7 @@ const restaurants: MapRestaurant[] = [
     price: '',
     description: '',
     address: '',
-    marker: { x: 30, y: 30 },
+    position: { lat: 30, lng: 30 },
   },
   {
     id: 'c',
@@ -56,7 +56,7 @@ const restaurants: MapRestaurant[] = [
     price: '',
     description: '',
     address: '',
-    marker: { x: 40, y: 50 },
+    position: { lat: 40, lng: 50 },
   },
 ]
 const base = {
@@ -67,6 +67,28 @@ const base = {
 } as const
 
 describe('filterMapRestaurants', () => {
+  it('limits results to the applied viewport, including its boundary', () => {
+    const located = restaurants.map((restaurant, index) => ({
+      ...restaurant,
+      position: { lat: 35 + index, lng: 139 + index },
+    }))
+    expect(
+      filterMapRestaurants(located, base, {
+        south: 35,
+        north: 36,
+        west: 139,
+        east: 140,
+      }).map(({ id }) => id),
+    ).toEqual(['a', 'b'])
+    expect(
+      filterMapRestaurants(located, base, {
+        south: 0,
+        north: 1,
+        west: 0,
+        east: 1,
+      }),
+    ).toEqual([])
+  })
   it('intersects keyword, area and category rather than overwriting conditions', () => {
     expect(
       filterMapRestaurants(restaurants, {

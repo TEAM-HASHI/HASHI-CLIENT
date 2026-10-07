@@ -1,8 +1,9 @@
-import type { MapConditions, MapRestaurant } from '@/pages/map/types'
+import type { MapBounds, MapConditions, MapRestaurant } from '@/pages/map/types'
 
 export const filterMapRestaurants = (
   restaurants: readonly MapRestaurant[],
   conditions: MapConditions,
+  bounds: MapBounds | null = null,
 ) => {
   const keyword = conditions.keyword.trim().toLocaleLowerCase()
 
@@ -12,6 +13,14 @@ export const filterMapRestaurants = (
         (value) => value.toLocaleLowerCase().includes(keyword),
       )
       return (
+        (!bounds ||
+          (restaurant.position.lat >= bounds.south &&
+            restaurant.position.lat <= bounds.north &&
+            (bounds.west <= bounds.east
+              ? restaurant.position.lng >= bounds.west &&
+                restaurant.position.lng <= bounds.east
+              : restaurant.position.lng >= bounds.west ||
+                restaurant.position.lng <= bounds.east))) &&
         matchesKeyword &&
         (conditions.category === 'all' ||
           restaurant.category === conditions.category) &&

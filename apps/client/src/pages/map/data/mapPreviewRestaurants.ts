@@ -1,19 +1,31 @@
 import type { MapRestaurant } from '@/pages/map/types'
-import tonkatsu1 from '@/shared/assets/images/map/tonkatsu-1.webp'
-import tonkatsu2 from '@/shared/assets/images/map/tonkatsu-2.webp'
-import tonkatsu3 from '@/shared/assets/images/map/tonkatsu-3.webp'
-import yakiniku1 from '@/shared/assets/images/map/yakiniku-1.webp'
-import yakiniku2 from '@/shared/assets/images/map/yakiniku-2.webp'
-import sushi1 from '@/shared/assets/images/map/sushi-1.webp'
-import sushi2 from '@/shared/assets/images/map/sushi-2.webp'
-import sushi3 from '@/shared/assets/images/map/sushi-3.webp'
+import tonkatsu1 from '@/shared/assets/images/map/preview/tonkatsu-1.webp'
+import tonkatsu2 from '@/shared/assets/images/map/preview/tonkatsu-2.webp'
+import tonkatsu3 from '@/shared/assets/images/map/preview/tonkatsu-3.webp'
+import yakiniku1 from '@/shared/assets/images/map/preview/yakiniku-1.webp'
+import yakiniku2 from '@/shared/assets/images/map/preview/yakiniku-2.webp'
+import sushi1 from '@/shared/assets/images/map/preview/sushi-1.webp'
+import sushi2 from '@/shared/assets/images/map/preview/sushi-2.webp'
+import sushi3 from '@/shared/assets/images/map/preview/sushi-3.webp'
 
 export const MAP_PREVIEW_AREAS = [
-  { code: 'shinjuku', name: '신주쿠', x: 12, y: 36 },
-  { code: 'shibuya', name: '시부야', x: 12, y: 56 },
-  { code: 'ginza', name: '긴자', x: 52, y: 45 },
-  { code: 'ueno', name: '우에노', x: 34, y: 23 },
-  { code: 'asakusa', name: '아사쿠사', x: 65, y: 30 },
+  {
+    code: 'shinjuku',
+    name: '신주쿠',
+    position: { lat: 35.6938, lng: 139.7034 },
+  },
+  {
+    code: 'shibuya',
+    name: '시부야',
+    position: { lat: 35.6595, lng: 139.7005 },
+  },
+  { code: 'ginza', name: '긴자', position: { lat: 35.6717, lng: 139.765 } },
+  { code: 'ueno', name: '우에노', position: { lat: 35.7142, lng: 139.7774 } },
+  {
+    code: 'asakusa',
+    name: '아사쿠사',
+    position: { lat: 35.7148, lng: 139.7967 },
+  },
 ] as const
 
 const common = {
@@ -38,7 +50,7 @@ export const MAP_PREVIEW_RESTAURANTS: MapRestaurant[] = [
     recommendationRank: 1,
     menuKeywords: ['돈카츠', '튀김'],
     images: [tonkatsu1, tonkatsu2, tonkatsu3],
-    marker: { x: 48, y: 25 },
+    position: { lat: 35.694, lng: 139.703 },
   },
   {
     ...common,
@@ -52,7 +64,7 @@ export const MAP_PREVIEW_RESTAURANTS: MapRestaurant[] = [
     recommendationRank: 2,
     menuKeywords: ['고기', '야키니쿠'],
     images: [yakiniku1, yakiniku2, yakiniku1],
-    marker: { x: 64, y: 34 },
+    position: { lat: 35.6605, lng: 139.7015 },
     description:
       '오사카에 있는 인기 있는 무제한 야키니쿠 레스토랑 “야키니쿠 리키마루”가 이케부쿠역에서 도보 30초 거리에 도쿄로 가까우선했습니다! 저희 레스토랑은 자랑스럽게 “Delicio”라고 주장합니다미국 고기! 무제한 야키니쿠의 중심에서 매일 합리적인 가격에 신선한 손으로 썰어 만든 고기를 즐기실 수 있습니다. 저희는 또한 순두부와 냉면을 포함한 다양한 수제 반찬을 제공하고 있습니다. 점심 영업을 위해, 낮 동안 무제한 제공되는 세 가지 코스를 즐기실 수 있습니다! 특별한 순간을 위해 넓은 박스 좌석에서 정통 야키니쿠를 경험해 보세요.',
   },
@@ -68,7 +80,7 @@ export const MAP_PREVIEW_RESTAURANTS: MapRestaurant[] = [
     recommendationRank: 3,
     menuKeywords: ['돈카츠'],
     images: [tonkatsu1, tonkatsu2, tonkatsu3],
-    marker: { x: 48, y: 53 },
+    position: { lat: 35.715, lng: 139.778 },
   },
   {
     ...common,
@@ -82,7 +94,7 @@ export const MAP_PREVIEW_RESTAURANTS: MapRestaurant[] = [
     recommendationRank: 4,
     menuKeywords: ['스시', '초밥', '연어'],
     images: [sushi1, sushi2, sushi3],
-    marker: { x: 81, y: 55 },
+    position: { lat: 35.672, lng: 139.765 },
   },
   {
     ...common,
@@ -96,7 +108,7 @@ export const MAP_PREVIEW_RESTAURANTS: MapRestaurant[] = [
     recommendationRank: 5,
     menuKeywords: ['커피', '라떼'],
     images: [],
-    marker: { x: 40, y: 62 },
+    position: { lat: 35.6585, lng: 139.6995 },
   },
   {
     ...common,
@@ -110,7 +122,7 @@ export const MAP_PREVIEW_RESTAURANTS: MapRestaurant[] = [
     recommendationRank: 6,
     menuKeywords: ['맥주', '사케'],
     images: [],
-    marker: { x: 17, y: 43 },
+    position: { lat: 35.7145, lng: 139.7965 },
   },
   {
     ...common,
@@ -124,6 +136,6 @@ export const MAP_PREVIEW_RESTAURANTS: MapRestaurant[] = [
     recommendationRank: 7,
     menuKeywords: ['고기'],
     images: [yakiniku1, yakiniku2],
-    marker: { x: 86, y: 24 },
+    position: { lat: 35.6955, lng: 139.705 },
   },
 ]

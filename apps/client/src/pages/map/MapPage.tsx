@@ -1,8 +1,9 @@
 import { DragPanel } from '@hashi/hds-ui'
 import { useLayoutEffect, useRef, useState } from 'react'
 
-import { MapViewportPreview } from '@/pages/map/components/MapViewportPreview'
+import { MapViewport } from '@/pages/map/components/MapViewport'
 import { MapToolbar } from '@/pages/map/components/MapToolbar'
+import { MapViewButton } from '@/pages/map/components/MapViewButton'
 import { MapRestaurantList } from '@/pages/map/components/MapRestaurantList'
 import { MapRestaurantDetail } from '@/pages/map/components/MapRestaurantDetail'
 import { MapPhotoViewer } from '@/pages/map/components/MapPhotoViewer'
@@ -19,6 +20,7 @@ export const MapPage = () => {
   const [detailStage, setDetailStage] = useState<MapPanelStage>('normal')
   const [photoIndex, setPhotoIndex] = useState<number | null>(null)
   const selectionTriggerRef = useRef<HTMLElement | null>(null)
+  const restoreSelectionFocus = useRef(false)
   const photoTriggerRef = useRef<HTMLElement | null>(null)
   const sortTriggerRef = useRef<HTMLButtonElement | null>(null)
   const restoreSortFocus = useRef(false)
@@ -28,12 +30,36 @@ export const MapPage = () => {
       restoreSortFocus.current = false
     }
   }, [state.conditions.sort])
+  useLayoutEffect(() => {
+    if (state.selectedRestaurant || !restoreSelectionFocus.current) return
+    let frame: number
+    const restore = () => {
+      const trigger = selectionTriggerRef.current
+      if (!trigger?.isConnected) return
+      // Modal isolation may outlive the page state update. Wait for its
+      // actual release rather than guessing a number of animation frames.
+      if (trigger.closest('[inert], [hidden]')) {
+        frame = requestAnimationFrame(restore)
+        return
+      }
+      trigger.focus({ preventScroll: true })
+      restoreSelectionFocus.current = false
+    }
+    frame = requestAnimationFrame(restore)
+    return () => cancelAnimationFrame(frame)
+  }, [state.selectedRestaurant])
   const filtered =
     state.conditions.category !== 'all' ||
     !!state.conditions.keyword ||
-    !!state.conditions.areaCode
+    !!state.conditions.areaCode ||
+    !!state.searchBounds
   const maxHeight = Math.max(30, availableHeight - (filtered ? 125 : 12))
-  const normalHeight = Math.min(filtered ? 304 : 312, maxHeight)
+  // Keep regional labels and Google attribution visible on shorter phones.
+  const normalHeight = Math.min(
+    filtered ? 304 : 312,
+    maxHeight,
+    Math.max(state.isExploring ? 156 : 30, availableHeight - 400),
+  )
   const height =
     stage === 'expanded' ? maxHeight : stage === 'collapsed' ? 30 : normalHeight
   const handleConditionsChange = (patch: Partial<MapConditions>) => {
@@ -46,18 +72,13 @@ export const MapPage = () => {
     )
   const handleSelect = (id: string) => {
     selectionTriggerRef.current = document.activeElement as HTMLElement
-    state.setSelectedId(id)
+    state.handleSelectRestaurant(id)
     setDetailStage('normal')
   }
   const handleCloseDetail = () => {
+    restoreSelectionFocus.current = true
     state.setSelectedId(null)
     setPhotoIndex(null)
-    // Dialog releases background inertness and restores its scope on the next frame.
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() =>
-        selectionTriggerRef.current?.focus({ preventScroll: true }),
-      ),
-    )
   }
 
   return (
@@ -67,12 +88,18 @@ export const MapPage = () => {
     >
       <h1 className="sr-only">도쿄 맛집 지도</h1>
       <div inert={!!state.selectedRestaurant && detailStage === 'expanded'}>
-        <MapViewportPreview
+        <MapViewport
           restaurants={state.restaurants}
+          areas={state.areas}
           selectedId={state.selectedRestaurant?.id ?? null}
-          zoomed={
-            filtered || stage === 'collapsed' || !!state.selectedRestaurant
-          }
+          areaCode={state.conditions.areaCode}
+          resetVersion={state.resetVersion}
+          onSearchArea={(bounds) => {
+            state.handleSearchArea(bounds)
+            setStage('normal')
+          }}
+          zoomed={state.isExploring}
+          onExplore={state.handleExplore}
           panelHeight={
             state.selectedRestaurant
               ? detailStage === 'collapsed'
@@ -98,20 +125,28 @@ export const MapPage = () => {
           onCategoryChange={(category) => handleConditionsChange({ category })}
         />
         <p className="typo-caption-4 text-cool-gray-600 pointer-events-none absolute top-[calc(112px+var(--safe-area-top,0px))] right-5 rounded bg-white/90 px-1">
-          샘플 지도 · 실제 위치/예약 미연동
+          샘플 식당 · 실제 매장 위치/예약 미연동
         </p>
         <div
           hidden={!!state.selectedRestaurant}
           className="pointer-events-none absolute inset-0"
         >
           <DragPanel
-            key={JSON.stringify(state.conditions)}
+            key={JSON.stringify([state.conditions, state.searchBounds])}
             aria-label="지도 식당 목록"
             handleLabel="식당 목록 높이 조절"
             height={height}
             normalHeight={normalHeight}
             maxHeight={maxHeight}
             onHeightChange={handleHeightChange}
+            footer={
+              <div
+                hidden={stage !== 'expanded'}
+                className="px-5 py-4 text-center"
+              >
+                <MapViewButton onClick={() => setStage('collapsed')} />
+              </div>
+            }
           >
             <MapRestaurantList
               restaurants={state.restaurants}

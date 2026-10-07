@@ -33,6 +33,51 @@ test('exposed map, category and search receive real pointer clicks', async ({
   ).toBeVisible()
 })
 
+test('direct zoom reveals pins, zoom-out keeps them, and reset restores regions', async ({
+  page,
+}) => {
+  const area = page.getByRole('button', { name: '신주쿠 식당 보기' })
+  const pins = page.getByRole('button', { name: /지도 마커$/ })
+  await expect(area).toBeVisible()
+  await expect(pins).toHaveCount(0)
+  await page.mouse.move(195, 300)
+  await expect
+    .poll(
+      async () => {
+        await page.mouse.wheel(0, -800)
+        return pins.count()
+      },
+      { timeout: 15000, intervals: [400] },
+    )
+    .toBeGreaterThan(0)
+  await expect(area).toHaveCount(0)
+  // Repeated wheel steps exercise Google Maps' incremental gesture zoom.
+  for (let step = 0; step < 12; step++) {
+    await page.mouse.wheel(0, 800)
+    await page.waitForTimeout(200)
+  }
+  await expect(area).toHaveCount(0)
+  await expect.poll(() => pins.count()).toBeGreaterThan(0)
+  await page.getByRole('button', { name: '전체 지역 보기' }).click()
+  await expect(area).toBeVisible()
+  await expect(pins).toHaveCount(0)
+})
+
+test('map CTA collapses the expanded list and restores keyboard focus', async ({
+  page,
+}) => {
+  const handle = page.getByRole('slider', { name: '식당 목록 높이 조절' })
+  await handle.press('End')
+  const button = page.getByRole('button', { name: '지도로 보기' })
+  await expect(button).toBeInViewport()
+  await button.click()
+  await expect(handle).toHaveAttribute('aria-valuenow', '30')
+  await expect(handle).toBeFocused()
+  await expect(button).toBeHidden()
+  await handle.press('ArrowUp')
+  await expect(page.getByRole('list', { name: '식당 검색 결과' })).toBeVisible()
+})
+
 test('dragging the handle expands the sheet and body scroll survives collapse', async ({
   page,
 }) => {

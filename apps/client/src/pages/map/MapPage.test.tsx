@@ -6,11 +6,28 @@ import {
   within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { PropsWithChildren } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MapPage } from '@/pages/map/MapPage'
 
+// Only the external Google SDK is replaced; page state, markers and panels stay real.
+vi.mock('@vis.gl/react-google-maps', () => ({
+  APIProvider: ({ children }: PropsWithChildren) => children,
+  Map: ({ children }: PropsWithChildren) => children,
+  AdvancedMarker: ({ children }: PropsWithChildren) => children,
+  useApiLoadingStatus: () => 'LOADED',
+  APILoadingStatus: {
+    LOADED: 'LOADED',
+    FAILED: 'FAILED',
+    AUTH_FAILURE: 'AUTH_FAILURE',
+  },
+  useMap: () => null,
+}))
+
 beforeEach(() => {
+  vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
+  vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
   // jsdom has no layout; keep the real DragPanel and supply its measured container.
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
     x: 0,
@@ -27,14 +44,46 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
+  vi.unstubAllEnvs()
 })
 
 describe('MapPage preview', () => {
+  it('returns from an expanded list to the map without clearing filters or scroll', async () => {
+    const user = userEvent.setup()
+    render(<MapPage />)
+    expect(
+      screen.queryByRole('button', { name: '지도로 보기' }),
+    ).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '카페' }))
+    const slider = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
+    slider.focus()
+    await user.keyboard('{End}')
+    const scroller = screen
+      .getByRole('list', { name: '식당 검색 결과' })
+      .closest('[data-map-list]')!.parentElement!
+    fireEvent.scroll(scroller, { target: { scrollTop: 80 } })
+    await user.click(screen.getByRole('button', { name: '지도로 보기' }))
+    expect(slider).toHaveAttribute('aria-valuenow', '30')
+    expect(slider).toHaveFocus()
+    expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(
+      screen.queryByRole('button', { name: '지도로 보기' }),
+    ).not.toBeInTheDocument()
+    await user.keyboard('{ArrowUp}')
+    expect(scroller.scrollTop).toBe(80)
+    expect(
+      screen.getByRole('button', { name: '도쿄 카페 미리보기 상세 보기' }),
+    ).toBeVisible()
+  })
+
   it('discloses preview data and keeps the real panel keyboard-operable', async () => {
     const user = userEvent.setup()
     render(<MapPage />)
     expect(
-      screen.getByText('샘플 지도 · 실제 위치/예약 미연동'),
+      screen.getByText('샘플 식당 · 실제 매장 위치/예약 미연동'),
     ).toBeInTheDocument()
     const slider = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
     slider.focus()

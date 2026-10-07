@@ -37,7 +37,7 @@ export const MapToolbar = ({
     >
       <SearchBar
         aria-label="식당 혹은 메뉴 검색"
-        className="bg-white shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+        className="bg-white shadow-[0_0_4px_rgba(0,0,0,0.2)]"
         placeholder="식당 혹은 메뉴를 검색해보세요"
         value={draft}
         onChange={(event) => onDraftChange(event.target.value)}
@@ -54,7 +54,7 @@ export const MapToolbar = ({
           selected={category === value && value !== 'all'}
           aria-label={label}
           className={cn(
-            'shrink-0 shadow-[0_0_2px_rgba(0,0,0,0.2)]',
+            'shrink-0 shadow-[0_0_4px_rgba(0,0,0,0.2)]',
             (category !== value || value === 'all') && 'bg-white',
           )}
           onSelectedChange={() =>
