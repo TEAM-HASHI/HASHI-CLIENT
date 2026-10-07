@@ -25,10 +25,13 @@ const meta: Meta<typeof SearchBar> = {
     onChange: {
       control: false,
     },
+    onClear: {
+      control: false,
+    },
   },
   decorators: [
     (Story) => (
-      <div className="w-[353px] bg-white p-4">
+      <div className="w-[353px] max-w-full bg-white">
         <Story />
       </div>
     ),
@@ -50,6 +53,7 @@ const ControlledSearchBar = (args: SearchBarStoryProps) => {
       onChange={(event) => {
         setValue(event.target.value)
       }}
+      onClear={() => setValue('')}
       value={value}
     />
   )
@@ -95,7 +99,7 @@ export const LongPlaceholderOverflow: Story = {
   },
   decorators: [
     (Story) => (
-      <div className="w-[240px] bg-white p-4">
+      <div className="w-[240px] max-w-full bg-white p-4">
         <Story />
       </div>
     ),
@@ -109,7 +113,7 @@ export const LongValueOverflow: Story = {
   },
   decorators: [
     (Story) => (
-      <div className="w-[240px] bg-white p-4">
+      <div className="w-[240px] max-w-full bg-white p-4">
         <Story />
       </div>
     ),
@@ -119,7 +123,7 @@ export const LongValueOverflow: Story = {
 export const MobileViewport430: Story = {
   decorators: [
     (Story) => (
-      <div className="w-[430px] bg-white p-5">
+      <div className="w-[430px] max-w-full bg-white p-5">
         <Story />
       </div>
     ),
@@ -134,4 +138,18 @@ export const Uncontrolled: Story = {
   args: {
     defaultValue: '텍스트',
   },
+}
+
+export const FormReset: Story = {
+  args: {
+    defaultValue: '텍스트',
+  },
+  render: (args) => (
+    <form>
+      <SearchBar {...args} />
+      <button className="mt-4" type="reset">
+        초기화
+      </button>
+    </form>
+  ),
 }
