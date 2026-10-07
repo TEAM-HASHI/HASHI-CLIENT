@@ -8,6 +8,7 @@ interface SearchHeaderProps {
   keyword: string
   onBackClick: () => void
   onKeywordChange: (keyword: string) => void
+  onKeywordClear: () => void
   onSearchSubmit: () => void
 }
 
@@ -16,6 +17,7 @@ export const SearchHeader = ({
   keyword,
   onBackClick,
   onKeywordChange,
+  onKeywordClear,
   onSearchSubmit,
 }: SearchHeaderProps) => {
   const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
@@ -44,6 +46,7 @@ export const SearchHeader = ({
         onChange={(event) => {
           onKeywordChange(event.target.value)
         }}
+        onClear={onKeywordClear}
         placeholder="식당 혹은 메뉴를 검색해보세요"
         value={keyword}
       />

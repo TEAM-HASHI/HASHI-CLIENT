@@ -14,7 +14,7 @@ const meta: Meta<typeof Textarea> = {
   ],
   args: {
     'aria-label': '내용',
-    placeholder: '내용을 입력해 주세요.',
+    placeholder: '요청사항을 작성해주세요.',
     helperText: undefined,
     maxLength: 1000,
     disabled: false,
