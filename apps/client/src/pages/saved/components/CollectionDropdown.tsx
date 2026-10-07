@@ -1,4 +1,4 @@
-import { TapDownIcon } from '@hashi/hds-icons'
+import { MenuIcon, TapDownIcon } from '@hashi/hds-icons'
 import { IconButton, OptionItem } from '@hashi/hds-ui'
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -10,6 +10,7 @@ type CollectionDropdownProps<T extends string> = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onChange: (value: T) => void
+  action?: boolean
 }
 
 // Figma 8317:38586 / 8317:38697: 너비 140px, 항목 높이 40px.
@@ -23,6 +24,7 @@ export const CollectionDropdown = <T extends string>({
   open,
   onOpenChange,
   onChange,
+  action = false,
 }: CollectionDropdownProps<T>) => {
   const id = useId()
   const triggerRef = useRef<HTMLDivElement>(null)
@@ -69,7 +71,7 @@ export const CollectionDropdown = <T extends string>({
   useEffect(() => {
     if (!open) return
     const selected = menuRef.current?.querySelector<HTMLButtonElement>(
-      '[aria-checked="true"]',
+      action ? '[role="menuitem"]' : '[aria-checked="true"]',
     )
     selected?.focus({ preventScroll: true })
     const dismiss = (event: PointerEvent) => {
@@ -82,7 +84,7 @@ export const CollectionDropdown = <T extends string>({
     }
     document.addEventListener('pointerdown', dismiss)
     return () => document.removeEventListener('pointerdown', dismiss)
-  }, [open, onOpenChange])
+  }, [open, onOpenChange, action])
 
   const closeAndFocus = () => {
     onOpenChange(false)
@@ -94,10 +96,12 @@ export const CollectionDropdown = <T extends string>({
       ref={triggerRef}
       className="typo-body-6 text-cool-gray-600 flex shrink-0 items-center"
     >
-      <span>{options.find((option) => option.value === value)?.label}</span>
+      {!action && (
+        <span>{options.find((option) => option.value === value)?.label}</span>
+      )}
       <IconButton
         size="xs"
-        aria-label={`${label} 선택`}
+        aria-label={action ? label : `${label} 선택`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? id : undefined}
@@ -109,7 +113,11 @@ export const CollectionDropdown = <T extends string>({
           }
         }}
       >
-        <TapDownIcon className="size-5" />
+        {action ? (
+          <MenuIcon className="text-warm-gray-300 size-4.5" />
+        ) : (
+          <TapDownIcon className="size-5" />
+        )}
       </IconButton>
       {open &&
         createPortal(
@@ -131,7 +139,7 @@ export const CollectionDropdown = <T extends string>({
             onKeyDown={(event) => {
               const items = [
                 ...(menuRef.current?.querySelectorAll<HTMLButtonElement>(
-                  '[role="menuitemradio"]',
+                  '[role="menuitemradio"], [role="menuitem"]',
                 ) ?? []),
               ]
               const index = items.indexOf(
@@ -159,8 +167,8 @@ export const CollectionDropdown = <T extends string>({
             {options.map((option) => (
               <OptionItem
                 key={option.value}
-                role="menuitemradio"
-                aria-checked={value === option.value}
+                role={action ? 'menuitem' : 'menuitemradio'}
+                aria-checked={action ? undefined : value === option.value}
                 className={[
                   'border-primary-100 h-10 border-b text-center last:border-b-0 [&>span]:justify-center',
                   value === option.value
@@ -179,5 +187,27 @@ export const CollectionDropdown = <T extends string>({
           document.body,
         )}
     </div>
+  )
+}
+
+const EDIT_OPTION = [{ value: 'edit', label: '수정하기' }] as const
+export const CollectionEditMenu = ({
+  name,
+  onEdit,
+}: {
+  name: string
+  onEdit: () => void
+}) => {
+  const [open, setOpen] = useState(false)
+  return (
+    <CollectionDropdown
+      action
+      label={`${name} 더보기`}
+      options={EDIT_OPTION}
+      value="edit"
+      open={open}
+      onOpenChange={setOpen}
+      onChange={onEdit}
+    />
   )
 }
