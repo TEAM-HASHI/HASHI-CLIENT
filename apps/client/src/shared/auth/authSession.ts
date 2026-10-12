@@ -4,6 +4,7 @@ export type AuthSessionStatus =
   | 'unauthenticated'
 
 let currentAccessToken: string | undefined
+let authSessionVersion = 0
 let currentAuthSessionStatus: AuthSessionStatus = 'unauthenticated'
 const authSessionListeners = new Set<() => void>()
 
@@ -19,7 +20,13 @@ export const setAccessToken = (accessToken: string) => {
   notifyAuthSessionListeners()
 }
 
+export const startAuthenticatedSession = (accessToken: string) => {
+  authSessionVersion += 1
+  setAccessToken(accessToken)
+}
+
 export const setOnboardingSession = () => {
+  authSessionVersion += 1
   currentAccessToken = undefined
   currentAuthSessionStatus = 'onboarding'
   notifyAuthSessionListeners()
@@ -34,10 +41,13 @@ export const getAuthSessionStatus = () => {
 }
 
 export const clearAuthSession = () => {
+  authSessionVersion += 1
   currentAccessToken = undefined
   currentAuthSessionStatus = 'unauthenticated'
   notifyAuthSessionListeners()
 }
+
+export const getAuthSessionVersion = () => authSessionVersion
 
 export const subscribeAuthSession = (listener: () => void) => {
   authSessionListeners.add(listener)
