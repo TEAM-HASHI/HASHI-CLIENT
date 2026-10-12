@@ -1,6 +1,13 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { StrictMode } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AuthSessionRestoreGate } from '@/app/providers/AuthSessionRestoreGate'
@@ -14,6 +21,7 @@ import {
   setAccessToken,
 } from '@/shared/auth/authSession'
 import { getApiAccessToken } from '@/shared/api/accessToken'
+import { HttpStatusError } from '@/shared/api/apiError'
 
 vi.mock('@/shared/api/accessToken', () => ({
   getApiAccessToken: vi.fn(),
@@ -74,8 +82,8 @@ describe('AuthSessionRestoreGate', () => {
   })
 
   it('renders children as unauthenticated when token restore fails', async () => {
-    mockedRequestTokenReissue.mockRejectedValue(new Error('No refresh token.'))
-    mockedGetAuthMe.mockRejectedValue(new Error('No signup token.'))
+    mockedRequestTokenReissue.mockRejectedValue(new HttpStatusError(401))
+    mockedGetAuthMe.mockRejectedValue(new HttpStatusError(401))
 
     render(
       <AuthSessionRestoreGate>
@@ -90,7 +98,7 @@ describe('AuthSessionRestoreGate', () => {
   })
 
   it('restores onboarding session from the signup cookie', async () => {
-    mockedRequestTokenReissue.mockRejectedValue(new Error('No refresh token.'))
+    mockedRequestTokenReissue.mockRejectedValue(new HttpStatusError(401))
     mockedGetAuthMe.mockResolvedValue({
       role: 'ONBOARDING',
     })
@@ -104,7 +112,7 @@ describe('AuthSessionRestoreGate', () => {
     await waitFor(() => {
       expect(screen.getByText('프로필 생성 화면')).toBeInTheDocument()
     })
-    expect(mockedGetAuthMe).toHaveBeenCalledWith()
+    expect(mockedGetAuthMe).toHaveBeenCalledWith(undefined)
     expect(getAuthSessionStatus()).toBe('onboarding')
   })
 
@@ -202,8 +210,9 @@ describe('AuthSessionRestoreGate', () => {
     expect(getAccessToken()).toBe('existing-access-token')
   })
 
-  it('restores the local development token without a reissue request', async () => {
+  it('restores the cookie session instead of the configured development token', async () => {
     mockedGetApiAccessToken.mockReturnValue('development-token')
+    mockedRequestTokenReissue.mockResolvedValue({ accessToken: 'cookie-token' })
 
     render(
       <AuthSessionRestoreGate>
@@ -214,9 +223,56 @@ describe('AuthSessionRestoreGate', () => {
     await waitFor(() => {
       expect(screen.getByText('앱 화면')).toBeInTheDocument()
     })
-    expect(mockedGetAuthMe).toHaveBeenCalledWith('development-token')
-    expect(mockedRequestTokenReissue).not.toHaveBeenCalled()
-    expect(getAccessToken()).toBe('development-token')
+    expect(mockedGetAuthMe).toHaveBeenCalledWith('cookie-token')
+    expect(mockedRequestTokenReissue).toHaveBeenCalledOnce()
+    expect(getAccessToken()).toBe('cookie-token')
+  })
+
+  it('retries a temporary restore failure instead of rendering logged-out content', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mockedRequestTokenReissue
+      .mockRejectedValueOnce(new HttpStatusError(503))
+      .mockResolvedValueOnce({ accessToken: 'restored-token' })
+    try {
+      render(
+        <ErrorBoundary
+          fallbackRender={({ resetErrorBoundary }) => (
+            <button onClick={resetErrorBoundary}>재시도</button>
+          )}
+        >
+          <AuthSessionRestoreGate>
+            <div>앱 화면</div>
+          </AuthSessionRestoreGate>
+        </ErrorBoundary>,
+      )
+      fireEvent.click(await screen.findByRole('button', { name: '재시도' }))
+      await screen.findByText('앱 화면')
+      expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(2)
+      expect(mockedGetAuthMe).toHaveBeenCalledWith('restored-token')
+      expect(getAccessToken()).toBe('restored-token')
+    } finally {
+      consoleError.mockRestore()
+    }
+  })
+
+  it('does not overwrite a login completed during background restore', async () => {
+    let resolveReissue!: (value: { accessToken: string }) => void
+    mockedRequestTokenReissue.mockReturnValue(
+      new Promise((resolve) => {
+        resolveReissue = resolve
+      }),
+    )
+    render(
+      <AuthSessionRestoreGate pathname={ROUTES.popularRestaurants}>
+        <div>앱 화면</div>
+      </AuthSessionRestoreGate>,
+    )
+    setAccessToken('new-login-token')
+    resolveReissue({ accessToken: 'old-restore-token' })
+    await waitFor(() =>
+      expect(mockedGetAuthMe).toHaveBeenCalledWith('old-restore-token'),
+    )
+    expect(getAccessToken()).toBe('new-login-token')
   })
 
   it('shares one restore request across StrictMode remounts', async () => {
