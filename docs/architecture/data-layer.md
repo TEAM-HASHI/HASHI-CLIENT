@@ -69,9 +69,12 @@ apps/admin/src/shared/api/
 ```
 
 - base URL, timeout, retry, header, 인증 토큰 주입 지점은 한 곳에서 조립합니다.
-- client access token은 `apps/client/src/shared/auth/authSession.ts`의 메모리 상태에서 조회하고, 로컬 개발에서만 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있습니다.
+- client access token은 `apps/client/src/shared/auth/authSession.ts`의 메모리 상태에서 조회하고, 로컬 개발의 일반 API 요청에서만 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있습니다. 인증 endpoint와 앱 시작 시 세션 복원에는 개발용 토큰을 사용하지 않습니다.
 - `requestTokenReissue`는 공통 request의 인증 복구에 필요한 기반 endpoint로 `apps/client/src/shared/api`가 소유합니다.
-- 공통 request는 인증 필요 오류에서 token 재발급을 한 번 수행하고 원 요청을 한 번 재시도합니다. 동시 인증 오류는 하나의 재발급 요청을 공유하며, 재발급 실패 시 인메모리 세션을 초기화합니다.
+- 공통 request는 인증 필요 오류에서 token 재발급을 한 번 수행하고 원 요청을 한 번 재시도합니다. 앱 시작 시 복원과 동시 인증 오류는 동일 세션의 재발급 요청을 공유합니다. 재발급이 401로 실패할 때만 해당 세션을 초기화하고, 네트워크·5xx 오류에서는 세션을 유지합니다.
+- Web Locks 지원 브라우저에서는 같은 출처의 탭들이 `hashi:user-token-reissue` 잠금으로 재발급 요청을 순차 실행합니다. 앞 요청의 응답 처리가 끝난 뒤 다음 요청이 갱신된 refresh 쿠키를 사용하며, 잠금 대기 중 세션이 변경된 요청은 전송하지 않습니다. 토큰을 저장소에 기록하거나 탭 간 전달하지 않습니다. Web Locks가 없는 환경에서는 기존 단일 탭 Promise 공유만 적용되며, 다른 출처·브라우저의 동시 재발급은 이 잠금의 보호 범위가 아닙니다.
+- 앱 시작 시 refresh 쿠키로 access token을 복원하고 USER 권한을 확인합니다. refresh 인증이 없으면 가입용 쿠키의 ONBOARDING 세션을 확인합니다. 일시적 복원 실패는 오류 경계에서 재시도하며, 복원 중 완료된 새 로그인이나 로그아웃을 이전 응답으로 덮어쓰지 않습니다.
+- 카카오 로그인·가입 완료는 `startAuthenticatedSession`으로 새 세션 버전을 시작합니다. 온보딩 세션 진입과 로그아웃도 버전을 변경하지만, 같은 세션의 access token 갱신은 `setAccessToken`으로 버전을 유지합니다. 콜백 응답은 현재 페이지와 세션 버전이 유지될 때만 반영합니다.
 - endpoint 함수는 `request` 같은 low-level helper를 사용합니다.
 - endpoint 함수는 React, TanStack Query, route, UI state를 알면 안 됩니다.
 - 인증, refresh, retry 정책은 실제 요구사항 없이 미리 복잡하게 만들지 않습니다.
