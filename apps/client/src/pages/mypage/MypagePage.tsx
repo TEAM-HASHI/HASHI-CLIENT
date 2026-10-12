@@ -10,6 +10,7 @@ export const MypagePage = () => {
   const {
     isComingSoonOpen,
     isLoading,
+    isLoggingOut,
     menuSections,
     primaryMenuItems,
     handleProfileEdit,
@@ -49,6 +50,7 @@ export const MypagePage = () => {
         <div className="relative left-1 flex flex-col gap-4.5">
           {menuSections.map((section) => (
             <MypageMenuSection
+              isLoggingOut={isLoggingOut}
               key={section.id}
               onMenuPress={handleMenuAction}
               section={section}
