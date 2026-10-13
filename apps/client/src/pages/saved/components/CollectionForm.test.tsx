@@ -26,7 +26,7 @@ const renderForm = (element: ReactElement) => {
   return router
 }
 describe('CollectionForm', () => {
-  it('한글 조합 중에는 자르거나 제출하지 않고 조합 종료 후 길이를 제한한다', () => {
+  it('한글 조합으로 제한을 넘겨도 입력값과 실제 글자 수를 유지한다', () => {
     renderForm(
       <CollectionForm collections={[]} onSubmit={vi.fn()} onClose={vi.fn()} />,
     )
@@ -37,7 +37,9 @@ describe('CollectionForm', () => {
     expect(input).toHaveValue('가'.repeat(21))
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
     fireEvent.compositionEnd(input)
-    expect(input).toHaveValue('가'.repeat(20))
+    expect(input).toHaveValue('가'.repeat(21))
+    expect(screen.getByText('/20').parentElement).toHaveTextContent('21 /20')
+    expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()
   })
   it('브라우저 뒤로가기도 수정 폐기를 확인하고 저장하지 않고 닫는다', async () => {
     const onClose = vi.fn()
@@ -74,7 +76,7 @@ describe('CollectionForm', () => {
       target: { value: collectionMocks.collections[0].name },
     })
     fireEvent.click(screen.getByRole('radio', { name: '빨강' }))
-    expect(screen.getByText('이미 사용 중인 컬렉션명이에요.')).toBeVisible()
+    expect(screen.getByText('중복된 컬렉션명입니다.')).toBeVisible()
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
   })
   it('이름과 색상이 필요하며 생성 입력 공백을 유지한다', async () => {
@@ -100,16 +102,86 @@ describe('CollectionForm', () => {
       }),
     )
   })
-  it('붙여넣기 초과 입력을 제한하고 오류와 글자 수를 표시한다', () => {
+  it('제한을 넘긴 이름을 유지하고 오류와 실제 글자 수를 표시한다', () => {
     renderForm(
       <CollectionForm collections={[]} onSubmit={vi.fn()} onClose={vi.fn()} />,
     )
     fireEvent.change(screen.getByLabelText('컬렉션명'), {
       target: { value: '가'.repeat(21) },
     })
-    expect(screen.getByLabelText('컬렉션명')).toHaveValue('가'.repeat(20))
+    expect(screen.getByLabelText('컬렉션명')).toHaveValue('가'.repeat(21))
+    expect(screen.getByText('글자 수 제한을 초과했어요.')).toHaveClass(
+      'typo-body-7',
+    )
+    expect(screen.getByText('/20').parentElement).toHaveTextContent('21 /20')
+    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+  })
+  it('설명은 HDS Textarea에서 제한 초과 입력과 카운터를 표시한다', () => {
+    renderForm(
+      <CollectionForm collections={[]} onSubmit={vi.fn()} onClose={vi.fn()} />,
+    )
+    const description = screen.getByLabelText('설명')
+    expect(screen.getByLabelText('컬렉션명').parentElement).toHaveClass(
+      'h-[53px]',
+      'px-5',
+    )
+    expect(description.tagName).toBe('TEXTAREA')
+    expect(description.parentElement).toHaveClass('gap-3')
+    expect(description).toHaveClass(
+      'min-h-[51px]',
+      'max-h-[129px]',
+      'px-5',
+      'py-4',
+    )
+
+    let scrollHeight = 78
+    vi.spyOn(description, 'scrollHeight', 'get').mockImplementation(
+      () => scrollHeight,
+    )
+    fireEvent.change(description, { target: { value: '중간 길이 설명' } })
+    expect(description).toHaveStyle({ height: '80px', overflowY: 'hidden' })
+
+    scrollHeight = 128
+    fireEvent.change(description, { target: { value: '가'.repeat(101) } })
+    expect(description).toHaveStyle({ height: '129px', overflowY: 'auto' })
+    expect(description).toHaveValue('가'.repeat(101))
+    expect(screen.getByText('/100').parentElement).toHaveTextContent('101/100')
+    expect(screen.getByText('글자 수 제한을 초과했어요.')).toHaveClass(
+      'typo-body-7',
+    )
+    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+
+    scrollHeight = 40
+    fireEvent.change(description, { target: { value: '' } })
+    expect(description).toHaveStyle({ height: '51px', overflowY: 'hidden' })
+  })
+  it('중복 이름과 설명 길이 초과 오류를 동시에 표시한다', () => {
+    renderForm(
+      <CollectionForm
+        collections={collectionMocks.collections}
+        onSubmit={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    )
+    fireEvent.change(screen.getByLabelText('컬렉션명'), {
+      target: { value: collectionMocks.collections[0].name },
+    })
+    fireEvent.change(screen.getByLabelText('설명'), {
+      target: { value: '가'.repeat(101) },
+    })
+    expect(screen.getByText('중복된 컬렉션명입니다.')).toBeVisible()
     expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()
-    expect(screen.getByText('/20')).toHaveTextContent('20 /20')
+  })
+  it('색상 선택 표시와 하단 버튼 여백을 리디자인 수치로 표시한다', () => {
+    renderForm(
+      <CollectionForm collections={[]} onSubmit={vi.fn()} onClose={vi.fn()} />,
+    )
+    const red = screen.getByRole('radio', { name: '빨강' })
+    fireEvent.click(red)
+    expect(red.closest('label')?.querySelector('svg')).toHaveClass('size-6.5')
+    expect(
+      screen.getByRole('button', { name: '만들기' }).parentElement,
+    ).toHaveClass('pb-[max(48px,var(--safe-area-bottom,0px))]')
   })
   it('수정은 변경이 있어야 저장되고 취소 시 입력을 유지할 수 있다', async () => {
     const user = userEvent.setup()

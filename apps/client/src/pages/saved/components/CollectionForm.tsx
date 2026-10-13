@@ -6,16 +6,17 @@ import {
   Header,
   IconButton,
   InputField,
+  Textarea,
 } from '@hashi/hds-ui'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { useBlocker } from 'react-router-dom'
-import type { ChangeEvent } from 'react'
 import { CollectionCover } from '@/pages/saved/components/CollectionCover'
 import { COLLECTION_COVER_COLORS } from '@/pages/saved/data/collectionPalette'
 import type { CollectionColor, SavedCollection } from '@/pages/saved/types'
 import {
   COLLECTION_NAME_LIMIT,
   COLLECTION_DESCRIPTION_LIMIT,
+  isDuplicateCollectionName,
   normalizeCollectionDraft,
   validateCollection,
 } from '@/pages/saved/utils/collectionMutations'
@@ -37,6 +38,11 @@ const EMPTY_DRAFT: CollectionDraft = {
   isPublic: true,
 }
 const LIMIT_MESSAGE = '글자 수 제한을 초과했어요.'
+const DESCRIPTION_MIN_HEIGHT = 51
+const DESCRIPTION_MAX_CLIENT_HEIGHT = 127
+const DESCRIPTION_BORDER_HEIGHT = 2
+const DESCRIPTION_MAX_HEIGHT =
+  DESCRIPTION_MAX_CLIENT_HEIGHT + DESCRIPTION_BORDER_HEIGHT
 
 export const CollectionForm = ({
   collection,
@@ -52,6 +58,7 @@ export const CollectionForm = ({
   const id = useId()
   const blocker = useBlocker(true)
   const composing = useRef(false)
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const [isComposing, setIsComposing] = useState(false)
   const initial: CollectionDraft = collection ?? EMPTY_DRAFT
   const [draft, setDraft] = useState<CollectionDraft>(initial)
@@ -68,6 +75,11 @@ export const CollectionForm = ({
     ['name', 'description', 'color', 'isPublic'] as const
   ).some((key) => value[key] !== initial[key])
   const error = validateCollection(draft, collections, collection?.id)
+  const hasDuplicateName = isDuplicateCollectionName(
+    draft,
+    collections,
+    collection?.id,
+  )
   const canSubmit = !isComposing && !error && (!collection || savedChanged)
   const needsConfirmation = Boolean(collection && changed)
   useEffect(() => {
@@ -76,34 +88,49 @@ export const CollectionForm = ({
       onClose()
     }
   }, [blocker, needsConfirmation, onClose])
+  useLayoutEffect(() => {
+    const textarea = descriptionRef.current
+    if (!textarea) return
+
+    textarea.style.height = 'auto'
+    const contentHeight = textarea.scrollHeight + DESCRIPTION_BORDER_HEIGHT
+    textarea.style.height = `${Math.min(
+      Math.max(contentHeight, DESCRIPTION_MIN_HEIGHT),
+      DESCRIPTION_MAX_HEIGHT,
+    )}px`
+    textarea.style.overflowY =
+      textarea.scrollHeight > DESCRIPTION_MAX_CLIENT_HEIGHT ? 'auto' : 'hidden'
+  }, [draft.description])
   const close = () => {
     if (needsConfirmation) setDiscarding(true)
     else onClose()
   }
-  const changeText =
-    (key: 'name' | 'description', limit: number) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const next = event.target.value
-      if (!composing.current)
-        setOverLimit((current) => ({ ...current, [key]: next.length > limit }))
-      setDraft((current) => ({
-        ...current,
-        [key]: composing.current ? next : next.slice(0, limit),
-      }))
-    }
-  const compositionProps = (key: 'name' | 'description', limit: number) => ({
-    onCompositionStart: () => {
-      composing.current = true
-      setIsComposing(true)
-    },
-    onCompositionEnd: (event: React.CompositionEvent<HTMLInputElement>) => {
-      composing.current = false
-      setIsComposing(false)
-      const next = event.currentTarget.value
+  const changeText = (
+    key: 'name' | 'description',
+    limit: number,
+    next: string,
+  ) => {
+    if (!composing.current)
       setOverLimit((current) => ({ ...current, [key]: next.length > limit }))
-      setDraft((current) => ({ ...current, [key]: next.slice(0, limit) }))
-    },
-  })
+    setDraft((current) => ({
+      ...current,
+      [key]: next,
+    }))
+  }
+  const startComposition = () => {
+    composing.current = true
+    setIsComposing(true)
+  }
+  const endComposition = (
+    key: 'name' | 'description',
+    limit: number,
+    next: string,
+  ) => {
+    composing.current = false
+    setIsComposing(false)
+    setOverLimit((current) => ({ ...current, [key]: next.length > limit }))
+    setDraft((current) => ({ ...current, [key]: next }))
+  }
 
   return (
     <>
@@ -150,33 +177,47 @@ export const CollectionForm = ({
                 컬렉션명
               </label>
               <InputField
+                className="h-[53px] px-5"
                 id={`${id}-name`}
                 aria-label="컬렉션명"
-                placeholder="새 컬렉션 명을 입력해주세요"
+                placeholder="새 컬렉션명을 입력해주세요."
                 value={draft.name}
-                {...compositionProps('name', COLLECTION_NAME_LIMIT)}
-                onChange={changeText('name', COLLECTION_NAME_LIMIT)}
-                aria-invalid={overLimit.name || error === 'duplicate'}
+                onCompositionStart={startComposition}
+                onCompositionEnd={(event) =>
+                  endComposition(
+                    'name',
+                    COLLECTION_NAME_LIMIT,
+                    event.currentTarget.value,
+                  )
+                }
+                onChange={(event) =>
+                  changeText(
+                    'name',
+                    COLLECTION_NAME_LIMIT,
+                    event.currentTarget.value,
+                  )
+                }
+                aria-invalid={overLimit.name || hasDuplicateName}
                 aria-describedby={`${id}-name-status`}
               />
               <div
                 id={`${id}-name-status`}
-                className="typo-body-6 flex flex-wrap justify-between gap-1"
+                className="flex flex-wrap justify-between gap-1"
               >
-                <span className="text-primary-400" role="status">
+                <span className="typo-body-7 text-primary-400" role="status">
                   {overLimit.name
                     ? LIMIT_MESSAGE
-                    : error === 'duplicate'
-                      ? '이미 사용 중인 컬렉션명이에요.'
+                    : hasDuplicateName
+                      ? '중복된 컬렉션명입니다.'
                       : ''}
                 </span>
-                <span className="text-warm-gray-300 ml-auto">
+                <span className="typo-body-6 text-warm-gray-300 ml-auto leading-[1.36]">
                   <span className="text-primary-200">{draft.name.length}</span>{' '}
                   /{COLLECTION_NAME_LIMIT}
                 </span>
               </div>
             </div>
-            <fieldset className="mb-3 w-full pb-7">
+            <fieldset className="mt-5 w-full pb-7">
               <legend className="typo-sub-header-1 text-primary-200">
                 색상 선택
               </legend>
@@ -204,7 +245,7 @@ export const CollectionForm = ({
                       {draft.color === color && (
                         <CheckIcon
                           aria-hidden="true"
-                          className="pointer-events-none size-5 text-white"
+                          className="pointer-events-none size-6.5 text-white"
                         />
                       )}
                     </label>
@@ -219,36 +260,35 @@ export const CollectionForm = ({
               >
                 설명
               </label>
-              <InputField
+              <Textarea
+                className="gap-3"
+                textareaClassName="min-h-[51px] max-h-[129px] px-5 py-4"
                 id={`${id}-description`}
+                ref={descriptionRef}
                 aria-label="설명"
-                placeholder="지유롭게 작성해보세요"
+                placeholder="자유롭게 작성해보세요."
                 value={draft.description}
-                {...compositionProps(
-                  'description',
-                  COLLECTION_DESCRIPTION_LIMIT,
-                )}
-                onChange={changeText(
-                  'description',
-                  COLLECTION_DESCRIPTION_LIMIT,
-                )}
+                maxLength={COLLECTION_DESCRIPTION_LIMIT}
+                maxLengthBehavior="allow"
+                showCounter
+                errorMessage={LIMIT_MESSAGE}
+                onCompositionStart={startComposition}
+                onCompositionEnd={(event) =>
+                  endComposition(
+                    'description',
+                    COLLECTION_DESCRIPTION_LIMIT,
+                    event.currentTarget.value,
+                  )
+                }
+                onChange={(event) =>
+                  changeText(
+                    'description',
+                    COLLECTION_DESCRIPTION_LIMIT,
+                    event.currentTarget.value,
+                  )
+                }
                 aria-invalid={overLimit.description}
-                aria-describedby={`${id}-description-status`}
               />
-              <div
-                id={`${id}-description-status`}
-                className="typo-body-6 flex flex-wrap justify-between gap-1"
-              >
-                <span role="status" className="text-primary-400">
-                  {overLimit.description ? LIMIT_MESSAGE : ''}
-                </span>
-                <span className="text-warm-gray-300 ml-auto">
-                  <span className="text-primary-200">
-                    {draft.description.length}
-                  </span>{' '}
-                  /{COLLECTION_DESCRIPTION_LIMIT}
-                </span>
-              </div>
             </div>
             <div
               className="flex flex-wrap items-center justify-between gap-3 py-5"
@@ -279,7 +319,7 @@ export const CollectionForm = ({
               </div>
             </div>
           </form>
-          <div className="w-full shrink-0 px-5 pt-2.5 pb-[max(30px,var(--safe-area-bottom,0px))]">
+          <div className="w-full shrink-0 px-5 pt-2.5 pb-[max(48px,var(--safe-area-bottom,0px))]">
             <Button
               form={`${id}-form`}
               type="submit"
