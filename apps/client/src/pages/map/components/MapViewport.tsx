@@ -1,4 +1,4 @@
-import { BackIcon, SaveIcon } from '@hashi/hds-icons'
+import { BackIcon, SaveIcon, CancelIcon } from '@hashi/hds-icons'
 import { IconButton } from '@hashi/hds-ui'
 import { MapStatusView } from '@/pages/map/components/MapStatusView'
 import { MapSearchAreaButton } from '@/pages/map/components/MapSearchAreaButton'
@@ -42,6 +42,7 @@ interface MapViewportProps {
   cameraRequest?: MapCameraSnapshot | null
   onResetArea: () => void
   onSaved: () => void
+  onCloseDetail?: () => void
 }
 
 const MapFailure = ({ configuration = false }: { configuration?: boolean }) => (
@@ -305,13 +306,17 @@ export const MapViewport = (props: MapViewportProps) => {
         </IconButton>
       )}
       <IconButton
-        aria-label="저장 목록 보기"
+        aria-label={props.selectedId ? '선택한 식당 닫기' : '저장 목록 보기'}
         variant="soft"
         className="absolute left-5 size-11 shadow-[0_0_4px_rgba(0,0,0,0.2)]"
         style={{ bottom: props.panelHeight + 48 }}
-        onClick={props.onSaved}
+        onClick={props.selectedId ? props.onCloseDetail : props.onSaved}
       >
-        <SaveIcon className="text-warm-gray-300 size-6" />
+        {props.selectedId ? (
+          <CancelIcon className="size-6" />
+        ) : (
+          <SaveIcon className="text-warm-gray-300 size-6" />
+        )}
       </IconButton>
     </>
   )

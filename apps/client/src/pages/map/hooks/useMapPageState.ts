@@ -12,6 +12,7 @@ import type {
   MapCameraSnapshot,
   MapConditions,
   MapRestaurant,
+  MapSessionSnapshot,
 } from '@/pages/map/types'
 import { getMapAreaMarkers } from '@/pages/map/utils/getMapAreaMarkers'
 import { getMapDisplayMode } from '@/pages/map/utils/mapDisplayPolicy'
@@ -29,33 +30,48 @@ const INITIAL_CONDITIONS: MapConditions = {
 type Reason = 'initial' | 'area' | 'viewport' | 'conditions' | 'sort'
 type EmptyKind = 'region' | 'conditions'
 
-export const useMapPageState = (source: MapPreviewSource = queryMapPreview) => {
-  const [draft, setDraft] = useState('')
-  const [conditions, setConditions] = useState(INITIAL_CONDITIONS)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [searchBounds, setSearchBounds] = useState<MapBounds | null>(null)
+export const useMapPageState = (
+  source: MapPreviewSource = queryMapPreview,
+  initial: MapSessionSnapshot | null = null,
+) => {
+  const [draft, setDraft] = useState(initial?.conditions.keyword ?? '')
+  const [conditions, setConditions] = useState(
+    initial?.conditions ?? INITIAL_CONDITIONS,
+  )
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initial?.selectedId ?? null,
+  )
+  const [searchBounds, setSearchBounds] = useState<MapBounds | null>(
+    initial?.searchBounds ?? null,
+  )
   const [resetVersion, setResetVersion] = useState(0)
-  const [isExploring, setIsExploring] = useState(false)
-  const camera = useRef<MapCameraSnapshot | null>(null)
+  const [isExploring, setIsExploring] = useState(initial?.isExploring ?? false)
+  const camera = useRef<MapCameraSnapshot | null>(initial?.camera ?? null)
+  const [cameraSnapshot, setCameraSnapshot] = useState(initial?.camera ?? null)
   const [cameraRequest, setCameraRequest] = useState<MapCameraSnapshot | null>(
-    null,
+    initial?.camera ?? null,
   )
   const [request, setRequest] = useState({
-    conditions: INITIAL_CONDITIONS,
-    bounds: null as MapBounds | null,
+    conditions: initial?.conditions ?? INITIAL_CONDITIONS,
+    bounds: initial?.searchBounds ?? (null as MapBounds | null),
+    restored: !!initial?.restaurants,
     reason: 'initial' as Reason,
     camera: null as MapCameraSnapshot | null,
   })
-  const [restaurants, setRestaurants] = useState<MapRestaurant[]>([])
+  const [restaurants, setRestaurants] = useState<MapRestaurant[]>(
+    initial?.restaurants ?? [],
+  )
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
-    'loading',
+    initial?.restaurants ? 'success' : 'loading',
   )
   const [emptyKind, setEmptyKind] = useState<EmptyKind>('conditions')
   const [emptyEvent, setEmptyEvent] = useState<{
     id: number
     kind: EmptyKind
   } | null>(null)
-  const [nextCursor, setNextCursor] = useState<string>()
+  const [nextCursor, setNextCursor] = useState<string | undefined>(
+    initial?.nextCursor,
+  )
   const [nextError, setNextError] = useState(false)
   const [loadingNext, setLoadingNext] = useState(false)
   const generation = useRef(0)
@@ -63,6 +79,8 @@ export const useMapPageState = (source: MapPreviewSource = queryMapPreview) => {
   const emptyKindRef = useRef<EmptyKind>('conditions')
 
   useEffect(() => {
+    if (request.restored) return
+    const requestGeneration = generation
     const id = ++generation.current
     nextPending.current = false
     void source(request)
@@ -86,7 +104,7 @@ export const useMapPageState = (source: MapPreviewSource = queryMapPreview) => {
         if (generation.current === id) setStatus('error')
       })
     return () => {
-      generation.current++
+      requestGeneration.current++
     }
   }, [request, source])
 
@@ -107,6 +125,7 @@ export const useMapPageState = (source: MapPreviewSource = queryMapPreview) => {
     setSelectedId(null)
     setCameraRequest(null)
     setRequest({
+      restored: false,
       conditions: next,
       bounds,
       reason,
@@ -199,8 +218,12 @@ export const useMapPageState = (source: MapPreviewSource = queryMapPreview) => {
       setRequest((current) => ({ ...current }))
     },
     cameraRequest,
+    cameraSnapshot,
+    restoreCamera: (value: MapCameraSnapshot | null) =>
+      setCameraRequest(value ? { ...value } : null),
     handleCameraChange: (value: MapCameraSnapshot) => {
       camera.current = value
+      setCameraSnapshot(value)
     },
     handleUserMove: () => {
       if (conditions.areaCode)

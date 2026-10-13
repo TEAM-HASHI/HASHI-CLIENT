@@ -55,3 +55,17 @@ export interface MapConditions {
   areaCode: string | null
   sort: MapSort
 }
+
+export interface MapSessionSnapshot {
+  conditions: MapConditions
+  searchBounds: MapBounds | null
+  camera: MapCameraSnapshot | null
+  restaurants?: MapRestaurant[]
+  nextCursor?: string
+  selectedId: string | null
+  isExploring: boolean
+  stage: MapPanelStage
+  detailStage: MapPanelStage
+  selectionCamera?: MapCameraSnapshot | null
+  selectionStage?: MapPanelStage
+}

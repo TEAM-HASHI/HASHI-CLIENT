@@ -4,6 +4,29 @@ import { useMapPageState } from '@/pages/map/hooks/useMapPageState'
 import { MAP_PREVIEW_RESTAURANTS } from '@/pages/map/data/mapPreviewRestaurants'
 
 afterEach(cleanup)
+it('restores loaded results and selection without refetching', async () => {
+  const source = vi.fn()
+  const initial = {
+    conditions: {
+      keyword: '',
+      category: 'all' as const,
+      sort: 'rating' as const,
+      areaCode: null,
+    },
+    searchBounds: null,
+    camera: null,
+    restaurants: MAP_PREVIEW_RESTAURANTS,
+    selectedId: MAP_PREVIEW_RESTAURANTS[0].id,
+    stage: 'normal' as const,
+    detailStage: 'collapsed' as const,
+    isExploring: true,
+  }
+  const { result } = renderHook(() => useMapPageState(source, initial))
+  expect(result.current.restaurants).toHaveLength(7)
+  expect(result.current.selectedRestaurant?.id).toBe(initial.selectedId)
+  await act(async () => {})
+  expect(source).not.toHaveBeenCalled()
+})
 const emptyBounds = { south: 0, north: 1, west: 0, east: 1 }
 it('restores regions on clearing conditions at overview zoom', async () => {
   const { result } = renderHook(() => useMapPageState())

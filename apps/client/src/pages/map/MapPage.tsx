@@ -1,5 +1,9 @@
 import { DragPanel, showToast } from '@hashi/hds-ui'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { ROUTES } from '@/app/router/path'
+import { useMapSession } from '@/pages/map/hooks/useMapSession'
+import { clearMapSession, readMapSession } from '@/pages/map/utils/mapSession'
 
 import { MapViewport } from '@/pages/map/components/MapViewport'
 import { MapToolbar } from '@/pages/map/components/MapToolbar'
@@ -13,11 +17,23 @@ import type { MapConditions, MapPanelStage } from '@/pages/map/types'
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 
 export const MapPage = () => {
-  const state = useMapPageState()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [initial] = useState(() => readMapSession())
+  const state = useMapPageState(undefined, initial)
   const { containerRef, availableHeight } = useMapPanelLayout()
-  const [stage, setStage] = useState<MapPanelStage>('normal')
+  const [stage, setStage] = useState<MapPanelStage>(initial?.stage ?? 'normal')
   const [comingSoon, setComingSoon] = useState(false)
-  const [detailStage, setDetailStage] = useState<MapPanelStage>('normal')
+  const [detailStage, setDetailStage] = useState<MapPanelStage>(
+    initial?.detailStage ?? 'normal',
+  )
+  const [selectionCamera, setSelectionCamera] = useState(
+    initial?.selectionCamera ?? null,
+  )
+  const [selectionStage, setSelectionStage] = useState<MapPanelStage>(
+    initial?.selectionStage ?? 'normal',
+  )
+  const [listVersion, setListVersion] = useState(0)
   const [photoIndex, setPhotoIndex] = useState<number | null>(null)
   const selectionTriggerRef = useRef<HTMLElement | null>(null)
   const restoreSelectionFocus = useRef(false)
@@ -25,6 +41,40 @@ export const MapPage = () => {
   const sortTriggerRef = useRef<HTMLButtonElement | null>(null)
   const restoreSortFocus = useRef(false)
   const lastEmptyEvent = useRef<number | null>(null)
+  const handleReset = () => {
+    clearMapSession()
+    state.handleReset()
+    setStage('normal')
+    setDetailStage('normal')
+    setPhotoIndex(null)
+  }
+  useMapSession(
+    {
+      conditions: state.conditions,
+      searchBounds: state.searchBounds,
+      camera: state.cameraSnapshot,
+      restaurants: state.status === 'success' ? state.restaurants : undefined,
+      nextCursor: state.nextCursor,
+      selectedId: state.selectedRestaurant?.id ?? null,
+      isExploring: state.isExploring,
+      stage,
+      detailStage,
+      selectionCamera,
+      selectionStage,
+    },
+    handleReset,
+  )
+  const resetLocationKey = useRef<string | null>(null)
+  useEffect(() => {
+    if (
+      location.state?.resetMap !== true ||
+      resetLocationKey.current === location.key
+    )
+      return
+    resetLocationKey.current = location.key
+    handleReset()
+    navigate(ROUTES.map, { replace: true, state: null })
+  })
   useEffect(() => {
     if (!state.emptyEvent || lastEmptyEvent.current === state.emptyEvent.id)
       return
@@ -47,8 +97,10 @@ export const MapPage = () => {
     if (state.selectedRestaurant || !restoreSelectionFocus.current) return
     let frame: number
     const restore = () => {
-      const trigger = selectionTriggerRef.current
-      if (!trigger?.isConnected) return
+      const trigger = selectionTriggerRef.current?.isConnected
+        ? selectionTriggerRef.current
+        : sortTriggerRef.current
+      if (!trigger) return
       // Modal isolation may outlive the page state update. Wait for its
       // actual release rather than guessing a number of animation frames.
       if (trigger.closest('[inert], [hidden]')) {
@@ -84,6 +136,10 @@ export const MapPage = () => {
       next <= 30 ? 'collapsed' : next >= maxHeight ? 'expanded' : 'normal',
     )
   const handleSelect = (id: string) => {
+    if (!state.selectedRestaurant) {
+      setSelectionCamera(state.cameraSnapshot)
+      setSelectionStage(stage)
+    }
     selectionTriggerRef.current = document.activeElement as HTMLElement
     state.handleSelectRestaurant(id)
     setDetailStage('normal')
@@ -91,6 +147,9 @@ export const MapPage = () => {
   const handleCloseDetail = () => {
     restoreSelectionFocus.current = true
     state.setSelectedId(null)
+    state.restoreCamera(selectionCamera)
+    setStage(selectionStage)
+    setListVersion((version) => version + 1)
     setPhotoIndex(null)
   }
 
@@ -139,6 +198,7 @@ export const MapPage = () => {
             setStage('normal')
           }}
           onSaved={() => setComingSoon(true)}
+          onCloseDetail={handleCloseDetail}
         />
         <MapToolbar
           draft={state.draft}
@@ -157,7 +217,11 @@ export const MapPage = () => {
           className="pointer-events-none absolute inset-0"
         >
           <DragPanel
-            key={JSON.stringify([state.conditions, state.searchBounds])}
+            key={JSON.stringify([
+              state.conditions,
+              state.searchBounds,
+              listVersion,
+            ])}
             aria-label="지도 식당 목록"
             handleLabel="식당 목록 높이 조절"
             height={height}
