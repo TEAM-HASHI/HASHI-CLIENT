@@ -58,7 +58,13 @@ describe('CollectionForm', () => {
     await act(async () => {
       await router.navigate(-1)
     })
-    const dialog = await screen.findByRole('alertdialog')
+    const dialog = await screen.findByRole('alertdialog', {
+      name: '변경사항이 저장되지 않았어요.',
+    })
+    expect(
+      within(dialog).getByText('저장하지 않고 나가면 변경사항이 사라져요.'),
+    ).toBeVisible()
+    expect(dialog.querySelector('svg')).toBeInTheDocument()
     fireEvent.click(within(dialog).getByRole('button', { name: '뒤로가기' }))
     expect(onClose).toHaveBeenCalledOnce()
     expect(onSubmit).not.toHaveBeenCalled()

@@ -1,4 +1,4 @@
-import { BackIcon, CheckIcon } from '@hashi/hds-icons'
+import { BackIcon, CheckIcon, OrderCancelIcon } from '@hashi/hds-icons'
 import {
   Button,
   Chip,
@@ -339,11 +339,14 @@ export const CollectionForm = ({
           if (!open && blocker.state === 'blocked') blocker.reset()
         }}
       >
-        <Dialog.Content>
+        <Dialog.Content className="h-[220px] rounded-[20px]">
           <Dialog.Header>
-            <Dialog.Title>변경 사항을 저장하지 않고 나갈까요?</Dialog.Title>
+            <Dialog.Icon>
+              <OrderCancelIcon className="size-6" />
+            </Dialog.Icon>
+            <Dialog.Title>변경사항이 저장되지 않았어요.</Dialog.Title>
             <Dialog.Description>
-              저장하지 않은 변경 사항은 사라져요.
+              저장하지 않고 나가면 변경사항이 사라져요.
             </Dialog.Description>
           </Dialog.Header>
           <Dialog.Footer>
