@@ -12,6 +12,7 @@ export const useGoogleMapCamera = (
   selectedPosition: MapPosition | undefined,
   resetVersion: number,
   cameraRequest?: MapCameraSnapshot | null,
+  searchPositions?: MapPosition[] | null,
 ) => {
   const map = useMap()
   const userMoved = useRef(false)
@@ -64,5 +65,23 @@ export const useGoogleMapCamera = (
       zoom: Math.max(minimumZoom.current ?? 0, cameraRequest.zoom),
     })
   }, [map, overviewReady, cameraRequest])
+  useEffect(() => {
+    if (!map || !overviewReady || !searchPositions?.length) return
+    userMoved.current = false
+    programmaticMove.current = true
+    if (searchPositions.length === 1) {
+      map.moveCamera({ center: searchPositions[0], zoom: 15 })
+      return
+    }
+    map.fitBounds(
+      {
+        north: Math.max(...searchPositions.map((p) => p.lat)),
+        south: Math.min(...searchPositions.map((p) => p.lat)),
+        east: Math.max(...searchPositions.map((p) => p.lng)),
+        west: Math.min(...searchPositions.map((p) => p.lng)),
+      },
+      { top: 140, bottom: 50, left: 40, right: 40 },
+    )
+  }, [map, overviewReady, searchPositions])
   return { userMoved, programmaticMove }
 }

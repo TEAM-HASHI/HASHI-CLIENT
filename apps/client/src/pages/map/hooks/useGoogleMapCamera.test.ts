@@ -28,6 +28,35 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
+it.each([0, 1, 2])(
+  'handles %i search result positions without inventing coordinates',
+  (count) => {
+    const points = [
+      { lat: 35.7, lng: 139.7 },
+      { lat: 35.8, lng: 139.8 },
+    ].slice(0, count)
+    const areas = [
+      {
+        code: 'a',
+        name: 'A',
+        restaurantCount: 1,
+        position: { lat: 35.7, lng: 139.7 },
+      },
+    ]
+    renderHook(() =>
+      useGoogleMapCamera(areas, undefined, undefined, 0, null, points),
+    )
+    act(() => sdk.idle())
+    if (count === 0) expect(sdk.map.moveCamera).not.toHaveBeenCalled()
+    if (count === 1)
+      expect(sdk.map.moveCamera).toHaveBeenCalledWith({
+        center: points[0],
+        zoom: 15,
+      })
+    expect(sdk.map.fitBounds).toHaveBeenCalledTimes(count > 1 ? 2 : 1)
+  },
+)
+
 it('waits for initial fitting before restoring a requested camera', () => {
   const snapshot = {
     center: { lat: 35.71, lng: 139.71 },

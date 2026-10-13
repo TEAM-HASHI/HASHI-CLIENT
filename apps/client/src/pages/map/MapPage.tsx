@@ -2,6 +2,7 @@ import { DragPanel, showToast } from '@hashi/hds-ui'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
+import { parseMapSearchContext } from '@/features/mapSearch/utils/parseMapSearchContext'
 import { useMapSession } from '@/pages/map/hooks/useMapSession'
 import { clearMapSession, readMapSession } from '@/pages/map/utils/mapSession'
 
@@ -65,6 +66,15 @@ export const MapPage = () => {
     handleReset,
   )
   const resetLocationKey = useRef<string | null>(null)
+  const searchLocationKey = useRef<string | null>(null)
+  useEffect(() => {
+    const result = parseMapSearchContext(location.state)
+    if (!result || searchLocationKey.current === location.key) return
+    searchLocationKey.current = location.key
+    state.handleConditionsChange({ keyword: result.keyword, areaCode: null })
+    setStage('normal')
+    navigate(ROUTES.map, { replace: true, state: null })
+  }, [location.state, location.key, state, navigate])
   useEffect(() => {
     if (
       location.state?.resetMap !== true ||
@@ -175,6 +185,7 @@ export const MapPage = () => {
           onOverview={state.handleOverview}
           onCameraChange={state.handleCameraChange}
           cameraRequest={state.cameraRequest}
+          searchPositions={state.searchPositions}
           onUserMove={() => {
             state.handleUserMove()
             if (state.selectedRestaurant) setDetailStage('collapsed')
@@ -201,11 +212,16 @@ export const MapPage = () => {
           onCloseDetail={handleCloseDetail}
         />
         <MapToolbar
-          draft={state.draft}
+          draft={state.conditions.keyword}
           category={state.conditions.category}
-          onDraftChange={state.setDraft}
-          onSubmit={() =>
-            handleConditionsChange({ keyword: state.draft.trim() })
+          onSearch={() =>
+            navigate(ROUTES.search, {
+              replace: true,
+              state: { source: 'map', keyword: state.conditions.keyword },
+            })
+          }
+          onClear={() =>
+            handleConditionsChange({ keyword: '', areaCode: null })
           }
           onCategoryChange={(category) => handleConditionsChange({ category })}
         />

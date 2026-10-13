@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { parseMapSearchContext } from '@/features/mapSearch/utils/parseMapSearchContext'
 import { RestaurantResultList } from '@/pages/search/components/RestaurantResultList'
 import { SearchErrorState } from '@/pages/search/components/SearchErrorState'
 import { SearchFilterBar } from '@/pages/search/components/SearchFilterBar'
@@ -33,14 +34,16 @@ const getOptionLabel = <TValue extends string>(
 export const SearchPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const mapContext = parseMapSearchContext(location.state)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const {
     category: foodCategoryValue,
-    keyword: appliedKeyword,
+    keyword: urlKeyword,
     searchParams,
     sort: sortValue,
     updateSearchUrlState,
   } = useSearchUrlState()
+  const appliedKeyword = mapContext?.keyword ?? urlKeyword
   const [keywordDraft, setKeywordDraft] = useState({
     appliedKeyword,
     value: appliedKeyword,
@@ -54,7 +57,7 @@ export const SearchPage = () => {
     query: searchRestaurantsQuery,
     restaurants,
     retry: retrySearchRestaurants,
-  } = useSearchRestaurantResults(searchParams)
+  } = useSearchRestaurantResults(mapContext ? null : searchParams)
   const sortSheet = useSearchFilterSheet({
     appliedValue: sortValue,
     defaultValue: DEFAULT_SORT_VALUE,
@@ -71,7 +74,7 @@ export const SearchPage = () => {
     },
     options: foodCategoryOptions,
   })
-  const isSearchIdle = searchParams === null
+  const isSearchIdle = !!mapContext || searchParams === null
   const sortLabel = getOptionLabel(sortOptions, sortValue)
   const foodCategoryLabel =
     foodCategoryValue === DEFAULT_FOOD_CATEGORY_VALUE
@@ -98,6 +101,19 @@ export const SearchPage = () => {
   const submitSearch = (nextKeyword = keyword) => {
     const normalizedKeyword = nextKeyword.trim()
 
+    if (mapContext) {
+      if (!normalizedKeyword) {
+        setKeyword('')
+        return
+      }
+      saveRecentSearchKeyword(normalizedKeyword)
+      navigate(ROUTES.map, {
+        replace: true,
+        state: { source: 'map', keyword: normalizedKeyword },
+      })
+      return
+    }
+
     if (!normalizedKeyword) {
       setKeyword('')
       updateSearchUrlState({ keyword: '' })
@@ -110,6 +126,10 @@ export const SearchPage = () => {
   }
 
   const handleBackClick = () => {
+    if (mapContext) {
+      navigate(ROUTES.map, { replace: true })
+      return
+    }
     if (location.key !== 'default') {
       navigate(-1)
       return

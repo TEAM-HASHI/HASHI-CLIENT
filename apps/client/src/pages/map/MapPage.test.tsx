@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MapPage } from '@/pages/map/MapPage'
 import { MemoryRouter } from 'react-router-dom'
-import { clearMapSession } from '@/pages/map/utils/mapSession'
+import { clearMapSession, writeMapSession } from '@/pages/map/utils/mapSession'
 
 // Only the external Google SDK is replaced; page state, markers and panels stay real.
 vi.mock('@vis.gl/react-google-maps', () => ({
@@ -52,6 +52,44 @@ afterEach(() => {
 })
 
 describe('MapPage preview', () => {
+  it('applies a returned search without losing the category, then clears only the keyword', async () => {
+    const user = userEvent.setup()
+    writeMapSession({
+      conditions: {
+        keyword: '',
+        category: 'cafe',
+        sort: 'recommended',
+        areaCode: null,
+      },
+      camera: null,
+      searchBounds: null,
+      selectedId: null,
+      stage: 'normal',
+      detailStage: 'normal',
+      isExploring: true,
+    })
+    render(
+      <MemoryRouter
+        initialEntries={[
+          { pathname: '/map', state: { source: 'map', keyword: '없는 식당' } },
+        ]}
+      >
+        <MapPage />
+      </MemoryRouter>,
+    )
+    await screen.findByText('검색 조건에 맞는 식당이 없어요.')
+    expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await user.click(screen.getByRole('button', { name: '지도 검색어 지우기' }))
+    await screen.findByRole('list', { name: '식당 검색 결과' })
+    expect(screen.getByRole('searchbox')).toHaveValue('')
+    expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
   it('restores category and panel after leaving and returning', async () => {
     const user = userEvent.setup()
     const view = render(
@@ -155,12 +193,7 @@ describe('MapPage preview', () => {
     expect(
       screen.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
     ).toBeVisible()
-    await user.type(screen.getByRole('searchbox'), '없는 식당{Enter}')
-    expect(screen.getByText('검색 조건에 맞는 식당이 없어요.')).toBeVisible()
-    await user.click(screen.getByRole('button', { name: '검색 조건 초기화' }))
-    expect(
-      screen.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
-    ).toBeVisible()
+    expect(screen.getByRole('searchbox')).toHaveAttribute('readonly')
   })
   it('sorts the sample list and closes the sort menu on selection', async () => {
     const user = userEvent.setup()

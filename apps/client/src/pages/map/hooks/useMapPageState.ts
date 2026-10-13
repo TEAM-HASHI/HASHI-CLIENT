@@ -13,6 +13,7 @@ import type {
   MapConditions,
   MapRestaurant,
   MapSessionSnapshot,
+  MapPosition,
 } from '@/pages/map/types'
 import { getMapAreaMarkers } from '@/pages/map/utils/getMapAreaMarkers'
 import { getMapDisplayMode } from '@/pages/map/utils/mapDisplayPolicy'
@@ -27,7 +28,7 @@ const INITIAL_CONDITIONS: MapConditions = {
   areaCode: null,
   sort: 'recommended',
 }
-type Reason = 'initial' | 'area' | 'viewport' | 'conditions' | 'sort'
+type Reason = 'initial' | 'area' | 'viewport' | 'conditions' | 'sort' | 'search'
 type EmptyKind = 'region' | 'conditions'
 
 export const useMapPageState = (
@@ -45,6 +46,9 @@ export const useMapPageState = (
     initial?.searchBounds ?? null,
   )
   const [resetVersion, setResetVersion] = useState(0)
+  const [searchPositions, setSearchPositions] = useState<MapPosition[] | null>(
+    null,
+  )
   const [isExploring, setIsExploring] = useState(initial?.isExploring ?? false)
   const camera = useRef<MapCameraSnapshot | null>(initial?.camera ?? null)
   const [cameraSnapshot, setCameraSnapshot] = useState(initial?.camera ?? null)
@@ -99,6 +103,8 @@ export const useMapPageState = (
         setEmptyKind(kind)
         if (!result.restaurants.length) setEmptyEvent({ id, kind })
         if (request.camera) setCameraRequest({ ...request.camera })
+        if (request.reason === 'search' && request.conditions.keyword)
+          setSearchPositions(result.restaurants.map((item) => item.position))
       })
       .catch(() => {
         if (generation.current === id) setStatus('error')
@@ -124,6 +130,7 @@ export const useMapPageState = (
     setSearchBounds(bounds)
     setSelectedId(null)
     setCameraRequest(null)
+    setSearchPositions(null)
     setRequest({
       restored: false,
       conditions: next,
@@ -151,7 +158,13 @@ export const useMapPageState = (
     submit(
       next,
       bounds,
-      patch.areaCode ? 'area' : patch.sort ? 'sort' : 'conditions',
+      patch.areaCode
+        ? 'area'
+        : patch.sort
+          ? 'sort'
+          : patch.keyword !== undefined
+            ? 'search'
+            : 'conditions',
     )
   }
   const handleReset = () => {
@@ -218,6 +231,7 @@ export const useMapPageState = (
       setRequest((current) => ({ ...current }))
     },
     cameraRequest,
+    searchPositions,
     cameraSnapshot,
     restoreCamera: (value: MapCameraSnapshot | null) =>
       setCameraRequest(value ? { ...value } : null),

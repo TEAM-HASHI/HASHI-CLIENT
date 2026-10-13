@@ -20,6 +20,7 @@ import type {
   MapBounds,
   MapCameraSnapshot,
   MapRestaurant,
+  MapPosition,
 } from '@/pages/map/types'
 
 interface MapViewportProps {
@@ -40,6 +41,7 @@ interface MapViewportProps {
   onCameraChange?: (camera: MapCameraSnapshot) => void
   onUserMove?: () => void
   cameraRequest?: MapCameraSnapshot | null
+  searchPositions?: MapPosition[] | null
   onResetArea: () => void
   onSaved: () => void
   onCloseDetail?: () => void
@@ -75,6 +77,7 @@ const GoogleMapSurface = ({
   onCameraChange,
   onUserMove,
   cameraRequest,
+  searchPositions,
 }: MapViewportProps) => {
   const status = useApiLoadingStatus()
   const [currentBounds, setCurrentBounds] = useState<MapBounds | null>(null)
@@ -110,6 +113,7 @@ const GoogleMapSurface = ({
       restaurants.find(({ id }) => id === selectedId)?.position,
       resetVersion,
       cameraRequest,
+      searchPositions,
     )
   const failed =
     authFailed ||
