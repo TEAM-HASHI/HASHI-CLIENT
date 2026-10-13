@@ -2,9 +2,9 @@
 
 Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/coordinates remain explicitly labelled samples. Restaurant API integration is deferred.
 
-## 2026-10-13 추가 유즈케이스 설계 — 구현 전 검토
+## 2026-10-13 추가 유즈케이스 설계
 
-이 절은 다음 구현의 목표이며 아직 구현 완료를 의미하지 않는다. 아래 기존 영문 절은 현재 구현 기준선이다. 서로 다른 내용은 이번 구현에서 이 절로 대체하고, 구현 완료 후 이전 기준선을 정리한다.
+이 절은 승인된 목표다. 프론트 구현은 샘플 데이터 경계 안에서 검증한다. 실제 상세 조회 실패, 서버 cursor/세션 만료 및 좌표 출처 표시는 실데이터 연동 시 별도 구현·검증한다.
 
 ### 기준과 범위
 
@@ -22,6 +22,7 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - 지역 묶음 표시 여부는 조건과 줌에서 파생한다. 기존 `isExploring`을 영구 전환 플래그로 사용하지 않는다.
 - 사용자 조작과 프로그램 이동(최초 fit, 지역 선택, 검색 결과 fit, 복원)을 구분한다. 프로그램 이동은 재검색 버튼이나 사용자 이동 처리를 발생시키지 않는다.
 - 최초 fit에서 얻은 최소 줌은 이후 지역·상세 선택이나 패널 높이 변경으로 덮어쓰지 않는다.
+- 세션 카메라는 최초 최소 줌도 보존한다. 복귀 시 달라진 패널 높이로 계산한 fit 줌이 저장 줌을 덮어쓰지 않는다.
 - 검색어·카테고리가 없으면 줌 13 이하에서 현재 viewport 안의 지역 묶음을 표시하고, 줌 14 이상에서 개별 핀을 표시한다. 13과 14 사이 소수 줌에서는 직전 표시 모드를 유지한다. 초기 진입은 지역 묶음, 지역 클릭은 개별 핀으로 시작한다.
 - 검색어 또는 카테고리가 있으면 줌과 관계없이 개별 핀을 표시한다. 조건 해제 시 현재 줌에 따라 표시 모드를 다시 판단한다.
 - 지역 묶음 복원 시 현재 중심을 유지한다. 최초 영역으로 이동하는 것은 명시적 초기화 때만 수행한다.
@@ -93,7 +94,7 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 
 ## 지도 추가 유즈케이스 Implementation Plan
 
-> For agentic workers: REQUIRED SUB-SKILL: `superpowers:executing-plans`. 아래 순서로 직접 구현하고 각 단계의 테스트 결과를 확인한다. 현재 항목은 모두 미실행이다.
+> For agentic workers: REQUIRED SUB-SKILL: `superpowers:executing-plans`. 실행 순서는 1 → 2 → 4 → 3 → 5. 검색 왕복이 세션을 사용하므로 세션을 먼저 구현한다. 아래는 계획이며 검증 결과는 Verification에 기록한다.
 
 **Goal:** 위 추가 유즈케이스 설계를 기존 지도·검색 화면에 적용한다.
 
@@ -185,6 +186,8 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 
 - Google Maps via @vis.gl/react-google-maps, using VITE_GOOGLE_MAPS_API_KEY and VITE_GOOGLE_MAPS_MAP_ID. No keys in source. Missing configuration, SDK/network timeout and authentication failure show a retry action (page reload, because SDK initialization is singleton).
 - Local, explicitly labelled sample restaurants. No geolocation, Places search, backend bounding-box query, save or reservation mutation.
+- Contract check (2026-10-13): live OpenAPI defines `GET /api/v1/restaurants/map/regions` (initial bounds, query limits, summaries) and `GET /api/v1/restaurants/map` (BBOX/filter, session sort, cursor-only next; maximum 10). Public regions returns HTTP 503 `RESTAURANT-017` (지도 설정이 준비되지 않았습니다). `queryMapPreview` remains an explicit sample source, not an automatic live-data fallback.
+- Future integration must honor coordinate `validUntil`, third-party attribution, server session expiry/410 recovery and 429/503 policies. Preview pagination tests do not verify live API behavior. No new server query keys or mutations are introduced.
 - Area labels in Figma include neighborhoods (우에노, 아사쿠사, 긴자), not only administrative wards. Sample areaCode is a local identifier, NOT a Japanese ward code.
 - Markers use latitude/longitude on the real map, but these sample coordinates are NOT verified restaurant locations. Counts derive from sample data. Regional summaries are not an automatic clustering algorithm.
 - Saved-list/save/reservation actions show the existing ComingSoonDialog. They do not navigate using fake restaurant ids or show successful saving.
@@ -192,17 +195,17 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 ## Requirements / State
 
 - First view: search, 전체/음식점/주점/카페, area markers, floating saved action, ranked recommendations.
-- Overview and exploration are explicit states, independent of panel height. After choosing an area/category/search or restaurant, only individual category pins remain until an explicit reset. No automatic marker clustering.
-- Direct user zoom to level 14 or above also enters exploration after camera movement settles. Zooming back out keeps individual pins and existing search conditions/results; only explicit reset restores area markers. Initial fitting and automatic camera moves do not trigger this transition. This display change does not query or filter restaurants.
+- Display follows `getMapDisplayMode`: no keyword/category and zoom ≤13 restores regions; zoom ≥14 shows pins; intermediate zoom preserves mode. Applied keyword/category always shows pins. Region restoration keeps the current center without querying.
 - The fitted initial camera zoom is the minimum zoom. Region labels reserve non-overlapping screen space without changing geographic anchors; displaced labels have a connector to the original anchor.
 - A restaurant/region selected before SDK readiness waits for the initial fit to finish, so its detail zoom cannot become the minimum. Zoom-out remains available to the initial overview level after selection.
-- `현 지도에서 검색` keeps the existing provisional button design. It appears after user map movement, not initial fitting, region selection or selected-restaurant centering.
+- `현재 위치에서 검색` uses the Figma pill and LocationIcon. It requires a category and changed bounds after a user gesture, not initial fit, area selection or restoration. Gestures collapse the active panel and clear the old area condition without automatically querying.
 - Area click centers/zooms the real map and filters sample restaurants. A reset action fits all sample regions. Category and submitted keyword apply together. Sort: recommended, rating, reviews, deterministic recommendation tie-break.
 - Search draft is separate from submitted keyword; empty results provide reset. Filter changes clear selected restaurant. Same selected category toggles to all.
-- Local state: draft, applied keyword/category/area/sort, selected restaurant id, panel stage, photo index, coming-soon dialog. No URL or server state is introduced.
-- List collapse/expand preserves scroll. Changes to keyword/category/area/sort reset list scroll. Selecting a restaurant keeps the list mounted; closing details restores the previous list and conditions.
+- The toolbar opens `/search` with validated map route state. Search returns using replace navigation, retains category, and fits nonempty keyword results. Clearing keyword retains the camera. Ordinary search URL policy is unchanged.
+- A memory session retains camera, conditions, loaded results, selection and panel stages for less than five minutes after route/background departure. Pending requests are not saved as successful data. Active map-tab reselection resets; reload persistence is not provided.
+- List collapse/expand preserves scroll. Condition changes reset scroll. Closing details restores preselection camera/stage and resets list scroll; focus falls back to the sort trigger if the original card remounts. Floating bookmark becomes close while selected.
 - An expanded list exposes `지도로 보기` in the panel footer. It collapses the list to the handle without resetting conditions or scroll; focus returns to the handle. It is not shown in normal/collapsed or restaurant-detail states.
-- `지도로 보기` only collapses the list. Moving/zooming the map exposes `현 지도에서 검색`; only clicking it applies the latest idle bounds to the sample list. It clears the prior area filter/selection but preserves keyword/category/sort. No map reload or backend request is needed for this local filter. Empty results retain the map and offer reset.
+- Explicit viewport search captures conditions/bounds/camera. Latest request wins; stale responses produce neither results nor toast. Empty viewport results collapse the list and show a region toast; empty condition results retain a normal-height list and show a condition toast. Retry uses the failed request; next-page failure keeps loaded results.
 - Selecting a marker/card opens restaurant summary. Expanding shows information/menu/photo/review tabs, sticky title and tabs, and bottom reserve action. Unavailable menu/review data is described as preview/unconnected, not as a real server result.
 - Photo selection opens a modal carousel; Escape/close restores focus to the source thumbnail. Background is inert while photo modal is open.
 - Long titles truncate to one line with the full accessible name. Thumbnail failure uses HDS fallback.
@@ -233,7 +236,9 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 ## File Responsibilities
 
 - `MapPage.tsx`: composes toolbar, viewport, list/detail panels and dialogs.
-- `hooks/useMapPreviewState.ts`: owns preview input/selection state and supplies restaurant and area data.
+- `hooks/useMapPageState.ts`: conditions, selection, request lifecycle, preview pagination, stale-response rejection and camera requests.
+- `hooks/useMapSession.ts`, `utils/mapSession.ts`: memory snapshots and expiry. `features/mapSearch` validates the contract shared with SearchPage.
+- `MapStatusView.tsx`, `MapSearchAreaButton.tsx`: presentation-only state UI and viewport-search CTA. Figma loading/error SVGs use shared assets; marker icons remain HDS icons.
 - `data/mapPreviewRestaurants.ts`: explicitly temporary sample restaurants/areas; UI components do not import it directly.
 - `utils/filterMapRestaurants.ts`, `utils/getMapAreaMarkers.ts`: pure filtering/sorting and area counts. Counts represent all supplied sample restaurants, independently of the active filters.
 - `utils/layoutMapAreaLabels.ts`: screen-space region label offsets using map zoom; never changes geographic anchors.
@@ -244,6 +249,10 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - `@hashi/hds-icons` exports RestaurantMarkerIcon, CafeMarkerIcon, BarMarkerIcon, MapViewIcon and MapPinTailIcon: original reusable vector artwork only. The app supplies size/color/disabled styling; routing, selection and sample data remain page-local.
 
 ## Verification
+
+- 추가 유즈케이스 검증: 지도·검색·탭 단위 테스트 98개 통과. 실제 Google Maps를 사용하는 Chromium E2E 13개 통과(localhost:5714, SDK 실패는 요청 차단 후 재시도로 검증).
+- `pnpm --filter @hashi/client test`: 158개 파일 / 752개 테스트 통과. `typecheck`, `lint`, `build`, 변경 범위 root ESLint, Prettier, `git diff --check` 통과.
+- 최종 리뷰 회귀: 상세 닫기 시 무필터 지역 묶음 복원, 세션 최소 줌 보존, 패널 크기 변경을 사용자 확대와 구분. 실제 모바일 기기 검증 및 실제 식당 API의 서버 오류·세션·좌표 만료 검증은 별도다.
 
 - Test filter intersection, sorting/ties, immutable data, empty/reset, selection/close, keyboard panel stages, photo modal, unavailable action feedback and direct public route.
 - Client lint/typecheck/full tests/build; DragPanel regression tests; diff check.

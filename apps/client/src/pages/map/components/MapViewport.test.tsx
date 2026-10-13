@@ -23,6 +23,7 @@ vi.mock('@vis.gl/react-google-maps', () => ({
     onZoomChanged?: () => void
   }>) => (
     <div onWheel={onZoomChanged}>
+      <button onClick={onZoomChanged}>자동 zoom</button>
       <button
         onClick={() =>
           onIdle({
@@ -102,6 +103,7 @@ it('reports camera snapshots but does not collapse panels for resize-only idle',
   )
   fireEvent.click(screen.getByText('초기 idle'))
   fireEvent.click(screen.getByText('이동 idle'))
+  fireEvent.click(screen.getByText('자동 zoom'))
   expect(onUserMove).not.toHaveBeenCalled()
   expect(onCameraChange).toHaveBeenLastCalledWith({
     center: { lat: 36.5, lng: 140.5 },

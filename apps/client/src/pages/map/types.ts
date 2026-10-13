@@ -18,6 +18,7 @@ export interface MapCameraSnapshot {
   center: MapPosition
   zoom: number
   bounds: MapBounds
+  minZoom?: number
 }
 
 export interface MapArea {

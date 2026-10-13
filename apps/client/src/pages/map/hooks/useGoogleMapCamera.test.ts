@@ -28,6 +28,26 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
+it('preserves the original minimum zoom when restoring into a taller viewport', () => {
+  sdk.zoom = 13
+  const snapshot = {
+    center: { lat: 35.71, lng: 139.71 },
+    zoom: 12,
+    minZoom: 11.75,
+    bounds: { north: 36, south: 35, west: 139, east: 140 },
+  }
+  const areas = [
+    { code: 'a', name: 'A', restaurantCount: 1, position: snapshot.center },
+  ]
+  renderHook(() => useGoogleMapCamera(areas, undefined, undefined, 0, snapshot))
+  act(() => sdk.idle())
+  expect(sdk.map.setOptions).toHaveBeenCalledWith({ minZoom: 11.75 })
+  expect(sdk.map.moveCamera).toHaveBeenCalledWith({
+    center: snapshot.center,
+    zoom: 12,
+  })
+})
+
 it.each([0, 1, 2])(
   'handles %i search result positions without inventing coordinates',
   (count) => {

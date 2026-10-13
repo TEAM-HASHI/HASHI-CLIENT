@@ -170,6 +170,7 @@ export const useMapPageState = (
   const handleReset = () => {
     generation.current++
     camera.current = null
+    setCameraSnapshot(null)
     setCameraRequest(null)
     setDraft('')
     setIsExploring(false)
@@ -233,8 +234,16 @@ export const useMapPageState = (
     cameraRequest,
     searchPositions,
     cameraSnapshot,
-    restoreCamera: (value: MapCameraSnapshot | null) =>
-      setCameraRequest(value ? { ...value } : null),
+    restoreCamera: (value: MapCameraSnapshot | null) => {
+      setCameraRequest(value ? { ...value } : null)
+      setIsExploring(
+        getMapDisplayMode({
+          zoom: value?.zoom ?? 11,
+          previous: isExploring ? 'restaurants' : 'areas',
+          hasConditions: !!conditions.keyword || conditions.category !== 'all',
+        }) === 'restaurants',
+      )
+    },
     handleCameraChange: (value: MapCameraSnapshot) => {
       camera.current = value
       setCameraSnapshot(value)

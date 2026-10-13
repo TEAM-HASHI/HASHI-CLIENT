@@ -11,4 +11,5 @@
 - Map CTA source: 8317:40775, 24×24. MapViewIcon shares the original paths; the app supplies enabled fill/stroke secondary-200/primary-100 and disabled warm-gray-300. There are no separate state asset copies or disabled business logic in HDS.
 - MapPinTailIcon preserves the original 8×5 silhouette; the app supplies its size and white color.
 - Collection assets are not imported. HDS contains reusable artwork only, without restaurant records, selection behavior, routes or map SDK dependencies.
-- These backgrounds are static publishing previews, not a map SDK or an authoritative representation of restaurant coordinates. Replace with the actual map integration in a follow-up ticket.
+- Map background is rendered by Google Maps. Files in `preview/` remain sample photos, not authoritative coordinates.
+- `loading-spinner.svg`: Figma `10089:135605` original loading artwork (80×80); `error-mark.svg`: error frame `9984:106067` original empty/error illustration. These are page state illustrations, not duplicate marker glyphs. `MapStatusView` owns animation/reduced-motion and product copy.

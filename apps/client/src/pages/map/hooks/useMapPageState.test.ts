@@ -28,6 +28,26 @@ it('restores loaded results and selection without refetching', async () => {
   expect(source).not.toHaveBeenCalled()
 })
 const emptyBounds = { south: 0, north: 1, west: 0, east: 1 }
+it.each(['all', 'cafe'] as const)(
+  'restores camera display mode after detail for %s',
+  async (category) => {
+    const { result } = renderHook(() => useMapPageState())
+    await waitFor(() => expect(result.current.status).toBe('success'))
+    act(() => result.current.handleConditionsChange({ category }))
+    await waitFor(() => expect(result.current.status).toBe('success'))
+    act(() =>
+      result.current.handleSelectRestaurant(result.current.restaurants[0].id),
+    )
+    act(() =>
+      result.current.restoreCamera({
+        center: { lat: 35.7, lng: 139.7 },
+        zoom: 12,
+        bounds: emptyBounds,
+      }),
+    )
+    expect(result.current.isExploring).toBe(category !== 'all')
+  },
+)
 it('restores regions on clearing conditions at overview zoom', async () => {
   const { result } = renderHook(() => useMapPageState())
   await waitFor(() => expect(result.current.status).toBe('success'))

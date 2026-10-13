@@ -18,6 +18,7 @@ export const useGoogleMapCamera = (
   const userMoved = useRef(false)
   const programmaticMove = useRef(true)
   const minimumZoom = useRef<number | null>(null)
+  const restoredMinimumZoom = useRef(cameraRequest?.minZoom)
   const [overviewReady, setOverviewReady] = useState(false)
   useEffect(() => {
     if (!map || !areas.length) return
@@ -33,8 +34,8 @@ export const useGoogleMapCamera = (
       if (minimumZoom.current === null) {
         const zoom = map.getZoom()
         if (zoom !== undefined) {
-          minimumZoom.current = zoom
-          map.setOptions({ minZoom: zoom })
+          minimumZoom.current = restoredMinimumZoom.current ?? zoom
+          map.setOptions({ minZoom: minimumZoom.current })
           setOverviewReady(true)
         }
       }
@@ -83,5 +84,5 @@ export const useGoogleMapCamera = (
       { top: 140, bottom: 50, left: 40, right: 40 },
     )
   }, [map, overviewReady, searchPositions])
-  return { userMoved, programmaticMove }
+  return { userMoved, programmaticMove, minimumZoom }
 }

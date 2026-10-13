@@ -106,15 +106,18 @@ const GoogleMapSurface = ({
     const timeout = window.setTimeout(() => setTimedOut(true), 15000)
     return () => window.clearTimeout(timeout)
   }, [ready])
-  const { userMoved: userMovedRef, programmaticMove: programmaticMoveRef } =
-    useGoogleMapCamera(
-      areas,
-      areas.find(({ code }) => code === areaCode)?.position,
-      restaurants.find(({ id }) => id === selectedId)?.position,
-      resetVersion,
-      cameraRequest,
-      searchPositions,
-    )
+  const {
+    userMoved: userMovedRef,
+    programmaticMove: programmaticMoveRef,
+    minimumZoom,
+  } = useGoogleMapCamera(
+    areas,
+    areas.find(({ code }) => code === areaCode)?.position,
+    restaurants.find(({ id }) => id === selectedId)?.position,
+    resetVersion,
+    cameraRequest,
+    searchPositions,
+  )
   const failed =
     authFailed ||
     status === APILoadingStatus.FAILED ||
@@ -127,17 +130,33 @@ const GoogleMapSurface = ({
     (['north', 'south', 'east', 'west'] as const).some(
       (key) => Math.abs(currentBounds[key] - searchedBounds[key]) > 0.00001,
     )
+  const markUserMove = () => {
+    if (!ready) return
+    programmaticMoveRef.current = false
+    userMovedRef.current = true
+    onUserMove?.()
+  }
   return (
     <div
       className="h-full w-full"
+      onWheelCapture={markUserMove}
+      onDoubleClickCapture={markUserMove}
+      onTouchMoveCapture={(event) => {
+        if (event.touches.length > 1) markUserMove()
+      }}
       onKeyDownCapture={(event) => {
         if (
-          ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(
-            event.key,
-          )
+          [
+            'ArrowUp',
+            'ArrowDown',
+            'ArrowLeft',
+            'ArrowRight',
+            '+',
+            '-',
+            '=',
+          ].includes(event.key)
         ) {
-          userMovedRef.current = true
-          onUserMove?.()
+          markUserMove()
         }
       }}
     >
@@ -151,22 +170,21 @@ const GoogleMapSurface = ({
           disableDefaultUI
           clickableIcons={false}
           maxZoom={20}
-          onDragstart={() => {
-            userMovedRef.current = true
-            onUserMove?.()
-          }}
-          onZoomChanged={() => {
-            if (!programmaticMoveRef.current) {
-              userMovedRef.current = true
-              onUserMove?.()
-            }
-          }}
+          onDragstart={markUserMove}
           onIdle={({ map }) => {
             const bounds = map.getBounds()?.toJSON()
             if (!bounds) return
             const nextZoom = map.getZoom() ?? 11
             const center = map.getCenter()?.toJSON()
-            if (center) onCameraChange?.({ center, zoom: nextZoom, bounds })
+            if (center)
+              onCameraChange?.({
+                center,
+                zoom: nextZoom,
+                bounds,
+                ...(minimumZoom.current !== null
+                  ? { minZoom: minimumZoom.current }
+                  : {}),
+              })
             if (!programmaticMoveRef.current && userMovedRef.current) {
               const mode = getMapDisplayMode({
                 zoom: nextZoom,

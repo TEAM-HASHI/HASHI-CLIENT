@@ -24,6 +24,8 @@ test('exposed map, category and search receive real pointer clicks', async ({
   await expect(
     page.getByRole('button', { name: '도쿄 카페 미리보기 상세 보기' }),
   ).toBeVisible()
+  await page.getByRole('searchbox').click()
+  await expect(page).toHaveURL(/\/search$/)
   await page.getByRole('searchbox').fill('없는 식당')
   await page.getByRole('searchbox').press('Enter')
   await expect(page.getByText('검색 조건에 맞는 식당이 없어요.')).toBeVisible()
@@ -33,7 +35,7 @@ test('exposed map, category and search receive real pointer clicks', async ({
   ).toBeVisible()
 })
 
-test('direct zoom reveals pins, zoom-out keeps them, and reset restores regions', async ({
+test('direct zoom reveals pins and zoom-out restores regions without filters', async ({
   page,
 }) => {
   const area = page.getByRole('button', { name: '신주쿠 식당 보기' })
@@ -56,9 +58,6 @@ test('direct zoom reveals pins, zoom-out keeps them, and reset restores regions'
     await page.mouse.wheel(0, 800)
     await page.waitForTimeout(200)
   }
-  await expect(area).toHaveCount(0)
-  await expect.poll(() => pins.count()).toBeGreaterThan(0)
-  await page.getByRole('button', { name: '전체 지역 보기' }).click()
   await expect(area).toBeVisible()
   await expect(pins).toHaveCount(0)
 })
@@ -76,6 +75,74 @@ test('map CTA collapses the expanded list and restores keyboard focus', async ({
   await expect(button).toBeHidden()
   await handle.press('ArrowUp')
   await expect(page.getByRole('list', { name: '식당 검색 결과' })).toBeVisible()
+})
+
+test('category zoom keeps pins, gestures collapse the list and the active tab resets it', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: '카페', exact: true }).click()
+  await expect(page.getByText('지도를 불러오고 있어요.')).toBeHidden()
+  await expect(
+    page.getByRole('button', { name: '도쿄 카페 미리보기 지도 마커' }),
+  ).toBeVisible()
+  await page.mouse.move(195, 280)
+  await page.mouse.wheel(0, -500)
+  const handle = page.getByRole('slider', { name: '식당 목록 높이 조절' })
+  await expect(handle).toHaveAttribute('aria-valuenow', '30')
+  await expect(
+    page.getByRole('button', { name: '현재 위치에서 검색' }),
+  ).toBeVisible()
+  await page.mouse.wheel(0, 900)
+  await expect(
+    page.getByRole('button', { name: '도쿄 카페 미리보기 지도 마커' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '신주쿠 식당 보기' }),
+  ).toHaveCount(0)
+  await page.getByRole('button', { name: '지도', exact: true }).click()
+  await expect(
+    page.getByRole('button', { name: '신주쿠 식당 보기' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '카페', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'false')
+})
+
+test('search round trip retains category and clear removes only keyword', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: '카페', exact: true }).click()
+  await page.getByRole('searchbox').click()
+  await expect(page).toHaveURL(/\/search$/)
+  await page.getByRole('searchbox').fill('카페')
+  await page.getByRole('searchbox').press('Enter')
+  await expect(page).toHaveURL(/\/map$/)
+  await expect(
+    page.getByRole('button', { name: '카페', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await page.getByRole('button', { name: '지도 검색어 지우기' }).click()
+  await expect(page.getByRole('searchbox')).toHaveValue('')
+  await expect(
+    page.getByRole('button', { name: '카페', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('SDK failure exposes a keyboard-operable retry', async ({ page }) => {
+  await page.route('**/maps.googleapis.com/maps/api/js*', (route) =>
+    route.abort(),
+  )
+  await page.reload()
+  await expect(page.getByText('지도를 불러오지 못했어요.')).toBeVisible({
+    timeout: 20000,
+  })
+  const retry = page.getByRole('button', { name: '다시 시도하기' })
+  await retry.focus()
+  await expect(retry).toBeFocused()
+  await page.unroute('**/maps.googleapis.com/maps/api/js*')
+  await retry.press('Enter')
+  await expect(
+    page.getByRole('button', { name: '신주쿠 식당 보기' }),
+  ).toBeVisible()
 })
 
 test('dragging the handle expands the sheet and body scroll survives collapse', async ({
@@ -165,9 +232,7 @@ test('expanded detail contains focus, has sticky headings and restores the photo
     detail.getByRole('button', { name: '예약하기' }),
   ).toBeInViewport()
   await page.getByRole('button', { name: '식당 상세 닫기' }).click()
-  await expect(
-    page.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
-  ).toBeFocused()
+  await expect(page.getByRole('button', { name: '정렬: 추천순' })).toBeFocused()
 })
 
 test('a touch gesture on the handle collapses the list', async ({ page }) => {
