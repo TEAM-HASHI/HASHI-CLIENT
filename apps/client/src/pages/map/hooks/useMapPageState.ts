@@ -1,0 +1,264 @@
+import { useEffect, useRef, useState } from 'react'
+import {
+  MAP_PREVIEW_AREAS,
+  MAP_PREVIEW_RESTAURANTS,
+} from '@/pages/map/data/mapPreviewRestaurants'
+import {
+  queryMapPreview,
+  type MapPreviewSource,
+} from '@/pages/map/data/queryMapPreview'
+import type {
+  MapBounds,
+  MapCameraSnapshot,
+  MapConditions,
+  MapRestaurant,
+  MapSessionSnapshot,
+  MapPosition,
+} from '@/pages/map/types'
+import { getMapAreaMarkers } from '@/pages/map/utils/getMapAreaMarkers'
+import { getMapDisplayMode } from '@/pages/map/utils/mapDisplayPolicy'
+
+const AREA_MARKERS = getMapAreaMarkers(
+  MAP_PREVIEW_AREAS,
+  MAP_PREVIEW_RESTAURANTS,
+)
+const INITIAL_CONDITIONS: MapConditions = {
+  keyword: '',
+  category: 'all',
+  areaCode: null,
+  sort: 'recommended',
+}
+type Reason = 'initial' | 'area' | 'viewport' | 'conditions' | 'sort' | 'search'
+type EmptyKind = 'region' | 'conditions'
+
+export const useMapPageState = (
+  source: MapPreviewSource = queryMapPreview,
+  initial: MapSessionSnapshot | null = null,
+) => {
+  const [draft, setDraft] = useState(initial?.conditions.keyword ?? '')
+  const [conditions, setConditions] = useState(
+    initial?.conditions ?? INITIAL_CONDITIONS,
+  )
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initial?.selectedId ?? null,
+  )
+  const [searchBounds, setSearchBounds] = useState<MapBounds | null>(
+    initial?.searchBounds ?? null,
+  )
+  const [resetVersion, setResetVersion] = useState(0)
+  const [searchPositions, setSearchPositions] = useState<MapPosition[] | null>(
+    null,
+  )
+  const [isExploring, setIsExploring] = useState(initial?.isExploring ?? false)
+  const camera = useRef<MapCameraSnapshot | null>(initial?.camera ?? null)
+  const [cameraSnapshot, setCameraSnapshot] = useState(initial?.camera ?? null)
+  const [cameraRequest, setCameraRequest] = useState<MapCameraSnapshot | null>(
+    initial?.camera ?? null,
+  )
+  const [request, setRequest] = useState({
+    conditions: initial?.conditions ?? INITIAL_CONDITIONS,
+    bounds: initial?.searchBounds ?? (null as MapBounds | null),
+    restored: !!initial?.restaurants,
+    reason: 'initial' as Reason,
+    camera: null as MapCameraSnapshot | null,
+  })
+  const [restaurants, setRestaurants] = useState<MapRestaurant[]>(
+    initial?.restaurants ?? [],
+  )
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
+    initial?.restaurants ? 'success' : 'loading',
+  )
+  const [emptyKind, setEmptyKind] = useState<EmptyKind>('conditions')
+  const [emptyEvent, setEmptyEvent] = useState<{
+    id: number
+    kind: EmptyKind
+  } | null>(null)
+  const [nextCursor, setNextCursor] = useState<string | undefined>(
+    initial?.nextCursor,
+  )
+  const [nextError, setNextError] = useState(false)
+  const [loadingNext, setLoadingNext] = useState(false)
+  const generation = useRef(0)
+  const nextPending = useRef(false)
+  const emptyKindRef = useRef<EmptyKind>('conditions')
+
+  useEffect(() => {
+    if (request.restored) return
+    const requestGeneration = generation
+    const id = ++generation.current
+    nextPending.current = false
+    void source(request)
+      .then((result) => {
+        if (generation.current !== id) return
+        setRestaurants(result.restaurants)
+        setNextCursor(result.nextCursor)
+        setStatus('success')
+        const kind =
+          request.reason === 'sort'
+            ? emptyKindRef.current
+            : request.reason === 'viewport' || request.reason === 'area'
+              ? 'region'
+              : 'conditions'
+        emptyKindRef.current = kind
+        setEmptyKind(kind)
+        if (!result.restaurants.length) setEmptyEvent({ id, kind })
+        if (request.camera) setCameraRequest({ ...request.camera })
+        if (request.reason === 'search' && request.conditions.keyword)
+          setSearchPositions(result.restaurants.map((item) => item.position))
+      })
+      .catch(() => {
+        if (generation.current === id) setStatus('error')
+      })
+    return () => {
+      requestGeneration.current++
+    }
+  }, [request, source])
+
+  const submit = (
+    next: MapConditions,
+    bounds: MapBounds | null,
+    reason: Reason,
+  ) => {
+    generation.current++
+    setLoadingNext(false)
+    setNextError(false)
+    setStatus('loading')
+    setRestaurants([])
+    setNextCursor(undefined)
+    setEmptyEvent(null)
+    setConditions(next)
+    setSearchBounds(bounds)
+    setSelectedId(null)
+    setCameraRequest(null)
+    setSearchPositions(null)
+    setRequest({
+      restored: false,
+      conditions: next,
+      bounds,
+      reason,
+      camera: reason === 'area' || reason === 'initial' ? null : camera.current,
+    })
+  }
+  const handleConditionsChange = (patch: Partial<MapConditions>) => {
+    const next = { ...conditions, ...patch }
+    const bounds = patch.areaCode
+      ? null
+      : next.areaCode
+        ? searchBounds
+        : (camera.current?.bounds ?? searchBounds)
+    setIsExploring(
+      patch.areaCode
+        ? true
+        : getMapDisplayMode({
+            zoom: camera.current?.zoom ?? 11,
+            previous: isExploring ? 'restaurants' : 'areas',
+            hasConditions: !!next.keyword || next.category !== 'all',
+          }) === 'restaurants',
+    )
+    submit(
+      next,
+      bounds,
+      patch.areaCode
+        ? 'area'
+        : patch.sort
+          ? 'sort'
+          : patch.keyword !== undefined
+            ? 'search'
+            : 'conditions',
+    )
+  }
+  const handleReset = () => {
+    generation.current++
+    camera.current = null
+    setCameraSnapshot(null)
+    setCameraRequest(null)
+    setDraft('')
+    setIsExploring(false)
+    setResetVersion((version) => version + 1)
+    submit(INITIAL_CONDITIONS, null, 'initial')
+  }
+  const loadNext = () => {
+    if (!nextCursor || nextPending.current || status !== 'success') return
+    nextPending.current = true
+    setLoadingNext(true)
+    setNextError(false)
+    const id = generation.current
+    void source({
+      conditions: request.conditions,
+      bounds: request.bounds,
+      cursor: nextCursor,
+    })
+      .then((result) => {
+        if (generation.current !== id) return
+        setRestaurants((current) => [
+          ...new Map(
+            [...current, ...result.restaurants].map((item) => [item.id, item]),
+          ).values(),
+        ])
+        setNextCursor(result.nextCursor)
+      })
+      .catch(() => {
+        if (generation.current === id) setNextError(true)
+      })
+      .finally(() => {
+        if (generation.current === id) {
+          nextPending.current = false
+          setLoadingNext(false)
+        }
+      })
+  }
+  return {
+    draft,
+    setDraft,
+    conditions,
+    restaurants,
+    areas: AREA_MARKERS,
+    selectedRestaurant: restaurants.find(({ id }) => id === selectedId) ?? null,
+    setSelectedId,
+    handleConditionsChange,
+    handleReset,
+    searchBounds,
+    resetVersion,
+    isExploring,
+    status,
+    emptyKind,
+    emptyEvent,
+    nextCursor,
+    nextError,
+    loadingNext,
+    loadNext,
+    retry: () => {
+      setStatus('loading')
+      setRequest((current) => ({ ...current }))
+    },
+    cameraRequest,
+    searchPositions,
+    cameraSnapshot,
+    restoreCamera: (value: MapCameraSnapshot | null) => {
+      setCameraRequest(value ? { ...value } : null)
+      setIsExploring(
+        getMapDisplayMode({
+          zoom: value?.zoom ?? 11,
+          previous: isExploring ? 'restaurants' : 'areas',
+          hasConditions: !!conditions.keyword || conditions.category !== 'all',
+        }) === 'restaurants',
+      )
+    },
+    handleCameraChange: (value: MapCameraSnapshot) => {
+      camera.current = value
+      setCameraSnapshot(value)
+    },
+    handleUserMove: () => {
+      if (conditions.areaCode)
+        setConditions((current) => ({ ...current, areaCode: null }))
+    },
+    handleSearchArea: (bounds: MapBounds) =>
+      submit({ ...conditions, areaCode: null }, bounds, 'viewport'),
+    handleExplore: () => setIsExploring(true),
+    handleOverview: () => setIsExploring(false),
+    handleSelectRestaurant: (id: string) => {
+      setIsExploring(true)
+      setSelectedId(id)
+    },
+  }
+}

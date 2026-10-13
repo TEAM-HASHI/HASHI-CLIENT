@@ -11,6 +11,7 @@ const lazyRoute = <T extends LazyRouteModule>(importPage: () => Promise<T>) => {
 }
 
 const SearchPage = lazyRoute(() => import('@/pages/search'))
+const MapPage = lazyRoute(() => import('@/pages/map'))
 const ComingSoonPage = lazyRoute(() => import('@/pages/comingSoon'))
 const TodayRestaurantPage = lazyRoute(() => import('@/pages/todayRestaurant'))
 const RestaurantDetailPage = lazyRoute(() => import('@/pages/restaurantDetail'))
@@ -55,6 +56,7 @@ const lazyPage = (Page: ReturnType<typeof lazy>) => {
 }
 
 export const lazyPages = {
+  map: () => lazyPage(MapPage),
   comingSoon: () => lazyPage(ComingSoonPage),
   search: () => lazyPage(SearchPage),
   todayRestaurant: () => lazyPage(TodayRestaurantPage),

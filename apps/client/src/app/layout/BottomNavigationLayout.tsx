@@ -81,6 +81,15 @@ export const BottomNavigationLayout = () => {
         <Outlet />
       </div>
       <BottomNavigation
+        onClick={(event) => {
+          if (
+            location.pathname === ROUTES.map &&
+            event.target instanceof Element &&
+            event.target.closest('button[aria-current="page"]')
+          ) {
+            navigate(ROUTES.map, { replace: true, state: { resetMap: true } })
+          }
+        }}
         className="app-mobile-fixed-bottom"
         items={bottomNavigationItems}
         onValueChange={(value) => {
