@@ -73,6 +73,7 @@ export const useMapPreviewState = () => {
     handleSearchArea,
     isExploring,
     handleExplore: () => setIsExploring(true),
+    handleOverview: () => setIsExploring(false),
     handleSelectRestaurant: (id: string) => {
       setIsExploring(true)
       setSelectedId(id)

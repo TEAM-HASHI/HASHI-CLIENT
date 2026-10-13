@@ -14,6 +14,12 @@ export interface MapBounds {
   west: number
 }
 
+export interface MapCameraSnapshot {
+  center: MapPosition
+  zoom: number
+  bounds: MapBounds
+}
+
 export interface MapArea {
   code: string
   name: string

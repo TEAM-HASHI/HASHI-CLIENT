@@ -91,6 +91,89 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - `pnpm --filter @hashi/client lint`, `typecheck`, `build`, 관련 단위 테스트 및 지도·검색 E2E, `git diff --check`를 실행한다. 이 목록은 실행 예정이지 통과 기록이 아니다.
 - API 계약 미지원과 실제 브라우저에서 검증하지 못한 항목은 완료 보고에서 별도 표기한다. UI 테스트 통과를 실제 API 연동 완료로 표현하지 않는다.
 
+## 지도 추가 유즈케이스 Implementation Plan
+
+> For agentic workers: REQUIRED SUB-SKILL: `superpowers:executing-plans`. 아래 순서로 직접 구현하고 각 단계의 테스트 결과를 확인한다. 현재 항목은 모두 미실행이다.
+
+**Goal:** 위 추가 유즈케이스 설계를 기존 지도·검색 화면에 적용한다.
+
+**Architecture:** 페이지가 조건·결과·선택을 소유하고 카메라 훅과 세션 훅은 각각 SDK 이동과 복원을 담당한다. 공통 검색 맥락만 feature 계약으로 공유하며, 조회 구현은 샘플 데이터 경계와 실제 API를 혼합하지 않는다.
+
+**Tech Stack:** React, TypeScript, React Router, Google Maps/vis.gl, HDS DragPanel, Vitest, Playwright, pnpm.
+
+**Spec:** 이 파일의 `2026-10-13 추가 유즈케이스 설계` 절.
+
+### Global Constraints
+
+- 카테고리 순서 `전체 → 음식점 → 주점 → 카페`, 지역 묶음 줌 13 이하/개별 핀 14 이상, 소수 구간은 직전 모드 유지.
+- 최초 fit 최소 줌 보존, Google 로고·저작권 비가림, 공통 DragPanel 재사용.
+- 세션 만료 `300_000ms` 이상. 메모리만 사용하며 새 의존성을 설치하지 않는다.
+- 조회 원인에 따른 빈 결과 분기와 기획 문구를 그대로 사용한다.
+- 컬렉션·예약 신규 기능 제외. 확인되지 않은 API와 좌표를 추측하지 않는다.
+
+### Review Focus
+
+- SDK 준비 전 지역 선택/세션 복원이 최초 fit과 충돌하지 않아야 한다(Task 1, 4).
+- 모바일 패널 높이 변화로 생긴 카메라 이벤트를 사용자 이동으로 오인하지 않아야 한다(Task 1).
+- 요청 중 리셋·언마운트 시 늦은 응답과 토스트가 새 화면에 반영되지 않아야 한다(Task 2).
+- 검색 화면 새로고침·잘못된 route state는 일반 검색을 깨뜨리지 않아야 한다(Task 3).
+- 백그라운드와 라우트 이탈 이벤트가 연속되어도 만료 시각이 연장되지 않아야 한다(Task 4).
+
+### Task 1: 지도 표시 정책과 카메라
+
+**Files:** `utils/mapDisplayPolicy.ts`, `utils/mapDisplayPolicy.test.ts` 신규; `hooks/useGoogleMapCamera.ts`, 해당 테스트, `components/MapViewport.tsx`, 해당 테스트 수정. 경로는 모두 `pages/map/` 기준.
+
+**Interfaces:** `getMapDisplayMode({ zoom, previous, hasConditions }): 'areas' | 'restaurants'`; `MapCameraSnapshot = { center: MapPosition; zoom: number; bounds: MapBounds }`를 `types.ts`에 정의. 카메라는 현재 snapshot과 사용자 조작 시작/종료를 상위에 알리고 프로그램 이동은 구분한다.
+
+- [ ] 실패 테스트 추가: 무필터 줌 13→areas, 14→restaurants, 13.5→previous; 조건 적용은 항상 restaurants. SDK 준비 전 선택 후에도 최소 줌은 초기 fit 값.
+- [ ] `pnpm --filter @hashi/client test src/pages/map/utils/mapDisplayPolicy.test.ts src/pages/map/hooks/useGoogleMapCamera.test.ts src/pages/map/components/MapViewport.test.tsx` 실행, 신규 기대값 실패 확인.
+- [ ] 표시 순수 함수와 카메라 요청 처리를 구현. 패널 resize/프로그램 이동은 사용자 이동으로 분류하지 않도록 테스트 추가.
+- [ ] 같은 테스트 재실행, 전체 PASS 확인 후 변경을 `feat(apps/client): HASHI-215 지도 표시 정책 적용`으로 커밋.
+
+### Task 2: 조회 상태·재검색·상태 UI
+
+**Files:** `hooks/useMapPreviewState.ts`와 테스트를 `useMapPageState.ts`와 테스트로 대체; `components/MapSearchAreaButton.tsx`, `components/MapStatusView.tsx` 및 테스트 신규; `MapPage.tsx`, `types.ts`, `components/MapRestaurantList.tsx`, `components/MapViewport.tsx` 수정.
+
+**Interfaces:** 요청 원인 `initial | area | viewport | conditions | sort | next`; 결과 상태 `loading | success | error`; 빈 상태 `region | conditions`. `useMapPageState`는 적용 조건·결과·요청 snapshot·선택·재시도 액션을 반환한다. UI는 상태와 재시도 callback만 소비한다.
+
+- [ ] 계약 확인: 기존 generated OpenAPI와 실제 최신 명세에서 bounds/좌표/지역 집계/페이지네이션 지원을 확인. 실연동 가능 시 API 스킬 절차로 endpoint 및 테스트를 같은 단계에 포함한다. 미지원이면 현재 샘플 경계를 유지하고 미지원 항목을 보고한다.
+- [ ] 실패 테스트 추가: 카테고리 없는 이동은 버튼 숨김; 카테고리+변경 bounds만 버튼 표시; 지역 재검색 0건은 region, 카테고리 0건은 conditions; 오래된 응답/리셋 후 응답은 결과와 토스트 모두 무시; 같은 cursor 중복 요청 방지.
+- [ ] `pnpm --filter @hashi/client test src/pages/map` 실행, 신규 테스트 실패 확인.
+- [ ] 요청별 snapshot과 최신 요청 판별을 구현. 성공 시 요청 카메라 복원, 실패 시 조건 유지. 상태 UI에 확정 문구·스피너·토스트·재시도를 연결하고 테스트 대역으로 오류/추가 조회 분기를 검증한다.
+- [ ] 같은 테스트 PASS 확인 후 `feat(apps/client): HASHI-215 지도 재검색과 상태 UI 구현`으로 커밋.
+
+### Task 3: 검색 화면 왕복
+
+**Files:** `features/mapSearch/types.ts`, `features/mapSearch/utils/parseMapSearchContext.ts` 및 테스트 신규; `pages/map/components/MapToolbar.tsx`, `pages/map/MapPage.tsx`, `pages/search/SearchPage.tsx`, `pages/search/components/SearchHeader.tsx` 및 각 페이지 테스트 수정.
+
+**Interfaces:** `MapSearchContext = { source: 'map'; keyword: string }`; `parseMapSearchContext(value: unknown): MapSearchContext | null`. 복귀 payload는 검증된 keyword만 전달하고 기존 지도 조건은 세션에서 유지한다. 일반 검색 URL 규약은 유지한다.
+
+- [ ] 실패 테스트 추가: 정상 맥락만 map 복귀, null/잘못된 객체는 일반 검색 유지; 지도 검색 제출 시 카테고리 유지; X는 draft 전체 삭제; 적용 검색 해제는 카메라 유지; 결과 0/1/다수에서 유지/이동/fit 각각 확인.
+- [ ] `pnpm --filter @hashi/client test src/pages/search src/features/mapSearch src/pages/map`으로 실패 확인.
+- [ ] 기존 최근 검색·입력 검증을 재사용하고 map 맥락에서는 불필요한 일반 결과 요청을 시작하지 않는다. 검색 복귀 시 기존 히스토리 중복/뒤로가기 루프를 만들지 않는다.
+- [ ] 같은 테스트 PASS 확인 후 `feat(apps/client): HASHI-215 지도 검색 화면 연동`으로 커밋.
+
+### Task 4: 세션·상세·하단 탭 복원
+
+**Files:** `pages/map/hooks/useMapSession.ts`, 테스트 및 `pages/map/utils/mapSession.ts` 신규; `pages/map/MapPage.tsx`, `pages/map/components/MapRestaurantDetail.tsx`, `pages/map/components/MapViewport.tsx`, `app/layout/BottomNavigationLayout.tsx` 및 테스트 수정.
+
+**Interfaces:** session snapshot은 Task 1 camera, 조건, 로드된 결과, 선택, 목록/상세 패널 상태, `leftAt: number | null`을 가진다. `readMapSession(now)`는 유효 snapshot 또는 null, `leaveMapSession(now)`는 첫 이탈 시각만 기록한다. 활성 탭 재선택은 navigate state의 명시적 reset 이벤트로 전달하고 페이지에서 1회 소비한다.
+
+- [ ] 실패 테스트 추가: 299999ms 복귀 유지, 300000ms 복귀 초기화; 중복 leave는 첫 시각 유지; remount 전 초기 fit을 마친 뒤 snapshot 복원; 활성 탭 클릭만 reset; 상세 X는 선택 전 카메라·패널 복원, 상세 재진입은 기본 탭.
+- [ ] `pnpm --filter @hashi/client test src/pages/map src/app/layout/BottomNavigationLayout.test.tsx` 실행, 신규 기대값 실패 확인.
+- [ ] 메모리 세션과 수명주기 구독을 구현하고 cleanup 처리. 지도 조작 시 활성 패널 최소화, 상세의 북마크/X 교체, 확장 상세 닫기와 포커스 복원 유지.
+- [ ] 같은 테스트 PASS 확인 후 `feat(apps/client): HASHI-215 지도 세션과 상세 복원`으로 커밋.
+
+### Task 5: 통합 검증·명세 정리
+
+**Files:** `apps/client/e2e/map.spec.ts`, 검색 관련 E2E, 이 명세, `pages/search/SearchPage.spec.md`, `docs/architecture/routing-and-access-policy.md`의 영향 항목만 수정.
+
+- [ ] 지도·검색 E2E에 줌 복원/카테고리 예외, 검색 왕복, 사용자 이동 패널 축소, 빈 결과·오류 재시도, 상세 카메라 복원, 탭 재선택 시나리오 추가.
+- [ ] `pnpm --filter @hashi/client test`, `pnpm --filter @hashi/client lint`, `pnpm --filter @hashi/client typecheck`, `pnpm --filter @hashi/client build`, `pnpm --filter @hashi/client test:e2e map.spec.ts` 실행. 오류는 수정 후 해당 명령 재실행하고 미실행/실패는 명시한다.
+- [ ] 320/393/768px에서 지도·패널 터치 충돌, 귀속 표시 비가림, 키보드 닫기/재시도, reduced-motion을 확인한다. 실제 SDK 확인은 로컬 키를 노출하지 않고 수행한다.
+- [ ] 구현된 요구사항만 완료 표시하고 기존 영문 기준선의 상충 정책을 정리한다. API 미지원은 별도 남긴다. `pnpm exec prettier apps/client/src/pages/map/MapPage.spec.md --check`와 `git diff --check` 통과 확인.
+- [ ] 전체 변경을 검토하고 잔여 이슈를 보고한다. 검증되지 않은 API 기능은 완료로 표시하지 않는다. 마지막 테스트·명세 변경 커밋 후 푸시는 별도 요청에 따른다.
+
 ## Purpose / Route
 
 - `/map` (`ROUTES.map`), public, lazy page under BottomNavigationLayout. No new guard, redirect or query parameter.

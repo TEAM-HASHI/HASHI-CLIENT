@@ -100,6 +100,10 @@ export const MapPage = () => {
           }}
           zoomed={state.isExploring}
           onExplore={state.handleExplore}
+          onOverview={state.handleOverview}
+          hasConditions={
+            state.conditions.category !== 'all' || !!state.conditions.keyword
+          }
           panelHeight={
             state.selectedRestaurant
               ? detailStage === 'collapsed'

@@ -28,6 +28,7 @@ vi.mock('@vis.gl/react-google-maps', () => ({
           onIdle({
             map: {
               getZoom: () => 11,
+              getCenter: () => ({ toJSON: () => ({ lat: 35.5, lng: 139.5 }) }),
               getBounds: () => ({
                 toJSON: () => ({ north: 36, south: 35, west: 139, east: 140 }),
               }),
@@ -42,6 +43,7 @@ vi.mock('@vis.gl/react-google-maps', () => ({
           onIdle({
             map: {
               getZoom: () => sdk.zoom,
+              getCenter: () => ({ toJSON: () => ({ lat: 36.5, lng: 140.5 }) }),
               getBounds: () => ({
                 toJSON: () => ({ north: 37, south: 36, west: 140, east: 141 }),
               }),
@@ -70,12 +72,44 @@ const props = {
   onSaved: vi.fn(),
   onSearchArea: vi.fn(),
   onExplore: vi.fn(),
+  onOverview: vi.fn(),
 }
 beforeEach(() => {
   vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
   vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
   sdk.status = 'LOADED'
   sdk.zoom = 12
+})
+
+it('restores region mode when the user zooms back out without conditions', () => {
+  render(<MapViewport {...props} zoomed />)
+  fireEvent.click(screen.getByText('초기 idle'))
+  sdk.zoom = 13
+  fireEvent.wheel(screen.getByText('이동 idle'))
+  fireEvent.click(screen.getByText('이동 idle'))
+  expect(props.onOverview).toHaveBeenCalledOnce()
+})
+
+it('reports camera snapshots but does not collapse panels for resize-only idle', () => {
+  const onCameraChange = vi.fn()
+  const onUserMove = vi.fn()
+  render(
+    <MapViewport
+      {...props}
+      onCameraChange={onCameraChange}
+      onUserMove={onUserMove}
+    />,
+  )
+  fireEvent.click(screen.getByText('초기 idle'))
+  fireEvent.click(screen.getByText('이동 idle'))
+  expect(onUserMove).not.toHaveBeenCalled()
+  expect(onCameraChange).toHaveBeenLastCalledWith({
+    center: { lat: 36.5, lng: 140.5 },
+    zoom: 12,
+    bounds: { north: 37, south: 36, west: 140, east: 141 },
+  })
+  fireEvent.wheel(screen.getByText('이동 idle'))
+  expect(onUserMove).toHaveBeenCalledOnce()
 })
 
 it('enters exploration only after user zoom reaches the neighborhood threshold', () => {

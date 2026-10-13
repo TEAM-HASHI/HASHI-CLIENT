@@ -12,9 +12,11 @@ import { MapAreaMarker } from '@/pages/map/components/MapAreaMarker'
 import { MapRestaurantMarker } from '@/pages/map/components/MapRestaurantMarker'
 import { useGoogleMapCamera } from '@/pages/map/hooks/useGoogleMapCamera'
 import { layoutMapAreaLabels } from '@/pages/map/utils/layoutMapAreaLabels'
+import { getMapDisplayMode } from '@/pages/map/utils/mapDisplayPolicy'
 import type {
   MapAreaMarkerData,
   MapBounds,
+  MapCameraSnapshot,
   MapRestaurant,
 } from '@/pages/map/types'
 
@@ -30,11 +32,13 @@ interface MapViewportProps {
   onSelectArea: (code: string) => void
   onSearchArea: (bounds: MapBounds) => void
   onExplore: () => void
+  onOverview?: () => void
+  hasConditions?: boolean
+  onCameraChange?: (camera: MapCameraSnapshot) => void
+  onUserMove?: () => void
   onResetArea: () => void
   onSaved: () => void
 }
-
-const INDIVIDUAL_PINS_ZOOM = 14
 
 const MapFailure = ({ configuration = false }: { configuration?: boolean }) => (
   <div
@@ -68,6 +72,10 @@ const GoogleMapSurface = ({
   onSelectArea,
   onSearchArea,
   onExplore,
+  onOverview,
+  hasConditions = false,
+  onCameraChange,
+  onUserMove,
 }: MapViewportProps) => {
   const status = useApiLoadingStatus()
   const [currentBounds, setCurrentBounds] = useState<MapBounds | null>(null)
@@ -123,8 +131,10 @@ const GoogleMapSurface = ({
           ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(
             event.key,
           )
-        )
+        ) {
           userMovedRef.current = true
+          onUserMove?.()
+        }
       }}
     >
       {!failed && (
@@ -139,21 +149,28 @@ const GoogleMapSurface = ({
           maxZoom={20}
           onDragstart={() => {
             userMovedRef.current = true
+            onUserMove?.()
           }}
           onZoomChanged={() => {
-            if (!programmaticMoveRef.current) userMovedRef.current = true
+            if (!programmaticMoveRef.current) {
+              userMovedRef.current = true
+              onUserMove?.()
+            }
           }}
           onIdle={({ map }) => {
             const bounds = map.getBounds()?.toJSON()
             if (!bounds) return
             const nextZoom = map.getZoom() ?? 11
-            if (
-              !zoomed &&
-              !programmaticMoveRef.current &&
-              userMovedRef.current &&
-              nextZoom >= INDIVIDUAL_PINS_ZOOM
-            ) {
-              onExplore()
+            const center = map.getCenter()?.toJSON()
+            if (center) onCameraChange?.({ center, zoom: nextZoom, bounds })
+            if (!programmaticMoveRef.current && userMovedRef.current) {
+              const mode = getMapDisplayMode({
+                zoom: nextZoom,
+                previous: zoomed ? 'restaurants' : 'areas',
+                hasConditions,
+              })
+              if (mode === 'restaurants' && !zoomed) onExplore()
+              if (mode === 'areas' && zoomed) onOverview?.()
             }
             setCurrentBounds(bounds)
             if (
