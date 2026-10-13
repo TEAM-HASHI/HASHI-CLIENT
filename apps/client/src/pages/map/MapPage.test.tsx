@@ -51,6 +51,7 @@ describe('MapPage preview', () => {
   it('returns from an expanded list to the map without clearing filters or scroll', async () => {
     const user = userEvent.setup()
     render(<MapPage />)
+    await screen.findByRole('list', { name: '식당 검색 결과' })
     expect(
       screen.queryByRole('button', { name: '지도로 보기' }),
     ).not.toBeInTheDocument()
@@ -82,6 +83,7 @@ describe('MapPage preview', () => {
   it('discloses preview data and keeps the real panel keyboard-operable', async () => {
     const user = userEvent.setup()
     render(<MapPage />)
+    await screen.findByRole('list', { name: '식당 검색 결과' })
     expect(
       screen.getByText('샘플 식당 · 실제 매장 위치/예약 미연동'),
     ).toBeInTheDocument()
@@ -102,6 +104,7 @@ describe('MapPage preview', () => {
   it('filters categories, toggles back, and resets an empty submitted search', async () => {
     const user = userEvent.setup()
     render(<MapPage />)
+    await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(screen.getByRole('button', { name: '카페' }))
     expect(
       screen.queryByRole('button', {
@@ -122,6 +125,7 @@ describe('MapPage preview', () => {
   it('sorts the sample list and closes the sort menu on selection', async () => {
     const user = userEvent.setup()
     render(<MapPage />)
+    await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(screen.getByRole('button', { name: '정렬: 추천순' }))
     await user.click(screen.getByRole('menuitemradio', { name: '별점순' }))
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
@@ -134,6 +138,7 @@ describe('MapPage preview', () => {
   it('preserves the list scroll when collapsing but resets it after a filter change', async () => {
     const user = userEvent.setup()
     render(<MapPage />)
+    await screen.findByRole('list', { name: '식당 검색 결과' })
     const list = screen.getByRole('list', { name: '식당 검색 결과' })
     const scroller = list.closest('[data-map-list]')!.parentElement!
     fireEvent.scroll(scroller, { target: { scrollTop: 180 } })
@@ -152,6 +157,7 @@ describe('MapPage preview', () => {
   it('opens a selected restaurant, expands details, switches tabs and returns to its filtered list', async () => {
     const user = userEvent.setup()
     render(<MapPage />)
+    await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(screen.getByRole('button', { name: '시부야 식당 보기' }))
     await user.click(
       screen.getByRole('button', { name: '야키니쿠 리키마루 상세 보기' }),
@@ -178,6 +184,7 @@ describe('MapPage preview', () => {
   it('clears the selected restaurant when the category changes', async () => {
     const user = userEvent.setup()
     render(<MapPage />)
+    await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(
       screen.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
     )
@@ -193,6 +200,7 @@ describe('MapPage preview', () => {
   it('opens the chosen photo and restores focus to its thumbnail after Escape', async () => {
     const user = userEvent.setup()
     render(<MapPage />)
+    await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(
       screen.getByRole('button', { name: '야키니쿠 리키마루 상세 보기' }),
     )
@@ -213,6 +221,7 @@ describe('MapPage preview', () => {
   it('does not pretend saving or reserving a preview restaurant succeeded', async () => {
     const user = userEvent.setup()
     render(<MapPage />)
+    await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(
       screen.getByRole('button', { name: '코코네 돈카츠 신도심점 저장' }),
     )

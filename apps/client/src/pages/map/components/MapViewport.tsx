@@ -1,5 +1,7 @@
 import { BackIcon, SaveIcon } from '@hashi/hds-icons'
-import { Button, IconButton } from '@hashi/hds-ui'
+import { IconButton } from '@hashi/hds-ui'
+import { MapStatusView } from '@/pages/map/components/MapStatusView'
+import { MapSearchAreaButton } from '@/pages/map/components/MapSearchAreaButton'
 import {
   APIProvider,
   APILoadingStatus,
@@ -34,30 +36,24 @@ interface MapViewportProps {
   onExplore: () => void
   onOverview?: () => void
   hasConditions?: boolean
+  hasCategory?: boolean
   onCameraChange?: (camera: MapCameraSnapshot) => void
   onUserMove?: () => void
+  cameraRequest?: MapCameraSnapshot | null
   onResetArea: () => void
   onSaved: () => void
 }
 
 const MapFailure = ({ configuration = false }: { configuration?: boolean }) => (
-  <div
-    role="alert"
-    className="absolute inset-x-5 top-40 rounded-lg bg-white p-4 text-center shadow"
-  >
-    <p className="typo-body-6">
-      {configuration
-        ? '지도 설정을 확인해주세요.'
-        : '지도를 불러오지 못했어요.'}
-    </p>
-    <p className="typo-caption-2 text-cool-gray-600 mt-2">
-      {configuration
-        ? '지도 API 키와 Map ID가 필요해요.'
-        : '네트워크 또는 지도 API 설정을 확인한 뒤 다시 시도해주세요.'}
-    </p>
-    <Button className="mt-3" onClick={() => window.location.reload()}>
-      다시 시도
-    </Button>
+  <div className="absolute inset-0 flex items-center justify-center bg-white">
+    <MapStatusView
+      message={
+        configuration
+          ? '지도 설정을 확인해주세요.'
+          : '지도를 불러오지 못했어요.'
+      }
+      onRetry={() => window.location.reload()}
+    />
   </div>
 )
 
@@ -74,8 +70,10 @@ const GoogleMapSurface = ({
   onExplore,
   onOverview,
   hasConditions = false,
+  hasCategory = false,
   onCameraChange,
   onUserMove,
+  cameraRequest,
 }: MapViewportProps) => {
   const status = useApiLoadingStatus()
   const [currentBounds, setCurrentBounds] = useState<MapBounds | null>(null)
@@ -110,6 +108,7 @@ const GoogleMapSurface = ({
       areas.find(({ code }) => code === areaCode)?.position,
       restaurants.find(({ id }) => id === selectedId)?.position,
       resetVersion,
+      cameraRequest,
     )
   const failed =
     authFailed ||
@@ -243,28 +242,28 @@ const GoogleMapSurface = ({
         </GoogleMap>
       )}
       {!ready && !failed && (
-        <p
-          role="status"
-          className="absolute inset-x-5 top-40 rounded-lg bg-white p-4 text-center"
-        >
-          지도를 불러오고 있어요.
-        </p>
-      )}
-      {failed && <MapFailure />}
-      {ready && !failed && hasUserMoved && boundsChanged && currentBounds && (
-        <div className="absolute inset-x-0 bottom-8 text-center">
-          <Button
-            onClick={() => {
-              userMovedRef.current = false
-              setHasUserMoved(false)
-              setSearchedBounds(currentBounds)
-              onSearchArea(currentBounds)
-            }}
-          >
-            현 지도에서 검색
-          </Button>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <MapStatusView loading message="지도를 불러오고 있어요." />
         </div>
       )}
+      {failed && <MapFailure />}
+      {ready &&
+        !failed &&
+        hasCategory &&
+        hasUserMoved &&
+        boundsChanged &&
+        currentBounds && (
+          <div className="absolute inset-x-0 bottom-8 text-center">
+            <MapSearchAreaButton
+              onClick={() => {
+                userMovedRef.current = false
+                setHasUserMoved(false)
+                setSearchedBounds(currentBounds)
+                onSearchArea(currentBounds)
+              }}
+            />
+          </div>
+        )}
     </div>
   )
 }

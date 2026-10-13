@@ -1,5 +1,5 @@
-import { DragPanel } from '@hashi/hds-ui'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { DragPanel, showToast } from '@hashi/hds-ui'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { MapViewport } from '@/pages/map/components/MapViewport'
 import { MapToolbar } from '@/pages/map/components/MapToolbar'
@@ -8,12 +8,12 @@ import { MapRestaurantList } from '@/pages/map/components/MapRestaurantList'
 import { MapRestaurantDetail } from '@/pages/map/components/MapRestaurantDetail'
 import { MapPhotoViewer } from '@/pages/map/components/MapPhotoViewer'
 import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
-import { useMapPreviewState } from '@/pages/map/hooks/useMapPreviewState'
+import { useMapPageState } from '@/pages/map/hooks/useMapPageState'
 import type { MapConditions, MapPanelStage } from '@/pages/map/types'
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 
 export const MapPage = () => {
-  const state = useMapPreviewState()
+  const state = useMapPageState()
   const { containerRef, availableHeight } = useMapPanelLayout()
   const [stage, setStage] = useState<MapPanelStage>('normal')
   const [comingSoon, setComingSoon] = useState(false)
@@ -24,6 +24,19 @@ export const MapPage = () => {
   const photoTriggerRef = useRef<HTMLElement | null>(null)
   const sortTriggerRef = useRef<HTMLButtonElement | null>(null)
   const restoreSortFocus = useRef(false)
+  const lastEmptyEvent = useRef<number | null>(null)
+  useEffect(() => {
+    if (!state.emptyEvent || lastEmptyEvent.current === state.emptyEvent.id)
+      return
+    lastEmptyEvent.current = state.emptyEvent.id
+    const isRegion = state.emptyEvent.kind === 'region'
+    setStage(isRegion ? 'collapsed' : 'normal')
+    showToast({
+      children: isRegion
+        ? '이 지역에는 아직 등록된 맛집이 없어요.'
+        : '조건에 맞는 맛집이 없어요.',
+    })
+  }, [state.emptyEvent])
   useLayoutEffect(() => {
     if (restoreSortFocus.current) {
       sortTriggerRef.current?.focus({ preventScroll: true })
@@ -101,6 +114,14 @@ export const MapPage = () => {
           zoomed={state.isExploring}
           onExplore={state.handleExplore}
           onOverview={state.handleOverview}
+          onCameraChange={state.handleCameraChange}
+          cameraRequest={state.cameraRequest}
+          onUserMove={() => {
+            state.handleUserMove()
+            if (state.selectedRestaurant) setDetailStage('collapsed')
+            else setStage('collapsed')
+          }}
+          hasCategory={state.conditions.category !== 'all'}
           hasConditions={
             state.conditions.category !== 'all' || !!state.conditions.keyword
           }
@@ -153,6 +174,12 @@ export const MapPage = () => {
             }
           >
             <MapRestaurantList
+              status={state.status}
+              onRetry={state.retry}
+              nextCursor={state.nextCursor}
+              nextError={state.nextError}
+              loadingNext={state.loadingNext}
+              onLoadNext={state.loadNext}
               restaurants={state.restaurants}
               sort={state.conditions.sort}
               filtered={filtered}

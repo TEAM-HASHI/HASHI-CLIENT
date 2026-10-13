@@ -1,12 +1,17 @@
 import { useMap } from '@vis.gl/react-google-maps'
 import { useEffect, useRef, useState } from 'react'
-import type { MapAreaMarkerData, MapPosition } from '@/pages/map/types'
+import type {
+  MapAreaMarkerData,
+  MapPosition,
+  MapCameraSnapshot,
+} from '@/pages/map/types'
 
 export const useGoogleMapCamera = (
   areas: MapAreaMarkerData[],
   areaPosition: MapPosition | undefined,
   selectedPosition: MapPosition | undefined,
   resetVersion: number,
+  cameraRequest?: MapCameraSnapshot | null,
 ) => {
   const map = useMap()
   const userMoved = useRef(false)
@@ -50,5 +55,14 @@ export const useGoogleMapCamera = (
     map.panTo(selectedPosition)
     if ((map.getZoom() ?? 0) < 15) map.setZoom(15)
   }, [map, overviewReady, selectedPosition])
+  useEffect(() => {
+    if (!map || !overviewReady || !cameraRequest) return
+    userMoved.current = false
+    programmaticMove.current = true
+    map.moveCamera({
+      center: cameraRequest.center,
+      zoom: Math.max(minimumZoom.current ?? 0, cameraRequest.zoom),
+    })
+  }, [map, overviewReady, cameraRequest])
   return { userMoved, programmaticMove }
 }

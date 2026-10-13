@@ -140,19 +140,19 @@ afterEach(() => {
 })
 
 it('does not search on idle, and submits the latest bounds only after a click', () => {
-  render(<MapViewport {...props} />)
+  render(<MapViewport {...props} hasCategory />)
   fireEvent.click(screen.getByText('초기 idle'))
   expect(
-    screen.queryByRole('button', { name: '현 지도에서 검색' }),
+    screen.queryByRole('button', { name: '현재 위치에서 검색' }),
   ).not.toBeInTheDocument()
   fireEvent.click(screen.getByText('이동 idle'))
   expect(
-    screen.queryByRole('button', { name: '현 지도에서 검색' }),
+    screen.queryByRole('button', { name: '현재 위치에서 검색' }),
   ).not.toBeInTheDocument()
   fireEvent.wheel(screen.getByText('초기 idle'))
   fireEvent.click(screen.getByText('초기 idle'))
   expect(props.onSearchArea).not.toHaveBeenCalled()
-  fireEvent.click(screen.getByRole('button', { name: '현 지도에서 검색' }))
+  fireEvent.click(screen.getByRole('button', { name: '현재 위치에서 검색' }))
   expect(props.onSearchArea).toHaveBeenCalledExactlyOnceWith({
     north: 36,
     south: 35,
@@ -160,7 +160,17 @@ it('does not search on idle, and submits the latest bounds only after a click', 
     east: 140,
   })
   expect(
-    screen.queryByRole('button', { name: '현 지도에서 검색' }),
+    screen.queryByRole('button', { name: '현재 위치에서 검색' }),
+  ).not.toBeInTheDocument()
+})
+
+it('does not offer viewport search without a category even after user movement', () => {
+  render(<MapViewport {...props} />)
+  fireEvent.click(screen.getByText('초기 idle'))
+  fireEvent.wheel(screen.getByText('이동 idle'))
+  fireEvent.click(screen.getByText('이동 idle'))
+  expect(
+    screen.queryByRole('button', { name: /(?:현재 위치|현 지도)에서 검색/ }),
   ).not.toBeInTheDocument()
 })
 
@@ -179,7 +189,7 @@ it.each(['FAILED', 'AUTH_FAILURE'])(
     expect(screen.getByRole('alert')).toHaveTextContent(
       '지도를 불러오지 못했어요',
     )
-    expect(screen.getByRole('button', { name: '다시 시도' })).toBeVisible()
+    expect(screen.getByRole('button', { name: '다시 시도하기' })).toBeVisible()
   },
 )
 
@@ -205,11 +215,11 @@ it('does not offer another search when a gesture leaves the bounds unchanged', (
   fireEvent.wheel(screen.getByText('초기 idle'))
   fireEvent.click(screen.getByText('초기 idle'))
   expect(
-    screen.queryByRole('button', { name: '현 지도에서 검색' }),
+    screen.queryByRole('button', { name: '현재 위치에서 검색' }),
   ).not.toBeInTheDocument()
   fireEvent.click(screen.getByText('이동 idle'))
   expect(
-    screen.queryByRole('button', { name: '현 지도에서 검색' }),
+    screen.queryByRole('button', { name: '현재 위치에서 검색' }),
   ).not.toBeInTheDocument()
 })
 
@@ -220,7 +230,7 @@ it('offers recovery when SDK loading times out', () => {
     render(<MapViewport {...props} />)
     act(() => vi.advanceTimersByTime(15000))
     expect(screen.getByRole('alert')).toBeVisible()
-    expect(screen.getByRole('button', { name: '다시 시도' })).toBeVisible()
+    expect(screen.getByRole('button', { name: '다시 시도하기' })).toBeVisible()
   } finally {
     vi.useRealTimers()
   }
@@ -232,6 +242,6 @@ it('does not treat a stationary background tap followed by resizing as a search 
   fireEvent.pointerDown(screen.getByText('초기 idle').parentElement!)
   fireEvent.click(screen.getByText('이동 idle'))
   expect(
-    screen.queryByRole('button', { name: '현 지도에서 검색' }),
+    screen.queryByRole('button', { name: '현재 위치에서 검색' }),
   ).not.toBeInTheDocument()
 })

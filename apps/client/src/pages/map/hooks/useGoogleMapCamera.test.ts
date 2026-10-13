@@ -28,6 +28,25 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
+it('waits for initial fitting before restoring a requested camera', () => {
+  const snapshot = {
+    center: { lat: 35.71, lng: 139.71 },
+    zoom: 14,
+    bounds: { north: 36, south: 35, west: 139, east: 140 },
+  }
+  const areas = [
+    { code: 'a', name: 'A', restaurantCount: 1, position: snapshot.center },
+  ]
+  renderHook(() => useGoogleMapCamera(areas, undefined, undefined, 0, snapshot))
+  expect(sdk.map.moveCamera).not.toHaveBeenCalled()
+  act(() => sdk.idle())
+  expect(sdk.map.moveCamera).toHaveBeenCalledWith({
+    center: snapshot.center,
+    zoom: 14,
+  })
+  expect(sdk.map.setOptions).toHaveBeenCalledWith({ minZoom: 11.75 })
+})
+
 it('locks zoom-out to the fitted overview, not a fixed distant zoom', () => {
   renderHook(() =>
     useGoogleMapCamera(

@@ -3,6 +3,7 @@ import type { RefObject } from 'react'
 
 import { MapRestaurantCard } from '@/pages/map/components/MapRestaurantCard'
 import { MapSortMenu } from '@/pages/map/components/MapSortMenu'
+import { MapStatusView } from '@/pages/map/components/MapStatusView'
 import type { MapRestaurant, MapSort } from '@/pages/map/types'
 
 interface MapRestaurantListProps {
@@ -14,6 +15,12 @@ interface MapRestaurantListProps {
   onSelect: (id: string) => void
   onSave: () => void
   onReset: () => void
+  status?: 'loading' | 'success' | 'error'
+  onRetry?: () => void
+  nextCursor?: string
+  nextError?: boolean
+  loadingNext?: boolean
+  onLoadNext?: () => void
 }
 
 export const MapRestaurantList = ({
@@ -25,6 +32,12 @@ export const MapRestaurantList = ({
   onSelect,
   onSave,
   onReset,
+  status = 'success',
+  onRetry,
+  nextCursor,
+  nextError,
+  loadingNext,
+  onLoadNext,
 }: MapRestaurantListProps) => (
   <div className="px-5 pb-5" data-map-list="">
     <div className="flex items-center justify-between gap-2">
@@ -37,7 +50,17 @@ export const MapRestaurantList = ({
         triggerRef={sortTriggerRef}
       />
     </div>
-    {restaurants.length ? (
+    {status !== 'success' ? (
+      <MapStatusView
+        loading={status === 'loading'}
+        message={
+          status === 'loading'
+            ? '식당 목록을 불러오고 있어요.'
+            : '식당 목록을 불러오지 못했어요.'
+        }
+        onRetry={status === 'error' ? onRetry : undefined}
+      />
+    ) : restaurants.length ? (
       <ul aria-label="식당 검색 결과">
         {restaurants.map((restaurant, index) => (
           <li key={restaurant.id}>
@@ -57,6 +80,11 @@ export const MapRestaurantList = ({
           검색 조건 초기화
         </Button>
       </div>
+    )}
+    {status === 'success' && nextCursor && (
+      <Button onClick={onLoadNext} disabled={loadingNext}>
+        {nextError ? '다시 시도하기' : loadingNext ? '불러오는 중' : '더 보기'}
+      </Button>
     )}
   </div>
 )
