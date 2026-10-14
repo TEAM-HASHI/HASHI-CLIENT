@@ -99,6 +99,7 @@ export const SearchBar = ({
     <div
       className={cn(
         'bg-primary-100 flex h-11.25 w-full items-center gap-2 rounded-[10px] px-3',
+        'transition-colors duration-150 ease-out motion-reduce:transition-none',
         'not-data-[disabled=true]:hover:bg-warm-gray-50 not-data-[disabled=true]:active:bg-warm-gray-100',
         'data-[disabled=true]:opacity-40',
         className,

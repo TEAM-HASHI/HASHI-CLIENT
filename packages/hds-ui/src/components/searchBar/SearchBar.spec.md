@@ -46,6 +46,7 @@ Jira: HASHI-218
 
 - w-full, 높이 45px, radius 10px, primary-100 배경, 좌우 여백 12px.
 - 활성 상태의 Hover 배경은 warm-gray-50, Pressed 배경은 warm-gray-100입니다. 비활성 상태에는 적용하지 않습니다.
+- 색상은 150ms ease-out으로 전환하며, 모션 감소 설정에서는 전환 효과를 사용하지 않습니다.
 - 검색·지우기 아이콘은 HDS SearchIcon·CancelIcon, 각각 24px. 아이콘과 입력 간격은 8px입니다.
 - Body 4, 본문 black, placeholder warm-gray-300.
 - input은 min-w-0, flex-1이며 아이콘과 버튼은 축소하지 않습니다.
