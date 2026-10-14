@@ -47,7 +47,7 @@ export const NoticeDetailPage = () => {
   const notice = noticeQuery.data
 
   return (
-    <div className="min-h-dvh bg-white pt-18.75">
+    <div className="app-mobile-bottom-nav-content bg-white pt-18.75">
       <Header
         className="app-mobile-fixed-top z-fixed fixed"
         leftAction={
@@ -66,16 +66,16 @@ export const NoticeDetailPage = () => {
         title="공지사항"
       />
       {notice ? (
-        <article className="px-5 pt-6 pb-10">
-          <h1 className="typo-sub-header-2 break-keep text-black">
-            {notice.title}
-          </h1>
-          <p className="typo-body-6 text-primary-200 mt-2">
-            {formatNoticeLastUpdatedDate(notice)}
-          </p>
-          <div className="mt-7">
-            <NoticeContent html={notice.content} />
+        <article className="px-5 pb-10">
+          <div className="flex min-h-25 flex-col justify-center gap-2 py-6">
+            <h1 className="typo-sub-header-2 leading-[1.27] break-keep text-black">
+              {notice.title}
+            </h1>
+            <p className="typo-body-6 text-primary-200 leading-[1.38]">
+              {formatNoticeLastUpdatedDate(notice)}
+            </p>
           </div>
+          <NoticeContent html={notice.content} />
           {notice.images.length > 0 ? (
             <ul className="mt-5 flex flex-col gap-2">
               {notice.images.map((image, index) => (
