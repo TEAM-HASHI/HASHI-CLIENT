@@ -128,9 +128,11 @@ NoticesPage
 
 ## Styling
 
-- 행: 좌우 20px, 상하 28px, 제목·날짜 간격 8px, `secondary-200` 하단 구분선
+- 행: 좌우 20px, 상하 28px, 제목·날짜 간격 8px, `warm-gray-100` 하단 구분선
 - 제목: `typo-sub-header-2 text-black truncate` (Figma 16px/600 `#101010`)
-- 날짜: `typo-body-6 text-primary-200` (Figma 목록 날짜의 `Primary_200` 적용, 2026-09-30 확인)
+- 날짜: `typo-body-7 text-primary-200` (14px Regular, 2026-10-14 확인)
+- 화살표: `NextIcon` 24px, `text-cool-gray-900`, 제목 영역 상단 정렬
+- 페이지 최소 높이: `app-mobile-bottom-nav-content`로 하단 내비게이션 높이를 제외한다.
 
 - 다음 아이콘: 24px (`size-6`)
 

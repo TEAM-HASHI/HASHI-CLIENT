@@ -105,8 +105,11 @@ NoticeDetailPage
 
 ## Styling
 
-- 본문 영역 좌우 20px, 상단 24px
-- 제목 `typo-sub-header-2 text-black`, 날짜 `typo-body-6 text-primary-200` (Figma 날짜 레이어 `8317-34300`, 2026-09-30 확인)
+- 콘텐츠 영역 좌우 20px
+- 제목·날짜는 헤더 아래 최소 100px 영역에서 세로 가운데 정렬하고, 서로 8px 간격을 둔다. 긴 제목은 영역 높이가 늘어나며 본문을 아래로 밀어낸다.
+- 제목 `typo-sub-header-2 text-black leading-[1.27]`, 날짜 `typo-body-6 text-primary-200 leading-[1.38]` (14px Medium, Figma 날짜 레이어 `8317-34300`, 2026-10-14 확인)
+- 한 줄 제목 기준 본문은 헤더 하단에서 100px 아래에 시작한다.
+- 페이지 최소 높이는 `app-mobile-bottom-nav-content`로 하단 내비게이션 높이를 제외한다.
 - 본문 `typo-caption-2` + 행간 150% + `text-black` (Figma Caption 2, `#000`), 목록 들여쓰기 18px
 - 첨부 이미지: 본문과 20px 간격, 이미지 사이 8px
 
