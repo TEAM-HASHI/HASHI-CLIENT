@@ -9,6 +9,7 @@ Jira: HASHI-218
 ## Figma References
 
 - [검색 입력 및 X 버튼](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=6977-62334&m=dev)
+- [기본·Hover·Pressed 상태](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=6951-4909&m=dev)
 - 개발에서 정한 `SearchBar` 이름을 유지합니다. `SearchField`와 `SearchFieldProps`는 호환 alias입니다.
 - 뒤로가기 버튼은 호출부에서 `IconButton`과 조합합니다.
 
@@ -44,7 +45,7 @@ Jira: HASHI-218
 ## Styling And Accessibility
 
 - w-full, 높이 45px, radius 10px, primary-100 배경, 좌우 여백 12px.
-- 상태 전환으로 배경색을 변경하지 않습니다.
+- 활성 상태의 Hover 배경은 warm-gray-50, Pressed 배경은 warm-gray-100입니다. 비활성 상태에는 적용하지 않습니다.
 - 검색·지우기 아이콘은 HDS SearchIcon·CancelIcon, 각각 24px. 아이콘과 입력 간격은 8px입니다.
 - Body 4, 본문 black, placeholder warm-gray-300.
 - input은 min-w-0, flex-1이며 아이콘과 버튼은 축소하지 않습니다.
@@ -53,6 +54,6 @@ Jira: HASHI-218
 
 ## Storybook And Verification
 
-Default, WithValue, WithoutIcon, Disabled, FocusState, 긴 입력·placeholder, 좁은 화면, Controlled, Uncontrolled, FormReset 상태를 확인합니다.
+Default, WithValue, WithoutIcon, Disabled, FocusState, 긴 입력·placeholder, 좁은 화면, Controlled, FormReset 상태를 확인합니다. WithValue는 비제어형 입력 예제입니다.
 
 자동 테스트는 제어형·비제어형 초기화, 부모 상태 유지, 폼 제출 방지, 포커스 복원, 폼 reset·취소 및 callback ref 생명주기를 검증합니다. 단순 스타일 클래스와 조건별 버튼 표시 테스트는 두지 않습니다.
