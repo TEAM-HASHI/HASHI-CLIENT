@@ -67,6 +67,10 @@ export const appRoutes: RouteObject[] = [
         element: withSilentLazyFallback(lazyPages.popularRestaurants()),
       },
       {
+        path: ROUTES.hotSnsRestaurants,
+        element: withSilentLazyFallback(lazyPages.hotSnsRestaurants()),
+      },
+      {
         path: ROUTES.magazines,
         element: withLazyFallback(lazyPages.magazines()),
       },

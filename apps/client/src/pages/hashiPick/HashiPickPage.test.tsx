@@ -243,9 +243,12 @@ describe('HashiPickPage', () => {
       await screen.findByRole('button', { name: /히마와리 스시 11 / })
       fireEvent.click(screen.getByRole('button', { name: /히마와리 스시 11 / }))
       if (storageFull) {
+        const storageKey = Array.from(
+          { length: sessionStorage.length },
+          (_, index) => sessionStorage.key(index),
+        ).find((key) => key?.startsWith('hashi:restaurant-list:hashi-pick:'))
         const saved = JSON.parse(
-          sessionStorage.getItem('hashi:restaurant-list:hashi-pick:default') ??
-            'null',
+          sessionStorage.getItem(storageKey ?? '') ?? 'null',
         )
         expect(saved.pageCount).toBe(2)
         expect(saved.data).toBeUndefined()
