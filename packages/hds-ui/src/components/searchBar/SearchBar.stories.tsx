@@ -134,12 +134,6 @@ export const Controlled: Story = {
   render: ControlledSearchBar,
 }
 
-export const Uncontrolled: Story = {
-  args: {
-    defaultValue: '텍스트',
-  },
-}
-
 export const FormReset: Story = {
   args: {
     defaultValue: '텍스트',
