@@ -41,6 +41,7 @@ Jira: HASHI-207
 ## Requirements
 
 - [x] Header에 뒤로가기, 약관 제목, `최종 업데이트: YYYY. MM. DD` 부제를 표시한다.
+- [x] 서비스 운영정책은 목록에서 `서비스 운영정책`, 상세 헤더에서 `서비스 운영 정책`으로 표시한다.
 - [x] 조항은 HDS `Accordion`으로 표시하고 기본은 모두 접힌 상태다.
 - [x] 조항을 펼치면 문단과 번호/불릿 목록(중첩 포함)을 표시한다.
 - [x] 존재하지 않는 `policyId`는 `NotFoundPage`를 표시한다.
@@ -101,7 +102,12 @@ TermsDetailPage
 
 - Accordion 본문은 HDS 기본 `typo-caption-2 text-warm-gray-300 leading-[1.5]` (12px, 줄높이 18px)를 사용하며 페이지에서 `contentClassName`으로 덮어쓰지 않는다.
 - 본문 스타일 기준: Figma `UI [디자인 2차 스프린트]` 본문 텍스트 (node `9343-111141`), 2026-10-14 확인
-- 목록은 `list-decimal` / `list-disc`, 들여쓰기 20px
+- 목록은 `list-decimal` / `list-disc`, 들여쓰기 18px이며 항목 사이에 추가 간격을 두지 않는다.
+- Hashi 이용약관 제2조의 안내 문장 뒤에는 원문의 빈 줄을 `blankLineAfter`로 표시해 18px 여백을 둔다. 다른 문단에는 일괄 간격을 추가하지 않는다.
+- Header와 조항 목록 사이 간격은 24px이다.
+- 접힌 Accordion 행 높이는 48px이다. 공통 컴포넌트는 변경하지 않고 페이지에서 `pb-1.75`로 테두리를 포함한 높이를 보정한다.
+- Hashi 이용약관 헤더의 제목·부제는 `text-black`, 나머지 약관은 Header 기본 `text-primary-200`을 사용한다.
+- 페이지 최소 높이는 `app-mobile-bottom-nav-content`로 하단 내비게이션 영역을 제외한다.
 - fixed area: Header `app-mobile-fixed-top`, 하단 네비게이션은 layout이 담당
 
 ## Content Source
@@ -115,6 +121,9 @@ TermsDetailPage
 - Figma 상세 헤더의 `최종 업데이트: 2006. 06. 29`는 오타로 보고 목록의 시행일 `2026.06.29`를 사용한다.
 
 ## Verification
+
+- 단순 표시·이동 및 공통 Accordion 동작을 반복 검증하는 페이지 테스트는 유지하지 않는다.
+- 약관 데이터 테스트는 전체 조항의 번호 연속성과 본문 블록 누락을 검사한다.
 
 - [x] `pnpm --filter @hashi/client lint`
 - [x] `pnpm --filter @hashi/client typecheck`

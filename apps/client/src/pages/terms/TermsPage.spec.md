@@ -117,10 +117,12 @@ TermsPage
 ## Styling
 
 - Tailwind layout:
-  - 모바일 단일 컬럼, 행 좌우 20px, 행 상하 28px, `secondary-200` 하단 구분선
-  - 제목 `typo-sub-header-3`, 시행일 `typo-body-7 text-primary-200` (14px), 문의 정보 `typo-caption-3 text-warm-gray-300`
-  - 다음 화살표 `NextIcon`은 `size-6` (24×24px)
-  - 스타일 기준: Figma `UI [디자인 2차 스프린트]` 이용약관 섹션 (node `8532-35000`), 2026-10-14 확인
+  - 모바일 단일 컬럼, 행 좌우 20px, 행 상하 28px, `warm-gray-100` 하단 구분선
+  - 제목 `typo-sub-header-2 text-black` (16px), 시행일 `typo-body-7 text-primary-200` (14px), 제목과 시행일 간격 8px
+  - 다음 화살표 `NextIcon`은 `size-6 text-cool-gray-900` (24×24px)이며 텍스트 영역 상단에 정렬한다.
+  - 문의 정보는 `typo-caption-2 text-warm-gray-300`, 줄높이 18px, 패딩 20px, 하단 여백 18px을 적용한다.
+  - 페이지 최소 높이는 `app-mobile-bottom-nav-content`로 하단 내비게이션 영역을 제외한다.
+  - 스타일 기준: Figma 이용약관 목록 프레임 (node `8317-97168`), 2026-10-14 확인
 - fixed area:
   - Header: `app-mobile-fixed-top`
   - 하단 네비게이션: `BottomNavigationLayout`
@@ -130,6 +132,9 @@ TermsPage
 - 최신 게시 약관 조회 API 연결은 계약 확인 대기다. 2026-09-30 서버 `develop` (`053fdb3`) 및 열린 PR에서 약관 endpoint를 찾지 못했으며, dev-api OpenAPI 조회는 타임아웃이었다. 현재 Figma 정적 원문을 제공하고 서버 게시 상태·버전·조회 오류는 검증하지 못한다.
 
 ## Verification
+
+- 단순 표시·이동 테스트는 유지하지 않는다. 목록과 상세에 중복되던 순서 검증도 제거했다.
+- 약관 데이터 테스트는 전체 조항의 번호 연속성과 본문 블록 누락을 검사한다.
 
 - [x] `pnpm --filter @hashi/client lint`
 - [x] `pnpm --filter @hashi/client typecheck`
