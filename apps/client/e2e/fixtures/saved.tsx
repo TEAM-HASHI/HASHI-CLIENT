@@ -41,15 +41,17 @@ const longCollection = {
 const data: CollectionData =
   scenario === 'empty'
     ? { ...collectionMocks, collections: [] }
-    : scenario === 'long'
-      ? {
-          collections: Array.from({ length: 20 }, (_, index) => ({
-            ...longCollection,
-            id: index === 0 ? 'spring' : `long-collection-${index}`,
-          })),
-          restaurants: longRestaurants,
-        }
-      : collectionMocks
+    : scenario === 'single'
+      ? { ...collectionMocks, collections: [collectionMocks.collections[0]] }
+      : scenario === 'long'
+        ? {
+            collections: Array.from({ length: 20 }, (_, index) => ({
+              ...longCollection,
+              id: index === 0 ? 'spring' : `long-collection-${index}`,
+            })),
+            restaurants: longRestaurants,
+          }
+        : collectionMocks
 
 const PanelFixture = () => {
   const { data, setData } = useCollectionData()
