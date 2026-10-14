@@ -1,0 +1,85 @@
+name: Slack Notification Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Channel to test
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - review
+          - deploy
+
+permissions: {}
+
+jobs:
+  send-test:
+    name: Test Slack ${{ matrix.channel }} channel
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - channel: review
+            secret: SLACK_REVIEW_WEBHOOK_URL
+          - channel: deploy
+            secret: SLACK_DEPLOY_WEBHOOK_URL
+    steps:
+      - name: Send test message
+        if: inputs.channel == 'both' || inputs.channel == matrix.channel
+        uses: actions/github-script@v7
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets[matrix.secret] }}
+          SLACK_SECRET_NAME: ${{ matrix.secret }}
+          SLACK_CHANNEL: ${{ matrix.channel }}
+        with:
+          script: |
+            const webhookUrl = process.env.SLACK_WEBHOOK_URL
+            const secretName = process.env.SLACK_SECRET_NAME
+            const channel = process.env.SLACK_CHANNEL
+
+            if (!webhookUrl) {
+              core.setFailed(`${secretName} secret is required.`)
+              return
+            }
+
+            core.setSecret(webhookUrl)
+
+            try {
+              const url = new URL(webhookUrl)
+              if (url.protocol !== 'https:' || url.hostname !== 'hooks.slack.com' || !url.pathname.startsWith('/services/')) {
+                core.setFailed(`${secretName} must be a Slack incoming webhook URL.`)
+                return
+              }
+            } catch {
+              core.setFailed(`${secretName} must be a valid URL.`)
+              return
+            }
+
+            const text = [
+              '[HASHI] Slack 알림 연결 테스트',
+              `대상: ${channel}`,
+              `실행자: ${context.actor}`,
+            ].join('\n')
+
+            try {
+              const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ attachments: [{ color: '#6B7280', text, fallback: text, mrkdwn_in: ['text'] }] }),
+                signal: AbortSignal.timeout(10_000),
+              })
+
+              if (!response.ok || (await response.text()).trim() !== 'ok') {
+                core.setFailed(`Slack ${channel} test failed (HTTP ${response.status}).`)
+                return
+              }
+
+              core.info(`Slack ${channel} test message sent.`)
+            } catch {
+              core.setFailed(`Slack ${channel} request failed or timed out. Check the webhook and retry manually.`)
+            }

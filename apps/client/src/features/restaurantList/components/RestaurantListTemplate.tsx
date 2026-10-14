@@ -136,7 +136,7 @@ export const RestaurantListTemplate = ({
         {isLoading ? (
           <ul
             aria-label={`${title} 식당 목록 로딩 중`}
-            className="mx-auto flex w-full flex-col gap-2 px-5"
+            className="mx-auto flex w-full flex-col gap-5 px-5"
             data-testid="restaurant-list"
           >
             {renderSkeletonItems(3)}
@@ -154,7 +154,7 @@ export const RestaurantListTemplate = ({
           <>
             {shouldRenderList ? (
               <ul
-                className="mx-auto flex w-full flex-col gap-2 px-5"
+                className="mx-auto flex w-full flex-col gap-5 px-5"
                 data-testid="restaurant-list"
               >
                 {visibleRestaurants.map((restaurant) => (
@@ -176,7 +176,9 @@ export const RestaurantListTemplate = ({
                 {hasNextPageError ? (
                   <li className="flex flex-col items-center gap-3 py-6 text-center">
                     <p className="typo-body-4 text-primary-200">
-                      식당을 더 불러오지 못했습니다.
+                      {restaurantType === 'sns-hot'
+                        ? '식당을 더 불러오지 못했습니다.'
+                        : '추가 식당을 불러오지 못했습니다.'}
                     </p>
                     <Button
                       onClick={handleRetryNextPage}
@@ -201,6 +203,8 @@ export const RestaurantListTemplate = ({
       {filterMode === 'bottom-sheet' ? (
         <>
           <FilterBottomSheet
+            layout="restaurant-list"
+            closeOnReset={false}
             onApply={handleApplySort}
             onOpenChange={handleCloseBottomSheet}
             onReset={handleResetSort}
@@ -211,6 +215,8 @@ export const RestaurantListTemplate = ({
             title="정렬 순서"
           />
           <FilterBottomSheet
+            layout="restaurant-list"
+            closeOnReset={false}
             onApply={handleApplyCategory}
             onOpenChange={handleCloseBottomSheet}
             onReset={handleResetCategory}

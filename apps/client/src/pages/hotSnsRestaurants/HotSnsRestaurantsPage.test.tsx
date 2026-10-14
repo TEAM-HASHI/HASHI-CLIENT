@@ -75,6 +75,7 @@ describe('HotSnsRestaurantsPage', () => {
     mockedGetRestaurants.mockReset()
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
+    sessionStorage.clear()
   })
 
   it('requests SNS hot restaurants with the selected sort', async () => {

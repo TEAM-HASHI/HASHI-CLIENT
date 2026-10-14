@@ -1,88 +1,149 @@
-import type { FetchNextPageOptions } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useLocation, useNavigationType } from 'react-router-dom'
 
-import {
-  clearRestaurantListSnapshot,
-  getRestaurantListSnapshot,
-  saveRestaurantListScrollPosition,
-} from '@/features/restaurantList/utils/restaurantListScrollRestoration'
+import type { RestaurantsResult } from '@/features/restaurantList/api/getRestaurants'
+import type { RestaurantsInfiniteData } from '@/features/restaurantList/queries/useRestaurantsInfiniteQuery'
+import type { RestaurantListCurationType } from '@/features/restaurantList/types'
 
-type UseRestaurantListRestorationParams = {
+type ListSnapshot = {
+  sort: string
+  category: string
+  scrollTop: number
   pageCount: number
-  hasNextPage: boolean
-  isPending: boolean
-  isFetching: boolean
-  isError: boolean
-  fetchNextPage: (options?: FetchNextPageOptions) => Promise<unknown>
+  data?: RestaurantsInfiniteData
 }
 
-export const useRestaurantListRestoration = ({
-  pageCount,
-  hasNextPage,
-  isPending,
-  isFetching,
-  isError,
-  fetchNextPage,
-}: UseRestaurantListRestorationParams) => {
+const SNAPSHOT_PREFIX = 'hashi:restaurant-list:'
+
+const readSnapshot = (key: string): ListSnapshot | null => {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(key) ?? 'null')
+    const pageCount = value?.pageCount ?? value?.data?.pages?.length
+    if (
+      typeof value?.sort !== 'string' ||
+      typeof value?.category !== 'string' ||
+      !Number.isFinite(value?.scrollTop) ||
+      !Number.isInteger(pageCount) ||
+      pageCount < 1
+    ) {
+      return null
+    }
+    if (
+      value.data !== undefined &&
+      (!Array.isArray(value.data?.pages) ||
+        !Array.isArray(value.data?.pageParams) ||
+        !value.data.pageParams.every(
+          (param: unknown) => param === null || typeof param === 'string',
+        ) ||
+        value.data.pages.length !== pageCount ||
+        value.data.pages.length !== value.data.pageParams.length ||
+        !value.data.pages.every((page: RestaurantsResult) =>
+          Array.isArray(page?.restaurants),
+        ))
+    )
+      return null
+    return {
+      sort: value.sort,
+      category: value.category,
+      scrollTop: value.scrollTop,
+      pageCount,
+      data: value.data,
+    }
+  } catch {
+    return null
+  }
+}
+
+const compactSnapshots = () => {
+  for (let index = 0; index < sessionStorage.length; index += 1) {
+    const key = sessionStorage.key(index)
+    if (!key?.startsWith(SNAPSHOT_PREFIX)) continue
+    const snapshot = readSnapshot(key)
+    if (snapshot?.data) {
+      sessionStorage.setItem(
+        key,
+        JSON.stringify({ ...snapshot, data: undefined }),
+      )
+    }
+  }
+}
+
+export const useRestaurantListRestoration = (
+  type: RestaurantListCurationType,
+) => {
   const location = useLocation()
   const navigationType = useNavigationType()
-  const [target] = useState(() =>
-    navigationType === 'POP'
-      ? getRestaurantListSnapshot(location.key)
-      : undefined,
+  const storageKey = `${SNAPSHOT_PREFIX}${type}:${location.key}`
+  const [snapshot, setSnapshot] = useState(() =>
+    navigationType === 'POP' ? readSnapshot(storageKey) : null,
   )
-  const [targetLocationKey] = useState(location.key)
-  const [isRestored, setIsRestored] = useState(!target)
-  const isRestoring = !isRestored && location.key === targetLocationKey
-  const hasRestorationError = Boolean(
-    isRestoring &&
-    target &&
-    isError &&
-    pageCount > 0 &&
-    pageCount < target.pageCount &&
-    hasNextPage,
-  )
+  const didRestore = useRef(false)
+  const [isRestored, setIsRestored] = useState(!snapshot)
 
-  useEffect(() => {
-    if (
-      !isRestoring ||
-      !target ||
-      isPending ||
-      isFetching ||
-      pageCount === 0 ||
-      hasRestorationError
-    ) {
-      return
-    }
-
-    if (pageCount < target.pageCount && hasNextPage) {
-      void fetchNextPage({ cancelRefetch: false }).catch(() => undefined)
-      return
-    }
+  const restoreScroll = useCallback(() => {
+    if (!snapshot || didRestore.current) return
 
     const frame = requestAnimationFrame(() => {
-      window.scrollTo({ behavior: 'auto', top: target.scrollTop })
-      clearRestaurantListSnapshot(location.key)
+      window.scrollTo(
+        type === 'sns-hot'
+          ? { top: snapshot.scrollTop, behavior: 'auto' }
+          : { top: snapshot.scrollTop, left: 0, behavior: 'auto' },
+      )
+      didRestore.current = true
       setIsRestored(true)
     })
-
     return () => cancelAnimationFrame(frame)
-  }, [
-    fetchNextPage,
-    hasNextPage,
-    hasRestorationError,
-    isFetching,
-    isPending,
-    isRestoring,
-    location.key,
-    pageCount,
-    target,
-  ])
+  }, [snapshot, type])
 
-  const saveScrollPosition = () => {
-    saveRestaurantListScrollPosition(location.key, window.scrollY, pageCount)
+  const saveSnapshot = (value: {
+    sort: string
+    category: string
+    data: RestaurantsInfiniteData
+  }) => {
+    const metadata = {
+      sort: value.sort,
+      category: value.category,
+      pageCount: value.data.pages.length,
+      scrollTop: window.scrollY,
+    }
+    try {
+      try {
+        sessionStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            ...metadata,
+            data: type === 'sns-hot' ? undefined : value.data,
+          }),
+        )
+      } catch (error) {
+        if (
+          !(error instanceof DOMException) ||
+          error.name !== 'QuotaExceededError'
+        )
+          throw error
+        compactSnapshots()
+        sessionStorage.setItem(storageKey, JSON.stringify(metadata))
+      }
+    } catch {
+      return
+    }
   }
 
-  return { hasRestorationError, isRestoring, saveScrollPosition }
+  const clearSnapshot = () => {
+    setSnapshot(null)
+    setIsRestored(true)
+    try {
+      sessionStorage.removeItem(storageKey)
+    } catch {
+      return
+    }
+  }
+
+  return {
+    snapshot,
+    saveSnapshot,
+    clearSnapshot,
+    restoreScroll,
+    isRestoring: !isRestored,
+  }
 }

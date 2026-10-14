@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -48,14 +48,20 @@ export const useRestaurantListContent = ({
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const defaultSortOption = sortOptions[0]
+  const { snapshot, saveSnapshot, clearSnapshot, restoreScroll, isRestoring } =
+    useRestaurantListRestoration(restaurantType)
+  const didHydrateSnapshot = useRef(false)
+  const resetScrollPending = useRef(false)
   const selectedSort = getSelectedOption(
     sortOptions,
-    searchParams.get('sort'),
+    searchParams.get('sort') ?? snapshot?.sort ?? null,
     defaultSortOption,
   )
   const selectedCategory = getSelectedOption(
     CATEGORY_OPTIONS,
-    restaurantType === 'sns-hot' ? null : searchParams.get('genre'),
+    restaurantType === 'sns-hot'
+      ? null
+      : (searchParams.get('genre') ?? snapshot?.category ?? null),
     DEFAULT_CATEGORY_OPTION,
   )
   const [activeBottomSheet, setActiveBottomSheet] =
@@ -72,10 +78,35 @@ export const useRestaurantListContent = ({
       }),
     [restaurantType, selectedCategory, selectedSort],
   )
+  const isRestoredFilter =
+    snapshot?.sort === selectedSort.value &&
+    snapshot.category === selectedCategory.value
+
+  useEffect(() => {
+    if (!resetScrollPending.current || activeBottomSheet !== null) return
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      resetScrollPending.current = false
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [activeBottomSheet, requestParams])
+
   const restaurantsQuery = useInfiniteQuery({
     ...restaurantsInfiniteQueryOptions(requestParams),
     throwOnError: false,
+    initialData: isRestoredFilter ? snapshot.data : undefined,
+    refetchOnMount: restaurantType === 'sns-hot' || !isRestoredFilter,
   })
+
+  useLayoutEffect(() => {
+    if (!isRestoredFilter || !snapshot.data || didHydrateSnapshot.current)
+      return
+    queryClient.setQueryData(
+      restaurantListQueryKeys.infiniteList(requestParams),
+      snapshot.data,
+    )
+    didHydrateSnapshot.current = true
+  }, [isRestoredFilter, snapshot, queryClient, requestParams])
   const visibleRestaurants =
     restaurantsQuery.data?.pages.flatMap((page) =>
       page.restaurants.flatMap((restaurant) => {
@@ -87,15 +118,43 @@ export const useRestaurantListContent = ({
   const hasMoreRestaurants = Boolean(restaurantsQuery.hasNextPage)
   const hasInitialLoadError =
     restaurantsQuery.isError && visibleRestaurants.length === 0
-  const { hasRestorationError, isRestoring, saveScrollPosition } =
-    useRestaurantListRestoration({
-      pageCount: restaurantsQuery.data?.pages.length ?? 0,
-      hasNextPage: hasMoreRestaurants,
-      isPending: restaurantsQuery.isPending,
-      isFetching: restaurantsQuery.isFetching,
-      isError: restaurantsQuery.isError,
-      fetchNextPage: restaurantsQuery.fetchNextPage,
-    })
+  const pageCount = restaurantsQuery.data?.pages.length ?? 0
+  const needsMoreRestorationPages =
+    isRestoring &&
+    Boolean(snapshot) &&
+    pageCount < (snapshot?.pageCount ?? 0) &&
+    hasMoreRestaurants
+  const hasRestorationError =
+    needsMoreRestorationPages && restaurantsQuery.isError && pageCount > 0
+  const { fetchNextPage, isFetching, isPending, isError } = restaurantsQuery
+
+  useEffect(() => {
+    if (!isRestoring || isPending || isFetching || pageCount === 0) return
+    if (needsMoreRestorationPages) {
+      if (!isError) {
+        const cachedData = queryClient.getQueryData<{ pages: unknown[] }>(
+          restaurantListQueryKeys.infiniteList(requestParams),
+        )
+        if ((cachedData?.pages.length ?? 0) >= (snapshot?.pageCount ?? 0))
+          return
+        void fetchNextPage({ cancelRefetch: false }).catch(() => undefined)
+      }
+      return
+    }
+    return restoreScroll()
+  }, [
+    isRestoring,
+    isPending,
+    isFetching,
+    pageCount,
+    needsMoreRestorationPages,
+    isError,
+    fetchNextPage,
+    queryClient,
+    requestParams,
+    snapshot?.pageCount,
+    restoreScroll,
+  ])
   const hasNextPageError =
     (restaurantsQuery.isFetchNextPageError || hasRestorationError) &&
     visibleRestaurants.length > 0
@@ -114,16 +173,21 @@ export const useRestaurantListContent = ({
       ? '음식 장르 선택'
       : selectedCategory.label
 
-  const applyFilters = (sort: FilterOption, category: FilterOption) => {
+  const applyFilters = (
+    sort: FilterOption,
+    category: FilterOption,
+    force = false,
+  ) => {
     const hasChanged =
       sort.value !== selectedSort.value ||
       category.value !== selectedCategory.value
 
-    if (!hasChanged) {
+    if (!hasChanged && !force) {
       setActiveBottomSheet(null)
       return
     }
 
+    clearSnapshot()
     const nextSearchParams = new URLSearchParams(searchParams)
     const nextRequestParams = createRestaurantListRequestParams({
       category,
@@ -149,7 +213,11 @@ export const useRestaurantListContent = ({
     })
     setSearchParams(nextSearchParams, { replace: true })
     setActiveBottomSheet(null)
-    window.scrollTo({ behavior: 'auto', top: 0 })
+    if (restaurantType === 'sns-hot') {
+      window.scrollTo({ behavior: 'auto', top: 0 })
+    } else {
+      resetScrollPending.current = true
+    }
   }
 
   const handleBackClick = () => {
@@ -196,24 +264,28 @@ export const useRestaurantListContent = ({
 
   const handleResetSort = () => {
     setDraftSort(defaultSortOption)
-    applyFilters(defaultSortOption, selectedCategory)
   }
 
   const handleResetCategory = () => {
     setDraftCategory(DEFAULT_CATEGORY_OPTION)
-    applyFilters(selectedSort, DEFAULT_CATEGORY_OPTION)
   }
 
   const handleApplySort = () => {
-    applyFilters(draftSort, selectedCategory)
+    applyFilters(draftSort, selectedCategory, true)
   }
 
   const handleApplyCategory = () => {
-    applyFilters(selectedSort, draftCategory)
+    applyFilters(selectedSort, draftCategory, true)
   }
 
   const handleClickRestaurant = (restaurantId: string) => {
-    saveScrollPosition()
+    if (restaurantsQuery.data) {
+      saveSnapshot({
+        sort: selectedSort.value,
+        category: selectedCategory.value,
+        data: restaurantsQuery.data,
+      })
+    }
     navigate(getRestaurantDetailPath(restaurantId))
   }
 
