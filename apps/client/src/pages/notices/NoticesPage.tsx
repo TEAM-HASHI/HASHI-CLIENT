@@ -115,7 +115,7 @@ export const NoticesPage = () => {
   }
 
   return (
-    <div className="min-h-dvh bg-white pt-18.75">
+    <div className="app-mobile-bottom-nav-content bg-white pt-18.75">
       <Header
         className="app-mobile-fixed-top z-fixed fixed"
         leftAction={
@@ -134,9 +134,9 @@ export const NoticesPage = () => {
       ) : (
         <ul>
           {notices.map((notice) => (
-            <li className="border-secondary-200 border-b" key={notice.noticeId}>
+            <li className="border-warm-gray-100 border-b" key={notice.noticeId}>
               <button
-                className="flex w-full items-center justify-between gap-3 px-5 py-7 text-left"
+                className="flex w-full items-start justify-between gap-3 px-5 py-7 text-left"
                 onClick={() => handleNoticeClick(notice.noticeId)}
                 type="button"
               >
@@ -144,11 +144,14 @@ export const NoticesPage = () => {
                   <span className="typo-sub-header-2 truncate text-black">
                     {notice.title}
                   </span>
-                  <span className="typo-body-6 text-primary-200">
+                  <span className="typo-body-7 text-primary-200">
                     {formatNoticeLastUpdatedDate(notice)}
                   </span>
                 </span>
-                <NextIcon aria-hidden="true" className="size-6 shrink-0" />
+                <NextIcon
+                  aria-hidden="true"
+                  className="text-cool-gray-900 size-6 shrink-0"
+                />
               </button>
             </li>
           ))}
