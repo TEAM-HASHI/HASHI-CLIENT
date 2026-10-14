@@ -1,7 +1,14 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { useState } from 'react'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CollectionDragPanelContent } from '@/pages/saved/components/CollectionDragPanelContent'
@@ -10,21 +17,32 @@ import type { CollectionViewState } from '@/pages/saved/types'
 
 const onClose = vi.fn()
 const onRestaurantSelect = vi.fn()
-const Harness = ({ availableHeight = 768 }: { availableHeight?: number }) => {
+const Harness = ({
+  availableHeight = 768,
+  list = false,
+  editable = false,
+}: {
+  availableHeight?: number
+  list?: boolean
+  editable?: boolean
+}) => {
   const [view, setView] = useState<CollectionViewState>({
-    collectionId: 'spring',
+    collectionId: list ? null : 'spring',
     sort: 'rating',
     category: 'cafe',
   })
   return (
-    <CollectionDragPanelContent
-      data={collectionMocks}
-      view={view}
-      onViewChange={setView}
-      availableHeight={availableHeight}
-      onClose={onClose}
-      onRestaurantSelect={onRestaurantSelect}
-    />
+    <MemoryRouter initialEntries={['/map']}>
+      <CollectionDragPanelContent
+        data={collectionMocks}
+        view={view}
+        onViewChange={setView}
+        availableHeight={availableHeight}
+        onClose={onClose}
+        onRestaurantSelect={onRestaurantSelect}
+        onDataChange={editable ? vi.fn() : undefined}
+      />
+    </MemoryRouter>
   )
 }
 

@@ -438,6 +438,241 @@ test('컬렉션 목록은 최대 높이를 유지하며 내부 스크롤 후 상
   await expect(page.getByRole('slider')).toHaveAttribute('aria-valuenow', '393')
   await expect(page.getByRole('list', { name: '저장 식당' })).toBeVisible()
   await expect(
+    page.getByRole('button', { name: '지도', exact: true }),
+  ).toHaveAttribute('aria-current', 'page')
+})
+
+test('컬렉션 메뉴는 화면 맥락과 피그마 규격을 따른다', async ({ page }) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  await openFixture(page, '?panel=list')
+
+  const trigger = page.getByRole('button', {
+    name: '2026 도쿄 봄 여행 더보기',
+  })
+  await trigger.click()
+  const panelMenu = page.getByRole('menu', {
+    name: '2026 도쿄 봄 여행 더보기',
+  })
+  await expect(panelMenu.getByRole('menuitem')).toHaveText([
+    '링크 복사',
+    '수정하기',
+    '삭제하기',
+  ])
+
+  const menuBox = await panelMenu.boundingBox()
+  const triggerBox = await trigger.boundingBox()
+  expect(menuBox?.width).toBe(140)
+  expect(menuBox?.height).toBe(120)
+  expect(menuBox!.y).toBe(triggerBox!.y + triggerBox!.height + 1)
+  expect(menuBox!.x + menuBox!.width).toBe(373)
+  for (const item of await panelMenu.getByRole('menuitem').all()) {
+    const itemBox = await item.boundingBox()
+    expect(itemBox?.width).toBe(120)
+    expect(itemBox?.height).toBe(40)
+    await expect(item.locator('span').last()).toHaveCSS('font-weight', '600')
+  }
+
+  await page.keyboard.press('Escape')
+  await page.getByRole('slider').press('End')
+  const fullscreen = page.getByRole('dialog', {
+    name: '컬렉션 전체 화면',
+  })
+  await fullscreen
+    .getByRole('button', { name: '2026 도쿄 봄 여행 더보기' })
+    .click()
+  await expect(fullscreen.getByRole('menuitem')).toHaveText([
+    '수정하기',
+    '공유하기',
+    '삭제하기',
+  ])
+})
+
+test('낮은 패널의 컬렉션 메뉴는 피그마 좌표로 위쪽에 열린다', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  await openFixture(page, '?panel=list&scenario=single')
+
+  const trigger = page.getByRole('button', {
+    name: '2026 도쿄 봄 여행 더보기',
+  })
+  await trigger.click()
+  const menu = page.getByRole('menu', {
+    name: '2026 도쿄 봄 여행 더보기',
+  })
+  const menuBox = await menu.boundingBox()
+  const iconBox = await trigger.locator('svg').boundingBox()
+  const navigationBox = await page.getByRole('navigation').boundingBox()
+
+  expect(menuBox).toMatchObject({ x: 233, width: 140, height: 120 })
+  expect(iconBox!.y - (menuBox!.y + menuBox!.height)).toBe(4)
+  expect(menuBox!.y + menuBox!.height).toBeLessThan(navigationBox!.y)
+})
+
+test('모든 컬렉션 액션 메뉴는 항목 수별 피그마 규격과 위치를 공유한다', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 430, height: 813 })
+
+  const expectMenuGeometry = async (
+    trigger: import('@playwright/test').Locator,
+    itemCount: number,
+  ) => {
+    await trigger.click()
+    const menu = page.getByRole('menu', {
+      name: await trigger.getAttribute('aria-label'),
+    })
+    const menuBox = await menu.boundingBox()
+    const iconBox = await trigger.locator('svg').boundingBox()
+
+    expect(menuBox).toMatchObject({
+      x: 270,
+      width: 140,
+      height: itemCount * 40,
+    })
+    expect(menuBox!.x + menuBox!.width).toBe(410)
+    const visualGap = Math.min(
+      Math.abs(menuBox!.y - (iconBox!.y + iconBox!.height)),
+      Math.abs(iconBox!.y - (menuBox!.y + menuBox!.height)),
+    )
+    expect(visualGap).toBe(4)
+    await expect(menu).toHaveCSS('border-radius', '10px')
+    for (const item of await menu.getByRole('menuitem').all()) {
+      expect(await item.boundingBox()).toMatchObject({ width: 120, height: 40 })
+    }
+    await page.keyboard.press('Escape')
+  }
+
+  await openFixture(page)
+  await expectMenuGeometry(
+    page.getByRole('button', { name: '2026 도쿄 봄 여행 더보기' }),
+    3,
+  )
+  await page
+    .getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' })
+    .click()
+  await expectMenuGeometry(
+    page.getByRole('button', { name: '컬렉션 더보기', exact: true }),
+    3,
+  )
+  await expectMenuGeometry(
+    page.getByRole('button', {
+      name: '히마와리 스시 신도심점 더보기',
+      exact: true,
+    }),
+    2,
+  )
+
+  await openFixture(page, '?panel=detail')
+  await expectMenuGeometry(
+    page.getByRole('button', { name: '컬렉션 더보기', exact: true }),
+    2,
+  )
+  await expectMenuGeometry(
+    page.getByRole('button', {
+      name: '히마와리 스시 신도심점 더보기',
+      exact: true,
+    }),
+    2,
+  )
+})
+
+for (const viewport of [
+  { width: 393, height: 852 },
+  { width: 320, height: 400 },
+  { width: 1280, height: 900 },
+]) {
+  test(`컬렉션 최대 단계 전체 화면과 복귀 ${viewport.width}`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize(viewport)
+    for (const query of [
+      '?panel=list',
+      '?panel=list&scenario=empty',
+      '?panel=detail&scenario=long',
+    ]) {
+      await openFixture(page, query)
+      const url = page.url()
+      const handle = page.getByRole('slider')
+      await handle.press('End')
+      const dialog = page.getByRole('dialog', { name: '컬렉션 전체 화면' })
+      await expect(dialog).toBeVisible()
+      const box = await dialog.boundingBox()
+      expect(box!.height).toBe(viewport.height)
+      expect(box!.y).toBe(0)
+      expect(box!.x).toBeGreaterThanOrEqual(0)
+      expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width)
+      await expect(
+        dialog.getByRole('button', { name: '지도', exact: true }),
+      ).toHaveAttribute('aria-current', 'page')
+      await expect(dialog.getByRole('navigation')).toBeInViewport()
+      await expect(
+        dialog.getByRole('button', { name: '지도로 보기' }),
+      ).toBeInViewport()
+      if (query.includes('panel=list')) {
+        await expect(
+          dialog.getByRole('heading', { name: /총\s*\d+\s*개/ }),
+        ).toBeVisible()
+      }
+      if (viewport.height <= 500) {
+        const scrollBox = await dialog.locator('.overflow-y-auto').boundingBox()
+        const buttonBox = await dialog
+          .getByRole('button', { name: '지도로 보기' })
+          .boundingBox()
+        expect(scrollBox!.y + scrollBox!.height).toBeLessThanOrEqual(
+          buttonBox!.y,
+        )
+      }
+      expect(page.url()).toBe(url)
+      await page.screenshot({
+        path: testInfo.outputPath(
+          `fullscreen-${query.includes('detail') ? 'detail' : query.includes('empty') ? 'empty' : 'list'}.png`,
+        ),
+      })
+      await dialog.getByRole('button', { name: '지도로 보기' }).click()
+      await expect(dialog).toHaveCount(0)
+      await expect(handle).toBeFocused()
+      await handle.press('End')
+      await expect(dialog).toBeVisible()
+      await page.keyboard.press('Escape')
+      await expect(dialog).toHaveCount(0)
+      await expect(handle).toBeFocused()
+    }
+  })
+}
+
+test('전체 화면의 필터·편집·내비게이션', async ({ page }) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  await openFixture(page, '?panel=detail')
+  await page.getByRole('slider').press('End')
+  const fullscreen = page.getByRole('dialog', { name: '컬렉션 전체 화면' })
+  await fullscreen.getByRole('button', { name: '정렬 선택' }).click()
+  await fullscreen.getByRole('menuitemradio', { name: '리뷰순' }).click()
+  await expect(fullscreen.getByText('리뷰순')).toBeVisible()
+  await fullscreen.getByRole('button', { name: '분류 선택' }).click()
+  await page.keyboard.press('Escape')
+  await expect(fullscreen).toBeVisible()
+  await expect(page.getByRole('menu')).toHaveCount(0)
+  await fullscreen
+    .getByRole('button', { name: '컬렉션 더보기', exact: true })
+    .click()
+  await fullscreen.getByRole('menuitem', { name: '편집하기' }).click()
+  const editor = page.getByRole('dialog', { name: '컬렉션 편집', exact: true })
+  await expect(editor).toBeVisible()
+  await expect(editor.getByRole('navigation')).toHaveCount(0)
+  await expect(
+    editor.getByRole('button', { name: '이동', exact: true }),
+  ).toBeInViewport()
+  await page.keyboard.press('Tab')
+  expect(
+    await editor.evaluate((node) => node.contains(document.activeElement)),
+  ).toBe(true)
+  await editor.getByRole('button', { name: '편집 종료' }).click()
+  await expect(fullscreen).toBeVisible()
+  await expect(fullscreen.getByText('리뷰순')).toBeVisible()
+  await fullscreen.getByRole('button', { name: '저장', exact: true }).click()
+  await expect(fullscreen).toHaveCount(0)
+  await expect(
     page.getByRole('button', { name: '저장', exact: true }),
   ).toHaveAttribute('aria-current', 'page')
 })
