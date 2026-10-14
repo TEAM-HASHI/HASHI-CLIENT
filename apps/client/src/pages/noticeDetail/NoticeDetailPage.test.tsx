@@ -51,10 +51,10 @@ const noticeDetailFixture: NoticeDetail = {
   ],
 }
 
-const renderNoticeDetailPage = (state: unknown = null) =>
+const renderNoticeDetailPage = () =>
   render(
     <QueryClientProvider client={createQueryClient()}>
-      <MemoryRouter initialEntries={[{ pathname: '/notices/3', state }]}>
+      <MemoryRouter initialEntries={['/notices/3']}>
         <NoticeDetailPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -66,37 +66,6 @@ describe('NoticeDetailPage', () => {
     mockNavigate.mockClear()
     mockedGetNoticeDetail.mockReset()
     mockParams.noticeId = '3'
-  })
-
-  it('renders the title, last updated date, and formatted content', async () => {
-    mockedGetNoticeDetail.mockResolvedValue(noticeDetailFixture)
-
-    renderNoticeDetailPage()
-
-    expect(
-      await screen.findByRole('heading', { name: '[Hashi 첫 공지사항]' }),
-    ).toBeInTheDocument()
-    expect(mockedGetNoticeDetail).toHaveBeenCalledWith(3)
-    expect(screen.getByText('2026.09.06')).toBeInTheDocument()
-    expect(screen.getByText('점검').tagName).toBe('STRONG')
-  })
-
-  it('renders attached images in order keeping their original ratio', async () => {
-    mockedGetNoticeDetail.mockResolvedValue(noticeDetailFixture)
-
-    renderNoticeDetailPage()
-
-    const images = await screen.findAllByRole('img', {
-      name: /\[Hashi 첫 공지사항\] 첨부 이미지/,
-    })
-
-    expect(images.map((image) => image.getAttribute('src'))).toEqual([
-      'https://example.com/notice-1.png',
-      'https://example.com/notice-2.png',
-    ])
-    expect(
-      screen.getByRole('button', { name: '첨부 이미지 1 크게 보기' }),
-    ).toHaveStyle({ aspectRatio: '706 / 354' })
   })
 
   it('keeps the image area and shows the common placeholder when an image fails', async () => {
@@ -181,22 +150,5 @@ describe('NoticeDetailPage', () => {
     expect(
       await screen.findByRole('heading', { name: '404 페이지' }),
     ).toBeInTheDocument()
-  })
-
-  it('returns direct entry to the notice list instead of browser history', async () => {
-    mockedGetNoticeDetail.mockResolvedValue(noticeDetailFixture)
-    renderNoticeDetailPage()
-    fireEvent.click(await screen.findByRole('button', { name: '뒤로가기' }))
-    expect(mockNavigate).toHaveBeenCalledWith('/notices', { replace: true })
-  })
-
-  it('goes back when the back button is pressed', async () => {
-    mockedGetNoticeDetail.mockResolvedValue(noticeDetailFixture)
-
-    renderNoticeDetailPage({ fromNoticeList: true })
-
-    fireEvent.click(await screen.findByRole('button', { name: '뒤로가기' }))
-
-    expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 })

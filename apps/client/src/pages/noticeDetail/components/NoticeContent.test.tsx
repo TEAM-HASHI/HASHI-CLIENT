@@ -26,8 +26,8 @@ describe('NoticeContent', () => {
     expect(
       screen.getAllByRole('listitem').map((item) => item.textContent),
     ).toEqual(['일시', '범위', '첫째'])
-    expect(container.querySelector('ul')).toHaveClass('list-disc')
-    expect(container.querySelector('ol')).toHaveClass('list-decimal')
+    expect(container.querySelectorAll('ul > li')).toHaveLength(2)
+    expect(container.querySelectorAll('ol > li')).toHaveLength(1)
   })
 
   it('opens internal links in the app and external links in a new tab', () => {

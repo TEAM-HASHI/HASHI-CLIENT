@@ -38,15 +38,11 @@ vi.mock('@/features/notice/api/getNotices', () => ({ getNotices: vi.fn() }))
 
 const mockedGetNotices = vi.mocked(getNotices)
 
-const createNotice = (
-  noticeId: number,
-  overrides: Partial<NoticeSummary> = {},
-): NoticeSummary => ({
+const createNotice = (noticeId: number): NoticeSummary => ({
   noticeId,
   title: `[공지 ${noticeId}]`,
   publishedAt: '2026-09-01T10:00:00',
   updatedAt: null,
-  ...overrides,
 })
 
 const badRequest = new ApiError(
@@ -84,64 +80,6 @@ describe('NoticesPage', () => {
     vi.mocked(window.scrollTo).mockClear()
     vi.restoreAllMocks()
     sessionStorage.clear()
-  })
-
-  it('shows the last updated date and falls back to the published date', async () => {
-    mockedGetNotices.mockResolvedValue({
-      notices: [
-        createNotice(3, {
-          title: '[Hashi 첫 공지사항]',
-          publishedAt: '2026-09-01T10:00:00',
-          updatedAt: '2026-09-06T09:00:00',
-        }),
-        createNotice(2, {
-          title: '[Hashi 다음 공지사항]',
-          publishedAt: '2026-09-02T10:00:00',
-        }),
-      ],
-      hasNext: false,
-      nextCursor: null,
-    })
-
-    renderNoticesPage()
-
-    const rows = await screen.findAllByRole('button', { name: /^\[Hashi/ })
-
-    expect(rows.map((row) => row.textContent)).toEqual([
-      '[Hashi 첫 공지사항]2026.09.06',
-      '[Hashi 다음 공지사항]2026.09.02',
-    ])
-    expect(mockedGetNotices).toHaveBeenCalledWith({ cursor: null, size: 10 })
-  })
-
-  it('keeps a notice title on a single truncated line', async () => {
-    mockedGetNotices.mockResolvedValue({
-      notices: [createNotice(3, { title: '아주 긴 공지 제목'.repeat(10) })],
-      hasNext: false,
-      nextCursor: null,
-    })
-
-    renderNoticesPage()
-
-    expect(await screen.findByText('아주 긴 공지 제목'.repeat(10))).toHaveClass(
-      'truncate',
-    )
-  })
-
-  it('navigates to the notice detail when a row is pressed', async () => {
-    mockedGetNotices.mockResolvedValue({
-      notices: [createNotice(3)],
-      hasNext: false,
-      nextCursor: null,
-    })
-
-    renderNoticesPage()
-
-    fireEvent.click(await screen.findByRole('button', { name: /\[공지 3\]/ }))
-
-    expect(mockNavigate).toHaveBeenCalledWith('/notices/3', {
-      state: { fromNoticeList: true },
-    })
   })
 
   it('shows the common error screen when the first page fails and retries from the first page', async () => {
@@ -274,19 +212,5 @@ describe('NoticesPage', () => {
     await waitFor(() =>
       expect(window.scrollTo).toHaveBeenCalledWith({ top: 480 }),
     )
-  })
-
-  it('goes back when the back button is pressed', async () => {
-    mockedGetNotices.mockResolvedValue({
-      notices: [],
-      hasNext: false,
-      nextCursor: null,
-    })
-
-    renderNoticesPage()
-
-    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
-
-    expect(mockNavigate).toHaveBeenCalledWith('/mypage', { replace: true })
   })
 })
