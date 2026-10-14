@@ -19,7 +19,7 @@ export interface TermsList {
 }
 
 export type TermsContentBlock =
-  | { type: 'paragraph'; text: string }
+  | { type: 'paragraph'; text: string; blankLineAfter?: boolean }
   | ({ type: 'list' } & TermsList)
 
 export interface TermsClause {

@@ -23,6 +23,7 @@ export const TERMS_POLICIES: readonly TermsPolicy[] = [
           {
             type: 'paragraph',
             text: '본 약관에서 사용하는 용어의 뜻은 다음과 같습니다.',
+            blankLineAfter: true,
           },
           {
             type: 'list',

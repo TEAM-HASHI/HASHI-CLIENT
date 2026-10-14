@@ -7,7 +7,7 @@ const TermsListContent = ({ ordered, items }: TermsList) => {
   return (
     <ListTag
       className={cn(
-        'flex flex-col gap-1 pl-5',
+        'flex flex-col pl-4.5',
         ordered ? 'list-decimal' : 'list-disc',
       )}
     >
@@ -32,10 +32,15 @@ interface TermsClauseContentProps {
 
 export const TermsClauseContent = ({ blocks }: TermsClauseContentProps) => {
   return (
-    <div className="flex flex-col gap-3 pb-3 break-keep">
+    <div className="flex flex-col break-keep">
       {blocks.map((block, index) =>
         block.type === 'paragraph' ? (
-          <p key={`paragraph-${index}`}>{block.text}</p>
+          <p
+            className={block.blankLineAfter ? 'mb-4.5' : undefined}
+            key={`paragraph-${index}`}
+          >
+            {block.text}
+          </p>
         ) : (
           <TermsListContent
             items={block.items}
