@@ -10,7 +10,7 @@ export const TermsPage = () => {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-dvh bg-white pt-18.75">
+    <div className="app-mobile-bottom-nav-content bg-white pt-18.75">
       <Header
         className="app-mobile-fixed-top z-fixed fixed"
         leftAction={
@@ -27,27 +27,30 @@ export const TermsPage = () => {
 
       <ul>
         {TERMS_POLICIES.map((policy) => (
-          <li className="border-secondary-200 border-b" key={policy.id}>
+          <li className="border-warm-gray-100 border-b" key={policy.id}>
             <button
-              className="flex w-full items-center justify-between gap-3 px-5 py-7 text-left"
+              className="flex w-full justify-between gap-3 px-5 py-7 text-left"
               onClick={() => navigate(getTermsDetailPath(policy.id))}
               type="button"
             >
-              <span className="flex min-w-0 flex-col gap-1">
-                <span className="typo-sub-header-3 text-cool-gray-900 break-keep">
+              <span className="flex min-w-0 flex-col gap-2">
+                <span className="typo-sub-header-2 break-keep text-black">
                   [{policy.title}]
                 </span>
                 <span className="typo-body-7 text-primary-200">
                   {policy.effectiveDate}
                 </span>
               </span>
-              <NextIcon aria-hidden="true" className="size-6 shrink-0" />
+              <NextIcon
+                aria-hidden="true"
+                className="text-cool-gray-900 size-6 shrink-0"
+              />
             </button>
           </li>
         ))}
       </ul>
 
-      <address className="typo-caption-3 text-warm-gray-300 flex flex-col gap-1 px-5 pt-6 not-italic">
+      <address className="typo-caption-2 text-warm-gray-300 mb-4.5 flex flex-col p-5 leading-[1.5] not-italic">
         <p>이메일: hashiservice@gmail.com</p>
         <p>문의 채널: Hashi 카카오톡 채널</p>
       </address>
