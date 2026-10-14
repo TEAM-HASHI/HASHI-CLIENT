@@ -29,10 +29,15 @@ const setup = (data: CollectionData = collectionMocks) => {
 afterEach(cleanup)
 
 describe('SavedPage', () => {
-  it('shows computed counts and fixed latest label without a collection sort menu', () => {
+  it('pins the collection header and create action without a collection sort label', () => {
     setup()
     expect(screen.getByText('총 4개')).toBeInTheDocument()
-    expect(screen.getByText('최신순')).toBeInTheDocument()
+    expect(screen.queryByText('최신순')).not.toBeInTheDocument()
+    expect(
+      screen
+        .getByRole('button', { name: '새 컬렉션 만들기' })
+        .closest('[data-testid="saved-fixed-header"]'),
+    ).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: '정렬 선택' }),
     ).not.toBeInTheDocument()
@@ -43,6 +48,14 @@ describe('SavedPage', () => {
     expect(
       screen.queryByRole('button', { name: /더보기|공유/ }),
     ).not.toBeInTheDocument()
+  })
+
+  it('uses the map-view icon and shadow on the detail CTA', async () => {
+    const { user } = setup()
+    await user.click(screen.getByRole('button', { name: /2026 도쿄 봄 여행/ }))
+    const cta = screen.getByRole('button', { name: '지도로 보기' })
+    expect(cta).toHaveClass('shadow-[0_4px_4px_rgba(0,0,0,0.15)]')
+    expect(cta.querySelector('svg path[d^="M14.2425"]')).toBeInTheDocument()
   })
 
   it('applies sorting and category immediately, retains sorting, and closes each menu', async () => {
