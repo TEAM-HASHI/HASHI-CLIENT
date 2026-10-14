@@ -118,7 +118,9 @@ TermsPage
 
 - Tailwind layout:
   - 모바일 단일 컬럼, 행 좌우 20px, 행 상하 28px, `secondary-200` 하단 구분선
-  - 제목 `typo-sub-header-3`, 시행일 `typo-body-8`, 문의 정보 `typo-caption-3 text-warm-gray-300`
+  - 제목 `typo-sub-header-3`, 시행일 `typo-body-7 text-primary-200` (14px), 문의 정보 `typo-caption-3 text-warm-gray-300`
+  - 다음 화살표 `NextIcon`은 `size-6` (24×24px)
+  - 스타일 기준: Figma `UI [디자인 2차 스프린트]` 이용약관 섹션 (node `8532-35000`), 2026-10-14 확인
 - fixed area:
   - Header: `app-mobile-fixed-top`
   - 하단 네비게이션: `BottomNavigationLayout`
@@ -135,3 +137,4 @@ TermsPage
 - [x] `pnpm --filter @hashi/client test`
 - [x] 목록 8개 순서·시행일·행 선택 이동·뒤로가기 확인
 - [x] 비로그인 직접 진입 확인
+- [x] 2026-10-14 스타일 검증: 393px 화면에서 8개 행의 화살표 24px, 시행일 14px·`#4A4A4A` 확인. 320px·393px 화면에서 가로 넘침 없음.

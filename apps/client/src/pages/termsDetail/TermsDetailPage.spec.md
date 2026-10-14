@@ -99,7 +99,9 @@ TermsDetailPage
 
 ## Styling
 
-- Accordion 본문은 `typo-body-5 text-cool-gray-500 leading-[1.5]`, 목록은 `list-decimal` / `list-disc`, 들여쓰기 20px
+- Accordion 본문은 HDS 기본 `typo-caption-2 text-warm-gray-300 leading-[1.5]` (12px, 줄높이 18px)를 사용하며 페이지에서 `contentClassName`으로 덮어쓰지 않는다.
+- 본문 스타일 기준: Figma `UI [디자인 2차 스프린트]` 본문 텍스트 (node `9343-111141`), 2026-10-14 확인
+- 목록은 `list-decimal` / `list-disc`, 들여쓰기 20px
 - fixed area: Header `app-mobile-fixed-top`, 하단 네비게이션은 layout이 담당
 
 ## Content Source
@@ -119,3 +121,4 @@ TermsDetailPage
 - [x] `pnpm --filter @hashi/client build`
 - [x] `pnpm --filter @hashi/client test`
 - [x] 8개 약관 상세 진입, 조항 펼침/접힘, 중첩 목록, NotFound, 뒤로가기 확인
+- [x] 2026-10-14 스타일 검증: Hashi 이용약관 제1조 본문 12px·`#B3B3B3`·줄높이 18px, 320px·393px 화면에서 가로 넘침 없음. 펼침·접힘과 목록 복귀 확인.

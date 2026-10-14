@@ -37,11 +37,11 @@ export const TermsPage = () => {
                 <span className="typo-sub-header-3 text-cool-gray-900 break-keep">
                   [{policy.title}]
                 </span>
-                <span className="typo-body-8 text-cool-gray-500">
+                <span className="typo-body-7 text-primary-200">
                   {policy.effectiveDate}
                 </span>
               </span>
-              <NextIcon aria-hidden="true" className="size-4 shrink-0" />
+              <NextIcon aria-hidden="true" className="size-6 shrink-0" />
             </button>
           </li>
         ))}

@@ -39,11 +39,7 @@ export const TermsDetailPage = () => {
       <ul>
         {policy.clauses.map((clause) => (
           <li key={clause.title}>
-            <Accordion
-              contentClassName="typo-body-5 text-cool-gray-500 leading-[1.5]"
-              headingLevel={2}
-              title={clause.title}
-            >
+            <Accordion headingLevel={2} title={clause.title}>
               <TermsClauseContent blocks={clause.blocks} />
             </Accordion>
           </li>
