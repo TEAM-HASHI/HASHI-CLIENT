@@ -12,6 +12,7 @@ import type {
 } from '@/features/restaurantList/types'
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
+import { cn } from '@/shared/utils'
 
 type RestaurantListTemplateProps = {
   filterMode?: 'bottom-sheet' | 'inline-sort'
@@ -89,6 +90,27 @@ export const RestaurantListTemplate = ({
     !isFetchingNextPage
   const shouldRenderList =
     visibleRestaurants.length > 0 || hasMoreRestaurants || isFetchingNextPage
+  const hasFixedSort =
+    restaurantType === 'sns-hot' && filterMode === 'inline-sort'
+  const listClassName = cn(
+    'mx-auto flex w-full flex-col px-5',
+    restaurantType === 'sns-hot' ? 'gap-2' : 'gap-5',
+  )
+  const filterBar =
+    filterMode === 'inline-sort' ? (
+      <RestaurantSortChipGroup
+        onValueChange={handleChangeSort}
+        options={sortOptions}
+        selectedValue={selectedSort.value}
+      />
+    ) : (
+      <RestaurantFilterBar
+        categoryLabel={categoryLabel}
+        onClickCategory={handleOpenCategorySheet}
+        onClickSort={handleOpenSortSheet}
+        sortLabel={selectedSort.label}
+      />
+    )
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
@@ -110,33 +132,24 @@ export const RestaurantListTemplate = ({
           }
           title={<h1>{title}</h1>}
         />
+        {hasFixedSort ? filterBar : null}
       </div>
 
       <div
-        className="flex flex-1 flex-col pt-[75px]"
+        className={cn(
+          'flex flex-1 flex-col',
+          hasFixedSort ? 'pt-[119px]' : 'pt-[75px]',
+        )}
         data-testid="restaurant-list-scroll-content"
       >
-        <div className="sticky top-[75px] z-10 bg-white">
-          {filterMode === 'inline-sort' ? (
-            <RestaurantSortChipGroup
-              onValueChange={handleChangeSort}
-              options={sortOptions}
-              selectedValue={selectedSort.value}
-            />
-          ) : (
-            <RestaurantFilterBar
-              categoryLabel={categoryLabel}
-              onClickCategory={handleOpenCategorySheet}
-              onClickSort={handleOpenSortSheet}
-              sortLabel={selectedSort.label}
-            />
-          )}
-        </div>
+        {!hasFixedSort ? (
+          <div className="sticky top-[75px] z-10 bg-white">{filterBar}</div>
+        ) : null}
 
         {isLoading ? (
           <ul
             aria-label={`${title} 식당 목록 로딩 중`}
-            className="mx-auto flex w-full flex-col gap-5 px-5"
+            className={listClassName}
             data-testid="restaurant-list"
           >
             {renderSkeletonItems(3)}
@@ -153,10 +166,7 @@ export const RestaurantListTemplate = ({
         ) : (
           <>
             {shouldRenderList ? (
-              <ul
-                className="mx-auto flex w-full flex-col gap-5 px-5"
-                data-testid="restaurant-list"
-              >
+              <ul className={listClassName} data-testid="restaurant-list">
                 {visibleRestaurants.map((restaurant) => (
                   <RestaurantCard
                     key={restaurant.id}
