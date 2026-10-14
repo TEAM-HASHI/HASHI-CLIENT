@@ -71,6 +71,27 @@ DragPanel의 접힘은 닫힘이나 unmount가 아니라
 
 ## Public API
 
+### Optional semantic stage commit
+
+`onStageCommit?: (event: DragPanelStageCommit) => void`를 추가합니다.
+`DragPanelStage`는 `collapsed | normal | maximum`이고 이벤트는
+`{ stage, height, input: 'pointer' | 'keyboard' }`입니다. height는 실제 제한된 높이입니다.
+기존 소비자는 callback을 추가하지 않아도 기존 숫자 기반 snap 동작을 유지합니다.
+
+- callback 사용 시 동일한 높이로 제한된 일반/최대도 의미 단계로 구분합니다.
+- 초기/외부 높이의 단계 추론은 가장 가까운 단계를 사용하며 동률은 낮은 단계를 선택합니다.
+- 사용자 commit 후 같은 높이가 유지되면 마지막 의미 단계를 보존합니다.
+- 최초 렌더, 외부 height 변경, resize/viewport 보정은 이벤트를 보내지 않습니다.
+- 레이아웃/설정 변경 중의 gesture, pointercancel/lost capture, 12px 미만 이동도 보내지 않습니다.
+- ArrowUp/Down은 의미 단계 한 칸, Home/End는 양 끝입니다. key repeat는 무시합니다.
+- 같은 단계로의 반복 입력은 이벤트를 재발행하지 않습니다. 다른 단계로 돌아온 뒤 다시 진입하면 발행합니다.
+- 실제 공간이 손잡이 이하이면 확장 이벤트를 보내지 않습니다.
+- 전체 화면 닫기 시 호출부가 일반 높이로 복귀합니다. 일반/최대 높이가 같은 경우
+  상태 초기화가 필요하면 caller가 panel key를 바꿔 새로운 세션으로 시작해야 합니다.
+- HDS는 Dialog/라우팅을 열지 않습니다. `height === maxHeight` 대신 이벤트의 stage를 소비합니다.
+
+호출부 조합 예시는 Storybook의 `FullscreenOnMaximum`을 참고합니다.
+
 `@hashi/hds-ui`에서 `DragPanel`, `DragPanelProps`를 export합니다.
 
 ```tsx
@@ -78,13 +99,13 @@ import { useState } from 'react'
 import { DragPanel } from '@hashi/hds-ui'
 
 // 높이는 예시입니다. 실제 화면의 Figma 규격은 호출부가 제공합니다.
-const [height, setHeight] = useState(318)
+const [height, setHeight] = useState(240)
 
 <div className="relative h-full">
   <DragPanel
     height={height}
-    normalHeight={318}
-    maxHeight={682}
+    normalHeight={240}
+    maxHeight={520}
     onHeightChange={setHeight}
     aria-label="목록"
     handleLabel="목록 패널 높이 조절"
@@ -182,7 +203,7 @@ HASHI DragPanel에서는 실제 사용 시 단계 전환의 예측 가능성을 
 
 ## Storybook
 
-Default, Collapsed, Expanded, AlternateHeights, Empty, SmallContainer, WithFixedSlots로 높이 설정, 배경 조작, 빈/긴 콘텐츠, 고정 영역을 확인합니다. 도메인 데이터나 API mock은 포함하지 않습니다.
+Default, Collapsed, Expanded, AlternateHeights, Empty, SmallContainer, WithFixedSlots로 높이 설정, 배경 조작, 빈/긴 콘텐츠, 고정 영역을 확인합니다. ChangingContainer는 크기 변경, FullscreenOnMaximum은 호출부 소유의 URL 변경 없는 Dialog 조합 예시입니다. 모든 예시 높이는 제품 규격이 아닌 시연용 값입니다. 도메인 데이터나 API mock은 포함하지 않습니다.
 
 ## Design Reference
 
@@ -191,6 +212,21 @@ Default, Collapsed, Expanded, AlternateHeights, Empty, SmallContainer, WithFixed
 - 이 값은 해당 디자인의 측정 기준입니다. 지도 전체나 내비게이션을 공컴 내부에 구현하거나 모든 화면 높이를 이 프레임에 고정하지 않습니다.
 
 ## Verification
+
+### Shared panel revision (2026-10-14)
+
+- HDS 전체 Vitest: 26 files / 258 tests 통과. DragPanel 30 tests 포함.
+- HDS lint, typecheck, TypeScript build 통과.
+- Storybook production build 통과 (기존 큰 chunk 경고 있음).
+- format:check, git diff --check, harness 검사 통과.
+- Playwright + 설치된 Chrome: 393x852, 1280x800, 320x400에서 목록 최대 제한,
+  Dialog fullscreen, 본문 스크롤 중 footer 위치 유지, Escape 후 포커스 복귀 확인.
+- 실제 pointer로 Dialog 전환, 닫기 포커스 복귀, 320x180에서 높이 중복 및 재열기 확인.
+- 일반/최대 모두 240px일 때 호출부 session 초기화로 3회 재열기 및 새 손잡이 포커스 복귀 확인.
+- 컨테이너를 560px에서 180px로 줄이면 높이를 제한하고 Dialog를 열지 않음 확인.
+- Playwright 기본 브라우저 바이너리가 없어 설치된 Chrome channel로 대체함.
+- Storybook dev의 최초 sandbox 실행은 실패했고 localhost:6017 실행으로 검증함.
+- 실제 기기 터치, 지도 카메라, attribution, nav/safe-area, 실제 컬렉션 호출부는 미검증.
 
 ### Automated
 

@@ -6,11 +6,20 @@ import { cn } from '../../utils'
 const HANDLE_HEIGHT = 30
 const DRAG_DEAD_ZONE = 12
 
+export type DragPanelStage = 'collapsed' | 'normal' | 'maximum'
+export type DragPanelStageCommit = {
+  stage: DragPanelStage
+  height: number
+  input: 'pointer' | 'keyboard'
+}
+const STAGE_NAMES: DragPanelStage[] = ['collapsed', 'normal', 'maximum']
+
 export type DragPanelProps = {
   height: number
   normalHeight: number
   maxHeight: number
   onHeightChange: (height: number) => void
+  onStageCommit?: (event: DragPanelStageCommit) => void
   children: ReactNode
   header?: ReactNode
   footer?: ReactNode
@@ -24,6 +33,7 @@ export const DragPanel = ({
   normalHeight,
   maxHeight,
   onHeightChange,
+  onStageCommit,
   children,
   header,
   footer,
@@ -36,11 +46,15 @@ export const DragPanel = ({
   const bodyRef = useRef<HTMLDivElement>(null)
   const handleRef = useRef<HTMLDivElement>(null)
   const scrollTop = useRef(0)
+  const committedStage = useRef<{ index: number; height: number } | null>(null)
 
   const gesture = useRef<{
     pointerId: number
     startY: number
     startHeight: number
+    startIndex: number
+    maximum: number
+    normal: number
   } | null>(null)
 
   const [dragHeight, setDragHeight] = useState<number | null>(null)
@@ -89,6 +103,26 @@ export const DragPanel = ({
   const clamp = (value: number) => Math.min(maximum, Math.max(minimum, value))
 
   const currentHeight = clamp(dragHeight ?? height)
+  const semanticStages = [minimum, clamp(normalHeight), maximum]
+
+  useLayoutEffect(() => {
+    const committed = committedStage.current
+    const effectiveStages = [
+      minimum,
+      Math.min(maximum, Math.max(minimum, normalHeight)),
+      maximum,
+    ]
+    if (
+      committed &&
+      (committed.height !== height ||
+        effectiveStages[committed.index] !== committed.height)
+    ) {
+      committedStage.current = null
+    }
+    // Layout changes invalidate an in-flight gesture, never confirm a stage.
+    gesture.current = null
+    setDragHeight(null)
+  }, [height, normalHeight, minimum, maximum, bottomInset])
 
   const stages = [...new Set([minimum, clamp(normalHeight), maximum])].sort(
     (a, b) => a - b,
@@ -102,6 +136,29 @@ export const DragPanel = ({
           : bestIndex,
       0,
     )
+
+  const getSemanticIndex = () => {
+    const committed = committedStage.current
+    if (committed && committed.height === clamp(height)) return committed.index
+    return semanticStages.reduce(
+      (best, value, index) =>
+        Math.abs(value - clamp(height)) <
+        Math.abs(semanticStages[best] - clamp(height))
+          ? index
+          : best,
+      0,
+    )
+  }
+
+  const commit = (index: number, input: DragPanelStageCommit['input']) => {
+    const previous = getSemanticIndex()
+    const next = semanticStages[index]
+    committedStage.current = { index, height: next }
+    onHeightChange(next)
+    if (index !== previous && maximum > minimum) {
+      onStageCommit?.({ stage: STAGE_NAMES[index], height: next, input })
+    }
+  }
 
   const getTargetStage = (
     startHeight: number,
@@ -147,6 +204,20 @@ export const DragPanel = ({
   }, [collapsed])
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (onStageCommit) {
+      const index = getSemanticIndex()
+      const targets: Record<string, number> = {
+        Home: 0,
+        End: 2,
+        ArrowUp: Math.min(index + 1, 2),
+        ArrowDown: Math.max(index - 1, 0),
+      }
+      const next = targets[event.key]
+      if (next === undefined) return
+      event.preventDefault()
+      if (!event.repeat) commit(next, 'keyboard')
+      return
+    }
     let nextHeight: number
 
     switch (event.key) {
@@ -194,6 +265,9 @@ export const DragPanel = ({
       pointerId: event.pointerId,
       startY: event.clientY,
       startHeight: currentHeight,
+      startIndex: getSemanticIndex(),
+      maximum,
+      normal: clamp(normalHeight),
     }
 
     setDragHeight(currentHeight)
@@ -218,7 +292,26 @@ export const DragPanel = ({
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
 
-    if (cancelled) return
+    if (
+      cancelled ||
+      active.maximum !== maximum ||
+      active.normal !== clamp(normalHeight)
+    )
+      return
+
+    if (onStageCommit) {
+      if (distance < DRAG_DEAD_ZONE) return
+      const up = deltaY > 0
+      let index = Math.max(0, Math.min(2, active.startIndex + (up ? 1 : -1)))
+      while (
+        up
+          ? index < 2 && finalHeight >= semanticStages[index] + DRAG_DEAD_ZONE
+          : index > 0 && finalHeight <= semanticStages[index] - DRAG_DEAD_ZONE
+      )
+        index += up ? 1 : -1
+      commit(index, 'pointer')
+      return
+    }
 
     if (distance < DRAG_DEAD_ZONE) {
       onHeightChange(stages[getClosestStageIndex(active.startHeight)])
