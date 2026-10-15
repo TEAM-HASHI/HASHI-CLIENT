@@ -116,4 +116,11 @@ describe('appRoutes', () => {
       rect.mockRestore()
     }
   })
+
+  it('registers terms list and detail as app routes', () => {
+    const routePaths = collectRoutePaths(appRoutes)
+
+    expect(routePaths).toContain(ROUTES.terms)
+    expect(routePaths).toContain(ROUTES.termsDetail)
+  })
 })

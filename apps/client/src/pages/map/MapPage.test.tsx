@@ -111,9 +111,7 @@ describe('MapPage preview', () => {
       if (reason === 'refresh') {
         await screen.findByRole('list', { name: '식당 검색 결과' })
         source.mockImplementationOnce(pending)
-        await user.click(
-          screen.getByRole('button', { name: '카페', exact: true }),
-        )
+        await user.click(screen.getByRole('button', { name: '카페' }))
       }
       const handle = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
       handle.focus()
