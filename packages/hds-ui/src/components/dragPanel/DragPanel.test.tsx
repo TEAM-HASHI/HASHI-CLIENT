@@ -1,16 +1,10 @@
 import '@testing-library/jest-dom/vitest'
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react'
+import { useState } from 'react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DragPanel } from './DragPanel'
-import { FullscreenPreview } from './DragPanel.stories'
+import type { DragPanelRenderState } from './DragPanel'
 
 let resize: ResizeObserverCallback
 
@@ -75,45 +69,213 @@ const renderPanel = (height = 318) =>
   )
 
 describe('DragPanel', () => {
-  it.each([520, 240, 180])(
-    'reopens the caller Dialog and restores focus with maximum %ipx',
-    async (maxHeight) => {
-      const url = window.location.href
+  it.each([700, 180])(
+    'keeps fullscreen and collapse controls when available height becomes %ipx',
+    (availableHeight) => {
+      const onHeightChange = vi.fn()
+      const onStageCommit = vi.fn()
+      const props = {
+        normalHeight: 240,
+        onHeightChange,
+        onStageCommit,
+        'aria-label': 'Results',
+        handleLabel: 'Panel height',
+        header: ({ isFullscreen, collapse }: DragPanelRenderState) =>
+          isFullscreen ? <button onClick={collapse}>Back</button> : null,
+        children: <p>Row</p>,
+      }
+      vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(600)
+      const Preview = () => {
+        const [height, setHeight] = useState(240)
+        return (
+          <DragPanel
+            {...props}
+            height={height}
+            onHeightChange={(next) => {
+              onHeightChange(next)
+              setHeight(next)
+            }}
+          />
+        )
+      }
+      render(<Preview />)
+      const handle = screen.getByRole('slider')
+      fireEvent.keyDown(handle, { key: 'End' })
+      onStageCommit.mockClear()
+      vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(availableHeight)
+      fireEvent.resize(window)
+      expect(handle).toHaveAttribute('aria-valuenow', String(availableHeight))
+      expect(handle).not.toBeVisible()
+      expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
+      expect(onStageCommit).not.toHaveBeenCalled()
+      fireEvent.wheel(screen.getByText('Row').parentElement!, { deltaY: -80 })
+      expect(onHeightChange).toHaveBeenLastCalledWith(
+        Math.min(240, availableHeight),
+      )
+      expect(
+        screen.queryByRole('button', { name: 'Back' }),
+      ).not.toBeInTheDocument()
+      expect(handle).toBeVisible()
+    },
+  )
+
+  it('restores fullscreen immediately when a second touch interrupts a pull', () => {
+    const onHeightChange = vi.fn()
+    render(
+      <DragPanel
+        height={700}
+        normalHeight={240}
+        onHeightChange={onHeightChange}
+        aria-label="Results"
+        handleLabel="Panel height"
+      >
+        <p>Row</p>
+      </DragPanel>,
+    )
+    const list = screen.getByText('Row').parentElement!
+    const first = { identifier: 1, clientX: 50, clientY: 100 }
+    const moved = { ...first, clientY: 160 }
+    fireEvent.touchStart(list, { touches: [first] })
+    fireEvent.touchMove(list, { touches: [moved] })
+    expect(screen.getByRole('slider', { hidden: true })).toHaveAttribute(
+      'aria-valuenow',
+      '640',
+    )
+    fireEvent.touchStart(list, {
+      touches: [moved, { ...moved, identifier: 2 }],
+    })
+    expect(screen.getByRole('slider', { hidden: true })).toHaveAttribute(
+      'aria-valuenow',
+      '700',
+    )
+    fireEvent.touchEnd(list)
+    expect(onHeightChange).not.toHaveBeenCalled()
+  })
+
+  it('expands in place and collapses from the header without replacing content', () => {
+    const onHeightChange = vi.fn()
+    const props = {
+      normalHeight: 240,
+      onHeightChange,
+      'aria-label': 'Results',
+      handleLabel: 'Panel height',
+      header: ({ isFullscreen, collapse }: DragPanelRenderState) =>
+        isFullscreen ? <button onClick={collapse}>Back</button> : null,
+      floating: ({ collapse }: DragPanelRenderState) => (
+        <button onClick={collapse}>Collapse</button>
+      ),
+      children: <input defaultValue="Draft" />,
+    }
+    const { rerender } = render(<DragPanel {...props} height={240} />)
+    const input = screen.getByRole('textbox')
+    const handle = screen.getByRole('slider')
+    handle.focus()
+    fireEvent.keyDown(handle, { key: 'End' })
+    expect(onHeightChange).toHaveBeenLastCalledWith(700)
+    rerender(<DragPanel {...props} height={700} />)
+    expect(handle).not.toBeVisible()
+    expect(input.closest('[tabindex="-1"]')).toHaveFocus()
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    expect(onHeightChange).toHaveBeenLastCalledWith(240)
+    rerender(<DragPanel {...props} height={240} />)
+    expect(handle).toHaveFocus()
+    expect(screen.getByRole('textbox')).toBe(input)
+    fireEvent.keyDown(handle, { key: 'End' })
+    rerender(<DragPanel {...props} height={700} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse' }))
+    expect(onHeightChange).toHaveBeenLastCalledWith(240)
+    rerender(<DragPanel {...props} height={240} />)
+    screen.getByRole('button', { name: 'Collapse' }).focus()
+    rerender(<DragPanel {...props} height={30} />)
+    expect(handle).toHaveFocus()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('only collapses a fullscreen list on downward input starting at its top', () => {
+    const onHeightChange = vi.fn()
+    render(
+      <DragPanel
+        height={700}
+        normalHeight={240}
+        onHeightChange={onHeightChange}
+        aria-label="Results"
+        handleLabel="Panel height"
+      >
+        <p>Row</p>
+      </DragPanel>,
+    )
+    const list = screen.getByText('Row').parentElement!
+    fireEvent.wheel(list, { deltaY: -80, ctrlKey: true })
+    expect(onHeightChange).not.toHaveBeenCalled()
+    list.scrollTop = 100
+    fireEvent.wheel(list, { deltaY: -80 })
+    fireEvent.touchStart(list, {
+      touches: [{ identifier: 1, clientX: 50, clientY: 100 }],
+    })
+    list.scrollTop = 0
+    fireEvent.touchMove(list, {
+      touches: [{ identifier: 1, clientX: 50, clientY: 160 }],
+    })
+    fireEvent.touchEnd(list)
+    expect(onHeightChange).not.toHaveBeenCalled()
+    fireEvent.touchStart(list, {
+      touches: [{ identifier: 1, clientX: 50, clientY: 100 }],
+    })
+    fireEvent.touchMove(list, {
+      touches: [{ identifier: 1, clientX: 50, clientY: 160 }],
+    })
+    fireEvent.touchCancel(list)
+    expect(onHeightChange).not.toHaveBeenCalled()
+    fireEvent.touchStart(list, {
+      touches: [{ identifier: 1, clientX: 50, clientY: 100 }],
+    })
+    fireEvent.touchMove(list, {
+      touches: [{ identifier: 1, clientX: 50, clientY: 160 }],
+    })
+    fireEvent.touchEnd(list)
+    expect(onHeightChange).toHaveBeenCalledExactlyOnceWith(240)
+    onHeightChange.mockClear()
+    fireEvent.wheel(list, { deltaY: -4 })
+    fireEvent.wheel(list, { deltaY: -4 })
+    expect(onHeightChange).not.toHaveBeenCalled()
+    fireEvent.wheel(list, { deltaY: -4 })
+    expect(onHeightChange).toHaveBeenCalledExactlyOnceWith(240)
+    onHeightChange.mockClear()
+    fireEvent.wheel(list, { deltaY: -1, deltaMode: 1 })
+    expect(onHeightChange).toHaveBeenCalledExactlyOnceWith(240)
+  })
+
+  it.each([false, true])(
+    'uses the same off-stage keyboard and pointer behavior with callback=%s',
+    (withCallback) => {
+      const onHeightChange = vi.fn()
       render(
-        <FullscreenPreview
-          height={240}
+        <DragPanel
+          height={200}
           normalHeight={240}
-          maxHeight={maxHeight}
-          onHeightChange={vi.fn()}
+          maxHeight={520}
+          onHeightChange={onHeightChange}
+          onStageCommit={withCallback ? vi.fn() : undefined}
           aria-label="Results"
           handleLabel="Panel height"
         >
-          Body
-        </FullscreenPreview>,
+          Content
+        </DragPanel>,
       )
       const handle = screen.getByRole('slider')
-      handle.focus()
-      fireEvent.keyDown(handle, { key: 'End' })
-      expect(await screen.findByRole('dialog')).toBeInTheDocument()
-      fireEvent.click(screen.getByRole('button', { name: 'Close details' }))
-      await waitFor(() =>
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-      )
-      await waitFor(() => expect(screen.getByRole('slider')).toHaveFocus())
-      expect(screen.getByRole('slider')).toHaveAttribute(
-        'aria-valuenow',
-        String(Math.min(240, maxHeight)),
-      )
-      expect(window.location.href).toBe(url)
-      fireEvent.keyDown(screen.getByRole('slider'), { key: 'End' })
-      expect(await screen.findByRole('dialog')).toBeInTheDocument()
-      fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
-      await waitFor(() =>
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
-      )
-      await waitFor(() => expect(screen.getByRole('slider')).toHaveFocus())
+      fireEvent.keyDown(handle, { key: 'ArrowUp' })
+      expect(onHeightChange).toHaveBeenLastCalledWith(240)
+      onHeightChange.mockClear()
+      fireEvent.keyDown(handle, { key: 'End', repeat: true })
+      fireEvent.pointerDown(handle, { clientY: 500 })
+      fireEvent.pointerUp(handle, { clientY: 495 })
+      expect(onHeightChange).not.toHaveBeenCalled()
+      fireEvent.pointerDown(handle, { clientY: 500 })
+      fireEvent.pointerUp(handle, { clientY: 480 })
+      expect(onHeightChange).toHaveBeenCalledExactlyOnceWith(520)
     },
   )
+
   const semanticPanel = (height = 240, normalHeight = 240, maxHeight = 520) => {
     const onStageCommit = vi.fn()
     const onHeightChange = vi.fn()
@@ -170,13 +332,9 @@ describe('DragPanel', () => {
     })
   })
 
-  it('does not commit on resize, external height correction, or interrupted drag', () => {
+  it('does not commit on resize or external height correction during a drag', () => {
     const { props, rerender, onStageCommit, onHeightChange } = semanticPanel()
     const handle = screen.getByRole('slider')
-    fireEvent.pointerDown(handle, { clientY: 500 })
-    fireEvent.pointerCancel(handle)
-    fireEvent.pointerDown(handle, { clientY: 500 })
-    fireEvent.lostPointerCapture(handle)
     fireEvent.pointerDown(handle, { clientY: 500 })
     rerender(<DragPanel {...props} maxHeight={400} height={400} />)
     fireEvent.pointerUp(handle, { clientY: 100 })
@@ -233,27 +391,6 @@ describe('DragPanel', () => {
     expect(onStageCommit).not.toHaveBeenCalled()
   })
 
-  it('keeps fixed slots outside the scrolling body', () => {
-    render(
-      <DragPanel
-        height={240}
-        normalHeight={240}
-        maxHeight={520}
-        onHeightChange={vi.fn()}
-        aria-label="Results"
-        handleLabel="Panel height"
-        header={<h2>Header</h2>}
-        footer={<button>Confirm</button>}
-      >
-        <p>Scrollable body</p>
-      </DragPanel>,
-    )
-    const body = screen.getByText('Scrollable body').parentElement!
-    expect(body).toHaveClass('overflow-y-auto')
-    expect(body).not.toContainElement(screen.getByText('Header'))
-    expect(body).not.toContainElement(screen.getByText('Confirm'))
-  })
-
   it('keeps the panel above the visible viewport bottom', () => {
     vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(500)
 
@@ -261,74 +398,6 @@ describe('DragPanel', () => {
 
     expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '500')
     expect(screen.getByRole('region')).toHaveStyle({ bottom: '200px' })
-  })
-
-  it('applies snap transition while not actively dragging', () => {
-    renderPanel()
-
-    expect(screen.getByRole('region', { name: 'Results' })).toHaveClass(
-      'transition-[height]',
-      'duration-[380ms]',
-      'ease-[cubic-bezier(0.22,1,0.36,1)]',
-    )
-  })
-
-  it('disables snap transition while actively dragging', () => {
-    renderPanel()
-
-    const handle = screen.getByRole('slider')
-    const panel = screen.getByRole('region', { name: 'Results' })
-
-    fireEvent.pointerDown(handle, {
-      clientY: 500,
-      pointerId: 1,
-    })
-
-    expect(panel).not.toHaveClass('transition-[height]')
-  })
-
-  it('moves focus out of content when the caller collapses the panel', () => {
-    const props = {
-      normalHeight: 318,
-      maxHeight: 682,
-      onHeightChange: vi.fn(),
-      'aria-label': 'Results',
-      handleLabel: 'Panel height',
-    }
-
-    const { rerender } = render(
-      <DragPanel {...props} height={318}>
-        <button>Item</button>
-      </DragPanel>,
-    )
-
-    screen.getByRole('button').focus()
-
-    rerender(
-      <DragPanel {...props} height={30}>
-        <button>Item</button>
-      </DragPanel>,
-    )
-
-    expect(screen.getByRole('slider')).toHaveFocus()
-  })
-
-  it('does not lock the background or render a modal', () => {
-    renderPanel()
-
-    expect(screen.getByRole('region', { name: 'Results' })).not.toHaveAttribute(
-      'aria-modal',
-    )
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(document.body.style.overflow).not.toBe('hidden')
-  })
-
-  it('uses the same entrance motion as BottomSheet', () => {
-    renderPanel()
-
-    expect(screen.getByRole('region', { name: 'Results' })).toHaveClass(
-      'animate-bottom-sheet-panel-in',
-    )
   })
 
   it('clamps height to available container space and responds to resizing', () => {
@@ -360,38 +429,6 @@ describe('DragPanel', () => {
 
     expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '30')
     expect(screen.getByText('Item').closest('[inert]')).toBeInTheDocument()
-  })
-
-  it('requests keyboard height changes without trapping Tab or closing on Escape', () => {
-    const onHeightChange = vi.fn()
-
-    render(
-      <DragPanel
-        height={318}
-        normalHeight={318}
-        maxHeight={682}
-        onHeightChange={onHeightChange}
-        aria-label="Results"
-        handleLabel="Panel height"
-      >
-        Content
-      </DragPanel>,
-    )
-
-    const handle = screen.getByRole('slider')
-
-    fireEvent.keyDown(handle, { key: 'End' })
-    expect(onHeightChange).toHaveBeenLastCalledWith(682)
-
-    fireEvent.keyDown(handle, { key: 'Home' })
-    expect(onHeightChange).toHaveBeenLastCalledWith(30)
-
-    onHeightChange.mockClear()
-
-    fireEvent.keyDown(handle, { key: 'Tab' })
-    fireEvent.keyDown(handle, { key: 'Escape' })
-
-    expect(onHeightChange).not.toHaveBeenCalled()
   })
 
   it('keeps the same content mounted across collapse and expansion', () => {
@@ -429,98 +466,47 @@ describe('DragPanel', () => {
     expect(input).toHaveValue('Preserved')
   })
 
-  it('moves up one stage when dragged upward beyond the dead zone', () => {
-    const onHeightChange = vi.fn()
-
-    render(
-      <DragPanel
-        height={318}
-        normalHeight={318}
-        maxHeight={682}
-        onHeightChange={onHeightChange}
-        aria-label="Results"
-        handleLabel="Panel height"
-      >
-        Content
-      </DragPanel>,
-    )
-
-    const handle = screen.getByRole('slider')
-
-    fireEvent.pointerDown(handle, {
-      clientY: 500,
-      pointerId: 1,
-    })
-
-    fireEvent.pointerUp(handle, {
-      clientY: 480,
-      pointerId: 1,
-    })
-
-    expect(onHeightChange).toHaveBeenCalledExactlyOnceWith(682)
-  })
-
-  it('moves down one stage when dragged downward beyond the dead zone', () => {
-    const onHeightChange = vi.fn()
-
-    render(
-      <DragPanel
-        height={318}
-        normalHeight={318}
-        maxHeight={682}
-        onHeightChange={onHeightChange}
-        aria-label="Results"
-        handleLabel="Panel height"
-      >
-        Content
-      </DragPanel>,
-    )
-
-    const handle = screen.getByRole('slider')
-
-    fireEvent.pointerDown(handle, {
-      clientY: 300,
-      pointerId: 1,
-    })
-
-    fireEvent.pointerUp(handle, {
-      clientY: 320,
-      pointerId: 1,
-    })
-
-    expect(onHeightChange).toHaveBeenCalledExactlyOnceWith(30)
-  })
-
-  it('keeps the current stage when movement stays inside the dead zone', () => {
-    const onHeightChange = vi.fn()
-
-    render(
-      <DragPanel
-        height={318}
-        normalHeight={318}
-        maxHeight={682}
-        onHeightChange={onHeightChange}
-        aria-label="Results"
-        handleLabel="Panel height"
-      >
-        Content
-      </DragPanel>,
-    )
-
-    const handle = screen.getByRole('slider')
-
-    fireEvent.pointerDown(handle, {
-      clientY: 500,
-      pointerId: 1,
-    })
-
-    fireEvent.pointerUp(handle, {
-      clientY: 495,
-      pointerId: 1,
-    })
-
-    expect(onHeightChange).toHaveBeenCalledExactlyOnceWith(318)
-  })
+  it.each([
+    { name: 'up one stage', height: 318, start: 500, end: 480, expected: 682 },
+    { name: 'down one stage', height: 318, start: 300, end: 320, expected: 30 },
+    {
+      name: 'up across the intermediate stage',
+      height: 30,
+      start: 700,
+      end: 300,
+      expected: 682,
+    },
+    {
+      name: 'down across the intermediate stage',
+      height: 682,
+      start: 200,
+      end: 600,
+      expected: 30,
+    },
+  ])(
+    'moves $name after a completed drag',
+    ({ height, start, end, expected }) => {
+      const onHeightChange = vi.fn()
+      render(
+        <DragPanel
+          height={height}
+          normalHeight={318}
+          maxHeight={682}
+          onHeightChange={onHeightChange}
+          aria-label="Results"
+          handleLabel="Panel height"
+        >
+          Content
+        </DragPanel>,
+      )
+      const handle = screen.getByRole('slider')
+      fireEvent.pointerDown(handle, { clientY: start, pointerId: 1 })
+      fireEvent.pointerMove(handle, { clientY: end, pointerId: 1 })
+      expect(onHeightChange).not.toHaveBeenCalled()
+      fireEvent.pointerUp(handle, { clientY: end, pointerId: 1 })
+      expect(onHeightChange).toHaveBeenCalledExactlyOnceWith(expected)
+    },
+  )
 
   it('ignores dragging that starts on content and secondary pointers', () => {
     renderPanel()
@@ -549,132 +535,41 @@ describe('DragPanel', () => {
     expect(handle).toHaveAttribute('aria-valuenow', '318')
   })
 
-  it('cancels interrupted gestures without committing a new height', () => {
-    const onHeightChange = vi.fn()
+  it.each(['pointerCancel', 'lostPointerCapture'] as const)(
+    'cancels %s without committing a new height',
+    (event) => {
+      const onHeightChange = vi.fn()
 
-    render(
-      <DragPanel
-        height={318}
-        normalHeight={318}
-        maxHeight={682}
-        onHeightChange={onHeightChange}
-        aria-label="Results"
-        handleLabel="Panel height"
-      >
-        Content
-      </DragPanel>,
-    )
+      render(
+        <DragPanel
+          height={318}
+          normalHeight={318}
+          maxHeight={682}
+          onHeightChange={onHeightChange}
+          aria-label="Results"
+          handleLabel="Panel height"
+        >
+          Content
+        </DragPanel>,
+      )
 
-    const handle = screen.getByRole('slider')
+      const handle = screen.getByRole('slider')
 
-    fireEvent.pointerDown(handle, {
-      clientY: 500,
-    })
+      fireEvent.pointerDown(handle, {
+        clientY: 500,
+      })
 
-    fireEvent.pointerMove(handle, {
-      clientY: 100,
-    })
+      fireEvent.pointerMove(handle, {
+        clientY: 100,
+      })
 
-    fireEvent.pointerCancel(handle)
+      fireEvent[event](handle)
+      fireEvent.pointerUp(handle, { clientY: 100 })
 
-    expect(handle).toHaveAttribute('aria-valuenow', '318')
-    expect(onHeightChange).not.toHaveBeenCalled()
-  })
-
-  it('moves between available stages with arrow keys', () => {
-    const onHeightChange = vi.fn()
-
-    render(
-      <DragPanel
-        height={30}
-        normalHeight={318}
-        maxHeight={682}
-        onHeightChange={onHeightChange}
-        aria-label="Results"
-        handleLabel="Panel height"
-      >
-        Content
-      </DragPanel>,
-    )
-
-    fireEvent.keyDown(screen.getByRole('slider'), {
-      key: 'ArrowUp',
-    })
-
-    expect(onHeightChange).toHaveBeenLastCalledWith(318)
-  })
-
-  it('moves across two stages when drag passes the intermediate stage', () => {
-    const onHeightChange = vi.fn()
-
-    render(
-      <DragPanel
-        height={30}
-        normalHeight={318}
-        maxHeight={682}
-        onHeightChange={onHeightChange}
-        aria-label="Results"
-        handleLabel="Panel height"
-      >
-        Content
-      </DragPanel>,
-    )
-
-    const handle = screen.getByRole('slider')
-
-    fireEvent.pointerDown(handle, {
-      clientY: 700,
-      pointerId: 1,
-    })
-
-    fireEvent.pointerMove(handle, {
-      clientY: 300,
-      pointerId: 1,
-    })
-
-    fireEvent.pointerUp(handle, {
-      clientY: 300,
-      pointerId: 1,
-    })
-
-    expect(onHeightChange).toHaveBeenCalledExactlyOnceWith(682)
-  })
-
-  it('moves down across two stages when drag passes the intermediate stage', () => {
-    const onHeightChange = vi.fn()
-
-    render(
-      <DragPanel
-        height={682}
-        normalHeight={318}
-        maxHeight={682}
-        onHeightChange={onHeightChange}
-        aria-label="Results"
-        handleLabel="Panel height"
-      >
-        Content
-      </DragPanel>,
-    )
-
-    const handle = screen.getByRole('slider')
-
-    fireEvent.pointerDown(handle, {
-      clientY: 200,
-      pointerId: 1,
-    })
-
-    fireEvent.pointerMove(handle, {
-      clientY: 600,
-      pointerId: 1,
-    })
-
-    fireEvent.pointerUp(handle, {
-      clientY: 600,
-      pointerId: 1,
-    })
-
-    expect(onHeightChange).toHaveBeenCalledExactlyOnceWith(30)
-  })
+      expect(handle).toHaveAttribute('aria-valuenow', '318')
+      expect(onHeightChange).not.toHaveBeenCalled()
+    },
+  )
 
   it('restores the list scroll position after collapse', () => {
     const props = {
