@@ -3,7 +3,7 @@ export type FilterOption = {
   value: string
 }
 
-export type RestaurantListCurationType = 'hashi-pick' | 'popular'
+export type RestaurantListCurationType = 'hashi-pick' | 'popular' | 'sns-hot'
 
 export type Restaurant = {
   id: string

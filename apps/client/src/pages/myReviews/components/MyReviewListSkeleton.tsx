@@ -8,7 +8,7 @@ const skeletonBlockClassName = 'bg-secondary-200 animate-pulse rounded-[4px]'
 
 const ReviewCardContentSkeleton = () => {
   return (
-    <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-w-0 flex-1 items-start gap-3">
       <div className={cn(skeletonBlockClassName, 'size-[92px] shrink-0')} />
       <div className="flex min-w-0 flex-1 flex-col">
         <div className={cn(skeletonBlockClassName, 'h-6 w-full')} />
@@ -21,16 +21,15 @@ const ReviewCardContentSkeleton = () => {
 
 const WritableReviewSkeleton = () => {
   return (
-    <article className="flex min-w-0 flex-col gap-3">
+    <article className="border-warm-gray-50 flex h-29 min-w-0 border-b py-3">
       <ReviewCardContentSkeleton />
-      <div className={cn(skeletonBlockClassName, 'h-9 rounded-[5px]')} />
     </article>
   )
 }
 
 const WrittenReviewSkeleton = () => {
   return (
-    <article className="border-warm-gray-50 flex h-[120px] min-w-0 items-center gap-3 border-b">
+    <article className="border-warm-gray-50 flex h-29 min-w-0 items-start gap-3 border-b py-3">
       <ReviewCardContentSkeleton />
       <div className={cn(skeletonBlockClassName, 'size-[18px] shrink-0')} />
     </article>

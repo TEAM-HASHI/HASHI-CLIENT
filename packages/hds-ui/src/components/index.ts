@@ -47,7 +47,12 @@ export type { SearchBarProps, SearchFieldProps } from './searchBar'
 export { BottomSheet } from './bottomSheet'
 export type { BottomSheetProps } from './bottomSheet'
 export { DragPanel } from './dragPanel'
-export type { DragPanelProps } from './dragPanel'
+export type {
+  DragPanelProps,
+  DragPanelRenderState,
+  DragPanelStage,
+  DragPanelStageCommit,
+} from './dragPanel'
 export { Tabs } from './tabs'
 export type { TabsItem, TabsProps } from './tabs'
 export { Textarea } from './textarea'

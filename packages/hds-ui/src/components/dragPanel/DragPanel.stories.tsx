@@ -1,3 +1,4 @@
+import { BackIcon } from '@hashi/hds-icons'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
@@ -51,13 +52,17 @@ const meta = {
     ),
   ],
   args: {
-    height: 318,
-    normalHeight: 318,
-    maxHeight: 794,
+    height: 240,
+    normalHeight: 240,
+    maxHeight: 520,
     'aria-label': 'Results',
     handleLabel: 'Panel height',
     onHeightChange: () => {},
     children: rows,
+    header: <h2 className="typo-sub-header-3 px-5 py-3">Results</h2>,
+    footer: (
+      <div className="border-cool-gray-100 border-t px-5 py-3">Footer</div>
+    ),
   },
   argTypes: {
     height: { control: false },
@@ -66,6 +71,7 @@ const meta = {
     children: { control: false },
     header: { control: false },
     footer: { control: false },
+    floating: { control: false },
     onHeightChange: { control: false },
   },
   render: Preview,
@@ -76,28 +82,54 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 export const Collapsed: Story = { args: { height: 30 } }
-export const Expanded: Story = { args: { height: 794 } }
-export const AlternateHeights: Story = {
-  args: { height: 458, normalHeight: 458, maxHeight: 682 },
+export const Empty: Story = {
+  args: { children: null, header: null, footer: null },
 }
-export const Empty: Story = { args: { children: null } }
-export const SmallContainer: Story = {
-  decorators: [
-    (Story) => (
-      <div className="relative h-75">
-        <Story />
-      </div>
-    ),
-  ],
-  args: { height: 794 },
-}
-export const WithFixedSlots: Story = {
+export const Fullscreen: Story = {
   args: {
-    header: <h2 className="typo-sub-header-3 px-5 py-3">Results</h2>,
-    footer: (
-      <div className="p-5">
-        <Button width="full">Confirm</Button>
+    maxHeight: undefined,
+    children: ({ isFullscreen }) => (
+      <div className={isFullscreen ? 'pb-20' : undefined}>{rows}</div>
+    ),
+    header: ({ isFullscreen, collapse }) => (
+      <div className="flex items-center gap-3 px-5 py-2">
+        {isFullscreen && (
+          <button
+            type="button"
+            aria-label="Back to panel"
+            title="Back to panel"
+            onClick={collapse}
+            className="flex size-11 items-center justify-center"
+          >
+            <BackIcon aria-hidden="true" />
+          </button>
+        )}
+        <h2 className="typo-sub-header-3">Results</h2>
       </div>
     ),
+    footer: null,
+    floating: ({ isFullscreen, collapse }) =>
+      isFullscreen && (
+        <Button className="absolute right-5 bottom-5" onClick={collapse}>
+          Return to panel
+        </Button>
+      ),
   },
 }
+
+const ResizablePreview = (args: DragPanelProps) => {
+  const [small, setSmall] = useState(false)
+  return (
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 p-4">
+        <Button onClick={() => setSmall(!small)}>Resize container</Button>
+      </div>
+      <div className="min-h-0 flex-1">
+        <div className="relative" style={{ height: small ? '45%' : '100%' }}>
+          <Preview {...args} />
+        </div>
+      </div>
+    </div>
+  )
+}
+export const ChangingContainer: Story = { render: ResizablePreview }

@@ -5,6 +5,9 @@ import { ROUTES } from '@/app/router/path'
 export const getRestaurantDetailPath = (restaurantId: string) =>
   generatePath(ROUTES.restaurantDetail, { restaurantId })
 
+export const getMagazineDetailPath = (magazineId: string) =>
+  generatePath(ROUTES.magazineDetail, { magazineId })
+
 export const getRestaurantMenuDetailPath = (
   restaurantId: string,
   menuId: string,
@@ -22,3 +25,6 @@ export const getRestaurantReviewNewPath = (
 
   return `${pathname}?${searchParams.toString()}`
 }
+
+export const getTermsDetailPath = (policyId: string) =>
+  generatePath(ROUTES.termsDetail, { policyId })
