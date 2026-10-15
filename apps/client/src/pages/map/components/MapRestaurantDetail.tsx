@@ -144,25 +144,41 @@ const MapDetailPanel = ({
         }
       >
         <div className="relative min-h-full">
-          <header className="sticky top-0 z-20 flex h-12.5 items-center gap-2 bg-white px-5">
-            <h2
-              className="typo-header-2 text-primary-200 min-w-0 flex-1 truncate"
-              title={restaurant.name}
-            >
-              {restaurant.name}
-            </h2>
-            <IconButton aria-label="식당 상세 닫기" size="xs" onClick={onClose}>
-              <CancelIcon className="size-6" />
-            </IconButton>
-          </header>
-          <div className="px-5 pb-6">
+          {isExpanded ? (
+            <header className="sticky top-0 z-20 flex h-12.5 items-center gap-2 bg-white px-5">
+              <h2
+                className="typo-header-2 text-primary-200 min-w-0 flex-1 truncate"
+                title={restaurant.name}
+              >
+                {restaurant.name}
+              </h2>
+              <IconButton
+                aria-label="식당 상세 닫기"
+                size="xs"
+                onClick={onClose}
+              >
+                <CancelIcon className="size-6" />
+              </IconButton>
+            </header>
+          ) : null}
+          <div className={cn('px-5 pb-6', !isExpanded && 'pt-2.75')}>
             <div className="flex items-start justify-between gap-2">
-              <MapRestaurantMeta restaurant={restaurant} />
+              <div className="min-w-0 flex-1">
+                {!isExpanded && (
+                  <h2
+                    className="typo-header-2 text-primary-200 mb-2 truncate"
+                    title={restaurant.name}
+                  >
+                    {restaurant.name}
+                  </h2>
+                )}
+                <MapRestaurantMeta restaurant={restaurant} />
+              </div>
               {!isExpanded && (
                 <MapSaveAction restaurant={restaurant} onSave={onUnavailable} />
               )}
             </div>
-            <div className="mt-5">
+            <div className="mt-3">
               <MapRestaurantImages
                 restaurant={restaurant}
                 onPhotoSelect={onPhotoSelect}

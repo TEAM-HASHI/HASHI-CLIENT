@@ -19,7 +19,7 @@ export const MapRestaurantCard = ({
 }: MapRestaurantCardProps) => (
   <article className="border-warm-gray-50 border-b py-4">
     <div className="flex items-start gap-1">
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
         <h3>
           <button
             type="button"

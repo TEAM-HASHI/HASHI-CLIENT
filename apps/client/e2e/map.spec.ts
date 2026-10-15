@@ -28,8 +28,15 @@ test('exposed map, category and search receive real pointer clicks', async ({
   await expect(page).toHaveURL(/\/search$/)
   await page.getByRole('searchbox').fill('없는 식당')
   await page.getByRole('searchbox').press('Enter')
-  await expect(page.getByText('검색 조건에 맞는 식당이 없어요.')).toBeVisible()
-  await page.getByRole('button', { name: '검색 조건 초기화' }).click()
+  await expect(page.getByText('조건에 맞는 맛집이 없어요.')).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '검색 조건 초기화' }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('slider', { name: '식당 목록 높이 조절' }),
+  ).toHaveAttribute('aria-valuenow', '30')
+  await page.getByRole('button', { name: '지도 검색어 지우기' }).click()
+  await page.getByRole('button', { name: '전체', exact: true }).click()
   await expect(
     page.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
   ).toBeVisible()
@@ -132,7 +139,7 @@ test('SDK failure exposes a keyboard-operable retry', async ({ page }) => {
     route.abort(),
   )
   await page.reload()
-  await expect(page.getByText('지도를 불러오지 못했어요.')).toBeVisible({
+  await expect(page.getByText('지도를 불러오지 못했어요!')).toBeVisible({
     timeout: 20000,
   })
   const retry = page.getByRole('button', { name: '다시 시도하기' })

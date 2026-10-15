@@ -45,6 +45,9 @@ interface MapViewportProps {
   onResetArea: () => void
   onSaved: () => void
   onCloseDetail?: () => void
+  loadingRestaurants?: boolean
+  mapUnavailable?: boolean
+  onMapFailureChange?: (failed: boolean) => void
 }
 
 const MapFailure = ({ configuration = false }: { configuration?: boolean }) => (
@@ -53,7 +56,7 @@ const MapFailure = ({ configuration = false }: { configuration?: boolean }) => (
       message={
         configuration
           ? '지도 설정을 확인해주세요.'
-          : '지도를 불러오지 못했어요.'
+          : '지도를 불러오지 못했어요!'
       }
       onRetry={() => window.location.reload()}
     />
@@ -78,6 +81,8 @@ const GoogleMapSurface = ({
   onUserMove,
   cameraRequest,
   searchPositions,
+  loadingRestaurants = false,
+  onMapFailureChange,
 }: MapViewportProps) => {
   const status = useApiLoadingStatus()
   const [currentBounds, setCurrentBounds] = useState<MapBounds | null>(null)
@@ -124,6 +129,9 @@ const GoogleMapSurface = ({
     status === APILoadingStatus.AUTH_FAILURE ||
     (timedOut && !ready)
   const offsets = layoutMapAreaLabels(areas, zoom)
+  useEffect(() => {
+    onMapFailureChange?.(failed)
+  }, [failed, onMapFailureChange])
   const boundsChanged =
     currentBounds &&
     searchedBounds &&
@@ -264,14 +272,20 @@ const GoogleMapSurface = ({
               ))}
         </GoogleMap>
       )}
-      {!ready && !failed && (
+      {(!ready || loadingRestaurants) && !failed && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <MapStatusView loading message="지도를 불러오고 있어요." />
+          <MapStatusView
+            loading
+            message={
+              ready ? '식당 목록을 불러오고 있어요.' : '지도를 불러오고 있어요.'
+            }
+          />
         </div>
       )}
       {failed && <MapFailure />}
       {ready &&
         !failed &&
+        !loadingRestaurants &&
         hasCategory &&
         hasUserMoved &&
         boundsChanged &&
@@ -294,6 +308,10 @@ const GoogleMapSurface = ({
 export const MapViewport = (props: MapViewportProps) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim()
   const mapId = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim()
+  const onMapFailureChange = props.onMapFailureChange
+  useEffect(() => {
+    if (!apiKey || !mapId) onMapFailureChange?.(true)
+  }, [apiKey, mapId, onMapFailureChange])
   return (
     <>
       <div
@@ -316,7 +334,7 @@ export const MapViewport = (props: MapViewportProps) => {
           <MapFailure configuration />
         )}
       </div>
-      {props.zoomed && (
+      {props.zoomed && !props.mapUnavailable && (
         <IconButton
           aria-label="전체 지역 보기"
           variant="soft"
@@ -327,19 +345,21 @@ export const MapViewport = (props: MapViewportProps) => {
           <BackIcon className="size-5" />
         </IconButton>
       )}
-      <IconButton
-        aria-label={props.selectedId ? '선택한 식당 닫기' : '저장 목록 보기'}
-        variant="soft"
-        className="absolute left-5 size-11 shadow-[0_0_4px_rgba(0,0,0,0.2)]"
-        style={{ bottom: props.panelHeight + 48 }}
-        onClick={props.selectedId ? props.onCloseDetail : props.onSaved}
-      >
-        {props.selectedId ? (
-          <CancelIcon className="size-6" />
-        ) : (
-          <SaveIcon className="text-warm-gray-300 size-6" />
-        )}
-      </IconButton>
+      {!props.mapUnavailable && (
+        <IconButton
+          aria-label={props.selectedId ? '선택한 식당 닫기' : '저장 목록 보기'}
+          variant="soft"
+          className="absolute left-5 size-11 shadow-[0_0_4px_rgba(0,0,0,0.2)]"
+          style={{ bottom: props.panelHeight + 20 }}
+          onClick={props.selectedId ? props.onCloseDetail : props.onSaved}
+        >
+          {props.selectedId ? (
+            <CancelIcon className="size-6" />
+          ) : (
+            <SaveIcon className="text-warm-gray-300 size-6" />
+          )}
+        </IconButton>
+      )}
     </>
   )
 }

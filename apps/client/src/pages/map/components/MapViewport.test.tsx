@@ -82,6 +82,14 @@ beforeEach(() => {
   sdk.zoom = 12
 })
 
+it('shows map loading while restaurant results refresh after the SDK is ready', () => {
+  render(<MapViewport {...props} loadingRestaurants />)
+  fireEvent.click(screen.getByText('초기 idle'))
+  expect(screen.getByRole('status')).toHaveTextContent(
+    '식당 목록을 불러오고 있어요.',
+  )
+})
+
 it('restores region mode when the user zooms back out without conditions', () => {
   render(<MapViewport {...props} zoomed />)
   fireEvent.click(screen.getByText('초기 idle'))

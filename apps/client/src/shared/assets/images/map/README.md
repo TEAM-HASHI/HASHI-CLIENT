@@ -3,7 +3,8 @@
 - Source: [HASHI 지도 디자인](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=8317-32364).
 - Overview: 8317:33067. Street background / selected restaurant images: 8317:32935. List food images: 8317:33362.
 - `preview/`: temporary map backgrounds and sample restaurant photos, converted to WebP (quality 90, original dimensions). No full-screen design screenshot is embedded as UI.
-- All map glyphs, including the area marker tail, are imported from `@hashi/hds-icons`: RestaurantMarkerIcon, CafeMarkerIcon, BarMarkerIcon, MapViewIcon and MapPinTailIcon. No page-local icon folder or marker asset copies remain.
+- Map marker and CTA glyphs, including the area marker tail, are imported from `@hashi/hds-icons`: RestaurantMarkerIcon, CafeMarkerIcon, BarMarkerIcon, MapViewIcon and MapPinTailIcon. No page-local icon folder or marker asset copies remain.
+- `shared/assets/icons/map-toast-warning.svg`: original Figma `10218:91472` warning artwork for empty-result toasts. Unlike HDS NoteIcon, it has a transparent triangle with a light outline; the shared icon is unchanged.
 - HDS stores original SVG inputs in `packages/hds-icons/src/rawIcons/` and generated React components in `src/icons/`. Normal/selected states share one glyph per category; the app's `MapRestaurantMarker` owns the circle, shadow, label and rating.
 - Original marker nodes: 7672:45501 (bar), 7672:45502 (cafe), 7672:45503 (restaurant). Selected nodes: 8317:38213 (restaurant), 8317:38231 (cafe), 8317:38247 (bar).
 - Glyph source groups: 8317:38215 / Frame 2131329717 (restaurant), 8317:38233 / Frame 2131329735 (cafe), 8317:38249 / Frame 2131329676 (bar). Export SVG through Figma, extract the named inner group (exports also include ancestor artwork), preserve its paths/transforms, remove unused IDs, and convert with `pnpm --filter @hashi/hds-icons gen:icons`. The accent uses currentColor; the app supplies primary-400 and keeps white paths.

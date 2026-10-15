@@ -16,6 +16,7 @@ import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
 import { useMapPageState } from '@/pages/map/hooks/useMapPageState'
 import type { MapConditions, MapPanelStage } from '@/pages/map/types'
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
+import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
 
 export const MapPage = () => {
   const location = useLocation()
@@ -25,6 +26,7 @@ export const MapPage = () => {
   const { containerRef, availableHeight } = useMapPanelLayout()
   const [stage, setStage] = useState<MapPanelStage>(initial?.stage ?? 'normal')
   const [comingSoon, setComingSoon] = useState(false)
+  const [mapUnavailable, setMapUnavailable] = useState(false)
   const [detailStage, setDetailStage] = useState<MapPanelStage>(
     initial?.detailStage ?? 'normal',
   )
@@ -90,8 +92,9 @@ export const MapPage = () => {
       return
     lastEmptyEvent.current = state.emptyEvent.id
     const isRegion = state.emptyEvent.kind === 'region'
-    setStage(isRegion ? 'collapsed' : 'normal')
+    setStage('collapsed')
     showToast({
+      icon: <img src={mapToastWarning} alt="" width={26} height={26} />,
       children: isRegion
         ? '이 지역에는 아직 등록된 맛집이 없어요.'
         : '조건에 맞는 맛집이 없어요.',
@@ -169,8 +172,17 @@ export const MapPage = () => {
       className="relative h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] overflow-hidden bg-white"
     >
       <h1 className="sr-only">도쿄 맛집 지도</h1>
-      <div inert={!!state.selectedRestaurant && detailStage === 'expanded'}>
+      <div
+        inert={
+          !!state.selectedRestaurant &&
+          detailStage === 'expanded' &&
+          !mapUnavailable
+        }
+      >
         <MapViewport
+          loadingRestaurants={state.status === 'loading'}
+          mapUnavailable={mapUnavailable}
+          onMapFailureChange={setMapUnavailable}
           restaurants={state.restaurants}
           areas={state.areas}
           selectedId={state.selectedRestaurant?.id ?? null}
@@ -196,11 +208,13 @@ export const MapPage = () => {
             state.conditions.category !== 'all' || !!state.conditions.keyword
           }
           panelHeight={
-            state.selectedRestaurant
-              ? detailStage === 'collapsed'
-                ? 30
-                : 294
-              : height
+            mapUnavailable
+              ? 0
+              : state.selectedRestaurant
+                ? detailStage === 'collapsed'
+                  ? 30
+                  : 294
+                : height
           }
           onSelectRestaurant={handleSelect}
           onSelectArea={(areaCode) => handleConditionsChange({ areaCode })}
@@ -225,11 +239,14 @@ export const MapPage = () => {
           }
           onCategoryChange={(category) => handleConditionsChange({ category })}
         />
-        <p className="typo-caption-4 text-cool-gray-600 pointer-events-none absolute top-[calc(112px+var(--safe-area-top,0px))] right-5 rounded bg-white/90 px-1">
+        <p
+          hidden={mapUnavailable}
+          className="typo-caption-4 text-cool-gray-600 pointer-events-none absolute top-[calc(112px+var(--safe-area-top,0px))] right-5 rounded bg-white/90 px-1"
+        >
           샘플 식당 · 실제 매장 위치/예약 미연동
         </p>
         <div
-          hidden={!!state.selectedRestaurant}
+          hidden={!!state.selectedRestaurant || mapUnavailable}
           className="pointer-events-none absolute inset-0"
         >
           <DragPanel
@@ -270,15 +287,11 @@ export const MapPage = () => {
               }}
               onSelect={handleSelect}
               onSave={() => setComingSoon(true)}
-              onReset={() => {
-                state.handleReset()
-                setStage('normal')
-              }}
             />
           </DragPanel>
         </div>
       </div>
-      {state.selectedRestaurant && (
+      {state.selectedRestaurant && !mapUnavailable && (
         <MapRestaurantDetail
           key={state.selectedRestaurant.id}
           restaurant={state.selectedRestaurant}

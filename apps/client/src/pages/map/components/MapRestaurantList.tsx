@@ -14,7 +14,6 @@ interface MapRestaurantListProps {
   onSortChange: (sort: MapSort) => void
   onSelect: (id: string) => void
   onSave: () => void
-  onReset: () => void
   status?: 'loading' | 'success' | 'error'
   onRetry?: () => void
   nextCursor?: string
@@ -31,7 +30,6 @@ export const MapRestaurantList = ({
   onSortChange,
   onSelect,
   onSave,
-  onReset,
   status = 'success',
   onRetry,
   nextCursor,
@@ -40,26 +38,30 @@ export const MapRestaurantList = ({
   onLoadNext,
 }: MapRestaurantListProps) => (
   <div className="px-5 pb-5" data-map-list="">
-    <div className="flex items-center justify-between gap-2">
-      <h2 className="typo-sub-header-3 text-cool-gray-600 min-w-0 truncate">
-        {filtered ? '검색한 맛집' : '지금 도쿄에서 제일 핫한 맛집'}
-      </h2>
-      <MapSortMenu
-        value={sort}
-        onChange={onSortChange}
-        triggerRef={sortTriggerRef}
-      />
-    </div>
+    {status !== 'error' && (status === 'loading' || restaurants.length > 0) && (
+      <div className="flex min-h-7 items-center justify-between gap-2 py-1">
+        <h2 className="typo-sub-header-3 text-cool-gray-600 min-w-0 truncate">
+          {filtered ? '검색한 맛집' : '지금 도쿄에서 제일 핫한 맛집'}
+        </h2>
+        <MapSortMenu
+          value={sort}
+          onChange={onSortChange}
+          triggerRef={sortTriggerRef}
+        />
+      </div>
+    )}
     {status !== 'success' ? (
-      <MapStatusView
-        loading={status === 'loading'}
-        message={
-          status === 'loading'
-            ? '식당 목록을 불러오고 있어요.'
-            : '식당 목록을 불러오지 못했어요.'
-        }
-        onRetry={status === 'error' ? onRetry : undefined}
-      />
+      <div className="py-[67px]">
+        <MapStatusView
+          loading={status === 'loading'}
+          message={
+            status === 'loading'
+              ? '식당 목록을 불러오고 있어요.'
+              : '식당 목록을 불러오지 못했어요!'
+          }
+          onRetry={status === 'error' ? onRetry : undefined}
+        />
+      </div>
     ) : restaurants.length ? (
       <ul aria-label="식당 검색 결과">
         {restaurants.map((restaurant, index) => (
@@ -73,18 +75,26 @@ export const MapRestaurantList = ({
           </li>
         ))}
       </ul>
-    ) : (
-      <div className="flex flex-col items-center gap-4 py-10" role="status">
-        <p className="typo-body-7">검색 조건에 맞는 식당이 없어요.</p>
-        <Button size="md" variant="neutral" onClick={onReset}>
-          검색 조건 초기화
+    ) : null}
+    {status === 'success' &&
+      nextCursor &&
+      (nextError ? (
+        <div className="flex min-h-68 items-center justify-center">
+          <MapStatusView
+            message="식당 목록을 불러오지 못했어요!"
+            onRetry={onLoadNext}
+          />
+        </div>
+      ) : (
+        <Button
+          size="md"
+          variant="neutral"
+          className="mx-auto mt-8 block px-2.5"
+          onClick={onLoadNext}
+          disabled={loadingNext}
+        >
+          {loadingNext ? '불러오는 중' : '더 보기'}
         </Button>
-      </div>
-    )}
-    {status === 'success' && nextCursor && (
-      <Button onClick={onLoadNext} disabled={loadingNext}>
-        {nextError ? '다시 시도하기' : loadingNext ? '불러오는 중' : '더 보기'}
-      </Button>
-    )}
+      ))}
   </div>
 )

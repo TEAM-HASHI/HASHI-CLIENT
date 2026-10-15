@@ -44,19 +44,22 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 
 ### UI 상태와 재시도
 
-| 상황                         | 화면 및 동작                                                                                            |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------- |
-| 지도 SDK 로딩                | 지도 중앙 스피너, 접근 가능한 로딩 안내                                                                 |
-| 지도 실패                    | `지도를 불러오지 못했어요.` 및 `다시 시도하기`; SDK 재초기화가 필요한 경우 기존 페이지 재로드 방식 유지 |
-| 목록 최초·재조회 로딩        | 이전 목록·핀 제거, 지도·목록 영역 스피너                                                                |
-| 목록 최초·재조회 실패        | 지도·조건 유지, 시트에 `식당 목록을 불러오지 못했어요.` 및 동일 요청 재시도                             |
-| 추가 조회 실패               | 기존 목록·핀 유지, 목록 하단에서 실패한 다음 페이지 재시도                                              |
-| 영역 재검색 결과 없음        | 지도 유지, 핀 제거, 목록 시트를 최소 높이로 축소, `이 지역에는 아직 등록된 맛집이 없어요.` 토스트 1회   |
-| 검색·카테고리 조건 결과 없음 | 조건 유지, 핀 제거, 일반 높이 시트에 빈 결과 안내, `조건에 맞는 맛집이 없어요.` 토스트 1회              |
-| 상세 조회 실패               | 상세 닫기, 직전 지도·목록 복원, `식당 정보를 불러오지 못했어요.` 토스트; 재선택으로 재시도              |
+| 상황                         | 화면 및 동작                                                                                                                |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 지도 SDK 로딩                | 지도 중앙 스피너, 접근 가능한 로딩 안내                                                                                     |
+| 지도 실패                    | 목록·상세·지도 버튼을 숨기고 흰 지도 영역 중앙에 `지도를 불러오지 못했어요!` 및 `다시 시도하기`; 페이지 재로드로 SDK 재시도 |
+| 목록 최초·재조회 로딩        | 이전 목록·핀 제거, 지도·목록 영역 스피너                                                                                    |
+| 목록 최초·재조회 실패        | 지도·조건 유지, 제목·정렬 없이 시트에 오류 그림과 `식당 목록을 불러오지 못했어요!` 및 동일 요청 재시도                      |
+| 추가 조회 실패               | 기존 목록·핀 유지, 목록 하단 272px 오류 블록에 그림·안내문·다음 페이지 재시도                                               |
+| 영역 재검색 결과 없음        | 지도 유지, 핀 제거, 목록 시트를 최소 높이로 축소, `이 지역에는 아직 등록된 맛집이 없어요.` 토스트 1회                       |
+| 검색·카테고리 조건 결과 없음 | 조건 유지, 핀 제거, 시트 최소 높이, `조건에 맞는 맛집이 없어요.` 경고 토스트 1회; 임시 안내문·초기화 버튼 없음              |
+| 상세 조회 실패               | 상세 닫기, 직전 지도·목록 복원, `식당 정보를 불러오지 못했어요.` 토스트; 재선택으로 재시도                                  |
 
 - 빈 결과 분기는 요청 원인으로 정한다. 재검색 버튼은 지역 안내, 검색·카테고리 변경은 조건 안내를 사용한다. 정렬·추가 조회는 현재 결과 집합의 빈 상태 종류를 유지한다.
+- 최신 사용자 지정 Figma `10121:89058`, `10218:91936`, `10218:91241`를 오류·빈 결과 표현 기준으로 적용한다. 검색·필터 0건 시 일반 높이 시트를 유지하던 이전 명세 대신 축소 시트+토스트를 적용한다. 검색어 X와 카테고리 chip으로 조건을 변경한다.
+- 오류 그림은 원본 SVG 48×29.2944px을 48×27.758px 레이아웃 슬롯에서 아래로 넘겨 표시한다. 그림→안내문 17px, 안내문→재시도 34px, 버튼 98×36px. 목록 오류 그림은 시트 상단에서 97px(핸들 30px+여백 67px)에 위치한다.
 - 토스트는 렌더링마다 반복하지 않고 최신 요청의 결과 이벤트마다 1회 표시한다. 오래된 응답은 토스트도 표시하지 않는다.
+- 빈 결과 토스트는 Figma `10218:91472`의 경고 SVG(26×26, 투명 배경·밝은 삼각형 테두리·빨간 느낌표)를 사용한다. 공통 Toast의 높이 60px, 아이콘과 문구 간격 11px을 유지한다.
 - 공통 토스트·버튼·아이콘을 재사용한다. 문구와 요청 재시도 책임은 페이지에 둔다. 스피너는 reduced-motion과 보조기기 안내를 고려한다.
 
 ### 상세·복원 정책
@@ -200,12 +203,14 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - A restaurant/region selected before SDK readiness waits for the initial fit to finish, so its detail zoom cannot become the minimum. Zoom-out remains available to the initial overview level after selection.
 - `현재 위치에서 검색` uses the Figma pill and LocationIcon. It requires a category and changed bounds after a user gesture, not initial fit, area selection or restoration. Gestures collapse the active panel and clear the old area condition without automatically querying.
 - Area click centers/zooms the real map and filters sample restaurants. A reset action fits all sample regions. Category and submitted keyword apply together. Sort: recommended, rating, reviews, deterministic recommendation tie-break.
-- Search draft is separate from submitted keyword; empty results provide reset. Filter changes clear selected restaurant. Same selected category toggles to all.
+- Search draft is separate from submitted keyword; empty results retain the search clear action and category chips, without an additional reset CTA. Filter changes clear selected restaurant. Same selected category toggles to all.
 - The toolbar opens `/search` with validated map route state. Search returns using replace navigation, retains category, and fits nonempty keyword results. Clearing keyword retains the camera. Ordinary search URL policy is unchanged.
 - A memory session retains camera, conditions, loaded results, selection and panel stages for less than five minutes after route/background departure. Pending requests are not saved as successful data. Active map-tab reselection resets; reload persistence is not provided.
 - List collapse/expand preserves scroll. Condition changes reset scroll. Closing details restores preselection camera/stage and resets list scroll; focus falls back to the sort trigger if the original card remounts. Floating bookmark becomes close while selected.
 - An expanded list exposes `지도로 보기` in the panel footer. It collapses the list to the handle without resetting conditions or scroll; focus returns to the handle. It is not shown in normal/collapsed or restaurant-detail states.
-- Explicit viewport search captures conditions/bounds/camera. Latest request wins; stale responses produce neither results nor toast. Empty viewport results collapse the list and show a region toast; empty condition results retain a normal-height list and show a condition toast. Retry uses the failed request; next-page failure keeps loaded results.
+- SDK failure hides the restaurant panels and floating map controls while retaining search/category controls and retry. Restaurant refetch displays a spinner on the map as well as the list; list failure hides the list heading/sort control.
+- Normal restaurant summary uses the floating map close button only; expanded detail retains its internal close button. Floating map controls are placed 20px above the panel.
+- Explicit viewport search captures conditions/bounds/camera. Latest request wins; stale responses produce neither results nor toast. Both viewport and condition empty results collapse the list and show their respective warning toast. Retry uses the failed request; next-page failure keeps loaded results and adds the illustrated inline error/retry block.
 - Selecting a marker/card opens restaurant summary. Expanding shows information/menu/photo/review tabs, sticky title and tabs, and bottom reserve action. Unavailable menu/review data is described as preview/unconnected, not as a real server result.
 - Photo selection opens a modal carousel; Escape/close restores focus to the source thumbnail. Background is inert while photo modal is open.
 - Long titles truncate to one line with the full accessible name. Thumbnail failure uses HDS fallback.

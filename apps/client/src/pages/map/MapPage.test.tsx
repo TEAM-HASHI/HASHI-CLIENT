@@ -11,15 +11,18 @@ import type { PropsWithChildren } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MapPage } from '@/pages/map/MapPage'
+import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
+import { ToastRegion, toastQueue } from '@hashi/hds-ui'
 import { MemoryRouter } from 'react-router-dom'
 import { clearMapSession, writeMapSession } from '@/pages/map/utils/mapSession'
 
 // Only the external Google SDK is replaced; page state, markers and panels stay real.
+const sdkState = vi.hoisted(() => ({ status: 'LOADED' }))
 vi.mock('@vis.gl/react-google-maps', () => ({
   APIProvider: ({ children }: PropsWithChildren) => children,
   Map: ({ children }: PropsWithChildren) => children,
   AdvancedMarker: ({ children }: PropsWithChildren) => children,
-  useApiLoadingStatus: () => 'LOADED',
+  useApiLoadingStatus: () => sdkState.status,
   APILoadingStatus: {
     LOADED: 'LOADED',
     FAILED: 'FAILED',
@@ -29,6 +32,7 @@ vi.mock('@vis.gl/react-google-maps', () => ({
 }))
 
 beforeEach(() => {
+  sdkState.status = 'LOADED'
   clearMapSession()
   vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
   vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
@@ -47,11 +51,55 @@ beforeEach(() => {
 })
 afterEach(() => {
   cleanup()
+  toastQueue.clear()
   vi.restoreAllMocks()
   vi.unstubAllEnvs()
 })
 
 describe('MapPage preview', () => {
+  it('keeps search available but hides restaurant panels and map actions when the map fails', async () => {
+    sdkState.status = 'FAILED'
+    render(
+      <MemoryRouter>
+        <MapPage />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByText('지도를 불러오지 못했어요!')).toBeVisible()
+    expect(screen.getByRole('searchbox')).toBeVisible()
+    expect(
+      screen.queryByRole('region', { name: '지도 식당 목록' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: '저장 목록 보기' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '다시 시도하기' })).toBeVisible()
+  })
+  it('includes the warning artwork in an empty search toast', async () => {
+    toastQueue.clear()
+    render(
+      <MemoryRouter
+        initialEntries={[
+          { pathname: '/map', state: { source: 'map', keyword: '없는 식당' } },
+        ]}
+      >
+        <MapPage />
+        <ToastRegion />
+      </MemoryRouter>,
+    )
+    const message = await screen.findByText('조건에 맞는 맛집이 없어요.')
+    const toast = message.closest('[role="alert"]')?.parentElement
+    expect(toast?.querySelector('img')).toHaveAttribute('src', mapToastWarning)
+    expect(
+      screen.queryByText('검색 조건에 맞는 식당이 없어요.'),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: '검색 조건 초기화' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
+    ).toHaveAttribute('aria-valuenow', '30')
+    toastQueue.clear()
+  })
   it('applies a returned search without losing the category, then clears only the keyword', async () => {
     const user = userEvent.setup()
     writeMapSession({
@@ -77,7 +125,11 @@ describe('MapPage preview', () => {
         <MapPage />
       </MemoryRouter>,
     )
-    await screen.findByText('검색 조건에 맞는 식당이 없어요.')
+    await waitFor(() =>
+      expect(
+        screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
+      ).toHaveAttribute('aria-valuenow', '30'),
+    )
     expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
       'aria-pressed',
       'true',
