@@ -15,6 +15,7 @@ interface MapRestaurantListProps {
   onSelect: (id: string) => void
   onSave: () => void
   status?: 'loading' | 'success' | 'error'
+  emptyKind?: 'region' | 'conditions'
   onRetry?: () => void
   nextCursor?: string
   nextError?: boolean
@@ -31,6 +32,7 @@ export const MapRestaurantList = ({
   onSelect,
   onSave,
   status = 'success',
+  emptyKind = 'conditions',
   onRetry,
   nextCursor,
   nextError,
@@ -75,6 +77,13 @@ export const MapRestaurantList = ({
           </li>
         ))}
       </ul>
+    ) : emptyKind === 'conditions' ? (
+      <p
+        role="status"
+        className="typo-caption-1 text-warm-gray-300 py-[67px] text-center font-medium"
+      >
+        조건에 맞는 맛집이 없어요.
+      </p>
     ) : null}
     {status === 'success' &&
       nextCursor &&

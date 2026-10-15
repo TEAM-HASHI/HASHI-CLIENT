@@ -62,6 +62,7 @@ export interface MapSessionSnapshot {
   searchBounds: MapBounds | null
   camera: MapCameraSnapshot | null
   restaurants?: MapRestaurant[]
+  emptyKind?: 'region' | 'conditions'
   nextCursor?: string
   selectedId: string | null
   isExploring: boolean

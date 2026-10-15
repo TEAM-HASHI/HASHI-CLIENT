@@ -25,6 +25,7 @@ export const MapPage = () => {
   const state = useMapPageState(undefined, initial)
   const { containerRef, availableHeight } = useMapPanelLayout()
   const [stage, setStage] = useState<MapPanelStage>(initial?.stage ?? 'normal')
+  const [previousStatus, setPreviousStatus] = useState(state.status)
   const [comingSoon, setComingSoon] = useState(false)
   const [mapUnavailable, setMapUnavailable] = useState(false)
   const [detailStage, setDetailStage] = useState<MapPanelStage>(
@@ -57,6 +58,7 @@ export const MapPage = () => {
       searchBounds: state.searchBounds,
       camera: state.cameraSnapshot,
       restaurants: state.status === 'success' ? state.restaurants : undefined,
+      emptyKind: state.emptyKind,
       nextCursor: state.nextCursor,
       selectedId: state.selectedRestaurant?.id ?? null,
       isExploring: state.isExploring,
@@ -92,7 +94,7 @@ export const MapPage = () => {
       return
     lastEmptyEvent.current = state.emptyEvent.id
     const isRegion = state.emptyEvent.kind === 'region'
-    setStage('collapsed')
+    setStage(isRegion ? 'collapsed' : 'normal')
     showToast({
       icon: <img src={mapToastWarning} alt="" width={26} height={26} />,
       children: isRegion
@@ -126,27 +128,49 @@ export const MapPage = () => {
     frame = requestAnimationFrame(restore)
     return () => cancelAnimationFrame(frame)
   }, [state.selectedRestaurant])
+  // Open each new failure once, without preventing later user map gestures.
+  if (previousStatus !== state.status) {
+    setPreviousStatus(state.status)
+    if (state.status === 'error') setStage('normal')
+  }
   const filtered =
     state.conditions.category !== 'all' ||
     !!state.conditions.keyword ||
     !!state.conditions.areaCode ||
     !!state.searchBounds
-  const maxHeight = Math.max(30, availableHeight - (filtered ? 125 : 12))
+  const isEmptyRegion =
+    state.status === 'success' &&
+    state.restaurants.length === 0 &&
+    state.emptyKind === 'region'
+  const maxHeight = isEmptyRegion
+    ? 30
+    : Math.max(30, availableHeight - (filtered ? 125 : 12))
   // Keep regional labels and Google attribution visible on shorter phones.
   const normalHeight = Math.min(
     filtered ? 304 : 312,
     maxHeight,
-    Math.max(state.isExploring ? 156 : 30, availableHeight - 400),
+    state.status === 'error'
+      ? maxHeight
+      : Math.max(state.isExploring ? 156 : 30, availableHeight - 400),
   )
-  const height =
-    stage === 'expanded' ? maxHeight : stage === 'collapsed' ? 30 : normalHeight
+  const height = isEmptyRegion
+    ? 30
+    : stage === 'expanded'
+      ? maxHeight
+      : stage === 'collapsed'
+        ? 30
+        : normalHeight
   const handleConditionsChange = (patch: Partial<MapConditions>) => {
     state.handleConditionsChange(patch)
     setStage('normal')
   }
   const handleHeightChange = (next: number) =>
     setStage(
-      next <= 30 ? 'collapsed' : next >= maxHeight ? 'expanded' : 'normal',
+      isEmptyRegion || next <= 30
+        ? 'collapsed'
+        : next >= maxHeight
+          ? 'expanded'
+          : 'normal',
     )
   const handleSelect = (id: string) => {
     if (!state.selectedRestaurant) {
@@ -263,7 +287,7 @@ export const MapPage = () => {
             onHeightChange={handleHeightChange}
             footer={
               <div
-                hidden={stage !== 'expanded'}
+                hidden={stage !== 'expanded' || isEmptyRegion}
                 className="px-5 py-4 text-center"
               >
                 <MapViewButton onClick={() => setStage('collapsed')} />
@@ -272,6 +296,7 @@ export const MapPage = () => {
           >
             <MapRestaurantList
               status={state.status}
+              emptyKind={state.emptyKind}
               onRetry={state.retry}
               nextCursor={state.nextCursor}
               nextError={state.nextError}

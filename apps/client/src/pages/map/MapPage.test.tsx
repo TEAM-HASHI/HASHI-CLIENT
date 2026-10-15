@@ -1,5 +1,6 @@
 import {
   cleanup,
+  act,
   fireEvent,
   render,
   screen,
@@ -11,6 +12,7 @@ import type { PropsWithChildren } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MapPage } from '@/pages/map/MapPage'
+import * as preview from '@/pages/map/data/queryMapPreview'
 import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
 import { ToastRegion, toastQueue } from '@hashi/hds-ui'
 import { MemoryRouter } from 'react-router-dom'
@@ -57,6 +59,74 @@ afterEach(() => {
 })
 
 describe('MapPage preview', () => {
+  it('keeps an empty region panel collapsed even when expanded by keyboard', async () => {
+    const user = userEvent.setup()
+    const source = vi.spyOn(preview, 'queryMapPreview')
+    const view = render(
+      <MemoryRouter>
+        <MapPage />
+        <ToastRegion />
+      </MemoryRouter>,
+    )
+    await screen.findByRole('list', { name: '식당 검색 결과' })
+    source.mockResolvedValueOnce({ restaurants: [] })
+    await user.click(screen.getByRole('button', { name: '우에노 식당 보기' }))
+    await screen.findByText('이 지역에는 아직 등록된 맛집이 없어요.')
+    const handle = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
+    handle.focus()
+    await user.keyboard('{End}')
+    expect(handle).toHaveAttribute('aria-valuenow', '30')
+    expect(
+      screen.queryByRole('button', { name: '지도로 보기' }),
+    ).not.toBeInTheDocument()
+    view.unmount()
+    render(
+      <MemoryRouter>
+        <MapPage />
+      </MemoryRouter>,
+    )
+    const restoredHandle = screen.getByRole('slider', {
+      name: '식당 목록 높이 조절',
+    })
+    restoredHandle.focus()
+    await user.keyboard('{End}')
+    expect(restoredHandle).toHaveAttribute('aria-valuenow', '30')
+  })
+  it.each(['initial', 'refresh'])(
+    'opens a failed %s request after the panel was collapsed and retries successfully',
+    async (reason) => {
+      const user = userEvent.setup()
+      let rejectRequest!: (reason: Error) => void
+      const source = vi.spyOn(preview, 'queryMapPreview')
+      const pending = () =>
+        new Promise<preview.MapPreviewResult>((_, reject) => {
+          rejectRequest = reject
+        })
+      if (reason === 'initial') source.mockImplementationOnce(pending)
+      render(
+        <MemoryRouter>
+          <MapPage />
+        </MemoryRouter>,
+      )
+      if (reason === 'refresh') {
+        await screen.findByRole('list', { name: '식당 검색 결과' })
+        source.mockImplementationOnce(pending)
+        await user.click(
+          screen.getByRole('button', { name: '카페', exact: true }),
+        )
+      }
+      const handle = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
+      handle.focus()
+      await user.keyboard('{Home}')
+      await act(async () => rejectRequest(new Error('network')))
+      expect(handle).not.toHaveAttribute('aria-valuenow', '30')
+      const retry = await screen.findByRole('button', { name: '다시 시도하기' })
+      await user.click(retry)
+      expect(
+        await screen.findByRole('list', { name: '식당 검색 결과' }),
+      ).toBeVisible()
+    },
+  )
   it('keeps search available but hides restaurant panels and map actions when the map fails', async () => {
     sdkState.status = 'FAILED'
     render(
@@ -86,7 +156,9 @@ describe('MapPage preview', () => {
         <ToastRegion />
       </MemoryRouter>,
     )
-    const message = await screen.findByText('조건에 맞는 맛집이 없어요.')
+    const message = await within(await screen.findByRole('alert')).findByText(
+      '조건에 맞는 맛집이 없어요.',
+    )
     const toast = message.closest('[role="alert"]')?.parentElement
     expect(toast?.querySelector('img')).toHaveAttribute('src', mapToastWarning)
     expect(
@@ -97,7 +169,12 @@ describe('MapPage preview', () => {
     ).not.toBeInTheDocument()
     expect(
       screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
-    ).toHaveAttribute('aria-valuenow', '30')
+    ).toHaveAttribute('aria-valuenow', '304')
+    expect(
+      within(screen.getByRole('region', { name: '지도 식당 목록' })).getByRole(
+        'status',
+      ),
+    ).toHaveTextContent('조건에 맞는 맛집이 없어요.')
     toastQueue.clear()
   })
   it('applies a returned search without losing the category, then clears only the keyword', async () => {
@@ -128,7 +205,7 @@ describe('MapPage preview', () => {
     await waitFor(() =>
       expect(
         screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
-      ).toHaveAttribute('aria-valuenow', '30'),
+      ).toHaveAttribute('aria-valuenow', '304'),
     )
     expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
       'aria-pressed',

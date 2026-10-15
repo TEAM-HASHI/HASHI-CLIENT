@@ -68,7 +68,9 @@ export const useMapPageState = (
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
     initial?.restaurants ? 'success' : 'loading',
   )
-  const [emptyKind, setEmptyKind] = useState<EmptyKind>('conditions')
+  const [emptyKind, setEmptyKind] = useState<EmptyKind>(
+    initial?.emptyKind ?? 'conditions',
+  )
   const [emptyEvent, setEmptyEvent] = useState<{
     id: number
     kind: EmptyKind
@@ -80,7 +82,7 @@ export const useMapPageState = (
   const [loadingNext, setLoadingNext] = useState(false)
   const generation = useRef(0)
   const nextPending = useRef(false)
-  const emptyKindRef = useRef<EmptyKind>('conditions')
+  const emptyKindRef = useRef<EmptyKind>(initial?.emptyKind ?? 'conditions')
 
   useEffect(() => {
     if (request.restored) return
