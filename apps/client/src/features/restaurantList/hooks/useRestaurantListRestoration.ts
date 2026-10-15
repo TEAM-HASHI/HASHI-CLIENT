@@ -78,16 +78,22 @@ export const useRestaurantListRestoration = (
     navigationType === 'POP' ? readSnapshot(storageKey) : null,
   )
   const didRestore = useRef(false)
+  const [isRestored, setIsRestored] = useState(!snapshot)
 
   const restoreScroll = useCallback(() => {
     if (!snapshot || didRestore.current) return
 
     const frame = requestAnimationFrame(() => {
-      window.scrollTo({ top: snapshot.scrollTop, left: 0, behavior: 'auto' })
+      window.scrollTo(
+        type === 'sns-hot'
+          ? { top: snapshot.scrollTop, behavior: 'auto' }
+          : { top: snapshot.scrollTop, left: 0, behavior: 'auto' },
+      )
       didRestore.current = true
+      setIsRestored(true)
     })
     return () => cancelAnimationFrame(frame)
-  }, [snapshot])
+  }, [snapshot, type])
 
   const saveSnapshot = (value: {
     sort: string
@@ -104,7 +110,10 @@ export const useRestaurantListRestoration = (
       try {
         sessionStorage.setItem(
           storageKey,
-          JSON.stringify({ ...metadata, data: value.data }),
+          JSON.stringify({
+            ...metadata,
+            data: type === 'sns-hot' ? undefined : value.data,
+          }),
         )
       } catch (error) {
         if (
@@ -122,6 +131,7 @@ export const useRestaurantListRestoration = (
 
   const clearSnapshot = () => {
     setSnapshot(null)
+    setIsRestored(true)
     try {
       sessionStorage.removeItem(storageKey)
     } catch {
@@ -129,5 +139,11 @@ export const useRestaurantListRestoration = (
     }
   }
 
-  return { snapshot, saveSnapshot, clearSnapshot, restoreScroll }
+  return {
+    snapshot,
+    saveSnapshot,
+    clearSnapshot,
+    restoreScroll,
+    isRestoring: !isRestored,
+  }
 }
