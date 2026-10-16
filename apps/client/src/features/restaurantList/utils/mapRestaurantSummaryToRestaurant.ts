@@ -1,4 +1,8 @@
 import type { RestaurantSummaryResponse } from '@/features/restaurantList/api/getRestaurants'
+import {
+  RESTAURANT_HASHTAG_MAX_COUNT,
+  RESTAURANT_IMAGE_SLOT_COUNT,
+} from '@/features/restaurantList/constants'
 import type { Restaurant } from '@/features/restaurantList/types'
 
 const categoryLabelByValue: Record<string, string> = {
@@ -31,16 +35,16 @@ const getRestaurantImages = ({
   thumbnailUrl,
 }: RestaurantSummaryResponse) => {
   if (imageUrls && imageUrls.length > 0) {
-    return imageUrls
+    return imageUrls.slice(0, RESTAURANT_IMAGE_SLOT_COUNT)
   }
 
   return thumbnailUrl ? [thumbnailUrl] : []
 }
 
 const getHashTags = ({ hashtags }: RestaurantSummaryResponse) => {
-  return (hashtags ?? []).map((hashtag) =>
-    hashtag.startsWith('#') ? hashtag : `#${hashtag}`,
-  )
+  return (hashtags ?? [])
+    .slice(0, RESTAURANT_HASHTAG_MAX_COUNT)
+    .map((hashtag) => (hashtag.startsWith('#') ? hashtag : `#${hashtag}`))
 }
 
 export const mapRestaurantSummaryToRestaurant = (

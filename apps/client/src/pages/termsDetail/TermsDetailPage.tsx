@@ -1,0 +1,59 @@
+import { BackIcon } from '@hashi/hds-icons'
+import { Accordion, Header, IconButton } from '@hashi/hds-ui'
+import { useNavigate, useParams } from 'react-router-dom'
+
+import { ROUTES } from '@/app/router/path'
+import { findTermsPolicy } from '@/features/terms/constants/termsPolicies'
+import { NotFoundPage } from '@/pages/notFound'
+import { TermsClauseContent } from '@/pages/termsDetail/components/TermsClauseContent'
+
+const formatLastUpdatedDate = (effectiveDate: string) =>
+  effectiveDate.split('.').join('. ')
+
+export const TermsDetailPage = () => {
+  const navigate = useNavigate()
+  const params = useParams<{ policyId: string }>()
+  const policy = findTermsPolicy(params.policyId)
+
+  if (!policy) {
+    return <NotFoundPage />
+  }
+
+  return (
+    <div className="app-mobile-bottom-nav-content bg-white pt-18.75">
+      <Header
+        className="app-mobile-fixed-top z-fixed fixed"
+        contentClassName={
+          policy.id === 'hashi-terms' ? 'text-black' : undefined
+        }
+        leftAction={
+          <IconButton
+            aria-label="뒤로가기"
+            onClick={() => navigate(ROUTES.terms, { replace: true })}
+            size="xs"
+          >
+            <BackIcon className="size-6" />
+          </IconButton>
+        }
+        subtitle={`최종 업데이트: ${formatLastUpdatedDate(policy.effectiveDate)}`}
+        title={
+          policy.id === 'service-policy' ? '서비스 운영 정책' : policy.title
+        }
+      />
+
+      <ul className="pt-6">
+        {policy.clauses.map((clause) => (
+          <li key={clause.title}>
+            <Accordion
+              className="pb-1.75"
+              headingLevel={2}
+              title={clause.title}
+            >
+              <TermsClauseContent blocks={clause.blocks} />
+            </Accordion>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
