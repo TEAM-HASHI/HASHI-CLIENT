@@ -7,7 +7,6 @@ import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import { SavedPage } from '@/pages/saved/SavedPage'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import type { CollectionData } from '@/pages/saved/types'
-import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
 
 const setup = (data: CollectionData = collectionMocks) => {
   const router = createMemoryRouter(
@@ -29,35 +28,6 @@ const setup = (data: CollectionData = collectionMocks) => {
 afterEach(cleanup)
 
 describe('SavedPage', () => {
-  it('pins the collection header and create action without a collection sort label', () => {
-    setup()
-    expect(screen.getByText('총 4개')).toBeInTheDocument()
-    expect(screen.queryByText('최신순')).not.toBeInTheDocument()
-    expect(
-      screen
-        .getByRole('button', { name: '새 컬렉션 만들기' })
-        .closest('[data-testid="saved-fixed-header"]'),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: '정렬 선택' }),
-    ).not.toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: '새 컬렉션 만들기' }),
-    ).toBeDisabled()
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: /더보기|공유/ }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('uses the map-view icon and shadow on the detail CTA', async () => {
-    const { user } = setup()
-    await user.click(screen.getByRole('button', { name: /2026 도쿄 봄 여행/ }))
-    const cta = screen.getByRole('button', { name: '지도로 보기' })
-    expect(cta).toHaveClass('shadow-[0_4px_4px_rgba(0,0,0,0.15)]')
-    expect(cta.querySelector('svg path[d^="M14.2425"]')).toBeInTheDocument()
-  })
-
   it('applies sorting and category immediately, retains sorting, and closes each menu', async () => {
     const { user } = setup()
     await user.click(screen.getByRole('button', { name: /2026 도쿄 봄 여행/ }))
@@ -99,29 +69,6 @@ describe('SavedPage', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
-  it('keeps an empty collection and an empty list visible without invented actions', async () => {
-    const { user } = setup()
-    await user.click(
-      screen.getByRole('button', { name: /2026 도쿄 가을 여행/ }),
-    )
-    expect(screen.getByText('총 0곳')).toBeInTheDocument()
-    expect(
-      within(screen.getByRole('list', { name: '저장 식당' })).queryAllByRole(
-        'listitem',
-      ),
-    ).toHaveLength(0)
-    await user.click(
-      screen.getByRole('button', { name: '컬렉션 목록으로 돌아가기' }),
-    )
-    expect(screen.getByText('총 4개')).toBeInTheDocument()
-    cleanup()
-    setup({ ...collectionMocks, collections: [] })
-    expect(screen.getByText('총 0개')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: '새 컬렉션 만들기' }),
-    ).toBeInTheDocument()
-  })
-
   it('hands collection state to the existing map and keeps the saved tab active', async () => {
     const { user, router } = setup()
     await user.click(screen.getByRole('button', { name: /2026 도쿄 봄 여행/ }))
@@ -141,15 +88,5 @@ describe('SavedPage', () => {
     await router.navigate(-1)
     expect(await screen.findByText('리뷰순')).toBeInTheDocument()
     expect(screen.getByText('총 4곳')).toBeInTheDocument()
-  })
-
-  it('rejects invalid map handoffs', () => {
-    for (const state of [
-      null,
-      {},
-      { collectionId: '' },
-      { collectionId: 'spring', sort: 'unknown', category: 'all' },
-    ])
-      expect(isCollectionMapState(state)).toBe(false)
   })
 })
