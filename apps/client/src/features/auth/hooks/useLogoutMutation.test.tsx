@@ -82,6 +82,39 @@ describe('useLogoutMutation', () => {
     expect(onLoggedOut).not.toHaveBeenCalled()
   })
 
+  it('completes logout cleanup when the session expires before logout succeeds', async () => {
+    let resolveLogout!: (response: Response) => void
+    vi.mocked(apiClient).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveLogout = resolve
+        }) as never,
+    )
+    const { result, client, onLoggedOut } = setup()
+    let completion!: Promise<unknown>
+    await act(async () => {
+      completion = result.current.mutateAsync()
+    })
+    await waitFor(() => expect(apiClient).toHaveBeenCalledOnce())
+    clearAuthSession()
+    await act(async () => {
+      resolveLogout(
+        new Response(
+          JSON.stringify({
+            success: true,
+            code: 'AUTH-205',
+            message: 'ok',
+            data: null,
+          }),
+        ),
+      )
+      await completion
+    })
+    expect(getAccessToken()).toBeUndefined()
+    expect(client.getQueryCache().getAll()).toHaveLength(0)
+    expect(onLoggedOut).toHaveBeenCalledOnce()
+  })
+
   it('does not clear a new session or its caches when an older logout succeeds', async () => {
     let resolveLogout!: (response: Response) => void
     vi.mocked(apiClient).mockImplementationOnce(
