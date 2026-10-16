@@ -230,6 +230,7 @@ TodayRestaurantPage
   - `Chip`
   - `Badge`
 - app shared component:
+  - `BottomActionBar`
   - `ShareIconButton`
   - `ComingSoonDialog`
   - `ListEmptyState`

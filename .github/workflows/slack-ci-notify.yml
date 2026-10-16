@@ -1,0 +1,34 @@
+name: Slack CI Notifications
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  notify:
+    if: >-
+      github.run_attempt == 1 &&
+      contains(fromJSON('["failure", "timed_out", "action_required"]'), github.event.workflow_run.conclusion)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout trusted default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Send Slack notification
+        uses: actions/github-script@v7
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_REVIEW_WEBHOOK_URL }}
+        with:
+          script: |
+            const { notifySlack } = require('./.github/scripts/slack-notify.cjs')
+            await notifySlack({ core, context, github, mode: 'ci' })

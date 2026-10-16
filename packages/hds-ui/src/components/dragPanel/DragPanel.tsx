@@ -1,19 +1,32 @@
-import { useId, useLayoutEffect, useRef, useState } from 'react'
-import type { KeyboardEvent, PointerEvent, ReactNode } from 'react'
+import { useId, useLayoutEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 
 import { cn } from '../../utils'
+import { useDragPanel } from './useDragPanel'
 
-const HANDLE_HEIGHT = 30
-const DRAG_DEAD_ZONE = 12
+export type DragPanelStage = 'collapsed' | 'normal' | 'maximum'
+export type DragPanelStageCommit = {
+  stage: DragPanelStage
+  height: number
+  input: 'pointer' | 'keyboard' | 'button'
+}
+
+export type DragPanelRenderState = {
+  isFullscreen: boolean
+  collapse: () => void
+}
+type DragPanelSlot = ReactNode | ((state: DragPanelRenderState) => ReactNode)
 
 export type DragPanelProps = {
   height: number
   normalHeight: number
-  maxHeight: number
+  maxHeight?: number
   onHeightChange: (height: number) => void
-  children: ReactNode
-  header?: ReactNode
-  footer?: ReactNode
+  onStageCommit?: (event: DragPanelStageCommit) => void
+  children: DragPanelSlot
+  header?: DragPanelSlot
+  footer?: DragPanelSlot
+  floating?: DragPanelSlot
   className?: string
   'aria-label': string
   handleLabel: string
@@ -24,119 +37,52 @@ export const DragPanel = ({
   normalHeight,
   maxHeight,
   onHeightChange,
+  onStageCommit,
   children,
   header,
   footer,
+  floating,
   className,
   'aria-label': ariaLabel,
   handleLabel,
 }: DragPanelProps) => {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
+  const {
+    containerRef,
+    contentRef,
+    bottomInset,
+    minimum,
+    maximum,
+    currentHeight,
+    fullscreen,
+    collapsed,
+    isDragging,
+    collapse,
+    handleProps,
+  } = useDragPanel({
+    height,
+    normalHeight,
+    maxHeight,
+    onHeightChange,
+    onStageCommit,
+  })
   const bodyRef = useRef<HTMLDivElement>(null)
   const handleRef = useRef<HTMLDivElement>(null)
+  const wasFullscreen = useRef(false)
   const scrollTop = useRef(0)
-
-  const gesture = useRef<{
-    pointerId: number
-    startY: number
-    startHeight: number
-  } | null>(null)
-
-  const [dragHeight, setDragHeight] = useState<number | null>(null)
   const contentId = useId()
-  const [availableHeight, setAvailableHeight] = useState(maxHeight)
-  const [bottomInset, setBottomInset] = useState(0)
 
   useLayoutEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    const measure = () => {
-      const rect = container.getBoundingClientRect()
-      const viewport = window.visualViewport
-      const visibleBottom = viewport
-        ? viewport.offsetTop + viewport.height
-        : window.innerHeight
-
-      setAvailableHeight(
-        Math.max(0, Math.min(rect.height, visibleBottom - rect.top)),
-      )
-
-      setBottomInset(Math.max(0, rect.bottom - visibleBottom))
-    }
-
-    measure()
-
-    const observer = new ResizeObserver(measure)
-    observer.observe(container)
-
-    window.addEventListener('resize', measure)
-    window.visualViewport?.addEventListener('resize', measure)
-    window.visualViewport?.addEventListener('scroll', measure)
-
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('resize', measure)
-      window.visualViewport?.removeEventListener('resize', measure)
-      window.visualViewport?.removeEventListener('scroll', measure)
-    }
-  }, [])
-
-  const maximum = Math.max(0, Math.min(maxHeight, availableHeight))
-  const minimum = Math.min(HANDLE_HEIGHT, maximum)
-
-  const clamp = (value: number) => Math.min(maximum, Math.max(minimum, value))
-
-  const currentHeight = clamp(dragHeight ?? height)
-
-  const stages = [...new Set([minimum, clamp(normalHeight), maximum])].sort(
-    (a, b) => a - b,
-  )
-
-  const getClosestStageIndex = (value: number) =>
-    stages.reduce(
-      (bestIndex, stage, index) =>
-        Math.abs(stage - value) < Math.abs(stages[bestIndex] - value)
-          ? index
-          : bestIndex,
-      0,
-    )
-
-  const getTargetStage = (
-    startHeight: number,
-    finalHeight: number,
-    direction: 'up' | 'down',
-  ) => {
-    const startIndex = getClosestStageIndex(startHeight)
-
-    if (direction === 'up') {
-      let targetIndex = Math.min(startIndex + 1, stages.length - 1)
-
-      while (
-        targetIndex < stages.length - 1 &&
-        finalHeight >= stages[targetIndex] + DRAG_DEAD_ZONE
-      ) {
-        targetIndex += 1
-      }
-
-      return stages[targetIndex]
-    }
-
-    let targetIndex = Math.max(startIndex - 1, 0)
-
-    while (
-      targetIndex > 0 &&
-      finalHeight <= stages[targetIndex] - DRAG_DEAD_ZONE
+    if (
+      fullscreen &&
+      (document.activeElement === handleRef.current ||
+        document.activeElement === document.body)
     ) {
-      targetIndex -= 1
+      bodyRef.current?.focus({ preventScroll: true })
+    } else if (!fullscreen && wasFullscreen.current) {
+      handleRef.current?.focus({ preventScroll: true })
     }
+    wasFullscreen.current = fullscreen
 
-    return stages[targetIndex]
-  }
-  const collapsed = currentHeight <= HANDLE_HEIGHT
-
-  useLayoutEffect(() => {
     if (collapsed && bodyRef.current?.contains(document.activeElement)) {
       handleRef.current?.focus({ preventScroll: true })
     }
@@ -144,91 +90,17 @@ export const DragPanel = ({
     if (!collapsed && contentRef.current) {
       contentRef.current.scrollTop = scrollTop.current
     }
-  }, [collapsed])
+  }, [collapsed, fullscreen])
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    let nextHeight: number
-
-    switch (event.key) {
-      case 'Home':
-        nextHeight = minimum
-        break
-
-      case 'End':
-        nextHeight = maximum
-        break
-
-      case 'ArrowUp':
-        nextHeight = stages.find((stage) => stage > currentHeight) ?? maximum
-        break
-
-      case 'ArrowDown':
-        nextHeight =
-          stages.filter((stage) => stage < currentHeight).at(-1) ?? minimum
-        break
-
-      default:
-        return
-    }
-
-    event.preventDefault()
-    onHeightChange(Math.min(maximum, Math.max(minimum, nextHeight)))
+  const renderState: DragPanelRenderState = {
+    isFullscreen: fullscreen,
+    collapse,
   }
-
-  const dragPosition = (clientY: number) => {
-    const active = gesture.current
-
-    return active
-      ? clamp(active.startHeight + active.startY - clientY)
-      : currentHeight
-  }
-
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (!event.isPrimary || event.button !== 0 || gesture.current) return
-
-    event.preventDefault()
-    event.currentTarget.focus()
-    event.currentTarget.setPointerCapture?.(event.pointerId)
-
-    gesture.current = {
-      pointerId: event.pointerId,
-      startY: event.clientY,
-      startHeight: currentHeight,
-    }
-
-    setDragHeight(currentHeight)
-  }
-
-  const finishDrag = (
-    event: PointerEvent<HTMLDivElement>,
-    cancelled: boolean,
-  ) => {
-    const active = gesture.current
-
-    if (!active || active.pointerId !== event.pointerId) return
-
-    const deltaY = active.startY - event.clientY
-    const distance = Math.abs(deltaY)
-    const finalHeight = dragPosition(event.clientY)
-
-    gesture.current = null
-    setDragHeight(null)
-
-    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId)
-    }
-
-    if (cancelled) return
-
-    if (distance < DRAG_DEAD_ZONE) {
-      onHeightChange(stages[getClosestStageIndex(active.startHeight)])
-      return
-    }
-
-    const direction = deltaY > 0 ? 'up' : 'down'
-
-    onHeightChange(getTargetStage(active.startHeight, finalHeight, direction))
-  }
+  const renderSlot = (slot: DragPanelSlot) =>
+    typeof slot === 'function' ? slot(renderState) : slot
+  const panelHeader = renderSlot(header)
+  const panelFooter = renderSlot(footer)
+  const panelFloating = renderSlot(floating)
 
   return (
     <div
@@ -239,14 +111,16 @@ export const DragPanel = ({
         aria-label={ariaLabel}
         className={cn(
           'animate-bottom-sheet-panel-in pointer-events-auto absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[20px] bg-white',
-          dragHeight === null &&
-            'transition-[height] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
+          !isDragging &&
+            'transition-[height] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+          fullscreen && 'rounded-none',
           className,
         )}
         style={{ height: currentHeight, bottom: bottomInset }}
       >
         <div
           ref={handleRef}
+          hidden={fullscreen}
           role="slider"
           aria-label={handleLabel}
           aria-controls={contentId}
@@ -255,16 +129,7 @@ export const DragPanel = ({
           aria-valuemax={maximum}
           aria-valuenow={currentHeight}
           tabIndex={0}
-          onKeyDown={handleKeyDown}
-          onPointerDown={handlePointerDown}
-          onPointerMove={(event) => {
-            if (gesture.current?.pointerId === event.pointerId) {
-              setDragHeight(dragPosition(event.clientY))
-            }
-          }}
-          onPointerUp={(event) => finishDrag(event, false)}
-          onPointerCancel={(event) => finishDrag(event, true)}
-          onLostPointerCapture={(event) => finishDrag(event, true)}
+          {...handleProps}
           className="relative h-7.5 shrink-0 cursor-ns-resize touch-none select-none focus-visible:outline-2 focus-visible:-outline-offset-2"
         >
           <span
@@ -276,6 +141,7 @@ export const DragPanel = ({
         <div
           ref={bodyRef}
           id={contentId}
+          tabIndex={-1}
           inert={collapsed}
           aria-hidden={collapsed || undefined}
           className={cn(
@@ -283,7 +149,7 @@ export const DragPanel = ({
             collapsed && 'invisible',
           )}
         >
-          {header && <div className="shrink-0">{header}</div>}
+          {panelHeader && <div className="shrink-0">{panelHeader}</div>}
 
           <div
             ref={contentRef}
@@ -294,10 +160,15 @@ export const DragPanel = ({
               }
             }}
           >
-            {children}
+            {renderSlot(children)}
           </div>
 
-          {footer && <div className="shrink-0">{footer}</div>}
+          {panelFooter && <div className="shrink-0">{panelFooter}</div>}
+          {panelFloating && (
+            <div className="pointer-events-none absolute inset-0 [&>*]:pointer-events-auto">
+              {panelFloating}
+            </div>
+          )}
         </div>
       </section>
     </div>

@@ -36,6 +36,14 @@ export const appRoutes: RouteObject[] = [
             path: ROUTES.map,
             element: lazyPages.comingSoon(),
           },
+          {
+            path: ROUTES.terms,
+            element: lazyPages.terms(),
+          },
+          {
+            path: ROUTES.termsDetail,
+            element: lazyPages.termsDetail(),
+          },
         ],
       },
       {
@@ -65,6 +73,10 @@ export const appRoutes: RouteObject[] = [
       {
         path: ROUTES.popularRestaurants,
         element: withSilentLazyFallback(lazyPages.popularRestaurants()),
+      },
+      {
+        path: ROUTES.hotSnsRestaurants,
+        element: withSilentLazyFallback(lazyPages.hotSnsRestaurants()),
       },
       {
         path: ROUTES.magazines,
@@ -132,6 +144,10 @@ export const appRoutes: RouteObject[] = [
             element: lazyPages.profileNew(),
           },
           {
+            path: ROUTES.profileEdit,
+            element: lazyPages.profileEdit(),
+          },
+          {
             path: ROUTES.withdrawal,
             element: lazyPages.withdrawal(),
           },
@@ -149,7 +165,7 @@ export const appRoutes: RouteObject[] = [
           },
           {
             path: ROUTES.reservationDetail,
-            element: lazyPages.reservationDetail(),
+            element: withSilentLazyFallback(lazyPages.reservationDetail()),
           },
         ],
       },

@@ -1,34 +1,25 @@
-import { CancelIcon, MenuIcon, PlusIcon, SaveIcon } from '@hashi/hds-icons'
-import { DragPanel, IconButton } from '@hashi/hds-ui'
-import { useId, useState } from 'react'
+import { CancelIcon, MapViewIcon } from '@hashi/hds-icons'
+import { Button, DragPanel, IconButton } from '@hashi/hds-ui'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
-import {
-  COLLECTION_CATEGORY_OPTIONS,
-  COLLECTION_SORT_OPTIONS,
-  INITIAL_COLLECTION_VIEW,
-} from '@/pages/saved/types'
-import type { CollectionData, CollectionViewState } from '@/pages/saved/types'
-import {
-  selectCollections,
-  selectRestaurants,
-} from '@/pages/saved/utils/collectionSelectors'
-import {
-  CollectionDropdown,
-  CollectionEditMenu,
-} from '@/pages/saved/components/CollectionDropdown'
 import { CollectionForm } from '@/pages/saved/components/CollectionForm'
 import {
   createCollection,
   updateCollection,
 } from '@/pages/saved/utils/collectionMutations'
-import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
+import { INITIAL_COLLECTION_VIEW } from '@/pages/saved/types'
+import type { CollectionData, CollectionViewState } from '@/pages/saved/types'
+import { selectRestaurants } from '@/pages/saved/utils/collectionSelectors'
+import { CollectionPanelHeader } from '@/pages/saved/components/CollectionPanelHeader'
+import { CollectionPanelList } from '@/pages/saved/components/CollectionPanelList'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
+import { cn } from '@/shared/utils'
 
-// Figma 8317:37386 / 8317:40088. 손잡이 포함, 내비게이션 제외.
+// Figma 8317:40578, 8317:40327. 손잡이 포함, 내비게이션 제외.
 const COLLECTION_PANEL_HEIGHT = {
-  list: 234,
+  list: 393,
   detail: 393,
-  topGap: 12,
   closeGap: 20,
   closeSize: 44,
 } as const
@@ -56,6 +47,12 @@ export const CollectionDragPanelContent = ({
   const id = useId()
   const [creationCount, setCreationCount] = useState(0)
   const [form, setForm] = useState<'create' | { id: string } | null>(null)
+  const [panelHost, setPanelHost] = useState<HTMLDivElement | null>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+  const listOffset = useRef<{
+    collectionId: string | null
+    top: number
+  } | null>(null)
   const collection = data.collections.find(
     (item) => item.id === view.collectionId,
   )
@@ -70,161 +67,132 @@ export const CollectionDragPanelContent = ({
     height: normalHeight,
   })
   const [menu, setMenu] = useState<'sort' | 'category' | null>(null)
-  const maxHeight = Math.max(
-    0,
-    availableHeight - COLLECTION_PANEL_HEIGHT.topGap,
-  )
-  const height =
-    panel.collectionId === view.collectionId ? panel.height : normalHeight
+  if (panel.collectionId !== view.collectionId) {
+    setPanel({ collectionId: view.collectionId, height: normalHeight })
+    setMenu(null)
+  }
+  const height = panel.height
   const restaurants = collection
     ? selectRestaurants(collection, data.restaurants, view.sort, view.category)
     : []
 
+  useLayoutEffect(() => {
+    const list = listRef.current
+    const scroller = list?.parentElement
+    if (!list || !scroller) {
+      listOffset.current = null
+      return
+    }
+    const top =
+      list.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop
+    const previous = listOffset.current
+    if (previous?.collectionId === view.collectionId && previous.top !== top) {
+      scroller.scrollTop += top - previous.top
+    }
+    listOffset.current = { collectionId: view.collectionId, top }
+  })
+
+  const renderHeader = (isFullscreen: boolean, collapse?: () => void) =>
+    collection ? (
+      <CollectionPanelHeader
+        collection={collection}
+        restaurantCount={restaurants.length}
+        isFullscreen={isFullscreen}
+        onCollapse={collapse}
+        view={view}
+        onViewChange={onViewChange}
+        menu={menu}
+        onMenuChange={setMenu}
+      />
+    ) : null
   return (
     <>
-      {collection && (
-        <IconButton
-          aria-label="컬렉션 지도 보기 종료"
-          variant="soft"
-          className="absolute left-5 z-10 size-11"
-          style={{
-            bottom: Math.max(
-              0,
-              Math.min(
-                Math.min(height, maxHeight) + COLLECTION_PANEL_HEIGHT.closeGap,
-                availableHeight - COLLECTION_PANEL_HEIGHT.closeSize,
-              ),
-            ),
+      <div ref={setPanelHost} className="pointer-events-none absolute inset-0">
+        <DragPanel
+          key={view.collectionId ?? 'list'}
+          aria-label="저장 컬렉션 패널"
+          handleLabel="컬렉션 패널 높이"
+          height={height}
+          normalHeight={normalHeight}
+          maxHeight={collection ? undefined : COLLECTION_PANEL_HEIGHT.list}
+          onHeightChange={(next) => {
+            setMenu(null)
+            setPanel({ collectionId: view.collectionId, height: next })
           }}
-          onClick={onClose}
-        >
-          <CancelIcon className="size-6" />
-        </IconButton>
-      )}
-      <DragPanel
-        aria-label="저장 컬렉션 패널"
-        handleLabel="컬렉션 패널 높이"
-        height={height}
-        normalHeight={normalHeight}
-        maxHeight={maxHeight}
-        onHeightChange={(next) => {
-          setMenu(null)
-          setPanel({ collectionId: view.collectionId, height: next })
-        }}
-      >
-        {collection ? (
-          <>
-            <div className="px-5 pt-1.5">
-              <div className="flex items-start gap-3">
-                <h2 className="typo-sub-header-1 text-primary-200 min-w-0 flex-1 [overflow-wrap:anywhere] break-words">
-                  {collection.name}
-                </h2>
-                <MenuIcon
-                  aria-hidden="true"
-                  className="text-warm-gray-300 size-4.5 shrink-0"
-                />
-              </div>
-              {collection.description && (
-                <p className="typo-body-6 text-cool-gray-400 mt-2 [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
-                  {collection.description}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center justify-between gap-2 px-5 py-4">
-              <span className="typo-body-6 text-cool-gray-600 flex items-center gap-0.5">
-                <SaveIcon
-                  aria-hidden="true"
-                  className="text-warm-gray-100 size-4"
-                />
-                {restaurants.length}
-              </span>
-              <div className="flex items-center gap-3.75">
-                <CollectionDropdown
-                  label="정렬"
-                  options={COLLECTION_SORT_OPTIONS}
-                  value={view.sort}
-                  open={menu === 'sort'}
-                  onOpenChange={(open) => setMenu(open ? 'sort' : null)}
-                  onChange={(sort) => onViewChange({ ...view, sort })}
-                />
-                <CollectionDropdown
-                  label="분류"
-                  options={COLLECTION_CATEGORY_OPTIONS}
-                  value={view.category}
-                  open={menu === 'category'}
-                  onOpenChange={(open) => setMenu(open ? 'category' : null)}
-                  onChange={(category) => onViewChange({ ...view, category })}
-                />
-              </div>
-            </div>
-            <ul aria-label="저장 식당" className="px-5">
-              {restaurants.map((restaurant) => (
-                <SavedRestaurantRow
-                  key={restaurant.id}
-                  restaurant={restaurant}
-                  onSelect={onRestaurantSelect}
-                />
-              ))}
-            </ul>
-          </>
-        ) : (
-          <>
-            <div className="flex items-center justify-between px-5 pt-2 pb-1">
-              <h2 className="typo-body-3 text-primary-200">
-                컬렉션{' '}
-                <span className="font-semibold">{data.collections.length}</span>
-                개
-              </h2>
-              <span className="typo-body-6 text-cool-gray-600">최신순</span>
-            </div>
-            <div className="px-5">
-              <button
-                type="button"
-                disabled={!onDataChange}
-                onClick={() => setForm('create')}
-                className="border-warm-gray-50 flex w-full items-center gap-3 border-b py-4.5 text-left"
+          header={({ isFullscreen, collapse }) =>
+            isFullscreen ? renderHeader(true, collapse) : null
+          }
+          floating={({ isFullscreen, collapse }) =>
+            isFullscreen ? (
+              <Button
+                size="md"
+                className="absolute right-5 bottom-5 h-11 gap-0.5 rounded-full px-3 leading-[1.36] shadow-[0_4px_4px_rgba(0,0,0,0.15)]"
+                leftIcon={
+                  <MapViewIcon className="fill-secondary-200 stroke-primary-100 size-6" />
+                }
+                onClick={collapse}
               >
-                <span className="bg-primary-100 flex size-12.5 shrink-0 items-center justify-center rounded-[5px]">
-                  <PlusIcon
-                    aria-hidden="true"
-                    className="text-primary-200 size-8 shrink-0"
-                  />
-                </span>
-                <span className="typo-body-3 text-primary-200">
-                  새 컬렉션 만들기
-                </span>
-              </button>
-              <ul aria-label="저장 컬렉션">
-                {selectCollections(data.collections).map((item) => (
-                  <CollectionListRow
-                    key={item.id}
-                    compact
-                    collection={item}
-                    moreAction={
-                      onDataChange ? (
-                        <CollectionEditMenu
-                          name={item.name}
-                          onEdit={() => setForm({ id: item.id })}
-                        />
-                      ) : undefined
-                    }
-                    restaurantCount={
-                      selectRestaurants(item, data.restaurants).length
-                    }
-                    onSelect={() => {
-                      setMenu(null)
-                      onViewChange({
-                        ...INITIAL_COLLECTION_VIEW,
-                        collectionId: item.id,
-                      })
-                    }}
-                  />
-                ))}
-              </ul>
-            </div>
-          </>
-        )}
-      </DragPanel>
+                지도로 보기
+              </Button>
+            ) : collection && panelHost ? (
+              createPortal(
+                <IconButton
+                  aria-label="컬렉션 지도 보기 종료"
+                  variant="soft"
+                  className="pointer-events-auto absolute left-5 z-10 size-11"
+                  style={{
+                    bottom: Math.max(
+                      0,
+                      Math.min(
+                        Math.min(height, availableHeight) +
+                          COLLECTION_PANEL_HEIGHT.closeGap,
+                        availableHeight - COLLECTION_PANEL_HEIGHT.closeSize,
+                      ),
+                    ),
+                  }}
+                  onClick={onClose}
+                >
+                  <CancelIcon className="size-6" />
+                </IconButton>,
+                panelHost,
+              )
+            ) : null
+          }
+        >
+          {({ isFullscreen }) => (
+            <>
+              {!isFullscreen && renderHeader(false)}
+              {collection ? (
+                <ul
+                  ref={listRef}
+                  aria-label="저장 식당"
+                  className={cn('px-5', isFullscreen && 'pb-20')}
+                >
+                  {restaurants.map((restaurant) => (
+                    <SavedRestaurantRow
+                      key={restaurant.id}
+                      restaurant={restaurant}
+                      onSelect={onRestaurantSelect}
+                    />
+                  ))}
+                </ul>
+              ) : (
+                <CollectionPanelList
+                  data={data}
+                  onCreate={onDataChange ? () => setForm('create') : undefined}
+                  onEdit={onDataChange ? (id) => setForm({ id }) : undefined}
+                  onSelect={(collectionId) => {
+                    setMenu(null)
+                    onViewChange({ ...INITIAL_COLLECTION_VIEW, collectionId })
+                  }}
+                />
+              )}
+            </>
+          )}
+        </DragPanel>
+      </div>
       {form && onDataChange && (
         <CollectionForm
           collections={data.collections}

@@ -16,8 +16,8 @@ export const getMyReviewCount = async (): Promise<MyReviewCountData> => {
     throw new Error('Missing API response data: GET /api/v1/reviews/me/count')
   }
 
-  if (response.reviewCount === undefined) {
-    throw new Error('Missing reviewCount: GET /api/v1/reviews/me/count')
+  if (typeof response.reviewCount !== 'number') {
+    throw new Error('Invalid reviewCount: GET /api/v1/reviews/me/count')
   }
 
   return {

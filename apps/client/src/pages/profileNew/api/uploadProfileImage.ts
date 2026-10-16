@@ -1,4 +1,4 @@
-import { checkIsSupportedProfileImageMimeType } from '@/pages/profileNew/constants/profileImage'
+import { checkIsSupportedProfileImageMimeType } from '@/features/profile/constants/profileImage'
 import type { components } from '@/shared/api/generated/openapi'
 import { request } from '@/shared/api/request'
 import { uploadFileToPresignedUrl } from '@/shared/api/uploadFileToPresignedUrl'

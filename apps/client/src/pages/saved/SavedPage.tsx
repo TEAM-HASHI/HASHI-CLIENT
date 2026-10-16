@@ -1,4 +1,4 @@
-import { BackIcon, MapIcon, MenuIcon, PlusIcon } from '@hashi/hds-icons'
+import { BackIcon, MapViewIcon, MenuIcon, PlusIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
 import { useId, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -59,7 +59,10 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
   return (
     <>
       <div className="app-mobile-bottom-nav-content bg-white pt-[var(--safe-area-top,0px)]">
-        <div className="sticky top-0 z-10 bg-white">
+        <div
+          data-testid="saved-fixed-header"
+          className="fixed top-[var(--safe-area-top,0px)] right-0 left-0 z-10 mx-auto w-full max-w-[var(--app-mobile-max-width,100vw)] bg-white"
+        >
           <div className="relative">
             <Header
               title={
@@ -125,7 +128,30 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
               <span className="typo-body-6 text-cool-gray-600">최신순</span>
             )}
           </div>
+          {!collection && (
+            <div className="px-5">
+              <button
+                type="button"
+                onClick={() => setForm('create')}
+                className="border-warm-gray-50 flex w-full items-center gap-3 border-b py-4.5 text-left"
+              >
+                <span className="bg-primary-100 flex size-12.5 shrink-0 items-center justify-center rounded-[5px]">
+                  <PlusIcon
+                    aria-hidden="true"
+                    className="text-primary-200 size-8 shrink-0"
+                  />
+                </span>
+                <span className="typo-body-3 text-primary-200">
+                  새 컬렉션 만들기
+                </span>
+              </button>
+            </div>
+          )}
         </div>
+        <div
+          aria-hidden="true"
+          className={collection ? 'h-[121px]' : 'h-[207px]'}
+        />
         {collection ? (
           <>
             <ul aria-label="저장 식당" className="px-5 pb-20">
@@ -140,8 +166,10 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
             <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">
               <Button
                 size="md"
-                className="pointer-events-auto h-11 rounded-full px-3"
-                leftIcon={<MapIcon className="size-6" />}
+                className="pointer-events-auto h-11 rounded-full px-3 shadow-[0_4px_4px_rgba(0,0,0,0.15)]"
+                leftIcon={
+                  <MapViewIcon className="fill-secondary-200 stroke-primary-100 size-6" />
+                }
                 onClick={() => {
                   const state: CollectionMapState = {
                     ...view,
@@ -157,21 +185,6 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
           </>
         ) : (
           <div className="px-5">
-            <button
-              type="button"
-              onClick={() => setForm('create')}
-              className="border-warm-gray-50 flex w-full items-center gap-3 border-b py-4.5 text-left"
-            >
-              <span className="bg-primary-100 flex size-12.5 shrink-0 items-center justify-center rounded-[5px]">
-                <PlusIcon
-                  aria-hidden="true"
-                  className="text-primary-200 size-8 shrink-0"
-                />
-              </span>
-              <span className="typo-body-3 text-primary-200">
-                새 컬렉션 만들기
-              </span>
-            </button>
             <ul aria-label="저장 컬렉션" className="flex flex-col gap-4 pt-4">
               {selectCollections(data.collections).map((item) => (
                 <CollectionListRow

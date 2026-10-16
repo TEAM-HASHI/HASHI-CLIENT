@@ -13,8 +13,11 @@ export const MyReservationsPage = () => {
     error,
     isLoading,
     hasNextPage,
+    isFetchNextPageError,
+    isFetchingNextPage,
     isCancelingReservation,
     loadMoreRef,
+    listScrollRef,
     isCancelDialogOpen,
     handleStatusChange,
     handleCancelPress,
@@ -24,27 +27,34 @@ export const MyReservationsPage = () => {
     handleDetailPress,
     handleEmptyActionPress,
     handleReviewPress,
+    handleRetryLoadMore,
   } = useMyReservationsPage()
-
   if (error) {
     throw error
   }
 
   return (
-    <section className="app-mobile-bottom-nav-content flex flex-col">
-      <div className="app-mobile-fixed-top z-fixed shadow-header bg-white px-5 pt-[calc(32px+var(--safe-area-top,0px))]">
+    <section className="app-mobile-bottom-nav-content flex h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] min-h-0 flex-col overflow-hidden">
+      <div className="z-fixed shrink-0 bg-white px-5 pt-[calc(32px+var(--safe-area-top,0px))]">
         <MyReservationsHeader userName={userName} />
         <ReservationStatusFilter
           selectedStatus={selectedStatus}
           onStatusChange={handleStatusChange}
         />
       </div>
-      <div className="flex flex-1 flex-col px-5 pt-[calc(132px+var(--safe-area-top,0px))]">
+      <div
+        ref={listScrollRef}
+        aria-label="예약 목록"
+        role="region"
+        className="flex min-h-0 flex-1 [scrollbar-width:none] flex-col overflow-y-auto overscroll-contain px-5 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
         <ReservationListSection
           reservations={reservations}
           selectedStatus={selectedStatus}
           totalCount={totalCount}
           hasNextPage={hasNextPage}
+          isFetchNextPageError={isFetchNextPageError}
+          isFetchingNextPage={isFetchingNextPage}
           isLoading={isLoading}
           loadMoreRef={loadMoreRef}
           onCancelPress={handleCancelPress}
@@ -52,6 +62,7 @@ export const MyReservationsPage = () => {
           onDetailPress={handleDetailPress}
           onEmptyActionPress={handleEmptyActionPress}
           onReviewPress={handleReviewPress}
+          onRetryLoadMore={handleRetryLoadMore}
         />
       </div>
       <ReservationCancelDialog
