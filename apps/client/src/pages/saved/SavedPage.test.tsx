@@ -1,0 +1,92 @@
+import { cleanup, render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
+import { afterEach, describe, expect, it } from 'vitest'
+
+import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
+import { SavedPage } from '@/pages/saved/SavedPage'
+import { collectionMocks } from '@/pages/saved/data/collectionMocks'
+import type { CollectionData } from '@/pages/saved/types'
+
+const setup = (data: CollectionData = collectionMocks) => {
+  const router = createMemoryRouter(
+    [
+      {
+        element: <BottomNavigationLayout />,
+        children: [
+          { path: '/saved', element: <SavedPage data={data} /> },
+          { path: '/map', element: <div data-testid="map-owner" /> },
+        ],
+      },
+    ],
+    { initialEntries: ['/saved'] },
+  )
+  render(<RouterProvider router={router} />)
+  return { router, user: userEvent.setup() }
+}
+
+afterEach(cleanup)
+
+describe('SavedPage', () => {
+  it('applies sorting and category immediately, retains sorting, and closes each menu', async () => {
+    const { user } = setup()
+    await user.click(screen.getByRole('button', { name: /2026 도쿄 봄 여행/ }))
+    const list = screen.getByRole('list', { name: '저장 식당' })
+    expect(screen.getByText('저장한 장소')).toBeVisible()
+    expect(list.querySelector('li')).toHaveAttribute(
+      'data-restaurant-id',
+      'sushi',
+    )
+    await user.click(screen.getByRole('button', { name: '정렬 선택' }))
+    await user.click(screen.getByRole('menuitemradio', { name: '별점순' }))
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(list.querySelector('li')).toHaveAttribute(
+      'data-restaurant-id',
+      'cafe',
+    )
+    expect(screen.getByRole('button', { name: '정렬 선택' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: '분류 선택' }))
+    await user.click(screen.getByRole('menuitemradio', { name: '음식점' }))
+    expect(screen.getByText('총 2곳')).toBeInTheDocument()
+    expect(screen.getByText('별점순')).toBeInTheDocument()
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2)
+    await user.click(screen.getByRole('button', { name: '분류 선택' }))
+    await user.click(screen.getByRole('menuitemradio', { name: '전체' }))
+    expect(within(list).getAllByRole('listitem')).toHaveLength(4)
+  })
+
+  it('dismisses menus with Escape, outside click and keyboard selection', async () => {
+    const { user } = setup()
+    await user.click(screen.getByRole('button', { name: /2026 도쿄 봄 여행/ }))
+    await user.click(screen.getByRole('button', { name: '정렬 선택' }))
+    await user.keyboard('{End}{Enter}')
+    expect(screen.getByText('리뷰순')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '정렬 선택' }))
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '분류 선택' }))
+    await user.click(screen.getByRole('heading'))
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('hands collection state to the existing map and keeps the saved tab active', async () => {
+    const { user, router } = setup()
+    await user.click(screen.getByRole('button', { name: /2026 도쿄 봄 여행/ }))
+    await user.click(screen.getByRole('button', { name: '정렬 선택' }))
+    await user.click(screen.getByRole('menuitemradio', { name: '리뷰순' }))
+    await user.click(screen.getByRole('button', { name: '지도로 보기' }))
+    expect(router.state.location.pathname).toBe('/map')
+    expect(router.state.location.state).toEqual({
+      collectionId: 'spring',
+      sort: 'reviews',
+      category: 'all',
+    })
+    expect(screen.getByRole('button', { name: '저장' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    await router.navigate(-1)
+    expect(await screen.findByText('리뷰순')).toBeInTheDocument()
+    expect(screen.getByText('총 4곳')).toBeInTheDocument()
+  })
+})
