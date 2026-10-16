@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { ROUTES } from '@/app/router/path'
 import { useMyPointBalanceQuery } from '@/features/point'
 import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
 import { useMyProfileSummaryQuery } from '@/features/user'
@@ -38,7 +39,6 @@ export const useMypagePage = () => {
     myReviewCountQuery.isPending
 
   const summary = {
-    ...DEFAULT_MYPAGE_SUMMARY,
     nickname:
       profileSummaryQuery.data?.nickname ?? DEFAULT_MYPAGE_SUMMARY.nickname,
     profileImageUrl:
@@ -51,23 +51,19 @@ export const useMypagePage = () => {
     myReviewCount: summary.myReviewCount,
   })
 
-  const handleComingSoonPress = () => {
-    setIsComingSoonOpen(true)
+  const handleProfileEdit = () => {
+    navigate(ROUTES.profileEdit)
   }
 
   const handleMenuAction = (action: MypageMenuAction) => {
     if (action.type === 'comingSoon') {
-      handleComingSoonPress()
+      setIsComingSoonOpen(true)
       return
     }
 
     if (action.type === 'navigate') {
       navigate(action.path)
       return
-    }
-
-    if (!action.url) {
-      handleComingSoonPress()
     }
   }
 
@@ -78,7 +74,7 @@ export const useMypagePage = () => {
     primaryMenuItems,
     setIsComingSoonOpen,
     summary,
-    handleComingSoonPress,
+    handleProfileEdit,
     handleMenuAction,
   }
 }

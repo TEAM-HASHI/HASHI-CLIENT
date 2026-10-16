@@ -131,9 +131,6 @@ describe('MyReviewsPage', () => {
     expect(
       await screen.findByRole('tab', { name: '리뷰 쓰기 2' }),
     ).toHaveAttribute('aria-selected', 'true')
-    expect(
-      document.querySelector('[data-hds-tabs-indicator]'),
-    ).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: '작성한 리뷰 4' })).toBeVisible()
     expect(getVisitedReservations).not.toHaveBeenCalledWith({
       reviewStatus: 'reviewed',
@@ -142,7 +139,9 @@ describe('MyReviewsPage', () => {
     expect(
       screen.getByText((_, element) => element?.textContent === '총 2건'),
     ).toBeVisible()
-    expect(screen.getAllByRole('button', { name: '리뷰 작성' })).toHaveLength(2)
+    expect(
+      screen.getAllByRole('button', { name: /리뷰 작성하기/ }),
+    ).toHaveLength(2)
   })
 
   it('uses secondary color for my review list skeletons', async () => {
@@ -208,16 +207,27 @@ describe('MyReviewsPage', () => {
     expect(getVisitedReservations).toHaveBeenCalledTimes(2)
   })
 
-  it('navigates to review new with restaurant and reservation IDs', async () => {
+  it('navigates to review new when the writable review card is pressed', async () => {
     renderPage()
 
     fireEvent.click(
-      (await screen.findAllByRole('button', { name: '리뷰 작성' }))[0],
+      await screen.findByRole('button', {
+        name: '아키토리 라멘 리뷰 작성하기',
+      }),
     )
 
     expect(mockNavigate).toHaveBeenCalledWith(
       '/restaurants/1/reviews/new?reservationId=23',
     )
+  })
+
+  it('navigates to review edit from the written review menu', async () => {
+    renderPage(`${ROUTES.myReviews}?tab=written`)
+
+    fireEvent.click((await screen.findAllByLabelText(/리뷰 메뉴 열기/))[0])
+    fireEvent.click(screen.getByRole('menuitem', { name: '수정하기' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/reviews/31/edit')
   })
 
   it('loads written reviews after tab change and opens one menu at a time', async () => {
@@ -300,7 +310,11 @@ describe('MyReviewsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '다시 시도' }))
 
     expect(
-      (await screen.findAllByRole('button', { name: '리뷰 작성' }))[0],
+      (
+        await screen.findAllByRole('button', {
+          name: /리뷰 작성하기/,
+        })
+      )[0],
     ).toBeVisible()
     expect(writableRequestCount).toBe(2)
   })

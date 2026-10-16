@@ -22,6 +22,8 @@ concurrency:
 jobs:
   deploy-admin-production:
     runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
 
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -59,4 +61,35 @@ jobs:
         run: pnpm exec vercel build --prod --local-config=vercel.admin.json --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Admin Production
-        run: pnpm exec vercel deploy --prebuilt --prod --local-config=vercel.admin.json --token=${{ secrets.VERCEL_TOKEN }}
+        id: deploy
+        run: |
+          url=$(pnpm exec vercel deploy --prebuilt --prod --local-config=vercel.admin.json --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+  notify-slack:
+    continue-on-error: true
+    needs: deploy-admin-production
+    if: always() && (needs.deploy-admin-production.result == 'success' || needs.deploy-admin-production.result == 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout trusted production commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Send Slack deployment result
+        uses: actions/github-script@v7
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_DEPLOY_WEBHOOK_URL }}
+          DEPLOY_RESULT: ${{ needs.deploy-admin-production.result }}
+          DEPLOY_URL: ${{ needs.deploy-admin-production.outputs.url }}
+          DEPLOY_ACTOR: ${{ github.triggering_actor }}
+        with:
+          script: |
+            const { notifySlack } = require('./.github/scripts/slack-notify.cjs')
+            await notifySlack({ core, context, github, mode: 'deploy', deployment: {
+              service: 'Admin', result: process.env.DEPLOY_RESULT, url: process.env.DEPLOY_URL, actor: process.env.DEPLOY_ACTOR,
+            } })

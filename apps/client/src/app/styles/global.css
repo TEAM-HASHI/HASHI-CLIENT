@@ -5,6 +5,8 @@
 @layer base {
   :root {
     --app-mobile-max-width: 430px;
+    --app-mobile-bottom-action-height: 106px;
+    --app-mobile-bottom-action-compact-height: 82px;
     --safe-area-top: env(safe-area-inset-top);
     --safe-area-bottom: env(safe-area-inset-bottom);
   }
@@ -104,6 +106,19 @@
 
 @utility app-mobile-bottom-nav-content {
   min-height: calc(100dvh - 84px - var(--safe-area-bottom, 0px));
+}
+
+@utility app-mobile-bottom-action-content {
+  padding-bottom: calc(
+    var(--app-mobile-bottom-action-height) + var(--safe-area-bottom, 0px)
+  );
+}
+
+@utility app-mobile-bottom-action-compact-content {
+  padding-bottom: calc(
+    var(--app-mobile-bottom-action-compact-height) +
+      var(--safe-area-bottom, 0px)
+  );
 }
 
 @keyframes reservation-progress-dot-ripple {

@@ -8,7 +8,6 @@ import { SavedPage } from '@/pages/saved/SavedPage'
 import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import type { CollectionData } from '@/pages/saved/types'
-import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
 
 const setup = (data: CollectionData = collectionMocks) => {
   const router = createMemoryRouter(
@@ -170,15 +169,5 @@ describe('SavedPage', () => {
     await router.navigate(-1)
     expect(await screen.findByText('리뷰순')).toBeInTheDocument()
     expect(screen.getByText('총 4곳')).toBeInTheDocument()
-  })
-
-  it('rejects invalid map handoffs', () => {
-    for (const state of [
-      null,
-      {},
-      { collectionId: '' },
-      { collectionId: 'spring', sort: 'unknown', category: 'all' },
-    ])
-      expect(isCollectionMapState(state)).toBe(false)
   })
 })

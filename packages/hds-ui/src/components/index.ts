@@ -49,6 +49,7 @@ export type { BottomSheetProps } from './bottomSheet'
 export { DragPanel } from './dragPanel'
 export type {
   DragPanelProps,
+  DragPanelRenderState,
   DragPanelStage,
   DragPanelStageCommit,
 } from './dragPanel'

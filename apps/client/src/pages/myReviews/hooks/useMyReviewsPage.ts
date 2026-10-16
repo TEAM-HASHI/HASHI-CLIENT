@@ -27,8 +27,6 @@ export const useMyReviewsPage = () => {
   const [openedMenuReviewId, setOpenedMenuReviewId] = useState<string | null>(
     null,
   )
-  const [isEditComingSoonDialogOpen, setIsEditComingSoonDialogOpen] =
-    useState(false)
   const isWritableTab = activeTab === MY_REVIEW_TAB_ITEMS.writable.value
   const writableQuery = useVisitedReservationsInfiniteQuery(
     { reviewStatus: 'unreviewed', size: 20 },
@@ -107,12 +105,8 @@ export const useMyReviewsPage = () => {
     navigate(generatePath(ROUTES.reviewDetail, { reviewId }))
   }
 
-  const handleOpenReviewEditComingSoonDialog = () => {
-    setIsEditComingSoonDialogOpen(true)
-  }
-
-  const handleReviewEditComingSoonDialogOpenChange = (open: boolean) => {
-    setIsEditComingSoonDialogOpen(open)
+  const handleNavigateToReviewEdit = (reviewId: string) => {
+    navigate(generatePath(ROUTES.reviewEdit, { reviewId }))
   }
 
   const handleNavigateToTodayRestaurant = () => {
@@ -142,7 +136,6 @@ export const useMyReviewsPage = () => {
     activeTab,
     currentCount: isWritableTab ? writableCount : writtenCount,
     isDeletePending: deleteReviewMutation.isPending,
-    isEditComingSoonDialogOpen,
     isError: activeQuery.isError,
     isFetchingNextPage,
     isPending: activeQuery.isPending,
@@ -160,9 +153,8 @@ export const useMyReviewsPage = () => {
     handleNavigateToReviewDetail,
     handleNavigateToReviewNew,
     handleNavigateToTodayRestaurant,
-    handleOpenReviewEditComingSoonDialog,
+    handleNavigateToReviewEdit,
     handleRetry,
-    handleReviewEditComingSoonDialogOpenChange,
     handleToggleReviewMenu,
   }
 }

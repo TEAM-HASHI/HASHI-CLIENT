@@ -1,6 +1,7 @@
 import { showToast } from '@hashi/hds-ui'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
+import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { cancelReservation } from '@/features/reservation/api/cancelReservation'
 import { syncCanceledReservationCache } from '@/features/reservation/queries/syncCanceledReservationCache'
 import { captureError } from '@/shared/lib/sentry'
@@ -25,7 +26,10 @@ export const useCancelReservationMutation = ({
         captureError(error)
       }
 
-      await syncCanceledReservationCache(queryClient, result.reservation)
+      await Promise.all([
+        syncCanceledReservationCache(queryClient, result.reservation),
+        queryClient.invalidateQueries({ queryKey: pointQueryKeys.myBalance() }),
+      ])
       showToast({ children: result.message })
     },
   })

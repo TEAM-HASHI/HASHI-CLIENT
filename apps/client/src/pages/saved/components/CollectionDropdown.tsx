@@ -108,13 +108,14 @@ export const CollectionDropdown = <T extends string>({
   return (
     <div
       ref={setTriggerRef}
-      className="typo-body-6 text-cool-gray-600 flex shrink-0 items-center"
+      className="typo-body-6 text-cool-gray-600 flex shrink-0 items-center leading-[1.36]"
     >
       {!action && (
         <span>{options.find((option) => option.value === value)?.label}</span>
       )}
       <IconButton
         size="xs"
+        className={action ? undefined : 'size-5'}
         aria-label={action ? label : `${label} 선택`}
         aria-haspopup="menu"
         aria-expanded={open}

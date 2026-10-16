@@ -1,24 +1,33 @@
 import { Button } from '@hashi/hds-ui'
 
+import { BottomActionBar } from '@/shared/components/bottomActionBar'
+
 export type ReservationDetailActionBarProps = {
+  canCancel: boolean
   onCancel: () => void
-  onHome: () => void
+  onContact: () => void
 }
 
 export const ReservationDetailActionBar = ({
+  canCancel,
   onCancel,
-  onHome,
+  onContact,
 }: ReservationDetailActionBarProps) => {
   return (
-    <div className="app-mobile-fixed-bottom z-fixed bg-white px-6 pt-4.25 pb-[calc(20px+var(--safe-area-bottom,0px))]">
-      <div className="grid grid-cols-2 gap-2.5">
-        <Button onClick={onCancel} size="md" variant="neutral" width="full">
-          예약 취소하기
+    <BottomActionBar
+      aria-label="예약 상세 액션"
+      startAction={
+        canCancel ? (
+          <Button onClick={onCancel} size="lg" variant="neutral" width="full">
+            예약 취소하기
+          </Button>
+        ) : undefined
+      }
+      endAction={
+        <Button onClick={onContact} size="lg" variant="primary" width="full">
+          문의하기
         </Button>
-        <Button onClick={onHome} size="md" variant="primary" width="full">
-          홈으로 돌아가기
-        </Button>
-      </div>
-    </div>
+      }
+    />
   )
 }

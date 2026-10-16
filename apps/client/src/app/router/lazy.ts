@@ -22,6 +22,9 @@ const HashiPickPage = lazyRoute(() => import('@/pages/hashiPick'))
 const PopularRestaurantsPage = lazyRoute(
   () => import('@/pages/popularRestaurants'),
 )
+const HotSnsRestaurantsPage = lazyRoute(
+  () => import('@/pages/hotSnsRestaurants'),
+)
 const MagazinesPage = lazyRoute(() => import('@/pages/magazines'))
 const MagazineDetailPage = lazyRoute(() => import('@/pages/magazineDetail'))
 const ReviewNewPage = lazyRoute(() => import('@/pages/reviewNew'))
@@ -30,7 +33,10 @@ const ReviewDetailPage = lazyRoute(() => import('@/pages/reviewDetail'))
 const ReviewEditPage = lazyRoute(() => import('@/pages/reviewEdit'))
 const MypagePage = lazyRoute(() => import('@/pages/mypage'))
 const ProfileNewPage = lazyRoute(() => import('@/pages/profileNew'))
+const ProfileEditPage = lazyRoute(() => import('@/pages/profileEdit'))
 const WithdrawalPage = lazyRoute(() => import('@/pages/withdrawal'))
+const TermsPage = lazyRoute(() => import('@/pages/terms'))
+const TermsDetailPage = lazyRoute(() => import('@/pages/termsDetail'))
 const RestaurantReservationNewPage = lazyRoute(
   () => import('@/pages/restaurantReservationNew'),
 )
@@ -63,6 +69,7 @@ export const lazyPages = {
   restaurantMenuDetail: () => lazyPage(RestaurantMenuDetailPage),
   hashiPick: () => lazyPage(HashiPickPage),
   popularRestaurants: () => lazyPage(PopularRestaurantsPage),
+  hotSnsRestaurants: () => lazyPage(HotSnsRestaurantsPage),
   magazines: () => lazyPage(MagazinesPage),
   magazineDetail: () => lazyPage(MagazineDetailPage),
   reviewNew: () => lazyPage(ReviewNewPage),
@@ -71,7 +78,10 @@ export const lazyPages = {
   reviewEdit: () => lazyPage(ReviewEditPage),
   mypage: () => lazyPage(MypagePage),
   profileNew: () => lazyPage(ProfileNewPage),
+  profileEdit: () => lazyPage(ProfileEditPage),
   withdrawal: () => lazyPage(WithdrawalPage),
+  terms: () => lazyPage(TermsPage),
+  termsDetail: () => lazyPage(TermsDetailPage),
   restaurantReservationNew: () => lazyPage(RestaurantReservationNewPage),
   anywhereReservation: () => lazyPage(AnywhereReservationPage),
   reservationRequest: () => lazyPage(ReservationRequestPage),

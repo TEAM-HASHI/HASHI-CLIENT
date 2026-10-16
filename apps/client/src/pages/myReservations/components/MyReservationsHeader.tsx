@@ -10,7 +10,7 @@ export const MyReservationsHeader = ({
   className,
 }: MyReservationsHeaderProps) => {
   return (
-    <header className={cn('w-full pb-3', className)}>
+    <header className={cn('w-full pb-4', className)}>
       <h1 className="typo-header-1 text-cool-gray-900">
         {userName}님의 예약 정보
       </h1>

@@ -15,7 +15,7 @@ export type MypageMenuAction =
     }
   | {
       type: 'external'
-      url?: string
+      url: string
     }
 
 export type MypageMenuItem = {

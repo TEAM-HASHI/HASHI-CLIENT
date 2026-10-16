@@ -75,24 +75,26 @@ DragPanel의 접힘은 닫힘이나 unmount가 아니라
 
 `onStageCommit?: (event: DragPanelStageCommit) => void`를 추가합니다.
 `DragPanelStage`는 `collapsed | normal | maximum`이고 이벤트는
-`{ stage, height, input: 'pointer' | 'keyboard' }`입니다. height는 실제 제한된 높이입니다.
-기존 소비자는 callback을 추가하지 않아도 기존 숫자 기반 snap 동작을 유지합니다.
+`{ stage, height, input: 'pointer' | 'keyboard' | 'button' }`입니다. height는 실제 제한된 높이입니다.
+callback은 확정 결과를 전달하며, 유무에 따라 단계 계산이나 입력 처리가 달라지지 않습니다.
 
-- callback 사용 시 동일한 높이로 제한된 일반/최대도 의미 단계로 구분합니다.
+- 동일한 높이로 제한된 일반/최대도 의미 단계로 구분합니다.
 - 초기/외부 높이의 단계 추론은 가장 가까운 단계를 사용하며 동률은 낮은 단계를 선택합니다.
 - 사용자 commit 후 같은 높이가 유지되면 마지막 의미 단계를 보존합니다.
 - 최초 렌더, 외부 height 변경, resize/viewport 보정은 이벤트를 보내지 않습니다.
 - 레이아웃/설정 변경 중의 gesture, pointercancel/lost capture, 12px 미만 이동도 보내지 않습니다.
-- ArrowUp/Down은 의미 단계 한 칸, Home/End는 양 끝입니다. key repeat는 무시합니다.
+- ArrowUp/Down은 현재 단계에서 한 칸 이동합니다. 단계 사이 높이에서는 입력 방향의 다음 높이로 이동합니다. Home/End는 양 끝이며 key repeat는 무시합니다.
 - 같은 단계로의 반복 입력은 이벤트를 재발행하지 않습니다. 다른 단계로 돌아온 뒤 다시 진입하면 발행합니다.
 - 실제 공간이 손잡이 이하이면 확장 이벤트를 보내지 않습니다.
-- 전체 화면 닫기 시 호출부가 일반 높이로 복귀합니다. 일반/최대 높이가 같은 경우
-  상태 초기화가 필요하면 caller가 panel key를 바꿔 새로운 세션으로 시작해야 합니다.
 - HDS는 Dialog/라우팅을 열지 않습니다. `height === maxHeight` 대신 이벤트의 stage를 소비합니다.
 
-호출부 조합 예시는 Storybook의 `FullscreenOnMaximum`을 참고합니다.
+`@hashi/hds-ui`에서 `DragPanel`, `DragPanelProps`, `DragPanelRenderState`를 export합니다.
 
-`@hashi/hds-ui`에서 `DragPanel`, `DragPanelProps`를 export합니다.
+헤더, 본문, 푸터, 플로팅 영역은 ReactNode 또는
+`({ isFullscreen, collapse }: DragPanelRenderState) => ReactNode`를 받습니다.
+공컴은 현재 전체 확장 여부와 일반 높이로 축소하는 함수를 제공할 뿐,
+컬렉션 제목, 뒤로가기 버튼, 정렬/필터, 지도 CTA를 직접 만들지 않습니다.
+호출부는 상태에 맞춰 헤더와 고정 요소를 구성하고 같은 목록 컴포넌트를 유지합니다.
 
 ```tsx
 import { useState } from 'react'
@@ -115,19 +117,20 @@ const [height, setHeight] = useState(240)
 </div>
 ```
 
-| Prop               | Type                       | 의미                                           |
-| ------------------ | -------------------------- | ---------------------------------------------- |
-| `height`           | `number`                   | 호출부가 소유하는 현재 높이(px)                |
-| `normalHeight`     | `number`                   | 화면별 일반 높이 단계(px)                      |
-| `maxHeight`        | `number`                   | 화면별 최대 높이(px)                           |
-| `onHeightChange`   | `(height: number) => void` | 드래그 종료 또는 키보드 조작 시 높이 변경 요청 |
-| `children`         | `ReactNode`                | 스크롤되는 본문                                |
-| `header`, `footer` | `ReactNode`                | 선택적 고정 영역. 본문과 함께 스크롤되지 않음  |
-| `aria-label`       | `string`                   | 패널 region의 접근성 이름                      |
-| `handleLabel`      | `string`                   | 높이 조절 손잡이의 접근성 이름                 |
-| `className`        | `string`                   | 선택적 패널 스타일                             |
+| Prop               | Type                       | 의미                                                               |
+| ------------------ | -------------------------- | ------------------------------------------------------------------ |
+| `height`           | `number`                   | 호출부가 소유하는 현재 높이(px)                                    |
+| `normalHeight`     | `number`                   | 화면별 일반 높이 단계(px)                                          |
+| `maxHeight`        | `number?`                  | 지정하면 최대 높이(px), 생략하면 부모의 사용 가능한 전체 높이      |
+| `onHeightChange`   | `(height: number) => void` | 드래그 종료 또는 키보드 조작 시 높이 변경 요청                     |
+| `children`         | `ReactNode 또는 렌더 함수` | 스크롤되는 본문                                                    |
+| `header`, `footer` | `ReactNode 또는 렌더 함수` | 선택적 고정 영역. 본문과 함께 스크롤되지 않음                      |
+| `floating`         | `ReactNode 또는 렌더 함수` | 본문 공간을 차지하지 않는 고정 레이어. 위치와 디자인은 호출부 책임 |
+| `aria-label`       | `string`                   | 패널 region의 접근성 이름                                          |
+| `handleLabel`      | `string`                   | 높이 조절 손잡이의 접근성 이름                                     |
+| `className`        | `string`                   | 선택적 패널 스타일                                                 |
 
-높이는 유한한 px 값으로 전달하며 `30 <= normalHeight <= maxHeight`를 기준으로 설정합니다. `height`는 실제 사용 가능한 영역 안으로 제한하여 표시합니다. 소비자는 callback 결과를 `height`에 반영해야 합니다.
+높이는 유한한 px 값으로 전달하며 최대 높이를 지정할 때는 `30 <= normalHeight <= maxHeight`를 기준으로 설정합니다. `height`는 실제 사용 가능한 영역 안으로 제한하여 표시합니다. 소비자는 callback 결과를 `height`에 반영해야 합니다.
 
 호출부는 위치와 높이가 정해진 relative 컨테이너를 제공하며, 하단 내비게이션 및 safe-area를 제외한 공간으로 배치합니다. 패널은 해당 컨테이너 하단에 붙고, viewport가 줄어들면 높이와 하단 위치를 보정합니다. 내비게이션의 DOM이나 높이를 공컴 내부에서 추측하지 않습니다.
 
@@ -137,14 +140,19 @@ const [height, setHeight] = useState(240)
 
 ## Agreed Behavior
 
-- 손잡이와 그 주변 터치 영역에서만 드래그를 시작합니다. 목록이나 제목에서 시작한 입력으로 높이를 변경하지 않습니다.
+- 기본적으로 손잡이와 그 주변 터치 영역에서 드래그를 시작합니다. 최대 높이를 생략한 전체 화면 방식에서는 목록 맨 위에서 시작한 아래 방향 터치/휠 입력으로도 일반 높이로 축소할 수 있습니다.
+- 전체 화면은 같은 패널의 확장 상태이며 URL 변경, Dialog, 콘텐츠 재생성을 사용하지 않습니다. 전체 화면에서는 손잡이와 그 30px 공간을 숨기고 전달받은 헤더부터 표시합니다.
+- 슬롯의 collapse는 일반 높이로 축소합니다. 헤더 뒤로가기와 플로팅 CTA는 호출부가 같은 함수를 연결합니다. 하단 내비게이션은 패널 밖의 페이지 레이아웃에서 관리합니다.
+- 사용자가 확정한 전체 화면 단계는 사용 가능 높이가 커져도 유지합니다. 화면 크기 보정만으로 단계 확정 이벤트를 다시 보내지 않습니다.
+- 목록을 당기는 중 다중 터치가 시작되면 임시 높이를 즉시 복구하고 축소 요청을 보내지 않습니다.
+- 목록 중간에서 시작한 터치, 수평 입력, 미세 이동 및 취소된 터치는 축소하지 않습니다. 최대 높이를 지정한 방식에서는 본문 입력으로 패널 높이를 변경하지 않습니다.
 - 아래로 끝까지 내려도 패널을 닫거나 제거하지 않고 다시 펼칠 수 있는 손잡이를 남깁니다.
 - 드래그 종료 시 시작 단계와 이동 방향을 기준으로 다음 높이 단계를 결정합니다.
 - 12px의 dead zone을 초과한 드래그는 이동 방향을 기준으로 높이 단계를 결정합니다.
 - dead zone 안의 미세한 움직임은 의도하지 않은 입력으로 보고 시작 단계를 유지합니다.
 - 기본적으로 인접 단계로 이동하되, 드래그 중 중간 단계를 충분히 넘어선 경우 한 번의 gesture에서 두 단계 이동할 수 있습니다.
 - 드래그 종료 위치의 단순 nearest 계산이 아니라 이동 방향과 실제로 통과한 단계 범위를 함께 사용합니다.
-- 드래그 중에는 내부 임시 높이를 표시하고, 정상 종료 시 한 번 높이 변경을 요청합니다. 포인터 취소 또는 예기치 않은 capture 손실은 변경을 요청하지 않고 호출부 높이로 돌아갑니다.
+- 드래그 중에는 내부 임시 높이를 표시하고, dead zone 이상의 정상 종료 시 한 번 높이 변경을 요청합니다. 미세 이동, 포인터 취소 또는 예기치 않은 capture 손실은 변경을 요청하지 않고 호출부 높이로 돌아갑니다.
 - 일반 높이와 최대 높이 모두 콘텐츠가 넘치면 내부 목록을 스크롤할 수 있습니다.
 - 같은 목록을 접었다 펼치면 기존 목록 스크롤 위치를 유지합니다.
 - 화면별 높이 설정은 달라도 됩니다. 작은 화면에서는 사용 가능한 높이로 제한하고 하단 내비게이션을 가리지 않습니다.
@@ -152,6 +160,7 @@ const [height, setHeight] = useState(240)
 - 최초 mount 시 BottomSheet와 동일한 `animate-bottom-sheet-panel-in` motion을 사용해 화면 하단에서 등장합니다.
 - 드래그 중에는 transition을 적용하지 않고 포인터 이동을 즉시 따라갑니다.
 - 드래그 종료 후 인접 높이 단계로 이동할 때는 BottomSheet와 동일한 380ms, cubic-bezier(0.22, 1, 0.36, 1) motion timing을 사용해 부드럽게 전환합니다.
+- 모션 감소 설정에서는 높이 transition을 사용하지 않습니다.
 
 ## Design Decision: 방향 기반 단계 전환
 
@@ -186,14 +195,19 @@ HASHI DragPanel에서는 실제 사용 시 단계 전환의 예측 가능성을 
 ## Accessibility And Scroll
 
 - 손잡이는 이름 있는 vertical slider입니다. ArrowUp/ArrowDown은 다음/이전 단계, Home/End는 접힘/최대 단계로 이동합니다.
+- 전체 화면에서 손잡이가 숨겨질 때 손잡이에 포커스가 있었다면 본문 영역으로 이동하고, 일반 패널로 복귀하면 손잡이로 돌립니다. 호출부는 전체 화면에서도 키보드로 실행 가능한 축소 버튼을 제공해야 합니다.
 - 패널은 모달이 아닌 이름 있는 region입니다. 배경 포커스를 가두거나 문서 스크롤을 잠그지 않습니다.
 - 접힌 콘텐츠는 DOM을 유지하되 `inert` 및 비노출 처리합니다. 접힐 때 내부에 포커스가 있으면 손잡이로 이동합니다.
 - 본문은 현재 높이에서 overflow 시 스크롤됩니다. 손잡이에만 `touch-action: none`을 적용하며 본문의 터치 스크롤은 막지 않습니다.
 - 같은 목록의 접기/펼치기 사이에 scrollTop을 복원합니다. 새 컬렉션으로 전환하거나 목록을 교체할 때의 초기화 정책은 호출부 책임이며 필요하면 key로 구분합니다.
-- 헤더/푸터는 본문과 분리합니다. 호출부는 사용할 최소 확장 높이에 고정 영역이 들어가도록 구성해야 합니다.
+- 헤더/푸터는 본문과 분리합니다. 플로팅 영역은 패널 내부에서 본문 위에 겹치며 빈 영역은 배경 입력을 막지 않습니다. 호출부는 고정 요소 위치, 최소 높이, 마지막 항목을 가리지 않을 본문 여백을 구성해야 합니다.
 
 ## Implementation Notes
 
+- `useDragPanel`: 높이·단계 계산, 손잡이 드래그와 키보드 조작, 확장·축소 확정을 담당하며 아래 두 훅을 조합합니다.
+- `usePanelViewport`: 부모/viewport 측정과 observer·이벤트 정리를 담당하는 내부 훅입니다.
+- `usePullToCollapse`: 본문 터치·휠 구분, 임시 드래그 높이 전달, 축소 요청과 입력 초기화를 담당하는 내부 훅입니다.
+- 포커스·스크롤 보존, 접근성 속성 및 슬롯 조립은 `DragPanel`에 남깁니다. 세 훅은 public barrel로 export하지 않습니다.
 - Pointer Events 및 pointer capture로 마우스/터치/펜 입력을 처리하며 새 의존성은 추가하지 않습니다.
 - 최초 등장 animation은 BottomSheet와 동일한 `animate-bottom-sheet-panel-in` token utility를 재사용하며 별도 motion 값을 정의하지 않습니다.
 - 동적으로 계산되는 높이와 viewport 하단 보정만 inline style을 사용합니다. 나머지는 Tailwind utility와 기존 `cn`을 사용합니다.
@@ -203,7 +217,13 @@ HASHI DragPanel에서는 실제 사용 시 단계 전환의 예측 가능성을 
 
 ## Storybook
 
-Default, Collapsed, Expanded, AlternateHeights, Empty, SmallContainer, WithFixedSlots로 높이 설정, 배경 조작, 빈/긴 콘텐츠, 고정 영역을 확인합니다. ChangingContainer는 크기 변경, FullscreenOnMaximum은 호출부 소유의 URL 변경 없는 Dialog 조합 예시입니다. 모든 예시 높이는 제품 규격이 아닌 시연용 값입니다. 도메인 데이터나 API mock은 포함하지 않습니다.
+- Default: 지정한 최대 높이, 고정 헤더/푸터, 내부 목록 스크롤, 배경 조작.
+- Collapsed: 손잡이만 남는 접힘 상태.
+- Empty: 콘텐츠가 없는 껍데기.
+- Fullscreen: 손잡이 공간 없는 전체 확장, 상태별 헤더, 플로팅 버튼과 목록 맨 위에서의 축소.
+- ChangingContainer: 부모 영역 크기 변경에 따른 높이 제한. 조작 버튼은 패널 밖에 두고 문서 스크롤을 만들지 않습니다.
+
+모든 예시 높이는 제품 규격이 아닌 시연용 값입니다. 도메인 디자인이나 API mock은 포함하지 않습니다.
 
 ## Design Reference
 
@@ -213,36 +233,18 @@ Default, Collapsed, Expanded, AlternateHeights, Empty, SmallContainer, WithFixed
 
 ## Verification
 
-### Shared panel revision (2026-10-14)
-
-- HDS 전체 Vitest: 26 files / 258 tests 통과. DragPanel 30 tests 포함.
-- HDS lint, typecheck, TypeScript build 통과.
-- Storybook production build 통과 (기존 큰 chunk 경고 있음).
-- format:check, git diff --check, harness 검사 통과.
-- Playwright + 설치된 Chrome: 393x852, 1280x800, 320x400에서 목록 최대 제한,
-  Dialog fullscreen, 본문 스크롤 중 footer 위치 유지, Escape 후 포커스 복귀 확인.
-- 실제 pointer로 Dialog 전환, 닫기 포커스 복귀, 320x180에서 높이 중복 및 재열기 확인.
-- 일반/최대 모두 240px일 때 호출부 session 초기화로 3회 재열기 및 새 손잡이 포커스 복귀 확인.
-- 컨테이너를 560px에서 180px로 줄이면 높이를 제한하고 Dialog를 열지 않음 확인.
-- Playwright 기본 브라우저 바이너리가 없어 설치된 Chrome channel로 대체함.
-- Storybook dev의 최초 sandbox 실행은 실패했고 localhost:6017 실행으로 검증함.
-- 실제 기기 터치, 지도 카메라, attribution, nav/safe-area, 실제 컬렉션 호출부는 미검증.
-
 ### Automated
 
 - [x] dead zone을 초과한 위/아래 드래그가 방향에 따라 인접 단계로 이동
 - [x] dead zone 안의 미세한 움직임은 현재 단계 유지
 - [x] 기본 drag는 방향에 따라 인접 단계로 이동
 - [x] 중간 단계를 충분히 넘긴 drag는 한 gesture에서 두 단계 이동 가능
-- [x] 드래그 중 height transition 미적용
-- [x] 드래그 종료 후 단계 이동 시 380ms snap transition 적용
 - [x] 접힌 상태에서도 콘텐츠 DOM 유지
 - [x] 접기/펼치기 후 스크롤 위치 복원
 - [x] 키보드로 단계 이동
 - [x] 비모달 동작 유지
 - [x] 작은 컨테이너에서 높이 제한
 - [x] 취소된 pointer gesture에서 높이를 commit하지 않음
-- [x] BottomSheet와 동일한 초기 panel entrance motion 적용
 
 ### Manual
 
