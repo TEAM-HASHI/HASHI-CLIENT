@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import { SavedPage } from '@/pages/saved/SavedPage'
+import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import type { CollectionData } from '@/pages/saved/types'
 
@@ -14,14 +15,18 @@ const setup = (data: CollectionData = collectionMocks) => {
       {
         element: <BottomNavigationLayout />,
         children: [
-          { path: '/saved', element: <SavedPage data={data} /> },
+          { path: '/saved', element: <SavedPage /> },
           { path: '/map', element: <div data-testid="map-owner" /> },
         ],
       },
     ],
     { initialEntries: ['/saved'] },
   )
-  render(<RouterProvider router={router} />)
+  render(
+    <CollectionDataProvider initialData={data}>
+      <RouterProvider router={router} />
+    </CollectionDataProvider>,
+  )
   return { router, user: userEvent.setup() }
 }
 
@@ -30,7 +35,9 @@ afterEach(cleanup)
 describe('SavedPage', () => {
   it('applies sorting and category immediately, retains sorting, and closes each menu', async () => {
     const { user } = setup()
-    await user.click(screen.getByRole('button', { name: /2026 도쿄 봄 여행/ }))
+    await user.click(
+      screen.getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' }),
+    )
     const list = screen.getByRole('list', { name: '저장 식당' })
     expect(screen.getByText('저장한 장소')).toBeVisible()
     expect(list.querySelector('li')).toHaveAttribute(
@@ -57,7 +64,9 @@ describe('SavedPage', () => {
 
   it('dismisses menus with Escape, outside click and keyboard selection', async () => {
     const { user } = setup()
-    await user.click(screen.getByRole('button', { name: /2026 도쿄 봄 여행/ }))
+    await user.click(
+      screen.getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' }),
+    )
     await user.click(screen.getByRole('button', { name: '정렬 선택' }))
     await user.keyboard('{End}{Enter}')
     expect(screen.getByText('리뷰순')).toBeInTheDocument()
@@ -71,7 +80,9 @@ describe('SavedPage', () => {
 
   it('hands collection state to the existing map and keeps the saved tab active', async () => {
     const { user, router } = setup()
-    await user.click(screen.getByRole('button', { name: /2026 도쿄 봄 여행/ }))
+    await user.click(
+      screen.getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' }),
+    )
     await user.click(screen.getByRole('button', { name: '정렬 선택' }))
     await user.click(screen.getByRole('menuitemradio', { name: '리뷰순' }))
     await user.click(screen.getByRole('button', { name: '지도로 보기' }))

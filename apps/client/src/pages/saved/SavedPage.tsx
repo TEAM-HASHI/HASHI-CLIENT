@@ -1,21 +1,28 @@
 import { BackIcon, MapViewIcon, MenuIcon, PlusIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 
-import { CollectionDropdown } from '@/pages/saved/components/CollectionDropdown'
+import {
+  CollectionDropdown,
+  CollectionEditMenu,
+} from '@/pages/saved/components/CollectionDropdown'
+import { CollectionForm } from '@/pages/saved/components/CollectionForm'
+import { useCollectionData } from '@/pages/saved/data/useCollectionData'
+import {
+  createCollection,
+  updateCollection,
+} from '@/pages/saved/utils/collectionMutations'
 import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
-import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import {
   COLLECTION_CATEGORY_OPTIONS,
   COLLECTION_SORT_OPTIONS,
   INITIAL_COLLECTION_VIEW,
 } from '@/pages/saved/types'
 import type {
-  CollectionData,
   CollectionMapState,
   CollectionViewState,
 } from '@/pages/saved/types'
@@ -26,14 +33,14 @@ import {
 import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
 
 export type SavedPageProps = {
-  data?: CollectionData
   onRestaurantSelect?: (restaurantId: string) => void
 }
 
-export const SavedPage = ({
-  data = collectionMocks,
-  onRestaurantSelect,
-}: SavedPageProps) => {
+export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
+  const { data, setData } = useCollectionData()
+  const id = useId()
+  const [creationCount, setCreationCount] = useState(0)
+  const [form, setForm] = useState<'create' | { id: string } | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const [view, setView] = useState<CollectionViewState>(() =>
@@ -50,147 +57,187 @@ export const SavedPage = ({
     : []
 
   return (
-    <div className="app-mobile-bottom-nav-content bg-white pt-[var(--safe-area-top,0px)]">
-      <div
-        data-testid="saved-fixed-header"
-        className="fixed top-[var(--safe-area-top,0px)] right-0 left-0 z-10 mx-auto w-full max-w-[var(--app-mobile-max-width,100vw)] bg-white"
-      >
-        <div className="relative">
-          <Header
-            title={
-              <h1 className="max-w-full truncate" title={collection?.name}>
-                {collection?.name ?? '저장 컬렉션'}
-              </h1>
-            }
-            subtitle={collection ? '저장한 장소' : undefined}
-            leftAction={
-              collection ? (
-                <IconButton
-                  size="xs"
-                  aria-label="컬렉션 목록으로 돌아가기"
-                  onClick={() => {
-                    setView(INITIAL_COLLECTION_VIEW)
-                    setMenu(null)
-                  }}
-                >
-                  <BackIcon className="size-6" />
-                </IconButton>
-              ) : undefined
-            }
-            contentClassName={
-              collection ? '[&>div:first-child]:typo-sub-header-2' : undefined
-            }
-          />
-          {collection && (
-            <MenuIcon
-              aria-hidden="true"
-              className="text-warm-gray-300 absolute top-8.25 right-5 size-4.5"
+    <>
+      <div className="app-mobile-bottom-nav-content bg-white pt-[var(--safe-area-top,0px)]">
+        <div
+          data-testid="saved-fixed-header"
+          className="fixed top-[var(--safe-area-top,0px)] right-0 left-0 z-10 mx-auto w-full max-w-[var(--app-mobile-max-width,100vw)] bg-white"
+        >
+          <div className="relative">
+            <Header
+              title={
+                <h1 className="max-w-full truncate" title={collection?.name}>
+                  {collection?.name ?? '저장 컬렉션'}
+                </h1>
+              }
+              subtitle={collection ? '저장한 장소' : undefined}
+              leftAction={
+                collection ? (
+                  <IconButton
+                    size="xs"
+                    aria-label="컬렉션 목록으로 돌아가기"
+                    onClick={() => {
+                      setView(INITIAL_COLLECTION_VIEW)
+                      setMenu(null)
+                    }}
+                  >
+                    <BackIcon className="size-6" />
+                  </IconButton>
+                ) : undefined
+              }
+              contentClassName={
+                collection ? '[&>div:first-child]:typo-sub-header-2' : undefined
+              }
             />
+            {collection && (
+              <MenuIcon
+                aria-hidden="true"
+                className="text-warm-gray-300 absolute top-8.25 right-5 size-4.5"
+              />
+            )}
+          </div>
+          <div className="flex h-11.5 items-center justify-between gap-2 px-5">
+            <p className="typo-body-5 text-primary-200 shrink-0">
+              총 {collection ? restaurants.length : data.collections.length}
+              {collection ? '곳' : '개'}
+            </p>
+            {collection ? (
+              <div className="flex items-center gap-3.75">
+                <CollectionDropdown
+                  label="정렬"
+                  options={COLLECTION_SORT_OPTIONS}
+                  value={view.sort}
+                  open={menu === 'sort'}
+                  onOpenChange={(open) => setMenu(open ? 'sort' : null)}
+                  onChange={(sort) =>
+                    setView((current) => ({ ...current, sort }))
+                  }
+                />
+                <CollectionDropdown
+                  label="분류"
+                  options={COLLECTION_CATEGORY_OPTIONS}
+                  value={view.category}
+                  open={menu === 'category'}
+                  onOpenChange={(open) => setMenu(open ? 'category' : null)}
+                  onChange={(category) =>
+                    setView((current) => ({ ...current, category }))
+                  }
+                />
+              </div>
+            ) : (
+              <span className="typo-body-6 text-cool-gray-600">최신순</span>
+            )}
+          </div>
+          {!collection && (
+            <div className="px-5">
+              <button
+                type="button"
+                onClick={() => setForm('create')}
+                className="border-warm-gray-50 flex w-full items-center gap-3 border-b py-4.5 text-left"
+              >
+                <span className="bg-primary-100 flex size-12.5 shrink-0 items-center justify-center rounded-[5px]">
+                  <PlusIcon
+                    aria-hidden="true"
+                    className="text-primary-200 size-8 shrink-0"
+                  />
+                </span>
+                <span className="typo-body-3 text-primary-200">
+                  새 컬렉션 만들기
+                </span>
+              </button>
+            </div>
           )}
         </div>
-        <div className="flex h-11.5 items-center justify-between gap-2 px-5">
-          <p className="typo-body-5 text-primary-200 shrink-0">
-            총 {collection ? restaurants.length : data.collections.length}
-            {collection ? '곳' : '개'}
-          </p>
-          {collection ? (
-            <div className="flex items-center gap-3.75">
-              <CollectionDropdown
-                label="정렬"
-                options={COLLECTION_SORT_OPTIONS}
-                value={view.sort}
-                open={menu === 'sort'}
-                onOpenChange={(open) => setMenu(open ? 'sort' : null)}
-                onChange={(sort) =>
-                  setView((current) => ({ ...current, sort }))
-                }
-              />
-              <CollectionDropdown
-                label="분류"
-                options={COLLECTION_CATEGORY_OPTIONS}
-                value={view.category}
-                open={menu === 'category'}
-                onOpenChange={(open) => setMenu(open ? 'category' : null)}
-                onChange={(category) =>
-                  setView((current) => ({ ...current, category }))
-                }
-              />
-            </div>
-          ) : null}
-        </div>
-        {!collection && (
-          <div className="px-5">
-            <button
-              type="button"
-              disabled
-              className="border-warm-gray-50 flex w-full items-center gap-3 border-b py-4.5 text-left"
-            >
-              <span className="bg-primary-100 flex size-12.5 shrink-0 items-center justify-center rounded-[5px]">
-                <PlusIcon
-                  aria-hidden="true"
-                  className="text-primary-200 size-8 shrink-0"
+        <div
+          aria-hidden="true"
+          className={collection ? 'h-[121px]' : 'h-[207px]'}
+        />
+        {collection ? (
+          <>
+            <ul aria-label="저장 식당" className="px-5 pb-20">
+              {restaurants.map((restaurant) => (
+                <SavedRestaurantRow
+                  key={restaurant.id}
+                  restaurant={restaurant}
+                  onSelect={onRestaurantSelect}
                 />
-              </span>
-              <span className="typo-body-3 text-primary-200">
-                새 컬렉션 만들기
-              </span>
-            </button>
+              ))}
+            </ul>
+            <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">
+              <Button
+                size="md"
+                className="pointer-events-auto h-11 rounded-full px-3 shadow-[0_4px_4px_rgba(0,0,0,0.15)]"
+                leftIcon={
+                  <MapViewIcon className="fill-secondary-200 stroke-primary-100 size-6" />
+                }
+                onClick={() => {
+                  const state: CollectionMapState = {
+                    ...view,
+                    collectionId: collection.id,
+                  }
+                  navigate(ROUTES.saved, { replace: true, state })
+                  navigate(ROUTES.map, { state })
+                }}
+              >
+                지도로 보기
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="px-5">
+            <ul aria-label="저장 컬렉션" className="flex flex-col gap-4 pt-4">
+              {selectCollections(data.collections).map((item) => (
+                <CollectionListRow
+                  key={item.id}
+                  collection={item}
+                  moreAction={
+                    <CollectionEditMenu
+                      name={item.name}
+                      onEdit={() => setForm({ id: item.id })}
+                    />
+                  }
+                  restaurantCount={
+                    selectRestaurants(item, data.restaurants).length
+                  }
+                  onSelect={() =>
+                    setView({
+                      ...INITIAL_COLLECTION_VIEW,
+                      collectionId: item.id,
+                    })
+                  }
+                />
+              ))}
+            </ul>
           </div>
         )}
       </div>
-      <div
-        aria-hidden="true"
-        className={collection ? 'h-[121px]' : 'h-[207px]'}
-      />
-      {collection ? (
-        <>
-          <ul aria-label="저장 식당" className="px-5 pb-20">
-            {restaurants.map((restaurant) => (
-              <SavedRestaurantRow
-                key={restaurant.id}
-                restaurant={restaurant}
-                onSelect={onRestaurantSelect}
-              />
-            ))}
-          </ul>
-          <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">
-            <Button
-              size="md"
-              className="pointer-events-auto h-11 rounded-full px-3 shadow-[0_4px_4px_rgba(0,0,0,0.15)]"
-              leftIcon={
-                <MapViewIcon className="fill-secondary-200 stroke-primary-100 size-6" />
-              }
-              onClick={() => {
-                const state: CollectionMapState = {
-                  ...view,
-                  collectionId: collection.id,
-                }
-                navigate(ROUTES.saved, { replace: true, state })
-                navigate(ROUTES.map, { state })
-              }}
-            >
-              지도로 보기
-            </Button>
-          </div>
-        </>
-      ) : (
-        <div className="px-5">
-          <ul aria-label="저장 컬렉션" className="flex flex-col gap-4 pt-4">
-            {selectCollections(data.collections).map((item) => (
-              <CollectionListRow
-                key={item.id}
-                collection={item}
-                restaurantCount={
-                  selectRestaurants(item, data.restaurants).length
-                }
-                onSelect={() =>
-                  setView({ ...INITIAL_COLLECTION_VIEW, collectionId: item.id })
-                }
-              />
-            ))}
-          </ul>
-        </div>
+      {form && (
+        <CollectionForm
+          collection={
+            form === 'create'
+              ? undefined
+              : data.collections.find((item) => item.id === form.id)
+          }
+          collections={data.collections}
+          onClose={() => setForm(null)}
+          onSubmit={(draft) => {
+            if (form === 'create') {
+              const createdAt = new Date().toISOString()
+              setData((current) =>
+                createCollection(
+                  current,
+                  draft,
+                  `mock-${id}-${creationCount}`,
+                  createdAt,
+                ),
+              )
+              setCreationCount((count) => count + 1)
+            } else
+              setData((current) => updateCollection(current, form.id, draft))
+            setForm(null)
+          }}
+        />
       )}
-    </div>
+    </>
   )
 }
