@@ -1,8 +1,14 @@
-import { CancelIcon, MapViewIcon } from '@hashi/hds-icons'
+import { CancelIcon, MapViewIcon, ShareIcon } from '@hashi/hds-icons'
 import { Button, DragPanel, IconButton } from '@hashi/hds-ui'
 import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+import {
+  CollectionActionMenu,
+  CollectionEditMenu,
+} from '@/pages/saved/components/CollectionDropdown'
+import { CollectionEditor } from '@/pages/saved/components/CollectionEditor'
+import type { CollectionManagementAction } from '@/pages/saved/components/CollectionEditor'
 import { CollectionForm } from '@/pages/saved/components/CollectionForm'
 import {
   createCollection,
@@ -47,8 +53,11 @@ export const CollectionDragPanelContent = ({
   const id = useId()
   const [creationCount, setCreationCount] = useState(0)
   const [form, setForm] = useState<'create' | { id: string } | null>(null)
+  const [management, setManagement] =
+    useState<CollectionManagementAction | null>(null)
   const [panelHost, setPanelHost] = useState<HTMLDivElement | null>(null)
   const listRef = useRef<HTMLUListElement>(null)
+  const collapsedScrollTop = useRef<number | null>(null)
   const listOffset = useRef<{
     collectionId: string | null
     top: number
@@ -81,7 +90,19 @@ export const CollectionDragPanelContent = ({
     const scroller = list?.parentElement
     if (!list || !scroller) {
       listOffset.current = null
+      collapsedScrollTop.current = null
       return
+    }
+    if (listOffset.current?.collectionId !== view.collectionId) {
+      collapsedScrollTop.current = null
+    }
+    if (
+      height > 30 &&
+      collapsedScrollTop.current !== null &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      scroller.scrollTop = collapsedScrollTop.current
+      collapsedScrollTop.current = null
     }
     const top =
       list.getBoundingClientRect().top -
@@ -105,11 +126,68 @@ export const CollectionDragPanelContent = ({
         onViewChange={onViewChange}
         menu={menu}
         onMenuChange={setMenu}
+        actions={
+          onDataChange ? (
+            <>
+              {!isFullscreen && (
+                <IconButton
+                  size="xs"
+                  aria-label="컬렉션 공유"
+                  onClick={() =>
+                    setManagement({
+                      collectionId: collection.id,
+                      type: 'share',
+                    })
+                  }
+                >
+                  <ShareIcon className="size-6" />
+                </IconButton>
+              )}
+              <CollectionActionMenu
+                label="컬렉션 더보기"
+                onManage={() =>
+                  setManagement({ collectionId: collection.id, type: 'edit' })
+                }
+                onShare={
+                  isFullscreen
+                    ? () =>
+                        setManagement({
+                          collectionId: collection.id,
+                          type: 'share',
+                        })
+                    : undefined
+                }
+                onDelete={() =>
+                  setManagement({ collectionId: collection.id, type: 'delete' })
+                }
+              />
+            </>
+          ) : undefined
+        }
       />
     ) : null
   return (
     <>
-      <div ref={setPanelHost} className="pointer-events-none absolute inset-0">
+      <div
+        ref={setPanelHost}
+        className="pointer-events-none absolute inset-0"
+        onTransitionEnd={(event) => {
+          if (
+            event.propertyName === 'height' &&
+            event.target instanceof HTMLElement &&
+            event.target.getAttribute('aria-label') === '저장 컬렉션 패널' &&
+            height > 30 &&
+            collapsedScrollTop.current !== null
+          ) {
+            const scroller = listRef.current?.parentElement
+            scroller?.scrollTo({
+              top: collapsedScrollTop.current,
+              behavior: 'instant',
+            })
+            collapsedScrollTop.current = null
+          }
+        }}
+      >
         <DragPanel
           key={view.collectionId ?? 'list'}
           aria-label="저장 컬렉션 패널"
@@ -119,6 +197,10 @@ export const CollectionDragPanelContent = ({
           maxHeight={collection ? undefined : COLLECTION_PANEL_HEIGHT.list}
           onHeightChange={(next) => {
             setMenu(null)
+            if (next <= 30 && height > next) {
+              collapsedScrollTop.current =
+                listRef.current?.parentElement?.scrollTop ?? 0
+            }
             setPanel({ collectionId: view.collectionId, height: next })
           }}
           header={({ isFullscreen, collapse }) =>
@@ -175,6 +257,28 @@ export const CollectionDragPanelContent = ({
                       key={restaurant.id}
                       restaurant={restaurant}
                       onSelect={onRestaurantSelect}
+                      moreAction={
+                        onDataChange ? (
+                          <CollectionActionMenu
+                            restaurant
+                            label={`${restaurant.name} 더보기`}
+                            onManage={() =>
+                              setManagement({
+                                collectionId: collection.id,
+                                type: 'move',
+                                restaurantIds: [restaurant.id],
+                              })
+                            }
+                            onDelete={() =>
+                              setManagement({
+                                collectionId: collection.id,
+                                type: 'remove',
+                                restaurantIds: [restaurant.id],
+                              })
+                            }
+                          />
+                        ) : undefined
+                      }
                     />
                   ))}
                 </ul>
@@ -182,7 +286,29 @@ export const CollectionDragPanelContent = ({
                 <CollectionPanelList
                   data={data}
                   onCreate={onDataChange ? () => setForm('create') : undefined}
-                  onEdit={onDataChange ? (id) => setForm({ id }) : undefined}
+                  moreAction={
+                    onDataChange
+                      ? (item) => (
+                          <CollectionEditMenu
+                            name={item.name}
+                            context="panel"
+                            onEdit={() => setForm({ id: item.id })}
+                            onShare={() =>
+                              setManagement({
+                                collectionId: item.id,
+                                type: 'share',
+                              })
+                            }
+                            onDelete={() =>
+                              setManagement({
+                                collectionId: item.id,
+                                type: 'delete',
+                              })
+                            }
+                          />
+                        )
+                      : undefined
+                  }
                   onSelect={(collectionId) => {
                     setMenu(null)
                     onViewChange({ ...INITIAL_COLLECTION_VIEW, collectionId })
@@ -216,6 +342,16 @@ export const CollectionDragPanelContent = ({
             } else onDataChange(updateCollection(data, form.id, draft))
             setForm(null)
           }}
+        />
+      )}
+      {management && onDataChange && (
+        <CollectionEditor
+          action={management}
+          data={data}
+          onDataChange={onDataChange}
+          view={view}
+          onClose={() => setManagement(null)}
+          onDeleted={() => onViewChange(INITIAL_COLLECTION_VIEW)}
         />
       )}
     </>

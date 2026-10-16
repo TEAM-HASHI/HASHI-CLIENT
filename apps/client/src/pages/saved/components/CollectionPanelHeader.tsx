@@ -1,5 +1,6 @@
 import { BackIcon, MenuIcon, SaveIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
+import type { ReactNode } from 'react'
 
 import { CollectionDropdown } from '@/pages/saved/components/CollectionDropdown'
 import {
@@ -18,6 +19,7 @@ type CollectionPanelHeaderProps = {
   onViewChange: (view: CollectionViewState) => void
   menu: 'sort' | 'category' | null
   onMenuChange: (menu: 'sort' | 'category' | null) => void
+  actions?: ReactNode
 }
 
 export const CollectionPanelHeader = ({
@@ -29,6 +31,7 @@ export const CollectionPanelHeader = ({
   onViewChange,
   menu,
   onMenuChange,
+  actions,
 }: CollectionPanelHeaderProps) => (
   <>
     {isFullscreen ? (
@@ -52,12 +55,21 @@ export const CollectionPanelHeader = ({
               <BackIcon className="size-6" />
             </IconButton>
           }
-          contentClassName="[&>div:first-child]:typo-sub-header-2"
+          contentClassName={cn(
+            '[&>div:first-child]:typo-sub-header-2',
+            actions && 'inset-x-20',
+          )}
         />
-        <MenuIcon
-          aria-hidden="true"
-          className="text-warm-gray-300 absolute top-8.25 right-5 size-4.5"
-        />
+        {actions ? (
+          <div className="absolute top-7 right-5 flex items-center gap-1">
+            {actions}
+          </div>
+        ) : (
+          <MenuIcon
+            aria-hidden="true"
+            className="text-warm-gray-300 absolute top-8.25 right-5 size-4.5"
+          />
+        )}
       </div>
     ) : (
       <div className="px-5 pt-1.5">
@@ -65,10 +77,14 @@ export const CollectionPanelHeader = ({
           <h2 className="typo-sub-header-1 text-primary-200 min-w-0 flex-1 leading-6.5 [overflow-wrap:anywhere] break-words">
             {collection.name}
           </h2>
-          <MenuIcon
-            aria-hidden="true"
-            className="text-warm-gray-300 mt-1 size-4.5 shrink-0"
-          />
+          {actions ? (
+            <div className="flex shrink-0 items-center gap-3">{actions}</div>
+          ) : (
+            <MenuIcon
+              aria-hidden="true"
+              className="text-warm-gray-300 mt-1 size-4.5 shrink-0"
+            />
+          )}
         </div>
         {collection.description && (
           <p className="typo-body-6 text-cool-gray-400 mt-2 leading-[1.36] [overflow-wrap:anywhere] break-words whitespace-pre-wrap">

@@ -33,6 +33,53 @@ const setup = (data: CollectionData = collectionMocks) => {
 afterEach(cleanup)
 
 describe('SavedPage', () => {
+  it('shows computed counts without a collection sort menu', () => {
+    setup()
+    expect(screen.getByText('총 4개')).toBeInTheDocument()
+    expect(screen.queryByText('최신순')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: '정렬 선택' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '새 컬렉션 만들기' }),
+    ).toBeEnabled()
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /공유/ }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('keeps sharing in the more menus without a detail header share icon', async () => {
+    const { user } = setup()
+    await user.click(
+      screen.getByRole('button', { name: '2026 도쿄 봄 여행 더보기' }),
+    )
+    expect(
+      screen.getAllByRole('menuitem').map((item) => item.textContent),
+    ).toEqual(['수정하기', '공유하기', '삭제하기'])
+    await user.keyboard('{Escape}')
+    await user.click(
+      screen.getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' }),
+    )
+    expect(
+      screen.queryByRole('button', { name: '컬렉션 공유' }),
+    ).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
+    expect(
+      screen.getAllByRole('menuitem').map((item) => item.textContent),
+    ).toEqual(['편집하기', '공유하기', '삭제하기'])
+  })
+
+  it('uses the map-view icon and shadow on the detail CTA', async () => {
+    const { user } = setup()
+    await user.click(
+      screen.getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' }),
+    )
+    const cta = screen.getByRole('button', { name: '지도로 보기' })
+    expect(cta).toHaveClass('shadow-[0_4px_4px_rgba(0,0,0,0.15)]')
+    expect(cta.querySelector('svg path[d^="M14.2425"]')).toBeInTheDocument()
+  })
+
   it('applies sorting and category immediately, retains sorting, and closes each menu', async () => {
     const { user } = setup()
     await user.click(
@@ -78,7 +125,30 @@ describe('SavedPage', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
-  it('hands collection state to the existing map and keeps the saved tab active', async () => {
+  it('keeps an empty collection and an empty list visible without invented actions', async () => {
+    const { user } = setup()
+    await user.click(
+      screen.getByRole('button', { name: '2026 도쿄 가을 여행 컬렉션 열기' }),
+    )
+    expect(screen.getByText('총 0곳')).toBeInTheDocument()
+    expect(
+      within(screen.getByRole('list', { name: '저장 식당' })).queryAllByRole(
+        'listitem',
+      ),
+    ).toHaveLength(0)
+    await user.click(
+      screen.getByRole('button', { name: '컬렉션 목록으로 돌아가기' }),
+    )
+    expect(screen.getByText('총 4개')).toBeInTheDocument()
+    cleanup()
+    setup({ ...collectionMocks, collections: [] })
+    expect(screen.getByText('총 0개')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '새 컬렉션 만들기' }),
+    ).toBeInTheDocument()
+  })
+
+  it('hands collection state to the existing map and activates the map tab', async () => {
     const { user, router } = setup()
     await user.click(
       screen.getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' }),
@@ -92,7 +162,7 @@ describe('SavedPage', () => {
       sort: 'reviews',
       category: 'all',
     })
-    expect(screen.getByRole('button', { name: '저장' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: '지도' })).toHaveAttribute(
       'aria-current',
       'page',
     )

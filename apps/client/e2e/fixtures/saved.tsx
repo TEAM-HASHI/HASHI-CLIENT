@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { ToastRegion } from '@hashi/hds-ui'
 import {
   createMemoryRouter,
   RouterProvider,
@@ -40,15 +41,17 @@ const longCollection = {
 const data: CollectionData =
   scenario === 'empty'
     ? { ...collectionMocks, collections: [] }
-    : scenario === 'long' || scenario === 'multiline'
-      ? {
-          collections: Array.from({ length: 20 }, (_, index) => ({
-            ...longCollection,
-            id: index === 0 ? 'spring' : `long-collection-${index}`,
-          })),
-          restaurants: longRestaurants,
-        }
-      : collectionMocks
+    : scenario === 'single'
+      ? { ...collectionMocks, collections: [collectionMocks.collections[0]] }
+      : scenario === 'long'
+        ? {
+            collections: Array.from({ length: 20 }, (_, index) => ({
+              ...longCollection,
+              id: index === 0 ? 'spring' : `long-collection-${index}`,
+            })),
+            restaurants: longRestaurants,
+          }
+        : collectionMocks
 
 const PanelFixture = () => {
   const { data, setData } = useCollectionData()
@@ -145,6 +148,7 @@ createRoot(document.getElementById('root')!).render(
   <main className="app-mobile-frame min-h-dvh bg-white">
     <CollectionDataProvider initialData={data}>
       <RouterProvider router={router} />
+      <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto max-w-[var(--app-mobile-max-width,100%)] px-5 pt-8" />
     </CollectionDataProvider>
   </main>,
 )

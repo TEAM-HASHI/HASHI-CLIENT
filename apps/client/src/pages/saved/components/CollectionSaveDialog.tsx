@@ -13,31 +13,37 @@ import {
   selectRestaurants,
 } from '@/pages/saved/utils/collectionSelectors'
 import { cn } from '@/shared/utils'
+import type { CollectionData } from '@/pages/saved/types'
 
 // Figma 8317:38858 / 8317:38956: 너비 327, 최대 높이 490, 행 80.
-export const CollectionSaveDialog = ({
-  restaurantId,
+export const CollectionTargetDialog = ({
+  data,
+  onDataChange,
   onClose,
+  title,
+  excludeId,
+  isDisabled = () => false,
+  onConfirm,
+  confirmLabel,
+  feedback,
 }: {
-  restaurantId: string
+  data: CollectionData
+  onDataChange: (data: CollectionData) => void
   onClose: () => void
+  title: string
+  excludeId?: string
+  isDisabled?: (id: string) => boolean
+  onConfirm: (id: string) => void
+  confirmLabel: (id: string | null) => string
+  feedback?: (id: string) => string
 }) => {
-  const { data, setData } = useCollectionData()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [creationCount, setCreationCount] = useState(0)
   const id = useId()
   const selected = data.collections.find((item) => item.id === selectedId)
-  const isSaved = (collectionId: string) =>
-    data.collections
-      .find((item) => item.id === collectionId)
-      ?.restaurants.some((item) => item.restaurantId === restaurantId) ?? false
   const canSave = Boolean(
-    selected &&
-    !isSaved(selected.id) &&
-    data.restaurants.some(
-      (item) => item.id === restaurantId && item.visibility === 'visible',
-    ),
+    selected && selected.id !== excludeId && !isDisabled(selected.id),
   )
 
   return (
@@ -50,10 +56,10 @@ export const CollectionSaveDialog = ({
       >
         <Dialog.Content
           className="max-h-[calc(100dvh-48px)] rounded-[20px] p-6"
-          aria-label="컬렉션 저장"
+          aria-label={title}
         >
           <Dialog.Header className="shrink-0">
-            <Dialog.Title>컬렉션 저장</Dialog.Title>
+            <Dialog.Title>{title}</Dialog.Title>
           </Dialog.Header>
           <button
             type="button"
@@ -70,7 +76,7 @@ export const CollectionSaveDialog = ({
           <Dialog.Body className="max-h-65 min-h-0 overflow-y-auto overscroll-contain">
             <div
               role="radiogroup"
-              aria-label="저장 대상 컬렉션"
+              aria-label={`${title} 대상`}
               onKeyDown={(event) => {
                 if (
                   ![
@@ -108,46 +114,59 @@ export const CollectionSaveDialog = ({
                 items[next].click()
               }}
             >
-              {selectCollections(data.collections).map((collection) => {
-                const saved = isSaved(collection.id)
-                const selected = selectedId === collection.id
-                return (
-                  <button
-                    key={collection.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    disabled={saved}
-                    aria-label={`${collection.name}${saved ? ' (저장됨)' : ''}`}
-                    onClick={() => setSelectedId(collection.id)}
-                    className="border-warm-gray-50 flex min-h-20 w-full items-center gap-3 border-b py-3 text-left focus-visible:outline-2 disabled:cursor-default"
-                  >
-                    <CollectionCover collection={collection} compact />
-                    <span className="flex min-w-0 flex-1 flex-col gap-1">
-                      <span className="typo-sub-header-2 text-primary-200 [overflow-wrap:anywhere] break-words">
-                        {collection.name}
-                      </span>
-                      <span className="typo-body-7 text-cool-gray-600 flex items-center">
-                        <SaveIcon className="text-warm-gray-100 size-4" />
-                        {selectRestaurants(collection, data.restaurants).length}
-                      </span>
-                    </span>
-                    <span
-                      aria-hidden="true"
-                      className={cn(
-                        'flex size-6 shrink-0 items-center justify-center rounded-full border',
-                        saved || selected
-                          ? 'border-cool-gray-900 bg-cool-gray-900 text-white'
-                          : 'border-warm-gray-100 text-warm-gray-100',
-                      )}
+              {selectCollections(data.collections)
+                .filter((c) => c.id !== excludeId)
+                .map((collection) => {
+                  const saved = isDisabled(collection.id)
+                  const selected = selectedId === collection.id
+                  return (
+                    <button
+                      key={collection.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      disabled={saved}
+                      aria-label={`${collection.name}${saved ? ' (저장됨)' : ''}`}
+                      onClick={() => setSelectedId(collection.id)}
+                      className="border-warm-gray-50 flex min-h-20 w-full items-center gap-3 border-b py-3 text-left focus-visible:outline-2 disabled:cursor-default"
                     >
-                      <CheckIcon className="size-5" />
-                    </span>
-                  </button>
-                )
-              })}
+                      <CollectionCover collection={collection} compact />
+                      <span className="flex min-w-0 flex-1 flex-col gap-1">
+                        <span className="typo-sub-header-2 text-primary-200 [overflow-wrap:anywhere] break-words">
+                          {collection.name}
+                        </span>
+                        <span className="typo-body-7 text-cool-gray-600 flex items-center">
+                          <SaveIcon className="text-warm-gray-100 size-4" />
+                          {
+                            selectRestaurants(collection, data.restaurants)
+                              .length
+                          }
+                        </span>
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          'flex size-6 shrink-0 items-center justify-center rounded-full border',
+                          saved || selected
+                            ? 'border-cool-gray-900 bg-cool-gray-900 text-white'
+                            : 'border-warm-gray-100 text-warm-gray-100',
+                        )}
+                      >
+                        <CheckIcon className="size-5" />
+                      </span>
+                    </button>
+                  )
+                })}
             </div>
           </Dialog.Body>
+          {selectedId && feedback?.(selectedId) && (
+            <p
+              role="status"
+              className="typo-body-6 text-primary-200 mt-3 w-full"
+            >
+              {feedback(selectedId)}
+            </p>
+          )}
           <Dialog.Footer className="shrink-0">
             <Button size="md" variant="neutral" onClick={onClose}>
               취소
@@ -157,18 +176,10 @@ export const CollectionSaveDialog = ({
               disabled={!canSave}
               onClick={() => {
                 if (!canSave || !selectedId) return
-                setData((current) =>
-                  saveRestaurant(
-                    current,
-                    selectedId,
-                    restaurantId,
-                    new Date().toISOString(),
-                  ),
-                )
-                onClose()
+                onConfirm(selectedId)
               }}
             >
-              저장
+              {confirmLabel(selectedId)}
             </Button>
           </Dialog.Footer>
         </Dialog.Content>
@@ -179,9 +190,9 @@ export const CollectionSaveDialog = ({
           onClose={() => setCreating(false)}
           onSubmit={(draft) => {
             const createdAt = new Date().toISOString()
-            setData((current) =>
+            onDataChange(
               createCollection(
-                current,
+                data,
                 draft,
                 `mock-${id}-${creationCount}`,
                 createdAt,
@@ -193,5 +204,40 @@ export const CollectionSaveDialog = ({
         />
       )}
     </>
+  )
+}
+
+export const CollectionSaveDialog = ({
+  restaurantId,
+  onClose,
+}: {
+  restaurantId: string
+  onClose: () => void
+}) => {
+  const { data, setData } = useCollectionData()
+  return (
+    <CollectionTargetDialog
+      data={data}
+      onDataChange={setData}
+      onClose={onClose}
+      title="컬렉션 저장"
+      confirmLabel={() => '저장'}
+      isDisabled={(id) =>
+        !data.restaurants.some(
+          (r) => r.id === restaurantId && r.visibility === 'visible',
+        ) ||
+        Boolean(
+          data.collections
+            .find((c) => c.id === id)
+            ?.restaurants.some((r) => r.restaurantId === restaurantId),
+        )
+      }
+      onConfirm={(id) => {
+        setData((current) =>
+          saveRestaurant(current, id, restaurantId, new Date().toISOString()),
+        )
+        onClose()
+      }}
+    />
   )
 }
