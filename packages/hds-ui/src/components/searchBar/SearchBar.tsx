@@ -64,7 +64,11 @@ export const SearchBar = ({
   useEffect(() => {
     const input = inputRef.current
     const ownerForm = input?.form
-    if (isControlled || !input || !ownerForm) {
+    if (isControlled || !input) {
+      return
+    }
+    setUncontrolledValue(input.value)
+    if (!ownerForm) {
       return
     }
     let resetTimer: ReturnType<typeof setTimeout> | undefined
@@ -82,7 +86,7 @@ export const SearchBar = ({
       ownerForm.removeEventListener('reset', handleReset)
       clearTimeout(resetTimer)
     }
-  }, [isControlled, form])
+  }, [isControlled, form, defaultValue])
 
   const handleClear = () => {
     if (!isControlled) {

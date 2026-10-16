@@ -16,6 +16,38 @@ import { SearchBar } from './SearchBar'
 afterEach(cleanup)
 
 describe('SearchBar', () => {
+  it('syncs the clear button with a default value supplied after mount', () => {
+    const { rerender } = render(<SearchBar aria-label="검색" defaultValue="" />)
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+
+    rerender(<SearchBar aria-label="검색" defaultValue="초밥" />)
+    expect(screen.getByRole('searchbox')).toHaveValue('초밥')
+    expect(
+      screen.getByRole('button', { name: '검색어 지우기' }),
+    ).toBeInTheDocument()
+
+    rerender(<SearchBar aria-label="검색" defaultValue="" />)
+    expect(screen.getByRole('searchbox')).toHaveValue('')
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('preserves user input and clear button state when the default changes', () => {
+    const { rerender } = render(<SearchBar aria-label="검색" defaultValue="" />)
+    const input = screen.getByRole('searchbox')
+    fireEvent.change(input, { target: { value: '라멘' } })
+
+    rerender(<SearchBar aria-label="검색" defaultValue="초밥" />)
+    expect(input).toHaveValue('라멘')
+    expect(
+      screen.getByRole('button', { name: '검색어 지우기' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '검색어 지우기' }))
+    rerender(<SearchBar aria-label="검색" defaultValue="우동" />)
+    expect(input).toHaveValue('')
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
   it('restores the native default value and clear button after a form reset, but respects cancelled resets', async () => {
     const renderForm = (cancelReset = false) => (
       <form
