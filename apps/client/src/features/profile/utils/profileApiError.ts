@@ -1,20 +1,14 @@
+import type { ProfileFieldName } from '@/features/profile/hooks/useProfileForm'
 import { isApiError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import type { FieldError } from '@/shared/api/types'
 
-export type ProfileNewFieldName =
-  | 'nickname'
-  | 'birthDate'
-  | 'phoneNumber'
-  | 'englishName'
-  | 'email'
-
-export interface ProfileNewOnboardingErrorHandlers {
-  setFieldError: (fieldName: ProfileNewFieldName, message: string) => void
+export interface ProfileApiErrorHandlers {
+  setFieldError: (fieldName: ProfileFieldName, message: string) => void
   setFormError: (message: string) => void
 }
 
-const ONBOARDING_ERROR_FIELD_MAP = {
+const PROFILE_ERROR_FIELD_MAP = {
   nickname: 'nickname',
   birthDate: 'birthDate',
   phone: 'phoneNumber',
@@ -29,9 +23,9 @@ const DUPLICATED_FIELD_ERROR_CODE_MAP = {
 } as const
 
 const getMappedFieldName = (field: string) => {
-  if (field in ONBOARDING_ERROR_FIELD_MAP) {
-    return ONBOARDING_ERROR_FIELD_MAP[
-      field as keyof typeof ONBOARDING_ERROR_FIELD_MAP
+  if (field in PROFILE_ERROR_FIELD_MAP) {
+    return PROFILE_ERROR_FIELD_MAP[
+      field as keyof typeof PROFILE_ERROR_FIELD_MAP
     ]
   }
 
@@ -48,9 +42,9 @@ const getDuplicatedFieldName = (code: string) => {
   return undefined
 }
 
-const applyProfileNewFieldErrors = (
+const applyProfileFieldErrors = (
   fieldErrors: FieldError[],
-  { setFieldError }: ProfileNewOnboardingErrorHandlers,
+  { setFieldError }: ProfileApiErrorHandlers,
 ) => {
   let hasMappedFieldError = false
 
@@ -68,9 +62,9 @@ const applyProfileNewFieldErrors = (
   return hasMappedFieldError
 }
 
-export const applyProfileNewOnboardingError = (
+export const applyProfileApiError = (
   error: unknown,
-  handlers: ProfileNewOnboardingErrorHandlers,
+  handlers: ProfileApiErrorHandlers,
 ) => {
   if (!isApiError(error)) {
     return false
@@ -79,15 +73,12 @@ export const applyProfileNewOnboardingError = (
   const duplicatedFieldName = getDuplicatedFieldName(error.code)
 
   if (duplicatedFieldName) {
-    handlers.setFieldError(
-      duplicatedFieldName,
-      getErrorPresentation(error).message,
-    )
+    handlers.setFieldError(duplicatedFieldName, error.message)
     return true
   }
 
   if (error.code === 'COMMON-400') {
-    const hasMappedFieldError = applyProfileNewFieldErrors(
+    const hasMappedFieldError = applyProfileFieldErrors(
       error.fieldErrors,
       handlers,
     )
