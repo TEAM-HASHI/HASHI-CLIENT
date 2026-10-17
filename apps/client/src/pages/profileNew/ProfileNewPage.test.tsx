@@ -1,13 +1,14 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClientProvider } from '@tanstack/react-query'
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
 } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
 import { requestOnboarding } from '@/pages/profileNew/api/requestOnboarding'
@@ -19,6 +20,7 @@ import {
   setOnboardingSession,
 } from '@/shared/auth/authSession'
 import { ApiError } from '@/shared/api/apiError'
+import { request } from '@/shared/api/request'
 import type { ErrorResponse } from '@/shared/api/types'
 import { createQueryClient } from '@/shared/lib/queryClient'
 import { DEFAULT_ERROR_MESSAGE } from '@/shared/api/errorPresentation'
@@ -49,6 +51,8 @@ vi.mock('@/pages/profileNew/api/uploadProfileImage', () => ({
   uploadProfileImage: vi.fn(),
 }))
 
+vi.mock('@/shared/api/request', () => ({ request: vi.fn() }))
+
 const mockedRequestOnboarding = vi.mocked(requestOnboarding)
 const mockedUploadProfileImage = vi.mocked(uploadProfileImage)
 
@@ -60,7 +64,7 @@ const renderProfileNewPage = (ui = <ProfileNewPage />) => {
   )
 }
 
-const fillValidProfileForm = () => {
+const fillValidProfileFields = () => {
   fireEvent.change(screen.getByLabelText('닉네임'), {
     target: { value: '하시' },
   })
@@ -73,6 +77,16 @@ const fillValidProfileForm = () => {
   fireEvent.change(screen.getByLabelText('이메일'), {
     target: { value: 'hashi@example.com' },
   })
+  for (const label of ['닉네임', '연락처', '이메일']) {
+    fireEvent.blur(screen.getByLabelText(label))
+  }
+}
+
+const fillValidProfileForm = async () => {
+  fillValidProfileFields()
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: '완료' })).toBeEnabled(),
+  )
 }
 
 const createErrorResponse = (
@@ -95,16 +109,82 @@ const createErrorResponse = (
   )
 
 describe('ProfileNewPage', () => {
+  beforeEach(() => {
+    vi.mocked(request).mockImplementation(async (_path, options) => {
+      const body = options?.json as Record<string, string>
+      return Object.fromEntries(
+        Object.keys(body).map((field) => [field, { available: true }]),
+      )
+    })
+  })
+
   afterEach(() => {
     cleanup()
     mockNavigate.mockClear()
     mockedRequestOnboarding.mockReset()
     mockedUploadProfileImage.mockReset()
+    vi.mocked(request).mockReset()
     mockSearchParams.delete('redirectTo')
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
     clearAuthSession()
   })
+
+  it.each(['duplicate', 'failure'] as const)(
+    'blocks onboarding while checking and preserves all input after an availability %s',
+    async (outcome) => {
+      let finishCheck!: () => void
+      let firstNicknameCheck = true
+      vi.mocked(request).mockImplementation(async (_path, options) => {
+        const body = options?.json as Record<string, string>
+        if (body.nickname && firstNicknameCheck) {
+          firstNicknameCheck = false
+          await new Promise<void>((resolve) => {
+            finishCheck = resolve
+          })
+          if (outcome === 'failure')
+            throw new Error('Availability request failed')
+          return {
+            nickname: { available: false, message: '서버 중복 닉네임 안내' },
+          }
+        }
+        return Object.fromEntries(
+          Object.keys(body).map((field) => [field, { available: true }]),
+        )
+      })
+      renderProfileNewPage()
+      fillValidProfileFields()
+      fireEvent.change(screen.getByLabelText('영문 이름 (선택)'), {
+        target: { value: 'HASHI' },
+      })
+      const submit = screen.getByRole('button', { name: '완료' })
+      expect(submit).toBeDisabled()
+      fireEvent.submit(screen.getByLabelText('닉네임').closest('form')!)
+      expect(mockedRequestOnboarding).not.toHaveBeenCalled()
+      await waitFor(() => expect(finishCheck).toBeTypeOf('function'))
+      finishCheck()
+      expect(
+        await screen.findByText(
+          outcome === 'failure'
+            ? DEFAULT_ERROR_MESSAGE
+            : '서버 중복 닉네임 안내',
+        ),
+      ).toBeInTheDocument()
+      expect(screen.getByLabelText('닉네임')).toHaveValue('하시')
+      expect(screen.getByLabelText('연락처')).toHaveValue('010-1234-5678')
+      expect(screen.getByLabelText('이메일')).toHaveValue('hashi@example.com')
+      expect(screen.getByLabelText('생년월일')).toHaveValue('1998/05/12')
+      expect(screen.getByLabelText('영문 이름 (선택)')).toHaveValue('HASHI')
+      expect(submit).toBeDisabled()
+      if (outcome === 'duplicate')
+        fireEvent.change(screen.getByLabelText('닉네임'), {
+          target: { value: '새하시' },
+        })
+      fireEvent.blur(screen.getByLabelText('닉네임'))
+      await waitFor(() => expect(submit).toBeEnabled())
+      expect(mockedRequestOnboarding).not.toHaveBeenCalled()
+    },
+  )
 
   it.each(['upload', 'onboarding'] as const)(
     'keeps the draft and preview and allows retry after %s fails',
@@ -130,7 +210,7 @@ describe('ProfileNewPage', () => {
         )
       }
       renderProfileNewPage()
-      fillValidProfileForm()
+      await fillValidProfileForm()
       fireEvent.change(screen.getByLabelText('프로필 이미지 파일 선택'), {
         target: { files: [file] },
       })
@@ -192,7 +272,7 @@ describe('ProfileNewPage', () => {
     })
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
 
     const submitButton = screen.getByRole('button', { name: '완료' })
 
@@ -229,7 +309,7 @@ describe('ProfileNewPage', () => {
     })
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
     fireEvent.change(screen.getByLabelText('프로필 이미지 파일 선택'), {
       target: { files: [imageFile] },
     })
@@ -262,7 +342,7 @@ describe('ProfileNewPage', () => {
       })
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
     fireEvent.change(screen.getByLabelText('프로필 이미지 파일 선택'), {
       target: { files: [imageFile] },
     })
@@ -273,6 +353,10 @@ describe('ProfileNewPage', () => {
     fireEvent.change(screen.getByLabelText('닉네임'), {
       target: { value: '새하시' },
     })
+    fireEvent.blur(screen.getByLabelText('닉네임'))
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: '완료' })).toBeEnabled(),
+    )
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
     await waitFor(() => {
@@ -287,7 +371,7 @@ describe('ProfileNewPage', () => {
     )
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
     expect(await screen.findByText('중복된 닉네임입니다')).toBeInTheDocument()
@@ -306,7 +390,7 @@ describe('ProfileNewPage', () => {
     )
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
     expect(
@@ -329,7 +413,7 @@ describe('ProfileNewPage', () => {
     )
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
     fireEvent.change(screen.getByLabelText('영문 이름 (선택)'), {
       target: { value: 'HASHI' },
     })
@@ -351,7 +435,7 @@ describe('ProfileNewPage', () => {
     )
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
     expect(
@@ -372,7 +456,7 @@ describe('ProfileNewPage', () => {
       )
       renderProfileNewPage()
 
-      fillValidProfileForm()
+      await fillValidProfileForm()
       fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
       await waitFor(() => {
@@ -393,11 +477,13 @@ describe('ProfileNewPage', () => {
     )
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
     const submitButton = screen.getByRole('button', { name: '완료' })
 
-    fireEvent.click(submitButton)
-    fireEvent.click(submitButton)
+    act(() => {
+      fireEvent.click(submitButton)
+      fireEvent.click(submitButton)
+    })
 
     await waitFor(() => {
       expect(mockedRequestOnboarding).toHaveBeenCalledTimes(1)
@@ -413,7 +499,7 @@ describe('ProfileNewPage', () => {
     )
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
     await waitFor(() => {
@@ -440,7 +526,7 @@ describe('ProfileNewPage', () => {
     mockSearchParams.set('redirectTo', '/restaurants/1/reviews/new')
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
 
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
@@ -460,7 +546,7 @@ describe('ProfileNewPage', () => {
     )
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
 
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
@@ -479,7 +565,7 @@ describe('ProfileNewPage', () => {
     mockSearchParams.set('redirectTo', ROUTES.withdrawal)
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
 
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
@@ -496,7 +582,7 @@ describe('ProfileNewPage', () => {
     mockSearchParams.set('redirectTo', 'https://example.com/reviews/new')
     renderProfileNewPage()
 
-    fillValidProfileForm()
+    await fillValidProfileForm()
 
     fireEvent.click(screen.getByRole('button', { name: '완료' }))
 
