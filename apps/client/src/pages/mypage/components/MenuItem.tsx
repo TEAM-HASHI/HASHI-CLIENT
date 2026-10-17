@@ -4,12 +4,18 @@ const menuItemClassName =
   'typo-body-4 text-cool-gray-900 flex h-7.5 w-full items-center text-left'
 
 type MenuItemProps = {
+  disabled?: boolean
   label: string
   action: MypageMenuAction
   onPress: (action: MypageMenuAction) => void
 }
 
-export const MenuItem = ({ label, action, onPress }: MenuItemProps) => {
+export const MenuItem = ({
+  label,
+  action,
+  onPress,
+  disabled,
+}: MenuItemProps) => {
   if (action.type === 'external') {
     return (
       <li>
@@ -29,6 +35,7 @@ export const MenuItem = ({ label, action, onPress }: MenuItemProps) => {
     <li>
       <button
         className={menuItemClassName}
+        disabled={disabled}
         onClick={() => {
           onPress(action)
         }}

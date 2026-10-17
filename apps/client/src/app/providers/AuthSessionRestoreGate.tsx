@@ -3,13 +3,15 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { getShouldRenderDuringAuthRestore } from '@/app/providers/authSessionRestorePolicy'
 import { getAuthMe } from '@/features/auth/api/getAuthMe'
 import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
+import { checkIsAuthRequiredError } from '@/shared/api/apiError'
 import {
   clearAuthSession,
   getAccessToken,
+  getAuthSessionStatus,
+  getAuthSessionVersion,
   setAccessToken,
   setOnboardingSession,
 } from '@/shared/auth/authSession'
-import { getApiAccessToken } from '@/shared/api/accessToken'
 
 interface AuthSessionRestoreGateProps {
   children: ReactNode
@@ -26,53 +28,45 @@ const getCurrentPathname = () => {
   return window.location.pathname
 }
 
-const restoreUserSession = async (accessToken: string) => {
-  const authMe = await getAuthMe(accessToken)
-
-  if (authMe.role !== 'USER') {
-    throw new Error('Invalid user session.')
-  }
-
-  setAccessToken(accessToken)
-}
-
 const restoreAuthSessionOnce = async () => {
-  const developmentAccessToken = getApiAccessToken()
+  const sessionVersion = getAuthSessionVersion()
+  const canRestore = () =>
+    getAuthSessionVersion() === sessionVersion &&
+    getAuthSessionStatus() === 'unauthenticated'
 
-  if (developmentAccessToken) {
-    await restoreUserSession(developmentAccessToken)
-    return
-  }
-
-  let accessToken: string
+  let accessToken: string | undefined
 
   try {
     const reissueResult = await requestTokenReissue()
     accessToken = reissueResult.accessToken
-  } catch {
-    const authMe = await getAuthMe()
-
-    if (authMe.role !== 'ONBOARDING') {
-      throw new Error('Invalid onboarding session.')
-    }
-
-    setOnboardingSession()
-    return
+  } catch (cause) {
+    if (!canRestore()) return
+    if (!checkIsAuthRequiredError(cause)) throw cause
   }
 
-  await restoreUserSession(accessToken)
+  try {
+    const authMe = await getAuthMe(accessToken)
+    if (!canRestore()) return
+
+    if (accessToken && authMe.role === 'USER') {
+      setAccessToken(accessToken)
+    } else if (!accessToken && authMe.role === 'ONBOARDING') {
+      setOnboardingSession()
+    } else {
+      clearAuthSession()
+    }
+  } catch (cause) {
+    if (!canRestore()) return
+    if (!checkIsAuthRequiredError(cause)) throw cause
+    clearAuthSession()
+  }
 }
 
 const restoreAuthSession = async () => {
   if (!authSessionRestorePromise) {
-    authSessionRestorePromise = restoreAuthSessionOnce()
-      .catch((cause) => {
-        clearAuthSession()
-        throw cause
-      })
-      .finally(() => {
-        authSessionRestorePromise = undefined
-      })
+    authSessionRestorePromise = restoreAuthSessionOnce().finally(() => {
+      authSessionRestorePromise = undefined
+    })
   }
 
   return authSessionRestorePromise
@@ -85,6 +79,7 @@ export const AuthSessionRestoreGate = ({
   const [isRestoreCompleted, setIsRestoreCompleted] = useState(() =>
     Boolean(getAccessToken()),
   )
+  const [restoreError, setRestoreError] = useState<unknown>()
   const currentPathname = pathname ?? getCurrentPathname()
   const shouldRenderChildren =
     isRestoreCompleted ||
@@ -101,8 +96,8 @@ export const AuthSessionRestoreGate = ({
     const completeAuthSessionRestore = async () => {
       try {
         await restoreAuthSession()
-      } catch {
-        // Missing or invalid user/onboarding credentials are logged-out startup.
+      } catch (cause) {
+        if (isMounted) setRestoreError(cause)
       } finally {
         if (isMounted) {
           setIsRestoreCompleted(true)
@@ -116,6 +111,8 @@ export const AuthSessionRestoreGate = ({
       isMounted = false
     }
   }, [])
+
+  if (restoreError) throw restoreError
 
   if (!shouldRenderChildren) {
     return null
