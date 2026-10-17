@@ -49,6 +49,9 @@ const MyReservationsPage = lazyRoute(() => import('@/pages/myReservations'))
 const ReservationDetailPage = lazyRoute(
   () => import('@/pages/reservationDetail'),
 )
+const ReservationCompletePage = lazyRoute(
+  () => import('@/pages/reservationComplete'),
+)
 const LoginRequiredPage = lazyRoute(() => import('@/pages/loginRequired'))
 const KakaoOAuthCallbackPage = lazyRoute(
   () => import('@/pages/kakaoOAuthCallback'),
@@ -85,6 +88,7 @@ export const lazyPages = {
   reservationRequest: () => lazyPage(ReservationRequestPage),
   myReservations: () => lazyPage(MyReservationsPage),
   reservationDetail: () => lazyPage(ReservationDetailPage),
+  reservationComplete: () => lazyPage(ReservationCompletePage),
   loginRequired: () => lazyPage(LoginRequiredPage),
   kakaoOAuthCallback: () => lazyPage(KakaoOAuthCallbackPage),
   notFound: () => lazyPage(NotFoundPage),

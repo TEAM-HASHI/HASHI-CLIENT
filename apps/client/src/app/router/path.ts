@@ -27,6 +27,7 @@ export const ROUTES = {
   reservationRequest: '/reservations/request',
   myReservations: '/my-reservations',
   reservationDetail: '/reservations/:reservationId',
+  reservationComplete: '/reservations/:reservationId/complete',
   loginRequired: '/login-required',
   kakaoOAuthCallback: '/oauth/callback/kakao',
 } as const

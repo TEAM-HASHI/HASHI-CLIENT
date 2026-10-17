@@ -72,6 +72,10 @@ describe('appRoutes', () => {
     expect(collectRoutePaths(appRoutes)).toContain(ROUTES.kakaoOAuthCallback)
   })
 
+  it('registers reservation complete as an app route', () => {
+    expect(collectRoutePaths(appRoutes)).toContain(ROUTES.reservationComplete)
+  })
+
   it('registers terms list and detail as app routes', () => {
     const routePaths = collectRoutePaths(appRoutes)
 
