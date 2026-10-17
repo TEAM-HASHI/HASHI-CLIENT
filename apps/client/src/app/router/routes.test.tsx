@@ -75,4 +75,11 @@ describe('appRoutes', () => {
   it('registers reservation complete as an app route', () => {
     expect(collectRoutePaths(appRoutes)).toContain(ROUTES.reservationComplete)
   })
+
+  it('registers terms list and detail as app routes', () => {
+    const routePaths = collectRoutePaths(appRoutes)
+
+    expect(routePaths).toContain(ROUTES.terms)
+    expect(routePaths).toContain(ROUTES.termsDetail)
+  })
 })

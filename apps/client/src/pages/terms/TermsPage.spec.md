@@ -1,0 +1,145 @@
+# Page Spec: `Terms`
+
+Jira: HASHI-207
+
+## Purpose
+
+- 사용자가 Hashi에서 적용 중인 약관의 제목과 시행일을 확인하고 각 약관 상세로 이동할 수 있게 한다.
+- 기획 명세: HASHI-PLAN `02_PRODUCT_SPEC/MYPAGE/TERMS/TERMS.md` (MY-004), `SPRINT-001_ADDITIONAL_FEATURES.md` §10
+- 디자인: Figma `Hashi.kr` > 서비스 전체 화면 > 이용약관 섹션 (node-id 8317-33970), 목록 프레임 8317-97168
+
+## Route
+
+- path: `/terms`
+- path constant:
+  - `ROUTES.terms`
+- route owner: `apps/client/src/app/router/routes.ts`
+- layout: `RootLayout` > `BottomNavigationLayout`
+- access type:
+  - `public`
+- guard:
+  - none
+- lazy loading:
+  - `lazyPages.terms`
+- bottom navigation:
+  - yes (`마이` 탭 활성)
+- redirect:
+  - unauthenticated: none
+  - authenticated guest: none
+- auth status:
+  - uses `useAuthStatus`: no
+
+## Location
+
+- page path:
+  - `apps/client/src/pages/terms/TermsPage.tsx`
+- spec path:
+  - `apps/client/src/pages/terms/TermsPage.spec.md`
+- route registration:
+  - `apps/client/src/app/router/path.ts`
+  - `apps/client/src/app/router/lazy.ts`
+  - `apps/client/src/app/router/routes.ts`
+  - URL helper: `getTermsDetailPath` in `apps/client/src/app/router/routePaths.ts`
+
+## Requirements
+
+- [x] 상단 Header에 뒤로가기 버튼과 `이용약관` 제목을 고정해 보여준다.
+- [x] 뒤로가기는 `navigate(ROUTES.mypage, { replace: true })`을 실행한다.
+- [x] 현재 적용 중인 약관 8개를 Figma 순서로 표시한다: Hashi 이용약관, 개인정보처리방침, 개인정보 수집 및 이용 동의, 개인정보 제3자 제공 동의, 예약 및 취소·환불 정책, 리뷰 운영정책, 포인트 이용약관, 서비스 운영정책.
+- [x] 각 행은 `[약관 제목]`과 시행일을 표시하고, 선택 시 해당 약관 상세로 이동한다.
+- [x] 목록 아래에 이메일과 카카오톡 채널 문의 정보를 표시한다.
+- [x] 비로그인 사용자도 접근할 수 있다.
+
+## Data Dependencies
+
+### Query
+
+- query: none
+  - 약관 목록과 본문은 `features/terms/constants/termsPolicies.ts`의 정적 콘텐츠를 사용한다. 백엔드 약관 API가 OpenAPI에 아직 없어 정적으로 시작하며, API 확정 시 데이터 소스만 교체한다.
+- loading state: none
+- error state: none
+- empty state: none
+
+### Mutation
+
+- mutation: none
+
+## User Flow
+
+1. 마이페이지 `이용약관` 메뉴에서 `/terms`로 진입한다.
+2. 약관 행을 선택하면 `/terms/{policyId}` 상세로 이동한다.
+3. 뒤로가기로 마이페이지로 돌아간다.
+
+## State
+
+- local state: none
+- URL state: none
+- server state: none
+- derived state: none
+
+## UI Structure
+
+```text
+TermsPage
+  Header (back, 이용약관)
+  ul > li > button (title, effectiveDate, NextIcon) x 8
+  address (이메일, 문의 채널)
+```
+
+## Component Mapping
+
+- HDS component:
+  - `Header`
+  - `IconButton`
+- feature constant:
+  - `TERMS_POLICIES`
+- icon:
+  - `BackIcon`
+  - `NextIcon`
+
+## Error Handling
+
+- API error: none
+- validation error: none
+- exceptional case: none
+
+## Navigation
+
+- entry:
+  - 마이페이지 `이용약관` 메뉴 (`ROUTES.terms`)
+- links:
+  - 약관 상세: `getTermsDetailPath(policyId)`
+- route params: none
+- search params: none
+- back behavior:
+  - `navigate(ROUTES.mypage, { replace: true })`
+
+## Styling
+
+- Tailwind layout:
+  - 모바일 단일 컬럼, 행 좌우 20px, 행 상하 28px, `warm-gray-100` 하단 구분선
+  - 제목 `typo-sub-header-2 text-black` (16px), 시행일 `typo-body-7 text-primary-200` (14px), 제목과 시행일 간격 8px
+  - 다음 화살표 `NextIcon`은 `size-6 text-cool-gray-900` (24×24px)이며 텍스트 영역 상단에 정렬한다.
+  - 문의 정보는 `typo-caption-2 text-warm-gray-300`, 줄높이 18px, 패딩 20px, 하단 여백 18px을 적용한다.
+  - 페이지 최소 높이는 `app-mobile-bottom-nav-content`로 하단 내비게이션 영역을 제외한다.
+  - 스타일 기준: Figma 이용약관 목록 프레임 (node `8317-97168`), 2026-10-14 확인
+- fixed area:
+  - Header: `app-mobile-fixed-top`
+  - 하단 네비게이션: `BottomNavigationLayout`
+
+## Known Gaps
+
+- 최신 게시 약관 조회 API 연결은 계약 확인 대기다. 2026-09-30 서버 `develop` (`053fdb3`) 및 열린 PR에서 약관 endpoint를 찾지 못했으며, dev-api OpenAPI 조회는 타임아웃이었다. 현재 Figma 정적 원문을 제공하고 서버 게시 상태·버전·조회 오류는 검증하지 못한다.
+
+## Verification
+
+- 단순 표시·이동 테스트는 유지하지 않는다. 목록과 상세에 중복되던 순서 검증도 제거했다.
+- 약관 데이터 테스트는 전체 조항의 번호 연속성과 본문 블록 누락을 검사한다.
+
+- [x] `pnpm --filter @hashi/client lint`
+- [x] `pnpm --filter @hashi/client typecheck`
+- [x] `pnpm --filter @hashi/client build`
+- [x] `pnpm --filter @hashi/client test`
+- [x] 목록 8개 순서·시행일·행 선택 이동·뒤로가기 확인
+- [x] 비로그인 직접 진입 확인
+- [x] 2026-10-14 스타일 검증: 393px 화면에서 8개 행의 화살표 24px, 시행일 14px·`#4A4A4A` 확인. 320px·393px 화면에서 가로 넘침 없음.
