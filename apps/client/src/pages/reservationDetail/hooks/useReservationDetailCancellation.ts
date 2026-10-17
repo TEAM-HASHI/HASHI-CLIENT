@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useCancelReservationMutation } from '@/features/reservation'
-import { reservationDetailQueryKey } from '@/pages/reservationDetail/hooks/useReservationDetailQuery'
+import { reservationDetailQueryKey } from '@/features/reservation/queries/useReservationDetailQuery'
 
 export const useReservationDetailCancellation = (
   reservationId: number | null,

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { getReservationDetail } from '@/pages/reservationDetail/api/getReservationDetail'
+import { getReservationDetail } from '@/features/reservation/api/getReservationDetail'
 
 export const reservationDetailQueryKey = (reservationId: number | null) =>
   ['reservationDetail', reservationId] as const
