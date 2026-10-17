@@ -4,12 +4,14 @@ export const getMapDisplayMode = ({
   zoom,
   previous,
   hasConditions,
+  overviewZoom = 11,
 }: {
   zoom: number
   previous: MapDisplayMode
   hasConditions: boolean
+  overviewZoom?: number
 }): MapDisplayMode => {
-  if (hasConditions || zoom >= 14) return 'restaurants'
-  if (zoom <= 13) return 'areas'
+  if (hasConditions || zoom >= overviewZoom + 1) return 'restaurants'
+  if (zoom <= overviewZoom + 0.01) return 'areas'
   return previous
 }

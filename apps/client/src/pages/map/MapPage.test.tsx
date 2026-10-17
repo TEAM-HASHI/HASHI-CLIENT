@@ -59,6 +59,39 @@ afterEach(() => {
 })
 
 describe('MapPage preview', () => {
+  it('reopens results when a successful refresh finishes after the panel collapsed', async () => {
+    const user = userEvent.setup()
+    const source = vi.spyOn(preview, 'queryMapPreview')
+    render(
+      <MemoryRouter>
+        <MapPage />
+      </MemoryRouter>,
+    )
+    await screen.findByRole('list', { name: '식당 검색 결과' })
+    const existing = await preview.queryMapPreview({
+      conditions: {
+        keyword: '',
+        category: 'all',
+        areaCode: null,
+        sort: 'recommended',
+      },
+      bounds: null,
+    })
+    let resolve!: (value: preview.MapPreviewResult) => void
+    source.mockImplementationOnce(
+      () =>
+        new Promise((r) => {
+          resolve = r
+        }),
+    )
+    await user.click(screen.getByRole('button', { name: '카페' }))
+    const handle = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
+    handle.focus()
+    await user.keyboard('{Home}')
+    expect(handle).toHaveAttribute('aria-valuenow', '30')
+    await act(async () => resolve(existing))
+    expect(handle).toHaveAttribute('aria-valuenow', '304')
+  })
   it('keeps an empty region panel collapsed even when expanded by keyboard', async () => {
     const user = userEvent.setup()
     const source = vi.spyOn(preview, 'queryMapPreview')
@@ -440,7 +473,7 @@ describe('MapPage preview', () => {
     expect(
       screen.queryByRole('dialog', { name: '식당 사진 상세보기' }),
     ).not.toBeInTheDocument()
-    expect(thumbnail).toHaveFocus()
+    await waitFor(() => expect(thumbnail).toHaveFocus())
   })
 
   it('does not pretend saving or reserving a preview restaurant succeeded', async () => {

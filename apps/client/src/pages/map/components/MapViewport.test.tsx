@@ -3,7 +3,7 @@ import type { PropsWithChildren } from 'react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { MapViewport } from '@/pages/map/components/MapViewport'
 
-const sdk = vi.hoisted(() => ({ status: 'LOADED', zoom: 12 }))
+const sdk = vi.hoisted(() => ({ status: 'LOADED', zoom: 12, initialZoom: 11 }))
 vi.mock('@vis.gl/react-google-maps', () => ({
   APIProvider: ({ children }: PropsWithChildren) => children,
   APILoadingStatus: {
@@ -28,7 +28,7 @@ vi.mock('@vis.gl/react-google-maps', () => ({
         onClick={() =>
           onIdle({
             map: {
-              getZoom: () => 11,
+              getZoom: () => sdk.initialZoom,
               getCenter: () => ({ toJSON: () => ({ lat: 35.5, lng: 139.5 }) }),
               getBounds: () => ({
                 toJSON: () => ({ north: 36, south: 35, west: 139, east: 140 }),
@@ -80,6 +80,7 @@ beforeEach(() => {
   vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
   sdk.status = 'LOADED'
   sdk.zoom = 12
+  sdk.initialZoom = 11
 })
 
 it('shows map loading while restaurant results refresh after the SDK is ready', () => {
@@ -93,10 +94,25 @@ it('shows map loading while restaurant results refresh after the SDK is ready', 
 it('restores region mode when the user zooms back out without conditions', () => {
   render(<MapViewport {...props} zoomed />)
   fireEvent.click(screen.getByText('초기 idle'))
-  sdk.zoom = 13
+  sdk.zoom = 15
+  fireEvent.click(screen.getByText('이동 idle'))
+  sdk.zoom = 11
   fireEvent.wheel(screen.getByText('이동 idle'))
   fireEvent.click(screen.getByText('이동 idle'))
   expect(props.onOverview).toHaveBeenCalledOnce()
+})
+
+it('keeps pins and category on a pan at the initial scale rather than auto-querying', () => {
+  render(<MapViewport {...props} zoomed />)
+  fireEvent.click(screen.getByText('초기 idle'))
+  sdk.zoom = 11
+  fireEvent.wheel(screen.getByText('이동 idle'))
+  fireEvent.click(screen.getByText('이동 idle'))
+  expect(props.onOverview).not.toHaveBeenCalled()
+  expect(props.onSearchArea).not.toHaveBeenCalled()
+  expect(
+    screen.getByRole('button', { name: '현재 위치에서 검색' }),
+  ).toBeVisible()
 })
 
 it('reports camera snapshots but does not collapse panels for resize-only idle', () => {
@@ -117,19 +133,37 @@ it('reports camera snapshots but does not collapse panels for resize-only idle',
     center: { lat: 36.5, lng: 140.5 },
     zoom: 12,
     bounds: { north: 37, south: 36, west: 140, east: 141 },
+    minZoom: 11,
   })
   fireEvent.wheel(screen.getByText('이동 idle'))
   expect(onUserMove).toHaveBeenCalledOnce()
 })
 
+it('reports the first fitted scale even before the camera hook idle listener runs', () => {
+  const onCameraChange = vi.fn()
+  sdk.initialZoom = 11.75
+  render(<MapViewport {...props} onCameraChange={onCameraChange} />)
+  fireEvent.click(screen.getByText('초기 idle'))
+  expect(onCameraChange).toHaveBeenLastCalledWith(
+    expect.objectContaining({ minZoom: 11.75 }),
+  )
+  sdk.zoom = 12.75
+  fireEvent.wheel(screen.getByText('이동 idle'))
+  fireEvent.click(screen.getByText('이동 idle'))
+  expect(onCameraChange).toHaveBeenLastCalledWith(
+    expect.objectContaining({ minZoom: 11.75 }),
+  )
+  expect(props.onExplore).toHaveBeenCalledOnce()
+})
+
 it('enters exploration only after user zoom reaches the neighborhood threshold', () => {
   render(<MapViewport {...props} />)
   fireEvent.click(screen.getByText('초기 idle'))
-  sdk.zoom = 13.9
+  sdk.zoom = 11.9
   fireEvent.wheel(screen.getByText('이동 idle'))
   fireEvent.click(screen.getByText('이동 idle'))
   expect(props.onExplore).not.toHaveBeenCalled()
-  sdk.zoom = 14
+  sdk.zoom = 12
   fireEvent.wheel(screen.getByText('이동 idle'))
   fireEvent.click(screen.getByText('이동 idle'))
   expect(props.onExplore).toHaveBeenCalledOnce()
@@ -150,7 +184,7 @@ afterEach(() => {
 })
 
 it('does not search on idle, and submits the latest bounds only after a click', () => {
-  render(<MapViewport {...props} hasCategory />)
+  render(<MapViewport {...props} />)
   fireEvent.click(screen.getByText('초기 idle'))
   expect(
     screen.queryByRole('button', { name: '현재 위치에서 검색' }),
@@ -174,14 +208,42 @@ it('does not search on idle, and submits the latest bounds only after a click', 
   ).not.toBeInTheDocument()
 })
 
-it('does not offer viewport search without a category even after user movement', () => {
+it('offers viewport search without a category after user movement', () => {
   render(<MapViewport {...props} />)
   fireEvent.click(screen.getByText('초기 idle'))
   fireEvent.wheel(screen.getByText('이동 idle'))
   fireEvent.click(screen.getByText('이동 idle'))
   expect(
     screen.queryByRole('button', { name: /(?:현재 위치|현 지도)에서 검색/ }),
-  ).not.toBeInTheDocument()
+  ).toBeInTheDocument()
+})
+
+it('uses the restored initial scale and preserves keyword results at that scale', () => {
+  const view = render(
+    <MapViewport
+      {...props}
+      zoomed
+      cameraRequest={{
+        center: { lat: 35.5, lng: 139.5 },
+        zoom: 15,
+        minZoom: 10.5,
+        bounds: { north: 36, south: 35, west: 139, east: 140 },
+      }}
+    />,
+  )
+  fireEvent.click(screen.getByText('초기 idle'))
+  sdk.zoom = 11
+  fireEvent.wheel(screen.getByText('이동 idle'))
+  fireEvent.click(screen.getByText('이동 idle'))
+  expect(props.onOverview).not.toHaveBeenCalled()
+  sdk.zoom = 10.5
+  fireEvent.wheel(screen.getByText('이동 idle'))
+  fireEvent.click(screen.getByText('이동 idle'))
+  expect(props.onOverview).toHaveBeenCalledOnce()
+  view.rerender(<MapViewport {...props} zoomed hasConditions />)
+  fireEvent.wheel(screen.getByText('이동 idle'))
+  fireEvent.click(screen.getByText('이동 idle'))
+  expect(props.onOverview).toHaveBeenCalledOnce()
 })
 
 it('shows a configuration error without trying to render a map when the key is absent', () => {

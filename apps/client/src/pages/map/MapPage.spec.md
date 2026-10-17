@@ -2,14 +2,13 @@
 
 Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/coordinates remain explicitly labelled samples. Restaurant API integration is deferred.
 
-## 2026-10-13 추가 유즈케이스 설계
+## 추가 유즈케이스 설계 (2026-10-17 갱신)
 
 이 절은 승인된 목표다. 프론트 구현은 샘플 데이터 경계 안에서 검증한다. 실제 상세 조회 실패, 서버 cursor/세션 만료 및 좌표 출처 표시는 실데이터 연동 시 별도 구현·검증한다.
 
 ### 기준과 범위
 
-- HASHI-PLAN `846b38a`의 MAP_MAIN, MAP_FILTERED, MAP_RESTAURANT_DETAIL을 기준으로 한다.
-- 사용자 확정: 지역 묶음 복원은 최신 MAP_MAIN을 따른다. DEC-001의 최초 진입 한정 규칙은 이번 구현에 적용하지 않는다.
+- HASHI-PLAN `a2990f8`의 MAP_MAIN, MAP_FILTERED, MAP_RESTAURANT_DETAIL을 기준으로 한다. DEC-001도 최신 지역 묶음 복원 정책으로 정리되었다.
 - 사용자 확정: 빈 결과는 그림에 남은 핀이 아니라 기획 문서의 핀 제거 규칙을 따른다.
 - 사용자 확정: 카테고리 순서는 현재 코드의 `전체 → 음식점 → 주점 → 카페`를 유지한다.
 - Figma 추가 유즈케이스: [재검색](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10043-182001), [스피너](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10057-135279), [오류](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=9984-85562), [토스트](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10043-183098), [검색 X](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=9984-55671), [상세 닫기](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=9965-71086).
@@ -23,15 +22,15 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - 사용자 조작과 프로그램 이동(최초 fit, 지역 선택, 검색 결과 fit, 복원)을 구분한다. 프로그램 이동은 재검색 버튼이나 사용자 이동 처리를 발생시키지 않는다.
 - 최초 fit에서 얻은 최소 줌은 이후 지역·상세 선택이나 패널 높이 변경으로 덮어쓰지 않는다.
 - 세션 카메라는 최초 최소 줌도 보존한다. 복귀 시 달라진 패널 높이로 계산한 fit 줌이 저장 줌을 덮어쓰지 않는다.
-- 검색어·카테고리가 없으면 줌 13 이하에서 현재 viewport 안의 지역 묶음을 표시하고, 줌 14 이상에서 개별 핀을 표시한다. 13과 14 사이 소수 줌에서는 직전 표시 모드를 유지한다. 초기 진입은 지역 묶음, 지역 클릭은 개별 핀으로 시작한다.
-- 검색어 또는 카테고리가 있으면 줌과 관계없이 개별 핀을 표시한다. 조건 해제 시 현재 줌에 따라 표시 모드를 다시 판단한다.
+- 검색어가 없고 사용자 조작이 끝나면 최초 fit에서 얻은 최소 줌까지 축소했을 때 지역 묶음으로 복원하고, 최소 줌+1 이상이면 개별 핀으로 전환한다. 중간 소수 줌은 직전 모드를 유지한다. 초기 진입은 지역 묶음, 지역 클릭은 개별 핀으로 시작한다.
+- 카테고리는 선택 시 개별 핀을 표시한다. 이후 검색어 없이 초기 축척까지 축소하면 카테고리를 `전체`로 해제하고 현재 viewport의 첫 페이지를 재조회한다. 검색어가 있거나 상세 선택 중이면 이 자동 전환을 하지 않는다.
 - 지역 묶음 복원 시 현재 중심을 유지한다. 최초 영역으로 이동하는 것은 명시적 초기화 때만 수행한다.
 - 지도 사용자 조작 시작 시 목록 패널을 최소 높이로 축소한다. 상세가 열려 있으면 상세 패널을 축소하되 선택은 유지한다. 기존 핀·목록은 자동 재조회하지 않는다.
 - 지역 선택 후 최초 사용자 이동 시 지역 조건을 해제한다. 이동 전 카테고리 적용은 선택 지역 범위를 사용하고, 이동 후 조건 변경은 현재 viewport를 사용한다.
 
 ### 재검색·검색 연결
 
-- `현재 위치에서 검색`은 위치 아이콘을 포함한 Figma 버튼을 사용한다. 카테고리가 적용되어 있고 사용자 이동 후 마지막 조회 영역과 현재 영역이 다를 때만 표시한다.
+- `현재 위치에서 검색`은 위치 아이콘을 포함한 Figma 버튼을 사용한다. 카테고리와 무관하게 사용자 이동 후 마지막 조회 영역과 현재 영역이 다르면 표시한다. 검색어·카테고리·정렬은 유지하고 현재 viewport로 조회한다.
 - 최초 로딩, 지역 클릭, 결과 fit 및 복원으로는 버튼을 표시하지 않는다. 요청 시작 즉시 숨기며 조건·조회 영역을 고정한다.
 - 검색창은 기존 `/search`로 이동한다. 지도 진입 맥락과 적용 검색어를 전달하고, 검색 실행 시 `/map`으로 돌아와 카테고리를 유지한 검색을 적용한다. 일반 검색 진입 동작은 바꾸지 않는다.
 - 경로 문자열은 ROUTES를 재사용한다. 지도 복귀용 route state는 유효성을 검사하며 누락·잘못된 state는 일반 검색으로 처리한다. 새로운 전역 URL 규약은 추가하지 않는다.
@@ -41,6 +40,8 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - 조회마다 식별자를 부여하여 최신 조건의 결과만 반영한다. 조건 변경 전 추가 조회 결과도 폐기한다. 동일 다음 페이지 중복 요청 및 중복 식당 추가를 막는다.
 - 조회 도중 사용자가 지도를 이동하면 성공 응답 시 요청 당시 카메라로 복귀한다. 검색 결과의 1개 이동/여러 개 fit은 그 다음 적용한다. 실패 시 현재 지도를 강제 이동하지 않는다.
 - 실제 데이터 계약이 지원하면 최초 10개와 다음 10개를 조회한다. 지도 핀은 로드된 목록과 동일한 결과를 사용한다. 계약 미지원 시 실제 페이지네이션으로 주장하지 않는다.
+- 추가 조회는 공통 `useInfiniteScrollTrigger`로 보이는 목록 하단에서 자동 실행한다. 접힌/숨겨진 패널, 로딩, 실패, 마지막 페이지에는 자동 실행하지 않는다. 추가 조회 실패는 기존 결과를 유지하고 명시적 재시도만 허용한다.
+- 첫 페이지 성공 결과가 있으면 요청 중 접힌 패널도 일반 높이로 다시 연다. 지역 0건/조건 0건 분기는 아래 정책을 유지한다.
 
 ### UI 상태와 재시도
 
@@ -88,7 +89,7 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 
 ### 완료 판정 및 검증 계획
 
-- 단위 테스트: 줌 13/14와 소수 구간, 필터/검색 예외, 초기 최소 줌 유지, 요청 원인별 빈 상태, 마지막 응답만 반영, 동일 페이지 중복 요청 방지.
+- 단위 테스트: 초기 최소 줌/+1과 소수 구간, 카테고리 해제/검색 예외, 초기 최소 줌 유지, 요청 원인별 빈 상태, 마지막 응답만 반영, 자동 추가 조회 및 동일 페이지 중복 요청 방지.
 - 세션 테스트: 5분 미만/정확히 5분/이후, 연속 이탈 이벤트, 탭 재선택 초기화, 검색 복귀와 일반 검색 회귀.
 - 컴포넌트 테스트: 재검색 버튼 조건, 각 오류 재시도, 토스트 중복 방지, 상세 X/북마크 교체, 포커스 복원, 지도 조작 시 패널 축소.
 - E2E: 지역 선택→축소 복원, 카테고리 상태의 축소, 검색 0/1/다수 결과, 상세 닫기 카메라 복원, 탭 복귀, 모바일 패널/지도 드래그 분리, Google 로고·저작권 가림 여부.
@@ -96,6 +97,8 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - API 계약 미지원과 실제 브라우저에서 검증하지 못한 항목은 완료 보고에서 별도 표기한다. UI 테스트 통과를 실제 API 연동 완료로 표현하지 않는다.
 
 ## 지도 추가 유즈케이스 Implementation Plan
+
+이 절은 2026-10-13 작업 당시의 기록이다. 최신 동작은 위 2026-10-17 설계 및 아래 Requirements를 우선한다.
 
 > For agentic workers: REQUIRED SUB-SKILL: `superpowers:executing-plans`. 실행 순서는 1 → 2 → 4 → 3 → 5. 검색 왕복이 세션을 사용하므로 세션을 먼저 구현한다. 아래는 계획이며 검증 결과는 Verification에 기록한다.
 
@@ -198,10 +201,10 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 ## Requirements / State
 
 - First view: search, 전체/음식점/주점/카페, area markers, floating saved action, ranked recommendations.
-- Display follows `getMapDisplayMode`: no keyword/category and zoom ≤13 restores regions; zoom ≥14 shows pins; intermediate zoom preserves mode. Applied keyword/category always shows pins. Region restoration keeps the current center without querying.
+- Display follows `getMapDisplayMode` relative to the fitted initial minimum zoom: overview at the minimum, pins at minimum+1, previous mode in between. User zoom-out without a keyword restores regions and clears any category, re-querying the current viewport only when a category was cleared. Search results and selected detail are exempt from automatic overview transition.
 - The fitted initial camera zoom is the minimum zoom. Region labels reserve non-overlapping screen space without changing geographic anchors; displaced labels have a connector to the original anchor.
 - A restaurant/region selected before SDK readiness waits for the initial fit to finish, so its detail zoom cannot become the minimum. Zoom-out remains available to the initial overview level after selection.
-- `현재 위치에서 검색` uses the Figma pill and LocationIcon. It requires a category and changed bounds after a user gesture, not initial fit, area selection or restoration. Gestures collapse the active panel and clear the old area condition without automatically querying.
+- `현재 위치에서 검색` uses the Figma pill and LocationIcon. It requires changed bounds after a user gesture regardless of category, not initial fit, area selection or restoration. Gestures collapse the active panel and clear the old area condition. Normal movement does not automatically query; clearing a category at overview zoom is the explicit exception.
 - Area click centers/zooms the real map and filters sample restaurants. A reset action fits all sample regions. Category and submitted keyword apply together. Sort: recommended, rating, reviews, deterministic recommendation tie-break.
 - Search draft is separate from submitted keyword; empty results retain the search clear action and category chips, without an additional reset CTA. Filter changes clear selected restaurant. Same selected category toggles to all.
 - The toolbar opens `/search` with validated map route state. Search returns using replace navigation, retains category, and fits nonempty keyword results. Clearing keyword retains the camera. Ordinary search URL policy is unchanged.
@@ -210,7 +213,7 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - An expanded list exposes `지도로 보기` in the panel footer. It collapses the list to the handle without resetting conditions or scroll; focus returns to the handle. It is not shown in normal/collapsed or restaurant-detail states.
 - SDK failure hides the restaurant panels and floating map controls while retaining search/category controls and retry. Restaurant refetch displays a spinner on the map as well as the list; list failure hides the list heading/sort control.
 - Normal restaurant summary uses the floating map close button only; expanded detail retains its internal close button. Floating map controls are placed 20px above the panel.
-- Explicit viewport search captures conditions/bounds/camera. Latest request wins; stale responses produce neither results nor toast. Both viewport and condition empty results collapse the list and show their respective warning toast. Retry uses the failed request; next-page failure keeps loaded results and adds the illustrated inline error/retry block.
+- Explicit viewport search captures conditions/bounds/camera. Latest request wins; stale responses produce neither results nor toast. Regional empty results collapse the list; condition empty results show a normal-height empty sheet, each with its warning toast. Nonempty first-page success reopens the normal sheet. Retry uses the failed request; next-page failure keeps loaded results and adds the illustrated inline error/retry block. Visible list-bottom intersection loads additional pages automatically, stopping on pending/error/end or a hidden/collapsed sheet.
 - Selecting a marker/card opens restaurant summary. Expanding shows information/menu/photo/review tabs, sticky title and tabs, and bottom reserve action. Unavailable menu/review data is described as preview/unconnected, not as a real server result.
 - Photo selection opens a modal carousel; Escape/close restores focus to the source thumbnail. Background is inert while photo modal is open.
 - Long titles truncate to one line with the full accessible name. Thumbnail failure uses HDS fallback.

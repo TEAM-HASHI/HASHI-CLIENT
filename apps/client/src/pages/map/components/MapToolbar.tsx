@@ -60,11 +60,11 @@ export const MapToolbar = ({
       {CATEGORIES.map(({ value, label }) => (
         <Chip
           key={value}
-          selected={category === value && value !== 'all'}
+          selected={category === value}
           aria-label={label}
           className={cn(
             'shrink-0 shadow-[0_0_4px_rgba(0,0,0,0.2)]',
-            (category !== value || value === 'all') && 'bg-white',
+            category !== value && 'bg-white',
           )}
           onSelectedChange={() =>
             onCategoryChange(category === value ? 'all' : value)

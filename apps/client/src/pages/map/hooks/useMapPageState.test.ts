@@ -42,6 +42,7 @@ it.each(['all', 'cafe'] as const)(
       result.current.restoreCamera({
         center: { lat: 35.7, lng: 139.7 },
         zoom: 12,
+        minZoom: 12,
         bounds: emptyBounds,
       }),
     )
@@ -54,6 +55,61 @@ it('restores regions on clearing conditions at overview zoom', async () => {
   act(() => result.current.handleConditionsChange({ category: 'cafe' }))
   act(() => result.current.handleConditionsChange({ category: 'all' }))
   expect(result.current.isExploring).toBe(false)
+})
+it('clears the category and re-queries the current bounds on overview restoration', async () => {
+  const source = vi
+    .fn()
+    .mockResolvedValue({ restaurants: MAP_PREVIEW_RESTAURANTS })
+  const { result } = renderHook(() => useMapPageState(source))
+  await waitFor(() => expect(result.current.status).toBe('success'))
+  act(() =>
+    result.current.handleConditionsChange({
+      category: 'cafe',
+      sort: 'reviews',
+    }),
+  )
+  await waitFor(() => expect(result.current.status).toBe('success'))
+  act(() =>
+    result.current.handleCameraChange({
+      center: { lat: 0.5, lng: 0.5 },
+      zoom: 10.5,
+      minZoom: 10.5,
+      bounds: emptyBounds,
+    }),
+  )
+  act(() => result.current.handleOverview())
+  expect(result.current.conditions.category).toBe('all')
+  expect(result.current.isExploring).toBe(false)
+  expect(result.current.status).toBe('loading')
+  expect(result.current.restaurants).toEqual([])
+  await waitFor(() => expect(result.current.status).toBe('success'))
+  expect(source).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      conditions: {
+        keyword: '',
+        category: 'all',
+        areaCode: null,
+        sort: 'reviews',
+      },
+      bounds: emptyBounds,
+    }),
+  )
+  const calls = source.mock.calls.length
+  act(() => result.current.handleOverview())
+  expect(source).toHaveBeenCalledTimes(calls)
+})
+it('does not clear keyword or category when overview is requested during search', async () => {
+  const { result } = renderHook(() => useMapPageState())
+  await waitFor(() => expect(result.current.status).toBe('success'))
+  act(() =>
+    result.current.handleConditionsChange({
+      keyword: 'coffee',
+      category: 'cafe',
+    }),
+  )
+  act(() => result.current.handleOverview())
+  expect(result.current.isExploring).toBe(true)
+  expect(result.current.conditions.category).toBe('cafe')
 })
 it('distinguishes viewport and condition empty results', async () => {
   const { result } = renderHook(() => useMapPageState())

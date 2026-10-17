@@ -128,10 +128,14 @@ export const MapPage = () => {
     frame = requestAnimationFrame(restore)
     return () => cancelAnimationFrame(frame)
   }, [state.selectedRestaurant])
-  // Open each new failure once, without preventing later user map gestures.
+  // Open settled results once, without preventing later user map gestures.
   if (previousStatus !== state.status) {
     setPreviousStatus(state.status)
-    if (state.status === 'error') setStage('normal')
+    if (
+      state.status === 'error' ||
+      (state.status === 'success' && state.restaurants.length > 0)
+    )
+      setStage('normal')
   }
   const filtered =
     state.conditions.category !== 'all' ||
@@ -227,10 +231,7 @@ export const MapPage = () => {
             if (state.selectedRestaurant) setDetailStage('collapsed')
             else setStage('collapsed')
           }}
-          hasCategory={state.conditions.category !== 'all'}
-          hasConditions={
-            state.conditions.category !== 'all' || !!state.conditions.keyword
-          }
+          hasConditions={!!state.conditions.keyword}
           panelHeight={
             mapUnavailable
               ? 0
@@ -295,6 +296,11 @@ export const MapPage = () => {
             }
           >
             <MapRestaurantList
+              active={
+                stage !== 'collapsed' &&
+                !state.selectedRestaurant &&
+                !mapUnavailable
+              }
               status={state.status}
               emptyKind={state.emptyKind}
               onRetry={state.retry}

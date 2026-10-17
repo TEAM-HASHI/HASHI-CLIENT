@@ -9,7 +9,7 @@ import {
   Map as GoogleMap,
   useApiLoadingStatus,
 } from '@vis.gl/react-google-maps'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MapAreaMarker } from '@/pages/map/components/MapAreaMarker'
 import { MapRestaurantMarker } from '@/pages/map/components/MapRestaurantMarker'
 import { useGoogleMapCamera } from '@/pages/map/hooks/useGoogleMapCamera'
@@ -37,7 +37,6 @@ interface MapViewportProps {
   onExplore: () => void
   onOverview?: () => void
   hasConditions?: boolean
-  hasCategory?: boolean
   onCameraChange?: (camera: MapCameraSnapshot) => void
   onUserMove?: () => void
   cameraRequest?: MapCameraSnapshot | null
@@ -76,7 +75,6 @@ const GoogleMapSurface = ({
   onExplore,
   onOverview,
   hasConditions = false,
-  hasCategory = false,
   onCameraChange,
   onUserMove,
   cameraRequest,
@@ -89,6 +87,7 @@ const GoogleMapSurface = ({
   const [searchedBounds, setSearchedBounds] = useState<MapBounds | null>(null)
   const [hasUserMoved, setHasUserMoved] = useState(false)
   const [zoom, setZoom] = useState(11)
+  const firstIdleZoom = useRef<number | null>(null)
   const [timedOut, setTimedOut] = useState(false)
   const [authFailed, setAuthFailed] = useState(false)
   useEffect(() => {
@@ -183,24 +182,29 @@ const GoogleMapSurface = ({
             const bounds = map.getBounds()?.toJSON()
             if (!bounds) return
             const nextZoom = map.getZoom() ?? 11
+            // The camera hook's first idle listener may run after this one.
+            // Keep the fitted scale in the very first published snapshot too.
+            firstIdleZoom.current ??= cameraRequest?.minZoom ?? nextZoom
+            const overviewZoom =
+              minimumZoom.current ?? firstIdleZoom.current ?? nextZoom
             const center = map.getCenter()?.toJSON()
             if (center)
               onCameraChange?.({
                 center,
                 zoom: nextZoom,
                 bounds,
-                ...(minimumZoom.current !== null
-                  ? { minZoom: minimumZoom.current }
-                  : {}),
+                minZoom: overviewZoom,
               })
             if (!programmaticMoveRef.current && userMovedRef.current) {
               const mode = getMapDisplayMode({
                 zoom: nextZoom,
+                overviewZoom,
                 previous: zoomed ? 'restaurants' : 'areas',
                 hasConditions,
               })
               if (mode === 'restaurants' && !zoomed) onExplore()
-              if (mode === 'areas' && zoomed) onOverview?.()
+              if (mode === 'areas' && zoomed && !selectedId && nextZoom < zoom)
+                onOverview?.()
             }
             setCurrentBounds(bounds)
             if (
@@ -286,7 +290,6 @@ const GoogleMapSurface = ({
       {ready &&
         !failed &&
         !loadingRestaurants &&
-        hasCategory &&
         hasUserMoved &&
         boundsChanged &&
         currentBounds && (

@@ -153,6 +153,7 @@ export const useMapPageState = (
         ? true
         : getMapDisplayMode({
             zoom: camera.current?.zoom ?? 11,
+            overviewZoom: camera.current?.minZoom,
             previous: isExploring ? 'restaurants' : 'areas',
             hasConditions: !!next.keyword || next.category !== 'all',
           }) === 'restaurants',
@@ -241,6 +242,7 @@ export const useMapPageState = (
       setIsExploring(
         getMapDisplayMode({
           zoom: value?.zoom ?? 11,
+          overviewZoom: value?.minZoom,
           previous: isExploring ? 'restaurants' : 'areas',
           hasConditions: !!conditions.keyword || conditions.category !== 'all',
         }) === 'restaurants',
@@ -257,7 +259,17 @@ export const useMapPageState = (
     handleSearchArea: (bounds: MapBounds) =>
       submit({ ...conditions, areaCode: null }, bounds, 'viewport'),
     handleExplore: () => setIsExploring(true),
-    handleOverview: () => setIsExploring(false),
+    handleOverview: () => {
+      if (conditions.keyword || selectedId) return
+      setIsExploring(false)
+      if (conditions.category !== 'all') {
+        submit(
+          { ...conditions, category: 'all', areaCode: null },
+          camera.current?.bounds ?? searchBounds,
+          'viewport',
+        )
+      }
+    },
     handleSelectRestaurant: (id: string) => {
       setIsExploring(true)
       setSelectedId(id)

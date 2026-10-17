@@ -86,7 +86,7 @@ test('map CTA collapses the expanded list and restores keyboard focus', async ({
   await expect(page.getByRole('list', { name: '식당 검색 결과' })).toBeVisible()
 })
 
-test('category zoom keeps pins, gestures collapse the list and the active tab resets it', async ({
+test('overview zoom clears category, restores regions and reloads the list', async ({
   page,
 }) => {
   await page.getByRole('button', { name: '카페', exact: true }).click()
@@ -101,20 +101,77 @@ test('category zoom keeps pins, gestures collapse the list and the active tab re
   await expect(
     page.getByRole('button', { name: '현재 위치에서 검색' }),
   ).toBeVisible()
-  await page.mouse.wheel(0, 900)
-  await expect(
-    page.getByRole('button', { name: '도쿄 카페 미리보기 지도 마커' }),
-  ).toBeVisible()
-  await expect(
-    page.getByRole('button', { name: '신주쿠 식당 보기' }),
-  ).toHaveCount(0)
-  await page.getByRole('button', { name: '지도', exact: true }).click()
+  await expect
+    .poll(
+      async () => {
+        if (
+          (await page
+            .getByRole('button', { name: '전체', exact: true })
+            .getAttribute('aria-pressed')) === 'true'
+        )
+          return true
+        await page.mouse.wheel(0, 800)
+        return false
+      },
+      { timeout: 15000, intervals: [400] },
+    )
+    .toBe(true)
   await expect(
     page.getByRole('button', { name: '신주쿠 식당 보기' }),
   ).toBeVisible()
   await expect(
     page.getByRole('button', { name: '카페', exact: true }),
   ).toHaveAttribute('aria-pressed', 'false')
+  await expect(handle).not.toHaveAttribute('aria-valuenow', '30')
+})
+
+test('unfiltered map movement offers explicit viewport search without auto-querying', async ({
+  page,
+}) => {
+  await expect(
+    page.getByRole('button', { name: '신주쿠 식당 보기' }),
+  ).toBeVisible()
+  await expect(page.getByText('지도를 불러오고 있어요.')).toBeHidden()
+  const search = page.getByRole('button', { name: '현재 위치에서 검색' })
+  await expect(search).toHaveCount(0)
+  await page.mouse.move(195, 270)
+  await page.mouse.down()
+  await page.mouse.move(235, 310, { steps: 12 })
+  await page.mouse.up()
+  await expect(search).toBeVisible()
+  await page.screenshot({
+    path: test.info().outputPath('unfiltered-viewport-search.png'),
+  })
+  await expect(
+    page.getByRole('slider', { name: '식당 목록 높이 조절' }),
+  ).toHaveAttribute('aria-valuenow', '30')
+  await search.click()
+  await expect(search).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: '전체', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('panning a category at the initial scale preserves the filter until explicit search', async ({
+  page,
+}) => {
+  await expect(page.getByText('지도를 불러오고 있어요.')).toBeHidden()
+  const cafe = page.getByRole('button', { name: '카페', exact: true })
+  await cafe.click()
+  await expect(
+    page.getByRole('button', { name: '도쿄 카페 미리보기 지도 마커' }),
+  ).toBeVisible()
+  await page.mouse.move(195, 270)
+  await page.mouse.down()
+  await page.mouse.move(235, 310, { steps: 12 })
+  await page.mouse.up()
+  await expect(
+    page.getByRole('button', { name: '현재 위치에서 검색' }),
+  ).toBeVisible()
+  await expect(cafe).toHaveAttribute('aria-pressed', 'true')
+  await expect(
+    page.getByRole('slider', { name: '식당 목록 높이 조절' }),
+  ).toHaveAttribute('aria-valuenow', '30')
 })
 
 test('search round trip retains category and clear removes only keyword', async ({
