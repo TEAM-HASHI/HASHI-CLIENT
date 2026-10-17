@@ -37,6 +37,14 @@ export const appRoutes: RouteObject[] = [
             element: lazyPages.comingSoon(),
           },
           {
+            path: ROUTES.notices,
+            element: lazyPages.notices(),
+          },
+          {
+            path: ROUTES.noticeDetail,
+            element: lazyPages.noticeDetail(),
+          },
+          {
             path: ROUTES.terms,
             element: lazyPages.terms(),
           },
@@ -166,6 +174,10 @@ export const appRoutes: RouteObject[] = [
           {
             path: ROUTES.reservationDetail,
             element: withSilentLazyFallback(lazyPages.reservationDetail()),
+          },
+          {
+            path: ROUTES.reservationComplete,
+            element: lazyPages.reservationComplete(),
           },
         ],
       },

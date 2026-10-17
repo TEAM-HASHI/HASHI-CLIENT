@@ -37,39 +37,42 @@
 
 ## Public Routes
 
-| Page                  | Path                                       | Notes                                                              |
-| --------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
-| 홈 페이지             | `/`                                        | 첫 진입 페이지입니다.                                              |
-| 검색 페이지           | `/search`                                  |                                                                    |
-| 오늘의 식당 페이지    | `/restaurants/today`                       | 매장 정보, 메뉴, 사진, 리뷰 탭을 가집니다.                         |
-| 식당 상세 페이지      | `/restaurants/:restaurantId`               | 매장 정보, 메뉴, 사진, 리뷰 탭을 가집니다.                         |
-| 메뉴 상세 페이지      | `/restaurants/:restaurantId/menus/:menuId` | 식당 메뉴 카드에서 진입하는 메뉴 상세 화면입니다.                  |
-| hashi 픽 페이지       | `/restaurants/hashi-pick`                  |                                                                    |
-| 인기 맛집 페이지      | `/restaurants/popular`                     |                                                                    |
-| 지도 페이지           | `/map`                                     | 준비중 페이지를 렌더링합니다.                                      |
-| 매거진 리스트 페이지  | `/magazines`                               | 유지 여부 논의 중입니다.                                           |
-| 매거진 상세 페이지    | `/magazines/:magazineId`                   | 유지 여부 논의 중입니다.                                           |
-| 카카오 OAuth callback | `/oauth/callback/kakao`                    | 카카오 인가 code/state 처리 후 기존/신규 회원 흐름으로 분기합니다. |
-| 이용약관 페이지       | `/terms`                                   | 마이페이지에서 진입하며 하단 네비게이션(`마이`)을 포함합니다.      |
-| 이용약관 상세 페이지  | `/terms/:policyId`                         | 정적 약관 콘텐츠의 조항을 Accordion으로 보여줍니다.                |
+| Page                  | Path                                       | Notes                                                                              |
+| --------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
+| 홈 페이지             | `/`                                        | 첫 진입 페이지입니다.                                                              |
+| 검색 페이지           | `/search`                                  |                                                                                    |
+| 오늘의 식당 페이지    | `/restaurants/today`                       | 매장 정보, 메뉴, 사진, 리뷰 탭을 가집니다.                                         |
+| 식당 상세 페이지      | `/restaurants/:restaurantId`               | 매장 정보, 메뉴, 사진, 리뷰 탭을 가집니다.                                         |
+| 메뉴 상세 페이지      | `/restaurants/:restaurantId/menus/:menuId` | 식당 메뉴 카드에서 진입하는 메뉴 상세 화면입니다.                                  |
+| hashi 픽 페이지       | `/restaurants/hashi-pick`                  |                                                                                    |
+| 인기 맛집 페이지      | `/restaurants/popular`                     |                                                                                    |
+| 지도 페이지           | `/map`                                     | 준비중 페이지를 렌더링합니다.                                                      |
+| 매거진 리스트 페이지  | `/magazines`                               | 유지 여부 논의 중입니다.                                                           |
+| 매거진 상세 페이지    | `/magazines/:magazineId`                   | 유지 여부 논의 중입니다.                                                           |
+| 카카오 OAuth callback | `/oauth/callback/kakao`                    | 카카오 인가 code/state 처리 후 기존/신규 회원 흐름으로 분기합니다.                 |
+| 공지사항 페이지       | `/notices`                                 | 마이페이지에서 진입하며 최신순 무한 스크롤, 상세 복귀 시 스크롤 위치를 복원합니다. |
+| 공지사항 상세 페이지  | `/notices/:noticeId`                       | 존재하지 않거나 삭제된 공지는 404 페이지를 렌더링합니다.                           |
+| 이용약관 페이지       | `/terms`                                   | 마이페이지에서 진입하며 하단 네비게이션(`마이`)을 포함합니다.                      |
+| 이용약관 상세 페이지  | `/terms/:policyId`                         | 정적 약관 콘텐츠의 조항을 Accordion으로 보여줍니다.                                |
 
 ## Auth Only Routes
 
-| Page               | Path                                          | Notes                                                                                                        |
-| ------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| 리뷰 작성 페이지   | `/restaurants/:restaurantId/reviews/new`      |                                                                                                              |
-| 마이 리뷰 페이지   | `/my-reviews`                                 | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                    |
-| 리뷰 상세 페이지   | `/reviews/:reviewId`                          |                                                                                                              |
-| 리뷰 수정 페이지   | `/reviews/:reviewId/edit`                     |                                                                                                              |
-| 저장 페이지        | `/saved`                                      | 준비중 페이지를 렌더링합니다.                                                                                |
-| 마이 페이지        | `/mypage`                                     |                                                                                                              |
-| 프로필 생성 페이지 | `/profile/new`                                | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                 |
-| 탈퇴 페이지        | `/withdrawal`                                 | 유지 여부 논의 중입니다.                                                                                     |
-| 예약 페이지        | `/restaurants/:restaurantId/reservations/new` |                                                                                                              |
-| 어디든 예약 페이지 | `/reservations/anywhere`                      |                                                                                                              |
-| 예약 요청 페이지   | `/reservations/request`                       |                                                                                                              |
-| 예약 정보 페이지   | `/my-reservations`                            | 진행 중, 방문 예정, 방문 완료, 예약 취소 chip 상태에 따라 카드 디자인과 데이터가 달라지는 단일 페이지입니다. |
-| 예약 상세 페이지   | `/reservations/:reservationId`                |                                                                                                              |
+| Page                  | Path                                          | Notes                                                                                                                                                     |
+| --------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 리뷰 작성 페이지      | `/restaurants/:restaurantId/reviews/new`      |                                                                                                                                                           |
+| 마이 리뷰 페이지      | `/my-reviews`                                 | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                                                                 |
+| 리뷰 상세 페이지      | `/reviews/:reviewId`                          |                                                                                                                                                           |
+| 리뷰 수정 페이지      | `/reviews/:reviewId/edit`                     |                                                                                                                                                           |
+| 저장 페이지           | `/saved`                                      | 준비중 페이지를 렌더링합니다.                                                                                                                             |
+| 마이 페이지           | `/mypage`                                     |                                                                                                                                                           |
+| 프로필 생성 페이지    | `/profile/new`                                | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                                                              |
+| 탈퇴 페이지           | `/withdrawal`                                 | 유지 여부 논의 중입니다.                                                                                                                                  |
+| 예약 페이지           | `/restaurants/:restaurantId/reservations/new` |                                                                                                                                                           |
+| 어디든 예약 페이지    | `/reservations/anywhere`                      |                                                                                                                                                           |
+| 예약 요청 페이지      | `/reservations/request`                       |                                                                                                                                                           |
+| 예약 정보 페이지      | `/my-reservations`                            | 진행 중, 방문 예정, 방문 완료, 예약 취소 chip 상태에 따라 카드 디자인과 데이터가 달라지는 단일 페이지입니다.                                              |
+| 예약 상세 페이지      | `/reservations/:reservationId`                |                                                                                                                                                           |
+| 예약 요청 완료 페이지 | `/reservations/:reservationId/complete`       | 예약 생성 성공 직후 replace 진입하며, `확인 완료`·브라우저 뒤로가기는 홈으로 replace 이동합니다. 생성 응답이 없는 직접 진입·새로고침도 홈으로 이동합니다. |
 
 ## Auth Gate Policy
 

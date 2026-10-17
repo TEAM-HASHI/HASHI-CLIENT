@@ -20,6 +20,8 @@ export const ROUTES = {
   profileNew: '/profile/new',
   profileEdit: '/profile/edit',
   withdrawal: '/withdrawal',
+  notices: '/notices',
+  noticeDetail: '/notices/:noticeId',
   terms: '/terms',
   termsDetail: '/terms/:policyId',
   restaurantReservationNew: '/restaurants/:restaurantId/reservations/new',
@@ -27,6 +29,7 @@ export const ROUTES = {
   reservationRequest: '/reservations/request',
   myReservations: '/my-reservations',
   reservationDetail: '/reservations/:reservationId',
+  reservationComplete: '/reservations/:reservationId/complete',
   loginRequired: '/login-required',
   kakaoOAuthCallback: '/oauth/callback/kakao',
 } as const
