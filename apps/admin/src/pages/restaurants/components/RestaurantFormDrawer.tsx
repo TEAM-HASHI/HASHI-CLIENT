@@ -53,6 +53,13 @@ interface RestaurantFormDrawerProps {
   onClose: () => void
 }
 
+// 앱 기준 화면(393px)에서 잘려 보이는 비율: 상세는 전체 너비 × 234px(RestaurantDetailHero·메뉴 상세),
+// 목록은 정사각형 썸네일(Thumbnail·메뉴 목록)
+const RESTAURANT_IMAGE_FRAMES = [
+  { label: '상세', aspectRatio: '393 / 234' },
+  { label: '목록', aspectRatio: '1 / 1' },
+] as const
+
 export const RestaurantFormDrawer = ({
   open,
   mode,
@@ -425,6 +432,7 @@ const MediaStep = ({
       label="식당 이미지 선택"
       usage="restaurant"
       value={form.images}
+      previewFrames={RESTAURANT_IMAGE_FRAMES}
       multiple
       representativeLabel
       onChange={(images) => setForm((current) => ({ ...current, images }))}
@@ -611,7 +619,7 @@ const MenuAndExposureStep = ({
     <Field
       label="해시태그"
       value={form.hashtags}
-      placeholder="쉼표로 구분"
+      placeholder="최대 3개, 각 20자 이하 · # 없이 쉼표로 구분"
       onChange={(hashtags) => setForm((current) => ({ ...current, hashtags }))}
     />
   )
@@ -745,6 +753,7 @@ const MenuEditor = ({
           label={`${menu.name || index + 1} 메뉴 이미지`}
           usage="restaurant-menu"
           value={menu.image ? [menu.image] : []}
+          previewFrames={RESTAURANT_IMAGE_FRAMES}
           onChange={(images) =>
             updateMenu(menus, index, { image: images[0] ?? null }, onChange)
           }
