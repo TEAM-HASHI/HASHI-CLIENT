@@ -97,4 +97,58 @@ describe('useReservationFormControls', () => {
       selectedTime: '11:00',
     })
   })
+  it('limits dates to the next three calendar months, including the boundary', () => {
+    const { result } = renderHook(() =>
+      useReservationFormControls({
+        checkIsDateReservable: () => true,
+        getTimeSlots: () => ['11:00'],
+      }),
+    )
+    expect(result.current.calendar.isDateDisabled(new Date(2026, 8, 1))).toBe(
+      false,
+    )
+    expect(result.current.calendar.isDateDisabled(new Date(2026, 8, 2))).toBe(
+      true,
+    )
+  })
+
+  it('clamps the three-month boundary at the last day of a shorter month', () => {
+    vi.setSystemTime(new Date(2026, 0, 31, 9))
+    const { result } = renderHook(() =>
+      useReservationFormControls({
+        checkIsDateReservable: () => true,
+        getTimeSlots: () => ['11:00'],
+      }),
+    )
+    expect(result.current.calendar.isDateDisabled(new Date(2026, 3, 30))).toBe(
+      false,
+    )
+    expect(result.current.calendar.isDateDisabled(new Date(2026, 4, 1))).toBe(
+      true,
+    )
+  })
+
+  it('caps every guest type at 100 and rejects names longer than 50 trimmed characters', () => {
+    const { result } = renderHook(() =>
+      useReservationFormControls({
+        checkIsDateReservable: () => true,
+        getTimeSlots: () => ['11:00'],
+      }),
+    )
+    act(() => {
+      for (const counter of result.current.guestCounters)
+        for (let i = 0; i < 105; i++) counter.onIncrease()
+      result.current.fields.guestName.onValueChange('가'.repeat(51))
+    })
+    expect(
+      result.current.guestCounters.map((counter) => counter.value),
+    ).toEqual([100, 100, 100])
+    expect(result.current.validity.isGuestNameValid).toBe(false)
+    act(() =>
+      result.current.fields.guestName.onValueChange(
+        '  ' + '가'.repeat(50) + '  ',
+      ),
+    )
+    expect(result.current.validity.isGuestNameValid).toBe(true)
+  })
 })

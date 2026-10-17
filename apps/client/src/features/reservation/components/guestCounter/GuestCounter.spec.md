@@ -191,6 +191,11 @@ GuestCounter
   - value 영역은 고정 `25px` 너비를 가져 한 자리와 두 자리 숫자 전환 시 controls 위치가 흔들리지 않게 합니다.
   - controls와 icon button은 `shrink-0`으로 고정 크기를 유지합니다.
 
+## Limits
+
+- 0명에서 감소 버튼, 100명에서 증가 버튼을 비활성화한다.
+- 실제 숫자 범위는 호출 hook에서도 0~100명으로 제한한다.
+
 ## Accessibility
 
 - minus와 plus는 `button type="button"` 요소를 사용합니다.

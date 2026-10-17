@@ -1,3 +1,4 @@
+import { showToast } from '@hashi/hds-ui'
 import { act, renderHook } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { PropsWithChildren } from 'react'
@@ -7,6 +8,14 @@ import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { myReservationsQueryKeys } from '@/features/reservation'
 import { createReservation } from '@/pages/reservationRequest/api/createReservation'
 import { useCreateReservationMutation } from '@/pages/reservationRequest/hooks/useCreateReservationMutation'
+import { createQueryClient } from '@/shared/lib/queryClient'
+import { captureError } from '@/shared/lib/sentry'
+
+vi.mock('@hashi/hds-ui', async () => ({
+  ...(await vi.importActual<typeof import('@hashi/hds-ui')>('@hashi/hds-ui')),
+  showToast: vi.fn(),
+}))
+vi.mock('@/shared/lib/sentry', () => ({ captureError: vi.fn() }))
 
 vi.mock('@/pages/reservationRequest/api/createReservation', () => ({
   createReservation: vi.fn(),
@@ -41,6 +50,7 @@ const createWrapper = (queryClient: QueryClient) => {
 
 describe('useCreateReservationMutation', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     mockedCreateReservation.mockReset()
   })
 
@@ -96,4 +106,24 @@ describe('useCreateReservationMutation', () => {
 
     expect(invalidateQueries).not.toHaveBeenCalled()
   })
+  it.each(['request failed', '예약 생성 응답에 예약 ID가 없습니다.'])(
+    'shows the reservation error once and records %s',
+    async (message) => {
+      const queryClient = createQueryClient()
+      const error = new Error(message)
+      mockedCreateReservation.mockRejectedValue(error)
+      const { result } = renderHook(() => useCreateReservationMutation(), {
+        wrapper: createWrapper(queryClient),
+      })
+      await act(async () => {
+        await expect(
+          result.current.mutateAsync(createReservationParams),
+        ).rejects.toThrow(message)
+      })
+      expect(showToast).toHaveBeenCalledExactlyOnceWith({
+        children: '예약 요청 중 문제가 발생했어요. 다시 시도해주세요.',
+      })
+      expect(captureError).toHaveBeenCalledExactlyOnceWith(error)
+    },
+  )
 })

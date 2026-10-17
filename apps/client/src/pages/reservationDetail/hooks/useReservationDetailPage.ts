@@ -2,12 +2,10 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useReservationDetailCancellation } from '@/pages/reservationDetail/hooks/useReservationDetailCancellation'
-import { useReservationDetailQuery } from '@/pages/reservationDetail/hooks/useReservationDetailQuery'
+import { useReservationDetailQuery } from '@/features/reservation/queries/useReservationDetailQuery'
 import { createReservationDetailViewModel } from '@/pages/reservationDetail/utils/createReservationDetailViewModel'
-import {
-  checkIsReservationDetailBlockedStatus,
-  parseReservationId,
-} from '@/pages/reservationDetail/utils/reservationDetailPolicy'
+import { checkIsReservationDetailBlockedStatus } from '@/pages/reservationDetail/utils/reservationDetailPolicy'
+import { parseReservationId } from '@/features/reservation/utils/parseReservationId'
 import { checkHasHttpStatus, checkIsNotFoundError } from '@/shared/api/apiError'
 import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 

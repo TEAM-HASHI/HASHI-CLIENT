@@ -1,6 +1,8 @@
+import { useLocation } from 'react-router-dom'
 import { useCallback } from 'react'
 
 import type { ReservationGuestCounts } from '@/features/reservation/constants/guest'
+import { checkIsReservationRequestDraft } from '@/features/reservation/reservationDraft'
 import { useReservationFormControls } from '@/features/reservation/hooks/useReservationFormControls'
 import { createReservationTimeSlots } from '@/features/reservation/utils/createReservationTimeSlots'
 import type { ReservationRestaurant } from '@/pages/restaurantReservationNew/hooks/useReservationRestaurant'
@@ -20,7 +22,7 @@ export interface ReservationDraft {
   guests: ReservationGuestCounts
   date: string
   time: string
-  requestNote: string
+  requestNote?: string
 }
 
 const DAY_OF_WEEK_NAMES = [
@@ -58,14 +60,13 @@ const checkIsReservableBusinessHours = (
 export const useRestaurantReservationForm = ({
   restaurant,
 }: UseRestaurantReservationFormParams) => {
-  const checkIsDateReservable = useCallback(
-    (date: Date) =>
-      checkIsReservableBusinessHours(
-        getBusinessHoursForDate(date, restaurant.businessHours),
-      ),
-    [restaurant.businessHours],
-  )
-
+  const location = useLocation()
+  const initialDraft =
+    checkIsReservationRequestDraft(location.state) &&
+    location.state.source !== 'anywhere' &&
+    location.state.restaurantId === restaurant.id
+      ? location.state
+      : null
   const getTimeSlots = useCallback(
     (selectedDate: Date | undefined) => {
       const businessHours = selectedDate
@@ -88,14 +89,21 @@ export const useRestaurantReservationForm = ({
           breakEnd: businessHours.breakEnd,
         },
         restaurant.reservationIntervalMinutes,
+        60,
       )
     },
     [restaurant.businessHours, restaurant.reservationIntervalMinutes],
   )
 
+  const checkIsDateReservable = useCallback(
+    (date: Date) => getTimeSlots(date).length > 0,
+    [getTimeSlots],
+  )
+
   const formControls = useReservationFormControls({
     checkIsDateReservable,
     getTimeSlots,
+    initialDraft,
   })
   const { fields, guestCounters, calendar, timeSelector, validity, values } =
     formControls
@@ -124,11 +132,14 @@ export const useRestaurantReservationForm = ({
       guests: values.guestCounts,
       date: formatDateToLocalDateString(values.selectedDate),
       time: values.selectedTime,
-      requestNote: fields.requestNote.value,
+      ...(fields.requestNote.value.trim()
+        ? { requestNote: fields.requestNote.value.trim() }
+        : {}),
     }
   }
 
   return {
+    hasChanges: formControls.hasChanges,
     fields,
     guestCounters,
     calendar,

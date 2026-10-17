@@ -1,9 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { showToast } from '@hashi/hds-ui'
 
 import { getShouldRenderDuringAuthRestore } from '@/app/providers/authSessionRestorePolicy'
 import { getAuthMe } from '@/features/auth/api/getAuthMe'
 import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
 import { checkIsAuthRequiredError } from '@/shared/api/apiError'
+import { getErrorPresentation } from '@/shared/api/errorPresentation'
+import { captureError } from '@/shared/lib/sentry'
 import {
   clearAuthSession,
   getAccessToken,
@@ -11,6 +14,7 @@ import {
   getAuthSessionVersion,
   setAccessToken,
   setOnboardingSession,
+  startAuthenticatedSession,
 } from '@/shared/auth/authSession'
 
 interface AuthSessionRestoreGateProps {
@@ -18,7 +22,9 @@ interface AuthSessionRestoreGateProps {
   pathname?: string
 }
 
-let authSessionRestorePromise: Promise<void> | undefined
+let authSessionRestore:
+  | { sessionVersion: number; promise: Promise<void> }
+  | undefined
 
 const getCurrentPathname = () => {
   if (typeof window === 'undefined') {
@@ -28,11 +34,14 @@ const getCurrentPathname = () => {
   return window.location.pathname
 }
 
-const restoreAuthSessionOnce = async () => {
+const restoreAuthSessionOnce = async (revalidate: boolean) => {
   const sessionVersion = getAuthSessionVersion()
+  const previousToken = getAccessToken()
+  const previousStatus = getAuthSessionStatus()
   const canRestore = () =>
     getAuthSessionVersion() === sessionVersion &&
-    getAuthSessionStatus() === 'unauthenticated'
+    getAccessToken() === previousToken &&
+    getAuthSessionStatus() === previousStatus
 
   let accessToken: string | undefined
 
@@ -49,7 +58,11 @@ const restoreAuthSessionOnce = async () => {
     if (!canRestore()) return
 
     if (accessToken && authMe.role === 'USER') {
-      setAccessToken(accessToken)
+      if (revalidate && previousStatus !== 'authenticated') {
+        startAuthenticatedSession(accessToken)
+      } else {
+        setAccessToken(accessToken)
+      }
     } else if (!accessToken && authMe.role === 'ONBOARDING') {
       setOnboardingSession()
     } else {
@@ -62,14 +75,17 @@ const restoreAuthSessionOnce = async () => {
   }
 }
 
-const restoreAuthSession = async () => {
-  if (!authSessionRestorePromise) {
-    authSessionRestorePromise = restoreAuthSessionOnce().finally(() => {
-      authSessionRestorePromise = undefined
+const restoreAuthSession = (revalidate: boolean) => {
+  const sessionVersion = getAuthSessionVersion()
+  if (authSessionRestore?.sessionVersion !== sessionVersion) {
+    const promise = restoreAuthSessionOnce(revalidate).finally(() => {
+      if (authSessionRestore?.promise === promise)
+        authSessionRestore = undefined
     })
+    authSessionRestore = { sessionVersion, promise }
   }
 
-  return authSessionRestorePromise
+  return authSessionRestore.promise
 }
 
 export const AuthSessionRestoreGate = ({
@@ -87,17 +103,19 @@ export const AuthSessionRestoreGate = ({
     getShouldRenderDuringAuthRestore(currentPathname)
 
   useEffect(() => {
-    if (getAccessToken()) {
-      return
-    }
-
     let isMounted = true
 
-    const completeAuthSessionRestore = async () => {
+    const completeAuthSessionRestore = async (revalidate = false) => {
       try {
-        await restoreAuthSession()
+        await restoreAuthSession(revalidate)
       } catch (cause) {
-        if (isMounted) setRestoreError(cause)
+        if (!isMounted) return
+        if (revalidate) {
+          captureError(cause)
+          showToast({ children: getErrorPresentation(cause).message })
+        } else {
+          setRestoreError(cause)
+        }
       } finally {
         if (isMounted) {
           setIsRestoreCompleted(true)
@@ -105,10 +123,15 @@ export const AuthSessionRestoreGate = ({
       }
     }
 
-    void completeAuthSessionRestore()
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) void completeAuthSessionRestore(true)
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    if (!getAccessToken()) void completeAuthSessionRestore()
 
     return () => {
       isMounted = false
+      window.removeEventListener('pageshow', handlePageShow)
     }
   }, [])
 
