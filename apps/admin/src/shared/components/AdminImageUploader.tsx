@@ -6,10 +6,17 @@ import {
   type AdminImageUploadStatus,
 } from '@/shared/hooks/useAdminImageUpload'
 
+export interface ImagePreviewFrame {
+  label: string
+  aspectRatio: string
+}
+
 interface AdminImageUploaderProps {
   label: string
   usage: UploadUsage
   value: UploadedImage[]
+  /** 앱에서 실제로 잘려 보이는 비율. 첫 번째는 크게, 나머지는 작은 썸네일로 보여준다. */
+  previewFrames: readonly [ImagePreviewFrame, ...ImagePreviewFrame[]]
   multiple?: boolean
   representativeLabel?: boolean
   onChange: (value: UploadedImage[]) => void
@@ -20,11 +27,13 @@ export const AdminImageUploader = ({
   label,
   usage,
   value,
+  previewFrames,
   multiple = false,
   representativeLabel = false,
   onChange,
   onStatusChange,
 }: AdminImageUploaderProps) => {
+  const [primaryFrame, ...secondaryFrames] = previewFrames
   const valueRef = useRef(value)
 
   useEffect(() => {
@@ -90,10 +99,13 @@ export const AdminImageUploader = ({
               key={image.fileKey}
               className="border-cool-gray-100 overflow-hidden rounded-lg border bg-white"
             >
-              <div className="bg-cool-gray-50 relative aspect-[16/10]">
+              <div
+                className="bg-cool-gray-50 relative"
+                style={{ aspectRatio: primaryFrame.aspectRatio }}
+              >
                 <img
                   src={image.fileUrl}
-                  alt={`${image.fileName} 미리보기`}
+                  alt={`${image.fileName} ${primaryFrame.label} 미리보기`}
                   className="size-full object-cover"
                 />
                 {representativeLabel && index === 0 ? (
@@ -101,8 +113,31 @@ export const AdminImageUploader = ({
                     대표 이미지
                   </span>
                 ) : null}
+                <span className="absolute right-2 bottom-2 rounded bg-black/60 px-2 py-1 text-xs font-semibold text-white">
+                  {primaryFrame.label}
+                </span>
               </div>
               <div className="space-y-2 p-3">
+                {secondaryFrames.length > 0 ? (
+                  <div className="flex flex-wrap gap-3">
+                    {secondaryFrames.map((frame) => (
+                      <figure
+                        key={frame.label}
+                        className="flex items-center gap-1.5"
+                      >
+                        <img
+                          src={image.fileUrl}
+                          alt={`${image.fileName} ${frame.label} 미리보기`}
+                          className="h-12 rounded-[5px] object-cover"
+                          style={{ aspectRatio: frame.aspectRatio }}
+                        />
+                        <figcaption className="text-cool-gray-500 text-xs">
+                          {frame.label}
+                        </figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                ) : null}
                 <p className="text-cool-gray-800 truncate text-sm font-semibold">
                   {image.fileName}
                 </p>
