@@ -192,15 +192,15 @@
 
 - local state:
   - active bottom sheet: `sort | category | null`
-  - selected/draft sort option
-  - selected/draft category option
+  - draft sort option
+  - draft category option
   - 필터 적용 후 스크롤 초기화 여부
 - session state:
   - `hashi:restaurant-list:{type}:{location.key}`: 상세 이동 직전의 적용 필터, 조회한 페이지 및 스크롤 위치
   - 저장된 목록 본문이 있으면 같은 필터의 기존 Query 캐시보다 해당 방문의 목록을 우선 복원합니다.
   - 방문 이력 개수에 임의 제한을 두지 않습니다. 저장 공간이 부족하면 이력의 목록 본문만 제거하고 필터·페이지 수·스크롤 위치는 유지합니다. 복귀 시 필요한 페이지를 다시 조회하며, 다른 기능의 sessionStorage는 변경하지 않습니다.
 - form state: none
-- URL state: none
+- URL state: 적용한 정렬은 `sort`, 음식 장르는 `genre`로 관리합니다. 기본값은 URL에서 생략하며, 상세 복귀 시 해당 방문의 세션 기록을 함께 사용합니다.
 - server state:
   - `useInfiniteQuery(restaurantsInfiniteQueryOptions(requestParams))` result pages
 - derived state:

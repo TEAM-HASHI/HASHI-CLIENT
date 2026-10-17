@@ -21,6 +21,9 @@ const HashiPickPage = lazyRoute(() => import('@/pages/hashiPick'))
 const PopularRestaurantsPage = lazyRoute(
   () => import('@/pages/popularRestaurants'),
 )
+const HotSnsRestaurantsPage = lazyRoute(
+  () => import('@/pages/hotSnsRestaurants'),
+)
 const MagazinesPage = lazyRoute(() => import('@/pages/magazines'))
 const MagazineDetailPage = lazyRoute(() => import('@/pages/magazineDetail'))
 const ReviewNewPage = lazyRoute(() => import('@/pages/reviewNew'))
@@ -33,6 +36,8 @@ const ProfileEditPage = lazyRoute(() => import('@/pages/profileEdit'))
 const WithdrawalPage = lazyRoute(() => import('@/pages/withdrawal'))
 const NoticesPage = lazyRoute(() => import('@/pages/notices'))
 const NoticeDetailPage = lazyRoute(() => import('@/pages/noticeDetail'))
+const TermsPage = lazyRoute(() => import('@/pages/terms'))
+const TermsDetailPage = lazyRoute(() => import('@/pages/termsDetail'))
 const RestaurantReservationNewPage = lazyRoute(
   () => import('@/pages/restaurantReservationNew'),
 )
@@ -64,6 +69,7 @@ export const lazyPages = {
   restaurantMenuDetail: () => lazyPage(RestaurantMenuDetailPage),
   hashiPick: () => lazyPage(HashiPickPage),
   popularRestaurants: () => lazyPage(PopularRestaurantsPage),
+  hotSnsRestaurants: () => lazyPage(HotSnsRestaurantsPage),
   magazines: () => lazyPage(MagazinesPage),
   magazineDetail: () => lazyPage(MagazineDetailPage),
   reviewNew: () => lazyPage(ReviewNewPage),
@@ -76,6 +82,8 @@ export const lazyPages = {
   withdrawal: () => lazyPage(WithdrawalPage),
   notices: () => lazyPage(NoticesPage),
   noticeDetail: () => lazyPage(NoticeDetailPage),
+  terms: () => lazyPage(TermsPage),
+  termsDetail: () => lazyPage(TermsDetailPage),
   restaurantReservationNew: () => lazyPage(RestaurantReservationNewPage),
   anywhereReservation: () => lazyPage(AnywhereReservationPage),
   reservationRequest: () => lazyPage(ReservationRequestPage),

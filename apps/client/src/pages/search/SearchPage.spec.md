@@ -396,6 +396,7 @@ SearchPage
 ## Reuse Audit
 
 - `SearchBar`를 사용합니다. 검색 실행, 최근 검색어, 추천 검색어, query 동기화는 HDS 범위가 아니므로 page가 소유합니다.
+- 입력값이 있을 때 표시되는 X 버튼의 `onClear`를 페이지의 초기화 처리에 연결합니다. 입력 초안과 URL의 검색어·정렬·음식 장르 조건을 함께 지우고 초기 검색 화면으로 전환합니다. 검색 결과를 새로 요청하거나 최근 검색어를 삭제하지 않습니다.
 - `IconButton size="xs"`와 `BackIcon`을 조합해 뒤로가기 버튼을 구현합니다. 호출부에서 `44px` 터치 영역을 확보하고 아이콘은 `24px`로 유지합니다.
 - `Chip`을 최근 검색어와 추천 검색어 pill에 사용합니다. 칩 목록의 horizontal scroll과 키워드 선택 동작은 page-local `KeywordChipList`가 소유합니다.
 - `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 page-local `useSearchFilterSheet`가 주입합니다.

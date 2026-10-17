@@ -5,7 +5,6 @@ import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
-import { HASHI_TERMS_URL } from '@/pages/mypage/constants/mypageMenu'
 import { MypagePage } from '@/pages/mypage/MypagePage'
 
 const { mockNavigate, mockRequest } = vi.hoisted(() => ({
@@ -115,20 +114,20 @@ describe('MypagePage', () => {
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
   })
 
-  it('renders the terms link as an external link', async () => {
-    renderMypagePage()
-
-    expect(
-      await screen.findByRole('link', { name: '이용약관' }),
-    ).toHaveAttribute('href', HASHI_TERMS_URL)
-  })
-
   it('navigates to the notices page when the notice menu is pressed', async () => {
     renderMypagePage()
 
     fireEvent.click(await screen.findByRole('button', { name: '공지사항' }))
 
     expect(mockNavigate).toHaveBeenCalledWith(ROUTES.notices)
+  })
+
+  it('navigates to the terms page when the terms menu is pressed', async () => {
+    renderMypagePage()
+
+    fireEvent.click(await screen.findByRole('button', { name: '이용약관' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.terms)
   })
 
   it('preserves the account section after adding the service page', async () => {

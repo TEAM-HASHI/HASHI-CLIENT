@@ -44,6 +44,14 @@ export const appRoutes: RouteObject[] = [
             path: ROUTES.noticeDetail,
             element: lazyPages.noticeDetail(),
           },
+          {
+            path: ROUTES.terms,
+            element: lazyPages.terms(),
+          },
+          {
+            path: ROUTES.termsDetail,
+            element: lazyPages.termsDetail(),
+          },
         ],
       },
       {
@@ -73,6 +81,10 @@ export const appRoutes: RouteObject[] = [
       {
         path: ROUTES.popularRestaurants,
         element: withSilentLazyFallback(lazyPages.popularRestaurants()),
+      },
+      {
+        path: ROUTES.hotSnsRestaurants,
+        element: withSilentLazyFallback(lazyPages.hotSnsRestaurants()),
       },
       {
         path: ROUTES.magazines,

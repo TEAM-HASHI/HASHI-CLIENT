@@ -61,7 +61,8 @@ const getBottomNavigationValue = (
 
   if (
     targetPathname === ROUTES.mypage ||
-    matchPath({ path: ROUTES.notices, end: false }, targetPathname)
+    matchPath({ path: ROUTES.notices, end: false }, targetPathname) ||
+    matchPath({ path: ROUTES.terms, end: false }, targetPathname)
   ) {
     return 'mypage'
   }

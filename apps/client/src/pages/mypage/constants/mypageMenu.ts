@@ -2,9 +2,6 @@ import { ROUTES } from '@/app/router/path'
 import type { MypageMenuItem, MypageMenuSection } from '@/pages/mypage/types'
 import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
-export const HASHI_TERMS_URL =
-  'https://ringed-mitten-50f.notion.site/Hashi-38dc804d7e5e80eebf2be0fc0ae448ac'
-
 export const createMypagePrimaryMenuItems = ({
   myReviewCount,
 }: {
@@ -63,8 +60,8 @@ export const mypageMenuSections: MypageMenuSection[] = [
         id: 'terms',
         label: '이용약관',
         action: {
-          type: 'external',
-          url: HASHI_TERMS_URL,
+          type: 'navigate',
+          path: ROUTES.terms,
         },
       },
     ],

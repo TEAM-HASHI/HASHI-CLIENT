@@ -52,6 +52,8 @@
 | 카카오 OAuth callback | `/oauth/callback/kakao`                    | 카카오 인가 code/state 처리 후 기존/신규 회원 흐름으로 분기합니다.                 |
 | 공지사항 페이지       | `/notices`                                 | 마이페이지에서 진입하며 최신순 무한 스크롤, 상세 복귀 시 스크롤 위치를 복원합니다. |
 | 공지사항 상세 페이지  | `/notices/:noticeId`                       | 존재하지 않거나 삭제된 공지는 404 페이지를 렌더링합니다.                           |
+| 이용약관 페이지       | `/terms`                                   | 마이페이지에서 진입하며 하단 네비게이션(`마이`)을 포함합니다.                      |
+| 이용약관 상세 페이지  | `/terms/:policyId`                         | 정적 약관 콘텐츠의 조항을 Accordion으로 보여줍니다.                                |
 
 ## Auth Only Routes
 
