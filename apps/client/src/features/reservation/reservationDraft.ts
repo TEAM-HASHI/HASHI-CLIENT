@@ -43,22 +43,53 @@ const checkIsReservationGuestCounts = (
 ): value is ReservationGuestCounts => {
   return (
     checkIsRecord(value) &&
-    checkIsNumber(value.adult) &&
-    checkIsNumber(value.teen) &&
-    checkIsNumber(value.child)
+    [value.adult, value.teen, value.child].every(
+      (count) =>
+        checkIsNumber(count) &&
+        Number.isInteger(count) &&
+        count >= 0 &&
+        count <= 100,
+    ) &&
+    Number(value.adult) + Number(value.teen) + Number(value.child) > 0
   )
 }
+
+const checkIsTextWithinLimit = (
+  value: unknown,
+  maxLength: number,
+): value is string =>
+  typeof value === 'string' &&
+  value.trim().length > 0 &&
+  value.trim().length <= maxLength
+
+const checkIsDate = (value: unknown): value is string => {
+  if (
+    typeof value !== 'string' ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
+    Number(value.slice(0, 4)) < 1
+  )
+    return false
+  const date = new Date(`${value}T00:00:00Z`)
+  return (
+    Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
+  )
+}
+
+const checkIsTime = (value: unknown): value is string =>
+  typeof value === 'string' && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value)
 
 const checkHasReservationRequestBaseFields = (
   value: Record<string, unknown>,
 ) => {
   return (
     typeof value.restaurantName === 'string' &&
-    typeof value.guestName === 'string' &&
+    checkIsTextWithinLimit(value.guestName, 50) &&
     checkIsReservationGuestCounts(value.guests) &&
-    typeof value.date === 'string' &&
-    typeof value.time === 'string' &&
-    (value.requestNote === undefined || typeof value.requestNote === 'string')
+    checkIsDate(value.date) &&
+    checkIsTime(value.time) &&
+    (value.requestNote === undefined ||
+      (typeof value.requestNote === 'string' &&
+        value.requestNote.length <= 1_000))
   )
 }
 
@@ -96,6 +127,8 @@ const checkIsAnywhereReservationRequestDraft = (
     value.restaurantId === null &&
     typeof value.restaurantAddress === 'string' &&
     value.restaurantImageUrl === null &&
+    checkIsTextWithinLimit(value.restaurantName, 200) &&
+    checkIsTextWithinLimit(value.restaurantAddress, 200) &&
     checkHasReservationRequestBaseFields(value)
   )
 }

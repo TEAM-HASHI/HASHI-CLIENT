@@ -229,10 +229,10 @@ describe('AnywhereReservationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
     expect(screen.getByRole('alertdialog')).toBeInTheDocument()
     expect(mockNavigate).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: '계속 작성' }))
+    fireEvent.click(screen.getByRole('button', { name: '계속 예약하기' }))
     expect(screen.getByLabelText('식당명')).toHaveValue('키츠라멘')
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
-    fireEvent.click(screen.getByRole('button', { name: '나가기' }))
+    fireEvent.click(screen.getByRole('button', { name: '그만두기' }))
     expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 

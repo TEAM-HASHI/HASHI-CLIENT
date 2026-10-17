@@ -82,7 +82,7 @@ describe('anywhere reservation history', () => {
     expect(screen.getByRole('button', { name: '다음' })).toBeEnabled()
 
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
-    fireEvent.click(screen.getByRole('button', { name: '나가기' }))
+    fireEvent.click(screen.getByRole('button', { name: '그만두기' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/'))
     await act(() => router.navigate(1))
     expect(await screen.findByLabelText('식당명')).toHaveValue('')

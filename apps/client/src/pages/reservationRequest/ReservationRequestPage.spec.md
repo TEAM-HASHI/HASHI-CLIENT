@@ -246,3 +246,10 @@ corepack pnpm --filter @hashi/client typecheck
 corepack pnpm --filter @hashi/client test -- ReservationRequestPage
 corepack pnpm --filter @hashi/client build
 ```
+
+## Review Follow-up Verification
+
+- draft 검증은 예약자명(앞뒤 공백 제거 후 1~50자), 유형별 정수 인원 0~100명·총합 1명 이상, 유효한 `YYYY-MM-DD` 날짜와 `HH:mm` 시간, 요청사항 1,000자 이하를 확인한다. 어디든 예약은 식당명·주소도 각각 앞뒤 공백 제거 후 1~200자로 검증한다. 잘못된 draft는 홈으로 replace 이동한다.
+- 예약 생성 API 실패 또는 응답의 예약 ID 누락 시 `예약 요청 중 문제가 발생했어요. 다시 시도해주세요.` 토스트를 한 번 표시한다. 오류 기록은 유지하며 공통 기본 토스트와 중복하지 않는다.
+- 실패 시 모달·예약 정보·사용 포인트를 보존한다. 재시도는 기존 동기 잠금 정책을 유지한다.
+- `reservationDraft.test.ts`, `useCreateReservationMutation.test.tsx`, `ReservationRequestPage.test.tsx`로 경계값·오류 문구·오류 기록·실패 후 상태를 검증한다.

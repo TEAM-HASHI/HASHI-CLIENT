@@ -122,28 +122,28 @@ describe('ReservationRequestPage', () => {
     expect(screen.getByText('7,000원')).toBeInTheDocument()
   })
 
-  it('shows the zero-guest fallback in the page and confirm dialog', () => {
-    mockLocationState.current = {
-      ...reservationDraft,
-      guests: {
-        adult: 0,
-        teen: 0,
-        child: 0,
-      },
-    }
-
-    renderPage()
-
-    expect(screen.getByText('0명')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
-
-    expect(
-      within(
-        screen.getByRole('alertdialog', { name: '예약을 진행할까요?' }),
-      ).getByText('0명'),
-    ).toBeInTheDocument()
-  })
+  it.each([
+    { guests: { adult: 0, teen: 0, child: 0 } },
+    { guests: { adult: -1, teen: 0, child: 0 } },
+    { guestName: ' ' },
+    { date: '2026-02-31' },
+    { time: '99:99' },
+  ])(
+    'returns home without submitting an invalid draft: %j',
+    async (overrides) => {
+      mockLocationState.current = { ...reservationDraft, ...overrides }
+      renderPage()
+      await waitFor(() =>
+        expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home, {
+          replace: true,
+        }),
+      )
+      expect(
+        screen.queryByRole('button', { name: '예약 요청' }),
+      ).not.toBeInTheDocument()
+      expect(mockedCreateReservation).not.toHaveBeenCalled()
+    },
+  )
 
   it('shows the default image when the restaurant image fails to load', () => {
     renderPage()
@@ -323,9 +323,12 @@ describe('ReservationRequestPage', () => {
     })
   })
 
-  it('keeps the confirm dialog open when reservation creation fails', async () => {
+  it('keeps the confirm dialog, draft and used points when reservation creation fails', async () => {
     mockedCreateReservation.mockRejectedValue(new Error('request failed'))
     renderPage()
+    fireEvent.change(screen.getByLabelText('사용 포인트'), {
+      target: { value: '1000' },
+    })
 
     fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
 
@@ -339,6 +342,8 @@ describe('ReservationRequestPage', () => {
     })
     expect(dialog).toBeInTheDocument()
     expect(mockNavigate).not.toHaveBeenCalled()
+    expect(screen.getByLabelText('사용 포인트')).toHaveValue('1000')
+    expect(mockLocationState.current).toEqual(reservationDraft)
   })
 
   it('prevents duplicate requests from immediate repeated confirmation', async () => {
