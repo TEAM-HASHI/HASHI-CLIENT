@@ -4,16 +4,19 @@ interface MagazineLikeButtonProps {
   count: number
   isLiked: boolean
   onClick: () => void
+  disabled?: boolean
 }
 
 export const MagazineLikeButton = ({
   count,
   isLiked,
   onClick,
+  disabled,
 }: MagazineLikeButtonProps) => {
   return (
     <button
       aria-pressed={isLiked}
+      disabled={disabled}
       className="focus-visible:outline-cool-gray-900 inline-flex items-center gap-0.5 bg-transparent p-0 focus-visible:outline-2 focus-visible:outline-offset-2"
       onClick={onClick}
       type="button"

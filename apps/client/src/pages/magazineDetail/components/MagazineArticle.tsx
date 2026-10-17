@@ -1,9 +1,9 @@
 import { MagazineCoverCarousel } from '@/pages/magazineDetail/components/MagazineCoverCarousel'
 import { MagazineLikeButton } from '@/pages/magazineDetail/components/MagazineLikeButton'
-import type { MagazineDetailPreview } from '@/pages/magazineDetail/types'
+import type { MagazineDetail } from '@/pages/magazineDetail/types'
 
 type MagazineArticleData = Pick<
-  MagazineDetailPreview,
+  MagazineDetail,
   'content' | 'coverImageUrls' | 'hashtag' | 'publishedAt' | 'title'
 >
 
@@ -12,6 +12,7 @@ interface MagazineArticleProps {
   likeCount: number
   magazine: MagazineArticleData
   onLikeToggle: () => void
+  isLikePending: boolean
 }
 
 export const MagazineArticle = ({
@@ -19,6 +20,7 @@ export const MagazineArticle = ({
   likeCount,
   magazine,
   onLikeToggle,
+  isLikePending,
 }: MagazineArticleProps) => {
   return (
     <article>
@@ -32,6 +34,7 @@ export const MagazineArticle = ({
           count={likeCount}
           isLiked={isLiked}
           onClick={onLikeToggle}
+          disabled={isLikePending}
         />
       </div>
 
