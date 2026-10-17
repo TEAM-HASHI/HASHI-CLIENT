@@ -12,12 +12,6 @@ export const MagazineListItem = ({ magazine }: Props) => {
     <li className="border-warm-gray-50 border-b last:border-b-0">
       <Link
         className="grid min-h-[136px] grid-cols-[minmax(0,1fr)_156px] gap-[29px] pt-4 pb-3"
-        state={{
-          magazinePreview: {
-            imageUrl: magazine.imageUrl,
-            title: magazine.title,
-          },
-        }}
         to={getMagazineDetailPath(magazine.id)}
       >
         <div className="flex min-w-0 flex-col">
