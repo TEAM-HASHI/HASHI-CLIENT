@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -18,7 +19,9 @@ import {
   clearAuthSession,
   getAccessToken,
   getAuthSessionStatus,
+  getAuthSessionVersion,
   setAccessToken,
+  startAuthenticatedSession,
 } from '@/shared/auth/authSession'
 import { getApiAccessToken } from '@/shared/api/accessToken'
 import { HttpStatusError } from '@/shared/api/apiError'
@@ -50,6 +53,7 @@ describe('AuthSessionRestoreGate', () => {
 
   afterEach(() => {
     cleanup()
+    vi.unstubAllGlobals()
     mockedRequestTokenReissue.mockReset()
     mockedGetAuthMe.mockReset()
     mockedGetApiAccessToken.mockReset()
@@ -274,6 +278,124 @@ describe('AuthSessionRestoreGate', () => {
     )
     expect(getAccessToken()).toBe('new-login-token')
   })
+
+  it.each([undefined, 'cached-access-token'])(
+    'revalidates cached session %s without reloading or losing the draft',
+    async (token) => {
+      const reload = vi.fn()
+      vi.stubGlobal('location', { pathname: '/', reload })
+      if (token) setAccessToken(token)
+      mockedRequestTokenReissue.mockRejectedValue(new HttpStatusError(401))
+      mockedGetAuthMe.mockRejectedValue(new HttpStatusError(401))
+      const { unmount } = render(
+        <AuthSessionRestoreGate>
+          <input aria-label="draft" defaultValue="" />
+        </AuthSessionRestoreGate>,
+      )
+      const input = await screen.findByRole('textbox', { name: 'draft' })
+      fireEvent.change(input, { target: { value: 'unsaved draft' } })
+      mockedRequestTokenReissue.mockClear()
+      mockedGetAuthMe.mockResolvedValue({ subjectId: 1, role: 'USER' })
+      const previousVersion = getAuthSessionVersion()
+      let resolveReissue!: (value: { accessToken: string }) => void
+      mockedRequestTokenReissue.mockReturnValue(
+        new Promise((resolve) => {
+          resolveReissue = resolve
+        }),
+      )
+
+      fireEvent(
+        window,
+        new PageTransitionEvent('pageshow', { persisted: false }),
+      )
+      expect(reload).not.toHaveBeenCalled()
+      expect(mockedRequestTokenReissue).not.toHaveBeenCalled()
+      fireEvent(
+        window,
+        new PageTransitionEvent('pageshow', { persisted: true }),
+      )
+      fireEvent(
+        window,
+        new PageTransitionEvent('pageshow', { persisted: true }),
+      )
+      expect(mockedRequestTokenReissue).toHaveBeenCalledOnce()
+      await act(async () =>
+        resolveReissue({ accessToken: 'fresh-cookie-token' }),
+      )
+      expect(getAccessToken()).toBe('fresh-cookie-token')
+      expect(getAuthSessionVersion()).toBe(previousVersion + (token ? 0 : 1))
+      expect(screen.getByRole('textbox', { name: 'draft' })).toBe(input)
+      expect(input).toHaveValue('unsaved draft')
+      expect(reload).not.toHaveBeenCalled()
+
+      unmount()
+      fireEvent(
+        window,
+        new PageTransitionEvent('pageshow', { persisted: true }),
+      )
+      expect(mockedRequestTokenReissue).toHaveBeenCalledOnce()
+    },
+  )
+
+  it.each([401, 503])(
+    'handles a %s BFCache recheck without unmounting the draft',
+    async (status) => {
+      setAccessToken('cached-token')
+      mockedRequestTokenReissue.mockRejectedValue(new HttpStatusError(status))
+      mockedGetAuthMe.mockRejectedValue(new HttpStatusError(401))
+      render(
+        <AuthSessionRestoreGate>
+          <input aria-label="draft" defaultValue="unsaved" />
+        </AuthSessionRestoreGate>,
+      )
+      const input = screen.getByRole('textbox', { name: 'draft' })
+      await act(async () => {
+        fireEvent(
+          window,
+          new PageTransitionEvent('pageshow', { persisted: true }),
+        )
+      })
+      expect(getAccessToken()).toBe(status === 401 ? undefined : 'cached-token')
+      expect(screen.getByRole('textbox', { name: 'draft' })).toBe(input)
+      expect(input).toHaveValue('unsaved')
+    },
+  )
+
+  it.each(['login', 'logout', 'refresh'])(
+    'ignores a late BFCache response after %s',
+    async (action) => {
+      setAccessToken('cached-token')
+      let resolveReissue!: (value: { accessToken: string }) => void
+      mockedRequestTokenReissue.mockReturnValue(
+        new Promise((resolve) => {
+          resolveReissue = resolve
+        }),
+      )
+      render(
+        <AuthSessionRestoreGate>
+          <div>앱 화면</div>
+        </AuthSessionRestoreGate>,
+      )
+      fireEvent(
+        window,
+        new PageTransitionEvent('pageshow', { persisted: true }),
+      )
+      expect(resolveReissue).toBeTypeOf('function')
+      act(() => {
+        if (action === 'login') startAuthenticatedSession('new-login')
+        else if (action === 'logout') clearAuthSession()
+        else setAccessToken('new-refresh')
+      })
+      await act(async () => resolveReissue({ accessToken: 'stale-token' }))
+      expect(getAccessToken()).toBe(
+        action === 'logout'
+          ? undefined
+          : action === 'login'
+            ? 'new-login'
+            : 'new-refresh',
+      )
+    },
+  )
 
   it('shares one restore request across StrictMode remounts', async () => {
     mockedRequestTokenReissue.mockResolvedValue({
