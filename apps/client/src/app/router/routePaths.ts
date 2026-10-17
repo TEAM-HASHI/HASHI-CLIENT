@@ -32,5 +32,7 @@ export const getRestaurantReviewNewPath = (
   return `${pathname}?${searchParams.toString()}`
 }
 
+export const getNoticeDetailPath = (noticeId: string) =>
+  generatePath(ROUTES.noticeDetail, { noticeId })
 export const getTermsDetailPath = (policyId: string) =>
   generatePath(ROUTES.termsDetail, { policyId })

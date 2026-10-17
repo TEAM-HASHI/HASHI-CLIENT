@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  getNoticeDetailPath,
   getReservationCompletePath,
   getReservationDetailPath,
   getRestaurantDetailPath,
@@ -30,6 +31,10 @@ describe('routePaths', () => {
     expect(getRestaurantReviewNewPath('tokyo/sushi', 'reservation/1')).toBe(
       '/restaurants/tokyo%2Fsushi/reviews/new?reservationId=reservation%2F1',
     )
+  })
+
+  it('creates a notice detail path from a raw id', () => {
+    expect(getNoticeDetailPath('3')).toBe('/notices/3')
   })
 
   it('creates an encoded reservation detail path from a raw id', () => {
