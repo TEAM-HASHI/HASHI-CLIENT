@@ -51,10 +51,10 @@ const noticeDetailFixture: NoticeDetail = {
   ],
 }
 
-const renderNoticeDetailPage = () =>
+const renderNoticeDetailPage = (state: unknown = null) =>
   render(
     <QueryClientProvider client={createQueryClient()}>
-      <MemoryRouter initialEntries={['/notices/3']}>
+      <MemoryRouter initialEntries={[{ pathname: '/notices/3', state }]}>
         <NoticeDetailPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -66,6 +66,20 @@ describe('NoticeDetailPage', () => {
     mockNavigate.mockClear()
     mockedGetNoticeDetail.mockReset()
     mockParams.noticeId = '3'
+  })
+
+  it('returns direct entry to the notice list instead of browser history', async () => {
+    mockedGetNoticeDetail.mockResolvedValue(noticeDetailFixture)
+    renderNoticeDetailPage()
+    fireEvent.click(await screen.findByRole('button', { name: '뒤로가기' }))
+    expect(mockNavigate).toHaveBeenCalledWith('/notices', { replace: true })
+  })
+
+  it('returns to the previous list when entered from the notice list', async () => {
+    mockedGetNoticeDetail.mockResolvedValue(noticeDetailFixture)
+    renderNoticeDetailPage({ fromNoticeList: true })
+    fireEvent.click(await screen.findByRole('button', { name: '뒤로가기' }))
+    expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 
   it('keeps the image area and shows the common placeholder when an image fails', async () => {

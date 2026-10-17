@@ -82,6 +82,22 @@ describe('NoticesPage', () => {
     sessionStorage.clear()
   })
 
+  it('marks list entry and saves restoration state before opening the detail', async () => {
+    mockedGetNotices.mockResolvedValue({
+      notices: [createNotice(3)],
+      hasNext: false,
+      nextCursor: null,
+    })
+    renderNoticesPage()
+    fireEvent.click(await screen.findByRole('button', { name: /\[공지 3\]/ }))
+    expect(mockNavigate).toHaveBeenCalledWith('/notices/3', {
+      state: { fromNoticeList: true },
+    })
+    expect(
+      JSON.parse(sessionStorage.getItem('hashi:notice-list-state')!),
+    ).toEqual({ scrollY: window.scrollY, pageCount: 1 })
+  })
+
   it('shows the common error screen when the first page fails and retries from the first page', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     mockedGetNotices.mockRejectedValueOnce(badRequest)
