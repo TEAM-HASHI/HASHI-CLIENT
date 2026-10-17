@@ -1,58 +1,19 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
-import type { SyntheticEvent } from 'react'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 
 import { ProfileFields } from '@/features/profile/components/ProfileFields'
 import { ProfileFormBottomBar } from '@/features/profile/components/ProfileFormBottomBar'
 import { ProfileImageSection } from '@/features/profile/components/ProfileImageSection'
-import { useProfileForm } from '@/features/profile/hooks/useProfileForm'
 import { useMyInfoQuery } from '@/features/user'
-import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
+import type { MyInfo } from '@/features/user/api/getMyInfo'
+import { useProfileEditPage } from '@/pages/profileEdit/hooks/useProfileEditPage'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 
 const PROFILE_EDIT_FORM_ID = 'profile-edit-form'
 
-interface ProfileEditFormProps {
-  nickname: string
-  englishName?: string
-  birthDate: string
-  phoneNumber: string
-  email: string
-  profileImageUrl?: string | null
-}
-
-const ProfileEditForm = ({
-  nickname,
-  englishName,
-  birthDate,
-  phoneNumber,
-  email,
-  profileImageUrl,
-}: ProfileEditFormProps) => {
-  const navigate = useNavigate()
-  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
-  const form = useProfileForm({
-    initialValues: {
-      nickname,
-      englishName,
-      birthDate,
-      phoneNumber,
-      email,
-      profileImageUrl: profileImageUrl ?? undefined,
-    },
-    requireChanges: true,
-  })
-
-  const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    if (!form.submit.createProfileDraft()) return
-
-    // TODO: 프로필 수정 API 연동 시 이미지 유지·교체·삭제를 저장하고 내 정보·프로필 요약 캐시를 무효화합니다.
-    setIsComingSoonOpen(true)
-  }
+const ProfileEditForm = (profile: MyInfo) => {
+  const { form, fields, canSubmit, isSubmitting, handleBack, handleSubmit } =
+    useProfileEditPage(profile)
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
@@ -62,7 +23,8 @@ const ProfileEditForm = ({
           leftAction={
             <IconButton
               aria-label="뒤로가기"
-              onClick={() => navigate(-1)}
+              disabled={isSubmitting}
+              onClick={handleBack}
               size="xs"
             >
               <BackIcon className="size-6" />
@@ -78,23 +40,25 @@ const ProfileEditForm = ({
         onSubmit={handleSubmit}
       >
         <ProfileImageSection
+          disabled={isSubmitting}
           errorMessage={form.profileImage.errorMessage}
           onImageChange={form.profileImage.onChange}
           onImageDelete={form.profileImage.onDelete}
           previewUrl={form.profileImage.previewUrl}
         />
-        <ProfileFields fields={form.fields} />
+        <ProfileFields disabled={isSubmitting} fields={fields} />
+        {form.formError ? (
+          <p className="typo-body-7 text-error mt-4" role="alert">
+            {form.formError}
+          </p>
+        ) : null}
       </form>
 
       <ProfileFormBottomBar
-        disabled={!form.submit.canSubmit}
+        disabled={!canSubmit}
         formId={PROFILE_EDIT_FORM_ID}
         label="저장"
-      />
-
-      <ComingSoonDialog
-        onOpenChange={setIsComingSoonOpen}
-        open={isComingSoonOpen}
+        loading={isSubmitting}
       />
     </div>
   )
@@ -103,8 +67,10 @@ const ProfileEditForm = ({
 export const ProfileEditPage = () => {
   const myInfoQuery = useMyInfoQuery()
 
-  if (myInfoQuery.error) throw myInfoQuery.error
-  if (myInfoQuery.isPending) return <LoadingScreen />
+  if (!myInfoQuery.data) {
+    if (myInfoQuery.error) throw myInfoQuery.error
+    return <LoadingScreen />
+  }
 
   return (
     <ProfileEditForm
