@@ -13,9 +13,9 @@ export const ReservationExitDialog = ({
   onExit,
 }: ReservationExitDialogProps) => (
   <Dialog.Root open={open} onOpenChange={onOpenChange} type="alertdialog">
-    <Dialog.Content className="rounded-[20px]">
+    <Dialog.Content className="rounded-[20px] py-6">
       <Dialog.Header className="gap-2">
-        <Dialog.Icon>
+        <Dialog.Icon className="mb-1">
           <OrderCancelIcon className="size-6" />
         </Dialog.Icon>
         <Dialog.Title className="leading-[30px]">
