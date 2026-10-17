@@ -27,7 +27,7 @@
 
 - type: `(date: Date) => boolean`
 - required: `true`
-- description: 오늘 이후 날짜 중 page 정책상 예약 가능한 날짜인지 판단합니다. 식당 예약은 영업시간·휴무를, 어디든 예약은 항상 예약 가능을 전달합니다.
+- description: 내일~오늘의 3개월 후 날짜 중 page 정책상 예약 가능한 날짜인지 판단합니다. 식당 예약은 영업시간·휴무를, 어디든 예약은 항상 예약 가능을 전달합니다.
 
 ### `getTimeSlots`
 
@@ -67,6 +67,14 @@ const { fields, guestCounters, validity, values, calendar, timeSelector } =
 
 페이지별 추가 validation은 이 hook이 소유하지 않습니다.
 
+## Draft Restoration and Limits
+
+- `initialDraft`가 있으면 예약자명·인원·요청사항·날짜·시간을 초기화한다.
+- `hasChanges`는 나가기 확인에 사용하는 입력 유무이다.
+- 예약자명은 trim 기준 1~50자, 각 유형 인원은 0~100명, 총 인원은 1명 이상이다.
+- 날짜 상한은 오늘의 3개월 후이며 해당 날짜가 없는 달은 월말로 보정한다.
+- 선택 시간이 현재 날짜의 슬롯에 포함되어야 유효하다.
+
 ## Side Effects
 
 - API 호출, cache update, storage, navigation, toast는 수행하지 않습니다.
@@ -83,7 +91,7 @@ const { fields, guestCounters, validity, values, calendar, timeSelector } =
 
 - [x] 시간 선택 전 유효 날짜 필요 여부
 - [x] 날짜 변경 시 선택 시간 초기화
-- [x] 인원 수 0명 하한
+- [x] 각 유형 인원 수 0~100명 제한
 - [x] 공통 text field 및 기본 validity
 - [x] `pnpm --filter @hashi/client test`
 - [ ] `pnpm --filter @hashi/client typecheck`

@@ -51,11 +51,13 @@ export const useAdminImageUpload = ({
   onUploaded,
 }: UseAdminImageUploadOptions) => {
   const [items, setItems] = useState<AdminImageUploadItem[]>([])
+  const activeUploadsRef = useRef(new Set<string>())
   const itemsRef = useRef(items)
   itemsRef.current = items
 
   useEffect(
     () => () => {
+      activeUploadsRef.current.clear()
       itemsRef.current.forEach(({ previewUrl }) => revokePreviewUrl(previewUrl))
     },
     [],
@@ -63,12 +65,15 @@ export const useAdminImageUpload = ({
 
   const uploadItem = useCallback(
     async (item: AdminImageUploadItem) => {
+      if (!activeUploadsRef.current.has(item.id)) return
       try {
         const uploaded = await uploadApi.uploadImage(item.file, usage)
+        if (!activeUploadsRef.current.delete(item.id)) return
         revokePreviewUrl(item.previewUrl)
         setItems((current) => current.filter(({ id }) => id !== item.id))
         onUploaded(uploaded)
       } catch (error) {
+        if (!activeUploadsRef.current.delete(item.id)) return
         setItems((current) =>
           current.map((currentItem) =>
             currentItem.id === item.id
@@ -104,6 +109,7 @@ export const useAdminImageUpload = ({
       setItems((current) => [...current, ...nextItems])
 
       const validItems = nextItems.filter(({ error }) => !error)
+      validItems.forEach(({ id }) => activeUploadsRef.current.add(id))
       for (let index = 0; index < validItems.length; index += 3) {
         await Promise.all(validItems.slice(index, index + 3).map(uploadItem))
       }
@@ -121,12 +127,14 @@ export const useAdminImageUpload = ({
           candidate.id === id ? pendingItem : candidate,
         ),
       )
+      activeUploadsRef.current.add(id)
       await uploadItem(pendingItem)
     },
     [uploadItem],
   )
 
   const remove = useCallback((id: string) => {
+    activeUploadsRef.current.delete(id)
     setItems((current) => {
       const removed = current.find((item) => item.id === id)
       if (removed) revokePreviewUrl(removed.previewUrl)
