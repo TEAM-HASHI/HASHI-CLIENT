@@ -16,6 +16,7 @@ export interface AdminImageUploadStatus {
 
 export interface AdminImageUploadItem {
   id: string
+  order: number
   file: File
   previewUrl: string
   status: 'pending' | 'failed'
@@ -24,7 +25,7 @@ export interface AdminImageUploadItem {
 
 interface UseAdminImageUploadOptions {
   usage: UploadUsage
-  onUploaded: (image: UploadedImage) => void
+  onUploaded: (image: UploadedImage, order: number) => void
 }
 
 const createPreviewUrl = (file: File) =>
@@ -71,7 +72,7 @@ export const useAdminImageUpload = ({
         if (!activeUploadsRef.current.delete(item.id)) return
         revokePreviewUrl(item.previewUrl)
         setItems((current) => current.filter(({ id }) => id !== item.id))
-        onUploaded(uploaded)
+        onUploaded(uploaded, item.order)
       } catch (error) {
         if (!activeUploadsRef.current.delete(item.id)) return
         setItems((current) =>
@@ -100,6 +101,7 @@ export const useAdminImageUpload = ({
         uploadItemSequence += 1
         return {
           id: `admin-upload-${uploadItemSequence}`,
+          order: uploadItemSequence,
           file,
           previewUrl: createPreviewUrl(file),
           status: error ? ('failed' as const) : ('pending' as const),

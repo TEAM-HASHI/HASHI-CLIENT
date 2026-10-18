@@ -50,7 +50,9 @@ describe('useAdminImageUpload', () => {
       ])
     })
 
-    await waitFor(() => expect(onUploaded).toHaveBeenCalledWith(uploaded))
+    await waitFor(() =>
+      expect(onUploaded).toHaveBeenCalledWith(uploaded, expect.any(Number)),
+    )
     expect(result.current.status).toEqual({ pendingCount: 0, failedCount: 0 })
   })
   it.each(['remove', 'unmount'] as const)(
@@ -112,7 +114,10 @@ describe('useAdminImageUpload', () => {
     await act(async () => {
       await result.current.retry(result.current.items[0].id)
     })
-    expect(onUploaded).toHaveBeenCalledExactlyOnceWith(uploaded)
+    expect(onUploaded).toHaveBeenCalledExactlyOnceWith(
+      uploaded,
+      expect.any(Number),
+    )
     expect(result.current.items).toHaveLength(0)
   })
 
@@ -156,6 +161,7 @@ describe('useAdminImageUpload', () => {
     expect(onUploaded).toHaveBeenCalledTimes(2)
     expect(onUploaded).not.toHaveBeenCalledWith(
       expect.objectContaining({ fileKey: '0.png' }),
+      expect.any(Number),
     )
     expect(result.current.items).toHaveLength(0)
   })
