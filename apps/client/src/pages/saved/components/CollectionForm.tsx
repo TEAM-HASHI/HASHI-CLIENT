@@ -67,20 +67,18 @@ export const CollectionForm = ({
     description: false,
   })
   const [discarding, setDiscarding] = useState(false)
-  const value = normalizeCollectionDraft(draft, Boolean(collection))
+  const value = normalizeCollectionDraft(draft)
+  const normalizedInitial = normalizeCollectionDraft(initial)
   const changed = (['name', 'description', 'color', 'isPublic'] as const).some(
-    (key) => draft[key] !== initial[key],
+    (key) => value[key] !== normalizedInitial[key],
   )
-  const savedChanged = (
-    ['name', 'description', 'color', 'isPublic'] as const
-  ).some((key) => value[key] !== initial[key])
   const error = validateCollection(draft, collections, collection?.id)
   const hasDuplicateName = isDuplicateCollectionName(
     draft,
     collections,
     collection?.id,
   )
-  const canSubmit = !isComposing && !error && (!collection || savedChanged)
+  const canSubmit = !isComposing && !error && (!collection || changed)
   const needsConfirmation = Boolean(collection && changed)
   useEffect(() => {
     if (blocker.state === 'blocked' && !needsConfirmation) {

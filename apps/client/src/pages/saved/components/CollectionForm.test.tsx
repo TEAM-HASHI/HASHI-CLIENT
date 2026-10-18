@@ -102,7 +102,7 @@ describe('CollectionForm', () => {
     await user.click(screen.getByRole('button', { name: '만들기' }))
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
-        name: '  새 여행  ',
+        name: '새 여행',
         color: 'red',
         isPublic: true,
       }),
@@ -188,6 +188,39 @@ describe('CollectionForm', () => {
     expect(
       screen.getByRole('button', { name: '만들기' }).parentElement,
     ).toHaveClass('pb-[max(48px,var(--safe-area-bottom,0px))]')
+  })
+  it('앞뒤 공백만 바꾸면 저장을 비활성화하고 실제 변경 후 되돌리기도 판정한다', () => {
+    const collection = {
+      ...collectionMocks.collections[0],
+      name: ' 여행 ',
+      description: ' 설명 ',
+    }
+    renderForm(
+      <CollectionForm
+        collections={[collection]}
+        collection={collection}
+        onSubmit={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    )
+    const save = screen.getByRole('button', { name: '저장하기' })
+    expect(save).toBeDisabled()
+    fireEvent.change(screen.getByLabelText('컬렉션명'), {
+      target: { value: '여행' },
+    })
+    expect(save).toBeDisabled()
+    fireEvent.change(screen.getByLabelText('설명'), {
+      target: { value: '  설명  ' },
+    })
+    expect(save).toBeDisabled()
+    fireEvent.change(screen.getByLabelText('컬렉션명'), {
+      target: { value: '여  행' },
+    })
+    expect(save).toBeEnabled()
+    fireEvent.change(screen.getByLabelText('컬렉션명'), {
+      target: { value: ' 여행 ' },
+    })
+    expect(save).toBeDisabled()
   })
   it('수정은 변경이 있어야 저장되고 취소 시 입력을 유지할 수 있다', async () => {
     const user = userEvent.setup()

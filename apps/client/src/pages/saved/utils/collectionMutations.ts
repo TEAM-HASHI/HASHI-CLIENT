@@ -14,14 +14,26 @@ export type CollectionDraft = {
   isPublic: boolean
 }
 
+// 서버 RestaurantCollectionService.isBlankChar와 같은 경계 공백 집합.
+// JS trim()과 달리 U+0085/U+001C~001F는 제거하고 BOM(U+FEFF)은 유지한다.
+const isCollectionBoundaryWhitespace = (character: string) =>
+  /\p{White_Space}/u.test(character) ||
+  (character >= '\u001c' && character <= '\u001f')
+
+const stripCollectionBoundaryWhitespace = (value: string) => {
+  let start = 0
+  let end = value.length
+  while (start < end && isCollectionBoundaryWhitespace(value[start])) start++
+  while (end > start && isCollectionBoundaryWhitespace(value[end - 1])) end--
+  return value.slice(start, end)
+}
+
 export const normalizeCollectionDraft = (
   draft: CollectionDraft,
-  editing = false,
-) => ({
-  color: draft.color,
-  isPublic: draft.isPublic,
-  name: editing ? draft.name.trim() : draft.name,
-  description: editing ? draft.description.trim() : draft.description,
+): CollectionDraft => ({
+  ...draft,
+  name: stripCollectionBoundaryWhitespace(draft.name),
+  description: stripCollectionBoundaryWhitespace(draft.description),
 })
 
 export const isDuplicateCollectionName = (
@@ -29,11 +41,11 @@ export const isDuplicateCollectionName = (
   collections: readonly SavedCollection[],
   editingId?: string,
 ) => {
-  const value = normalizeCollectionDraft(draft, Boolean(editingId))
+  const name = stripCollectionBoundaryWhitespace(draft.name)
   return collections.some(
     (item) =>
       item.id !== editingId &&
-      (editingId ? item.name.trim() : item.name) === value.name,
+      stripCollectionBoundaryWhitespace(item.name) === name,
   )
 }
 
@@ -42,12 +54,11 @@ export const validateCollection = (
   collections: readonly SavedCollection[],
   editingId?: string,
 ) => {
-  const value = normalizeCollectionDraft(draft, Boolean(editingId))
-  if (!value.name.trim()) return 'name'
+  if (!stripCollectionBoundaryWhitespace(draft.name)) return 'name'
   if (draft.name.length > COLLECTION_NAME_LIMIT) return 'nameLength'
   if (draft.description.length > COLLECTION_DESCRIPTION_LIMIT)
     return 'descriptionLength'
-  if (!value.color) return 'color'
+  if (!draft.color) return 'color'
   if (isDuplicateCollectionName(draft, collections, editingId))
     return 'duplicate'
   return null
@@ -64,7 +75,7 @@ export const createCollection = (
     ...data,
     collections: [
       {
-        ...draft,
+        ...normalizeCollectionDraft(draft),
         color: draft.color,
         id,
         createdAt,
@@ -83,7 +94,7 @@ export const updateCollection = (
 ): CollectionData => {
   if (validateCollection(draft, data.collections, id) || !draft.color)
     return data
-  const value = { ...normalizeCollectionDraft(draft, true), color: draft.color }
+  const value = { ...normalizeCollectionDraft(draft), color: draft.color }
   return {
     ...data,
     collections: data.collections.map((item) =>
