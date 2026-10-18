@@ -16,19 +16,21 @@ export const RestaurantResultItem = ({
     <li>
       <Link className="flex gap-3" to={getRestaurantDetailPath(restaurant.id)}>
         <Thumbnail alt="" size="md" src={restaurant.imageUrl} />
-        <div className="min-w-0 flex-1 self-center">
-          <h3 className="typo-sub-header-2 text-cool-gray-900 line-clamp-2">
-            {restaurant.name}
+        <div className="min-w-0 flex-1">
+          <h3 className="typo-sub-header-2 text-cool-gray-900 flex h-[38px] items-center">
+            <span className="line-clamp-2">{restaurant.name}</span>
           </h3>
           <div className="mt-2 flex items-center gap-1">
-            <StarFillIcon
-              aria-hidden="true"
-              className="text-primary-400 size-4 shrink-0"
-            />
-            <span className="typo-body-4 text-black">
-              {restaurant.rating.toFixed(1)}
+            <span className="flex shrink-0 items-center gap-0.5">
+              <StarFillIcon
+                aria-hidden="true"
+                className="text-primary-400 size-4.5 shrink-0"
+              />
+              <span className="typo-body-4 text-black">
+                {restaurant.rating.toFixed(1)}
+              </span>
             </span>
-            <span className="typo-body-6 text-point-300">
+            <span className="typo-body-6 text-point-300 min-w-0 truncate">
               # {restaurant.tag}
             </span>
           </div>
