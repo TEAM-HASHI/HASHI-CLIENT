@@ -31,10 +31,7 @@ export const useProfileEditPage = (profile: MyInfo) => {
 
   return {
     form,
-    fields: {
-      ...availability.bindFields(form.fields),
-      englishName: { ...form.fields.englishName, disabled: true },
-    },
+    fields: availability.bindFields(form.fields),
     canSubmit,
     isSubmitting: mutation.isPending,
     handleBack: mutation.handleBack,

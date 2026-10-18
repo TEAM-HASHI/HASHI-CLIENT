@@ -101,10 +101,10 @@ export const useProfileEditMutation = (
           await updateProfile(body, signal)
           didWrite = true
           checkSession()
-          // 사진 삭제가 실패해도 재시도는 실제 저장된 정보와 비교합니다.
           savedProfile.current = {
             ...saved,
             nickname: draft.nickname,
+            englishName: draft.englishName,
             email: draft.email,
             phoneNumber: draft.phoneNumber,
             birthDate: draft.birthDate,

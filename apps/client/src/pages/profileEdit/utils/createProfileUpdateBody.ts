@@ -9,6 +9,9 @@ export const createProfileUpdateBody = (
 ): UpdateProfileBody => {
   const body: UpdateProfileBody = {}
   if (draft.nickname !== saved.nickname.trim()) body.nickname = draft.nickname
+  const englishName = draft.englishName ?? ''
+  if (englishName !== (saved.englishName ?? '').trim())
+    body.nameEng = englishName
   if (draft.email !== saved.email.trim()) body.email = draft.email
   if (draft.phoneNumber !== normalizeDigits(saved.phoneNumber))
     body.phone = draft.phoneNumber

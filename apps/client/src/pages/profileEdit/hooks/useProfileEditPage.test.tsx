@@ -79,7 +79,7 @@ it('deduplicates submission and saves a reverted field after a partial save fail
   })
   const { result, client, getPath } = setup()
   act(() => {
-    result.current.form.fields.birthDate.onValueChange('19990101')
+    result.current.form.fields.englishName.onValueChange('NEW NAME')
     result.current.form.profileImage.onDelete()
   })
   act(() => {
@@ -90,7 +90,7 @@ it('deduplicates submission and saves a reverted field after a partial save fail
   expect(result.current.isSubmitting).toBe(true)
   await act(async () => resolvePatch())
   await waitFor(() => expect(result.current.isSubmitting).toBe(false))
-  expect(result.current.form.fields.birthDate.value).toBe('1999/01/01')
+  expect(result.current.form.fields.englishName.value).toBe('NEW NAME')
   expect(result.current.form.profileImage.previewUrl).toBeUndefined()
   expect(result.current.form.formError).not.toBe('')
   expect(getPath()).toBe('/profile/edit')
@@ -98,7 +98,7 @@ it('deduplicates submission and saves a reverted field after a partial save fail
   expect(
     client.getQueryState(MY_PROFILE_SUMMARY_QUERY_KEY)?.isInvalidated,
   ).toBe(true)
-  act(() => result.current.form.fields.birthDate.onValueChange('19980512'))
+  act(() => result.current.form.fields.englishName.onValueChange('HASHI'))
   vi.mocked(request).mockResolvedValue(null)
   act(() => result.current.handleSubmit(submitEvent))
   await waitFor(() => expect(getPath()).toBe('/mypage'))
@@ -110,7 +110,26 @@ it('deduplicates submission and saves a reverted field after a partial save fail
     .mocked(request)
     .mock.calls.filter(([, options]) => options?.method === 'patch')
     .at(-1)
-  expect(patch?.[1]?.json).toEqual({ birthDate: '1998-05-12' })
+  expect(patch?.[1]?.json).toEqual({ nameEng: 'HASHI' })
+})
+
+it('retains a cleared English name after a failed save and retries with an empty string', async () => {
+  vi.mocked(request).mockRejectedValueOnce(new Error('save failed'))
+  const { result, getPath } = setup()
+  act(() => result.current.fields.englishName.onValueChange('   '))
+  act(() => result.current.handleSubmit(submitEvent))
+  await waitFor(() => expect(result.current.isSubmitting).toBe(false))
+  expect(result.current.fields.englishName.value).toBe('   ')
+  expect(result.current.form.formError).not.toBe('')
+  expect(getPath()).toBe('/profile/edit')
+  vi.mocked(request).mockResolvedValue(null)
+  act(() => result.current.handleSubmit(submitEvent))
+  await waitFor(() => expect(getPath()).toBe('/mypage'))
+  expect(request).toHaveBeenCalledTimes(2)
+  expect(request).toHaveBeenLastCalledWith(
+    'api/v1/users/me',
+    expect.objectContaining({ json: { nameEng: '' } }),
+  )
 })
 
 it('maps a save-time duplicate to the field using the server message and retains the input', async () => {
