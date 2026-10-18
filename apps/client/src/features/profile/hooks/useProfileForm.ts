@@ -50,7 +50,6 @@ export const useProfileForm = ({
   initialValues = {},
   requireChanges = false,
 }: UseProfileFormOptions = {}) => {
-  // 재조회된 응답은 작성 중인 입력과 변경 비교 기준을 덮어쓰지 않습니다.
   const [initialProfile] = useState(() => ({ ...initialValues }))
   const [profileImageChange, setProfileImageChange] =
     useState<ProfileImageChange>({ type: 'keep' })
