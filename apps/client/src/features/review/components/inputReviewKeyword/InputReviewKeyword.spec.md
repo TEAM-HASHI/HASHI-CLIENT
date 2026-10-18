@@ -50,6 +50,7 @@
 - [x] 안내 문구 `( 키워드를 1개~3개 선택해주세요.)`를 표시합니다.
 - [x] 키워드 선택 영역은 `role="group"`과 `aria-label="리뷰 키워드 선택"`을 가집니다.
 - [x] Figma 기준 10개의 리뷰 키워드를 렌더링합니다.
+- [x] 기존 `전통적이에요` 선택지 대신 `혼밥하기 좋아요`와 HDS `SoloIcon`을 표시합니다. 현재 API code `GOOD_FOR_SOLO_DINING`과 label `혼밥하기 좋아요` 모두 동일 키워드로 복원합니다.
 - [x] `keywordOptions`가 전달되면 해당 선택지만 렌더링합니다.
 - [x] 각 키워드는 HDS `Badge`와 HDS icon을 사용해 `button`으로 렌더링합니다.
 - [x] 선택된 키워드는 `aria-pressed="true"` 상태를 가집니다.

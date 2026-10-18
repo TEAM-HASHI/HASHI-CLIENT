@@ -159,6 +159,55 @@ describe('ReviewEditPage', () => {
     expect(screen.getByRole('button', { name: '저장하기' })).toBeEnabled()
   })
 
+  it.each(['혼밥하기 좋아요', 'GOOD_FOR_SOLO_DINING'])(
+    'restores the saved solo dining selection from %s with an icon',
+    async (keyword) => {
+      vi.mocked(getMyReviewDetail).mockResolvedValue({
+        ...reviewDetailResponse,
+        keywords: [keyword],
+      })
+      renderPage()
+      await screen.findByDisplayValue(/정말 맛있습니다/)
+      const soloKeyword = screen.getByRole('button', {
+        name: '혼밥하기 좋아요',
+      })
+
+      expect(soloKeyword).toHaveAttribute('aria-pressed', 'true')
+      expect(soloKeyword.querySelector('svg')).not.toBeNull()
+      expect(
+        screen.queryByRole('button', { name: '전통적이에요' }),
+      ).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '저장하기' })).toBeEnabled()
+      fireEvent.click(soloKeyword)
+      expect(soloKeyword).toHaveAttribute('aria-pressed', 'false')
+      expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
+    },
+  )
+
+  it('blocks review text beyond 1,000 characters without disabling a valid edit', async () => {
+    renderPage()
+    await screen.findByDisplayValue(/정말 맛있습니다/)
+    const textarea = screen.getByLabelText('리뷰 내용')
+    const saveButton = screen.getByRole('button', { name: '저장하기' })
+
+    fireEvent.change(textarea, { target: { value: '가'.repeat(1000) } })
+    expect(textarea).toHaveValue('가'.repeat(1000))
+    expect(saveButton).toBeEnabled()
+
+    fireEvent.change(textarea, { target: { value: '가'.repeat(1000) + '나' } })
+    expect(textarea).toHaveValue('가'.repeat(1000))
+    expect(textarea).toHaveAttribute('maxlength', '1000')
+    expect(screen.getByText('1000')).toBeInTheDocument()
+    expect(
+      screen.queryByText('글자 수 제한을 초과했어요.'),
+    ).not.toBeInTheDocument()
+    expect(saveButton).toBeEnabled()
+
+    fireEvent.change(textarea, { target: { value: '가'.repeat(999) } })
+    expect(textarea).toHaveValue('가'.repeat(999))
+    expect(saveButton).toBeEnabled()
+  })
+
   it('keeps the fourth keyword unavailable when three saved keywords are selected', async () => {
     renderPage()
 

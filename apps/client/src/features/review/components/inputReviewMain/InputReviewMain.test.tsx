@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -120,6 +121,36 @@ describe('InputReviewMain', () => {
 
     expect(handleValueChange).toHaveBeenCalledTimes(1)
     expect(handleValueChange).toHaveBeenCalledWith('abc')
+  })
+
+  it('blocks typing and paste beyond 1,000 characters but allows input again after deletion', async () => {
+    const user = userEvent.setup()
+    const ReviewInput = () => {
+      const [value, setValue] = useState('가'.repeat(999))
+
+      return <InputReviewMain value={value} onValueChange={setValue} />
+    }
+    render(<ReviewInput />)
+    const textarea = screen.getByRole('textbox', {
+      name: '리뷰 내용',
+    })
+
+    await user.click(textarea)
+    await user.keyboard('{End}나다')
+    expect(textarea).toHaveValue(`${'가'.repeat(999)}나`)
+    expect(screen.getByText('1000')).toBeInTheDocument()
+
+    await user.paste('추가 입력')
+    expect(textarea).toHaveValue(`${'가'.repeat(999)}나`)
+
+    await user.keyboard('{Backspace}')
+    expect(textarea).toHaveValue('가'.repeat(999))
+    await user.paste('나다라')
+    expect(textarea).toHaveValue(`${'가'.repeat(999)}나`)
+
+    expect(
+      screen.queryByText('글자 수 제한을 초과했어요.'),
+    ).not.toBeInTheDocument()
   })
 
   it('passes selected photo files to onPhotoFilesChange', () => {

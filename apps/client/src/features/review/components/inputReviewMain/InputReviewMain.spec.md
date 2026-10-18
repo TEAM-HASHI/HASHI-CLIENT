@@ -63,7 +63,7 @@
 - [x] 이미지 삭제 버튼을 누르면 기존 사진 오류 메시지를 초기화합니다.
 - [x] 리뷰 본문 textarea는 HDS `Textarea`를 사용하며, 공통 Input 리디자인 이후에도 `min-h-57.5`로 기존 최소 높이 `230px`를 유지합니다.
 - [x] textarea placeholder는 `리뷰를 작성해 주세요.`입니다.
-- [x] textarea는 기본 `maxLengthBehavior="prevent"`로 최대 글자 수까지만 입력받습니다.
+- [x] textarea는 `maxLengthBehavior="prevent"`로 최대 1000자까지만 입력받습니다. 직접 입력과 붙여넣기 모두 제한하며, 제한에 도달해도 삭제와 선택 영역 교체는 가능합니다.
 - [x] textarea 본문은 Figma `Long Body 1` 기준인 `typo-long-body-1`을 사용합니다.
 - [x] 입력하지 않은 빈 상태의 helper text는 `10자 이상`입니다.
 - [x] textarea가 blur되었거나 본문이 입력된 뒤 10자 미만이면 helper text를 `10자 이상 작성해주세요.`로 표시합니다.
