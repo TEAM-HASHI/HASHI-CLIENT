@@ -182,7 +182,10 @@ describe('SearchPage', () => {
           ].some((value) => value.toLowerCase().includes(normalizedKeyword))
 
           return (
-            matchesKeyword && (genre === 'all' || restaurant.category === genre)
+            matchesKeyword &&
+            (genre === 'all' ||
+              restaurant.category === genre ||
+              (genre === 'sushi' && restaurant.category === 'sushiSashimi'))
           )
         })
         .sort((firstRestaurant, secondRestaurant) => {
@@ -202,6 +205,45 @@ describe('SearchPage', () => {
         restaurants: restaurants.map(convertSearchRestaurantFixtureToSummary),
       })
     })
+  })
+
+  it('does not submit or store invalid hashtag searches, including direct URL entry', async () => {
+    const user = userEvent.setup()
+    renderSearchPageWithRoutes(`${ROUTES.search}?keyword=%23`)
+    const input = screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' })
+    expect(mockGetRestaurants).not.toHaveBeenCalled()
+    await user.clear(input)
+    await user.type(input, '#도쿄 라멘{Enter}')
+    expect(mockGetRestaurants).not.toHaveBeenCalled()
+    expect(
+      window.localStorage.getItem('hashi:search:recent-keywords'),
+    ).toBeNull()
+    expect(input).toHaveValue('#도쿄 라멘')
+  })
+
+  it('keeps existing results during edits and resets filters only when a new search is submitted', async () => {
+    const user = userEvent.setup()
+    renderSearchPageWithRoutes(
+      `${ROUTES.search}?keyword=스시&sort=rating&category=sushiSashimi`,
+    )
+    await screen.findByText('스시 하루')
+    const input = screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' })
+    await user.clear(input)
+    await user.type(input, '야끼')
+    expect(screen.getByText('스시 하루')).toBeInTheDocument()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(1)
+    await user.clear(input)
+    await user.type(input, '아끼소바{Enter}')
+    await waitFor(() =>
+      expect(mockGetRestaurants).toHaveBeenLastCalledWith({
+        keyword: '아끼소바',
+        genre: 'all',
+        size: 10,
+      }),
+    )
+    expect(screen.getByTestId('location-state')).toHaveTextContent(
+      '?keyword=%EC%95%84%EB%81%BC%EC%86%8C%EB%B0%94',
+    )
   })
 
   it('clears the draft and applied conditions without searching, then uses default filters for the next search', async () => {

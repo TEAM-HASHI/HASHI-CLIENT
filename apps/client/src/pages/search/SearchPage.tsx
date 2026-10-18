@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { NoteIcon } from '@hashi/hds-icons'
+import { showToast } from '@hashi/hds-ui'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -8,6 +10,7 @@ import { SearchFilterBar } from '@/pages/search/components/SearchFilterBar'
 import { SearchHeader } from '@/pages/search/components/SearchHeader'
 import { SearchIdlePanel } from '@/pages/search/components/SearchIdlePanel'
 import { SearchResultSkeleton } from '@/pages/search/components/SearchResultSkeleton'
+import { getSearchKeywordError } from '@/pages/search/utils/searchKeyword'
 import {
   DEFAULT_FOOD_CATEGORY_VALUE,
   DEFAULT_SORT_VALUE,
@@ -45,8 +48,11 @@ export const SearchPage = () => {
     appliedKeyword,
     value: appliedKeyword,
   })
-  const { recentSearchKeywords, saveRecentSearchKeyword } =
-    useRecentSearchKeywords()
+  const {
+    recentSearchKeywords,
+    saveRecentSearchKeyword,
+    clearRecentSearchKeywords,
+  } = useRecentSearchKeywords()
   const searchKeywordRecommendationsQuery =
     useSearchKeywordRecommendationsQuery({ enabled: searchParams === null })
   const {
@@ -97,16 +103,20 @@ export const SearchPage = () => {
 
   const submitSearch = (nextKeyword = keyword) => {
     const normalizedKeyword = nextKeyword.trim()
-
-    if (!normalizedKeyword) {
-      setKeyword('')
-      updateSearchUrlState({ keyword: '' })
+    const error = getSearchKeywordError(normalizedKeyword)
+    if (error) {
+      showToast({ children: error, icon: <NoteIcon className="size-6.5" /> })
       return
     }
 
     setKeyword(normalizedKeyword)
-    updateSearchUrlState({ keyword: normalizedKeyword })
+    updateSearchUrlState({
+      keyword: normalizedKeyword,
+      sort: DEFAULT_SORT_VALUE,
+      category: DEFAULT_FOOD_CATEGORY_VALUE,
+    })
     saveRecentSearchKeyword(normalizedKeyword)
+    searchInputRef.current?.blur()
   }
 
   const handleBackClick = () => {
@@ -156,7 +166,7 @@ export const SearchPage = () => {
       <div
         className={cn(
           'flex flex-1 flex-col',
-          isSearchIdle ? 'pt-[83px]' : 'pt-[122px]',
+          isSearchIdle ? 'pt-[79px]' : 'pt-[127px]',
         )}
       >
         {isSearchIdle ? (
@@ -164,6 +174,7 @@ export const SearchPage = () => {
             recentSearchKeywords={recentSearchKeywords}
             recommendedSearchKeywords={recommendedSearchKeywords}
             onKeywordSelect={submitSearch}
+            onRecentKeywordsClear={clearRecentSearchKeywords}
           />
         ) : (
           <>
@@ -181,15 +192,23 @@ export const SearchPage = () => {
               </>
             ) : (
               <ListEmptyState
-                className="min-h-0 flex-1 pb-[122px]"
+                className="min-h-0 flex-1 pb-[127px]"
                 description="검색된 식당이 없습니다."
               />
             )}
           </>
         )}
       </div>
-      <FilterBottomSheet {...sortSheet} title="정렬 순서" />
-      <FilterBottomSheet {...foodCategorySheet} title="음식 장르 선택" />
+      <FilterBottomSheet
+        {...sortSheet}
+        layout="restaurant-list"
+        title="정렬순"
+      />
+      <FilterBottomSheet
+        {...foodCategorySheet}
+        layout="restaurant-list"
+        title="음식 장르"
+      />
     </div>
   )
 }
