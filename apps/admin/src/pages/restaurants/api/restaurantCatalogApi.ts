@@ -4,7 +4,7 @@ import { request } from '@/shared/api/request'
 
 export type RestaurantCatalogParams = NonNullable<
   paths['/api/v1/restaurants']['get']['parameters']['query']
->
+> & { foodCategory?: string }
 export type RestaurantCatalogData =
   components['schemas']['RestaurantListResponse']
 export type RestaurantCatalogItem =
