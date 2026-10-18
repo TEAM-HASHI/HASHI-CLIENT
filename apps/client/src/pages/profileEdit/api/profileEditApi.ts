@@ -1,12 +1,7 @@
 import { request } from '@/shared/api/request'
+import type { components } from '@/shared/api/generated/openapi'
 
-export interface UpdateProfileBody {
-  nickname?: string
-  birthDate?: string
-  phone?: string
-  email?: string
-  profileImageAssetId?: string
-}
+export type UpdateProfileBody = components['schemas']['UpdateMyInfoRequest']
 
 export const updateProfile = async (
   body: UpdateProfileBody,
