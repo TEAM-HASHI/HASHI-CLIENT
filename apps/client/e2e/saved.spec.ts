@@ -102,7 +102,7 @@ test('패널 드래그·접힘 유지·정렬·분류·종료', async ({ page },
   await page.getByRole('button', { name: '컬렉션 지도 보기 종료' }).click()
   await expect(handle).toHaveCount(0)
   await expect(
-    page.getByRole('button', { name: '지도', exact: true }),
+    page.getByRole('button', { name: '저장', exact: true }),
   ).toHaveAttribute('aria-current', 'page')
 })
 
@@ -184,8 +184,14 @@ for (const viewport of [
     await page.getByRole('button', { name: /새 여행.*더보기/ }).click()
     await page.getByRole('menuitem', { name: '수정하기' }).click()
     await expect(page.getByLabel('컬렉션명', { exact: true })).toHaveValue(
-      '  새 여행  ',
+      '새 여행',
     )
+    await expect(page.getByLabel('설명', { exact: true })).toHaveValue(
+      '여행 설명',
+    )
+    await page.getByLabel('컬렉션명', { exact: true }).fill('  새 여행  ')
+    await page.getByLabel('설명', { exact: true }).fill('  여행 설명  ')
+    await expect(page.getByRole('button', { name: '저장하기' })).toBeDisabled()
     await page.getByLabel('컬렉션명', { exact: true }).fill('  수정 이름  ')
     await page.getByRole('button', { name: '뒤로가기', exact: true }).click()
     await expect(page.getByRole('alertdialog')).toBeVisible()
@@ -195,10 +201,10 @@ for (const viewport of [
       '  수정 이름  ',
     )
     await page.getByRole('button', { name: '저장하기' }).click()
-    await page.getByRole('button', { name: '수정 이름 컬렉션 열기' }).click()
-    await expect(page.getByRole('heading', { name: '수정 이름' })).toBeVisible()
+    await page.getByRole('button', { name: /수정 이름.*컬렉션 열기/ }).click()
+    await expect(page.getByRole('heading', { name: /수정 이름/ })).toBeVisible()
     await page.getByRole('button', { name: '지도로 보기' }).click()
-    await expect(page.getByRole('heading', { name: '수정 이름' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /수정 이름/ })).toBeVisible()
     await expect(page.getByText('여행 설명', { exact: true })).toBeVisible()
     expect(
       await page.evaluate(
@@ -254,4 +260,112 @@ test('PR2 작은 저장 모달에서 목록만 스크롤', async ({ page }, test
   expect(after!.y).toBe(before!.y)
   expect(after!.y + after!.height).toBeLessThanOrEqual(400)
   await page.screenshot({ path: testInfo.outputPath('short-save.png') })
+})
+
+test('독립 상세 URL·정렬·분류·지도 종료·새로고침·없는 ID', async ({ page }) => {
+  await openFixture(page)
+  await page.getByRole('button', { name: /봄 여행.*컬렉션 열기/ }).click()
+  await expect(page).toHaveURL(/#\/saved\/collections\/spring$/)
+  await page.getByRole('button', { name: '정렬 선택' }).click()
+  await page.getByRole('menuitemradio', { name: '리뷰순' }).click()
+  await page.getByRole('button', { name: '분류 선택' }).click()
+  await page.getByRole('menuitemradio', { name: '카페', exact: true }).click()
+  await page.getByRole('button', { name: '지도로 보기' }).click()
+  await page.getByRole('button', { name: '컬렉션 지도 보기 종료' }).click()
+  await expect(page).toHaveURL(
+    /#\/saved\/collections\/spring\?sort=reviews&category=cafe$/,
+  )
+  await expect(page.getByText('총 1곳')).toBeVisible()
+  await page.reload()
+  await expect(page.getByText('총 1곳')).toBeVisible()
+  await expect(page.getByText('리뷰순')).toBeVisible()
+  await page.goto(
+    '/e2e/fixtures/saved.html?direct=1#/saved/collections/missing/edit',
+  )
+  await expect(page).toHaveURL(/#\/saved$/)
+  await expect(page.getByText('총 4개')).toBeVisible()
+})
+
+test('브라우저 뒤로가기 폐기·계속하기와 직접 생성 URL의 기본 복귀', async ({
+  page,
+}) => {
+  await openFixture(page)
+  await page.getByRole('button', { name: /봄 여행.*더보기/ }).click()
+  await page.getByRole('menuitem', { name: '수정하기' }).click()
+  await expect(page).toHaveURL(/#\/saved\/collections\/spring\/edit$/)
+  await page.getByLabel('컬렉션명', { exact: true }).fill('폐기할 원문 ')
+  await page.goBack()
+  const dialog = page.getByRole('alertdialog')
+  await dialog.getByRole('button', { name: '계속하기' }).click()
+  await expect(page.getByLabel('컬렉션명', { exact: true })).toHaveValue(
+    '폐기할 원문 ',
+  )
+  await page.goBack()
+  await dialog.getByRole('button', { name: '뒤로가기' }).click()
+  await expect(page).toHaveURL(/#\/saved$/)
+  await page.goto('/e2e/fixtures/saved.html?direct=1#/saved/collections/new')
+  await page.getByRole('button', { name: '뒤로가기', exact: true }).click()
+  await expect(page).toHaveURL(/#\/saved$/)
+})
+
+test('저장 모달에서 생성 취소·브라우저 복귀 후에도 원래 식당과 명시적 선택을 유지한다', async ({
+  page,
+}) => {
+  await openFixture(page, '?save=sushi')
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: '새 컬렉션 만들기' })
+    .click()
+  await expect(page).toHaveURL(/#\/saved\/collections\/new$/)
+  await page.goBack()
+  const dialog = page.getByRole('dialog', { name: '컬렉션 저장' })
+  await expect(
+    dialog.getByRole('radio', { name: /봄 여행.*저장됨/ }),
+  ).toBeDisabled()
+  await expect(
+    dialog.getByRole('button', { name: '저장', exact: true }),
+  ).toBeDisabled()
+})
+
+test('목록과 상세를 브라우저 뒤로가기·앞으로가기로 이동한다', async ({
+  page,
+}) => {
+  await openFixture(page)
+  await page.getByRole('button', { name: /봄 여행.*컬렉션 열기/ }).click()
+  await page.goBack()
+  await expect(page.getByRole('heading', { name: '저장 컬렉션' })).toBeVisible()
+  await page.goForward()
+  await expect(
+    page.getByRole('heading', { name: '2026 도쿄 봄 여행' }),
+  ).toBeVisible()
+})
+
+test('로컬 상태 저장 모달의 식당·기존 선택은 생성 취소와 브라우저 뒤로가기에도 복원된다', async ({
+  page,
+}) => {
+  await openFixture(page, '?localSave=sushi')
+  await page.getByRole('button', { name: '식당 저장 열기' }).click()
+  await page.getByRole('radio', { name: /가을/ }).click()
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: '새 컬렉션 만들기' })
+    .click()
+  await page.goBack()
+  let dialog = page.getByRole('dialog', { name: '컬렉션 저장' })
+  await expect(
+    dialog.getByRole('radio', { name: /봄 여행.*저장됨/ }),
+  ).toBeDisabled()
+  await expect(dialog.getByRole('radio', { name: /가을/ })).toBeChecked()
+  await dialog.getByRole('button', { name: '새 컬렉션 만들기' }).click()
+  await page.getByLabel('컬렉션명', { exact: true }).fill('새 명시적 대상')
+  await page.getByRole('radio', { name: '주황' }).check()
+  await page.getByRole('button', { name: '만들기', exact: true }).click()
+  dialog = page.getByRole('dialog', { name: '컬렉션 저장' })
+  await expect(dialog.getByRole('radio', { name: /가을/ })).toBeChecked()
+  await expect(
+    dialog.getByRole('radio', { name: '새 명시적 대상', exact: true }),
+  ).not.toBeChecked()
+  await dialog.getByRole('button', { name: '취소' }).click()
+  await page.reload()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
 })

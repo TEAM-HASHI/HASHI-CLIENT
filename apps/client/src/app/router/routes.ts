@@ -117,6 +117,8 @@ export const appRoutes: RouteObject[] = [
             path: ROUTES.reviewEdit,
             element: lazyPages.reviewEdit(),
           },
+          { path: ROUTES.collectionNew, element: lazyPages.collectionForm() },
+          { path: ROUTES.collectionEdit, element: lazyPages.collectionForm() },
           {
             path: ROUTES.saved,
             element: createElement(BottomNavigationLayout),
@@ -125,6 +127,7 @@ export const appRoutes: RouteObject[] = [
                 index: true,
                 element: lazyPages.saved(),
               },
+              { path: ROUTES.collectionDetail, element: lazyPages.saved() },
             ],
           },
           {

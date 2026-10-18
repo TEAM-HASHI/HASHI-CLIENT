@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
-  createMemoryRouter,
+  createHashRouter,
   RouterProvider,
   useLocation,
   useNavigate,
@@ -9,6 +9,9 @@ import {
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import '@/app/styles/global.css'
+import { CollectionFormPage } from '@/pages/saved/CollectionFormPage'
+import { getCollectionDetailPath } from '@/app/router/routePaths'
+import { getCollectionSaveRestaurantId } from '@/pages/saved/utils/collectionNavigation'
 import { SavedPage } from '@/pages/saved/SavedPage'
 import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
 import { useCollectionData } from '@/pages/saved/data/useCollectionData'
@@ -91,8 +94,15 @@ const PanelFixture = () => {
           }}
           availableHeight={availableHeight}
           onClose={() => {
-            setClosed(true)
-            navigate('/map', { replace: true, state: null })
+            if (view.collectionId) {
+              navigate(
+                `${getCollectionDetailPath(view.collectionId)}?sort=${view.sort}&category=${view.category}`,
+                { replace: true, state: view },
+              )
+            } else {
+              setClosed(true)
+              navigate('/map', { replace: true, state: null })
+            }
           }}
           onRestaurantSelect={() => {}}
         />
@@ -102,10 +112,18 @@ const PanelFixture = () => {
 }
 
 const SavedFixture = () => {
-  const [saving, setSaving] = useState(params.get('save'))
+  const location = useLocation()
+  const [saving, setSaving] = useState(
+    () => getCollectionSaveRestaurantId(location.state) ?? params.get('save'),
+  )
   return (
     <>
       <SavedPage />
+      {params.get('localSave') && (
+        <button onClick={() => setSaving(params.get('localSave'))}>
+          식당 저장 열기
+        </button>
+      )}
       {saving && (
         <CollectionSaveDialog
           restaurantId={saving}
@@ -116,30 +134,28 @@ const SavedFixture = () => {
   )
 }
 
-const router = createMemoryRouter(
-  [
-    {
-      element: <BottomNavigationLayout />,
-      children: [
-        { path: '/saved', element: <SavedFixture /> },
-        { path: '/map', element: <PanelFixture /> },
-      ],
-    },
-  ],
+if (!window.location.hash) {
+  window.history.replaceState(
+    null,
+    '',
+    `${window.location.pathname}${window.location.search}#${params.has('panel') ? '/map' : '/saved'}`,
+  )
+}
+const router = createHashRouter([
   {
-    initialEntries: [
-      params.has('panel')
-        ? {
-            pathname: '/map',
-            state:
-              params.get('panel') === 'detail'
-                ? { collectionId: 'spring', sort: 'latest', category: 'all' }
-                : INITIAL_COLLECTION_VIEW,
-          }
-        : '/saved',
+    element: <BottomNavigationLayout />,
+    children: [
+      { path: '/saved', element: <SavedFixture /> },
+      { path: '/saved/collections/:collectionId', element: <SavedFixture /> },
+      { path: '/map', element: <PanelFixture /> },
     ],
   },
-)
+  { path: '/saved/collections/new', element: <CollectionFormPage /> },
+  {
+    path: '/saved/collections/:collectionId/edit',
+    element: <CollectionFormPage />,
+  },
+])
 
 createRoot(document.getElementById('root')!).render(
   <main className="app-mobile-frame min-h-dvh bg-white">

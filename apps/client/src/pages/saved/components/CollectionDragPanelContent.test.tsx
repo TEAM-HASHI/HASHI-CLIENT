@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -61,7 +62,9 @@ describe('CollectionDragPanelContent', () => {
       onClose,
       onRestaurantSelect,
     }
-    const { rerender } = render(<CollectionDragPanelContent {...props} />)
+    const { rerender } = render(<CollectionDragPanelContent {...props} />, {
+      wrapper: MemoryRouter,
+    })
     fireEvent.keyDown(screen.getByRole('slider'), { key: 'End' })
     await user.click(screen.getByRole('button', { name: '정렬 선택' }))
     rerender(
@@ -80,7 +83,7 @@ describe('CollectionDragPanelContent', () => {
 
   it('preserves collection, sort and category across collapse and expansion', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    render(<Harness />, { wrapper: MemoryRouter })
     const handle = screen.getByRole('slider')
     expect(handle).toHaveAttribute('aria-valuenow', '393')
     fireEvent.keyDown(handle, { key: 'Home' })
@@ -107,7 +110,7 @@ describe('CollectionDragPanelContent', () => {
 
   it('closes dropdowns on expansion and preserves the selected view when returning to the panel', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    render(<Harness />, { wrapper: MemoryRouter })
     const handle = screen.getByRole('slider')
     await user.click(screen.getByRole('button', { name: '정렬 선택' }))
     expect(screen.getByRole('menu')).toBeInTheDocument()

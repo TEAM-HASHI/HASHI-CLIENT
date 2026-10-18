@@ -8,7 +8,7 @@ import {
   InputField,
   Textarea,
 } from '@hashi/hds-ui'
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { useBlocker } from 'react-router-dom'
 import { CollectionCover } from '@/pages/saved/components/CollectionCover'
 import { COLLECTION_COVER_COLORS } from '@/pages/saved/data/collectionPalette'
@@ -21,6 +21,8 @@ import {
   validateCollection,
 } from '@/pages/saved/utils/collectionMutations'
 import type { CollectionDraft } from '@/pages/saved/utils/collectionMutations'
+import { BottomActionBar } from '@/shared/components/bottomActionBar/BottomActionBar'
+import { getCollectionHistoryIndex } from '@/pages/saved/utils/collectionNavigation'
 import { cn } from '@/shared/utils'
 
 const COLOR_LABELS: Record<CollectionColor, string> = {
@@ -49,14 +51,17 @@ export const CollectionForm = ({
   collections,
   onSubmit,
   onClose,
+  onDiscard = onClose,
 }: {
   collection?: SavedCollection
   collections: readonly SavedCollection[]
   onSubmit: (draft: CollectionDraft) => void
   onClose: () => void
+  onDiscard?: () => void
 }) => {
   const id = useId()
-  const blocker = useBlocker(true)
+  const allowNavigation = useRef(false)
+  const historyIndex = useRef(getCollectionHistoryIndex())
   const composing = useRef(false)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const [isComposing, setIsComposing] = useState(false)
@@ -67,10 +72,10 @@ export const CollectionForm = ({
     description: false,
   })
   const [discarding, setDiscarding] = useState(false)
-  const value = normalizeCollectionDraft(draft)
+  const normalizedDraft = normalizeCollectionDraft(draft)
   const normalizedInitial = normalizeCollectionDraft(initial)
   const changed = (['name', 'description', 'color', 'isPublic'] as const).some(
-    (key) => value[key] !== normalizedInitial[key],
+    (key) => normalizedDraft[key] !== normalizedInitial[key],
   )
   const error = validateCollection(draft, collections, collection?.id)
   const hasDuplicateName = isDuplicateCollectionName(
@@ -80,12 +85,19 @@ export const CollectionForm = ({
   )
   const canSubmit = !isComposing && !error && (!collection || changed)
   const needsConfirmation = Boolean(collection && changed)
-  useEffect(() => {
-    if (blocker.state === 'blocked' && !needsConfirmation) {
-      blocker.reset()
-      onClose()
-    }
-  }, [blocker, needsConfirmation, onClose])
+  const blocker = useBlocker(({ historyAction }) => {
+    const nextIndex = getCollectionHistoryIndex()
+    const isBack =
+      historyIndex.current === undefined ||
+      nextIndex === undefined ||
+      nextIndex < historyIndex.current
+    return (
+      !allowNavigation.current &&
+      needsConfirmation &&
+      historyAction === 'POP' &&
+      isBack
+    )
+  })
   useLayoutEffect(() => {
     const textarea = descriptionRef.current
     if (!textarea) return
@@ -132,192 +144,196 @@ export const CollectionForm = ({
 
   return (
     <>
-      <Dialog.Root
-        open
-        onOpenChange={(open) => {
-          if (!open) close()
-        }}
+      <section
+        aria-label={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
+        className="app-mobile-bottom-action-content min-h-dvh bg-white pt-[var(--safe-area-top,0px)]"
       >
-        <Dialog.Content
-          aria-label={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
-          className="h-dvh max-h-dvh w-screen max-w-[var(--app-mobile-max-width,100vw)] rounded-none p-0 pt-[var(--safe-area-top,0px)]"
-        >
-          <Header
-            className="shrink-0"
-            title={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
-            leftAction={
-              <IconButton size="xs" aria-label="뒤로가기" onClick={close}>
-                <BackIcon className="size-6" />
-              </IconButton>
+        <Header
+          className="shrink-0"
+          title={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
+          leftAction={
+            <IconButton size="xs" aria-label="뒤로가기" onClick={close}>
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+        />
+        <form
+          id={`${id}-form`}
+          className="w-full px-6"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (canSubmit) {
+              allowNavigation.current = true
+              onSubmit(draft)
             }
-          />
-          <form
-            id={`${id}-form`}
-            className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain px-6"
-            onSubmit={(event) => {
-              event.preventDefault()
-              if (canSubmit) onSubmit(value)
-            }}
-          >
-            <div className="my-8.5 flex justify-center">
-              <CollectionCover
-                collection={{
-                  color: draft.color,
-                  coverImages: collection?.coverImages ?? [null, null, null],
-                }}
-              />
-            </div>
-            <div className="flex flex-col gap-3">
-              <label
-                htmlFor={`${id}-name`}
-                className="typo-sub-header-1 text-primary-200"
-              >
-                컬렉션명
-              </label>
-              <InputField
-                className="h-[53px] px-5"
-                id={`${id}-name`}
-                aria-label="컬렉션명"
-                placeholder="새 컬렉션명을 입력해주세요."
-                value={draft.name}
-                onCompositionStart={startComposition}
-                onCompositionEnd={(event) =>
-                  endComposition(
-                    'name',
-                    COLLECTION_NAME_LIMIT,
-                    event.currentTarget.value,
-                  )
-                }
-                onChange={(event) =>
-                  changeText(
-                    'name',
-                    COLLECTION_NAME_LIMIT,
-                    event.currentTarget.value,
-                  )
-                }
-                aria-invalid={overLimit.name || hasDuplicateName}
-                aria-describedby={`${id}-name-status`}
-              />
-              <div
-                id={`${id}-name-status`}
-                className="flex flex-wrap justify-between gap-1"
-              >
-                <span className="typo-body-7 text-primary-400" role="status">
-                  {overLimit.name
-                    ? LIMIT_MESSAGE
-                    : hasDuplicateName
-                      ? '중복된 컬렉션명입니다.'
-                      : ''}
-                </span>
-                <span className="typo-body-6 text-warm-gray-300 ml-auto leading-[1.36]">
-                  <span className="text-primary-200">{draft.name.length}</span>{' '}
-                  /{COLLECTION_NAME_LIMIT}
-                </span>
-              </div>
-            </div>
-            <fieldset className="mt-5 w-full pb-7">
-              <legend className="typo-sub-header-1 text-primary-200">
-                색상 선택
-              </legend>
-              <div className="mt-4 flex justify-between px-2.5">
-                {(Object.keys(COLOR_LABELS) as CollectionColor[]).map(
-                  (color) => (
-                    <label
-                      key={color}
-                      className="relative flex size-8 cursor-pointer items-center justify-center rounded-full"
-                      style={{
-                        background: COLLECTION_COVER_COLORS[color].background,
-                      }}
-                    >
-                      <input
-                        className="peer absolute inset-0 size-full cursor-pointer opacity-0"
-                        type="radio"
-                        name={`${id}-color`}
-                        aria-label={COLOR_LABELS[color]}
-                        checked={draft.color === color}
-                        onChange={() =>
-                          setDraft((current) => ({ ...current, color }))
-                        }
-                      />
-                      <span className="pointer-events-none absolute inset-0 rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2" />
-                      {draft.color === color && (
-                        <CheckIcon
-                          aria-hidden="true"
-                          className="pointer-events-none size-6.5 text-white"
-                        />
-                      )}
-                    </label>
-                  ),
-                )}
-              </div>
-            </fieldset>
-            <div className="flex flex-col gap-3">
-              <label
-                htmlFor={`${id}-description`}
-                className="typo-sub-header-1 text-primary-200"
-              >
-                설명
-              </label>
-              <Textarea
-                className="gap-3"
-                textareaClassName="min-h-[51px] max-h-[129px] px-5 py-4"
-                id={`${id}-description`}
-                ref={descriptionRef}
-                aria-label="설명"
-                placeholder="자유롭게 작성해보세요."
-                value={draft.description}
-                maxLength={COLLECTION_DESCRIPTION_LIMIT}
-                maxLengthBehavior="allow"
-                showCounter
-                errorMessage={LIMIT_MESSAGE}
-                onCompositionStart={startComposition}
-                onCompositionEnd={(event) =>
-                  endComposition(
-                    'description',
-                    COLLECTION_DESCRIPTION_LIMIT,
-                    event.currentTarget.value,
-                  )
-                }
-                onChange={(event) =>
-                  changeText(
-                    'description',
-                    COLLECTION_DESCRIPTION_LIMIT,
-                    event.currentTarget.value,
-                  )
-                }
-                aria-invalid={overLimit.description}
-              />
-            </div>
-            <div
-              className="flex flex-wrap items-center justify-between gap-3 py-5"
-              role="group"
-              aria-label="공개 범위"
+          }}
+        >
+          <div className="my-8.5 flex justify-center">
+            <CollectionCover
+              collection={{
+                color: draft.color,
+                coverImages: collection?.coverImages ?? [null, null, null],
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-3">
+            <label
+              htmlFor={`${id}-name`}
+              className="typo-sub-header-1 text-primary-200"
             >
-              <span className="typo-sub-header-1 text-primary-200">
-                공개 범위
+              컬렉션명
+            </label>
+            <InputField
+              className="h-[53px] px-5"
+              id={`${id}-name`}
+              aria-label="컬렉션명"
+              placeholder="새 컬렉션명을 입력해주세요."
+              value={draft.name}
+              onCompositionStart={startComposition}
+              onCompositionEnd={(event) =>
+                endComposition(
+                  'name',
+                  COLLECTION_NAME_LIMIT,
+                  event.currentTarget.value,
+                )
+              }
+              onChange={(event) =>
+                changeText(
+                  'name',
+                  COLLECTION_NAME_LIMIT,
+                  event.currentTarget.value,
+                )
+              }
+              aria-invalid={overLimit.name || hasDuplicateName}
+              aria-describedby={`${id}-name-status`}
+            />
+            <div
+              id={`${id}-name-status`}
+              className="flex flex-wrap justify-between gap-1"
+            >
+              <span className="typo-body-7 text-primary-400" role="status">
+                {overLimit.name
+                  ? LIMIT_MESSAGE
+                  : hasDuplicateName
+                    ? '중복된 컬렉션명입니다.'
+                    : ''}
               </span>
-              <div className="flex gap-3">
-                {[true, false].map((isPublic) => (
-                  <Chip
-                    key={String(isPublic)}
-                    selected={draft.isPublic === isPublic}
-                    onSelectedChange={() =>
-                      setDraft((current) => ({ ...current, isPublic }))
-                    }
-                    className={cn(
-                      '[&>span]:typo-body-4 h-7 py-1',
-                      draft.isPublic === isPublic
-                        ? 'bg-cool-gray-900'
-                        : 'border-warm-gray-300 text-warm-gray-300 border bg-white',
-                    )}
-                  >
-                    {isPublic ? '공개' : '비공개'}
-                  </Chip>
-                ))}
-              </div>
+              <span className="typo-body-6 text-warm-gray-300 ml-auto leading-[1.36]">
+                <span
+                  className={
+                    overLimit.name ? 'text-primary-400' : 'text-primary-200'
+                  }
+                >
+                  {draft.name.length}
+                </span>{' '}
+                /{COLLECTION_NAME_LIMIT}
+              </span>
             </div>
-          </form>
-          <div className="w-full shrink-0 px-5 pt-2.5 pb-[max(48px,var(--safe-area-bottom,0px))]">
+          </div>
+          <fieldset className="w-full pb-7">
+            <legend className="typo-sub-header-1 text-primary-200">
+              색상 선택
+            </legend>
+            <div className="mt-4 flex justify-between px-2.5">
+              {(Object.keys(COLOR_LABELS) as CollectionColor[]).map((color) => (
+                <label
+                  key={color}
+                  className="relative flex size-8 cursor-pointer items-center justify-center rounded-full"
+                  style={{
+                    background: COLLECTION_COVER_COLORS[color].background,
+                  }}
+                >
+                  <input
+                    className="peer absolute inset-0 size-full cursor-pointer opacity-0"
+                    type="radio"
+                    name={`${id}-color`}
+                    aria-label={COLOR_LABELS[color]}
+                    checked={draft.color === color}
+                    onChange={() =>
+                      setDraft((current) => ({ ...current, color }))
+                    }
+                  />
+                  <span className="pointer-events-none absolute inset-0 rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2" />
+                  {draft.color === color && (
+                    <CheckIcon
+                      aria-hidden="true"
+                      className="pointer-events-none size-6.5 text-white"
+                    />
+                  )}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <div className="flex flex-col gap-3">
+            <label
+              htmlFor={`${id}-description`}
+              className="typo-sub-header-1 text-primary-200"
+            >
+              설명
+            </label>
+            <Textarea
+              className="gap-3"
+              textareaClassName="min-h-[51px] max-h-[129px] px-5 py-4"
+              id={`${id}-description`}
+              ref={descriptionRef}
+              aria-label="설명"
+              placeholder="자유롭게 작성해보세요."
+              value={draft.description}
+              maxLength={COLLECTION_DESCRIPTION_LIMIT}
+              maxLengthBehavior="allow"
+              showCounter
+              errorMessage={LIMIT_MESSAGE}
+              onCompositionStart={startComposition}
+              onCompositionEnd={(event) =>
+                endComposition(
+                  'description',
+                  COLLECTION_DESCRIPTION_LIMIT,
+                  event.currentTarget.value,
+                )
+              }
+              onChange={(event) =>
+                changeText(
+                  'description',
+                  COLLECTION_DESCRIPTION_LIMIT,
+                  event.currentTarget.value,
+                )
+              }
+              aria-invalid={overLimit.description}
+            />
+          </div>
+          <div
+            className="flex flex-wrap items-center justify-between gap-3 py-5"
+            role="group"
+            aria-label="공개 범위"
+          >
+            <span className="typo-sub-header-1 text-primary-200">
+              공개 범위
+            </span>
+            <div className="flex gap-3">
+              {[true, false].map((isPublic) => (
+                <Chip
+                  key={String(isPublic)}
+                  selected={draft.isPublic === isPublic}
+                  onSelectedChange={() =>
+                    setDraft((current) => ({ ...current, isPublic }))
+                  }
+                  className={cn(
+                    '[&>span]:typo-body-4 h-7 py-1',
+                    draft.isPublic === isPublic
+                      ? 'bg-cool-gray-900'
+                      : 'border-warm-gray-300 text-warm-gray-300 border bg-white',
+                  )}
+                >
+                  {isPublic ? '공개' : '비공개'}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        </form>
+        <BottomActionBar
+          aria-label={collection ? '컬렉션 수정 제출' : '컬렉션 생성 제출'}
+          className="min-h-[calc(100px+var(--safe-area-bottom,0px))] pt-2.5"
+          endAction={
             <Button
               form={`${id}-form`}
               type="submit"
@@ -326,9 +342,9 @@ export const CollectionForm = ({
             >
               {collection ? '저장하기' : '만들기'}
             </Button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Root>
+          }
+        />
+      </section>
       <Dialog.Root
         type="alertdialog"
         open={discarding || (blocker.state === 'blocked' && needsConfirmation)}
@@ -337,15 +353,17 @@ export const CollectionForm = ({
           if (!open && blocker.state === 'blocked') blocker.reset()
         }}
       >
-        <Dialog.Content className="h-[220px] rounded-[20px]">
-          <Dialog.Header>
+        <Dialog.Content className="min-h-55 justify-center rounded-[20px] px-6.75 py-6.5">
+          <Dialog.Header className="gap-3">
             <Dialog.Icon>
               <OrderCancelIcon className="size-6" />
             </Dialog.Icon>
-            <Dialog.Title>변경사항이 저장되지 않았어요.</Dialog.Title>
-            <Dialog.Description>
-              저장하지 않고 나가면 변경사항이 사라져요.
-            </Dialog.Description>
+            <div className="flex w-full flex-col items-center gap-2">
+              <Dialog.Title>변경사항이 저장되지 않았어요.</Dialog.Title>
+              <Dialog.Description className="typo-body-6 flex min-h-9.5 items-center justify-center leading-[1.36]">
+                저장하지 않고 나가면 변경사항이 사라져요.
+              </Dialog.Description>
+            </div>
           </Dialog.Header>
           <Dialog.Footer>
             <Button
@@ -353,7 +371,8 @@ export const CollectionForm = ({
               size="md"
               onClick={() => {
                 if (blocker.state === 'blocked') blocker.reset()
-                onClose()
+                allowNavigation.current = true
+                onDiscard()
               }}
             >
               뒤로가기

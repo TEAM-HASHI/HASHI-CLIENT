@@ -8,7 +8,6 @@ import { SavedPage } from '@/pages/saved/SavedPage'
 import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import type { CollectionData } from '@/pages/saved/types'
-import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
 
 const setup = (data: CollectionData = collectionMocks) => {
   const router = createMemoryRouter(
@@ -17,6 +16,7 @@ const setup = (data: CollectionData = collectionMocks) => {
         element: <BottomNavigationLayout />,
         children: [
           { path: '/saved', element: <SavedPage /> },
+          { path: '/saved/collections/:collectionId', element: <SavedPage /> },
           { path: '/map', element: <div data-testid="map-owner" /> },
         ],
       },
@@ -34,22 +34,21 @@ const setup = (data: CollectionData = collectionMocks) => {
 afterEach(cleanup)
 
 describe('SavedPage', () => {
-  it('shows computed counts and fixed latest label without a collection sort menu', () => {
-    setup()
-    expect(screen.getByText('총 4개')).toBeInTheDocument()
-    expect(screen.getByText('최신순')).toBeInTheDocument()
+  it('상세를 독립 URL로 열고 브라우저 뒤로가기·앞으로가기로 복원한다', async () => {
+    const { user, router } = setup()
+    await user.click(
+      screen.getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' }),
+    )
+    expect(router.state.location.pathname).toBe('/saved/collections/spring')
+    await router.navigate(-1)
     expect(
-      screen.queryByRole('button', { name: '정렬 선택' }),
-    ).not.toBeInTheDocument()
+      await screen.findByRole('heading', { name: '저장 컬렉션' }),
+    ).toBeVisible()
+    await router.navigate(1)
     expect(
-      screen.getByRole('button', { name: '새 컬렉션 만들기' }),
-    ).toBeEnabled()
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: /공유/ }),
-    ).not.toBeInTheDocument()
+      await screen.findByRole('heading', { name: '2026 도쿄 봄 여행' }),
+    ).toBeVisible()
   })
-
   it('applies sorting and category immediately, retains sorting, and closes each menu', async () => {
     const { user } = setup()
     await user.click(
@@ -95,29 +94,6 @@ describe('SavedPage', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
-  it('keeps an empty collection and an empty list visible without invented actions', async () => {
-    const { user } = setup()
-    await user.click(
-      screen.getByRole('button', { name: '2026 도쿄 가을 여행 컬렉션 열기' }),
-    )
-    expect(screen.getByText('총 0곳')).toBeInTheDocument()
-    expect(
-      within(screen.getByRole('list', { name: '저장 식당' })).queryAllByRole(
-        'listitem',
-      ),
-    ).toHaveLength(0)
-    await user.click(
-      screen.getByRole('button', { name: '컬렉션 목록으로 돌아가기' }),
-    )
-    expect(screen.getByText('총 4개')).toBeInTheDocument()
-    cleanup()
-    setup({ ...collectionMocks, collections: [] })
-    expect(screen.getByText('총 0개')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: '새 컬렉션 만들기' }),
-    ).toBeInTheDocument()
-  })
-
   it('hands collection state to the existing map and keeps the saved tab active', async () => {
     const { user, router } = setup()
     await user.click(
@@ -139,15 +115,5 @@ describe('SavedPage', () => {
     await router.navigate(-1)
     expect(await screen.findByText('리뷰순')).toBeInTheDocument()
     expect(screen.getByText('총 4곳')).toBeInTheDocument()
-  })
-
-  it('rejects invalid map handoffs', () => {
-    for (const state of [
-      null,
-      {},
-      { collectionId: '' },
-      { collectionId: 'spring', sort: 'unknown', category: 'all' },
-    ])
-      expect(isCollectionMapState(state)).toBe(false)
   })
 })

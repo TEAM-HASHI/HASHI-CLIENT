@@ -1,15 +1,39 @@
 # 저장 컬렉션 퍼블리싱
 
+## PR #218 리뷰 반영 기준 (2026-10-18)
+
+- 기준 PR head: `be1a1613b5aa837df63358c9933b18e01abc5521`. base는 변경하지 않는다.
+- 기획: HASHI-PLAN main `a2990f8a5afcf3f90aee4ac712c0ffd1209767a3`의 SAVED 4개 문서를 읽었다.
+- 생성·수정·상세는 독립 라우트로, 저장 대상 선택과 수정 폐기는 모달로 구분한다.
+- `/saved`, `/saved/collections/new`, `/saved/collections/:collectionId`, `/saved/collections/:collectionId/edit`.
+- member guard를 유지하며 목록·상세만 하단 내비게이션을 표시한다. 생성·수정은 lazy page다.
+- 상세 ID와 정렬·분류는 URL에서 읽는다. 지도 상태 전달 계약은 유지한다.
+- Provider는 RootLayout에 유지해 라우트 간 목 데이터를 공유한다. 새로고침하면 초기화한다. 없는 ID는 목록으로 안전하게 복귀한다.
+- 저장 모달에서 생성 페이지로 이동할 때 진입 위치·식당 ID를 전달하고 완료·취소 시 복원한다. 새 컬렉션은 자동 선택하지 않으며 이전에 직접 선택한 대상은 유지한다.
+- 사용자 확정 변경: 생성·수정 모두 서버 기준으로 이름·설명의 앞뒤 공백을 제거해 저장하고, 정규화한 이름으로 중복을 판단한다. 변경 감지도 정규화한 이름·설명 기준이다. 입력 중 원문과 카운터는 유지한다.
+- 사용자 확정 예외: 기획의 초과 입력 차단 대신 이름 20자·설명 100자 초과 입력과 한글 조합을 보존하고 실제 카운터·오류를 표시하며 제출을 차단한다.
+- 수정 중 변경이 있는 뒤로가기에서 폐기 확인, 계속하기는 입력 보존, 폐기는 목록으로 이동한다. 제출과 일반 PUSH 이동은 막지 않는다.
+- BottomActionBar를 재사용하고 커버·저장/폐기 모달 디자인을 Figma로 검증한다. 범용 CTA나 HDS 컴포넌트 변경은 추가하지 않는다. 색상은 리뷰 요청에 따라 HDS 토큰에서 관리한다.
+- 구현 순서: 공백/URL 회귀 테스트 실패 확인 → 서버 기준 정규화 → 라우트/진입/복귀 연결 → 디자인 보정 → 동작 테스트/E2E/뷰포트/최종 검증.
+- API 연동·영속 저장·후속 관리/삭제/공유 기능·커밋·push·PR 변경은 범위 밖이다.
+
+## 공백 정책 변경 근거
+
+- 사용자 결정으로 HASHI-PLAN의 공백 보존 정책 및 리뷰 `discussion_r4296372176`의 원문 비교 요구 대신 서버 정책을 따른다. 리뷰 요구를 그대로 반영한 것으로 취급하지 않는다.
+- 서버 근거: HASHI-SERVER develop `e2c486c6b1f5e98e9fa7ee09390e2f5e7189630c`, `RestaurantCollectionService.normalizeName/normalizeDescription/stripBoundaryWhitespace` 및 생성·수정 DTO. 배포 버전은 미확인이다.
+- NBSP·전각 공백·U+0085 등을 포함한 서버 경계 공백을 제거하며 내부 공백과 BOM(U+FEFF)은 보존한다. 빈 설명은 UI 모델에서 빈 문자열로 유지한다(서버 저장은 null).
+- HASHI-PLAN 자체와 서버 코드는 변경하지 않는다. API 요청은 추가하지 않는다.
+
 ## 목적과 범위
 
 `/saved`의 인증된 사용자에게 컬렉션 목록·상세를 표시하는 퍼블리싱이다.
 별도 목 데이터로 동작하며 API와 영구 저장을 연결하지 않는다.
 
-기능 근거는 최신화한 HASHI-PLAN `main` (`6f2c99c`)의
+현재 기능 근거는 HASHI-PLAN `main` (`a2990f8a`)의
 SAVED_COLLECTION_LIST, SAVED_COLLECTION_SAVE, SAVED_COLLECTION_MANAGE,
-SAVED_COLLECTION, SAVED_COLLECTION_SHARE 명세다. 충돌 시 사용자 확정 정책을 우선한다.
+SAVED_COLLECTION 명세다. 충돌 시 사용자 확정 정책을 우선한다. 후속 공유 기능은 범위 밖이다.
 
-작업 브랜치는 `feat/HASHI-206-collection-list`이며, 미병합 #209의 head
+최초 PR 1 작업 브랜치는 `feat/HASHI-206-collection-list`였으며, 당시 미병합 #209의 head
 `22b3fc4`에서 분기했다. PR base는 `feat/HASHI-214-drag-panel`로 지정한다.
 기존 `feat/HASHI-206-collection-page` 브랜치는 보존했다.
 
@@ -21,7 +45,7 @@ SAVED_COLLECTION, SAVED_COLLECTION_SHARE 명세다. 충돌 시 사용자 확정 
 - 정렬은 최신순/별점순/리뷰순, 분류는 전체/음식점/카페/주점이다.
 - 상세 기본값은 최신순/전체이며, 정렬과 분류는 서로 유지된다. 선택 즉시 적용하고
   메뉴를 닫으며 키보드 선택·Escape·바깥 클릭 닫기·포커스 복귀를 지원한다.
-- 목록·상세는 같은 `/saved` 안에서 전환한다. 새로고침 시 목 데이터는 초기값이다.
+- 목록은 `/saved`, 상세는 `/saved/collections/:collectionId`이다. 상세 정렬·분류는 `sort`·`category` query로 복원한다. 새로고침 시 목 데이터는 초기값이다.
 - 빈 목록은 0개와 생성 항목을, 빈 상세는 컬렉션 정보와 0곳을 유지한다.
 - 긴 이름은 행에서 줄바꿈하며 HDS Header 제목은 말줄임과 원문 title을 제공한다.
 
@@ -62,9 +86,11 @@ SAVED_COLLECTION, SAVED_COLLECTION_SHARE 명세다. 충돌 시 사용자 확정 
 ## 재사용과 후속 PR
 
 HDS Header, BottomNavigation, Thumbnail/ImageFallback, Button, IconButton,
-OptionItem, DragPanel과 기존 아이콘을 사용하며 공통 패키지는 수정하지 않는다.
-커버 색상 중 기존 토큰에 없는 값은 Figma `collection_cover`의 확인된 색상을
-이름 있는 페이지 상수로 관리한다. 예시 사진은 없으므로 HDS fallback을 사용한다.
+OptionItem, DragPanel과 기존 아이콘을 사용하며 공통 UI 컴포넌트는 수정하지 않는다.
+커버 색상의 실제 값은 `packages/hds-tokens/src/tokens/colors.css`에서 관리한다.
+`collectionPalette.ts`는 컬렉션 색상 enum과 HDS CSS 변수의 매핑만 담고 직접 색상값을 정의하지 않는다.
+빨강 배경은 `primary-400`, 초록 전경은 `secondary-500`을 재사용하고 나머지 10개 값은
+`palette-*-soft/strong` 토큰으로 추가한다. 예시 사진은 없으므로 HDS fallback을 사용한다.
 
 PR 1에서 더보기 아이콘은 장식용 슬롯이며 새 컬렉션 만들기는 비활성화했다.
 PR 2는 생성·수정하기·저장 UI와 수정 폐기 확인을 연결한다.
@@ -82,7 +108,7 @@ Figma 파일은 `UHaom01PvoRx2wRCYa1kS1`이다.
 8317:39104, 8317:39211, 8317:40193이다.
 목록 정렬 화살표는 사용자 확정에 따라 제외한다. Figma의 지도 활성 탭과 달리
 저장 탭을 활성화한다. X는 SAVED_COLLECTION_LIST의 상세 복귀 문구보다
-사용자 확정 및 SAVED_COLLECTION의 기본 지도 복귀 정책을 우선한다.
+2026-10-18 사용자 확정 정책에 따라 직전 컬렉션 상세 목록으로 복귀하고 정렬·분류를 유지한다.
 
 ## 추가 Figma 대조 (2026-10-07)
 
@@ -139,11 +165,10 @@ Figma 파일은 `UHaom01PvoRx2wRCYa1kS1`이다.
 
 - 브랜치 `feat/HASHI-221-collection-save`는 PR 1의 `226b9ee`에서 분기했다.
   PR을 생성할 때 base는 `feat/HASHI-206-collection-list`로 지정한다.
-- 작업 전 두 저장소를 최신화했다. HASHI-PLAN은 `1c981e5`이며 SAVED 명세는
-  PR 1 기준에서 변경되지 않았다. PLAN 파일을 직접 수정하지 않는다.
+- 최초 구현 시 PLAN은 `1c981e5`였다. 리뷰 반영은 상단의 최신 기획 ref를 기준으로 하며 PLAN 파일은 수정하지 않는다.
 - `CollectionForm`은 사용자 승인 페이지 조합이다. 생성과 정보 수정을 함께
-  표현하며 HDS Header, IconButton, InputField, Textarea, Chip, Button, Dialog를 재사용한다.
-- 사용자 결정으로 생성·수정 모두 서버 기준 앞뒤 공백을 제거한다. 공백만 있는 이름은 거절한다. 중복·변경 감지는 정규화 기준이며 중간 공백은 유지한다. 입력 길이는 정규화 전에 검사한다.
+  표현하며 HDS Header, IconButton, InputField, Textarea, Chip, Button과 app shared BottomActionBar를 재사용한다. Dialog는 폐기 확인에만 사용한다.
+- 생성·수정 모두 이름·설명의 앞뒤 공백을 제거해 저장한다. 중간 공백은 유지한다. 중복·변경은 정규화한 값으로 비교하며 자기 자신은 중복 검사에서 제외한다. 공백만 있는 이름은 거절하고 공백뿐인 설명은 비운다. 앞뒤 공백만 변경하면 저장 및 폐기 확인을 활성화하지 않는다. 길이는 공백 제거 전 입력으로 검증한다.
   이름 20자·설명 100자 제한은 `collectionMutations.ts` 상수로 관리한다.
   한글 조합·붙여넣기를 포함한 초과 입력값은 자르지 않고 실제 글자 수를 표시한다.
   이름 또는 설명이 제한을 넘으면 오류를 표시하고 제출을 비활성화한다. 중복 이름과
@@ -166,7 +191,7 @@ Figma 파일은 `UHaom01PvoRx2wRCYa1kS1`이다.
 
 ### PR 2 디자인 근거
 
-- 개별 상세 속성과 스크린샷: `8317:39060`(생성 기본), `8317:39016`(입력·비공개),
+- 2026-10-18 재조회에서 `8317:39060`, `8317:39016`은 삭제돼 사용하지 않는다. 유효한 상세 속성과 스크린샷:
   `8317:38808`(저장 단일 목록), `8317:38885`(저장 긴 목록·선택),
   `9996:80229`(생성 빈 상태), `9996:80308`(생성 입력 상태),
   `9996:80461`(중복·글자 수 초과), `9996:80543`(수정),
@@ -181,21 +206,22 @@ Figma 파일은 `UHaom01PvoRx2wRCYa1kS1`이다.
   작은 화면에서는 가용 높이에 맞춰 목록 높이를 줄인다.
 - HDS Checkbox는 사각형이므로 원형 단일 선택에는 radio 의미와 HDS CheckIcon을
   사용한다. 색상 선택은 기본 radio를 사용한다. 공통 컴포넌트는 수정하지 않는다.
-- 주황 `#FBB94E`·파랑 `#CEE2F4` 배경은 Figma 값이며 두 북마크는 사용자 승인으로
-  흰색을 적용한다. 색상은 `collectionPalette.ts`에서 관리한다.
+- 최신 커버 `8317:38262`의 배경/북마크는 red `#FF5D5D/#BF2E2E`, orange `#FBB94E/#E59540`, yellow `#FDEC82/#EFC53A`, green `#DEDC5F/#ABA944`, blue `#CEE2F4/#A8D0E0`, purple `#C7AFDA/#A383C7`이다. 과거 주황·파랑 흰색 예외는 폐기한다.
+- compact는 50×50, 셀 24×24, gap 2, 북마크 영역 16×15이다. 생성/수정 프레임에서 100×100, 셀 48×48, gap 4, 북마크 32×30을 별도로 확인했다. Figma 원본 SVG 두 크기를 수정 없이 로컬 asset으로 저장하고 색상에 맞춰 mask로 표시한다. 동적 식당 사진은 props를 사용하며 누락 시 HDS Thumbnail fallback을 유지한다.
+- 최신 상세 프레임 `9996:84884`의 Figma 전용 ButtonCta(`10040:115150`)를 확인했다. 코드 검색 결과 대응하는 전용 지도 CTA 컴포넌트는 없어 기존 HDS Button + MapViewIcon을 유지하고 호출부 gap을 2px로 맞춘다. 과거 상세 노드 `8317:38007`은 삭제됐다.
 - 지도 패널 최초 높이에 대한 미확정 사항은 PR 1 그대로이며 변경하지 않는다.
 
 ### PR 2 검증 범위
 
-- 단위 검사: 생성·수정 공백 정규화, 필수값·중복·초과 입력 보존,
-  실제 카운터, 중복·설명 초과 동시 노출, Textarea 높이·스크롤 전환,
-  한글 조합, 수정 폐기, 브라우저 뒤로가기, 중복 저장 방지.
+- 단위 검사: 생성·수정 서버 기준 공백 정규화, 필수값·중복·초과 입력 보존,
+  실제 카운터, 중복·설명 초과 동시 노출, 정규화 기준 변경 감지·되돌리기,
+  한글 조합, 수정 폐기, 헤더/브라우저 뒤로가기, 앞으로가기·일반 PUSH 비차단, 중복 저장 방지. CSS·아이콘 존재 assertion은 제거하고 레이아웃은 실제 브라우저에서 검증한다.
 - 브라우저 검사: 393x852·320x568·820x1180 생성·수정·폐기,
   저장 대상 선택·생성 복귀·새로고침 초기화, 320x400 저장 목록 스크롤.
 - 기존 PR 1 목록·상세·정렬·분류·빈 목록·긴 목록·패널 회귀 검사를 함께 실행한다.
 - 실제 iPad 키보드·지도 복원·식당 상세 연결·API는 자동 브라우저 검증 대상이 아니다.
 
-### PR 2 검증 결과 (2026-10-08)
+### 최초 PR 2 검증 결과 (2026-10-08, 과거 기록)
 
 - client 전체: 148개 파일, 729개 테스트 통과.
 - 최종 컬렉션 범위: 5개 파일, 21개 테스트 통과.
@@ -213,7 +239,7 @@ Figma 파일은 `UHaom01PvoRx2wRCYa1kS1`이다.
 
 - 생성·수정 폼의 초과 입력 보존, 실제 카운터, 개별 오류와 동시 오류,
   HDS Textarea 자동 높이·최대 높이 내부 스크롤, 체크 아이콘, 하단 여백,
-  수정 이탈 Dialog 문구와 아이콘을 단위 테스트에 반영했다.
+  당시 수정 이탈 Dialog 문구와 아이콘도 검사했으나 PR #218 리뷰에서 단순 스타일·아이콘 assertion은 제거했다.
 - 브라우저 fixture에서 설명 입력창이 53px에서 시작해 내용에 따라 늘고,
   바깥 높이 129px·내부 높이 127px에서 스크롤로 전환한 뒤 내용 삭제 시
   다시 최소 높이로 줄어드는 것을 확인했다.
@@ -228,9 +254,25 @@ Figma 파일은 `UHaom01PvoRx2wRCYa1kS1`이다.
   제한되고 `overflow: auto`로 전환되는 것을 확인했다.
 - PR 2 push와 GitHub diff 확인은 후속 검증 항목이다.
 
-## 공백 정책 변경
+## PR #218 라우팅 책임과 제약
 
-사용자 결정으로 HASHI-PLAN 및 리뷰의 공백 보존 요청 대신 서버 정책을 따른다.
-서버 근거는 HASHI-SERVER develop `e2c486c6b1f5e98e9fa7ee09390e2f5e7189630c`의 `RestaurantCollectionService`다.
-서버와 동일하게 NBSP·전각 공백·U+0085 등을 제거하고 BOM과 중간 공백은 보존한다.
-공백뿐인 설명은 비우며, 앞뒤 공백만 변경하면 저장을 활성화하지 않는다. 배포 버전은 미확인이다.
+- path/lazy/routes에 라우트를 등록하고 기존 AuthOnlyRoute 및 RootLayout Provider를 사용한다. 서버 데이터·Query·API 변경은 없다.
+- CollectionFormPage가 생성/수정 및 복귀를 조율하고 CollectionForm은 폼·검증·뒤로가기 확인을 담당한다. 정상 제출은 blocker를 우회한다. 브라우저 POP 방향은 기존 프로젝트와 동일한 history index를 이용해 앞으로가기를 차단하지 않는다.
+- location.state의 collectionReturn으로 진입 pathname/search/state 및 저장 식당 ID·기존 선택을 전달한다. 브라우저 뒤로가기를 위해 원래 history 항목에도 모달 복원 정보를 기록하고 닫을 때 제거한다. 복귀 정보가 없거나 외부 경로면 /saved를 기본값으로 사용한다. 폐기를 확정하면 진입점과 관계없이 /saved로 이동한다.
+- 저장 모달 호출자는 생성 페이지 복귀 시 collectionSaveRestaurantId를 읽어 원래 식당 모달을 다시 연다. 현재 호출자는 saved E2E fixture이며 제품 식당 상세/지도 저장 버튼은 아직 연결하지 않았다.
+- 지도 패널의 기존 data/view/onViewChange/onDataChange props는 유지한다. 생성·수정 라우트도 같은 CollectionDataProvider의 데이터를 사용해야 한다. 독립 data만 사용하는 지도 호출자는 Provider를 함께 연결해야 한다.
+- 실제 /map은 기존 ComingSoon 상태를 유지한다. 지도 종료 복귀는 map owner fixture에서 검증하며 SDK/핀/지도 담당자의 제품 코드까지 구현한 것으로 보고하지 않는다.
+- E2E fixture는 동일한 경로 패턴의 HashRouter를 사용해 테스트 HTML 안에서 브라우저 뒤로가기/앞으로가기/새로고침을 검증한다. 제품 라우터는 기존 BrowserRouter를 유지한다.
+
+## PR #218 리뷰 반영 검증 결과 (2026-10-18)
+
+- baseline: client 전체 150개 파일·720개 테스트, lint·typecheck 통과.
+- 회귀 테스트에서 상세 URL·공백 버그 6건, 앞으로가기 차단 1건, 로컬 저장 모달 복귀 1건의 실패를 확인한 뒤 수정했다.
+- 최종 client 전체: 151개 파일·740개 테스트 통과. 실제 appRoutes의 인증된 목록·상세·생성·수정 진입도 포함한다.
+- 최종 saved Playwright: 15개 통과. 생성·수정·폐기(320/393/820px), 저장 대상 선택·생성 복귀·기존 선택 보존·중복 저장·로컬 상태 복귀, 지도 패널, 상세 URL·정렬·분류·직접 진입·새로고침·없는 ID·뒤로/앞으로가기를 검증했다.
+- client lint·typecheck, E2E TypeScript 검사, 변경 TS/TSX/문서 Prettier 검사, git diff --check, production build와 PWA generateSW 통과.
+- 320×568, 393×852, 820×1180에서 생성·수정·상세·오류·저장 모달·폐기 확인을 캡처하고 Figma와 대조했다. 320×400 저장 모달도 확인했다. 가로 넘침·pageerror는 없었으며 생성 항목과 하단 버튼이 목록 스크롤 중 접근 가능한 것을 확인했다.
+- 새로고침은 목 데이터를 초기화한다. 생성된 목 ID의 상세·수정 URL은 새로고침 후 목록으로 복귀한다. 저장 모달의 복원 정보는 닫을 때 제거한다.
+- 실제 /map SDK, 식당 상세 저장 버튼, 실서버 API, 실제 iOS/Android 가상 키보드 검증은 범위 밖이다.
+- verify-implementation의 등록 대상 verify-api-integration을 확인했다. 서버 데이터가 없는 목 퍼블리싱 예외를 적용했으며 API/query/cache 변경이 없는 것과 입력·disabled·문서 동기화·테스트 격리를 확인했다.
+- 스크린샷·Figma 기준·로그·전체 패치는 기존 \*.local 규칙으로 무시되는 review-evidence.local에 보관한다. .gitignore·의존성·lockfile·HDS public API는 변경하지 않았다.
