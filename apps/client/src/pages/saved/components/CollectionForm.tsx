@@ -349,7 +349,6 @@ export const CollectionForm = ({
         </form>
         <BottomActionBar
           aria-label={collection ? '컬렉션 수정 제출' : '컬렉션 생성 제출'}
-          className="min-h-[calc(100px+var(--safe-area-bottom,0px))] pt-2.5"
           endAction={
             <Button
               form={`${id}-form`}
