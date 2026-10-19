@@ -686,6 +686,16 @@ test('PR3 긴 편집 목록·개별 선택·취소 유지', async ({ page }, tes
   await target.getByRole('button', { name: '취소', exact: true }).click()
   await expect(editor.getByText('1개 선택됨')).toBeVisible()
   await editor.getByRole('button', { name: '편집 종료' }).click()
+  await expect(editor).toHaveCount(0)
+  await page.goForward()
+  await expect(editor).toBeVisible()
+  await expect(editor.getByRole('checkbox', { checked: true })).toHaveCount(0)
+  await expect(
+    editor.getByRole('button', { name: '이동', exact: true }),
+  ).toBeDisabled()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.goBack()
+  await expect(editor).toHaveCount(0)
   await page.getByRole('button', { name: '컬렉션 더보기', exact: true }).click()
   await page.getByRole('menuitem', { name: '편집하기' }).click()
   await expect(editor.getByRole('checkbox', { checked: true })).toHaveCount(0)

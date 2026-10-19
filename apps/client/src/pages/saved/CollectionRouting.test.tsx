@@ -193,6 +193,48 @@ describe('컬렉션 독립 라우트와 복귀', () => {
     expect(router.state.location.pathname).toBe('/saved')
   })
 
+  it.each(['header', 'browser'])(
+    '이동 취소 후 %s로 편집을 종료하면 앞으로 가기로 돌아와도 선택은 초기화한다',
+    async (source) => {
+      const { user, router } = setup(
+        '/saved/collections/spring?sort=rating&category=all',
+      )
+      await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
+      await user.click(screen.getByRole('menuitem', { name: '편집하기' }))
+      await user.click(
+        screen.getByRole('checkbox', { name: '히마와리 스시 신도심점 선택' }),
+      )
+      await user.click(screen.getByRole('button', { name: '이동 1' }))
+      await user.click(
+        within(screen.getByRole('dialog', { name: '컬렉션 이동' })).getByRole(
+          'button',
+          { name: '취소' },
+        ),
+      )
+      expect(
+        screen.getByRole('checkbox', { name: '히마와리 스시 신도심점 선택' }),
+      ).toBeChecked()
+      if (source === 'header')
+        await user.click(screen.getByRole('button', { name: '편집 종료' }))
+      else
+        await act(async () => {
+          await router.navigate(-1)
+        })
+      expect(router.state.location.pathname).toBe('/saved/collections/spring')
+      await act(async () => {
+        await router.navigate(1)
+      })
+      expect(router.state.location.pathname).toBe(
+        '/saved/collections/spring/restaurants/edit',
+      )
+      expect(
+        screen.getByRole('checkbox', { name: '히마와리 스시 신도심점 선택' }),
+      ).not.toBeChecked()
+      expect(screen.getByRole('button', { name: '이동' })).toBeDisabled()
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    },
+  )
+
   it('편집 직접 진입은 이전 화면에 관계없이 상세로 종료한다', async () => {
     const { user, router } = setup(
       '/saved/collections/spring/restaurants/edit?sort=rating&category=all',
@@ -251,6 +293,13 @@ describe('컬렉션 독립 라우트와 복귀', () => {
     expect(
       screen.queryByRole('region', { name: '컬렉션 편집' }),
     ).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await act(async () => {
+      await router.navigate(1)
+    })
+    expect(
+      screen.getByRole('checkbox', { name: '히마와리 스시 신도심점 선택' }),
+    ).not.toBeChecked()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   Navigate,
   useLocation,
@@ -16,6 +17,7 @@ import {
 import {
   getCollectionEditorReturnKey,
   getCollectionManagementAction,
+  getCollectionManagementState,
 } from '@/pages/saved/utils/collectionNavigation'
 
 export const CollectionEditorPage = () => {
@@ -24,6 +26,26 @@ export const CollectionEditorPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const [params] = useSearchParams()
+  const restored = getCollectionManagementAction(location.state)
+  useEffect(() => {
+    if (
+      restored?.collectionId !== collectionId ||
+      restored?.type !== 'edit' ||
+      (restored.restaurantIds === undefined && restored.dialog === undefined)
+    )
+      return
+    // 복귀용 선택은 현재 편집에서만 사용하고 다음 history 방문에는 남기지 않는다.
+    navigate(
+      { pathname: location.pathname, search: location.search },
+      {
+        replace: true,
+        state: getCollectionManagementState(location.state, {
+          collectionId: restored.collectionId,
+          type: 'edit',
+        }),
+      },
+    )
+  }, [collectionId, location, navigate, restored])
   if (
     !collectionId ||
     !data.collections.some((item) => item.id === collectionId)
@@ -39,7 +61,6 @@ export const CollectionEditorPage = () => {
         (item) => item.value === params.get('category'),
       )?.value ?? 'all',
   }
-  const restored = getCollectionManagementAction(location.state)
   const action =
     restored?.collectionId === collectionId && restored.type === 'edit'
       ? restored
