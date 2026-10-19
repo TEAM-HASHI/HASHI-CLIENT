@@ -123,7 +123,7 @@ export const appRoutes: RouteObject[] = [
             children: [
               {
                 index: true,
-                element: lazyPages.comingSoon(),
+                element: lazyPages.saved(),
               },
             ],
           },
