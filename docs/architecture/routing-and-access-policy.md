@@ -137,3 +137,7 @@
 지도(`/map`)는 샘플 지도·검색·필터·목록·상세·사진 보기 화면을 제공합니다.
 지도 SDK는 Google Maps를 사용합니다. 식당 데이터와 좌표는 샘플임을 표시하며 실제 식당 검색·저장/예약 API는 연결하지 않습니다.
 지도 검색은 `/search`에 검증된 map context를 전달하고 replace navigation으로 복귀합니다. 지도 상태는 메모리에서 이탈 후 5분 미만 복원하며, 활성 지도 탭 재선택은 reset route state를 전달해 즉시 초기화합니다. 일반 검색 URL과 접근 정책은 변경하지 않습니다.
+
+### 이용약관 API route parameter (2026-10-17)
+
+`/terms/:policyId`의 parameter는 공개 목록 API가 제공하는 양의 정수 `termsId`를 사용한다. 정적 약관 slug가 아니라 서버 ID로 상세를 조회하며 잘못된 ID와 미게시/없는 약관의 404는 NotFound로 처리한다.
