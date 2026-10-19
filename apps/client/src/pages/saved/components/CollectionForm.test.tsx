@@ -13,6 +13,7 @@ import { useState, type ReactElement } from 'react'
 import { CollectionForm } from '@/pages/saved/components/CollectionForm'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import { createCollection } from '@/pages/saved/utils/collectionMutations'
+import { ApiError } from '@/shared/api/apiError'
 
 afterEach(cleanup)
 const renderForm = (element: ReactElement, withForwardEntry = false) => {
@@ -35,6 +36,115 @@ const renderForm = (element: ReactElement, withForwardEntry = false) => {
   return router
 }
 describe('CollectionForm', () => {
+  it('서버 응답을 기다리며 중복 제출을 막고 실패한 입력으로 재시도한 뒤 성공할 때만 복귀한다', async () => {
+    let rejectRequest!: (error: Error) => void
+    const pending = new Promise<void>((_, reject) => {
+      rejectRequest = reject
+    })
+    const onSubmit = vi
+      .fn()
+      .mockReturnValueOnce(pending)
+      .mockResolvedValueOnce(undefined)
+    const onSubmitSuccess = vi.fn()
+    renderForm(
+      <CollectionForm
+        collections={[]}
+        onSubmit={onSubmit}
+        onSubmitSuccess={onSubmitSuccess}
+        onClose={vi.fn()}
+      />,
+    )
+    const name = screen.getByLabelText('컬렉션명')
+    const description = screen.getByLabelText('설명')
+    fireEvent.change(name, { target: { value: '새 여행' } })
+    fireEvent.change(description, { target: { value: '저장할 설명' } })
+    fireEvent.click(screen.getByRole('radio', { name: '빨강' }))
+    const form = name.closest('form')!
+    fireEvent.submit(form)
+    fireEvent.submit(form)
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    expect(onSubmitSuccess).not.toHaveBeenCalled()
+    expect(name).toBeDisabled()
+    expect(screen.getByRole('button', { name: '비공개' })).toBeDisabled()
+    await act(async () => {
+      rejectRequest(new Error('network failure'))
+    })
+    expect(name).toHaveValue('새 여행')
+    expect(description).toHaveValue('저장할 설명')
+    expect(screen.getByRole('alert')).toBeVisible()
+    expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled()
+    fireEvent.submit(form)
+    await act(async () => {})
+    expect(onSubmit).toHaveBeenCalledTimes(2)
+    expect(onSubmitSuccess).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+  })
+
+  it('서버 중복 이름 오류를 기존 이름 안내에 표시하고 이름을 고치면 해제한다', async () => {
+    const onSubmit = vi.fn().mockRejectedValue(
+      new ApiError(
+        {
+          success: false,
+          code: 'USER-007',
+          message: 'duplicate',
+          data: null,
+          timestamp: '2026-10-20T00:00:00',
+          path: '/api/v1/collections',
+        },
+        409,
+      ),
+    )
+    renderForm(
+      <CollectionForm collections={[]} onSubmit={onSubmit} onClose={vi.fn()} />,
+    )
+    const name = screen.getByLabelText('컬렉션명')
+    fireEvent.change(name, { target: { value: '같은 이름' } })
+    fireEvent.click(screen.getByRole('radio', { name: '빨강' }))
+    await act(async () => {
+      fireEvent.submit(name.closest('form')!)
+    })
+    expect(name).toHaveValue('같은 이름')
+    expect(name).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByText('중복된 컬렉션명입니다.')).toBeVisible()
+    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+    fireEvent.change(name, { target: { value: '다른 이름' } })
+    expect(screen.queryByText('중복된 컬렉션명입니다.')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled()
+  })
+
+  it('수정 요청 중 뒤로가기를 막고 성공한 뒤에는 폐기 확인 없이 복귀한다', async () => {
+    let completeRequest!: () => void
+    const pending = new Promise<void>((resolve) => {
+      completeRequest = resolve
+    })
+    const router = renderForm(
+      <CollectionForm
+        collection={collectionMocks.collections[0]}
+        collections={collectionMocks.collections}
+        onSubmit={() => pending}
+        onSubmitSuccess={() => {
+          void router.navigate(-1)
+        }}
+        onClose={vi.fn()}
+      />,
+    )
+    fireEvent.change(screen.getByLabelText('컬렉션명'), {
+      target: { value: '수정할 이름' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '저장하기' }))
+    await act(async () => {
+      await router.navigate(-1)
+    })
+    expect(router.state.location.pathname).toBe('/form')
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    await act(async () => {
+      completeRequest()
+    })
+    expect(router.state.location.pathname).toBe('/previous')
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
   it('설명 Enter는 줄바꿈하지 않고 붙여넣은 개행은 공백으로 바꿔 제출한다', async () => {
     const user = userEvent.setup()
     const onSubmit = vi.fn()

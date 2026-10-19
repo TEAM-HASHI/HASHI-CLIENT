@@ -24,6 +24,8 @@ import {
 import type { CollectionDraft } from '@/pages/saved/utils/collectionMutations'
 import { BottomActionBar } from '@/shared/components/bottomActionBar/BottomActionBar'
 import { getCollectionHistoryIndex } from '@/pages/saved/utils/collectionNavigation'
+import { ApiError } from '@/shared/api/apiError'
+import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { cn } from '@/shared/utils'
 
 const COLOR_LABELS: Record<CollectionColor, string> = {
@@ -51,17 +53,20 @@ export const CollectionForm = ({
   collection,
   collections,
   onSubmit,
+  onSubmitSuccess,
   onClose,
   onDiscard = onClose,
 }: {
   collection?: SavedCollection
   collections: readonly SavedCollection[]
-  onSubmit: (draft: CollectionDraft) => void
+  onSubmit: (draft: CollectionDraft) => void | Promise<void>
+  onSubmitSuccess?: () => void
   onClose: () => void
   onDiscard?: () => void
 }) => {
   const id = useId()
   const allowNavigation = useRef(false)
+  const submitting = useRef(false)
   const historyIndex = useRef(getCollectionHistoryIndex())
   const composing = useRef(false)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
@@ -79,6 +84,9 @@ export const CollectionForm = ({
   })
   const [discarding, setDiscarding] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState<unknown>(null)
+  const hasServerDuplicateName =
+    submitError instanceof ApiError && submitError.code === 'USER-007'
   const normalizedDraft = normalizeCollectionDraft(draft)
   const normalizedInitial = normalizeCollectionDraft(initial)
   const changed = (['name', 'description', 'color', 'isPublic'] as const).some(
@@ -87,9 +95,14 @@ export const CollectionForm = ({
   const error = validateCollection(draft, collections, collection?.id)
   const hasDuplicateName =
     !isSubmitted &&
-    isDuplicateCollectionName(draft, collections, collection?.id)
+    (hasServerDuplicateName ||
+      isDuplicateCollectionName(draft, collections, collection?.id))
   const canSubmit =
-    !isSubmitted && !isComposing && !error && (!collection || changed)
+    !isSubmitted &&
+    !isComposing &&
+    !error &&
+    !hasDuplicateName &&
+    (!collection || changed)
   const needsConfirmation = Boolean(collection && changed)
   const blocker = useBlocker(({ historyAction }) => {
     const nextIndex = getCollectionHistoryIndex()
@@ -98,10 +111,11 @@ export const CollectionForm = ({
       nextIndex === undefined ||
       nextIndex < historyIndex.current
     return (
-      !allowNavigation.current &&
-      needsConfirmation &&
-      historyAction === 'POP' &&
-      isBack
+      submitting.current ||
+      (!allowNavigation.current &&
+        needsConfirmation &&
+        historyAction === 'POP' &&
+        isBack)
     )
   })
   useLayoutEffect(() => {
@@ -118,6 +132,7 @@ export const CollectionForm = ({
       textarea.scrollHeight > DESCRIPTION_MAX_CLIENT_HEIGHT ? 'auto' : 'hidden'
   }, [draft.description])
   const close = () => {
+    if (submitting.current) return
     if (needsConfirmation) setDiscarding(true)
     else onClose()
   }
@@ -126,6 +141,7 @@ export const CollectionForm = ({
     limit: number,
     next: string,
   ) => {
+    if (key === 'name') setSubmitError(null)
     if (!composing.current)
       setOverLimit((current) => ({ ...current, [key]: next.length > limit }))
     setDraft((current) => ({
@@ -142,6 +158,7 @@ export const CollectionForm = ({
     limit: number,
     next: string,
   ) => {
+    if (key === 'name') setSubmitError(null)
     composing.current = false
     setIsComposing(false)
     setOverLimit((current) => ({ ...current, [key]: next.length > limit }))
@@ -158,7 +175,12 @@ export const CollectionForm = ({
           <Header
             title={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
             leftAction={
-              <IconButton size="xs" aria-label="뒤로가기" onClick={close}>
+              <IconButton
+                size="xs"
+                aria-label="뒤로가기"
+                onClick={close}
+                disabled={isSubmitted}
+              >
                 <BackIcon className="size-6" />
               </IconButton>
             }
@@ -167,14 +189,24 @@ export const CollectionForm = ({
         <form
           id={`${id}-form`}
           className="w-full px-6"
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault()
-            if (canSubmit) {
-              allowNavigation.current = true
-              onSubmit(draft)
-              // 목록 갱신 후 뒤로 이동이 끝나기 전에는 생성 항목을 재검증하지 않는다.
-              setIsSubmitted(true)
+            if (!canSubmit || submitting.current) return
+            submitting.current = true
+            setIsSubmitted(true)
+            setSubmitError(null)
+            try {
+              const result = onSubmit(draft)
+              if (result) await result
+            } catch (cause) {
+              submitting.current = false
+              setIsSubmitted(false)
+              setSubmitError(cause)
+              return
             }
+            submitting.current = false
+            allowNavigation.current = true
+            onSubmitSuccess?.()
           }}
         >
           <div className="my-8.5 flex justify-center">
@@ -193,6 +225,7 @@ export const CollectionForm = ({
               컬렉션명
             </label>
             <InputField
+              disabled={isSubmitted}
               className="h-[53px] px-5"
               id={`${id}-name`}
               aria-label="컬렉션명"
@@ -239,7 +272,7 @@ export const CollectionForm = ({
               </span>
             </div>
           </div>
-          <fieldset className="w-full pb-7">
+          <fieldset className="w-full pb-7" disabled={isSubmitted}>
             <legend className="typo-sub-header-1 text-primary-200">
               색상 선택
             </legend>
@@ -281,6 +314,7 @@ export const CollectionForm = ({
               설명
             </label>
             <Textarea
+              disabled={isSubmitted}
               className="gap-3"
               textareaClassName="min-h-[51px] max-h-[129px] px-5 py-4"
               id={`${id}-description`}
@@ -326,7 +360,7 @@ export const CollectionForm = ({
             <span className="typo-sub-header-1 text-primary-200">
               공개 범위
             </span>
-            <div className="flex gap-3">
+            <fieldset className="flex gap-3" disabled={isSubmitted}>
               {[true, false].map((isPublic) => (
                 <Chip
                   key={String(isPublic)}
@@ -344,8 +378,13 @@ export const CollectionForm = ({
                   {isPublic ? '공개' : '비공개'}
                 </Chip>
               ))}
-            </div>
+            </fieldset>
           </div>
+          {submitError !== null && !hasServerDuplicateName && (
+            <p role="alert" className="typo-body-7 text-primary-400 pb-5">
+              {getErrorPresentation(submitError).message}
+            </p>
+          )}
         </form>
         <BottomActionBar
           aria-label={collection ? '컬렉션 수정 제출' : '컬렉션 생성 제출'}
@@ -363,7 +402,10 @@ export const CollectionForm = ({
       </section>
       <Dialog.Root
         type="alertdialog"
-        open={discarding || (blocker.state === 'blocked' && needsConfirmation)}
+        open={
+          !isSubmitted &&
+          (discarding || (blocker.state === 'blocked' && needsConfirmation))
+        }
         onOpenChange={(open) => {
           setDiscarding(open)
           if (!open && blocker.state === 'blocked') blocker.reset()
