@@ -10,6 +10,7 @@ import {
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import '@/app/styles/global.css'
+import { CollectionEditorPage } from '@/pages/saved/CollectionEditorPage'
 import { CollectionFormPage } from '@/pages/saved/CollectionFormPage'
 import { getCollectionDetailPath } from '@/app/router/routePaths'
 import { getCollectionSaveRestaurantId } from '@/pages/saved/utils/collectionNavigation'
@@ -155,6 +156,10 @@ const router = createHashRouter([
       { path: '/saved/collections/:collectionId', element: <SavedFixture /> },
       { path: '/map', element: <PanelFixture /> },
     ],
+  },
+  {
+    path: '/saved/collections/:collectionId/restaurants/edit',
+    element: <CollectionEditorPage />,
   },
   { path: '/saved/collections/new', element: <CollectionFormPage /> },
   {

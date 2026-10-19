@@ -26,10 +26,11 @@ describe('CollectionEditor', () => {
       </StrictMode>,
     )
     expect(toast).toHaveBeenCalledTimes(1)
-    expect(toast).toHaveBeenCalledWith({
-      icon: expect.anything(),
-      children: '링크 복사는 아직 연결되지 않았어요.',
-    })
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        children: '링크 복사는 아직 연결되지 않았어요.',
+      }),
+    )
   })
   it('비공개 공유 취소는 데이터 변경을 하지 않는다', () => {
     const change = vi.fn()

@@ -15,6 +15,7 @@ import {
 } from '@hashi/hds-ui'
 import { useEffect, useRef, useState } from 'react'
 import type { CollectionData, CollectionViewState } from '@/pages/saved/types'
+import { BottomActionBar } from '@/shared/components/bottomActionBar/BottomActionBar'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import { CollectionTargetDialog } from '@/pages/saved/components/CollectionSaveDialog'
 import { selectRestaurants } from '@/pages/saved/utils/collectionSelectors'
@@ -31,7 +32,6 @@ export type CollectionManagementAction = {
   restaurantIds?: readonly string[]
 }
 
-// Figma 8317:39338 / 39425 / 39512. 공통 Checkbox는 페이지 내부에서 원형 24px로 조합한다.
 const SELECTION_CLASS =
   'shrink-0 [&>span:first-of-type]:size-6 [&>span:first-of-type]:rounded-full [&>span:first-of-type]:border [&>span:first-of-type]:border-warm-gray-100 [&>span:first-of-type]:bg-white [&>span:first-of-type]:text-warm-gray-100 [&>span:first-of-type>svg]:size-5 [&>input:checked+span]:bg-cool-gray-900 [&>input:checked+span]:border-cool-gray-900 [&>input:checked+span]:text-white'
 
@@ -94,91 +94,89 @@ export const CollectionEditor = ({
   return (
     <>
       {editing && (
-        <Dialog.Root
-          open
-          onOpenChange={(open) => {
-            if (!open) onClose()
-          }}
+        <section
+          aria-label="컬렉션 편집"
+          className="app-mobile-bottom-action-content flex h-dvh flex-col overflow-hidden bg-white pt-[var(--safe-area-top,0px)]"
         >
-          <Dialog.Content
-            aria-label="컬렉션 편집"
-            className="h-dvh max-h-dvh w-screen max-w-[var(--app-mobile-max-width,100vw)] rounded-none p-0 pt-[var(--safe-area-top,0px)]"
-          >
-            <Header
-              className="shrink-0"
-              title={collection.name}
-              subtitle="편집하기"
-              contentClassName="[&>div:first-child]:typo-sub-header-2"
-              leftAction={
-                <IconButton size="xs" aria-label="편집 종료" onClick={onClose}>
-                  <BackIcon className="size-6" />
-                </IconButton>
+          <Header
+            className="shrink-0"
+            title={collection.name}
+            subtitle="편집하기"
+            contentClassName="[&>div:first-child]:typo-sub-header-2"
+            leftAction={
+              <IconButton size="xs" aria-label="편집 종료" onClick={onClose}>
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+          />
+          <div className="border-warm-gray-50 flex h-11.5 w-full shrink-0 items-center border-b px-5">
+            <Checkbox
+              className={SELECTION_CLASS}
+              aria-label="전체 선택"
+              checked={all}
+              disabled={!restaurants.length}
+              ref={(node) => {
+                if (node) node.indeterminate = selectedIds.length > 0 && !all
+              }}
+              onChange={() =>
+                setSelected(all ? [] : restaurants.map((r) => r.id))
               }
-            />
-            <div className="border-warm-gray-50 flex h-11.5 w-full shrink-0 items-center border-b px-5">
-              <Checkbox
-                className={SELECTION_CLASS}
-                aria-label="전체 선택"
-                checked={all}
-                disabled={!restaurants.length}
-                ref={(node) => {
-                  if (node) node.indeterminate = selectedIds.length > 0 && !all
-                }}
-                onChange={() =>
-                  setSelected(all ? [] : restaurants.map((r) => r.id))
-                }
-              >
-                <span className="typo-body-5 text-primary-200">전체 선택</span>
-              </Checkbox>
-            </div>
-            <div className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain px-5">
-              {selectedIds.length > 0 && (
-                <p className="typo-body-5 text-primary-200 py-3" role="status">
-                  {selectedIds.length}개 선택됨
-                </p>
-              )}
-              <ul aria-label="편집 식당">
-                {restaurants.map((restaurant) => (
-                  <SavedRestaurantRow
-                    key={restaurant.id}
-                    restaurant={restaurant}
-                    editing
-                    selection={
-                      <Checkbox
-                        className={SELECTION_CLASS}
-                        aria-label={`${restaurant.name} 선택`}
-                        checked={selectedIds.includes(restaurant.id)}
-                        onChange={() =>
-                          setSelected((current) =>
-                            current.includes(restaurant.id)
-                              ? current.filter((id) => id !== restaurant.id)
-                              : [...current, restaurant.id],
-                          )
-                        }
-                      />
-                    }
-                  />
-                ))}
-              </ul>
-            </div>
-            <div className="flex w-full shrink-0 gap-4 px-5 pt-4 pb-[max(48px,var(--safe-area-bottom,0px))]">
+            >
+              <span className="typo-body-5 text-primary-200">전체 선택</span>
+            </Checkbox>
+          </div>
+          <div className="min-h-0 w-full flex-1 overflow-y-auto overscroll-contain px-5">
+            {selectedIds.length > 0 && (
+              <p className="typo-body-5 text-primary-200 py-3" role="status">
+                {selectedIds.length}개 선택됨
+              </p>
+            )}
+            <ul aria-label="편집 식당">
+              {restaurants.map((restaurant) => (
+                <SavedRestaurantRow
+                  key={restaurant.id}
+                  restaurant={restaurant}
+                  editing
+                  selection={
+                    <Checkbox
+                      className={SELECTION_CLASS}
+                      aria-label={`${restaurant.name} 선택`}
+                      checked={selectedIds.includes(restaurant.id)}
+                      onChange={() =>
+                        setSelected((current) =>
+                          current.includes(restaurant.id)
+                            ? current.filter((id) => id !== restaurant.id)
+                            : [...current, restaurant.id],
+                        )
+                      }
+                    />
+                  }
+                />
+              ))}
+            </ul>
+          </div>
+          <BottomActionBar
+            aria-label="컬렉션 식당 편집 액션"
+            startAction={
               <Button
-                className="min-w-0 flex-1"
+                className="w-full min-w-0"
                 disabled={!selectedIds.length}
                 onClick={() => setDialog('move')}
               >
                 이동{selectedIds.length ? ` ${selectedIds.length}` : ''}
               </Button>
+            }
+            endAction={
               <Button
-                className="min-w-0 flex-1"
+                className="w-full min-w-0"
                 disabled={!selectedIds.length}
                 onClick={() => setDialog('remove')}
               >
                 삭제{selectedIds.length ? ` ${selectedIds.length}` : ''}
               </Button>
-            </div>
-          </Dialog.Content>
-        </Dialog.Root>
+            }
+          />
+        </section>
       )}
       {dialog === 'move' && (
         <CollectionTargetDialog

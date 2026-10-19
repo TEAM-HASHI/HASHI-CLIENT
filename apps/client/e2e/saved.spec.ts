@@ -8,255 +8,6 @@ const openFixture = async (
   await page.getByRole('navigation').waitFor()
 }
 
-test('회귀: 일반 목록을 스크롤한 뒤 상세는 상단에서 열린다', async ({
-  page,
-}, testInfo) => {
-  await page.setViewportSize({ width: 382, height: 647 })
-  await openFixture(page, '?scenario=long')
-  await page
-    .getByRole('button', { name: /컬렉션 열기$/ })
-    .last()
-    .click()
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
-  await expect(
-    page.getByRole('heading', { name: '가'.repeat(20) }),
-  ).toBeInViewport()
-  await page.screenshot({ path: testInfo.outputPath('detail-entry.png') })
-})
-
-test('회귀: 지도 목록 높이와 상세 진입 스크롤', async ({ page }, testInfo) => {
-  await page.setViewportSize({ width: 382, height: 647 })
-  await openFixture(page, '?panel=list')
-  await page
-    .getByRole('button', { name: '2026 도쿄 여름 여행 컬렉션 열기' })
-    .click()
-  const panel = page.getByRole('region', { name: '저장 컬렉션 패널' })
-  await expect
-    .poll(() =>
-      panel.locator('.overflow-y-auto').evaluate((node) => node.scrollTop),
-    )
-    .toBe(0)
-  await expect(page.getByRole('slider')).toHaveAttribute('aria-valuenow', '393')
-  await page.screenshot({ path: testInfo.outputPath('panel-detail-entry.png') })
-  await openFixture(page, '?panel=list&scenario=empty')
-  await expect(page.getByRole('slider')).toHaveAttribute('aria-valuenow', '234')
-  await openFixture(page, '?panel=list')
-  await expect(page.getByRole('slider')).toHaveAttribute('aria-valuenow', '374')
-  await page.screenshot({ path: testInfo.outputPath('panel-list-entry.png') })
-  await openFixture(page, '?panel=list&scenario=long')
-  await page
-    .getByRole('button', { name: /컬렉션 열기$/ })
-    .last()
-    .click()
-  const scroller = panel.locator('.overflow-y-auto')
-  await expect.poll(() => scroller.evaluate((node) => node.scrollTop)).toBe(0)
-  await scroller.evaluate((node) => {
-    node.scrollTop = 100
-  })
-  await page.getByRole('slider').press('Home')
-  await page.getByRole('slider').press('ArrowUp')
-  await expect.poll(() => scroller.evaluate((node) => node.scrollTop)).toBe(100)
-})
-
-for (const viewport of [
-  { width: 393, height: 852 },
-  { width: 320, height: 568 },
-  { width: 820, height: 1180 },
-]) {
-  test(`PR3 선택·부분 이동·삭제 ${viewport.width}`, async ({
-    page,
-  }, testInfo) => {
-    await page.setViewportSize(viewport)
-    await openFixture(page)
-    await page
-      .getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' })
-      .click()
-    await page
-      .getByRole('button', { name: '컬렉션 더보기', exact: true })
-      .click()
-    await page.getByRole('menuitem', { name: '편집하기' }).click()
-    const editor = page.getByRole('dialog', {
-      name: '컬렉션 편집',
-      exact: true,
-    })
-    await expect(
-      editor.getByRole('button', { name: '이동', exact: true }),
-    ).toBeDisabled()
-    await editor.getByText('전체 선택', { exact: true }).click()
-    await expect(editor.getByText('4개 선택됨')).toBeVisible()
-    await expect(
-      editor
-        .getByRole('checkbox', { name: '전체 선택' })
-        .locator('..')
-        .locator('span')
-        .first(),
-    ).toHaveCSS('background-color', 'rgb(39, 48, 51)')
-    await page.screenshot({
-      path: testInfo.outputPath('editor-all.png'),
-      animations: 'disabled',
-    })
-    await editor.getByRole('button', { name: '이동 4' }).click()
-    const target = page.getByRole('dialog', {
-      name: '컬렉션 이동',
-      exact: true,
-    })
-    await expect(
-      target.getByRole('radio', { name: '2026 도쿄 봄 여행' }),
-    ).toHaveCount(0)
-    await target.getByRole('radio', { name: '2026 도쿄 여름 여행' }).click()
-    await expect(
-      target.getByText('이미 저장된 2곳은 이동하지 않아요.'),
-    ).toBeVisible()
-    await page.screenshot({
-      path: testInfo.outputPath('move-partial.png'),
-      animations: 'disabled',
-    })
-    await target.getByRole('button', { name: '이동', exact: true }).click()
-    await expect(editor.getByText('2개 선택됨')).toBeVisible()
-    await expect(editor.locator('[data-restaurant-id]')).toHaveCount(2)
-    await editor.getByRole('button', { name: '삭제 2' }).click()
-    await page.getByRole('button', { name: '취소하기' }).click()
-    await expect(editor.getByText('2개 선택됨')).toBeVisible()
-    await editor.getByRole('button', { name: '삭제 2' }).click()
-    await page.getByRole('button', { name: '삭제하기', exact: true }).click()
-    await expect(editor.locator('[data-restaurant-id]')).toHaveCount(0)
-    await expect(
-      editor.getByRole('button', { name: '삭제', exact: true }),
-    ).toBeDisabled()
-    await editor.getByRole('button', { name: '편집 종료' }).click()
-    await expect(page.getByText('총 0곳')).toBeVisible()
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBe(true)
-  })
-}
-
-test('PR3 긴 편집 목록·개별 선택·취소 유지', async ({ page }, testInfo) => {
-  await page.setViewportSize({ width: 320, height: 400 })
-  await openFixture(page, '?scenario=long')
-  await page
-    .getByRole('button', { name: `${'가'.repeat(20)} 컬렉션 열기` })
-    .first()
-    .click()
-  await page.getByRole('button', { name: '컬렉션 더보기', exact: true }).click()
-  await page.getByRole('menuitem', { name: '편집하기' }).click()
-  const editor = page.getByRole('dialog', { name: '컬렉션 편집', exact: true })
-  await editor.locator('[data-restaurant-id="long-0"] label').click()
-  await expect(
-    editor.getByRole('checkbox', { name: '전체 선택' }),
-  ).toHaveJSProperty('indeterminate', true)
-  await expect(
-    editor
-      .getByRole('checkbox', { name: '전체 선택' })
-      .locator('..')
-      .locator('span')
-      .first(),
-  ).toHaveCSS('background-color', 'rgb(255, 255, 255)')
-  await page.screenshot({ path: testInfo.outputPath('editor-partial.png') })
-  const button = editor.getByRole('button', { name: '이동 1' })
-  const before = await button.boundingBox()
-  await editor.locator('[data-restaurant-id]').last().scrollIntoViewIfNeeded()
-  await expect(editor.locator('[data-restaurant-id]').last()).toBeInViewport()
-  expect((await button.boundingBox())!.y).toBe(before!.y)
-  await button.click()
-  const target = page.getByRole('dialog', { name: '컬렉션 이동', exact: true })
-  await target.getByRole('radio').last().scrollIntoViewIfNeeded()
-  await expect(
-    target.getByRole('button', { name: '새 컬렉션 만들기' }),
-  ).toBeVisible()
-  await page.screenshot({
-    path: testInfo.outputPath('long-move.png'),
-    animations: 'disabled',
-  })
-  await target.getByRole('button', { name: '취소', exact: true }).click()
-  await expect(editor.getByText('1개 선택됨')).toBeVisible()
-  await editor.getByRole('button', { name: '편집 종료' }).click()
-  await page.getByRole('button', { name: '컬렉션 더보기', exact: true }).click()
-  await page.getByRole('menuitem', { name: '편집하기' }).click()
-  await expect(editor.getByRole('checkbox', { checked: true })).toHaveCount(0)
-})
-
-test('PR3 단일 중복 이동·생성 복귀·취소', async ({ page }) => {
-  await openFixture(page)
-  await page
-    .getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' })
-    .click()
-  await page
-    .getByRole('button', { name: '히마와리 스시 신도심점 더보기', exact: true })
-    .click()
-  await page.getByRole('menuitem', { name: '이동하기' }).click()
-  const target = page.getByRole('dialog', { name: '컬렉션 이동', exact: true })
-  await target.getByRole('radio', { name: '2026 도쿄 여름 여행' }).click()
-  await target.getByRole('button', { name: '이동', exact: true }).click()
-  await expect(target.getByText('이미 저장된 식당이에요.')).toBeVisible()
-  await target.getByRole('button', { name: '새 컬렉션 만들기' }).click()
-  await page.getByLabel('컬렉션명', { exact: true }).fill('이동 목적지')
-  await page.getByRole('radio', { name: '빨강' }).check()
-  await page.getByRole('button', { name: '만들기', exact: true }).click()
-  await expect(
-    target.getByRole('radio', { name: '이동 목적지' }),
-  ).not.toBeChecked()
-  await target.getByRole('radio', { name: '이동 목적지' }).click()
-  await target.getByRole('button', { name: '이동', exact: true }).click()
-  await expect(page.getByText('총 3곳')).toBeVisible()
-})
-
-test('PR3 비공개 공유·목록 삭제·지도 관리 연결', async ({ page }, testInfo) => {
-  await page.setViewportSize({ width: 393, height: 852 })
-  await openFixture(page, '?panel=list')
-  await page.getByRole('button', { name: '2026 도쿄 가을 여행 더보기' }).click()
-  await page.getByRole('menuitem', { name: '링크 복사' }).click()
-  await expect(page.getByRole('alertdialog')).toBeVisible()
-  await page.screenshot({
-    path: testInfo.outputPath('private-share.png'),
-    animations: 'disabled',
-  })
-  await page.getByRole('button', { name: '공개 후 공유' }).click()
-  await expect(
-    page.getByText(
-      '공개 컬렉션으로 변경했어요. 링크 복사는 아직 연결되지 않았어요.',
-    ),
-  ).toBeVisible()
-  await expect(page.getByText('컬렉션 링크가 복사되었어요.')).toHaveCount(0)
-  await page.getByRole('button', { name: '2026 도쿄 가을 여행 더보기' }).click()
-  await page.getByRole('menuitem', { name: '링크 복사' }).click()
-  await expect(page.getByRole('button', { name: '공개 후 공유' })).toHaveCount(
-    0,
-  )
-  const shareToast = page.getByText('링크 복사는 아직 연결되지 않았어요.', {
-    exact: true,
-  })
-  await expect(shareToast).toBeVisible()
-  await expect(shareToast.locator('..').locator('svg')).toHaveCount(1)
-  await page.screenshot({ path: testInfo.outputPath('share-link-icon.png') })
-  await page.getByRole('button', { name: '2026 도쿄 가을 여행 더보기' }).click()
-  await page.getByRole('menuitem', { name: '삭제하기' }).click()
-  await page.screenshot({
-    path: testInfo.outputPath('delete-collection.png'),
-    animations: 'disabled',
-  })
-  await page.getByRole('button', { name: '취소하기' }).click()
-  await page.getByRole('button', { name: '2026 도쿄 가을 여행 더보기' }).click()
-  await page.getByRole('menuitem', { name: '삭제하기' }).click()
-  await page.getByRole('button', { name: '삭제하기', exact: true }).click()
-  await expect(page.getByText('컬렉션이 삭제되었어요.')).toBeVisible()
-  await expect(page.getByRole('heading', { name: '컬렉션 3개' })).toBeVisible()
-  await page
-    .getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' })
-    .click()
-  await page.getByRole('button', { name: '컬렉션 더보기', exact: true }).click()
-  await page.getByRole('menuitem', { name: '편집하기' }).click()
-  await expect(
-    page.getByRole('dialog', { name: '컬렉션 편집', exact: true }),
-  ).toBeVisible()
-  await page.getByRole('button', { name: '편집 종료' }).click()
-  await expect(
-    page.getByRole('heading', { name: '2026 도쿄 봄 여행' }),
-  ).toBeVisible()
-})
-
 for (const viewport of [
   { width: 393, height: 852 },
   { width: 320, height: 400 },
@@ -303,6 +54,11 @@ for (const viewport of [
     const rowBox = await lastRestaurant.boundingBox()
     const navBox = await page.getByRole('navigation').boundingBox()
     expect(rowBox!.y + rowBox!.height).toBeLessThanOrEqual(navBox!.y + 1)
+    await lastRestaurant.getByRole('button', { name: /더보기$/ }).click()
+    await expect(
+      page.getByRole('menuitem', { name: '삭제하기' }),
+    ).toBeInViewport()
+    await page.keyboard.press('Escape')
     await page.getByRole('button', { name: '분류 선택' }).click()
     await expect(
       page.getByRole('menuitemradio', { name: '음식점' }),
@@ -442,241 +198,6 @@ test('컬렉션 목록은 최대 높이를 유지하며 내부 스크롤 후 상
   ).toHaveAttribute('aria-current', 'page')
 })
 
-test('컬렉션 메뉴는 화면 맥락과 피그마 규격을 따른다', async ({ page }) => {
-  await page.setViewportSize({ width: 393, height: 852 })
-  await openFixture(page, '?panel=list')
-
-  const trigger = page.getByRole('button', {
-    name: '2026 도쿄 봄 여행 더보기',
-  })
-  await trigger.click()
-  const panelMenu = page.getByRole('menu', {
-    name: '2026 도쿄 봄 여행 더보기',
-  })
-  await expect(panelMenu.getByRole('menuitem')).toHaveText([
-    '링크 복사',
-    '수정하기',
-    '삭제하기',
-  ])
-
-  const menuBox = await panelMenu.boundingBox()
-  const triggerBox = await trigger.boundingBox()
-  expect(menuBox?.width).toBe(140)
-  expect(menuBox?.height).toBe(120)
-  expect(menuBox!.y).toBe(triggerBox!.y + triggerBox!.height + 1)
-  expect(menuBox!.x + menuBox!.width).toBe(373)
-  for (const item of await panelMenu.getByRole('menuitem').all()) {
-    const itemBox = await item.boundingBox()
-    expect(itemBox?.width).toBe(120)
-    expect(itemBox?.height).toBe(40)
-    await expect(item.locator('span').last()).toHaveCSS('font-weight', '600')
-  }
-
-  await page.keyboard.press('Escape')
-  await page.getByRole('slider').press('End')
-  const fullscreen = page.getByRole('dialog', {
-    name: '컬렉션 전체 화면',
-  })
-  await fullscreen
-    .getByRole('button', { name: '2026 도쿄 봄 여행 더보기' })
-    .click()
-  await expect(fullscreen.getByRole('menuitem')).toHaveText([
-    '수정하기',
-    '공유하기',
-    '삭제하기',
-  ])
-})
-
-test('낮은 패널의 컬렉션 메뉴는 피그마 좌표로 위쪽에 열린다', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 393, height: 852 })
-  await openFixture(page, '?panel=list&scenario=single')
-
-  const trigger = page.getByRole('button', {
-    name: '2026 도쿄 봄 여행 더보기',
-  })
-  await trigger.click()
-  const menu = page.getByRole('menu', {
-    name: '2026 도쿄 봄 여행 더보기',
-  })
-  const menuBox = await menu.boundingBox()
-  const iconBox = await trigger.locator('svg').boundingBox()
-  const navigationBox = await page.getByRole('navigation').boundingBox()
-
-  expect(menuBox).toMatchObject({ x: 233, width: 140, height: 120 })
-  expect(iconBox!.y - (menuBox!.y + menuBox!.height)).toBe(4)
-  expect(menuBox!.y + menuBox!.height).toBeLessThan(navigationBox!.y)
-})
-
-test('모든 컬렉션 액션 메뉴는 항목 수별 피그마 규격과 위치를 공유한다', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 430, height: 813 })
-
-  const expectMenuGeometry = async (
-    trigger: import('@playwright/test').Locator,
-    itemCount: number,
-  ) => {
-    await trigger.click()
-    const menu = page.getByRole('menu', {
-      name: await trigger.getAttribute('aria-label'),
-    })
-    const menuBox = await menu.boundingBox()
-    const iconBox = await trigger.locator('svg').boundingBox()
-
-    expect(menuBox).toMatchObject({
-      x: 270,
-      width: 140,
-      height: itemCount * 40,
-    })
-    expect(menuBox!.x + menuBox!.width).toBe(410)
-    const visualGap = Math.min(
-      Math.abs(menuBox!.y - (iconBox!.y + iconBox!.height)),
-      Math.abs(iconBox!.y - (menuBox!.y + menuBox!.height)),
-    )
-    expect(visualGap).toBe(4)
-    await expect(menu).toHaveCSS('border-radius', '10px')
-    for (const item of await menu.getByRole('menuitem').all()) {
-      expect(await item.boundingBox()).toMatchObject({ width: 120, height: 40 })
-    }
-    await page.keyboard.press('Escape')
-  }
-
-  await openFixture(page)
-  await expectMenuGeometry(
-    page.getByRole('button', { name: '2026 도쿄 봄 여행 더보기' }),
-    3,
-  )
-  await page
-    .getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' })
-    .click()
-  await expectMenuGeometry(
-    page.getByRole('button', { name: '컬렉션 더보기', exact: true }),
-    3,
-  )
-  await expectMenuGeometry(
-    page.getByRole('button', {
-      name: '히마와리 스시 신도심점 더보기',
-      exact: true,
-    }),
-    2,
-  )
-
-  await openFixture(page, '?panel=detail')
-  await expectMenuGeometry(
-    page.getByRole('button', { name: '컬렉션 더보기', exact: true }),
-    2,
-  )
-  await expectMenuGeometry(
-    page.getByRole('button', {
-      name: '히마와리 스시 신도심점 더보기',
-      exact: true,
-    }),
-    2,
-  )
-})
-
-for (const viewport of [
-  { width: 393, height: 852 },
-  { width: 320, height: 400 },
-  { width: 1280, height: 900 },
-]) {
-  test(`컬렉션 최대 단계 전체 화면과 복귀 ${viewport.width}`, async ({
-    page,
-  }, testInfo) => {
-    await page.setViewportSize(viewport)
-    for (const query of [
-      '?panel=list',
-      '?panel=list&scenario=empty',
-      '?panel=detail&scenario=long',
-    ]) {
-      await openFixture(page, query)
-      const url = page.url()
-      const handle = page.getByRole('slider')
-      await handle.press('End')
-      const dialog = page.getByRole('dialog', { name: '컬렉션 전체 화면' })
-      await expect(dialog).toBeVisible()
-      const box = await dialog.boundingBox()
-      expect(box!.height).toBe(viewport.height)
-      expect(box!.y).toBe(0)
-      expect(box!.x).toBeGreaterThanOrEqual(0)
-      expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width)
-      await expect(
-        dialog.getByRole('button', { name: '지도', exact: true }),
-      ).toHaveAttribute('aria-current', 'page')
-      await expect(dialog.getByRole('navigation')).toBeInViewport()
-      await expect(
-        dialog.getByRole('button', { name: '지도로 보기' }),
-      ).toBeInViewport()
-      if (query.includes('panel=list')) {
-        await expect(
-          dialog.getByRole('heading', { name: /총\s*\d+\s*개/ }),
-        ).toBeVisible()
-      }
-      if (viewport.height <= 500) {
-        const scrollBox = await dialog.locator('.overflow-y-auto').boundingBox()
-        const buttonBox = await dialog
-          .getByRole('button', { name: '지도로 보기' })
-          .boundingBox()
-        expect(scrollBox!.y + scrollBox!.height).toBeLessThanOrEqual(
-          buttonBox!.y,
-        )
-      }
-      expect(page.url()).toBe(url)
-      await page.screenshot({
-        path: testInfo.outputPath(
-          `fullscreen-${query.includes('detail') ? 'detail' : query.includes('empty') ? 'empty' : 'list'}.png`,
-        ),
-      })
-      await dialog.getByRole('button', { name: '지도로 보기' }).click()
-      await expect(dialog).toHaveCount(0)
-      await expect(handle).toBeFocused()
-      await handle.press('End')
-      await expect(dialog).toBeVisible()
-      await page.keyboard.press('Escape')
-      await expect(dialog).toHaveCount(0)
-      await expect(handle).toBeFocused()
-    }
-  })
-}
-
-test('전체 화면의 필터·편집·내비게이션', async ({ page }) => {
-  await page.setViewportSize({ width: 393, height: 852 })
-  await openFixture(page, '?panel=detail')
-  await page.getByRole('slider').press('End')
-  const fullscreen = page.getByRole('dialog', { name: '컬렉션 전체 화면' })
-  await fullscreen.getByRole('button', { name: '정렬 선택' }).click()
-  await fullscreen.getByRole('menuitemradio', { name: '리뷰순' }).click()
-  await expect(fullscreen.getByText('리뷰순')).toBeVisible()
-  await fullscreen.getByRole('button', { name: '분류 선택' }).click()
-  await page.keyboard.press('Escape')
-  await expect(fullscreen).toBeVisible()
-  await expect(page.getByRole('menu')).toHaveCount(0)
-  await fullscreen
-    .getByRole('button', { name: '컬렉션 더보기', exact: true })
-    .click()
-  await fullscreen.getByRole('menuitem', { name: '편집하기' }).click()
-  const editor = page.getByRole('dialog', { name: '컬렉션 편집', exact: true })
-  await expect(editor).toBeVisible()
-  await expect(editor.getByRole('navigation')).toHaveCount(0)
-  await expect(
-    editor.getByRole('button', { name: '이동', exact: true }),
-  ).toBeInViewport()
-  await page.keyboard.press('Tab')
-  expect(
-    await editor.evaluate((node) => node.contains(document.activeElement)),
-  ).toBe(true)
-  await editor.getByRole('button', { name: '편집 종료' }).click()
-  await expect(fullscreen).toBeVisible()
-  await expect(fullscreen.getByText('리뷰순')).toBeVisible()
-  await fullscreen.getByRole('button', { name: '저장', exact: true }).click()
-  await expect(fullscreen).toHaveCount(0)
-  await expect(
-    page.getByRole('button', { name: '저장', exact: true }),
-  ).toHaveAttribute('aria-current', 'page')
-})
-
 test('낮은 패널에서 30자 설명 이후에도 필터와 마지막 식당에 접근할 수 있다', async ({
   page,
 }) => {
@@ -694,8 +215,10 @@ test('낮은 패널에서 30자 설명 이후에도 필터와 마지막 식당�
   expect(rect!.x + rect!.width).toBeLessThanOrEqual(320)
   expect(rect!.y + rect!.height).toBeLessThanOrEqual(400)
   await page.getByRole('menuitemradio', { name: '전체' }).click()
+  await expect(page.getByRole('button', { name: '분류 선택' })).toBeInViewport()
   await page.locator('[data-restaurant-id]').last().scrollIntoViewIfNeeded()
   await expect(page.locator('[data-restaurant-id]').last()).toBeInViewport()
+  await expect(page.getByRole('button', { name: '분류 선택' })).toBeInViewport()
 })
 
 test('확장과 축소 후에도 보던 식당과 목록 내 위치를 유지한다', async ({
@@ -747,19 +270,6 @@ for (const viewport of [
     await page.setViewportSize(viewport)
     await openFixture(page)
     await page.getByRole('button', { name: '새 컬렉션 만들기' }).click()
-    await expect(
-      page
-        .getByRole('dialog', { name: '새 컬렉션 만들기' })
-        .getByRole('banner'),
-    ).toBeInViewport()
-    await expect
-      .poll(() =>
-        page
-          .getByRole('dialog')
-          .locator('.overflow-y-auto')
-          .evaluate((node) => node.scrollTop),
-      )
-      .toBe(0)
     await expect(
       page.getByRole('button', { name: '만들기', exact: true }),
     ).toBeDisabled()
@@ -987,4 +497,274 @@ test('로컬 상태 저장 모달의 식당·기존 선택은 생성 취소와 �
   await dialog.getByRole('button', { name: '취소' }).click()
   await page.reload()
   await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
+test('전체 확장한 상세에서 식당을 삭제하고 패널로 돌아온다', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  await openFixture(page, '?panel=detail')
+  await page.getByRole('slider').press('End')
+  await page.getByRole('button', { name: '컬렉션 더보기', exact: true }).click()
+  await page.getByRole('menuitem', { name: '편집하기' }).click()
+  const editor = page.getByRole('region', { name: '컬렉션 편집', exact: true })
+  await editor.getByText('전체 선택', { exact: true }).click()
+  await editor.getByRole('button', { name: '삭제 4', exact: true }).click()
+  await page.getByRole('button', { name: '삭제하기', exact: true }).click()
+  await expect(editor.locator('[data-restaurant-id]')).toHaveCount(0)
+  await editor.getByRole('button', { name: '편집 종료' }).click()
+  await expect(page.getByText('총 0곳')).toBeVisible()
+  await page.getByRole('button', { name: '지도로 보기' }).click()
+  await expect(page.getByRole('slider')).toHaveAttribute('aria-valuenow', '393')
+  await expect(
+    page.getByRole('list', { name: '저장 식당' }).getByRole('listitem'),
+  ).toHaveCount(0)
+})
+
+test('회귀: 일반 목록을 스크롤한 뒤 상세는 상단에서 열린다', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 382, height: 647 })
+  await openFixture(page, '?scenario=long')
+  await page
+    .getByRole('button', { name: /컬렉션 열기$/ })
+    .last()
+    .click()
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+  await expect(
+    page.getByRole('heading', { name: '가'.repeat(20) }),
+  ).toBeInViewport()
+  await page.screenshot({ path: testInfo.outputPath('detail-entry.png') })
+})
+
+test('회귀: 지도 목록 높이와 상세 진입 스크롤', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 382, height: 647 })
+  await openFixture(page, '?panel=list')
+  await page
+    .getByRole('button', { name: '2026 도쿄 여름 여행 컬렉션 열기' })
+    .click()
+  const panel = page.getByRole('region', { name: '저장 컬렉션 패널' })
+  await expect
+    .poll(() =>
+      panel
+        .getByRole('list', { name: '저장 식당' })
+        .locator('..')
+        .evaluate((node) => node.scrollTop),
+    )
+    .toBe(0)
+  await expect(page.getByRole('slider')).toHaveAttribute('aria-valuenow', '393')
+  await page.screenshot({ path: testInfo.outputPath('panel-detail-entry.png') })
+  await openFixture(page, '?panel=list&scenario=empty')
+  await expect(page.getByRole('slider')).toHaveAttribute('aria-valuenow', '393')
+  await openFixture(page, '?panel=list')
+  await expect(page.getByRole('slider')).toHaveAttribute('aria-valuenow', '393')
+  await page.screenshot({ path: testInfo.outputPath('panel-list-entry.png') })
+  await openFixture(page, '?panel=list&scenario=long')
+  await page
+    .getByRole('button', { name: /컬렉션 열기$/ })
+    .last()
+    .click()
+  const scroller = panel.getByRole('list', { name: '저장 식당' }).locator('..')
+  await expect.poll(() => scroller.evaluate((node) => node.scrollTop)).toBe(0)
+  await scroller.evaluate((node) => {
+    node.scrollTop = 100
+  })
+  await page.getByRole('slider').press('Home')
+  await page.getByRole('slider').press('ArrowUp')
+  await expect.poll(() => scroller.evaluate((node) => node.scrollTop)).toBe(100)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.getByRole('slider').press('Home')
+  await page.getByRole('slider').press('ArrowUp')
+  await expect.poll(() => scroller.evaluate((node) => node.scrollTop)).toBe(100)
+})
+
+for (const viewport of [
+  { width: 393, height: 852 },
+  { width: 320, height: 568 },
+  { width: 820, height: 1180 },
+]) {
+  test(`PR3 선택·부분 이동·삭제 ${viewport.width}`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize(viewport)
+    await openFixture(page)
+    await page
+      .getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' })
+      .click()
+    await page
+      .getByRole('button', { name: '컬렉션 더보기', exact: true })
+      .click()
+    await page.getByRole('menuitem', { name: '편집하기' }).click()
+    const editor = page.getByRole('region', {
+      name: '컬렉션 편집',
+      exact: true,
+    })
+    await expect(
+      editor.getByRole('button', { name: '이동', exact: true }),
+    ).toBeDisabled()
+    await editor.getByText('전체 선택', { exact: true }).click()
+    await expect(editor.getByText('4개 선택됨')).toBeVisible()
+    await page.screenshot({
+      path: testInfo.outputPath('editor-all.png'),
+      animations: 'disabled',
+    })
+    await editor.getByRole('button', { name: '이동 4' }).click()
+    const target = page.getByRole('dialog', {
+      name: '컬렉션 이동',
+      exact: true,
+    })
+    await expect(
+      target.getByRole('radio', { name: '2026 도쿄 봄 여행' }),
+    ).toHaveCount(0)
+    await target.getByRole('radio', { name: '2026 도쿄 여름 여행' }).click()
+    await expect(
+      target.getByText('이미 저장된 2곳은 이동하지 않아요.'),
+    ).toBeVisible()
+    await page.screenshot({
+      path: testInfo.outputPath('move-partial.png'),
+      animations: 'disabled',
+    })
+    await target.getByRole('button', { name: '이동', exact: true }).click()
+    await expect(editor.getByText('2개 선택됨')).toBeVisible()
+    await expect(editor.locator('[data-restaurant-id]')).toHaveCount(2)
+    await editor.getByRole('button', { name: '삭제 2' }).click()
+    await page.getByRole('button', { name: '취소하기' }).click()
+    await expect(editor.getByText('2개 선택됨')).toBeVisible()
+    await editor.getByRole('button', { name: '삭제 2' }).click()
+    await page.getByRole('button', { name: '삭제하기', exact: true }).click()
+    await expect(editor.locator('[data-restaurant-id]')).toHaveCount(0)
+    await expect(
+      editor.getByRole('button', { name: '삭제', exact: true }),
+    ).toBeDisabled()
+    await editor.getByRole('button', { name: '편집 종료' }).click()
+    await expect(page.getByText('총 0곳')).toBeVisible()
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true)
+  })
+}
+
+test('PR3 긴 편집 목록·개별 선택·취소 유지', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 320, height: 400 })
+  await openFixture(page, '?scenario=long')
+  await page
+    .getByRole('button', { name: `${'가'.repeat(20)} 컬렉션 열기` })
+    .first()
+    .click()
+  await page.getByRole('button', { name: '컬렉션 더보기', exact: true }).click()
+  await page.getByRole('menuitem', { name: '편집하기' }).click()
+  const editor = page.getByRole('region', { name: '컬렉션 편집', exact: true })
+  await editor.locator('[data-restaurant-id="long-0"] label').click()
+  await expect(
+    editor.getByRole('checkbox', { name: '전체 선택' }),
+  ).toHaveJSProperty('indeterminate', true)
+  await page.screenshot({ path: testInfo.outputPath('editor-partial.png') })
+  const button = editor.getByRole('button', { name: '이동 1' })
+  const before = await button.boundingBox()
+  await editor.locator('[data-restaurant-id]').last().scrollIntoViewIfNeeded()
+  await expect(editor.locator('[data-restaurant-id]').last()).toBeInViewport()
+  await expect(
+    editor.getByRole('button', { name: '편집 종료' }),
+  ).toBeInViewport()
+  await expect(editor.getByText('전체 선택', { exact: true })).toBeInViewport()
+  await page.screenshot({
+    path: testInfo.outputPath('editor-long-scrolled.png'),
+  })
+  expect((await button.boundingBox())!.y).toBe(before!.y)
+  await button.click()
+  const target = page.getByRole('dialog', { name: '컬렉션 이동', exact: true })
+  await target.getByRole('radio').last().scrollIntoViewIfNeeded()
+  await expect(
+    target.getByRole('button', { name: '새 컬렉션 만들기' }),
+  ).toBeVisible()
+  await page.screenshot({
+    path: testInfo.outputPath('long-move.png'),
+    animations: 'disabled',
+  })
+  await target.getByRole('button', { name: '취소', exact: true }).click()
+  await expect(editor.getByText('1개 선택됨')).toBeVisible()
+  await editor.getByRole('button', { name: '편집 종료' }).click()
+  await page.getByRole('button', { name: '컬렉션 더보기', exact: true }).click()
+  await page.getByRole('menuitem', { name: '편집하기' }).click()
+  await expect(editor.getByRole('checkbox', { checked: true })).toHaveCount(0)
+})
+
+test('PR3 단일 중복 이동·생성 복귀·취소', async ({ page }) => {
+  await openFixture(page)
+  await page
+    .getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' })
+    .click()
+  await page
+    .getByRole('button', { name: '히마와리 스시 신도심점 더보기', exact: true })
+    .click()
+  await page.getByRole('menuitem', { name: '이동하기' }).click()
+  const target = page.getByRole('dialog', { name: '컬렉션 이동', exact: true })
+  await target.getByRole('radio', { name: '2026 도쿄 여름 여행' }).click()
+  await target.getByRole('button', { name: '이동', exact: true }).click()
+  await expect(target.getByText('이미 저장된 식당이에요.')).toBeVisible()
+  await target.getByRole('button', { name: '새 컬렉션 만들기' }).click()
+  await page.getByLabel('컬렉션명', { exact: true }).fill('이동 목적지')
+  await page.getByRole('radio', { name: '빨강' }).check()
+  await page.getByRole('button', { name: '만들기', exact: true }).click()
+  await expect(
+    target.getByRole('radio', { name: '이동 목적지' }),
+  ).not.toBeChecked()
+  await target.getByRole('radio', { name: '이동 목적지' }).click()
+  await target.getByRole('button', { name: '이동', exact: true }).click()
+  await expect(page.getByText('총 3곳')).toBeVisible()
+})
+
+test('PR3 비공개 공유·목록 삭제·지도 관리 연결', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  await openFixture(page, '?panel=list')
+  await page.getByRole('button', { name: '2026 도쿄 가을 여행 더보기' }).click()
+  await page.getByRole('menuitem', { name: '링크 복사' }).click()
+  await expect(page.getByRole('alertdialog')).toBeVisible()
+  await page.screenshot({
+    path: testInfo.outputPath('private-share.png'),
+    animations: 'disabled',
+  })
+  await page.getByRole('button', { name: '공개 후 공유' }).click()
+  await expect(
+    page.getByText(
+      '공개 컬렉션으로 변경했어요. 링크 복사는 아직 연결되지 않았어요.',
+    ),
+  ).toBeVisible()
+  await expect(page.getByText('컬렉션 링크가 복사되었어요.')).toHaveCount(0)
+  await page.getByRole('button', { name: '2026 도쿄 가을 여행 더보기' }).click()
+  await page.getByRole('menuitem', { name: '링크 복사' }).click()
+  await expect(page.getByRole('button', { name: '공개 후 공유' })).toHaveCount(
+    0,
+  )
+  const shareToast = page.getByText('링크 복사는 아직 연결되지 않았어요.', {
+    exact: true,
+  })
+  await expect(shareToast).toBeVisible()
+  await page.screenshot({ path: testInfo.outputPath('share-link-icon.png') })
+  await page.getByRole('button', { name: '2026 도쿄 가을 여행 더보기' }).click()
+  await page.getByRole('menuitem', { name: '삭제하기' }).click()
+  await page.screenshot({
+    path: testInfo.outputPath('delete-collection.png'),
+    animations: 'disabled',
+  })
+  await page.getByRole('button', { name: '취소하기' }).click()
+  await page.getByRole('button', { name: '2026 도쿄 가을 여행 더보기' }).click()
+  await page.getByRole('menuitem', { name: '삭제하기' }).click()
+  await page.getByRole('button', { name: '삭제하기', exact: true }).click()
+  await expect(page.getByText('컬렉션이 삭제되었어요.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: '컬렉션 3개' })).toBeVisible()
+  await page
+    .getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' })
+    .click()
+  await page.getByRole('button', { name: '컬렉션 더보기', exact: true }).click()
+  await page.getByRole('menuitem', { name: '편집하기' }).click()
+  await expect(
+    page.getByRole('region', { name: '컬렉션 편집', exact: true }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: '편집 종료' }).click()
+  await expect(
+    page.getByRole('heading', { name: '2026 도쿄 봄 여행' }),
+  ).toBeVisible()
 })

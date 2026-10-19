@@ -67,6 +67,7 @@
 | 컬렉션 생성           | `/saved/collections/new`                      | 독립 폼 페이지이며 하단 내비게이션을 표시하지 않습니다.                                                                                                   |
 | 컬렉션 상세           | `/saved/collections/:collectionId`            | 목 상세와 URL 정렬·분류를 표시합니다. 없는 ID는 `/saved`로 복귀합니다.                                                                                    |
 | 컬렉션 수정           | `/saved/collections/:collectionId/edit`       | 독립 폼 페이지이며 변경이 있는 뒤로가기에 폐기 확인을 표시합니다.                                                                                         |
+| 컬렉션 식당 편집   | `/saved/collections/:collectionId/restaurants/edit` | 독립 편집 페이지이며 하단 내비게이션 없이 선택·이동·삭제를 제공합니다. 없는 ID는 `/saved`로 복귀합니다.      |
 | 마이 페이지           | `/mypage`                                     |                                                                                                                                                           |
 | 프로필 생성 페이지    | `/profile/new`                                | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                                                              |
 | 탈퇴 페이지           | `/withdrawal`                                 | 유지 여부 논의 중입니다.                                                                                                                                  |
@@ -133,4 +134,4 @@
 하단 네비게이션바가 필요한 page는 `BottomNavigationLayout`에서 렌더링합니다.
 
 저장 목록·컬렉션 상세는 목 데이터 퍼블리싱 화면이며 BottomNavigationLayout을 사용합니다.
-컬렉션 생성·수정은 하단 내비게이션 없는 독립 페이지입니다. 지도(`/map`)는 아직 준비중 페이지입니다.
+컬렉션 생성·수정·식당 편집은 하단 내비게이션 없는 독립 페이지입니다. 지도(`/map`)는 아직 준비중 페이지입니다.

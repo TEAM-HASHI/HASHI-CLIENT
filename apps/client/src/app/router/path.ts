@@ -4,6 +4,7 @@ export const ROUTES = {
   collectionNew: '/saved/collections/new',
   collectionDetail: '/saved/collections/:collectionId',
   collectionEdit: '/saved/collections/:collectionId/edit',
+  collectionRestaurantEdit: '/saved/collections/:collectionId/restaurants/edit',
   map: '/map',
   comingSoon: '/coming-soon',
   search: '/search',

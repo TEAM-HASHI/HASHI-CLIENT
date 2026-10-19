@@ -58,6 +58,7 @@ describe('appRoutes', () => {
     ['/saved/collections/spring', '2026 도쿄 봄 여행', false],
     ['/saved/collections/new', '새 컬렉션 만들기', true],
     ['/saved/collections/spring/edit', '컬렉션 수정', true],
+    ['/saved/collections/spring/restaurants/edit', '컬렉션 편집', true],
   ] as const)(
     '실제 appRoutes에서 인증된 사용자의 %s를 올바른 레이아웃으로 연다',
     async (path, name, form) => {

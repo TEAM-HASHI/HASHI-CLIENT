@@ -18,6 +18,7 @@ import { useState } from 'react'
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import { SavedPage } from '@/pages/saved/SavedPage'
+import { CollectionEditorPage } from '@/pages/saved/CollectionEditorPage'
 import { CollectionFormPage } from '@/pages/saved/CollectionFormPage'
 import { CollectionSaveDialog } from '@/pages/saved/components/CollectionSaveDialog'
 import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
@@ -66,6 +67,10 @@ const setup = (
           { path: '/map', element: <MapHost /> },
         ],
       },
+      {
+        path: '/saved/collections/:collectionId/restaurants/edit',
+        element: <CollectionEditorPage />,
+      },
       { path: '/saved/collections/new', element: <CollectionFormPage /> },
       {
         path: '/saved/collections/:collectionId/edit',
@@ -110,6 +115,143 @@ describe('컬렉션 독립 라우트와 복귀', () => {
         await router.navigate(-1)
       })
       expect(router.state.location.pathname).toBe('/map')
+    },
+  )
+
+  it('상세에서 편집을 종료하면 원래 이력으로 복귀하고 뒤로가기는 목록으로 간다', async () => {
+    const { user, router } = setup()
+    await user.click(
+      screen.getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' }),
+    )
+    await user.click(screen.getByRole('button', { name: '정렬 선택' }))
+    await user.click(screen.getByRole('menuitemradio', { name: '별점순' }))
+    const detailKey = router.state.location.key
+    await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
+    await user.click(screen.getByRole('menuitem', { name: '편집하기' }))
+    await user.click(screen.getByRole('button', { name: '편집 종료' }))
+    expect(router.state.location.pathname).toBe('/saved/collections/spring')
+    expect(router.state.location.key).toBe(detailKey)
+    expect(screen.getByText('별점순')).toBeVisible()
+    await act(async () => {
+      await router.navigate(-1)
+    })
+    expect(router.state.location.pathname).toBe('/saved')
+  })
+
+  it('편집 직접 진입은 이전 화면에 관계없이 상세로 종료한다', async () => {
+    const { user, router } = setup(
+      '/saved/collections/spring/restaurants/edit?sort=rating&category=all',
+      collectionMocks,
+      '/map',
+    )
+    await user.click(screen.getByRole('button', { name: '편집 종료' }))
+    expect(router.state.location.pathname).toBe('/saved/collections/spring')
+    expect(screen.getByText('별점순')).toBeVisible()
+  })
+
+  it('식당 편집 중 생성 후 선택 식당·이동 대상과 편집 URL을 복원한다', async () => {
+    const { user, router } = setup(
+      '/saved/collections/spring?sort=rating&category=all',
+    )
+    await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
+    await user.click(screen.getByRole('menuitem', { name: '편집하기' }))
+    await user.click(
+      screen.getByRole('checkbox', { name: '히마와리 스시 신도심점 선택' }),
+    )
+    await user.click(screen.getByRole('button', { name: '이동 1' }))
+    await user.click(screen.getByRole('radio', { name: '2026 도쿄 여름 여행' }))
+    await user.click(
+      within(screen.getByRole('dialog', { name: '컬렉션 이동' })).getByRole(
+        'button',
+        { name: '새 컬렉션 만들기' },
+      ),
+    )
+    expect(router.state.location.pathname).toBe('/saved/collections/new')
+    await user.type(screen.getByLabelText('컬렉션명'), '관리 중 새 대상')
+    await user.click(screen.getByRole('radio', { name: '파랑' }))
+    await user.click(screen.getByRole('button', { name: '만들기' }))
+    expect(router.state.location.pathname).toBe(
+      '/saved/collections/spring/restaurants/edit',
+    )
+    const target = screen.getByRole('dialog', { name: '컬렉션 이동' })
+    expect(within(target).getAllByRole('radio')[0]).toHaveAccessibleName(
+      '관리 중 새 대상',
+    )
+    expect(
+      within(target).getByRole('radio', { name: '관리 중 새 대상' }),
+    ).not.toBeChecked()
+    expect(
+      within(target).getByRole('radio', { name: '2026 도쿄 여름 여행' }),
+    ).toBeChecked()
+    await user.click(within(target).getByRole('button', { name: '취소' }))
+    expect(
+      screen.getByRole('checkbox', { name: '히마와리 스시 신도심점 선택' }),
+    ).toBeChecked()
+    expect(screen.getByRole('button', { name: '이동 1' })).toBeEnabled()
+    await user.click(screen.getByRole('button', { name: '편집 종료' }))
+    await act(async () => {
+      await router.navigate(-1)
+    })
+    expect(router.state.location.pathname).toBe('/saved/collections/spring')
+    expect(
+      screen.queryByRole('region', { name: '컬렉션 편집' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('이동 대상 생성 취소 후 뒤로가기는 편집을 종료하고 상세로 돌아간다', async () => {
+    const { user, router } = setup('/saved/collections/spring')
+    await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
+    await user.click(screen.getByRole('menuitem', { name: '편집하기' }))
+    await user.click(
+      screen.getByRole('checkbox', { name: '히마와리 스시 신도심점 선택' }),
+    )
+    await user.click(screen.getByRole('button', { name: '이동 1' }))
+    await user.click(screen.getByRole('button', { name: '새 컬렉션 만들기' }))
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+    expect(router.state.location.pathname).toBe(
+      '/saved/collections/spring/restaurants/edit',
+    )
+    await act(async () => {
+      await router.navigate(-1)
+    })
+    expect(router.state.location.pathname).toBe('/saved/collections/spring')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it.each(['header', 'browser'])(
+    '식당 편집은 독립 URL을 사용하고 %s 종료 후 선택을 초기화한다',
+    async (source) => {
+      const { user, router } = setup(
+        '/saved/collections/spring?sort=rating&category=all',
+      )
+      await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
+      await user.click(screen.getByRole('menuitem', { name: '편집하기' }))
+      expect(router.state.location.pathname).toBe(
+        '/saved/collections/spring/restaurants/edit',
+      )
+      expect(
+        screen.queryByRole('dialog', { name: '컬렉션 편집' }),
+      ).not.toBeInTheDocument()
+      expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+      await user.click(
+        screen.getByRole('checkbox', { name: '히마와리 스시 신도심점 선택' }),
+      )
+      expect(screen.getByRole('button', { name: '이동 1' })).toBeEnabled()
+      if (source === 'header')
+        await user.click(screen.getByRole('button', { name: '편집 종료' }))
+      else
+        await act(async () => {
+          await router.navigate(-1)
+        })
+      expect(router.state.location.pathname).toBe('/saved/collections/spring')
+      expect(screen.getByText('별점순')).toBeVisible()
+      await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
+      await user.click(screen.getByRole('menuitem', { name: '편집하기' }))
+      expect(
+        screen.getByRole('checkbox', { name: '히마와리 스시 신도심점 선택' }),
+      ).not.toBeChecked()
+      expect(screen.getByRole('button', { name: '이동' })).toBeDisabled()
     },
   )
 

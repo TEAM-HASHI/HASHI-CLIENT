@@ -1,21 +1,33 @@
 import { BackIcon, MapViewIcon, PlusIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
-import { useId, useLayoutEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import {
+  getCollectionDetailPath,
+  getCollectionEditPath,
+  getCollectionRestaurantEditPath,
+} from '@/app/router/routePaths'
+import {
+  getCollectionFormState,
+  getCollectionManagementAction,
+  getCollectionManagementState,
+  getCollectionSaveState,
+} from '@/pages/saved/utils/collectionNavigation'
 
 import {
   CollectionDropdown,
   CollectionEditMenu,
   CollectionActionMenu,
 } from '@/pages/saved/components/CollectionDropdown'
-import { CollectionForm } from '@/pages/saved/components/CollectionForm'
 import { useCollectionData } from '@/pages/saved/data/useCollectionData'
-import {
-  createCollection,
-  updateCollection,
-} from '@/pages/saved/utils/collectionMutations'
 import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import {
@@ -32,6 +44,7 @@ import {
   selectRestaurants,
 } from '@/pages/saved/utils/collectionSelectors'
 import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
+
 import { CollectionEditor } from '@/pages/saved/components/CollectionEditor'
 import type { CollectionManagementAction } from '@/pages/saved/components/CollectionEditor'
 
@@ -41,18 +54,50 @@ export type SavedPageProps = {
 
 export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
   const { data, setData } = useCollectionData()
-  const id = useId()
-  const [creationCount, setCreationCount] = useState(0)
-  const [form, setForm] = useState<'create' | { id: string } | null>(null)
-  const [management, setManagement] =
-    useState<CollectionManagementAction | null>(null)
   const navigate = useNavigate()
   const location = useLocation()
-  const [view, setView] = useState<CollectionViewState>(() =>
-    isCollectionMapState(location.state)
-      ? location.state
-      : INITIAL_COLLECTION_VIEW,
-  )
+  const [management, setManagement] =
+    useState<CollectionManagementAction | null>(() =>
+      getCollectionManagementAction(location.state),
+    )
+  const closeManagement = () => {
+    setManagement(null)
+    navigate(
+      { pathname: location.pathname, search: location.search },
+      {
+        replace: true,
+        state: getCollectionManagementState(
+          getCollectionSaveState(location.state, null),
+          null,
+        ),
+      },
+    )
+  }
+  const { collectionId } = useParams<{ collectionId: string }>()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const restored = isCollectionMapState(location.state)
+    ? location.state
+    : INITIAL_COLLECTION_VIEW
+  const view: CollectionViewState = {
+    collectionId: collectionId ?? null,
+    sort:
+      COLLECTION_SORT_OPTIONS.find(
+        (item) => item.value === searchParams.get('sort'),
+      )?.value ?? restored.sort,
+    category:
+      COLLECTION_CATEGORY_OPTIONS.find(
+        (item) => item.value === searchParams.get('category'),
+      )?.value ?? restored.category,
+  }
+  const setView = (
+    change: (current: CollectionViewState) => CollectionViewState,
+  ) => {
+    const next = change(view)
+    setSearchParams(
+      { sort: next.sort, category: next.category },
+      { replace: true, state: next },
+    )
+  }
   const [menu, setMenu] = useState<'sort' | 'category' | null>(null)
   const collection = data.collections.find(
     (item) => item.id === view.collectionId,
@@ -61,14 +106,15 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
     ? selectRestaurants(collection, data.restaurants, view.sort, view.category)
     : []
 
-  useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-  }, [view.collectionId])
+  if (collectionId && !collection) return <Navigate to={ROUTES.saved} replace />
 
   return (
     <>
-      <div className="app-mobile-bottom-nav-content bg-white pt-[var(--safe-area-top,0px)]">
-        <div className="fixed top-[var(--safe-area-top,0px)] right-0 left-0 z-10 mx-auto w-full max-w-[var(--app-mobile-max-width,100vw)] bg-white">
+      <div className="flex h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] flex-col overflow-hidden bg-white pt-[var(--safe-area-top,0px)]">
+        <div
+          data-testid="saved-fixed-header"
+          className="relative z-10 shrink-0 bg-white"
+        >
           <div className="relative">
             <Header
               title={
@@ -83,7 +129,7 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
                     size="xs"
                     aria-label="컬렉션 목록으로 돌아가기"
                     onClick={() => {
-                      setView(INITIAL_COLLECTION_VIEW)
+                      navigate(ROUTES.saved)
                       setMenu(null)
                     }}
                   >
@@ -92,9 +138,7 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
                 ) : undefined
               }
               contentClassName={
-                collection
-                  ? '[&>div:first-child]:typo-sub-header-2 inset-x-20'
-                  : undefined
+                collection ? '[&>div:first-child]:typo-sub-header-2' : undefined
               }
             />
             {collection && (
@@ -102,7 +146,10 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
                 <CollectionActionMenu
                   label="컬렉션 더보기"
                   onManage={() =>
-                    setManagement({ collectionId: collection.id, type: 'edit' })
+                    navigate(
+                      `${getCollectionRestaurantEditPath(collection.id)}?${new URLSearchParams({ sort: view.sort, category: view.category })}`,
+                      { state: { collectionEditorReturnKey: location.key } },
+                    )
                   }
                   onShare={() =>
                     setManagement({
@@ -154,7 +201,11 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
             <div className="px-5">
               <button
                 type="button"
-                onClick={() => setForm('create')}
+                onClick={() =>
+                  navigate(ROUTES.collectionNew, {
+                    state: getCollectionFormState(location),
+                  })
+                }
                 className="border-warm-gray-50 flex w-full items-center gap-3 border-b py-4.5 text-left"
               >
                 <span className="bg-primary-100 flex size-12.5 shrink-0 items-center justify-center rounded-[5px]">
@@ -170,130 +221,110 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
             </div>
           )}
         </div>
-        <div
-          aria-hidden="true"
-          className={collection ? 'h-[121px]' : 'h-[207px]'}
-        />
-        {collection ? (
-          <>
-            <ul aria-label="저장 식당" className="px-5 pb-20">
-              {restaurants.map((restaurant) => (
-                <SavedRestaurantRow
-                  key={restaurant.id}
-                  restaurant={restaurant}
-                  onSelect={onRestaurantSelect}
-                  moreAction={
-                    <CollectionActionMenu
-                      restaurant
-                      label={`${restaurant.name} 더보기`}
-                      onManage={() =>
-                        setManagement({
-                          collectionId: collection.id,
-                          type: 'move',
-                          restaurantIds: [restaurant.id],
-                        })
-                      }
-                      onDelete={() =>
-                        setManagement({
-                          collectionId: collection.id,
-                          type: 'remove',
-                          restaurantIds: [restaurant.id],
-                        })
-                      }
-                    />
+        <section
+          key={collectionId ?? 'list'}
+          aria-label={collection ? '저장 식당 목록' : '컬렉션 목록'}
+          tabIndex={0}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain"
+        >
+          {collection ? (
+            <>
+              <ul aria-label="저장 식당" className="px-5 pb-20">
+                {restaurants.map((restaurant) => (
+                  <SavedRestaurantRow
+                    key={restaurant.id}
+                    restaurant={restaurant}
+                    onSelect={onRestaurantSelect}
+                    moreAction={
+                      <CollectionActionMenu
+                        restaurant
+                        label={`${restaurant.name} 더보기`}
+                        onManage={() =>
+                          setManagement({
+                            collectionId: collection.id,
+                            type: 'move',
+                            restaurantIds: [restaurant.id],
+                          })
+                        }
+                        onDelete={() =>
+                          setManagement({
+                            collectionId: collection.id,
+                            type: 'remove',
+                            restaurantIds: [restaurant.id],
+                          })
+                        }
+                      />
+                    }
+                  />
+                ))}
+              </ul>
+              <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">
+                <Button
+                  size="md"
+                  className="pointer-events-auto h-11 gap-0.5 rounded-full px-3 shadow-[0_4px_4px_rgba(0,0,0,0.15)]"
+                  leftIcon={
+                    <MapViewIcon className="fill-secondary-200 stroke-primary-100 size-6" />
                   }
-                />
-              ))}
-            </ul>
-            <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">
-              <Button
-                size="md"
-                className="pointer-events-auto h-11 rounded-full px-3 shadow-[0_4px_4px_rgba(0,0,0,0.15)]"
-                leftIcon={
-                  <MapViewIcon className="fill-secondary-200 stroke-primary-100 size-6" />
-                }
-                onClick={() => {
-                  const state: CollectionMapState = {
-                    ...view,
-                    collectionId: collection.id,
-                  }
-                  navigate(ROUTES.saved, { replace: true, state })
-                  navigate(ROUTES.map, { state })
-                }}
-              >
-                지도로 보기
-              </Button>
+                  onClick={() => {
+                    const state: CollectionMapState = {
+                      ...view,
+                      collectionId: collection.id,
+                    }
+                    navigate(ROUTES.map, { state })
+                  }}
+                >
+                  지도로 보기
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="px-5">
+              <ul aria-label="저장 컬렉션" className="flex flex-col gap-4 py-4">
+                {selectCollections(data.collections).map((item) => (
+                  <CollectionListRow
+                    key={item.id}
+                    collection={item}
+                    moreAction={
+                      <CollectionEditMenu
+                        name={item.name}
+                        onShare={() =>
+                          setManagement({
+                            collectionId: item.id,
+                            type: 'share',
+                          })
+                        }
+                        onDelete={() =>
+                          setManagement({
+                            collectionId: item.id,
+                            type: 'delete',
+                          })
+                        }
+                        onEdit={() =>
+                          navigate(getCollectionEditPath(item.id), {
+                            state: getCollectionFormState(location),
+                          })
+                        }
+                      />
+                    }
+                    restaurantCount={
+                      selectRestaurants(item, data.restaurants).length
+                    }
+                    onSelect={() => navigate(getCollectionDetailPath(item.id))}
+                  />
+                ))}
+              </ul>
             </div>
-          </>
-        ) : (
-          <div className="px-5">
-            <ul aria-label="저장 컬렉션" className="flex flex-col gap-4 pt-4">
-              {selectCollections(data.collections).map((item) => (
-                <CollectionListRow
-                  key={item.id}
-                  collection={item}
-                  moreAction={
-                    <CollectionEditMenu
-                      name={item.name}
-                      onEdit={() => setForm({ id: item.id })}
-                      onShare={() =>
-                        setManagement({ collectionId: item.id, type: 'share' })
-                      }
-                      onDelete={() =>
-                        setManagement({ collectionId: item.id, type: 'delete' })
-                      }
-                    />
-                  }
-                  restaurantCount={
-                    selectRestaurants(item, data.restaurants).length
-                  }
-                  onSelect={() =>
-                    setView({
-                      ...INITIAL_COLLECTION_VIEW,
-                      collectionId: item.id,
-                    })
-                  }
-                />
-              ))}
-            </ul>
-          </div>
-        )}
+          )}
+        </section>
       </div>
-      {form && (
-        <CollectionForm
-          collection={
-            form === 'create'
-              ? undefined
-              : data.collections.find((item) => item.id === form.id)
-          }
-          collections={data.collections}
-          onClose={() => setForm(null)}
-          onSubmit={(draft) => {
-            if (form === 'create') {
-              const createdAt = new Date().toISOString()
-              setData((current) =>
-                createCollection(
-                  current,
-                  draft,
-                  `mock-${id}-${creationCount}`,
-                  createdAt,
-                ),
-              )
-              setCreationCount((count) => count + 1)
-            } else
-              setData((current) => updateCollection(current, form.id, draft))
-            setForm(null)
-          }}
-        />
-      )}
       {management && (
         <CollectionEditor
           action={management}
           data={data}
           onDataChange={setData}
           view={view}
-          onClose={() => setManagement(null)}
-          onDeleted={() => setView(INITIAL_COLLECTION_VIEW)}
+          onClose={closeManagement}
+          onDeleted={() => navigate(ROUTES.saved, { replace: true })}
         />
       )}
     </>

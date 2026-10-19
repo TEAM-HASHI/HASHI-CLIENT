@@ -42,3 +42,6 @@ export const getCollectionDetailPath = (collectionId: string) =>
 
 export const getCollectionEditPath = (collectionId: string) =>
   generatePath(ROUTES.collectionEdit, { collectionId })
+
+export const getCollectionRestaurantEditPath = (collectionId: string) =>
+  generatePath(ROUTES.collectionRestaurantEdit, { collectionId })
