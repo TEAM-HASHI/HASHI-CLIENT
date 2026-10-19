@@ -56,10 +56,21 @@ const EXPECTED_ERROR_CODES = [
   'USER-003',
   'USER-004',
   'USER-005',
+  'USER-006',
+  'USER-007',
+  'USER-008',
+  'USER-009',
+  'USER-010',
+  'USER-011',
+  'USER-012',
+  'USER-013',
+  'USER-014',
+  'USER-015',
+  'USER-016',
 ]
 
 describe('ERROR_CATALOG', () => {
-  it('contains every HASHI-104 external error code exactly once', () => {
+  it('contains supported external error codes exactly once', () => {
     expect(Object.keys(ERROR_CATALOG).sort()).toEqual(EXPECTED_ERROR_CODES)
   })
 

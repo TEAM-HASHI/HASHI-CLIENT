@@ -13,6 +13,15 @@ export const collectionQueryKeys = {
     [...collectionQueryKeys.details(), collectionId] as const,
   restaurantLists: (collectionId: number | null) =>
     [...collectionQueryKeys.all, 'restaurants', collectionId] as const,
+  movePlan: (
+    targetCollectionId: number | null,
+    restaurantIds: readonly number[],
+  ) =>
+    [
+      ...collectionQueryKeys.restaurantLists(targetCollectionId),
+      'move-plan',
+      restaurantIds,
+    ] as const,
   restaurants: (
     collectionId: number | null,
     params: SavedRestaurantsFiltersTypes | null,
