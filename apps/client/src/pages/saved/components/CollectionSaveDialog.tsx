@@ -87,7 +87,7 @@ export const CollectionSaveDialog = ({
           </span>
           <span className="typo-body-3 text-primary-200">새 컬렉션 만들기</span>
         </button>
-        <Dialog.Body className="-mr-3 max-h-65 min-h-0 overflow-y-auto overscroll-contain pr-3">
+        <Dialog.Body className="max-h-65 min-h-0 w-[calc(100%+16px)] self-start overflow-y-auto overscroll-contain pr-4">
           <div
             role="radiogroup"
             aria-label="저장 대상 컬렉션"

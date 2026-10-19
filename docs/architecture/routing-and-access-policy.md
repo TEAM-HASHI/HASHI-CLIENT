@@ -63,10 +63,10 @@
 | 마이 리뷰 페이지      | `/my-reviews`                                 | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                                                                 |
 | 리뷰 상세 페이지      | `/reviews/:reviewId`                          |                                                                                                                                                           |
 | 리뷰 수정 페이지      | `/reviews/:reviewId/edit`                     |                                                                                                                                                           |
-| 저장 페이지           | `/saved`                                      | 목 데이터 기반 컬렉션 목록입니다.                                                                                                                             |
-| 컬렉션 생성        | `/saved/collections/new`                      | 독립 폼 페이지이며 하단 내비게이션을 표시하지 않습니다.                                                      |
-| 컬렉션 상세        | `/saved/collections/:collectionId`            | 목 상세와 URL 정렬·분류를 표시합니다. 없는 ID는 `/saved`로 복귀합니다.                                       |
-| 컬렉션 수정        | `/saved/collections/:collectionId/edit`       | 독립 폼 페이지이며 변경이 있는 뒤로가기에 폐기 확인을 표시합니다.                                            |
+| 저장 페이지           | `/saved`                                      | 목 데이터 기반 컬렉션 목록입니다.                                                                                                                         |
+| 컬렉션 생성           | `/saved/collections/new`                      | 독립 폼 페이지이며 하단 내비게이션을 표시하지 않습니다.                                                                                                   |
+| 컬렉션 상세           | `/saved/collections/:collectionId`            | 목 상세와 URL 정렬·분류를 표시합니다. 없는 ID는 `/saved`로 복귀합니다.                                                                                    |
+| 컬렉션 수정           | `/saved/collections/:collectionId/edit`       | 독립 폼 페이지이며 변경이 있는 뒤로가기에 폐기 확인을 표시합니다.                                                                                         |
 | 마이 페이지           | `/mypage`                                     |                                                                                                                                                           |
 | 프로필 생성 페이지    | `/profile/new`                                | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                                                              |
 | 탈퇴 페이지           | `/withdrawal`                                 | 유지 여부 논의 중입니다.                                                                                                                                  |

@@ -101,7 +101,7 @@ export const CollectionDropdown = <T extends string>({
       )}
       <IconButton
         size="xs"
-        className="size-5"
+        className={action ? undefined : 'size-5'}
         aria-label={action ? label : `${label} 선택`}
         aria-haspopup="menu"
         aria-expanded={open}
