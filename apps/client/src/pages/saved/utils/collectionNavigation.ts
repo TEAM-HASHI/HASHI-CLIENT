@@ -1,3 +1,4 @@
+import type { CollectionManagementAction } from '@/pages/saved/components/CollectionEditor'
 import type { Location } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -65,3 +66,39 @@ export const getCollectionHistoryIndex = () => {
     ? state.idx
     : undefined
 }
+
+export const getCollectionManagementState = (
+  state: unknown,
+  action: CollectionManagementAction | null,
+) => ({
+  ...(isRecord(state) ? state : {}),
+  collectionManagement: action,
+})
+
+export const getCollectionManagementAction = (
+  state: unknown,
+): CollectionManagementAction | null => {
+  const action = isRecord(state) ? state.collectionManagement : undefined
+  if (
+    !isRecord(action) ||
+    typeof action.collectionId !== 'string' ||
+    !['edit', 'move', 'remove', 'delete', 'share'].includes(
+      String(action.type),
+    ) ||
+    (action.restaurantIds !== undefined &&
+      (!Array.isArray(action.restaurantIds) ||
+        !action.restaurantIds.every(
+          (id: unknown) => typeof id === 'string',
+        ))) ||
+    (action.dialog !== undefined &&
+      action.dialog !== 'move' &&
+      action.dialog !== 'remove')
+  )
+    return null
+  return action as CollectionManagementAction
+}
+
+export const getCollectionEditorReturnKey = (state: unknown) =>
+  isRecord(state) && typeof state.collectionEditorReturnKey === 'string'
+    ? state.collectionEditorReturnKey
+    : null

@@ -16,6 +16,11 @@ const CollectionFormPage = lazyRoute(() =>
     default: module.CollectionFormPage,
   })),
 )
+const CollectionEditorPage = lazyRoute(() =>
+  import('@/pages/saved/CollectionEditorPage').then((module) => ({
+    default: module.CollectionEditorPage,
+  })),
+)
 const SavedPage = lazyRoute(() => import('@/pages/saved'))
 const ComingSoonPage = lazyRoute(() => import('@/pages/comingSoon'))
 const TodayRestaurantPage = lazyRoute(() => import('@/pages/todayRestaurant'))
@@ -73,6 +78,7 @@ const lazyPage = (Page: ReturnType<typeof lazy>) => {
 export const lazyPages = {
   saved: () => lazyPage(SavedPage),
   collectionForm: () => lazyPage(CollectionFormPage),
+  collectionEditor: () => lazyPage(CollectionEditorPage),
   comingSoon: () => lazyPage(ComingSoonPage),
   search: () => lazyPage(SearchPage),
   todayRestaurant: () => lazyPage(TodayRestaurantPage),

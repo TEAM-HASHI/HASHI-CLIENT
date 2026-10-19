@@ -1,11 +1,18 @@
 import { MenuIcon, TapDownIcon } from '@hashi/hds-icons'
 import { IconButton, OptionItem } from '@hashi/hds-ui'
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import { createPortal } from 'react-dom'
 
 type CollectionDropdownProps<T extends string> = {
   label: string
-  options: readonly { value: T; label: string }[]
+  options: readonly { value: T; label: string; destructive?: boolean }[]
   value: T
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -16,6 +23,7 @@ type CollectionDropdownProps<T extends string> = {
 // Figma 8317:38586 / 8317:38697: 너비 140px, 항목 높이 40px.
 const MENU_WIDTH = 140
 const OPTION_HEIGHT = 40
+const MENU_GAP = 1
 
 export const CollectionDropdown = <T extends string>({
   label,
@@ -28,6 +36,12 @@ export const CollectionDropdown = <T extends string>({
 }: CollectionDropdownProps<T>) => {
   const id = useId()
   const triggerRef = useRef<HTMLDivElement>(null)
+  const [portalContainer, setPortalContainer] = useState<Element | null>(null)
+  const setTriggerRef = useCallback((node: HTMLDivElement | null) => {
+    triggerRef.current = node
+    if (node)
+      setPortalContainer(node.closest('[role="dialog"]') ?? document.body)
+  }, [])
   const menuRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ top: 0, left: 0, maxHeight: 0 })
 
@@ -41,15 +55,15 @@ export const CollectionDropdown = <T extends string>({
       const viewportLeft = viewport?.offsetLeft ?? 0
       const bottom = viewportTop + (viewport?.height ?? window.innerHeight)
       const right = viewportLeft + (viewport?.width ?? window.innerWidth)
-      const menuHeight = options.length * OPTION_HEIGHT + 2
-      const below = Math.max(0, bottom - rect.bottom)
-      const above = Math.max(0, rect.top - viewportTop)
+      const menuHeight = options.length * OPTION_HEIGHT
+      const below = Math.max(0, bottom - rect.bottom - MENU_GAP)
+      const above = Math.max(0, rect.top - viewportTop - MENU_GAP)
       const placeBelow = below >= menuHeight || below >= above
       const maxHeight = placeBelow ? below : above
       setPosition({
         top: placeBelow
-          ? rect.bottom
-          : rect.top - Math.min(menuHeight, maxHeight),
+          ? rect.bottom + MENU_GAP
+          : rect.top - Math.min(menuHeight, maxHeight) - MENU_GAP,
         left: Math.max(
           viewportLeft,
           Math.min(rect.right - MENU_WIDTH, right - MENU_WIDTH),
@@ -93,7 +107,7 @@ export const CollectionDropdown = <T extends string>({
 
   return (
     <div
-      ref={triggerRef}
+      ref={setTriggerRef}
       className="typo-body-6 text-cool-gray-600 flex shrink-0 items-center leading-[1.36]"
     >
       {!action && (
@@ -127,8 +141,16 @@ export const CollectionDropdown = <T extends string>({
             id={id}
             role="menu"
             aria-label={label}
-            className="border-warm-gray-100 z-50 overflow-y-auto rounded-[10px] border bg-white px-2.5"
-            style={{ position: 'fixed', width: MENU_WIDTH, ...position }}
+            className="ring-warm-gray-100 z-50 overflow-y-auto rounded-[10px] bg-white px-2.5 ring-1 ring-inset"
+            style={{
+              position: 'fixed',
+              width: MENU_WIDTH,
+              height: Math.min(
+                options.length * OPTION_HEIGHT,
+                position.maxHeight,
+              ),
+              ...position,
+            }}
             onBlur={(event) => {
               if (
                 !event.currentTarget.contains(
@@ -148,6 +170,7 @@ export const CollectionDropdown = <T extends string>({
               )
               if (event.key === 'Escape') {
                 event.preventDefault()
+                event.stopPropagation()
                 closeAndFocus()
               }
               if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
@@ -172,20 +195,22 @@ export const CollectionDropdown = <T extends string>({
                 aria-checked={action ? undefined : value === option.value}
                 className={[
                   'border-primary-100 h-10 border-b text-center last:border-b-0 [&>span]:justify-center',
-                  value === option.value
-                    ? 'text-primary-200'
-                    : 'text-warm-gray-300',
+                  option.destructive
+                    ? 'text-primary-400'
+                    : action || value === option.value
+                      ? 'text-primary-200'
+                      : 'text-warm-gray-300',
                 ].join(' ')}
                 onClick={() => {
                   onChange(option.value)
                   closeAndFocus()
                 }}
               >
-                {option.label}
+                <span className="typo-sub-header-2">{option.label}</span>
               </OptionItem>
             ))}
           </div>,
-          document.body,
+          portalContainer ?? document.body,
         )}
     </div>
   )
@@ -195,20 +220,82 @@ const EDIT_OPTION = [{ value: 'edit', label: '수정하기' }] as const
 export const CollectionEditMenu = ({
   name,
   onEdit,
+  onShare,
+  onDelete,
+  context = 'page',
 }: {
   name: string
   onEdit: () => void
+  onShare?: () => void
+  onDelete?: () => void
+  context?: 'page' | 'panel'
+}) => {
+  const [open, setOpen] = useState(false)
+  const shareOption = onShare
+    ? [
+        {
+          value: 'share',
+          label: context === 'panel' ? '링크 복사' : '공유하기',
+        },
+      ]
+    : []
+  const deleteOption = onDelete
+    ? [{ value: 'delete', label: '삭제하기', destructive: true }]
+    : []
+  return (
+    <CollectionDropdown
+      action
+      label={`${name} 더보기`}
+      options={
+        context === 'panel'
+          ? [...shareOption, ...EDIT_OPTION, ...deleteOption]
+          : [...EDIT_OPTION, ...shareOption, ...deleteOption]
+      }
+      value="edit"
+      open={open}
+      onOpenChange={setOpen}
+      onChange={(value) => {
+        if (value === 'share') onShare?.()
+        else if (value === 'delete') onDelete?.()
+        else onEdit()
+      }}
+    />
+  )
+}
+
+export const CollectionActionMenu = ({
+  label,
+  onManage,
+  onShare,
+  onDelete,
+  restaurant = false,
+}: {
+  label: string
+  onManage: () => void
+  onShare?: () => void
+  onDelete: () => void
+  restaurant?: boolean
 }) => {
   const [open, setOpen] = useState(false)
   return (
     <CollectionDropdown
       action
-      label={`${name} 더보기`}
-      options={EDIT_OPTION}
-      value="edit"
+      label={label}
+      value="manage"
       open={open}
       onOpenChange={setOpen}
-      onChange={onEdit}
+      options={[
+        { value: 'manage', label: restaurant ? '이동하기' : '편집하기' },
+        ...(onShare && !restaurant
+          ? [{ value: 'share', label: '공유하기' }]
+          : []),
+        { value: 'delete', label: '삭제하기', destructive: true },
+      ]}
+      onChange={(value) => {
+        if (value === 'manage') onManage()
+        else if (value === 'share') onShare?.()
+        else onDelete()
+      }}
     />
   )
 }

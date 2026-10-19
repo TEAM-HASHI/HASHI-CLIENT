@@ -1,8 +1,8 @@
 import { PlusIcon } from '@hashi/hds-icons'
+import type { ReactNode } from 'react'
 
 import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
-import { CollectionEditMenu } from '@/pages/saved/components/CollectionDropdown'
-import type { CollectionData } from '@/pages/saved/types'
+import type { CollectionData, SavedCollection } from '@/pages/saved/types'
 import {
   selectCollections,
   selectRestaurants,
@@ -12,14 +12,14 @@ type CollectionPanelListProps = {
   data: CollectionData
   onSelect: (collectionId: string) => void
   onCreate?: () => void
-  onEdit?: (collectionId: string) => void
+  moreAction?: (collection: SavedCollection) => ReactNode
 }
 
 export const CollectionPanelList = ({
   data,
   onSelect,
   onCreate,
-  onEdit,
+  moreAction,
 }: CollectionPanelListProps) => (
   <>
     <div className="z-raised sticky top-0 bg-white">
@@ -54,14 +54,7 @@ export const CollectionPanelList = ({
             key={item.id}
             compact
             collection={item}
-            moreAction={
-              onEdit ? (
-                <CollectionEditMenu
-                  name={item.name}
-                  onEdit={() => onEdit(item.id)}
-                />
-              ) : undefined
-            }
+            moreAction={moreAction?.(item)}
             restaurantCount={selectRestaurants(item, data.restaurants).length}
             onSelect={() => onSelect(item.id)}
           />

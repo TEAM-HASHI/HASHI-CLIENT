@@ -1,16 +1,22 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { ToastRegion } from '@hashi/hds-ui'
 import {
   createHashRouter,
   RouterProvider,
   useLocation,
   useNavigate,
+  useParams,
 } from 'react-router-dom'
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import '@/app/styles/global.css'
+import { CollectionEditorPage } from '@/pages/saved/CollectionEditorPage'
 import { CollectionFormPage } from '@/pages/saved/CollectionFormPage'
-import { getCollectionDetailPath } from '@/app/router/routePaths'
+import {
+  getCollectionDetailPath,
+  getRestaurantDetailPath,
+} from '@/app/router/routePaths'
 import { getCollectionSaveRestaurantId } from '@/pages/saved/utils/collectionNavigation'
 import { SavedPage } from '@/pages/saved/SavedPage'
 import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
@@ -46,15 +52,17 @@ const longCollection = {
 const data: CollectionData =
   scenario === 'empty'
     ? { ...collectionMocks, collections: [] }
-    : scenario === 'long' || scenario === 'multiline'
-      ? {
-          collections: Array.from({ length: 20 }, (_, index) => ({
-            ...longCollection,
-            id: index === 0 ? 'spring' : `long-collection-${index}`,
-          })),
-          restaurants: longRestaurants,
-        }
-      : collectionMocks
+    : scenario === 'single'
+      ? { ...collectionMocks, collections: [collectionMocks.collections[0]] }
+      : scenario === 'long' || scenario === 'multiline'
+        ? {
+            collections: Array.from({ length: 20 }, (_, index) => ({
+              ...longCollection,
+              id: index === 0 ? 'spring' : `long-collection-${index}`,
+            })),
+            restaurants: longRestaurants,
+          }
+        : collectionMocks
 
 const PanelFixture = () => {
   const { data, setData } = useCollectionData()
@@ -107,10 +115,25 @@ const PanelFixture = () => {
               navigate('/map', { replace: true, state: null })
             }
           }}
-          onRestaurantSelect={() => {}}
+          onRestaurantSelect={(restaurantId) =>
+            navigate(getRestaurantDetailPath(restaurantId))
+          }
         />
       )}
     </div>
+  )
+}
+
+// 라우팅 검증용 화면. 목 식당 ID로 실제 상세 API를 호출하지 않는다.
+const RestaurantDetailFixture = () => {
+  const { restaurantId } = useParams()
+  const navigate = useNavigate()
+  return (
+    <main>
+      <h1>식당 상세 라우팅 검증</h1>
+      <p>{restaurantId}</p>
+      <button onClick={() => navigate(-1)}>컬렉션으로 돌아가기</button>
+    </main>
   )
 }
 
@@ -153,6 +176,11 @@ const router = createHashRouter([
       { path: '/map', element: <PanelFixture /> },
     ],
   },
+  {
+    path: '/saved/collections/:collectionId/restaurants/edit',
+    element: <CollectionEditorPage />,
+  },
+  { path: '/restaurants/:restaurantId', element: <RestaurantDetailFixture /> },
   { path: '/saved/collections/new', element: <CollectionFormPage /> },
   {
     path: '/saved/collections/:collectionId/edit',
@@ -164,6 +192,7 @@ createRoot(document.getElementById('root')!).render(
   <main className="app-mobile-frame min-h-dvh bg-white">
     <CollectionDataProvider initialData={data}>
       <RouterProvider router={router} />
+      <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto max-w-[var(--app-mobile-max-width,100%)] px-5 pt-8" />
     </CollectionDataProvider>
   </main>,
 )
