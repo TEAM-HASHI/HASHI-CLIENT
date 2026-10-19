@@ -6,13 +6,17 @@ import {
   RouterProvider,
   useLocation,
   useNavigate,
+  useParams,
 } from 'react-router-dom'
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import '@/app/styles/global.css'
 import { CollectionEditorPage } from '@/pages/saved/CollectionEditorPage'
 import { CollectionFormPage } from '@/pages/saved/CollectionFormPage'
-import { getCollectionDetailPath } from '@/app/router/routePaths'
+import {
+  getCollectionDetailPath,
+  getRestaurantDetailPath,
+} from '@/app/router/routePaths'
 import { getCollectionSaveRestaurantId } from '@/pages/saved/utils/collectionNavigation'
 import { SavedPage } from '@/pages/saved/SavedPage'
 import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
@@ -111,10 +115,25 @@ const PanelFixture = () => {
               navigate('/map', { replace: true, state: null })
             }
           }}
-          onRestaurantSelect={() => {}}
+          onRestaurantSelect={(restaurantId) =>
+            navigate(getRestaurantDetailPath(restaurantId))
+          }
         />
       )}
     </div>
+  )
+}
+
+// 라우팅 검증용 화면. 목 식당 ID로 실제 상세 API를 호출하지 않는다.
+const RestaurantDetailFixture = () => {
+  const { restaurantId } = useParams()
+  const navigate = useNavigate()
+  return (
+    <main>
+      <h1>식당 상세 라우팅 검증</h1>
+      <p>{restaurantId}</p>
+      <button onClick={() => navigate(-1)}>컬렉션으로 돌아가기</button>
+    </main>
   )
 }
 
@@ -161,6 +180,7 @@ const router = createHashRouter([
     path: '/saved/collections/:collectionId/restaurants/edit',
     element: <CollectionEditorPage />,
   },
+  { path: '/restaurants/:restaurantId', element: <RestaurantDetailFixture /> },
   { path: '/saved/collections/new', element: <CollectionFormPage /> },
   {
     path: '/saved/collections/:collectionId/edit',

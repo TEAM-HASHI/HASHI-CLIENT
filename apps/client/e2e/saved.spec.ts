@@ -768,3 +768,64 @@ test('PR3 비공개 공유·목록 삭제·지도 관리 연결', async ({ page 
     page.getByRole('heading', { name: '2026 도쿄 봄 여행' }),
   ).toBeVisible()
 })
+
+test('식당 상세 이동 후 원래 컬렉션의 필터와 내부 스크롤로 복귀한다', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  await openFixture(page, '?scenario=long')
+  await page
+    .getByRole('button', { name: /컬렉션 열기$/ })
+    .first()
+    .click()
+  await page.getByRole('button', { name: '정렬 선택' }).click()
+  await page.getByRole('menuitemradio', { name: '별점순' }).click()
+  await page.getByRole('button', { name: '분류 선택' }).click()
+  await page.getByRole('menuitemradio', { name: '음식점' }).click()
+  const originalHash = await page.evaluate(() => window.location.hash)
+  const scroller = page.getByRole('region', { name: '저장 식당 목록' })
+  await scroller.evaluate((node) => {
+    node.scrollTop = node.scrollHeight
+  })
+  const top = await scroller.evaluate((node) => node.scrollTop)
+  expect(top).toBeGreaterThan(0)
+  const row = page.locator('[data-restaurant-id]').last()
+  const id = await row.getAttribute('data-restaurant-id')
+  await row.getByRole('button').first().click()
+  await expect(
+    page.getByRole('heading', { name: '식당 상세 라우팅 검증' }),
+  ).toBeVisible()
+  expect(await page.evaluate(() => window.location.hash)).toBe(
+    '#/restaurants/' + id,
+  )
+  await page.getByRole('button', { name: '컬렉션으로 돌아가기' }).click()
+  expect(await page.evaluate(() => window.location.hash)).toBe(originalHash)
+  await expect(page.getByText('별점순', { exact: true })).toBeVisible()
+  await expect(page.getByText('음식점', { exact: true })).toBeVisible()
+  await expect.poll(() => scroller.evaluate((node) => node.scrollTop)).toBe(top)
+  await page.goBack()
+  await expect(page.getByRole('heading', { name: '저장 컬렉션' })).toBeVisible()
+})
+
+test('지도 fixture의 식당 선택은 기존 콜백으로 상세 경로에 연결된다', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  await openFixture(page, '?panel=detail')
+  await page.getByRole('button', { name: '정렬 선택' }).click()
+  await page.getByRole('menuitemradio', { name: '별점순' }).click()
+  await page
+    .locator('[data-restaurant-id]')
+    .first()
+    .getByRole('button')
+    .first()
+    .click()
+  await expect(
+    page.getByRole('heading', { name: '식당 상세 라우팅 검증' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: '컬렉션으로 돌아가기' }).click()
+  await expect(
+    page.getByRole('region', { name: '저장 컬렉션 패널' }),
+  ).toBeVisible()
+  await expect(page.getByText('별점순', { exact: true })).toBeVisible()
+})

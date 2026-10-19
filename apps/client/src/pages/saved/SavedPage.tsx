@@ -11,6 +11,7 @@ import {
 
 import { ROUTES } from '@/app/router/path'
 import {
+  getRestaurantDetailPath,
   getCollectionDetailPath,
   getCollectionEditPath,
   getCollectionRestaurantEditPath,
@@ -44,9 +45,12 @@ import {
   selectRestaurants,
 } from '@/pages/saved/utils/collectionSelectors'
 import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
+import { createListReturnStore, useListReturnRestoration } from '@/shared/hooks'
 
 import { CollectionEditor } from '@/pages/saved/components/CollectionEditor'
 import type { CollectionManagementAction } from '@/pages/saved/components/CollectionEditor'
+
+const restaurantDetailReturnStore = createListReturnStore<null>()
 
 export type SavedPageProps = {
   onRestaurantSelect?: (restaurantId: string) => void
@@ -105,6 +109,16 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
   const restaurants = collection
     ? selectRestaurants(collection, data.restaurants, view.sort, view.category)
     : []
+
+  const { scrollRef, capture } = useListReturnRestoration({
+    locationKey: location.key,
+    ready: Boolean(collection),
+    store: restaurantDetailReturnStore,
+  })
+  const handleRestaurantSelect = (restaurantId: string) => {
+    capture(null)
+    navigate(getRestaurantDetailPath(restaurantId))
+  }
 
   if (collectionId && !collection) return <Navigate to={ROUTES.saved} replace />
 
@@ -222,6 +236,7 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
           )}
         </div>
         <section
+          ref={scrollRef}
           key={collectionId ?? 'list'}
           aria-label={collection ? '저장 식당 목록' : '컬렉션 목록'}
           tabIndex={0}
@@ -234,7 +249,7 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
                   <SavedRestaurantRow
                     key={restaurant.id}
                     restaurant={restaurant}
-                    onSelect={onRestaurantSelect}
+                    onSelect={onRestaurantSelect ?? handleRestaurantSelect}
                     moreAction={
                       <CollectionActionMenu
                         restaurant

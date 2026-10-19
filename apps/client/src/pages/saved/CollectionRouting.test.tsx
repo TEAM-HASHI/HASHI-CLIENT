@@ -13,6 +13,7 @@ import {
   RouterProvider,
   useLocation,
   useNavigate,
+  useParams,
 } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -51,6 +52,16 @@ const MapHost = () => {
   const navigate = useNavigate()
   return <button onClick={() => navigate(-1)}>컬렉션 지도 보기 종료</button>
 }
+const RestaurantDetailFixture = () => {
+  const { restaurantId } = useParams()
+  const navigate = useNavigate()
+  return (
+    <>
+      <h1>식당 상세 {restaurantId}</h1>
+      <button onClick={() => navigate(-1)}>상세 뒤로가기</button>
+    </>
+  )
+}
 const setup = (
   path = '/saved',
   data: CollectionData = collectionMocks,
@@ -70,6 +81,10 @@ const setup = (
       {
         path: '/saved/collections/:collectionId/restaurants/edit',
         element: <CollectionEditorPage />,
+      },
+      {
+        path: '/restaurants/:restaurantId',
+        element: <RestaurantDetailFixture />,
       },
       { path: '/saved/collections/new', element: <CollectionFormPage /> },
       {
@@ -98,6 +113,46 @@ const setup = (
 afterEach(cleanup)
 
 describe('컬렉션 독립 라우트와 복귀', () => {
+  it.each(['header', 'browser'])(
+    '식당 상세 %s 복귀는 원래 컬렉션·정렬·분류·스크롤과 방문 이력을 유지한다',
+    async (source) => {
+      const path = '/saved/collections/spring?sort=rating&category=cafe'
+      const { router, user } = setup(path, collectionMocks, '/saved')
+      const originalKey = router.state.location.key
+      const scroller = screen.getByRole('region', { name: '저장 식당 목록' })
+      scroller.scrollTop = 240
+      await user.click(
+        screen.getByRole('button', { name: /^히마와리 카페 4\.9/ }),
+      )
+      expect(router.state.location.pathname).toBe('/restaurants/cafe')
+      if (source === 'header')
+        await user.click(screen.getByRole('button', { name: '상세 뒤로가기' }))
+      else
+        await act(async () => {
+          await router.navigate(-1)
+        })
+      expect(router.state.location.key).toBe(originalKey)
+      expect(
+        router.state.location.pathname + router.state.location.search,
+      ).toBe(path)
+      expect(screen.getByText('별점순')).toBeVisible()
+      expect(screen.getByText('카페')).toBeVisible()
+      expect(
+        screen.getByRole('region', { name: '저장 식당 목록' }).scrollTop,
+      ).toBe(240)
+      await act(async () => {
+        await router.navigate(-1)
+      })
+      expect(router.state.location.pathname).toBe('/saved')
+      await act(async () => {
+        await router.navigate(path)
+      })
+      expect(
+        screen.getByRole('region', { name: '저장 식당 목록' }).scrollTop,
+      ).toBe(0)
+    },
+  )
+
   it.each(['완료', '취소'])(
     '생성 %s 후 원래 목록 이력으로 복귀한다',
     async (action) => {
