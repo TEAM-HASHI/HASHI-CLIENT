@@ -28,9 +28,10 @@ const synchronizeSavedCollections = async (
   ])
 }
 
-export const useSaveRestaurantMutation = () => {
+export const useSaveRestaurantMutation = (onError?: (error: Error) => void) => {
   const queryClient = useQueryClient()
   return useMutation({
+    ...(onError && { onError: (error: Error) => onError(error) }),
     mutationFn: ({
       collectionId,
       body,
@@ -59,9 +60,12 @@ export const useRemoveSavedRestaurantsMutation = (
   })
 }
 
-export const useMoveSavedRestaurantsMutation = () => {
+export const useMoveSavedRestaurantsMutation = (
+  onError?: (error: Error) => void,
+) => {
   const queryClient = useQueryClient()
   return useMutation({
+    ...(onError && { onError: (error: Error) => onError(error) }),
     mutationFn: ({
       collectionId,
       body,
