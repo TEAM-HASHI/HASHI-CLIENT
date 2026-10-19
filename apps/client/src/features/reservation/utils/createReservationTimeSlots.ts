@@ -21,9 +21,11 @@ const formatMinutesToTime = (minutes: number) => {
 export const createReservationTimeSlots = (
   businessHours: BusinessHours,
   intervalMinutes: number,
+  minutesBeforeClose = 0,
 ) => {
   const openMinutes = convertTimeToMinutes(businessHours.open)
-  const closeMinutes = convertTimeToMinutes(businessHours.close)
+  const closeMinutes =
+    convertTimeToMinutes(businessHours.close) - minutesBeforeClose
 
   if (intervalMinutes <= 0 || openMinutes > closeMinutes) {
     return []

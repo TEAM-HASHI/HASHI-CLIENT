@@ -1,8 +1,10 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Calendar, Header, IconButton } from '@hashi/hds-ui'
+import { useState } from 'react'
 import type { SyntheticEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
+import { ReservationExitDialog } from '@/features/reservation/components/ReservationExitDialog'
 import { ROUTES } from '@/app/router/path'
 import {
   GuestCounter,
@@ -17,11 +19,14 @@ const ANYWHERE_RESERVATION_FORM_ID = 'anywhere-reservation-form'
 
 export const AnywhereReservationPage = () => {
   const navigate = useNavigate()
-  const { calendar, fields, guestCounters, submit, timeSelector } =
+  const location = useLocation()
+  const [isExitOpen, setIsExitOpen] = useState(false)
+  const { calendar, fields, guestCounters, submit, timeSelector, hasChanges } =
     useAnywhereReservationForm()
 
   const handleBackClick = () => {
-    navigate(-1)
+    if (hasChanges) setIsExitOpen(true)
+    else navigate(-1)
   }
 
   const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
@@ -33,6 +38,10 @@ export const AnywhereReservationPage = () => {
       return
     }
 
+    navigate(location.pathname, {
+      replace: true,
+      state: anywhereReservationDraft,
+    })
     navigate(ROUTES.reservationRequest, {
       state: anywhereReservationDraft,
     })
@@ -60,6 +69,7 @@ export const AnywhereReservationPage = () => {
             <ReservationUnderlineTextField
               label="식당명"
               name="restaurantName"
+              maxLength={200}
               onValueChange={fields.restaurantName.onValueChange}
               placeholder="식당명을 입력해주세요."
               value={fields.restaurantName.value}
@@ -67,6 +77,7 @@ export const AnywhereReservationPage = () => {
             <ReservationUnderlineTextField
               label="식당 주소"
               name="restaurantAddress"
+              maxLength={200}
               onValueChange={fields.restaurantAddress.onValueChange}
               placeholder="식당 주소를 입력해주세요."
               value={fields.restaurantAddress.value}
@@ -75,6 +86,7 @@ export const AnywhereReservationPage = () => {
               autoComplete="name"
               label="예약자명"
               name="guestName"
+              maxLength={50}
               onValueChange={fields.guestName.onValueChange}
               placeholder="예약자 성함을 입력해주세요."
               value={fields.guestName.value}
@@ -140,6 +152,14 @@ export const AnywhereReservationPage = () => {
         </form>
       </div>
 
+      <ReservationExitDialog
+        open={isExitOpen}
+        onOpenChange={setIsExitOpen}
+        onExit={() => {
+          navigate(location.pathname, { replace: true, state: null })
+          navigate(-1)
+        }}
+      />
       <ReservationBottomBar
         disabled={!submit.canSubmit}
         formId={ANYWHERE_RESERVATION_FORM_ID}

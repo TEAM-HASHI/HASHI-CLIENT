@@ -8,9 +8,15 @@ import type {
   ReservationGuestCounts,
   ReservationGuestType,
 } from '@/features/reservation/constants/guest'
-import { checkIsTodayOrBefore, createMonthStart } from '@/shared/utils/date'
+import type { ReservationRequestDraft } from '@/features/reservation/reservationDraft'
+import {
+  createDayStart,
+  checkIsTodayOrBefore,
+  createMonthStart,
+} from '@/shared/utils/date'
 
 interface UseReservationFormControlsParams {
+  initialDraft?: ReservationRequestDraft | null
   checkIsDateReservable: (date: Date) => boolean
   getTimeSlots: (selectedDate: Date | undefined) => readonly string[]
 }
@@ -18,21 +24,47 @@ interface UseReservationFormControlsParams {
 export const useReservationFormControls = ({
   checkIsDateReservable,
   getTimeSlots,
+  initialDraft,
 }: UseReservationFormControlsParams) => {
-  const [guestName, setGuestName] = useState('')
+  const [guestName, setGuestName] = useState(initialDraft?.guestName ?? '')
   const [guestCounts, setGuestCounts] = useState<ReservationGuestCounts>(
-    INITIAL_RESERVATION_GUEST_COUNTS,
+    initialDraft?.guests ?? INITIAL_RESERVATION_GUEST_COUNTS,
   )
-  const [requestNote, setRequestNote] = useState('')
+  const [requestNote, setRequestNote] = useState(
+    initialDraft?.requestNote ?? '',
+  )
   const [visibleMonth, setVisibleMonth] = useState(() =>
-    createMonthStart(new Date()),
+    createMonthStart(
+      initialDraft ? new Date(`${initialDraft.date}T00:00:00`) : new Date(),
+    ),
   )
-  const [selectedDate, setSelectedDate] = useState<Date>()
-  const [selectedTime, setSelectedTime] = useState<string>()
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() =>
+    initialDraft ? new Date(`${initialDraft.date}T00:00:00`) : undefined,
+  )
+  const [selectedTime, setSelectedTime] = useState<string | undefined>(
+    initialDraft?.time,
+  )
   const minMonth = createMonthStart(new Date())
 
   const checkIsDateDisabled = useCallback(
-    (date: Date) => checkIsTodayOrBefore(date) || !checkIsDateReservable(date),
+    (date: Date) => {
+      const today = new Date()
+      const lastDay = new Date(
+        today.getFullYear(),
+        today.getMonth() + 4,
+        0,
+      ).getDate()
+      const maxDate = new Date(
+        today.getFullYear(),
+        today.getMonth() + 3,
+        Math.min(today.getDate(), lastDay),
+      )
+      return (
+        checkIsTodayOrBefore(date) ||
+        createDayStart(date) > maxDate ||
+        !checkIsDateReservable(date)
+      )
+    },
     [checkIsDateReservable],
   )
 
@@ -40,7 +72,8 @@ export const useReservationFormControls = ({
     selectedDate !== undefined && !checkIsDateDisabled(selectedDate)
   const totalGuestCount =
     guestCounts.adult + guestCounts.teen + guestCounts.child
-  const isGuestNameValid = guestName.trim().length > 0
+  const isGuestNameValid =
+    guestName.trim().length > 0 && guestName.trim().length <= 50
   const timeSlots = useMemo(
     () => getTimeSlots(selectedDate),
     [getTimeSlots, selectedDate],
@@ -52,12 +85,15 @@ export const useReservationFormControls = ({
   ) => {
     setGuestCounts((currentGuestCounts) => ({
       ...currentGuestCounts,
-      [guestType]: Math.max(0, currentGuestCounts[guestType] + amount),
+      [guestType]: Math.min(
+        100,
+        Math.max(0, currentGuestCounts[guestType] + amount),
+      ),
     }))
   }
 
   const handleTimeSelect = (time: string) => {
-    if (!isSelectedDateValid) {
+    if (!isSelectedDateValid || !timeSlots.includes(time)) {
       return
     }
 
@@ -72,7 +108,12 @@ export const useReservationFormControls = ({
     setSelectedDate(nextDate)
   }
 
+  const hasChanges = Boolean(
+    guestName || requestNote || totalGuestCount || selectedDate || selectedTime,
+  )
+
   return {
+    hasChanges,
     fields: {
       guestName: {
         value: guestName,
@@ -94,7 +135,8 @@ export const useReservationFormControls = ({
       totalGuestCount,
       isGuestNameValid,
       isSelectedDateValid,
-      hasSelectedTime: selectedTime !== undefined,
+      hasSelectedTime:
+        selectedTime !== undefined && timeSlots.includes(selectedTime),
     },
     values: {
       guestCounts,
