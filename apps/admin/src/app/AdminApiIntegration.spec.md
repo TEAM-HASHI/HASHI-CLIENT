@@ -10,6 +10,8 @@
 
 공지사항 관리는 `pages/notices/NoticesPage.spec.md`를 따른다. 관리자 전용 목록·상세·생성·수정·게시·삭제와 NOTICE media asset 업로드를 연결하며 별도 generated 계약을 사용한다. `pnpm --filter @hashi/admin gen:notice-api-types`로 해당 범위만 갱신한다.
 
+이용약관 관리는 `pages/terms/TermsPage.spec.md`를 따른다. 기존 admin generated 계약으로 유형·버전 이력·상세·초안 저장·게시·삭제를 연결한다. 게시된 버전은 읽기 전용이며 새 버전 게시 시 기존 현재 버전 캐시도 재조회한다.
+
 | UI                        | Endpoint                                     | Query mode/key                                                 | States                                   |
 | ------------------------- | -------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------- |
 | Dashboard/reservations    | `GET /api/v1/admin/reservations`             | finite query, `adminQueryKeys.reservations.*`                  | loading/error/empty/success              |
