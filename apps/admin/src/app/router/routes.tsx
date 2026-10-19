@@ -12,6 +12,7 @@ const {
   DashboardPage,
   UsersPage,
   RestaurantsPage,
+  RestaurantLocationsPage,
   ReservationsPage,
   MagazinesPage,
   NoticesPage,
@@ -41,6 +42,10 @@ export const appRoutes = [
         path: ROUTES.adminRoot,
         element: <AdminLayout />,
         children: [
+          {
+            path: ROUTES.restaurantLocations,
+            element: withSuspense(<RestaurantLocationsPage />),
+          },
           { path: ROUTES.terms, element: withSuspense(<TermsPage />) },
           { path: ROUTES.termsNew, element: withSuspense(<TermsEditorPage />) },
           {

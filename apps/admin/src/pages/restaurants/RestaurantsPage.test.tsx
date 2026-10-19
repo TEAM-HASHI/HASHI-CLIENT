@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { RestaurantsPage } from '@/pages/restaurants/RestaurantsPage'
 import {
   useCreateRestaurantMutation,
@@ -23,6 +24,12 @@ vi.mock('@/pages/restaurants/mutations/useRestaurantMutations', () => ({
 }))
 
 const deleteMock = vi.fn()
+vi.mock(
+  '@/features/restaurantLocation/components/RestaurantLocationPanel',
+  () => ({
+    RestaurantLocationPanel: () => <div>지도 위치 확인</div>,
+  }),
+)
 const mutation = (mutate = vi.fn()) => ({
   mutate,
   reset: vi.fn(),
@@ -98,7 +105,11 @@ describe('RestaurantsPage', () => {
 
   it('renders the published list and opens the four-step create drawer', async () => {
     const user = userEvent.setup()
-    render(<RestaurantsPage />)
+    render(
+      <MemoryRouter>
+        <RestaurantsPage />
+      </MemoryRouter>,
+    )
 
     expect(screen.getByText('현재 공개 중인 식당')).toBeVisible()
     expect(screen.getByText('하시 스시')).toBeVisible()
@@ -132,7 +143,11 @@ describe('RestaurantsPage', () => {
       data: restaurantPrefill,
     } as unknown as ReturnType<typeof useRestaurantPrefillQuery>)
 
-    render(<RestaurantsPage />)
+    render(
+      <MemoryRouter>
+        <RestaurantsPage />
+      </MemoryRouter>,
+    )
 
     await user.click(screen.getByRole('button', { name: '수정' }))
     await user.click(screen.getByRole('button', { name: '다음' }))
@@ -151,7 +166,11 @@ describe('RestaurantsPage', () => {
 
   it('supports soft delete by direct numeric ID', async () => {
     const user = userEvent.setup()
-    render(<RestaurantsPage />)
+    render(
+      <MemoryRouter>
+        <RestaurantsPage />
+      </MemoryRouter>,
+    )
 
     await user.type(screen.getByLabelText('식당 ID'), '91')
     await user.click(screen.getByRole('button', { name: 'ID로 비공개 처리' }))

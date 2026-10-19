@@ -35,6 +35,7 @@ import { Drawer } from '@/shared/components/Drawer'
 import type { AdminImageUploadStatus } from '@/shared/hooks/useAdminImageUpload'
 import { RestaurantFormStepper } from '@/pages/restaurants/components/RestaurantFormStepper'
 import { RestaurantReplacementSection } from '@/pages/restaurants/components/RestaurantReplacementSection'
+import { RestaurantLocationPanel } from '@/features/restaurantLocation/components/RestaurantLocationPanel'
 
 const emptyReplacements: RestaurantReplacementFlags = {
   images: false,
@@ -282,7 +283,23 @@ export const RestaurantFormDrawer = ({
             </p>
           ) : null}
           {step === 0 ? (
-            <BasicStep form={form} errors={errors} setScalar={setScalar} />
+            <>
+              <BasicStep form={form} errors={errors} setScalar={setScalar} />
+              {mode === 'update' && restaurantId != null && (
+                <div className="border-cool-gray-100 mt-6 border-t pt-5">
+                  <RestaurantLocationPanel
+                    key={restaurantId}
+                    restaurantId={restaurantId}
+                    disabled={
+                      activeMutation.isPending ||
+                      ['name', 'localName', 'address'].some((field) =>
+                        dirtyFields.has(field as keyof RestaurantScalarFields),
+                      )
+                    }
+                  />
+                </div>
+              )}
+            </>
           ) : null}
           {step === 1 ? (
             <MediaStep
