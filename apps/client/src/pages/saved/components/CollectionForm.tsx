@@ -152,17 +152,18 @@ export const CollectionForm = ({
     <>
       <section
         aria-label={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
-        className="app-mobile-bottom-action-content min-h-dvh bg-white pt-[var(--safe-area-top,0px)]"
+        className="app-mobile-bottom-action-content min-h-dvh bg-white pt-[calc(75px+var(--safe-area-top,0px))]"
       >
-        <Header
-          className="shrink-0"
-          title={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
-          leftAction={
-            <IconButton size="xs" aria-label="뒤로가기" onClick={close}>
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-        />
+        <div className="app-mobile-fixed-top z-fixed bg-white pt-[var(--safe-area-top,0px)]">
+          <Header
+            title={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
+            leftAction={
+              <IconButton size="xs" aria-label="뒤로가기" onClick={close}>
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+          />
+        </div>
         <form
           id={`${id}-form`}
           className="w-full px-6"

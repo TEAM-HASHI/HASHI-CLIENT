@@ -8,6 +8,129 @@ const openFixture = async (
   await page.getByRole('navigation').waitFor()
 }
 
+for (const viewport of [
+  { width: 393, height: 852 },
+  { width: 320, height: 400 },
+  { width: 820, height: 1180 },
+]) {
+  test(`독립 컬렉션 목록·상세는 내부 스크롤과 진입 초기화를 유지한다 ${viewport.width}`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize(viewport)
+    await openFixture(page, '?scenario=long')
+    const listScroll = page.getByRole('region', { name: '컬렉션 목록' })
+    const lastCollection = listScroll.getByRole('listitem').last()
+    await lastCollection.scrollIntoViewIfNeeded()
+    expect(await listScroll.evaluate((node) => node.scrollTop)).toBeGreaterThan(
+      0,
+    )
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+    await expect(
+      page.getByRole('heading', { name: '저장 컬렉션' }),
+    ).toBeInViewport()
+    await expect(
+      page.getByRole('button', { name: '새 컬렉션 만들기' }),
+    ).toBeInViewport()
+    await lastCollection.getByRole('button', { name: /더보기$/ }).click()
+    await expect(
+      page.getByRole('menuitem', { name: '수정하기' }),
+    ).toBeInViewport()
+    await page.keyboard.press('Escape')
+    await page.screenshot({ path: testInfo.outputPath('internal-list.png') })
+    await lastCollection.getByRole('button', { name: /컬렉션 열기$/ }).click()
+    const restaurantScroll = page.getByRole('region', {
+      name: '저장 식당 목록',
+    })
+    expect(await restaurantScroll.evaluate((node) => node.scrollTop)).toBe(0)
+    const lastRestaurant = restaurantScroll.getByRole('listitem').last()
+    await lastRestaurant.scrollIntoViewIfNeeded()
+    expect(
+      await restaurantScroll.evaluate((node) => node.scrollTop),
+    ).toBeGreaterThan(0)
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+    await expect(
+      page.getByRole('button', { name: '분류 선택' }),
+    ).toBeInViewport()
+    const rowBox = await lastRestaurant.boundingBox()
+    const navBox = await page.getByRole('navigation').boundingBox()
+    expect(rowBox!.y + rowBox!.height).toBeLessThanOrEqual(navBox!.y + 1)
+    await page.getByRole('button', { name: '분류 선택' }).click()
+    await expect(
+      page.getByRole('menuitemradio', { name: '음식점' }),
+    ).toBeInViewport()
+    await page.keyboard.press('Escape')
+    await restaurantScroll.hover()
+    await page.mouse.wheel(0, 1000)
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+    await page.screenshot({ path: testInfo.outputPath('internal-detail.png') })
+    await page.getByRole('button', { name: '컬렉션 목록으로 돌아가기' }).click()
+    expect(await listScroll.evaluate((node) => node.scrollTop)).toBe(0)
+  })
+}
+
+test('일반 컬렉션 패널은 마지막 항목에서도 헤더와 필터·생성에 접근할 수 있다', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  for (const mode of ['list', 'detail']) {
+    await openFixture(page, `?panel=${mode}&scenario=long`)
+    const list = page.getByRole('list', {
+      name: mode === 'list' ? '저장 컬렉션' : '저장 식당',
+    })
+    await list.getByRole('listitem').last().scrollIntoViewIfNeeded()
+    await expect(
+      page.getByRole('heading', {
+        name: mode === 'list' ? '컬렉션 20개' : '가'.repeat(20),
+      }),
+    ).toBeInViewport()
+    if (mode === 'list') {
+      await expect(
+        page.getByRole('button', { name: '새 컬렉션 만들기' }),
+      ).toBeInViewport()
+    } else {
+      await expect(
+        page.getByRole('button', { name: '분류 선택' }),
+      ).toBeInViewport()
+      await page.getByRole('button', { name: '분류 선택' }).click()
+      await expect(
+        page.getByRole('menuitemradio', { name: '음식점' }),
+      ).toBeVisible()
+    }
+    await page.screenshot({
+      path: testInfo.outputPath(`fixed-panel-${mode}.png`),
+    })
+  }
+})
+
+test('생성·수정 폼은 하단 입력 중에도 헤더 뒤로가기에 접근할 수 있다', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 320, height: 400 })
+  for (const path of [
+    '/saved/collections/new',
+    '/saved/collections/spring/edit',
+  ]) {
+    await page.goto(
+      `/e2e/fixtures/saved.html?formHeader=${path.endsWith('/new') ? 'new' : 'edit'}#${path}`,
+    )
+    await page.getByRole('button', { name: '비공개', exact: true }).click()
+    await expect(
+      page.getByRole('button', { name: '뒤로가기', exact: true }),
+    ).toBeInViewport()
+    await expect(
+      page.getByText(
+        path.endsWith('/new') ? '새 컬렉션 만들기' : '컬렉션 수정',
+        { exact: true },
+      ),
+    ).toBeInViewport()
+    await page.screenshot({
+      path: testInfo.outputPath(
+        path.endsWith('/new') ? 'fixed-create.png' : 'fixed-edit.png',
+      ),
+    })
+  }
+})
+
 test('패널 드래그·접힘 유지·정렬·분류·종료', async ({ page }) => {
   await page.setViewportSize({ width: 393, height: 852 })
   await openFixture(page, '?panel=detail')

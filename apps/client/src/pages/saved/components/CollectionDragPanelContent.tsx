@@ -120,7 +120,7 @@ export const CollectionDragPanelContent = ({
             setPanel({ collectionId: view.collectionId, height: next })
           }}
           header={({ isFullscreen, collapse }) =>
-            isFullscreen ? renderHeader(true, collapse) : null
+            renderHeader(isFullscreen, collapse)
           }
           floating={({ isFullscreen, collapse }) =>
             isFullscreen ? (
@@ -161,7 +161,6 @@ export const CollectionDragPanelContent = ({
         >
           {({ isFullscreen }) => (
             <>
-              {!isFullscreen && renderHeader(false)}
               {collection ? (
                 <ul
                   ref={listRef}
