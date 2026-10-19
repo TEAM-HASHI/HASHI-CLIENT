@@ -1,13 +1,17 @@
 import { CheckIcon, PlusIcon, SaveIcon } from '@hashi/hds-icons'
 import { Button, Dialog } from '@hashi/hds-ui'
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import { CollectionCover } from '@/pages/saved/components/CollectionCover'
-import { CollectionForm } from '@/pages/saved/components/CollectionForm'
-import { useCollectionData } from '@/pages/saved/data/useCollectionData'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { ROUTES } from '@/app/router/path'
 import {
-  createCollection,
-  saveRestaurant,
-} from '@/pages/saved/utils/collectionMutations'
+  getCollectionFormState,
+  getCollectionSaveState,
+  getCollectionSaveRestaurantId,
+  getCollectionSaveSelectedId,
+} from '@/pages/saved/utils/collectionNavigation'
+import { useCollectionData } from '@/pages/saved/data/useCollectionData'
+import { saveRestaurant } from '@/pages/saved/utils/collectionMutations'
 import {
   selectCollections,
   selectRestaurants,
@@ -18,7 +22,6 @@ import type { CollectionData } from '@/pages/saved/types'
 // Figma 8317:38858 / 8317:38956: 너비 327, 최대 높이 490, 행 80.
 export const CollectionTargetDialog = ({
   data,
-  onDataChange,
   onClose,
   title,
   excludeId,
@@ -26,9 +29,10 @@ export const CollectionTargetDialog = ({
   onConfirm,
   confirmLabel,
   feedback,
+  createState,
 }: {
+  createState?: unknown
   data: CollectionData
-  onDataChange: (data: CollectionData) => void
   onClose: () => void
   title: string
   excludeId?: string
@@ -37,10 +41,11 @@ export const CollectionTargetDialog = ({
   confirmLabel: (id: string | null) => string
   feedback?: (id: string) => string
 }) => {
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [creating, setCreating] = useState(false)
-  const [creationCount, setCreationCount] = useState(0)
-  const id = useId()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [selectedId, setSelectedId] = useState(() =>
+    getCollectionSaveSelectedId(location.state),
+  )
   const selected = data.collections.find((item) => item.id === selectedId)
   const canSave = Boolean(
     selected && selected.id !== excludeId && !isDisabled(selected.id),
@@ -49,13 +54,13 @@ export const CollectionTargetDialog = ({
   return (
     <>
       <Dialog.Root
-        open={!creating}
+        open
         onOpenChange={(open) => {
           if (!open) onClose()
         }}
       >
         <Dialog.Content
-          className="max-h-[calc(100dvh-48px)] rounded-[20px] p-6"
+          className="max-h-[calc(100dvh-48px)] overflow-hidden rounded-[20px] p-6"
           aria-label={title}
         >
           <Dialog.Header className="shrink-0">
@@ -63,7 +68,24 @@ export const CollectionTargetDialog = ({
           </Dialog.Header>
           <button
             type="button"
-            onClick={() => setCreating(true)}
+            onClick={() => {
+              const restored = createState ?? location.state
+              const returnState = getCollectionSaveState(
+                restored,
+                getCollectionSaveRestaurantId(restored),
+                selectedId,
+              )
+              navigate(
+                { pathname: location.pathname, search: location.search },
+                { replace: true, state: returnState },
+              )
+              navigate(ROUTES.collectionNew, {
+                state: getCollectionFormState({
+                  ...location,
+                  state: returnState,
+                }),
+              })
+            }}
             className="border-warm-gray-50 mt-3 flex min-h-20 w-full shrink-0 items-center gap-3 border-b text-left"
           >
             <span className="bg-primary-100 flex size-12 shrink-0 items-center justify-center rounded-[5px]">
@@ -73,7 +95,7 @@ export const CollectionTargetDialog = ({
               새 컬렉션 만들기
             </span>
           </button>
-          <Dialog.Body className="max-h-65 min-h-0 overflow-y-auto overscroll-contain">
+          <Dialog.Body className="max-h-65 min-h-0 w-[calc(100%+16px)] self-start overflow-y-auto overscroll-contain pr-4">
             <div
               role="radiogroup"
               aria-label={`${title} 대상`}
@@ -184,25 +206,6 @@ export const CollectionTargetDialog = ({
           </Dialog.Footer>
         </Dialog.Content>
       </Dialog.Root>
-      {creating && (
-        <CollectionForm
-          collections={data.collections}
-          onClose={() => setCreating(false)}
-          onSubmit={(draft) => {
-            const createdAt = new Date().toISOString()
-            onDataChange(
-              createCollection(
-                data,
-                draft,
-                `mock-${id}-${creationCount}`,
-                createdAt,
-              ),
-            )
-            setCreationCount((count) => count + 1)
-            setCreating(false)
-          }}
-        />
-      )}
     </>
   )
 }
@@ -215,11 +218,20 @@ export const CollectionSaveDialog = ({
   onClose: () => void
 }) => {
   const { data, setData } = useCollectionData()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const handleClose = () => {
+    navigate(
+      { pathname: location.pathname, search: location.search },
+      { replace: true, state: getCollectionSaveState(location.state, null) },
+    )
+    onClose()
+  }
   return (
     <CollectionTargetDialog
       data={data}
-      onDataChange={setData}
-      onClose={onClose}
+      onClose={handleClose}
+      createState={getCollectionSaveState(location.state, restaurantId)}
       title="컬렉션 저장"
       confirmLabel={() => '저장'}
       isDisabled={(id) =>
@@ -236,7 +248,7 @@ export const CollectionSaveDialog = ({
         setData((current) =>
           saveRestaurant(current, id, restaurantId, new Date().toISOString()),
         )
-        onClose()
+        handleClose()
       }}
     />
   )

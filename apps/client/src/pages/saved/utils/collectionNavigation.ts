@@ -1,3 +1,4 @@
+import type { CollectionManagementAction } from '@/pages/saved/components/CollectionEditor'
 import type { Location } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'

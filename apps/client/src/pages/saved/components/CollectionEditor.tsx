@@ -14,6 +14,11 @@ import {
   showToast,
 } from '@hashi/hds-ui'
 import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import {
+  getCollectionManagementState,
+  getCollectionSaveState,
+} from '@/pages/saved/utils/collectionNavigation'
 import type { CollectionData, CollectionViewState } from '@/pages/saved/types'
 import { BottomActionBar } from '@/shared/components/bottomActionBar/BottomActionBar'
 import { cn } from '@/shared/utils'
@@ -30,6 +35,7 @@ import {
 export type CollectionManagementAction = {
   collectionId: string
   type: 'edit' | 'move' | 'remove' | 'delete' | 'share'
+  dialog?: 'move' | 'remove'
   restaurantIds?: readonly string[]
 }
 
@@ -51,13 +57,17 @@ export const CollectionEditor = ({
   onDeleted: () => void
   view: CollectionViewState
 }) => {
+  const location = useLocation()
+  const navigate = useNavigate()
   const collection = data.collections.find((c) => c.id === action.collectionId)
   const shareNotified = useRef(false)
   const [selected, setSelected] = useState<readonly string[]>(
     action.restaurantIds ?? [],
   )
   const [dialog, setDialog] = useState<'move' | 'remove' | null>(
-    action.type === 'move' || action.type === 'remove' ? action.type : null,
+    action.type === 'move' || action.type === 'remove'
+      ? action.type
+      : (action.dialog ?? null),
   )
   const editing = action.type === 'edit'
   const restaurants = collection
@@ -69,9 +79,21 @@ export const CollectionEditor = ({
   const all =
     restaurants.length > 0 && selectedIds.length === restaurants.length
   const closeDialog = () => {
-    if (editing) setDialog(null)
-    else onClose()
+    if (editing) {
+      setDialog(null)
+      navigate(
+        { pathname: location.pathname, search: location.search },
+        {
+          replace: true,
+          state: getCollectionManagementState(
+            getCollectionSaveState(location.state, null),
+            { ...action, restaurantIds: selectedIds, dialog: undefined },
+          ),
+        },
+      )
+    } else onClose()
   }
+
   useEffect(() => {
     if (
       action.type === 'share' &&
@@ -182,9 +204,13 @@ export const CollectionEditor = ({
       {dialog === 'move' && (
         <CollectionTargetDialog
           data={data}
-          onDataChange={onDataChange}
           onClose={closeDialog}
           title="컬렉션 이동"
+          createState={getCollectionManagementState(location.state, {
+            ...action,
+            restaurantIds: selectedIds,
+            dialog: 'move',
+          })}
           excludeId={collection.id}
           confirmLabel={() => '이동'}
           feedback={(target) =>
