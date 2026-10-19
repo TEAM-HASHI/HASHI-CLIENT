@@ -2,14 +2,14 @@ import type { NoticeListData } from '@/features/notice/types'
 import { request } from '@/shared/api/request'
 
 interface GetNoticesParams {
-  cursor: number | null
-  size: number
+  cursor: string | null
 }
 
-export const getNotices = async ({ cursor, size }: GetNoticesParams) => {
+export const getNotices = async ({ cursor }: GetNoticesParams) => {
   const data = await request<NoticeListData>('/api/v1/notices', {
-    searchParams: cursor === null ? { size } : { cursor, size },
+    searchParams: cursor === null ? {} : { cursor },
   })
 
-  return data ?? { notices: [], hasNext: false, nextCursor: null }
+  if (!data) throw new Error('Notice list response data is empty')
+  return data
 }

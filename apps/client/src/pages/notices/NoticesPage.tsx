@@ -12,8 +12,6 @@ import { formatNoticeLastUpdatedDate } from '@/features/notice/utils/formatNotic
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { useInfiniteScrollTrigger } from '@/shared/hooks'
 
-const NOTICE_PAGE_SIZE = 10
-
 // ponytail: RootLayout이 경로가 바뀔 때마다 맨 위로 스크롤하므로, 공지 목록만 상세에서 돌아올 때
 // 마지막 위치를 되살린다. 여러 화면에 필요해지면 라우터 ScrollRestoration으로 옮긴다.
 const NOTICE_LIST_SCROLL_KEY = 'hashi:notice-list-state'
@@ -56,10 +54,11 @@ export const NoticesPage = () => {
   )
   const isRestoring = Boolean(restoration)
   const noticesQuery = useInfiniteQuery({
-    queryKey: noticeQueryKeys.infiniteList(NOTICE_PAGE_SIZE),
-    queryFn: ({ pageParam }) =>
-      getNotices({ cursor: pageParam, size: NOTICE_PAGE_SIZE }),
-    initialPageParam: null as number | null,
+    queryKey: noticeQueryKeys.infiniteList(),
+    queryFn: ({ pageParam }) => getNotices({ cursor: pageParam }),
+    initialPageParam: null as string | null,
+    // 첫 페이지는 아래에서 오류 경계로 전달하고, 추가 페이지 실패는 목록 안에서 재시도한다.
+    throwOnError: false,
     getNextPageParam: (lastPage) =>
       lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined,
   })
@@ -121,7 +120,11 @@ export const NoticesPage = () => {
         leftAction={
           <IconButton
             aria-label="뒤로가기"
-            onClick={() => navigate(ROUTES.mypage, { replace: true })}
+            onClick={() =>
+              window.history.state?.idx > 0
+                ? navigate(-1)
+                : navigate(ROUTES.mypage, { replace: true })
+            }
             size="xs"
           >
             <BackIcon className="size-6" />
@@ -131,6 +134,8 @@ export const NoticesPage = () => {
       />
       {noticesQuery.isPending ? (
         <LoadingScreen className="min-h-[calc(100dvh-159px)]" />
+      ) : notices.length === 0 ? (
+        <p className="typo-body-6 px-5 py-7">등록된 공지사항이 없어요.</p>
       ) : (
         <ul>
           {notices.map((notice) => (

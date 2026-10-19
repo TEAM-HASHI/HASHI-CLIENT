@@ -24,6 +24,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 닉네임·연락처·이메일 사용 가능 여부 — 온보딩(임시 토큰)·내 정보 수정 화면이 필드별 입력 시점에 전달한 필드만 검사한다.
+         * @description 닉네임·연락처·이메일 사용 가능 여부 — 온보딩(임시 토큰)·내 정보 수정 화면이 필드별 입력 시점에 전달한 필드만 검사한다.
+         *      중복이어도 200이며 필드별 available·message로 구분한다. 회원이 호출하면 본인 값은 사용 가능으로 본다.
+         */
+        post: operations["checkAvailability"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/uploads/presigned-urls": {
         parameters: {
             query?: never;
@@ -124,6 +145,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/media/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAssetStatuses"];
+        put?: never;
+        post: operations["createAssets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media/assets/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["completeAssets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/magazines/{magazineId}/likes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 좋아요 등록 — 이미 좋아요 상태면 LIKE_ALREADY_CREATED 코드로 현재 상태·수를 그대로 돌려준다.
+         * @description 좋아요 등록 — 이미 좋아요 상태면 LIKE_ALREADY_CREATED 코드로 현재 상태·수를 그대로 돌려준다.
+         */
+        post: operations["like"];
+        /**
+         * 좋아요 취소 — 좋아요 상태가 아니면 LIKE_ALREADY_DELETED 코드로 현재 상태·수를 그대로 돌려준다.
+         * @description 좋아요 취소 — 좋아요 상태가 아니면 LIKE_ALREADY_DELETED 코드로 현재 상태·수를 그대로 돌려준다.
+         */
+        delete: operations["unlike"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dev/dummies": {
         parameters: {
             query?: never;
@@ -150,6 +227,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 내 컬렉션 목록 — 생성일 최신순 커서 페이지네이션.
+         * @description 내 컬렉션 목록 — 생성일 최신순 커서 페이지네이션. cursor는 직전 응답의 nextCursor, size 기본 20·최대 50.
+         *      restaurantId를 주면 항목마다 그 식당의 저장 여부(saved)를 함께 내린다(저장·이동 모달용).
+         */
+        get: operations["getMyCollections"];
+        put?: never;
+        /**
+         * 새 컬렉션 만들기 — 공개 범위(public·private)는 필수다.
+         * @description 새 컬렉션 만들기 — 공개 범위(public·private)는 필수다. 같은 이름의 컬렉션이 있으면 USER-007.
+         */
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/{collectionId}/restaurants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 저장 식당 목록 — 커서 페이지네이션.
+         * @description 저장 식당 목록 — 커서 페이지네이션. sort는 latest(기본)·rating·review, placeType은 restaurant·cafe·bar(없으면 전체).
+         *      공개 컬렉션은 비로그인도 조회할 수 있고, 비공개 컬렉션은 소유자가 아니면 USER-006(404).
+         */
+        get: operations["getSavedRestaurants"];
+        put?: never;
+        /**
+         * 컬렉션에 식당 저장 — 같은 컬렉션에 이미 있으면 USER-012.
+         * @description 컬렉션에 식당 저장 — 같은 컬렉션에 이미 있으면 USER-012. 응답은 갱신된 컬렉션 헤더(저장 수·커버).
+         */
+        post: operations["saveRestaurant"];
+        /**
+         * 선택 식당 제거 — restaurantIds 중 하나라도 컬렉션에 없으면 USER-013으로 전체 거부한다.
+         * @description 선택 식당 제거 — restaurantIds 중 하나라도 컬렉션에 없으면 USER-013으로 전체 거부한다.
+         */
+        delete: operations["removeRestaurants"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/{collectionId}/restaurants/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 선택 식당 이동(action 서브리소스) — 대상 컬렉션에 이미 있는 식당이 하나라도 있으면 USER-012로 전체 실패한다.
+         * @description 선택 식당 이동(action 서브리소스) — 대상 컬렉션에 이미 있는 식당이 하나라도 있으면 USER-012로 전체 실패한다.
+         */
+        post: operations["moveRestaurants"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/reissue": {
         parameters: {
             query?: never;
@@ -164,6 +315,26 @@ export interface paths {
          * @description 토큰 재발급 — refresh 쿠키로 액세스 토큰(헤더)과 리프레시 쿠키를 갱신한다.
          */
         post: operations["reissue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 로그아웃 — 리프레시 토큰을 폐기(Redis 삭제)하고 쿠키를 만료시킨다.
+         * @description 로그아웃 — 리프레시 토큰을 폐기(Redis 삭제)하고 쿠키를 만료시킨다.
+         */
+        post: operations["logout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -224,10 +395,71 @@ export interface paths {
         get: operations["getMyInfo"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * 회원 탈퇴 — 방문 완료·취소가 아닌 예약이 있으면 거절한다(RESERVATION-008).
+         * @description 회원 탈퇴 — 방문 완료·취소가 아닌 예약이 있으면 거절한다(RESERVATION-008). 성공 즉시 토큰이 차단되므로 클라이언트는
+         *      보관한 토큰을 버리고 로그인 화면으로 보낸다. 리뷰는 남고 작성자는 익명 닉네임으로 보인다.
+         */
+        delete: operations["withdraw"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * 내 정보 부분 수정 — null 필드는 유지한다.
+         * @description 내 정보 부분 수정 — null 필드는 유지한다. 중복이면 필드별 409(USER-001·002·003), 저장 경합은 USER-004.
+         */
+        patch: operations["updateMyInfo"];
+        trace?: never;
+    };
+    "/api/v1/reviews/{reviewId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * 내 리뷰 삭제 — 본인 소유가 아니면 404.
+         * @description 내 리뷰 삭제 — 본인 소유가 아니면 404.
+         */
+        delete: operations["deleteMyReview"];
+        options?: never;
+        head?: never;
+        /**
+         * 내 리뷰 수정 — 본인 소유가 아니면 404.
+         * @description 내 리뷰 수정 — 본인 소유가 아니면 404.
+         */
+        patch: operations["updateMyReview"];
+        trace?: never;
+    };
+    "/api/v1/collections/{collectionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 컬렉션 상세 헤더 — 공개 컬렉션은 비로그인도 조회.
+         * @description 컬렉션 상세 헤더 — 공개 컬렉션은 비로그인도 조회. 비공개 컬렉션은 소유자가 아니면 USER-006(404).
+         */
+        get: operations["getCollection"];
+        put?: never;
+        post?: never;
+        /**
+         * 컬렉션 삭제 — 저장 관계만 지우고 식당 원본은 유지한다.
+         * @description 컬렉션 삭제 — 저장 관계만 지우고 식당 원본은 유지한다.
+         */
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        /**
+         * 컬렉션 수정(PATCH) — 보낸 필드만 바꾼다.
+         * @description 컬렉션 수정(PATCH) — 보낸 필드만 바꾼다. 공유 전 공개 전환도 visibility로 처리한다.
+         */
+        patch: operations["update"];
         trace?: never;
     };
     "/api/v1/users/me/profile-summary": {
@@ -242,6 +474,38 @@ export interface paths {
          * @description 프로필 요약 조회 — 닉네임과 프로필 사진 URL.
          */
         get: operations["getMyProfileSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/terms/{termsId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["detail"];
         put?: never;
         post?: never;
         delete?: never;
@@ -302,6 +566,26 @@ export interface paths {
          * @description 내 리뷰 상세 조회 — 본인 소유가 아니면 404.
          */
         get: operations["getMyReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/me/{reviewId}/edit-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 내 리뷰 수정 화면 초기값 조회 — 본인 소유가 아니면 404.
+         * @description 내 리뷰 수정 화면 초기값 조회 — 본인 소유가 아니면 404.
+         */
+        get: operations["getMyReviewEditContext"];
         put?: never;
         post?: never;
         delete?: never;
@@ -426,22 +710,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/restaurants/{restaurantId}/reviews/images": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getRestaurantReviewImages"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/restaurants/{restaurantId}/menus": {
         parameters: {
             query?: never;
@@ -530,8 +798,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 오늘의 식당 중 현재 식당을 제외한 랜덤 추천 조회.
-         * @description 오늘의 식당 중 현재 식당을 제외한 랜덤 추천 조회.
+         * 전체 식당 중 현재 식당을 제외한 랜덤 추천 조회.
+         * @description 전체 식당 중 현재 식당을 제외한 랜덤 추천 조회.
          */
         get: operations["getRandomRestaurantRecommendation"];
         put?: never;
@@ -602,6 +870,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notices/{noticeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["detail_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/magazines": {
         parameters: {
             query?: never;
@@ -614,6 +914,26 @@ export interface paths {
          * @description 매거진 목록 조회 — 최신순 커서 페이지네이션.
          */
         get: operations["getMagazines"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/magazines/{magazineId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 매거진 상세 조회 — 비로그인 허용.
+         * @description 매거진 상세 조회 — 비로그인 허용. 로그인 회원이면 liked에 내 좋아요 여부가 실린다.
+         */
+        get: operations["getDetail"];
         put?: never;
         post?: never;
         delete?: never;
@@ -662,7 +982,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/reviews/{reviewId}": {
+    "/api/v1/users/me/profile-image": {
         parameters: {
             query?: never;
             header?: never;
@@ -673,10 +993,10 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * 내 리뷰 삭제 — 본인 소유가 아니면 404.
-         * @description 내 리뷰 삭제 — 본인 소유가 아니면 404.
+         * 프로필 사진 삭제 — 기본 프로필로 되돌린다.
+         * @description 프로필 사진 삭제 — 기본 프로필로 되돌린다. 사진이 없어도 성공한다(멱등).
          */
-        delete: operations["deleteMyReview"];
+        delete: operations["deleteProfileImage"];
         options?: never;
         head?: never;
         patch?: never;
@@ -742,6 +1062,13 @@ export interface components {
              * @example profiles/a1b2c3-profile.jpg
              */
             profileImageKey?: string;
+            /**
+             * Format: uuid
+             * @description 프로필 사진 public asset ID(선택)
+             * @example a3af06f1-4ef2-46f8-a489-2347fb840447
+             */
+            profileImageAssetId?: string;
+            profileImageSourceValid?: boolean;
         };
         OnboardingResponse: {
             /** Format: int64 */
@@ -753,6 +1080,56 @@ export interface components {
             code?: string;
             message?: string;
             data?: components["schemas"]["OnboardingResponse"];
+        };
+        /**
+         * @description 닉네임·연락처·이메일 사용 가능 여부 확인 요청 — 모두 선택이며 전달된 필드만 검사한다(최소 1개).
+         *      형식 규칙은 온보딩 요청과 같다. 클라이언트는 필드별 입력 시점(디바운스·blur)에 검사 대상 필드만 보낸다.
+         */
+        CheckProfileAvailabilityRequest: {
+            /**
+             * @description 닉네임(선택, 공백 불가)
+             * @example 김하람
+             */
+            nickname?: string;
+            /**
+             * @description 연락처(선택) — 하이픈 없이 숫자 10~11자리
+             * @example 01078757856
+             */
+            phone?: string;
+            /**
+             * Format: email
+             * @description 이메일(선택)
+             * @example hashi@example.com
+             */
+            email?: string;
+        };
+        FieldAvailability: {
+            /**
+             * @description 사용 가능 여부
+             * @example false
+             */
+            available?: boolean;
+            /**
+             * @description 사용 불가 사유 — 사용 가능이면 생략
+             * @example 중복된 닉네임입니다.
+             */
+            message?: string;
+        };
+        /**
+         * @description 필드별 사용 가능 여부 응답 — 요청에 없던 필드는 null이라 직렬화에서 생략한다.
+         *      사용 불가일 때만 중복 에러 코드의 문구(기능명세 항목별 문구)를 message로 함께 내려 클라이언트가 입력창별로 표시한다.
+         */
+        ProfileAvailabilityResponse: {
+            nickname?: components["schemas"]["FieldAvailability"];
+            phone?: components["schemas"]["FieldAvailability"];
+            email?: components["schemas"]["FieldAvailability"];
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseProfileAvailabilityResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["ProfileAvailabilityResponse"];
         };
         FileRequest: {
             /**
@@ -813,7 +1190,7 @@ export interface components {
              * @description 리뷰 키워드 코드(1~3개)
              * @example [
              *       "FOOD_IS_DELICIOUS",
-             *       "STAFF_IS_KIND"
+             *       "GOOD_FOR_SOLO_DINING"
              *     ]
              */
             keywordCodes: string[];
@@ -898,6 +1275,24 @@ export interface components {
              */
             amount: number;
         };
+        Candidate: {
+            url?: string;
+            /** Format: int32 */
+            width?: number;
+            /** Format: int32 */
+            height?: number;
+        };
+        /** @description 클라이언트가 반응형 이미지 후보를 선택할 수 있는 공통 이미지 응답. */
+        MediaImage: {
+            /** Format: uuid */
+            assetId?: string;
+            /** @enum {string} */
+            role?: "PROFILE_AVATAR" | "RESTAURANT_THUMBNAIL" | "RESTAURANT_CARD" | "RESTAURANT_HERO" | "MENU_LIST" | "MENU_DETAIL" | "REVIEW_PREVIEW" | "REVIEW_DETAIL" | "MAGAZINE_BANNER" | "MAGAZINE_THUMBNAIL" | "MAGAZINE_CARD_NEWS" | "NOTICE_DETAIL";
+            /** @enum {string} */
+            status?: "PROCESSING" | "READY" | "FAILED";
+            defaultSource?: components["schemas"]["Source"];
+            sourceSets?: components["schemas"]["SourceSet"][];
+        };
         /**
          * @description 예약 단건 응답(목록·생성·취소). 식당 정보는 STANDARD면 실시간 조회 값, ANYWHERE면 저장된 값(이미지 null).
          *      confirmDDay는 진행중(REQUESTED·CONTACTING) 예약만 값이 있고, 예정일 경과 시 음수로 감소한다.
@@ -912,6 +1307,7 @@ export interface components {
             restaurantId?: number;
             restaurantName?: string;
             restaurantImageUrl?: string;
+            restaurantThumbnailImage?: components["schemas"]["MediaImage"];
             restaurantAddress?: string;
             /** Format: date-time */
             reservedAt?: string;
@@ -926,6 +1322,18 @@ export interface components {
             reservationStatus?: "REQUESTED" | "CONTACTING" | "CONFIRMED" | "VISITED" | "CANCELED";
             /** Format: int64 */
             confirmDDay?: number;
+        };
+        Source: {
+            url?: string;
+            /** Format: int32 */
+            width?: number;
+            /** Format: int32 */
+            height?: number;
+            mimeType?: string;
+        };
+        SourceSet: {
+            mimeType?: string;
+            candidates?: components["schemas"]["Candidate"][];
         };
         /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
         SuccessResponseReservationResponse: {
@@ -993,6 +1401,75 @@ export interface components {
              */
             amount: number;
         };
+        CreateMediaAssetsRequest: {
+            /**
+             * @description 이미지 업로드 목적
+             * @example REVIEW
+             * @enum {string}
+             */
+            purpose: "PROFILE" | "REVIEW" | "RESTAURANT" | "RESTAURANT_MENU" | "MAGAZINE_BANNER" | "MAGAZINE_THUMBNAIL" | "MAGAZINE_CARD_NEWS" | "NOTICE";
+            /** @description 업로드할 이미지 목록(1~10개) */
+            files: components["schemas"]["FileRequest"][];
+        };
+        CreateMediaAssetsResponse: {
+            uploads?: components["schemas"]["MediaUploadResponse"][];
+        };
+        MediaUploadResponse: {
+            /** Format: uuid */
+            assetId?: string;
+            /** @enum {string} */
+            status?: "PENDING_UPLOAD" | "PROCESSING" | "READY" | "FAILED" | "EXPIRED";
+            uploadUrl?: string;
+            requiredHeaders?: {
+                [key: string]: string;
+            };
+            /** Format: int64 */
+            expectedContentLength?: number;
+            /** Format: int32 */
+            expiresInSeconds?: number;
+            uploadMethod?: string;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseCreateMediaAssetsResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["CreateMediaAssetsResponse"];
+        };
+        CompleteMediaAssetsRequest: {
+            assetIds: string[];
+        };
+        MediaAssetStatusResponse: {
+            /** Format: uuid */
+            assetId?: string;
+            /** @enum {string} */
+            status?: "PENDING_UPLOAD" | "PROCESSING" | "READY" | "FAILED" | "EXPIRED";
+        };
+        MediaAssetStatusesResponse: {
+            assets?: components["schemas"]["MediaAssetStatusResponse"][];
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseMediaAssetStatusesResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["MediaAssetStatusesResponse"];
+        };
+        /** @description 좋아요 등록·취소 결과 — 클라이언트가 낙관적으로 갱신한 하트 상태·수를 서버 값으로 맞추는 데 쓴다. */
+        MagazineLikeResponse: {
+            /** Format: int64 */
+            magazineId?: number;
+            liked?: boolean;
+            /** Format: int64 */
+            likeCount?: number;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseMagazineLikeResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["MagazineLikeResponse"];
+        };
         /**
          * @description 더미 시나리오 생성 결과 — 생성된 각 도메인의 식별자 목록과, 바로 쓸 수 있는 대표 더미 유저 토큰.
          *      sampleUser의 accessToken을 Authorize에 붙이면 그 유저의 예약·리뷰 조회가 곧장 동작하고,
@@ -1034,6 +1511,106 @@ export interface components {
             code?: string;
             message?: string;
             data?: components["schemas"]["DummyScenarioResponse"];
+        };
+        /**
+         * @description 컬렉션 생성 요청(SAVED-006). 컬렉션명·색상·공개 범위는 필수, 설명은 선택(100자).
+         *      color는 "red"·"orange"·"yellow"·"green"·"blue"·"purple", visibility는 "public"·"private"다.
+         *      공개 범위는 프라이버시와 직결돼 서버가 기본값을 채우지 않고 클라이언트가 선택값을 명시한다(시안 기본 선택은 공개).
+         *      컬렉션명의 공백 판정은 수정 요청과 같이 유니코드 공백(전각 공백 등)까지 보고, 줄바꿈이 섞여 있어도 판정한다.
+         */
+        CreateRestaurantCollectionRequest: {
+            /**
+             * @description 컬렉션명
+             * @example 2026 도쿄 여름 여행
+             */
+            name: string;
+            /**
+             * @description 커버 색상(red·orange·yellow·green·blue·purple)
+             * @example red
+             */
+            color: string;
+            /**
+             * @description 설명(선택)
+             * @example 여행 가기 전에 저장해둔 맛집들 중에서 꼭 가보고 싶은 곳
+             */
+            description?: string;
+            /**
+             * @description 공개 범위(public·private)
+             * @example public
+             */
+            visibility: string;
+        };
+        /** @description 커버 — 시계 방향 1번 칸은 color, 2~4번 칸은 imageUrls 순서대로 채운다(부족하면 있는 만큼). */
+        CoverResponse: {
+            color?: string;
+            imageUrls?: string[];
+        };
+        /**
+         * @description 컬렉션 단건 응답(생성·수정 결과, 상세 헤더). savedCount는 삭제된 식당을 뺀 현재 표시 가능한 저장 식당 수다.
+         *      cover는 컬렉션 색상과 저장이 오래된 순 대표 이미지 최대 3장이며, 이미지가 없는 식당은 건너뛴다.
+         *      owner는 현재 사용자가 소유자인지(비로그인은 false)로, 클라이언트가 편집·삭제 메뉴 노출을 결정한다.
+         */
+        RestaurantCollectionResponse: {
+            /** Format: int64 */
+            collectionId?: number;
+            name?: string;
+            color?: string;
+            description?: string;
+            visibility?: string;
+            /** Format: int32 */
+            savedCount?: number;
+            cover?: components["schemas"]["CoverResponse"];
+            owner?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseRestaurantCollectionResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["RestaurantCollectionResponse"];
+        };
+        /** @description 컬렉션에 식당 저장 요청(SAVED-006) — 한 번에 한 컬렉션·한 식당. */
+        SaveRestaurantRequest: {
+            /**
+             * Format: int64
+             * @description 저장할 식당 ID
+             * @example 1001
+             */
+            restaurantId: number;
+        };
+        /**
+         * @description 저장 식당 이동 요청(SAVED-004) — 선택한 식당들을 다른 컬렉션으로 옮긴다.
+         *      대상 컬렉션에 이미 있는 식당이 하나라도 있으면 전체 실패한다.
+         */
+        MoveSavedRestaurantsRequest: {
+            /**
+             * Format: int64
+             * @description 이동 대상 컬렉션 ID
+             * @example 2
+             */
+            targetCollectionId: number;
+            /**
+             * @description 이동할 식당 ID 목록
+             * @example [
+             *       1001,
+             *       1002
+             *     ]
+             */
+            restaurantIds: number[];
+        };
+        /** @description 저장 식당 이동 결과 — 원래·대상 컬렉션의 갱신된 저장 수를 함께 내려 클라이언트가 두 목록을 갱신한다. */
+        MoveSavedRestaurantsResponse: {
+            sourceCollection?: components["schemas"]["RestaurantCollectionResponse"];
+            targetCollection?: components["schemas"]["RestaurantCollectionResponse"];
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseMoveSavedRestaurantsResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["MoveSavedRestaurantsResponse"];
         };
         /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
         SuccessResponseVoid: {
@@ -1098,8 +1675,44 @@ export interface components {
             data?: components["schemas"]["DevTokenResponse"];
         };
         /**
+         * @description 내 정보 부분 수정(PATCH) 요청 — null 필드는 변경하지 않는다(식당·매거진·컬렉션과 동일 정책).
+         *      영문 이름은 수정 화면 범위 밖이라 받지 않고(MYP-002), 사진 제거는 별도 DELETE로 한다.
+         *      profileImageAssetId는 media에 업로드를 마친 PROFILE asset이며 보내면 기존 사진을 교체한다.
+         */
+        UpdateMyInfoRequest: {
+            /**
+             * @description 닉네임(선택, 공백 불가)
+             * @example 김하람
+             */
+            nickname?: string;
+            /**
+             * Format: date
+             * @description 생년월일(선택)
+             * @example 1998-01-01
+             */
+            birthDate?: string;
+            /**
+             * @description 연락처(선택) — 하이픈 없이 숫자 10~11자리
+             * @example 01078757856
+             */
+            phone?: string;
+            /**
+             * Format: email
+             * @description 이메일(선택)
+             * @example hashi@example.com
+             */
+            email?: string;
+            /**
+             * Format: uuid
+             * @description 새 프로필 사진 public asset ID(선택, 보내면 교체)
+             * @example a3af06f1-4ef2-46f8-a489-2347fb840447
+             */
+            profileImageAssetId?: string;
+        };
+        /**
          * @description 내 정보 조회 응답(내 정보 수정 페이지용) — 온보딩에서 받은 프로필 전체를 내린다.
-         *      profileImageUrl은 저장된 S3 key를 조회 URL로 변환한 값이며, 사진 미등록이면 null(클라가 기본 이미지 처리).
+         *      profileImageUrl은 READY 파생본 URL 또는 asset이 없는 기존 사진 URL이다.
+         *      사진 미등록, asset 변환 중·실패 또는 조회 결과가 없으면 null이며, profileImage가 있으면 그 상태로 표시한다.
          */
         MyInfoResponse: {
             nickname?: string;
@@ -1109,6 +1722,7 @@ export interface components {
             phone?: string;
             email?: string;
             profileImageUrl?: string;
+            profileImage?: components["schemas"]["MediaImage"];
         };
         /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
         SuccessResponseMyInfoResponse: {
@@ -1117,13 +1731,70 @@ export interface components {
             message?: string;
             data?: components["schemas"]["MyInfoResponse"];
         };
+        /** @description 리뷰 수정 요청. 수정 가능한 필드의 최종 상태를 모두 전달한다. */
+        UpdateReviewRequest: {
+            /**
+             * Format: int32
+             * @description 별점(1~5)
+             * @example 4
+             */
+            rating: number;
+            /**
+             * @description 리뷰 키워드 코드(1~3개, 중복 불가)
+             * @example [
+             *       "FOOD_IS_DELICIOUS",
+             *       "GOOD_FOR_SOLO_DINING"
+             *     ]
+             */
+            keywordCodes: string[];
+            /**
+             * @description 리뷰 내용(10~1000자)
+             * @example 음식이 맛있고 분위기도 좋아서 다시 방문하고 싶습니다.
+             */
+            content: string;
+            /**
+             * @description 수정 후 남길 리뷰 이미지 S3 key 전체 목록(최대 10개, 중복 불가, 빈 배열은 전체 삭제)
+             * @example [
+             *       "uploads/reviews/a1b2c3-1.jpg"
+             *     ]
+             */
+            imageFileKeys: string[];
+        };
+        /**
+         * @description 컬렉션 부분 수정(PATCH) 요청(SAVED-007) — null 필드는 변경하지 않는다.
+         *      설명은 빈 문자열을 보내면 지운다. 공유 전 "공개 후 공유"도 visibility 변경으로 처리한다.
+         */
+        UpdateRestaurantCollectionRequest: {
+            /**
+             * @description 컬렉션명(선택, 공백 불가)
+             * @example 2026 도쿄 겨울 여행
+             */
+            name?: string;
+            /**
+             * @description 커버 색상(red·orange·yellow·green·blue·purple, 선택)
+             * @example blue
+             */
+            color?: string;
+            /**
+             * @description 설명(선택) — 빈 문자열이면 설명을 지운다
+             * @example 도쿄여행 야호
+             */
+            description?: string;
+            /**
+             * @description 공개 범위(public·private, 선택)
+             * @example private
+             */
+            visibility?: string;
+        };
         /**
          * @description 프로필 요약 응답(헤더·마이페이지 노출용) — 닉네임과 프로필 사진만.
-         *      profileImageUrl은 저장된 S3 key를 조회 URL로 변환한 값이며, 사진 미등록이면 null(클라가 기본 이미지 처리).
+         *      profileImageUrl은 READY 파생본 URL 또는 asset이 없는 기존 사진 URL이다.
+         *      사진 미등록, asset 변환 중·실패 또는 조회 결과가 없으면 null이며, profileImage가 있으면 그 상태로 표시한다.
          */
         ProfileSummaryResponse: {
             nickname?: string;
             profileImageUrl?: string;
+            profileImage?: components["schemas"]["MediaImage"];
         };
         /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
         SuccessResponseProfileSummaryResponse: {
@@ -1131,6 +1802,49 @@ export interface components {
             code?: string;
             message?: string;
             data?: components["schemas"]["ProfileSummaryResponse"];
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseListTermsSummaryResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["TermsSummaryResponse"][];
+        };
+        TermsSummaryResponse: {
+            /** Format: int64 */
+            termsId?: number;
+            /** @enum {string} */
+            type?: "SERVICE_TERMS" | "PRIVACY_POLICY" | "PERSONAL_DATA_COLLECTION" | "PERSONAL_DATA_THIRD_PARTY" | "RESERVATION_REFUND_POLICY" | "REVIEW_POLICY" | "POINT_TERMS" | "SERVICE_POLICY";
+            title?: string;
+            version?: string;
+            /** Format: date */
+            effectiveDate?: string;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseTermsResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["TermsResponse"];
+        };
+        /** @description 일반 텍스트 조항. 배열 순서대로 accordion을 표시한다. HTML은 렌더링하지 않는다. */
+        TermsClause: {
+            heading?: string;
+            content?: string;
+        };
+        TermsResponse: {
+            /** Format: int64 */
+            termsId?: number;
+            /** @enum {string} */
+            type?: "SERVICE_TERMS" | "PRIVACY_POLICY" | "PERSONAL_DATA_COLLECTION" | "PERSONAL_DATA_THIRD_PARTY" | "RESERVATION_REFUND_POLICY" | "REVIEW_POLICY" | "POINT_TERMS" | "SERVICE_POLICY";
+            title?: string;
+            version?: string;
+            /** Format: date */
+            effectiveDate?: string;
+            clauses?: components["schemas"]["TermsClause"][];
+            status?: string;
+            /** Format: date-time */
+            publishedAt?: string;
         };
         /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
         SuccessResponseVisitedReservationListResponse: {
@@ -1154,6 +1868,7 @@ export interface components {
             restaurantId?: number;
             restaurantName?: string;
             restaurantThumbnailUrl?: string;
+            restaurantThumbnailImage?: components["schemas"]["MediaImage"];
             /** Format: date-time */
             visitedAt?: string;
             /** Format: int32 */
@@ -1187,6 +1902,7 @@ export interface components {
             restaurantId?: number;
             restaurantName?: string;
             restaurantThumbnailUrl?: string;
+            restaurantThumbnailImage?: components["schemas"]["MediaImage"];
             /** Format: date-time */
             visitedAt?: string;
             /** Format: int32 */
@@ -1214,6 +1930,7 @@ export interface components {
             restaurantId?: number;
             restaurantName?: string;
             restaurantThumbnailUrl?: string;
+            restaurantThumbnailImage?: components["schemas"]["MediaImage"];
             /** Format: date-time */
             visitedAt?: string;
             /** Format: int32 */
@@ -1236,6 +1953,49 @@ export interface components {
             message?: string;
             data?: components["schemas"]["MyReviewDetailResponse"];
         };
+        /** @description 리뷰 수정 화면 초기값. 저장에 필요한 keyword code와 이미지 fileKey를 함께 반환한다. */
+        ReviewEditContextResponse: {
+            /** Format: int64 */
+            reviewId?: number;
+            /** Format: int64 */
+            reservationId?: number;
+            /** Format: int64 */
+            restaurantId?: number;
+            restaurantName?: string;
+            restaurantThumbnailUrl?: string;
+            restaurantThumbnailImage?: components["schemas"]["MediaImage"];
+            /** Format: date-time */
+            visitedAt?: string;
+            /** Format: int32 */
+            adultCount?: number;
+            /** Format: int32 */
+            teenCount?: number;
+            /** Format: int32 */
+            childCount?: number;
+            /** Format: int32 */
+            rating?: number;
+            content?: string;
+            selectedKeywordCodes?: string[];
+            reviewKeywordOptions?: components["schemas"]["ReviewKeywordOption"][];
+            images?: components["schemas"]["ReviewEditImageResponse"][];
+        };
+        ReviewEditImageResponse: {
+            fileKey?: string;
+            imageUrl?: string;
+            /** Format: int32 */
+            displayOrder?: number;
+        };
+        ReviewKeywordOption: {
+            code?: string;
+            label?: string;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseReviewEditContextResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["ReviewEditContextResponse"];
+        };
         MyReviewCountResponse: {
             /** Format: int64 */
             reviewCount?: number;
@@ -1254,6 +2014,7 @@ export interface components {
             restaurantId?: number;
             restaurantName?: string;
             restaurantThumbnailUrl?: string;
+            restaurantThumbnailImage?: components["schemas"]["MediaImage"];
             /** Format: date-time */
             visitedAt?: string;
             /** Format: int32 */
@@ -1267,16 +2028,21 @@ export interface components {
             reviewUnavailableReason?: "NOT_VISITED" | "ALREADY_REVIEWED" | "UNSUPPORTED_RESERVATION_TYPE";
             reviewKeywordOptions?: components["schemas"]["ReviewKeywordOption"][];
         };
-        ReviewKeywordOption: {
-            code?: string;
-            label?: string;
-        };
         /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
         SuccessResponseReviewContextResponse: {
             success?: boolean;
             code?: string;
             message?: string;
             data?: components["schemas"]["ReviewContextResponse"];
+        };
+        /** @description 식당 Aggregate가 소유하는 stable 이미지 association과 media projection. */
+        RestaurantImageInfo: {
+            /** Format: int64 */
+            restaurantImageId?: number;
+            /** Format: int32 */
+            displayOrder?: number;
+            image?: components["schemas"]["MediaImage"];
+            legacyUrl?: string;
         };
         RestaurantListResponse: {
             content?: components["schemas"]["RestaurantSummaryResponse"][];
@@ -1289,7 +2055,9 @@ export interface components {
             name?: string;
             rating?: number;
             thumbnailUrl?: string;
+            thumbnailImage?: components["schemas"]["RestaurantImageInfo"];
             imageUrls?: string[];
+            cardImages?: components["schemas"]["RestaurantImageInfo"][];
             area?: string;
             genre?: string;
             foodCategory?: string;
@@ -1323,7 +2091,9 @@ export interface components {
             foodCategory?: string;
             address?: string;
             thumbnailUrl?: string;
+            thumbnailImage?: components["schemas"]["RestaurantImageInfo"];
             imageUrls?: string[];
+            heroImages?: components["schemas"]["RestaurantImageInfo"][];
             /** Format: int64 */
             reservationFee?: number;
         };
@@ -1393,6 +2163,7 @@ export interface components {
             reviewId?: number;
             reviewerNickname?: string;
             reviewerProfileImageUrl?: string;
+            reviewerProfileImage?: components["schemas"]["MediaImage"];
             /** Format: int32 */
             rating?: number;
             content?: string;
@@ -1410,26 +2181,6 @@ export interface components {
             message?: string;
             data?: components["schemas"]["RestaurantReviewResponse"];
         };
-        RestaurantReviewImageListResponse: {
-            content?: components["schemas"]["RestaurantReviewImageResponse"][];
-            /** Format: int64 */
-            nextCursor?: number;
-            hasNext?: boolean;
-        };
-        RestaurantReviewImageResponse: {
-            /** Format: int64 */
-            imageId?: number;
-            /** Format: int64 */
-            reviewId?: number;
-            imageUrl?: string;
-        };
-        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
-        SuccessResponseRestaurantReviewImageListResponse: {
-            success?: boolean;
-            code?: string;
-            message?: string;
-            data?: components["schemas"]["RestaurantReviewImageListResponse"];
-        };
         RestaurantMenuListResponse: {
             content?: components["schemas"]["RestaurantMenuResponse"][];
             /** Format: int64 */
@@ -1442,6 +2193,7 @@ export interface components {
             name?: string;
             description?: string;
             imageUrl?: string;
+            listImage?: components["schemas"]["MediaImage"];
             currency?: string;
             /** Format: int64 */
             price?: number;
@@ -1460,6 +2212,7 @@ export interface components {
             name?: string;
             description?: string;
             imageUrl?: string;
+            detailImage?: components["schemas"]["MediaImage"];
             currency?: string;
             /** Format: int64 */
             price?: number;
@@ -1517,6 +2270,7 @@ export interface components {
             restaurantNameJa?: string;
             restaurantAddress?: string;
             restaurantImageUrl?: string;
+            restaurantThumbnailImage?: components["schemas"]["MediaImage"];
             /** Format: date-time */
             reservedAt?: string;
             /** Format: int32 */
@@ -1577,6 +2331,60 @@ export interface components {
             message?: string;
             data?: components["schemas"]["PointBalanceResponse"];
         };
+        Item: {
+            /** Format: int64 */
+            noticeId?: number;
+            title?: string;
+            /** Format: date-time */
+            lastModifiedAt?: string;
+        };
+        NoticeListResponse: {
+            notices?: components["schemas"]["Item"][];
+            nextCursor?: string;
+            hasNext?: boolean;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseNoticeListResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["NoticeListResponse"];
+        };
+        Attachment: {
+            /** Format: uuid */
+            assetId?: string;
+            image?: components["schemas"]["MediaImage"];
+        };
+        /** @description 본문 구조. text는 HTML이 아닌 일반 텍스트이며 줄바꿈을 그대로 표시한다. */
+        NoticeBlock: {
+            /** @enum {string} */
+            type?: "PARAGRAPH" | "BULLET_LIST" | "ORDERED_LIST";
+            items?: components["schemas"]["Span"][][];
+        };
+        NoticeResponse: {
+            /** Format: int64 */
+            noticeId?: number;
+            title?: string;
+            body?: components["schemas"]["NoticeBlock"][];
+            status?: string;
+            /** Format: date-time */
+            publishedAt?: string;
+            /** Format: date-time */
+            lastModifiedAt?: string;
+            images?: components["schemas"]["Attachment"][];
+        };
+        Span: {
+            text?: string;
+            bold?: boolean;
+            href?: string;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseNoticeResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["NoticeResponse"];
+        };
         /**
          * @description 매거진 목록 응답(최신순 커서 페이지네이션). nextCursor는 다음 페이지 요청에 그대로 전달하며,
          *      hasNext가 false면 마지막 페이지라 nextCursor는 null이다.
@@ -1592,7 +2400,9 @@ export interface components {
             magazineId?: number;
             title?: string;
             bannerImageUrl?: string;
+            bannerImage?: components["schemas"]["MediaImage"];
             thumbnailImageUrl?: string;
+            thumbnailImage?: components["schemas"]["MediaImage"];
             instagramRedirectUrl?: string;
             /** Format: date-time */
             createdAt?: string;
@@ -1604,6 +2414,61 @@ export interface components {
             message?: string;
             data?: components["schemas"]["MagazineListResponse"];
         };
+        /**
+         * @description 카드뉴스 이미지 1장. image.status가 READY면 새 이미지를, image가 null이고 legacyUrl이 있으면 기존 주소를 쓴다.
+         *      legacyUrl은 asset ID가 없는 카드뉴스에만 있고, asset이 있으면 상태와 관계없이 null이다.
+         */
+        CardNewsImageResponse: {
+            /** Format: int64 */
+            cardNewsId?: number;
+            /** Format: int32 */
+            displayOrder?: number;
+            image?: components["schemas"]["MediaImage"];
+            legacyUrl?: string;
+        };
+        /**
+         * @description 매거진 상세 응답. cardNewsImageUrls는 캐러셀 순서대로의 카드뉴스 이미지 조회 URL로,
+         *      표시 가능한 기존 주소와 READY 주소만 담는다. cardNewsImages는 카드뉴스 전체를 순서대로 담은
+         *      wrapper 목록이며 식당 이미지 wrapper와 같은 형태다(image-delivery-contract §9.2) —
+         *      카드뉴스는 원본 비율을 유지해 높이가 이미지마다 다르므로 image의 width·height를 사용한다.
+         *      두 목록은 길이가 다를 수 있어 같은 인덱스로 맞추지 않는다(기존 URL 필드는 호환을 위해 유지).
+         *      liked는 로그인 회원의 좋아요 여부(비로그인은 false)다. restaurants는 연결 식당 카드로,
+         *      삭제된 식당은 제외되며 연결 식당이 없으면 빈 목록이다.
+         */
+        MagazineDetailResponse: {
+            /** Format: int64 */
+            magazineId?: number;
+            title?: string;
+            cardNewsImageUrls?: string[];
+            cardNewsImages?: components["schemas"]["CardNewsImageResponse"][];
+            content?: string;
+            hashtags?: string[];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            likeCount?: number;
+            liked?: boolean;
+            restaurants?: components["schemas"]["MagazineRestaurantResponse"][];
+        };
+        /** @description 연결 식당 카드 — 식당명·평점·지역·카테고리·식당 이미지(최대 3장)·오늘 영업시간·예상 가격대. */
+        MagazineRestaurantResponse: {
+            /** Format: int64 */
+            restaurantId?: number;
+            name?: string;
+            rating?: number;
+            area?: string;
+            foodCategory?: string;
+            imageUrls?: string[];
+            todayBusinessHour?: components["schemas"]["TodayBusinessHourResponse"];
+            priceRange?: components["schemas"]["PriceRangeResponse"];
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseMagazineDetailResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["MagazineDetailResponse"];
+        };
         /** @description 매거진 배너 목록 응답 — 최신 매거진 5개의 배너. 배너 클릭 시 instagramRedirectUrl로 이동한다. */
         MagazineBannerListResponse: {
             banners?: components["schemas"]["MagazineBannerResponse"][];
@@ -1613,6 +2478,7 @@ export interface components {
             magazineId?: number;
             title?: string;
             bannerImageUrl?: string;
+            bannerImage?: components["schemas"]["MediaImage"];
             instagramRedirectUrl?: string;
         };
         /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
@@ -1621,6 +2487,71 @@ export interface components {
             code?: string;
             message?: string;
             data?: components["schemas"]["MagazineBannerListResponse"];
+        };
+        /**
+         * @description 내 컬렉션 목록 응답(SAVED-008 목록·SAVED-006 저장 모달·SAVED-004 이동 모달 공용) — 생성일 최신순 커서 페이지네이션.
+         *      nextCursor는 다음 페이지 요청에 그대로 전달하며, hasNext가 false면 마지막 페이지라 nextCursor는 null이다.
+         *      totalCount는 사용자의 전체 컬렉션 수로, 목록 헤더의 "컬렉션 N개" 표시용이다(페이지에 담긴 수가 아니다).
+         *      restaurantId를 주고 조회하면 항목마다 그 식당이 이미 저장돼 있는지 saved를 채우고, 주지 않으면 saved를 생략한다.
+         */
+        RestaurantCollectionListResponse: {
+            collections?: components["schemas"]["RestaurantCollectionSummaryResponse"][];
+            /** Format: int64 */
+            totalCount?: number;
+            /** Format: int64 */
+            nextCursor?: number;
+            hasNext?: boolean;
+        };
+        RestaurantCollectionSummaryResponse: {
+            /** Format: int64 */
+            collectionId?: number;
+            name?: string;
+            color?: string;
+            visibility?: string;
+            /** Format: int32 */
+            savedCount?: number;
+            cover?: components["schemas"]["CoverResponse"];
+            saved?: boolean;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseRestaurantCollectionListResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["RestaurantCollectionListResponse"];
+        };
+        /**
+         * @description 컬렉션 저장 식당 목록 응답(SAVED-008) — 커서 페이지네이션. nextCursor는 다음 페이지 요청에 그대로 전달하며,
+         *      hasNext가 false면 nextCursor는 null이다. 정렬·분류 필터가 바뀌면 커서를 버리고 처음부터 조회한다.
+         *      삭제된 식당은 목록에서 제외된다.
+         */
+        SavedRestaurantListResponse: {
+            content?: components["schemas"]["SavedRestaurantResponse"][];
+            nextCursor?: string;
+            hasNext?: boolean;
+        };
+        /** @description 저장 식당 카드 — 대표 이미지·식당명·평점·지역·음식 종류·음식점 분류와 저장 시각. */
+        SavedRestaurantResponse: {
+            /** Format: int64 */
+            restaurantId?: number;
+            name?: string;
+            rating?: number;
+            /** Format: int64 */
+            reviewCount?: number;
+            area?: string;
+            foodCategory?: string;
+            placeType?: string;
+            thumbnailUrl?: string;
+            thumbnailImage?: components["schemas"]["MediaImage"];
+            /** Format: date-time */
+            savedAt?: string;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseSavedRestaurantListResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["SavedRestaurantListResponse"];
         };
         /**
          * @description 현재 인증 상태 응답. role은 USER·ADMIN·ONBOARDING 3값(401 = 미로그인).
@@ -1711,7 +2642,68 @@ export interface operations {
                 };
             };
             /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    checkAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckProfileAvailabilityRequest"];
+            };
+        };
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseProfileAvailabilityResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1970,6 +2962,305 @@ export interface operations {
             };
         };
     };
+    getAssetStatuses: {
+        parameters: {
+            query: {
+                assetIds: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseMediaAssetStatusesResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    createAssets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMediaAssetsRequest"];
+            };
+        };
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseCreateMediaAssetsResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    completeAssets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteMediaAssetsRequest"];
+            };
+        };
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseMediaAssetStatusesResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    like: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                magazineId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 매거진 좋아요를 등록했습니다 / 이미 좋아요한 매거진입니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseMagazineLikeResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    unlike: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                magazineId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 매거진 좋아요를 취소했습니다 / 이미 좋아요하지 않은 매거진입니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseMagazineLikeResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     createDummies: {
         parameters: {
             query?: never;
@@ -1991,6 +3282,370 @@ export interface operations {
             };
         };
     };
+    getMyCollections: {
+        parameters: {
+            query?: {
+                restaurantId?: number;
+                cursor?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseRestaurantCollectionListResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRestaurantCollectionRequest"];
+            };
+        };
+        responses: {
+            /** @description 컬렉션을 만들었습니다 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseRestaurantCollectionResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    getSavedRestaurants: {
+        parameters: {
+            query?: {
+                sort?: string;
+                placeType?: string;
+                cursor?: string;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                collectionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseSavedRestaurantListResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    saveRestaurant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collectionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveRestaurantRequest"];
+            };
+        };
+        responses: {
+            /** @description 컬렉션에 식당을 저장했습니다 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseRestaurantCollectionResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    removeRestaurants: {
+        parameters: {
+            query: {
+                restaurantIds: number[];
+            };
+            header?: never;
+            path: {
+                collectionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseRestaurantCollectionResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    moveRestaurants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collectionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveSavedRestaurantsRequest"];
+            };
+        };
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseMoveSavedRestaurantsResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     reissue: {
         parameters: {
             query?: never;
@@ -2003,6 +3658,47 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description 토큰이 재발급되었습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseVoid"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: {
+                Origin?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 로그아웃에 성공했습니다 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2166,6 +3862,400 @@ export interface operations {
             };
         };
     };
+    withdraw: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 회원 탈퇴가 완료되었습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseVoid"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    updateMyInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMyInfoRequest"];
+            };
+        };
+        responses: {
+            /** @description 내 정보를 수정했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseMyInfoResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    deleteMyReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reviewId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseVoid"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    updateMyReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reviewId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseVoid"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    getCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collectionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseRestaurantCollectionResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collectionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseVoid"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collectionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRestaurantCollectionRequest"];
+            };
+        };
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseRestaurantCollectionResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     getMyProfileSummary: {
         parameters: {
             query?: never;
@@ -2200,6 +4290,59 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 이용약관 조회 완료 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseListTermsSummaryResponse"];
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                termsId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 이용약관 조회 완료 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseTermsResponse"];
                     "application/json": unknown;
                 };
             };
@@ -2328,6 +4471,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SuccessResponseMyReviewDetailResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    getMyReviewEditContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reviewId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseReviewEditContextResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": unknown;
                 };
             };
@@ -2572,50 +4765,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SuccessResponseRestaurantReviewResponse"];
-                    "application/json": unknown;
-                };
-            };
-            /** @description 에러 응답 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description 에러 응답 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    getRestaurantReviewImages: {
-        parameters: {
-            query?: {
-                cursor?: number;
-                size?: number;
-            };
-            header?: never;
-            path: {
-                restaurantId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 요청에 성공했습니다 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["SuccessResponseRestaurantReviewImageListResponse"];
                     "application/json": unknown;
                 };
             };
@@ -2937,6 +5086,70 @@ export interface operations {
             };
         };
     };
+    list_1: {
+        parameters: {
+            query?: {
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 공지사항 조회 완료 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseNoticeListResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    detail_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                noticeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 공지사항 조회 완료 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseNoticeResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     getMagazines: {
         parameters: {
             query?: {
@@ -2956,6 +5169,47 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SuccessResponseMagazineListResponse"];
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    getDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                magazineId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseMagazineDetailResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": unknown;
                 };
             };
@@ -3012,18 +5266,16 @@ export interface operations {
             };
         };
     };
-    deleteMyReview: {
+    deleteProfileImage: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                reviewId: number;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 요청에 성공했습니다 */
+            /** @description 프로필 사진을 삭제했습니다 */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3043,7 +5295,25 @@ export interface operations {
                 };
             };
             /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

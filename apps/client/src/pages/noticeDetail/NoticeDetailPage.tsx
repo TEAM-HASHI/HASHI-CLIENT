@@ -45,6 +45,15 @@ export const NoticeDetailPage = () => {
   }
 
   const notice = noticeQuery.data
+  const images =
+    notice?.images.map(({ image }) => {
+      const source = image.status === 'READY' ? image.defaultSource : null
+      return {
+        url: source?.url ?? null,
+        width: source?.width ?? 1,
+        height: source?.height ?? 1,
+      }
+    }) ?? []
 
   return (
     <div className="app-mobile-bottom-nav-content bg-white pt-18.75">
@@ -68,17 +77,17 @@ export const NoticeDetailPage = () => {
       {notice ? (
         <article className="px-5 pb-10">
           <div className="flex min-h-25 flex-col justify-center gap-2 py-6">
-            <h1 className="typo-sub-header-2 leading-[1.27] break-keep text-black">
+            <h1 className="typo-sub-header-2 leading-[1.27] tracking-[-0.01em] break-keep text-black">
               {notice.title}
             </h1>
             <p className="typo-body-6 text-primary-200 leading-[1.38]">
               {formatNoticeLastUpdatedDate(notice)}
             </p>
           </div>
-          <NoticeContent html={notice.content} />
-          {notice.images.length > 0 ? (
+          <NoticeContent body={notice.body} />
+          {images.length > 0 ? (
             <ul className="mt-5 flex flex-col gap-2">
-              {notice.images.map((image, index) => (
+              {images.map((image, index) => (
                 <li key={`${image.url}-${index}`}>
                   <button
                     aria-label={`첨부 이미지 ${index + 1} 크게 보기`}
@@ -98,7 +107,7 @@ export const NoticeDetailPage = () => {
           ) : null}
           {viewerIndex !== null ? (
             <NoticeImageViewer
-              images={notice.images}
+              images={images}
               initialIndex={viewerIndex}
               onClose={() => setViewerIndex(null)}
               title={notice.title}

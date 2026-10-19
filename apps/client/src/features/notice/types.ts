@@ -1,27 +1,36 @@
-// ponytail: 백엔드 공지사항 API가 OpenAPI에 아직 없어 기존 cursor 목록 API(매거진, 내 예약)
-// 형식과 HASHI-PLAN MYPAGE_NOTICE 명세를 따른 가계약입니다. Swagger가 확정되면 generated 타입으로
-// 교체하고 api 함수만 맞춥니다.
-export interface NoticeSummary {
-  noticeId: number
-  title: string
-  publishedAt: string
-  updatedAt: string | null
-}
+import type { components } from '@/shared/api/generated/openapi'
 
-export interface NoticeListData {
+type Schema = components['schemas']
+
+// OpenAPI가 필수 필드를 표시하지 않아 서버 DTO의 non-null 계약을 경계에서 보완한다.
+export type NoticeSummary = Required<Schema['Item']>
+export type NoticeSpan = Required<Omit<Schema['Span'], 'href'>> & {
+  href?: string | null
+}
+export type NoticeBlock = Required<Omit<Schema['NoticeBlock'], 'items'>> & {
+  items: NoticeSpan[][]
+}
+type NoticeAttachment = Required<Omit<Schema['Attachment'], 'image'>> & {
+  image: Required<Omit<Schema['MediaImage'], 'defaultSource'>> & {
+    defaultSource: Required<Schema['Source']> | null
+  }
+}
+export type NoticeListData = Required<
+  Omit<Schema['NoticeListResponse'], 'notices' | 'nextCursor'>
+> & {
   notices: NoticeSummary[]
-  hasNext: boolean
-  nextCursor: number | null
+  nextCursor: string | null
+}
+export type NoticeDetail = Required<
+  Omit<Schema['NoticeResponse'], 'body' | 'images'>
+> & {
+  body: NoticeBlock[]
+  images: NoticeAttachment[]
 }
 
+// 상세 이미지와 뷰어에서 사용하는 표시 모델. 미처리 이미지는 placeholder로 표시한다.
 export interface NoticeImage {
-  url: string
+  url: string | null
   width: number
   height: number
-}
-
-export interface NoticeDetail extends NoticeSummary {
-  /** 허용 태그(strong, b, br, p, ul, ol, li, a)만 쓰는 HTML */
-  content: string
-  images: NoticeImage[]
 }

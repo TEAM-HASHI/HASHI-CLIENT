@@ -14,7 +14,7 @@ import AsyncBoundary from '@/app/providers/AsyncBoundary'
 import { getNotices } from '@/features/notice/api/getNotices'
 import type { NoticeSummary } from '@/features/notice/types'
 import { NoticesPage } from '@/pages/notices/NoticesPage'
-import { ApiError } from '@/shared/api/apiError'
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { createQueryClient } from '@/shared/lib/queryClient'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
@@ -38,11 +38,14 @@ vi.mock('@/features/notice/api/getNotices', () => ({ getNotices: vi.fn() }))
 
 const mockedGetNotices = vi.mocked(getNotices)
 
-const createNotice = (noticeId: number): NoticeSummary => ({
+const createNotice = (
+  noticeId: number,
+  overrides: Partial<NoticeSummary> = {},
+): NoticeSummary => ({
   noticeId,
   title: `[공지 ${noticeId}]`,
-  publishedAt: '2026-09-01T10:00:00',
-  updatedAt: null,
+  lastModifiedAt: '2026-09-01T10:00:00',
+  ...overrides,
 })
 
 const badRequest = new ApiError(
@@ -80,9 +83,64 @@ describe('NoticesPage', () => {
     vi.mocked(window.scrollTo).mockClear()
     vi.restoreAllMocks()
     sessionStorage.clear()
+    window.history.replaceState(null, '')
   })
 
-  it('marks list entry and saves restoration state before opening the detail', async () => {
+  it('shows an empty message when no notice is published', async () => {
+    mockedGetNotices.mockResolvedValue({
+      notices: [],
+      hasNext: false,
+      nextCursor: null,
+    })
+    renderNoticesPage()
+    expect(
+      await screen.findByText('등록된 공지사항이 없어요.'),
+    ).toBeInTheDocument()
+    expect(mockedGetNotices).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the server lastModifiedAt date', async () => {
+    mockedGetNotices.mockResolvedValue({
+      notices: [
+        createNotice(3, {
+          title: '[Hashi 첫 공지사항]',
+          lastModifiedAt: '2026-09-06T09:00:00',
+        }),
+        createNotice(2, {
+          title: '[Hashi 다음 공지사항]',
+          lastModifiedAt: '2026-09-02T10:00:00',
+        }),
+      ],
+      hasNext: false,
+      nextCursor: null,
+    })
+
+    renderNoticesPage()
+
+    const rows = await screen.findAllByRole('button', { name: /^\[Hashi/ })
+
+    expect(rows.map((row) => row.textContent)).toEqual([
+      '[Hashi 첫 공지사항]2026.09.06',
+      '[Hashi 다음 공지사항]2026.09.02',
+    ])
+    expect(mockedGetNotices).toHaveBeenCalledWith({ cursor: null })
+  })
+
+  it('keeps a notice title on a single truncated line', async () => {
+    mockedGetNotices.mockResolvedValue({
+      notices: [createNotice(3, { title: '아주 긴 공지 제목'.repeat(10) })],
+      hasNext: false,
+      nextCursor: null,
+    })
+
+    renderNoticesPage()
+
+    expect(await screen.findByText('아주 긴 공지 제목'.repeat(10))).toHaveClass(
+      'truncate',
+    )
+  })
+
+  it('navigates to the notice detail when a row is pressed', async () => {
     mockedGetNotices.mockResolvedValue({
       notices: [createNotice(3)],
       hasNext: false,
@@ -116,7 +174,6 @@ describe('NoticesPage', () => {
     ).toBeInTheDocument()
     expect(mockedGetNotices).toHaveBeenLastCalledWith({
       cursor: null,
-      size: 10,
     })
   })
 
@@ -125,7 +182,11 @@ describe('NoticesPage', () => {
 
     mockedGetNotices.mockImplementation(async ({ cursor }) => {
       if (cursor === null) {
-        return { notices: [createNotice(3)], hasNext: true, nextCursor: 3 }
+        return {
+          notices: [createNotice(3)],
+          hasNext: true,
+          nextCursor: 'cursor-3',
+        }
       }
 
       throw badRequest
@@ -146,7 +207,7 @@ describe('NoticesPage', () => {
 
     mockedGetNotices.mockImplementation(async ({ cursor }) =>
       cursor === null
-        ? { notices: [createNotice(3)], hasNext: true, nextCursor: 3 }
+        ? { notices: [createNotice(3)], hasNext: true, nextCursor: 'cursor-3' }
         : { notices: [createNotice(2)], hasNext: false, nextCursor: null },
     )
     fireEvent.click(retryButton)
@@ -188,9 +249,16 @@ describe('NoticesPage', () => {
     mockNavigationType.current = 'POP'
     const { triggerAllIntersects } = mockIntersectionObserver()
     mockedGetNotices.mockImplementation(async ({ cursor }) => ({
-      notices: [createNotice(cursor === null ? 3 : cursor - 1)],
-      hasNext: cursor !== 2,
-      nextCursor: cursor === null ? 3 : cursor - 1,
+      notices: [
+        createNotice(cursor === null ? 3 : cursor === 'cursor-3' ? 2 : 1),
+      ],
+      hasNext: cursor !== 'cursor-2',
+      nextCursor:
+        cursor === null
+          ? 'cursor-3'
+          : cursor === 'cursor-3'
+            ? 'cursor-2'
+            : null,
     }))
     renderNoticesPage()
     triggerAllIntersects()
@@ -200,7 +268,7 @@ describe('NoticesPage', () => {
     )
     expect(
       mockedGetNotices.mock.calls.map(([params]) => params.cursor),
-    ).toEqual([null, 3, 2])
+    ).toEqual([null, 'cursor-3', 'cursor-2'])
   })
 
   it('keeps loaded notices and resumes restoration after a next-page retry', async () => {
@@ -212,7 +280,7 @@ describe('NoticesPage', () => {
     mockedGetNotices.mockResolvedValueOnce({
       notices: [createNotice(3)],
       hasNext: true,
-      nextCursor: 3,
+      nextCursor: 'cursor-3',
     })
     mockedGetNotices.mockRejectedValueOnce(badRequest)
     mockedGetNotices.mockResolvedValueOnce({
@@ -228,5 +296,60 @@ describe('NoticesPage', () => {
     await waitFor(() =>
       expect(window.scrollTo).toHaveBeenCalledWith({ top: 480 }),
     )
+  })
+
+  it('falls back to mypage when there is no previous app history', async () => {
+    mockedGetNotices.mockResolvedValue({
+      notices: [],
+      hasNext: false,
+      nextCursor: null,
+    })
+
+    renderNoticesPage()
+
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/mypage', { replace: true })
+  })
+
+  it('returns to the previous app screen rather than always replacing with mypage', () => {
+    window.history.replaceState({ idx: 1 }, '')
+    mockedGetNotices.mockResolvedValue({
+      notices: [],
+      hasNext: false,
+      nextCursor: null,
+    })
+    renderNoticesPage()
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+    expect(mockNavigate).toHaveBeenCalledWith(-1)
+  })
+
+  it('keeps the list after HTTP 500 and one automatic next-page retry', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { triggerAllIntersects } = mockIntersectionObserver()
+    const queryClient = createQueryClient()
+    queryClient.setDefaultOptions({
+      queries: { ...queryClient.getDefaultOptions().queries, retryDelay: 0 },
+    })
+    mockedGetNotices.mockImplementation(async ({ cursor }) => {
+      if (cursor !== null) throw new HttpStatusError(500)
+      return {
+        notices: [createNotice(3)],
+        hasNext: true,
+        nextCursor: 'cursor-3',
+      }
+    })
+    renderNoticesPage(queryClient)
+    await screen.findByRole('button', { name: /\[공지 3\]/ })
+    triggerAllIntersects()
+    await screen.findByRole('button', { name: '다음 공지 다시 불러오기' })
+    expect(
+      screen.getByRole('button', { name: /\[공지 3\]/ }),
+    ).toBeInTheDocument()
+    expect(
+      mockedGetNotices.mock.calls.filter(
+        ([params]) => params.cursor === 'cursor-3',
+      ),
+    ).toHaveLength(2)
   })
 })
