@@ -34,6 +34,9 @@ export const MapPage = () => {
   const [selectionCamera, setSelectionCamera] = useState(
     initial?.selectionCamera ?? null,
   )
+  const [selectionIsExploring, setSelectionIsExploring] = useState(
+    initial?.selectionIsExploring ?? false,
+  )
   const [selectionStage, setSelectionStage] = useState<MapPanelStage>(
     initial?.selectionStage ?? 'normal',
   )
@@ -65,6 +68,7 @@ export const MapPage = () => {
       stage,
       detailStage,
       selectionCamera,
+      selectionIsExploring,
       selectionStage,
     },
     handleReset,
@@ -179,6 +183,7 @@ export const MapPage = () => {
   const handleSelect = (id: string) => {
     if (!state.selectedRestaurant) {
       setSelectionCamera(state.cameraSnapshot)
+      setSelectionIsExploring(state.isExploring)
       setSelectionStage(stage)
     }
     selectionTriggerRef.current = document.activeElement as HTMLElement
@@ -188,7 +193,7 @@ export const MapPage = () => {
   const handleCloseDetail = () => {
     restoreSelectionFocus.current = true
     state.setSelectedId(null)
-    state.restoreCamera(selectionCamera)
+    state.restoreCamera(selectionCamera, selectionIsExploring)
     setStage(selectionStage)
     setListVersion((version) => version + 1)
     setPhotoIndex(null)

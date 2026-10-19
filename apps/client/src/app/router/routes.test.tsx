@@ -3,11 +3,26 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { PropsWithChildren } from 'react'
 
 import { ROUTES } from '@/app/router/path'
 import { appRoutes } from '@/app/router/routes'
 import { createQueryClient } from '@/shared/lib/queryClient'
+import { clearMapSession } from '@/pages/map/utils/mapSession'
+
+vi.mock('@vis.gl/react-google-maps', () => ({
+  APIProvider: ({ children }: PropsWithChildren) => children,
+  Map: ({ children }: PropsWithChildren) => children,
+  AdvancedMarker: ({ children }: PropsWithChildren) => children,
+  useApiLoadingStatus: () => 'LOADED',
+  APILoadingStatus: {
+    LOADED: 'LOADED',
+    FAILED: 'FAILED',
+    AUTH_FAILURE: 'AUTH_FAILURE',
+  },
+  useMap: () => null,
+}))
 
 vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
   getMagazineBanners: vi.fn(async () => ({ banners: [] })),
@@ -42,8 +57,15 @@ const renderRoute = (initialEntry: string) => {
 }
 
 describe('appRoutes', () => {
+  beforeEach(() => {
+    clearMapSession()
+    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
+    vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
+  })
   afterEach(() => {
     cleanup()
+    clearMapSession()
+    vi.unstubAllEnvs()
     document.body.style.overflow = ''
   })
 

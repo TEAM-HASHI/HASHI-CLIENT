@@ -69,5 +69,6 @@ export interface MapSessionSnapshot {
   stage: MapPanelStage
   detailStage: MapPanelStage
   selectionCamera?: MapCameraSnapshot | null
+  selectionIsExploring?: boolean
   selectionStage?: MapPanelStage
 }

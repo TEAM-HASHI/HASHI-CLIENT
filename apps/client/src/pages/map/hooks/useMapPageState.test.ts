@@ -39,12 +39,15 @@ it.each(['all', 'cafe'] as const)(
       result.current.handleSelectRestaurant(result.current.restaurants[0].id),
     )
     act(() =>
-      result.current.restoreCamera({
-        center: { lat: 35.7, lng: 139.7 },
-        zoom: 12,
-        minZoom: 12,
-        bounds: emptyBounds,
-      }),
+      result.current.restoreCamera(
+        {
+          center: { lat: 35.7, lng: 139.7 },
+          zoom: 12,
+          minZoom: 12,
+          bounds: emptyBounds,
+        },
+        category !== 'all',
+      ),
     )
     expect(result.current.isExploring).toBe(category !== 'all')
   },

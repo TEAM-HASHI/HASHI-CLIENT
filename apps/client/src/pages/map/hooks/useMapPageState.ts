@@ -237,16 +237,12 @@ export const useMapPageState = (
     cameraRequest,
     searchPositions,
     cameraSnapshot,
-    restoreCamera: (value: MapCameraSnapshot | null) => {
+    restoreCamera: (value: MapCameraSnapshot | null, wasExploring: boolean) => {
       setCameraRequest(value ? { ...value } : null)
-      setIsExploring(
-        getMapDisplayMode({
-          zoom: value?.zoom ?? 11,
-          overviewZoom: value?.minZoom,
-          previous: isExploring ? 'restaurants' : 'areas',
-          hasConditions: !!conditions.keyword || conditions.category !== 'all',
-        }) === 'restaurants',
-      )
+      setIsExploring(wasExploring)
+      // A selection made before the SDK's first idle has no saved camera.
+      // Refit the initial areas without clearing the query or list state.
+      if (!value) setResetVersion((current) => current + 1)
     },
     handleCameraChange: (value: MapCameraSnapshot) => {
       camera.current = value

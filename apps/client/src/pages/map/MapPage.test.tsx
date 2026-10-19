@@ -9,6 +9,7 @@ import {
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { PropsWithChildren } from 'react'
+import type { useMap } from '@vis.gl/react-google-maps'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MapPage } from '@/pages/map/MapPage'
@@ -19,10 +20,21 @@ import { MemoryRouter } from 'react-router-dom'
 import { clearMapSession, writeMapSession } from '@/pages/map/utils/mapSession'
 
 // Only the external Google SDK is replaced; page state, markers and panels stay real.
-const sdkState = vi.hoisted(() => ({ status: 'LOADED' }))
+type SdkMap = NonNullable<ReturnType<typeof useMap>>
+const sdkState = vi.hoisted(() => ({
+  status: 'LOADED',
+  map: null as SdkMap | null,
+  onIdle: undefined as ((event: { map: SdkMap }) => void) | undefined,
+}))
 vi.mock('@vis.gl/react-google-maps', () => ({
   APIProvider: ({ children }: PropsWithChildren) => children,
-  Map: ({ children }: PropsWithChildren) => children,
+  Map: ({
+    children,
+    onIdle,
+  }: PropsWithChildren<{ onIdle: typeof sdkState.onIdle }>) => {
+    sdkState.onIdle = onIdle
+    return children
+  },
   AdvancedMarker: ({ children }: PropsWithChildren) => children,
   useApiLoadingStatus: () => sdkState.status,
   APILoadingStatus: {
@@ -30,11 +42,13 @@ vi.mock('@vis.gl/react-google-maps', () => ({
     FAILED: 'FAILED',
     AUTH_FAILURE: 'AUTH_FAILURE',
   },
-  useMap: () => null,
+  useMap: () => sdkState.map,
 }))
 
 beforeEach(() => {
   sdkState.status = 'LOADED'
+  sdkState.map = null
+  sdkState.onIdle = undefined
   clearMapSession()
   vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
   vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
@@ -59,6 +73,114 @@ afterEach(() => {
 })
 
 describe('MapPage preview', () => {
+  it.each([false, true])(
+    'restores the preselection fractional-zoom display mode (pins: %s) after leaving and returning',
+    async (isExploring) => {
+      const user = userEvent.setup()
+      writeMapSession({
+        conditions: {
+          keyword: '',
+          category: 'all',
+          areaCode: null,
+          sort: 'recommended',
+        },
+        camera: {
+          center: { lat: 35.7, lng: 139.7 },
+          zoom: 11.5,
+          minZoom: 11,
+          bounds: { north: 36, south: 35, east: 140, west: 139 },
+        },
+        searchBounds: null,
+        selectedId: null,
+        stage: 'normal',
+        detailStage: 'normal',
+        isExploring,
+      })
+      const view = render(
+        <MemoryRouter>
+          <MapPage />
+        </MemoryRouter>,
+      )
+      await user.click(
+        await screen.findByRole('button', {
+          name: '코코네 돈카츠 신도심점 상세 보기',
+        }),
+      )
+      view.unmount()
+      render(
+        <MemoryRouter>
+          <MapPage />
+        </MemoryRouter>,
+      )
+      await user.click(
+        await screen.findByRole('button', { name: '선택한 식당 닫기' }),
+      )
+      if (isExploring) {
+        expect(
+          screen.queryByRole('button', { name: '우에노 식당 보기' }),
+        ).not.toBeInTheDocument()
+      } else {
+        expect(
+          screen.getByRole('button', { name: '우에노 식당 보기' }),
+        ).toBeVisible()
+      }
+    },
+  )
+
+  it('returns to the initial bounds when detail was opened before the SDK loaded', async () => {
+    const user = userEvent.setup()
+    sdkState.status = 'LOADING'
+    const view = render(
+      <MemoryRouter>
+        <MapPage />
+      </MemoryRouter>,
+    )
+    await user.click(
+      await screen.findByRole('button', {
+        name: '코코네 돈카츠 신도심점 상세 보기',
+      }),
+    )
+    let idle = () => {}
+    let zoom = 11
+    const fitBounds = vi.fn()
+    const map = {
+      fitBounds,
+      addListener: (_name: string, callback: () => void) => {
+        idle = callback
+        return { remove: vi.fn() }
+      },
+      getZoom: () => zoom,
+      setZoom: (value: number) => {
+        zoom = value
+      },
+      setOptions: vi.fn(),
+      panTo: vi.fn(),
+      moveCamera: vi.fn(),
+      getBounds: () => ({
+        toJSON: () => ({ north: 36, south: 35, east: 140, west: 139 }),
+      }),
+      getCenter: () => ({ toJSON: () => ({ lat: 35.7, lng: 139.7 }) }),
+    } as unknown as SdkMap
+    sdkState.map = map
+    sdkState.status = 'LOADED'
+    view.rerender(
+      <MemoryRouter>
+        <MapPage />
+      </MemoryRouter>,
+    )
+    act(() => idle())
+    expect(zoom).toBe(15)
+    act(() => sdkState.onIdle?.({ map }))
+    const initialFit = fitBounds.mock.calls[0]
+    fitBounds.mockClear()
+    await user.click(screen.getByRole('button', { name: '선택한 식당 닫기' }))
+    expect(fitBounds).toHaveBeenCalledExactlyOnceWith(...initialFit)
+    expect(
+      screen.getByRole('button', { name: '우에노 식당 보기' }),
+    ).toBeVisible()
+    expect(screen.getByRole('button', { name: '정렬: 추천순' })).toBeVisible()
+  })
+
   it('reopens results when a successful refresh finishes after the panel collapsed', async () => {
     const user = userEvent.setup()
     const source = vi.spyOn(preview, 'queryMapPreview')
