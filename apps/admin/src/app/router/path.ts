@@ -5,6 +5,7 @@ export const ROUTES = {
   users: '/admin/users',
   restaurants: '/admin/restaurants',
   restaurantLocations: '/admin/restaurants/locations',
+  mapRegions: '/admin/restaurants/map-regions',
   reservations: '/admin/reservations',
   magazines: '/admin/magazines',
   notices: '/admin/notices',

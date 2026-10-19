@@ -69,6 +69,12 @@ export const RestaurantsPage = () => {
         >
           위치 검토
         </Link>
+        <Link
+          to={ROUTES.mapRegions}
+          className="text-cool-gray-700 border-cool-gray-100 inline-flex h-7 items-center rounded-md border px-3 text-xs font-bold"
+        >
+          관광 지역 관리
+        </Link>
         <Button
           size="sm"
           leftIcon={<PlusIcon className="size-4" />}
