@@ -71,7 +71,7 @@ const getChangedFields = (
   }
 }
 
-/** 제품 라우트 전환은 관리 API 화면과 함께 진행한다. */
+/** 제품 생성·수정 라우트에서 서버 데이터와 폼 제출을 연결한다. */
 export const CollectionFormQueryPage = () => {
   const { collectionId } = useParams<{ collectionId: string }>()
   const { isAuthenticated } = useAuthStatus()

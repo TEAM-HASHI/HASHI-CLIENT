@@ -64,7 +64,7 @@ type SavedQueryPageProps = {
   ) => ReactNode
 }
 
-/** Mutation 연결까지 검증한 뒤 제품 라우트에서 사용한다. 목 데이터에는 접근하지 않는다. */
+/** 제품 컬렉션 조회 화면. 목 데이터에는 접근하지 않는다. */
 export const SavedQueryPage = ({
   onRestaurantSelect,
   onCreate,

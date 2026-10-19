@@ -21,7 +21,7 @@ type CollectionDeleteQueryDialogProps = {
   | {
       kind: 'restaurants'
       restaurantIds: readonly number[]
-      onRemoved: (ids: readonly number[]) => void
+      onRemoved?: (ids: readonly number[]) => void
     }
 )
 
@@ -72,7 +72,7 @@ export const CollectionDeleteQueryDialog = (
             restaurantIds: props.restaurantIds,
           })
           if (!mounted.current) return
-          props.onRemoved(props.restaurantIds)
+          props.onRemoved?.(props.restaurantIds)
           props.onClose()
         } else {
           await deleteCollection.mutateAsync(props.collectionId)

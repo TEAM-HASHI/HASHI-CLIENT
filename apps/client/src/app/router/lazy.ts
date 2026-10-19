@@ -12,16 +12,20 @@ const lazyRoute = <T extends LazyRouteModule>(importPage: () => Promise<T>) => {
 
 const SearchPage = lazyRoute(() => import('@/pages/search'))
 const CollectionFormPage = lazyRoute(() =>
-  import('@/pages/saved/CollectionFormPage').then((module) => ({
-    default: module.CollectionFormPage,
+  import('@/pages/saved/CollectionFormQueryPage').then((module) => ({
+    default: module.CollectionFormQueryPage,
   })),
 )
 const CollectionEditorPage = lazyRoute(() =>
-  import('@/pages/saved/CollectionEditorPage').then((module) => ({
-    default: module.CollectionEditorPage,
+  import('@/pages/saved/CollectionEditorQueryPage').then((module) => ({
+    default: module.CollectionEditorQueryPage,
   })),
 )
-const SavedPage = lazyRoute(() => import('@/pages/saved'))
+const SavedPage = lazyRoute(() =>
+  import('@/pages/saved/SavedApiPage').then((module) => ({
+    default: module.SavedApiPage,
+  })),
+)
 const ComingSoonPage = lazyRoute(() => import('@/pages/comingSoon'))
 const TodayRestaurantPage = lazyRoute(() => import('@/pages/todayRestaurant'))
 const RestaurantDetailPage = lazyRoute(() => import('@/pages/restaurantDetail'))
