@@ -16,6 +16,7 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import type { CollectionData, CollectionViewState } from '@/pages/saved/types'
 import { BottomActionBar } from '@/shared/components/bottomActionBar/BottomActionBar'
+import { cn } from '@/shared/utils'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import { CollectionTargetDialog } from '@/pages/saved/components/CollectionSaveDialog'
 import { selectRestaurants } from '@/pages/saved/utils/collectionSelectors'
@@ -219,7 +220,12 @@ export const CollectionEditor = ({
           if (!open) closeDialog()
         }}
       >
-        <Dialog.Content className="max-h-[calc(100dvh-48px)] min-h-55 justify-center overflow-y-auto rounded-[20px]">
+        <Dialog.Content
+          className={cn(
+            'max-h-[calc(100dvh-48px)] min-h-55 justify-center overflow-y-auto rounded-[20px] px-6.75',
+            sharing ? 'py-6.5' : 'py-6',
+          )}
+        >
           <Dialog.Header>
             <Dialog.Icon>
               {sharing ? (
@@ -228,31 +234,45 @@ export const CollectionEditor = ({
                 <OrderCancelIcon className="size-6" />
               )}
             </Dialog.Icon>
-            <Dialog.Title>
-              {sharing
-                ? '공개된 컬렉션만 공유할 수 있어요. 공개로 변경하시겠어요?'
-                : '정말 삭제하시겠습니까?'}
-            </Dialog.Title>
-            {!sharing && (
-              <Dialog.Description className="min-h-9.5">
-                {confirmingDelete ? (
-                  '삭제한 컬렉션은 다시 되돌릴 수 없어요.'
-                ) : (
+            <div className="flex w-full flex-col items-center gap-2">
+              <Dialog.Title className="leading-normal">
+                {sharing ? (
                   <>
-                    컬렉션에서 삭제한 장소는
+                    공개된 컬렉션만 공유할 수 있어요.
                     <br />
-                    다시 되돌릴 수 없어요.
+                    공개로 변경하시겠어요?
                   </>
+                ) : (
+                  '정말 삭제하시겠습니까?'
                 )}
-              </Dialog.Description>
-            )}
+              </Dialog.Title>
+              {!sharing && (
+                <Dialog.Description className="typo-body-6 flex min-h-9.5 items-center justify-center leading-[1.36]">
+                  {confirmingDelete ? (
+                    '삭제한 컬렉션은 다시 되돌릴 수 없어요.'
+                  ) : (
+                    <>
+                      컬렉션에서 삭제한 장소는
+                      <br />
+                      다시 되돌릴 수 없어요.
+                    </>
+                  )}
+                </Dialog.Description>
+              )}
+            </div>
           </Dialog.Header>
-          <Dialog.Footer>
-            <Button size="md" variant="neutral" onClick={closeDialog}>
+          <Dialog.Footer className="max-w-68 self-center">
+            <Button
+              size="md"
+              variant="neutral"
+              className="leading-[1.36]"
+              onClick={closeDialog}
+            >
               취소하기
             </Button>
             <Button
               size="md"
+              className="leading-[1.36]"
               onClick={() => {
                 if (sharing) {
                   onDataChange({
