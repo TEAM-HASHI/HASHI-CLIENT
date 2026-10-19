@@ -31,7 +31,7 @@ export const useRestaurantDetailListQueries = ({
 }: UseRestaurantDetailListQueriesParams) => {
   const menusQuery = useInfiniteQuery({
     ...restaurantMenusInfiniteQueryOptions(restaurantId, menuPageSize),
-    enabled,
+    enabled: enabled && activeTab === 'menu',
   })
   const reviewsQuery = useInfiniteQuery({
     ...restaurantReviewsInfiniteQueryOptions({
@@ -39,13 +39,19 @@ export const useRestaurantDetailListQueries = ({
       size: REVIEW_PAGE_SIZE,
       sort: selectedReviewSort,
     }),
-    enabled,
+    enabled: enabled && activeTab === 'review',
   })
 
   const canFetchNextMenuPage =
-    menusQuery.hasNextPage && !menusQuery.isFetchingNextPage
+    enabled &&
+    menusQuery.hasNextPage &&
+    !menusQuery.isFetching &&
+    !menusQuery.isError
   const canFetchNextReviewPage =
-    reviewsQuery.hasNextPage && !reviewsQuery.isFetchingNextPage
+    enabled &&
+    reviewsQuery.hasNextPage &&
+    !reviewsQuery.isFetching &&
+    !reviewsQuery.isError
   const { fetchNextPage: fetchNextMenuPage } = menusQuery
   const { fetchNextPage: fetchNextReviewPage } = reviewsQuery
 
@@ -74,23 +80,41 @@ export const useRestaurantDetailListQueries = ({
 
   const menuPages = menusQuery.data?.pages ?? []
   const reviewPages = reviewsQuery.data?.pages ?? []
-  const menus = menuPages.flatMap((page: RestaurantMenuListData) => page.menus)
-  const reviews = reviewPages.flatMap(
-    (page: RestaurantReviewListData) => page.reviews,
-  )
+  const menus = [
+    ...new Map(
+      menuPages
+        .flatMap((page: RestaurantMenuListData) => page.menus)
+        .map((menu) => [menu.menuId, menu]),
+    ).values(),
+  ]
+  const reviews = [
+    ...new Map(
+      reviewPages
+        .flatMap((page: RestaurantReviewListData) => page.reviews)
+        .map((review) => [review.reviewId, review]),
+    ).values(),
+  ]
 
   return {
     firstReviewPage: reviewPages[0],
     hasMoreMenus: menusQuery.hasNextPage,
     hasMoreReviews: reviewsQuery.hasNextPage,
     isMenuListError: menusQuery.isError && menuPages.length === 0,
-    isMenuListPending: menusQuery.isPending,
+    isMenuListPending: activeTab === 'menu' && menusQuery.isPending,
+    isMenuNextPageError: menusQuery.isFetchNextPageError,
+    isReviewNextPageError: reviewsQuery.isFetchNextPageError,
     isReviewListError: reviewsQuery.isError && reviewPages.length === 0,
     isReviewListLoading: reviewsQuery.isPending,
     menuLoadMoreRef,
     menus,
-    onRetryMenuList: () => void menusQuery.refetch(),
-    onRetryReviewList: () => void reviewsQuery.refetch(),
+    onRetryMenuList: () =>
+      menusQuery.isFetchNextPageError
+        ? menusQuery.fetchNextPage()
+        : menusQuery.refetch(),
+    onRetryReviewList: () =>
+      reviewsQuery.isFetchNextPageError
+        ? reviewsQuery.fetchNextPage()
+        : reviewsQuery.refetch(),
     reviewLoadMoreRef,
     reviews,
   }

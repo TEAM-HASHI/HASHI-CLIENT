@@ -35,6 +35,8 @@ const MypagePage = lazyRoute(() => import('@/pages/mypage'))
 const ProfileNewPage = lazyRoute(() => import('@/pages/profileNew'))
 const ProfileEditPage = lazyRoute(() => import('@/pages/profileEdit'))
 const WithdrawalPage = lazyRoute(() => import('@/pages/withdrawal'))
+const NoticesPage = lazyRoute(() => import('@/pages/notices'))
+const NoticeDetailPage = lazyRoute(() => import('@/pages/noticeDetail'))
 const TermsPage = lazyRoute(() => import('@/pages/terms'))
 const TermsDetailPage = lazyRoute(() => import('@/pages/termsDetail'))
 const RestaurantReservationNewPage = lazyRoute(
@@ -49,6 +51,9 @@ const ReservationRequestPage = lazyRoute(
 const MyReservationsPage = lazyRoute(() => import('@/pages/myReservations'))
 const ReservationDetailPage = lazyRoute(
   () => import('@/pages/reservationDetail'),
+)
+const ReservationCompletePage = lazyRoute(
+  () => import('@/pages/reservationComplete'),
 )
 const LoginRequiredPage = lazyRoute(() => import('@/pages/loginRequired'))
 const KakaoOAuthCallbackPage = lazyRoute(
@@ -80,6 +85,8 @@ export const lazyPages = {
   profileNew: () => lazyPage(ProfileNewPage),
   profileEdit: () => lazyPage(ProfileEditPage),
   withdrawal: () => lazyPage(WithdrawalPage),
+  notices: () => lazyPage(NoticesPage),
+  noticeDetail: () => lazyPage(NoticeDetailPage),
   terms: () => lazyPage(TermsPage),
   termsDetail: () => lazyPage(TermsDetailPage),
   restaurantReservationNew: () => lazyPage(RestaurantReservationNewPage),
@@ -87,6 +94,7 @@ export const lazyPages = {
   reservationRequest: () => lazyPage(ReservationRequestPage),
   myReservations: () => lazyPage(MyReservationsPage),
   reservationDetail: () => lazyPage(ReservationDetailPage),
+  reservationComplete: () => lazyPage(ReservationCompletePage),
   loginRequired: () => lazyPage(LoginRequiredPage),
   kakaoOAuthCallback: () => lazyPage(KakaoOAuthCallbackPage),
   notFound: () => lazyPage(NotFoundPage),

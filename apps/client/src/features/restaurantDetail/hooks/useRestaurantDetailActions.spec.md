@@ -5,6 +5,7 @@
 `RestaurantDetailPage`와 `TodayRestaurantPage`가 공유하는 식당 상세 액션 흐름을 캡슐화한다.
 인증이 필요한 액션의 auth gate 상태, 카카오 로그인 시작, 예약 이동, 메뉴 상세 이동,
 현재 준비 중인 좋아요 액션의 coming soon 상태를 한 곳에서 관리한다.
+리뷰 작성 가능 여부 확인과 이동은 `useRestaurantReviewWriteNavigation`에 위임하고 로그인 안내를 연결한다.
 
 ## Hook Type
 
@@ -31,6 +32,7 @@
   - 카카오 OAuth 시작 시 현재 location 기반 redirect path 전달
   - 식당 예약 생성 route 이동
   - 메뉴 상세 route 이동과 menu detail source state 전달
+  - 리뷰 작성 액션과 로그인/작성 불가 안내 연결
 
 ## Inputs
 
@@ -48,6 +50,8 @@
 
 ## Return Shape
 
+`onReviewUnavailable: () => void`를 필수 입력으로 받아 작성 가능한 예약이 없을 때 content의 안내 모달을 연다.
+
 ```ts
 const {
   isAuthGateOpen,
@@ -58,9 +62,11 @@ const {
   onPressLike,
   onPressMenuItem,
   onPressReservation,
+  onPressWriteReview,
 } = useRestaurantDetailActions({
   menuDetailSource,
   restaurantId,
+  onReviewUnavailable,
 })
 ```
 
@@ -71,6 +77,7 @@ const {
 
 ### `action`
 
+- `onPressWriteReview`: 리뷰 작성 가능 여부를 확인한 뒤 로그인 안내, 작성 불가 안내 또는 리뷰 작성 이동으로 연결한다.
 - `onAuthGateOpenChange`: auth gate bottom sheet open 상태를 외부 UI와 동기화한다.
 - `onComingSoonOpenChange`: coming soon dialog open 상태를 외부 UI와 동기화한다.
 - `onPressKakao`: 현재 location을 redirect path로 보존한 뒤 Kakao OAuth를 시작한다.
@@ -90,7 +97,7 @@ const {
 
 ## Side Effects
 
-- API 호출: 없음
+- API 호출: 리뷰 작성 시 `useRestaurantReviewWriteNavigation`을 통해 방문 완료 예약을 조회함
 - cache update/invalidation: 없음
 - localStorage/sessionStorage: 직접 접근하지 않음
 - navigation:
@@ -102,7 +109,7 @@ const {
 
 ## Error Handling
 
-- 이 hook은 API 요청을 직접 수행하지 않으므로 request error를 처리하지 않는다.
+- 리뷰 작성 요청의 오류와 세션 변경 방어는 `useRestaurantReviewWriteNavigation`이 처리한다.
 - OAuth 시작 중 발생하는 세부 에러 처리는 `useKakaoOAuthStart`의 책임이다.
 - route 생성에 필요한 `restaurantId`, `menuId`, `menuDetailSource` 값은 호출부가 유효한 값을 전달한다.
 

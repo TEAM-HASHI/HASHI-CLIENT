@@ -38,19 +38,18 @@ export interface RestaurantDetail {
   rating: number
   reviewCount: number
   ratingDistribution: RestaurantRatingDistribution
-  likeCount: string
   summary: string
   address: string
   businessHoursSummary: string
   deposit: string
   detailDescription: string
-  lastOrderTime: string
+  lastOrderTime?: string
   businessHours: {
     day: string
     hours: string
   }[]
   priceRange: string
-  heroImages: string[]
+  heroImages: (string | undefined)[]
   menus: RestaurantMenu[]
   reviews: RestaurantReview[]
 }
