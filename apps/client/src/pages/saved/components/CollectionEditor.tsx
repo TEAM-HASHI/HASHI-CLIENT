@@ -1,18 +1,5 @@
-import {
-  BackIcon,
-  CheckIcon,
-  LinkIcon,
-  NoteIcon,
-  OrderCancelIcon,
-} from '@hashi/hds-icons'
-import {
-  Button,
-  Checkbox,
-  Dialog,
-  Header,
-  IconButton,
-  showToast,
-} from '@hashi/hds-ui'
+import { BackIcon, CheckIcon, LinkIcon } from '@hashi/hds-icons'
+import { Button, Checkbox, Header, IconButton, showToast } from '@hashi/hds-ui'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -21,7 +8,7 @@ import {
 } from '@/pages/saved/utils/collectionNavigation'
 import type { CollectionData, CollectionViewState } from '@/pages/saved/types'
 import { BottomActionBar } from '@/shared/components/bottomActionBar/BottomActionBar'
-import { cn } from '@/shared/utils'
+import { CollectionConfirmDialog } from '@/pages/saved/components/CollectionConfirmDialog'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import { CollectionTargetDialog } from '@/pages/saved/components/CollectionSaveDialog'
 import { selectRestaurants } from '@/pages/saved/utils/collectionSelectors'
@@ -239,102 +226,40 @@ export const CollectionEditor = ({
           }}
         />
       )}
-      <Dialog.Root
-        type="alertdialog"
+      <CollectionConfirmDialog
         open={confirmingDelete || sharing || dialog === 'remove'}
-        onOpenChange={(open) => {
-          if (!open) closeDialog()
+        sharing={sharing}
+        deletingCollection={confirmingDelete}
+        onClose={closeDialog}
+        onConfirm={() => {
+          if (sharing) {
+            onDataChange({
+              ...data,
+              collections: data.collections.map((c) =>
+                c.id === collection.id ? { ...c, isPublic: true } : c,
+              ),
+            })
+            showToast({
+              icon: <LinkIcon className="size-6" />,
+              children:
+                '공개 컬렉션으로 변경했어요. 링크 복사는 아직 연결되지 않았어요.',
+            })
+            onClose()
+          } else if (confirmingDelete) {
+            onDataChange(deleteCollection(data, collection.id))
+            showToast({
+              icon: <CheckIcon className="text-success size-6.5" />,
+              children: '컬렉션이 삭제되었어요.',
+            })
+            onDeleted()
+            onClose()
+          } else {
+            onDataChange(removeRestaurants(data, collection.id, selectedIds))
+            setSelected([])
+            closeDialog()
+          }
         }}
-      >
-        <Dialog.Content
-          className={cn(
-            'max-h-[calc(100dvh-48px)] min-h-55 justify-center overflow-y-auto rounded-[20px] px-6.75',
-            sharing ? 'py-6.5' : 'py-6',
-          )}
-        >
-          <Dialog.Header>
-            <Dialog.Icon>
-              {sharing ? (
-                <NoteIcon className="size-6" />
-              ) : (
-                <OrderCancelIcon className="size-6" />
-              )}
-            </Dialog.Icon>
-            <div className="flex w-full flex-col items-center gap-2">
-              <Dialog.Title className="leading-normal">
-                {sharing ? (
-                  <>
-                    공개된 컬렉션만 공유할 수 있어요.
-                    <br />
-                    공개로 변경하시겠어요?
-                  </>
-                ) : (
-                  '정말 삭제하시겠습니까?'
-                )}
-              </Dialog.Title>
-              {!sharing && (
-                <Dialog.Description className="typo-body-6 flex min-h-9.5 items-center justify-center leading-[1.36]">
-                  {confirmingDelete ? (
-                    '삭제한 컬렉션은 다시 되돌릴 수 없어요.'
-                  ) : (
-                    <>
-                      컬렉션에서 삭제한 장소는
-                      <br />
-                      다시 되돌릴 수 없어요.
-                    </>
-                  )}
-                </Dialog.Description>
-              )}
-            </div>
-          </Dialog.Header>
-          <Dialog.Footer className="max-w-68 self-center">
-            <Button
-              size="md"
-              variant="neutral"
-              className="leading-[1.36]"
-              onClick={closeDialog}
-            >
-              취소하기
-            </Button>
-            <Button
-              size="md"
-              className="leading-[1.36]"
-              onClick={() => {
-                if (sharing) {
-                  onDataChange({
-                    ...data,
-                    collections: data.collections.map((c) =>
-                      c.id === collection.id ? { ...c, isPublic: true } : c,
-                    ),
-                  })
-                  showToast({
-                    icon: <LinkIcon className="size-6" />,
-                    children:
-                      '공개 컬렉션으로 변경했어요. 링크 복사는 아직 연결되지 않았어요.',
-                  })
-                  onClose()
-                } else if (confirmingDelete) {
-                  onDataChange(deleteCollection(data, collection.id))
-                  showToast({
-                    icon: <CheckIcon className="text-success size-6.5" />,
-                    children: '컬렉션이 삭제되었어요.',
-                  })
-                  onDeleted()
-                  onClose()
-                } else {
-                  onDataChange(
-                    removeRestaurants(data, collection.id, selectedIds),
-                  )
-                  setSelected([])
-                  closeDialog()
-                }
-              }}
-            >
-              {sharing ? '공개 후 공유' : '삭제하기'}
-            </Button>
-          </Dialog.Footer>
-        </Dialog.Content>
-      </Dialog.Root>
+      />
     </>
   )
 }

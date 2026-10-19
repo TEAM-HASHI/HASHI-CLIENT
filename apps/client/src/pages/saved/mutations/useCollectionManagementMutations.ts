@@ -42,9 +42,12 @@ export const useSaveRestaurantMutation = () => {
   })
 }
 
-export const useRemoveSavedRestaurantsMutation = () => {
+export const useRemoveSavedRestaurantsMutation = (
+  onError?: (error: Error) => void,
+) => {
   const queryClient = useQueryClient()
   return useMutation({
+    ...(onError && { onError: (error: Error) => onError(error) }),
     mutationFn: ({
       collectionId,
       restaurantIds,
@@ -74,9 +77,12 @@ export const useMoveSavedRestaurantsMutation = () => {
   })
 }
 
-export const useDeleteCollectionMutation = () => {
+export const useDeleteCollectionMutation = (
+  onError?: (error: Error) => void,
+) => {
   const queryClient = useQueryClient()
   return useMutation({
+    ...(onError && { onError: (error: Error) => onError(error) }),
     mutationFn: deleteCollection,
     onSuccess: async (_, collectionId) => {
       const detailKey = collectionQueryKeys.detail(collectionId)
