@@ -10,7 +10,9 @@
 
 식당 위치 검토·보정은 `pages/restaurantLocations/RestaurantLocationsPage.spec.md`를 따른다. 기존 식당의 상태·검토 목록·재요청·Places 후보 검색·선택을 연결한다. 유료 후보 검색은 자동 실행하지 않는다.
 
-등록 전 위치 미리보기(HASHI-236)는 등록 화면의 버튼으로만 `POST /api/v1/admin/restaurants/location-preview`를 호출한다. 최종 등록과 동일하게 정리한 식당명·현지명·주소로 검색하며 선택 토큰만 `locationSelectionToken`으로 전달한다. 입력 변경·닫기 시 후보와 선택을 폐기하고 진행 중 검색을 중단한다. 선택 토큰 만료는 등록 직전에도 확인하며, 선택 해제 또는 재검색 후 진행한다. 서버의 토큰 오류(027/028)는 입력을 보존하고 기본 정보 단계로 돌아간다. 후보 없이 등록하는 기존 흐름과 수정 화면은 유지한다. 미리보기 결과는 영구 저장하거나 자동 재검색하지 않는다. 관광 지역 관리는 별도 범위다.
+등록 전 위치 미리보기(HASHI-236)는 등록 화면의 버튼으로만 `POST /api/v1/admin/restaurants/location-preview`를 호출한다. 최종 등록과 동일하게 정리한 식당명·현지명·주소로 검색하며 선택 토큰만 `locationSelectionToken`으로 전달한다. 입력 변경·닫기 시 후보와 선택을 폐기하고 진행 중 검색을 중단한다. 선택 토큰 만료는 등록 직전에도 확인하며, 선택 해제 또는 재검색 후 진행한다. 서버의 토큰 오류(027/028)는 입력을 보존하고 기본 정보 단계로 돌아간다. 후보 없이 등록하는 기존 흐름과 수정 화면은 유지한다. 미리보기 결과는 영구 저장하거나 자동 재검색하지 않는다.
+
+관광 지역 관리·식당 배정(HASHI-237)은 `pages/mapRegions/MapRegionsPage.spec.md`를 따른다. 지역 목록·전체 설정 PUT·명시적 식당 배정/해제를 연결하며 사용자 지도나 위치 검증 작업은 변경하지 않는다.
 
 공지사항 관리는 `pages/notices/NoticesPage.spec.md`를 따른다. 관리자 전용 목록·상세·생성·수정·게시·삭제와 NOTICE media asset 업로드를 연결하며 별도 generated 계약을 사용한다. `pnpm --filter @hashi/admin gen:notice-api-types`로 해당 범위만 갱신한다.
 
