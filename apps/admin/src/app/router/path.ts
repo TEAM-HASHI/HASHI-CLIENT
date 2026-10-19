@@ -9,4 +9,7 @@ export const ROUTES = {
   notices: '/admin/notices',
   noticeNew: '/admin/notices/new',
   noticeDetail: '/admin/notices/:noticeId',
+  terms: '/admin/terms',
+  termsNew: '/admin/terms/new',
+  termsDetail: '/admin/terms/:termsId',
 } as const
