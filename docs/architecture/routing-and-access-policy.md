@@ -63,11 +63,11 @@
 | 마이 리뷰 페이지      | `/my-reviews`                                       | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                                                                 |
 | 리뷰 상세 페이지      | `/reviews/:reviewId`                                |                                                                                                                                                           |
 | 리뷰 수정 페이지      | `/reviews/:reviewId/edit`                           |                                                                                                                                                           |
-| 저장 페이지           | `/saved`                                            | 목 데이터 기반 컬렉션 목록입니다.                                                                                                                         |
+| 저장 페이지           | `/saved`                                            | API 기반 컬렉션 목록과 추가 조회를 제공합니다.                                                                                                            |
 | 컬렉션 생성           | `/saved/collections/new`                            | 독립 폼 페이지이며 하단 내비게이션을 표시하지 않습니다.                                                                                                   |
-| 컬렉션 상세           | `/saved/collections/:collectionId`                  | 목 상세와 URL 정렬·분류를 표시합니다. 없는 ID는 `/saved`로 복귀합니다.                                                                                    |
+| 컬렉션 상세           | `/saved/collections/:collectionId`                  | API 상세와 URL 정렬·분류를 표시합니다. 잘못된 형식의 ID는 `/saved`로, 조회 실패는 인라인 재시도로 처리합니다.                                             |
 | 컬렉션 수정           | `/saved/collections/:collectionId/edit`             | 독립 폼 페이지이며 변경이 있는 뒤로가기에 폐기 확인을 표시합니다.                                                                                         |
-| 컬렉션 식당 편집      | `/saved/collections/:collectionId/restaurants/edit` | 독립 편집 페이지이며 하단 내비게이션 없이 선택·이동·삭제를 제공합니다. 없는 ID는 `/saved`로 복귀합니다.                                                   |
+| 컬렉션 식당 편집      | `/saved/collections/:collectionId/restaurants/edit` | 소유자만 사용하는 독립 API 편집 페이지이며 하단 내비게이션 없이 개별 선택·이동·삭제를 제공합니다. 잘못된 형식의 ID는 `/saved`로 복귀합니다.               |
 | 마이 페이지           | `/mypage`                                           |                                                                                                                                                           |
 | 프로필 생성 페이지    | `/profile/new`                                      | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                                                              |
 | 탈퇴 페이지           | `/withdrawal`                                       | 유지 여부 논의 중입니다.                                                                                                                                  |
@@ -133,5 +133,7 @@
 
 하단 네비게이션바가 필요한 page는 `BottomNavigationLayout`에서 렌더링합니다.
 
-저장 목록·컬렉션 상세는 목 데이터 퍼블리싱 화면이며 BottomNavigationLayout을 사용합니다.
+저장 목록·컬렉션 상세는 API 기반 화면이며 BottomNavigationLayout을 사용합니다.
+제품 라우트는 `SavedApiPage`·`CollectionFormQueryPage`·`CollectionEditorQueryPage`로 lazy load합니다.
+목 데이터 Provider는 제품 RootLayout에서 사용하지 않으며 지도/퍼블리싱 fixture에서만 명시적으로 제공합니다.
 컬렉션 생성·수정·식당 편집은 하단 내비게이션 없는 독립 페이지입니다. 지도(`/map`)는 아직 준비중 페이지입니다.

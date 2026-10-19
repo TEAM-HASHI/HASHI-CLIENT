@@ -1,5 +1,12 @@
 # 저장 컬렉션 퍼블리싱
 
+## 제품 API 연결 현황 (2026-10-20, HASHI-224 / HASHI-238 / HASHI-239)
+
+제품 라우트는 목 화면 대신 `SavedApiPage`, `CollectionFormQueryPage`, `CollectionEditorQueryPage`를 사용한다.
+현재 API 계약·오류·캐시·보류 사항은 [CollectionApi.spec.md](./CollectionApi.spec.md)를 따른다.
+아래 퍼블리싱의 목 Provider·전체 선택·공유 항목은 기존 fixture 계약과 변경 이력을 설명한다.
+제품의 전체 선택·필터별 개수·실제 공유 링크와 #221 인증 세션 연결은 별도 보류 상태다.
+
 ## PR #218 리뷰 반영 기준 (2026-10-18)
 
 - 기준 PR head: `be1a1613b5aa837df63358c9933b18e01abc5521`. base는 변경하지 않는다.

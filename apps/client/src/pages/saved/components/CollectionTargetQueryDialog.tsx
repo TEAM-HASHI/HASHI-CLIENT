@@ -32,7 +32,7 @@ type CollectionTargetQueryDialogProps = {
       mode: 'move'
       sourceCollectionId: number
       restaurantIds: readonly number[]
-      onMoved: (ids: readonly number[]) => void
+      onMoved?: (ids: readonly number[]) => void
     }
 )
 
@@ -251,7 +251,7 @@ export const CollectionTargetQueryDialog = (
             throw cause
           }
           if (!mounted.current) return
-          props.onMoved(movedIds)
+          props.onMoved?.(movedIds)
           props.onClose()
         }
       }}
