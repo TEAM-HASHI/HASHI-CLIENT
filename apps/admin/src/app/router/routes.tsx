@@ -14,6 +14,8 @@ const {
   RestaurantsPage,
   ReservationsPage,
   MagazinesPage,
+  NoticesPage,
+  NoticeEditorPage,
 } = lazyPages
 
 const withSuspense = (element: ReactElement) => (
@@ -37,6 +39,15 @@ export const appRoutes = [
         path: ROUTES.adminRoot,
         element: <AdminLayout />,
         children: [
+          { path: ROUTES.notices, element: withSuspense(<NoticesPage />) },
+          {
+            path: ROUTES.noticeNew,
+            element: withSuspense(<NoticeEditorPage />),
+          },
+          {
+            path: ROUTES.noticeDetail,
+            element: withSuspense(<NoticeEditorPage />),
+          },
           {
             index: true,
             element: <Navigate to={ROUTES.dashboard} replace />,

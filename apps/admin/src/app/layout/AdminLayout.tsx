@@ -6,6 +6,7 @@ import {
   PeopleIcon,
   ReservationIcon,
   TodayRestaurantIcon,
+  NoteIcon,
 } from '@hashi/hds-icons'
 import { Button } from '@hashi/hds-ui'
 import { useQueryClient } from '@tanstack/react-query'
@@ -17,6 +18,11 @@ import { clearAdminSession, getAdminSession } from '@/shared/auth/adminSession'
 import { cn } from '@/shared/utils/cn'
 
 const navigationItems = [
+  {
+    label: '공지사항 관리',
+    to: ROUTES.notices,
+    icon: <NoteIcon aria-hidden="true" className="size-5" />,
+  },
   {
     label: '대시보드',
     to: ROUTES.dashboard,
