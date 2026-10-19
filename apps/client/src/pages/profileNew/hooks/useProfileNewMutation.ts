@@ -61,9 +61,9 @@ export const useProfileNewMutation = ({
         createOnboardingRequestBody(profileDraft, profileImageKey),
       )
     },
-    onSuccess: ({ accessToken }, _variables, sessionVersion) => {
+    onSuccess: ({ accessToken, userId }, _variables, sessionVersion) => {
       if (!canApplyResponse(sessionVersion)) return
-      startAuthenticatedSession(accessToken)
+      startAuthenticatedSession(accessToken, userId)
       navigateTo(getRedirectPath())
     },
     onError: (error, _variables, sessionVersion) => {
