@@ -43,7 +43,7 @@ export const normalizeCollectionDraft = (
 
 export const isDuplicateCollectionName = (
   draft: CollectionDraft,
-  collections: readonly SavedCollection[],
+  collections: readonly Pick<SavedCollection, 'id' | 'name'>[],
   editingId?: string,
 ) => {
   const name = stripCollectionBoundaryWhitespace(draft.name)
@@ -56,7 +56,7 @@ export const isDuplicateCollectionName = (
 
 export const validateCollection = (
   draft: CollectionDraft,
-  collections: readonly SavedCollection[],
+  collections: readonly Pick<SavedCollection, 'id' | 'name'>[],
   editingId?: string,
 ) => {
   if (!stripCollectionBoundaryWhitespace(draft.name)) return 'name'

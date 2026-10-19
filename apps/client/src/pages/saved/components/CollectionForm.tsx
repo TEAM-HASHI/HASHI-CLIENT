@@ -57,8 +57,11 @@ export const CollectionForm = ({
   onClose,
   onDiscard = onClose,
 }: {
-  collection?: SavedCollection
-  collections: readonly SavedCollection[]
+  collection?: Pick<
+    SavedCollection,
+    'id' | 'name' | 'description' | 'color' | 'isPublic' | 'coverImages'
+  >
+  collections: readonly Pick<SavedCollection, 'id' | 'name'>[]
   onSubmit: (draft: CollectionDraft) => void | Promise<void>
   onSubmitSuccess?: () => void
   onClose: () => void
