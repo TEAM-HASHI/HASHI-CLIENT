@@ -7,11 +7,13 @@ import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
 import { checkIsAuthRequiredError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { captureError } from '@/shared/lib/sentry'
+import { queryClient } from '@/shared/lib/queryClient'
 import {
   clearAuthSession,
   getAccessToken,
   getAuthSessionStatus,
   getAuthSessionVersion,
+  getAuthSubjectId,
   setAccessToken,
   setOnboardingSession,
   startAuthenticatedSession,
@@ -38,6 +40,7 @@ const restoreAuthSessionOnce = async (revalidate: boolean) => {
   const sessionVersion = getAuthSessionVersion()
   const previousToken = getAccessToken()
   const previousStatus = getAuthSessionStatus()
+  const previousSubjectId = getAuthSubjectId()
   const canRestore = () =>
     getAuthSessionVersion() === sessionVersion &&
     getAccessToken() === previousToken &&
@@ -58,10 +61,21 @@ const restoreAuthSessionOnce = async (revalidate: boolean) => {
     if (!canRestore()) return
 
     if (accessToken && authMe.role === 'USER') {
-      if (revalidate && previousStatus !== 'authenticated') {
-        startAuthenticatedSession(accessToken)
+      const accountChanged =
+        previousStatus === 'authenticated' &&
+        previousSubjectId !== authMe.subjectId
+      if (
+        revalidate &&
+        (previousStatus !== 'authenticated' || accountChanged)
+      ) {
+        startAuthenticatedSession(accessToken, authMe.subjectId ?? undefined)
       } else {
-        setAccessToken(accessToken)
+        setAccessToken(accessToken, authMe.subjectId ?? undefined)
+      }
+      if (accountChanged) {
+        queryClient.removeQueries({ type: 'inactive' })
+        queryClient.getMutationCache().clear()
+        void queryClient.resetQueries({ type: 'active' })
       }
     } else if (!accessToken && authMe.role === 'ONBOARDING') {
       setOnboardingSession()

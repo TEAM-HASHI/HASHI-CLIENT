@@ -8,6 +8,7 @@ import {
   waitFor,
 } from '@testing-library/react'
 import { StrictMode } from 'react'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -25,6 +26,16 @@ import {
 } from '@/shared/auth/authSession'
 import { getApiAccessToken } from '@/shared/api/accessToken'
 import { HttpStatusError } from '@/shared/api/apiError'
+import { queryClient } from '@/shared/lib/queryClient'
+import { getMyProfileSummary } from '@/features/user/api/getMyProfileSummary'
+import {
+  MY_PROFILE_SUMMARY_QUERY_KEY,
+  useMyProfileSummaryQuery,
+} from '@/features/user/hooks/useMyProfileSummaryQuery'
+
+vi.mock('@/features/user/api/getMyProfileSummary', () => ({
+  getMyProfileSummary: vi.fn(),
+}))
 
 vi.mock('@/shared/api/accessToken', () => ({
   getApiAccessToken: vi.fn(),
@@ -57,7 +68,9 @@ describe('AuthSessionRestoreGate', () => {
     mockedRequestTokenReissue.mockReset()
     mockedGetAuthMe.mockReset()
     mockedGetApiAccessToken.mockReset()
+    vi.mocked(getMyProfileSummary).mockReset()
     clearAuthSession()
+    queryClient.clear()
     window.history.pushState({}, '', '/')
   })
 
@@ -284,7 +297,7 @@ describe('AuthSessionRestoreGate', () => {
     async (token) => {
       const reload = vi.fn()
       vi.stubGlobal('location', { pathname: '/', reload })
-      if (token) setAccessToken(token)
+      if (token) setAccessToken(token, 1)
       mockedRequestTokenReissue.mockRejectedValue(new HttpStatusError(401))
       mockedGetAuthMe.mockRejectedValue(new HttpStatusError(401))
       const { unmount } = render(
@@ -334,6 +347,80 @@ describe('AuthSessionRestoreGate', () => {
         new PageTransitionEvent('pageshow', { persisted: true }),
       )
       expect(mockedRequestTokenReissue).toHaveBeenCalledOnce()
+    },
+  )
+
+  it.each([1, 2])(
+    'revalidates user %s without mixing the previous account cache',
+    async (subjectId) => {
+      startAuthenticatedSession('account-a-token', 1)
+      const previousVersion = getAuthSessionVersion()
+      queryClient.setQueryData(MY_PROFILE_SUMMARY_QUERY_KEY, {
+        nickname: 'account-a',
+      })
+      const requestedTokens: (string | undefined)[] = []
+      vi.mocked(getMyProfileSummary).mockImplementation(async () => {
+        requestedTokens.push(getAccessToken())
+        return { nickname: 'account-b' }
+      })
+      const Profile = () => {
+        const profile = useMyProfileSummaryQuery()
+        return (
+          <>
+            <span>{profile.data?.nickname}</span>
+            <input aria-label="draft" defaultValue="unsaved" />
+          </>
+        )
+      }
+      const aborted = vi.fn()
+      let resolveProfile!: (value: string) => void
+      const pending = queryClient
+        .fetchQuery({
+          queryKey: ['pending-profile'],
+          queryFn: ({ signal }) => {
+            signal.addEventListener('abort', aborted)
+            return new Promise<string>((resolve) => {
+              resolveProfile = resolve
+            })
+          },
+        })
+        .catch(() => undefined)
+      mockedRequestTokenReissue.mockResolvedValue({
+        accessToken: 'restored-token',
+      })
+      mockedGetAuthMe.mockResolvedValue({ role: 'USER', subjectId })
+      render(
+        <QueryClientProvider client={queryClient}>
+          <AuthSessionRestoreGate>
+            <Profile />
+          </AuthSessionRestoreGate>
+        </QueryClientProvider>,
+      )
+      expect(screen.getByText('account-a')).toBeInTheDocument()
+      const input = screen.getByRole('textbox', { name: 'draft' })
+      await act(async () => {
+        fireEvent(
+          window,
+          new PageTransitionEvent('pageshow', { persisted: true }),
+        )
+      })
+      expect(getAccessToken()).toBe('restored-token')
+      expect(getAuthSessionVersion()).toBe(
+        previousVersion + (subjectId === 2 ? 1 : 0),
+      )
+      await screen.findByText(subjectId === 2 ? 'account-b' : 'account-a')
+      expect(queryClient.getQueryData(MY_PROFILE_SUMMARY_QUERY_KEY)).toEqual({
+        nickname: subjectId === 2 ? 'account-b' : 'account-a',
+      })
+      expect(requestedTokens).toEqual(subjectId === 2 ? ['restored-token'] : [])
+      expect(aborted).toHaveBeenCalledTimes(subjectId === 2 ? 1 : 0)
+      resolveProfile('late-account-a-profile')
+      await pending
+      expect(queryClient.getQueryData(['pending-profile'])).toBe(
+        subjectId === 2 ? undefined : 'late-account-a-profile',
+      )
+      expect(screen.getByRole('textbox', { name: 'draft' })).toBe(input)
+      expect(input).toHaveValue('unsaved')
     },
   )
 
