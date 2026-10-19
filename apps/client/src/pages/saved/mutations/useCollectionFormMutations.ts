@@ -6,9 +6,12 @@ import type { UpdateCollectionBody } from '@/pages/saved/api/updateCollection'
 import { synchronizeCollectionHeader } from '@/pages/saved/mutations/synchronizeCollectionHeader'
 import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
 
-export const useCreateCollectionMutation = () => {
+export const useCreateCollectionMutation = (
+  onError?: (error: Error) => void,
+) => {
   const queryClient = useQueryClient()
   return useMutation({
+    ...(onError && { onError: (error: Error) => onError(error) }),
     mutationFn: createCollection,
     onSuccess: async (detail) => {
       await synchronizeCollectionHeader(queryClient, detail)
@@ -19,9 +22,12 @@ export const useCreateCollectionMutation = () => {
   })
 }
 
-export const useUpdateCollectionMutation = () => {
+export const useUpdateCollectionMutation = (
+  onError?: (error: Error) => void,
+) => {
   const queryClient = useQueryClient()
   return useMutation({
+    ...(onError && { onError: (error: Error) => onError(error) }),
     mutationFn: ({
       collectionId,
       body,
