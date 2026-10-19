@@ -276,3 +276,9 @@ Figma 파일은 `UHaom01PvoRx2wRCYa1kS1`이다.
 - 실제 /map SDK, 식당 상세 저장 버튼, 실서버 API, 실제 iOS/Android 가상 키보드 검증은 범위 밖이다.
 - verify-implementation의 등록 대상 verify-api-integration을 확인했다. 서버 데이터가 없는 목 퍼블리싱 예외를 적용했으며 API/query/cache 변경이 없는 것과 입력·disabled·문서 동기화·테스트 격리를 확인했다.
 - 스크린샷·Figma 기준·로그·전체 패치는 기존 \*.local 규칙으로 무시되는 review-evidence.local에 보관한다. .gitignore·의존성·lockfile·HDS public API는 변경하지 않았다.
+
+### HASHI-221 추가 수정: 생성 완료·복귀
+
+- 생성 완료 후 폼이 닫히기 전 새 항목을 자기 중복으로 안내하거나 재제출하지 않는다.
+- 생성 완료/취소는 저장한 원래 history 항목으로 돌아가며 직접 URL 진입은 목록 fallback을 유지한다. 저장 모달의 식당 및 명시적 대상 선택 복원은 유지한다.
+- 기능 테스트는 생성 직후 목록 갱신과 생성 완료/취소 후 원래 방문 이력 복귀를 검증한다.

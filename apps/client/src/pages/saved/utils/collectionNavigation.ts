@@ -16,11 +16,12 @@ export const getCollectionSaveState = (
 })
 
 export const getCollectionFormState = (
-  location: Pick<Location, 'pathname' | 'search' | 'state'>,
+  location: Pick<Location, 'pathname' | 'search' | 'state' | 'key'>,
   restaurantId?: string,
   selectedId: string | null = null,
 ) => ({
   collectionReturn: {
+    key: location.key,
     pathname: location.pathname,
     search: location.search,
     state: restaurantId
@@ -38,8 +39,9 @@ export const getCollectionReturn = (state: unknown) => {
     target.pathname.startsWith('//') ||
     typeof target.search !== 'string'
   )
-    return { pathname: ROUTES.saved, search: '', state: null }
+    return { pathname: ROUTES.saved, search: '', state: null, key: null }
   return {
+    key: typeof target.key === 'string' ? target.key : null,
     pathname: target.pathname,
     search: target.search,
     state: target.state,

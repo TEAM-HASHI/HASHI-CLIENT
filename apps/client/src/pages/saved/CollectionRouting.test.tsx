@@ -93,6 +93,26 @@ const setup = (
 afterEach(cleanup)
 
 describe('컬렉션 독립 라우트와 복귀', () => {
+  it.each(['완료', '취소'])(
+    '생성 %s 후 원래 목록 이력으로 복귀한다',
+    async (action) => {
+      const { router, user } = setup('/saved', collectionMocks, '/map')
+      const originalKey = router.state.location.key
+      await user.click(screen.getByRole('button', { name: '새 컬렉션 만들기' }))
+      if (action === '완료') {
+        await user.type(screen.getByLabelText('컬렉션명'), '이력 확인')
+        await user.click(screen.getByRole('radio', { name: '빨강' }))
+        await user.click(screen.getByRole('button', { name: '만들기' }))
+      } else await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+      expect(router.state.location.pathname).toBe('/saved')
+      expect(router.state.location.key).toBe(originalKey)
+      await act(async () => {
+        await router.navigate(-1)
+      })
+      expect(router.state.location.pathname).toBe('/map')
+    },
+  )
+
   it('생성 후 정규화한 이름과 설명을 저장하고 새 컬렉션을 최상단에 표시한다', async () => {
     const { router, user } = setup()
     await user.click(screen.getByRole('button', { name: '새 컬렉션 만들기' }))

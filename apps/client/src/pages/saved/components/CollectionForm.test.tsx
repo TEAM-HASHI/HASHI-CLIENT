@@ -9,9 +9,10 @@ import {
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
-import type { ReactElement } from 'react'
+import { useState, type ReactElement } from 'react'
 import { CollectionForm } from '@/pages/saved/components/CollectionForm'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
+import { createCollection } from '@/pages/saved/utils/collectionMutations'
 
 afterEach(cleanup)
 const renderForm = (element: ReactElement, withForwardEntry = false) => {
@@ -34,6 +35,47 @@ const renderForm = (element: ReactElement, withForwardEntry = false) => {
   return router
 }
 describe('CollectionForm', () => {
+  it('생성 후 화면 전환을 기다리는 동안 자기 자신을 중복으로 안내하지 않는다', () => {
+    const CreateForm = () => {
+      const [data, setData] = useState(collectionMocks)
+      return (
+        <>
+          <CollectionForm
+            collections={data.collections}
+            onClose={() => {}}
+            onSubmit={(draft) =>
+              setData((current) =>
+                createCollection(
+                  current,
+                  draft,
+                  'created',
+                  '2026-10-18T00:00:00Z',
+                ),
+              )
+            }
+          />
+          <output aria-label="생성 결과">
+            {data.collections.find((item) => item.id === 'created')?.name}
+          </output>
+        </>
+      )
+    }
+    renderForm(<CreateForm />)
+    fireEvent.change(screen.getByLabelText('컬렉션명'), {
+      target: { value: '새 여행' },
+    })
+    fireEvent.click(screen.getByRole('radio', { name: '빨강' }))
+    fireEvent.click(screen.getByRole('button', { name: '만들기' }))
+
+    expect(screen.getByLabelText('생성 결과')).toHaveTextContent('새 여행')
+    expect(screen.queryByText('중복된 컬렉션명입니다.')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('컬렉션명')).toHaveAttribute(
+      'aria-invalid',
+      'false',
+    )
+    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+  })
+
   it('수정 중에도 브라우저 앞으로가기는 차단하지 않는다', async () => {
     const previousHistoryState = window.history.state
     try {

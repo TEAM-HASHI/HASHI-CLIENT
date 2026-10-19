@@ -17,11 +17,15 @@ export const CollectionFormPage = () => {
   const collection = data.collections.find((item) => item.id === collectionId)
   if (collectionId && !collection) return <Navigate to={ROUTES.saved} replace />
   const returnTo = getCollectionReturn(location.state)
-  const handleClose = () =>
-    navigate(
-      { pathname: returnTo.pathname, search: returnTo.search },
-      { replace: true, state: returnTo.state },
-    )
+  const handleClose = () => {
+    // 앱에서 진입했다면 원래 history 항목으로 돌아가 복귀 화면을 중복하지 않는다.
+    if (returnTo.key) navigate(-1)
+    else
+      navigate(
+        { pathname: returnTo.pathname, search: returnTo.search },
+        { replace: true, state: returnTo.state },
+      )
+  }
   return (
     <CollectionForm
       key={collectionId ?? 'new'}

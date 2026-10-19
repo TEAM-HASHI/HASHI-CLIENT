@@ -72,18 +72,18 @@ export const CollectionForm = ({
     description: false,
   })
   const [discarding, setDiscarding] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
   const normalizedDraft = normalizeCollectionDraft(draft)
   const normalizedInitial = normalizeCollectionDraft(initial)
   const changed = (['name', 'description', 'color', 'isPublic'] as const).some(
     (key) => normalizedDraft[key] !== normalizedInitial[key],
   )
   const error = validateCollection(draft, collections, collection?.id)
-  const hasDuplicateName = isDuplicateCollectionName(
-    draft,
-    collections,
-    collection?.id,
-  )
-  const canSubmit = !isComposing && !error && (!collection || changed)
+  const hasDuplicateName =
+    !isSubmitted &&
+    isDuplicateCollectionName(draft, collections, collection?.id)
+  const canSubmit =
+    !isSubmitted && !isComposing && !error && (!collection || changed)
   const needsConfirmation = Boolean(collection && changed)
   const blocker = useBlocker(({ historyAction }) => {
     const nextIndex = getCollectionHistoryIndex()
@@ -165,6 +165,8 @@ export const CollectionForm = ({
             if (canSubmit) {
               allowNavigation.current = true
               onSubmit(draft)
+              // 목록 갱신 후 뒤로 이동이 끝나기 전에는 생성 항목을 재검증하지 않는다.
+              setIsSubmitted(true)
             }
           }}
         >
