@@ -18,6 +18,7 @@ import {
   COLLECTION_DESCRIPTION_LIMIT,
   isDuplicateCollectionName,
   normalizeCollectionDraft,
+  normalizeCollectionDescription,
   validateCollection,
 } from '@/pages/saved/utils/collectionMutations'
 import type { CollectionDraft } from '@/pages/saved/utils/collectionMutations'
@@ -65,7 +66,12 @@ export const CollectionForm = ({
   const composing = useRef(false)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const [isComposing, setIsComposing] = useState(false)
-  const initial: CollectionDraft = collection ?? EMPTY_DRAFT
+  const initial: CollectionDraft = collection
+    ? {
+        ...collection,
+        description: normalizeCollectionDescription(collection.description),
+      }
+    : EMPTY_DRAFT
   const [draft, setDraft] = useState<CollectionDraft>(initial)
   const [overLimit, setOverLimit] = useState({
     name: false,
@@ -285,19 +291,27 @@ export const CollectionForm = ({
               maxLengthBehavior="allow"
               showCounter
               errorMessage={LIMIT_MESSAGE}
+              onKeyDown={(event) => {
+                if (
+                  event.key === 'Enter' &&
+                  !event.nativeEvent.isComposing &&
+                  !composing.current
+                )
+                  event.preventDefault()
+              }}
               onCompositionStart={startComposition}
               onCompositionEnd={(event) =>
                 endComposition(
                   'description',
                   COLLECTION_DESCRIPTION_LIMIT,
-                  event.currentTarget.value,
+                  normalizeCollectionDescription(event.currentTarget.value),
                 )
               }
               onChange={(event) =>
                 changeText(
                   'description',
                   COLLECTION_DESCRIPTION_LIMIT,
-                  event.currentTarget.value,
+                  normalizeCollectionDescription(event.currentTarget.value),
                 )
               }
               aria-invalid={overLimit.description}

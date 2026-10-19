@@ -34,7 +34,10 @@ const longRestaurants = Array.from({ length: 40 }, (_, index) => ({
 const longCollection = {
   ...collectionMocks.collections[0],
   name: '가'.repeat(20),
-  description: scenario === 'multiline' ? '가\n'.repeat(50) : '가'.repeat(100),
+  description:
+    scenario === 'multiline'
+      ? '가'.repeat(14) + '\n' + '나'.repeat(15)
+      : '가'.repeat(30),
   restaurants: longRestaurants.map((restaurant, index) => ({
     restaurantId: restaurant.id,
     savedAt: new Date(Date.UTC(2026, 9, 7, 0, 0, 40 - index)).toISOString(),

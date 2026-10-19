@@ -4,9 +4,9 @@ import type {
   SavedCollection,
 } from '@/pages/saved/types'
 
-// SAVED_COLLECTION_SAVE / SAVED_COLLECTION_MANAGE 입력 제한.
+// 컬렉션 입력 제한. 설명은 2026-10-18 기획 답변으로 100자에서 30자로 변경.
 export const COLLECTION_NAME_LIMIT = 20
-export const COLLECTION_DESCRIPTION_LIMIT = 100
+export const COLLECTION_DESCRIPTION_LIMIT = 30
 export type CollectionDraft = {
   name: string
   description: string
@@ -28,12 +28,17 @@ const stripCollectionBoundaryWhitespace = (value: string) => {
   return value.slice(start, end)
 }
 
+export const normalizeCollectionDescription = (description: string) =>
+  description.replace(/\r\n|[\r\n\u2028\u2029]/g, ' ')
+
 export const normalizeCollectionDraft = (
   draft: CollectionDraft,
 ): CollectionDraft => ({
   ...draft,
   name: stripCollectionBoundaryWhitespace(draft.name),
-  description: stripCollectionBoundaryWhitespace(draft.description),
+  description: stripCollectionBoundaryWhitespace(
+    normalizeCollectionDescription(draft.description),
+  ),
 })
 
 export const isDuplicateCollectionName = (
@@ -56,7 +61,10 @@ export const validateCollection = (
 ) => {
   if (!stripCollectionBoundaryWhitespace(draft.name)) return 'name'
   if (draft.name.length > COLLECTION_NAME_LIMIT) return 'nameLength'
-  if (draft.description.length > COLLECTION_DESCRIPTION_LIMIT)
+  if (
+    normalizeCollectionDescription(draft.description).length >
+    COLLECTION_DESCRIPTION_LIMIT
+  )
     return 'descriptionLength'
   if (!draft.color) return 'color'
   if (isDuplicateCollectionName(draft, collections, editingId))

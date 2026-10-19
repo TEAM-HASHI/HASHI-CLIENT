@@ -35,6 +35,27 @@ const renderForm = (element: ReactElement, withForwardEntry = false) => {
   return router
 }
 describe('CollectionForm', () => {
+  it('설명 Enter는 줄바꿈하지 않고 붙여넣은 개행은 공백으로 바꿔 제출한다', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn()
+    renderForm(
+      <CollectionForm collections={[]} onSubmit={onSubmit} onClose={vi.fn()} />,
+    )
+    await user.type(screen.getByLabelText('컬렉션명'), '새 여행')
+    await user.click(screen.getByRole('radio', { name: '빨강' }))
+    const description = screen.getByLabelText('설명')
+    await user.type(description, '첫 설명{Enter}')
+    expect(description).toHaveValue('첫 설명')
+    await user.clear(description)
+    await user.paste('첫 줄\r\n둘째 줄\n셋째 줄')
+    expect(description).toHaveValue('첫 줄 둘째 줄 셋째 줄')
+    expect(screen.getByText('/30').parentElement).toHaveTextContent('13/30')
+    await user.click(screen.getByRole('button', { name: '만들기' }))
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ description: '첫 줄 둘째 줄 셋째 줄' }),
+    )
+  })
+
   it('생성 후 화면 전환을 기다리는 동안 자기 자신을 중복으로 안내하지 않는다', () => {
     const CreateForm = () => {
       const [data, setData] = useState(collectionMocks)
@@ -196,18 +217,30 @@ describe('CollectionForm', () => {
     expect(screen.getByText('/20').parentElement).toHaveTextContent('21 /20')
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
   })
-  it('설명은 HDS Textarea에서 제한 초과 입력과 카운터를 표시한다', () => {
+  it('설명은 한글 조합 중 31자를 보존하고 30자로 수정하면 제출할 수 있다', () => {
     renderForm(
       <CollectionForm collections={[]} onSubmit={vi.fn()} onClose={vi.fn()} />,
     )
+    fireEvent.change(screen.getByLabelText('컬렉션명'), {
+      target: { value: '새 여행' },
+    })
+    fireEvent.click(screen.getByRole('radio', { name: '빨강' }))
     const description = screen.getByLabelText('설명')
-    fireEvent.change(description, { target: { value: '가'.repeat(101) } })
-    expect(description).toHaveValue('가'.repeat(101))
-    expect(screen.getByText('/100').parentElement).toHaveTextContent('101/100')
+    fireEvent.compositionStart(description)
+    fireEvent.change(description, { target: { value: '가'.repeat(31) } })
+    expect(description).toHaveValue('가'.repeat(31))
+    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+    fireEvent.compositionEnd(description)
+    expect(screen.getByText('/30').parentElement).toHaveTextContent('31/30')
     expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
 
-    fireEvent.change(description, { target: { value: '' } })
+    fireEvent.change(description, { target: { value: '가'.repeat(30) } })
+    expect(
+      screen.queryByText('글자 수 제한을 초과했어요.'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('/30').parentElement).toHaveTextContent('30/30')
+    expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled()
   })
   it('중복 이름과 설명 길이 초과 오류를 동시에 표시한다', () => {
     renderForm(
@@ -221,7 +254,7 @@ describe('CollectionForm', () => {
       target: { value: collectionMocks.collections[0].name },
     })
     fireEvent.change(screen.getByLabelText('설명'), {
-      target: { value: '가'.repeat(101) },
+      target: { value: '가'.repeat(31) },
     })
     expect(screen.getByText('중복된 컬렉션명입니다.')).toBeVisible()
     expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()

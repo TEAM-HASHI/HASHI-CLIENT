@@ -14,6 +14,63 @@ const draft = {
   isPublic: true,
 }
 describe('컬렉션 목 데이터 변경', () => {
+  it('설명 개행을 공백으로 바꾼 뒤 공백 포함 30자 제한을 적용한다', () => {
+    const description = '가'.repeat(14) + '\r\n' + '나'.repeat(15)
+    const created = createCollection(
+      collectionMocks,
+      { ...draft, description },
+      'newline',
+      'now',
+    )
+    expect(created.collections[0]).toMatchObject({
+      id: 'newline',
+      description: '가'.repeat(14) + ' ' + '나'.repeat(15),
+    })
+    const updated = updateCollection(created, 'newline', {
+      ...draft,
+      description: '첫 줄\n둘째 줄',
+    })
+    expect(updated.collections[0].description).toBe('첫 줄 둘째 줄')
+    expect(
+      updateCollection(updated, 'newline', {
+        ...draft,
+        description: '가'.repeat(15) + '\n' + '나'.repeat(15),
+      }),
+    ).toBe(updated)
+  })
+
+  it('설명 30자는 생성·수정할 수 있고 31자는 기존 데이터를 변경하지 않는다', () => {
+    const created = createCollection(
+      collectionMocks,
+      { ...draft, description: '가'.repeat(30) },
+      'limit',
+      'now',
+    )
+    expect(created.collections[0]).toMatchObject({
+      id: 'limit',
+      description: '가'.repeat(30),
+    })
+    expect(
+      createCollection(
+        created,
+        { ...draft, name: '다른 여행', description: '가'.repeat(31) },
+        'over',
+        'now',
+      ),
+    ).toBe(created)
+    const updated = updateCollection(created, 'limit', {
+      ...draft,
+      description: '나'.repeat(30),
+    })
+    expect(updated.collections[0].description).toBe('나'.repeat(30))
+    expect(
+      updateCollection(updated, 'limit', {
+        ...draft,
+        description: '나'.repeat(31),
+      }),
+    ).toBe(updated)
+  })
+
   it('생성과 수정 모두 앞뒤 공백을 제거하며 원본을 변경하지 않는다', () => {
     const created = createCollection(
       collectionMocks,
@@ -50,7 +107,7 @@ describe('컬렉션 목 데이터 변경', () => {
     ).toBe('nameLength')
     expect(
       validateCollection(
-        { ...draft, description: '가'.repeat(101) },
+        { ...draft, description: '가'.repeat(31) },
         collectionMocks.collections,
       ),
     ).toBe('descriptionLength')
@@ -126,7 +183,7 @@ describe('컬렉션 목 데이터 변경', () => {
       validateCollection({ ...draft, name: ' ' + '가'.repeat(20) }, []),
     ).toBe('nameLength')
     expect(
-      validateCollection({ ...draft, description: ' ' + '가'.repeat(100) }, []),
+      validateCollection({ ...draft, description: ' ' + '가'.repeat(30) }, []),
     ).toBe('descriptionLength')
     const created = createCollection(
       collectionMocks,
