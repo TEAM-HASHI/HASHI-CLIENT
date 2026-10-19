@@ -2,10 +2,13 @@ import { MenuIcon, StarFillIcon } from '@hashi/hds-icons'
 import { Thumbnail } from '@hashi/hds-ui'
 import type { ReactNode } from 'react'
 
-import type { SavedRestaurant } from '@/pages/saved/types'
+import type { SavedRestaurantReadModelTypes } from '@/pages/saved/types/collectionReadModels'
 
 type SavedRestaurantRowProps = {
-  restaurant: SavedRestaurant
+  restaurant: Pick<
+    SavedRestaurantReadModelTypes,
+    'id' | 'name' | 'rating' | 'region' | 'cuisine'
+  > & { image: SavedRestaurantReadModelTypes['image'] | null }
   onSelect?: (restaurantId: string) => void
   moreAction?: ReactNode
   selection?: ReactNode
@@ -27,15 +30,19 @@ export const SavedRestaurantRow = ({
           {restaurant.name}
         </span>
         <span className="text-primary-200 flex flex-wrap items-center gap-x-1">
-          <span className="typo-body-3 flex h-6 items-center">
-            <StarFillIcon
-              aria-hidden="true"
-              className="text-primary-400 size-4.5"
-            />
-            {restaurant.rating.toFixed(1)}
-          </span>
+          {restaurant.rating !== undefined && (
+            <span className="typo-body-3 flex h-6 items-center">
+              <StarFillIcon
+                aria-hidden="true"
+                className="text-primary-400 size-4.5"
+              />
+              {restaurant.rating.toFixed(1)}
+            </span>
+          )}
           <span className="typo-body-7 [overflow-wrap:anywhere] break-words">
-            {restaurant.region} · {restaurant.cuisine}
+            {[restaurant.region, restaurant.cuisine]
+              .filter(Boolean)
+              .join(' · ')}
           </span>
         </span>
       </span>
