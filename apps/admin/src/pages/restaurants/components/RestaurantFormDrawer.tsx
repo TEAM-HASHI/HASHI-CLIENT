@@ -39,6 +39,7 @@ import { RestaurantLocationPanel } from '@/features/restaurantLocation/component
 import { PlaceCandidates } from '@/features/restaurantLocation/components/PlaceCandidates'
 import { useLocationPreview } from '@/features/restaurantLocation/useLocationPreview'
 import { AdminApiRequestError } from '@/shared/api/request'
+import { RestaurantRegionAssignment } from '@/features/mapRegion/components/RestaurantRegionAssignment'
 
 const emptyReplacements: RestaurantReplacementFlags = {
   images: false,
@@ -381,6 +382,11 @@ export const RestaurantFormDrawer = ({
                         dirtyFields.has(field as keyof RestaurantScalarFields),
                       )
                     }
+                  />
+                  <RestaurantRegionAssignment
+                    key={`region-${restaurantId}`}
+                    restaurantId={restaurantId}
+                    disabled={activeMutation.isPending}
                   />
                 </div>
               )}
