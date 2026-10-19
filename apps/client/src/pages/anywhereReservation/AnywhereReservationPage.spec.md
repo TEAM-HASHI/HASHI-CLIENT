@@ -6,7 +6,7 @@ Jira: HASHI-86
 
 `/reservations/anywhere`에서 사용자가 DB에 등록되지 않은 식당 정보를 직접 입력해 예약 초안을 만들고, 예약 확인 페이지로 전달한다.
 
-이번 범위는 API 연동 없이 퍼블리싱, 로컬 입력 상태, CTA 활성/비활성, `/reservations/request` 이동까지만 포함한다.
+이 화면은 로컬 입력과 draft를 관리하고, `/reservations/request`에서 기존 어디든 예약 생성 API로 제출한다.
 
 ## Route
 
@@ -46,14 +46,31 @@ Jira: HASHI-86
 
 CTA 활성 조건은 아래 값을 모두 만족해야 한다.
 
-- `restaurantName.trim().length`가 1~200
-- `restaurantAddress.trim().length`가 1~200
+- `restaurantName.trim().length`가 1~100
+- `restaurantAddress.trim().length`가 1~255
 - `guestName.trim().length`가 1~50
 - 각 유형 0~100명, 초기 0명이며 총 인원 수가 1명 이상
 - 내일부터 오늘의 3개월 후(해당 날짜가 없으면 월말)까지 선택됨
 - 예약 시간이 선택됨
 
 요청사항은 선택값이므로 CTA 활성 조건에 포함하지 않는다.
+
+## Data Dependencies
+
+2026-10-19 OpenAPI의 `CreateAnywhereReservationRequest`와 서버 develop DTO를 대조했다.
+Notion #50의 기존 화면 제한(식당명·주소 모두 200자)과 서버 계약이 달라,
+식당명 100자·주소 255자로 입력, CTA, draft 검증을 함께 맞춘다.
+
+| API                                  | 입력 / 응답                                                | 실행 및 상태                                                                                               | Cache                                                |
+| ------------------------------------ | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `POST /api/v1/reservations/anywhere` | `CreateAnywhereReservationRequest` / `ReservationResponse` | 인증 필요. 확인 화면의 기존 mutation으로 제출. 요청 중 버튼 비활성화, 실패 시 안내, 성공 시 완료 화면 이동 | 완료 상세 응답 저장, 포인트 잔액·내 예약 목록 무효화 |
+| `GET /api/v1/points/me`              | `PointBalanceResponse`                                     | 확인 화면의 기존 `useSuspenseQuery`, route loading/error 처리                                              | `pointQueryKeys.myBalance()`                         |
+
+- 이 입력 화면은 새로운 query나 mutation을 추가하지 않는다. 기존 API adapter와 cache 정책을 유지한다.
+- 글자 수 제한은 공유 상수로 input `maxLength`, form 검증, history draft 검증에 함께 적용한다.
+- 확인 화면 왕복에서도 최대 길이의 이름·주소를 그대로 복원한다.
+- Notion #57의 포인트 차감·환불 정책은 기획·서버 답변 대기로 이번 변경 범위에 포함하지 않는다.
+- 실제 서버 예약 생성과 운영 정책 전체 정합성 검증은 별도로 필요하다.
 
 ## State
 
@@ -115,6 +132,9 @@ interface AnywhereReservationDraft {
   - `useAnywhereReservationForm`
 
 ## Verification
+
+- 식당명 100자·주소 255자는 제출할 수 있고 101자·256자는 차단한다.
+- 최대 길이 입력을 확인 화면에 전달하고 뒤로가기로 복원한다.
 
 - 요청사항을 1000자까지만 입력할 수 있고 글자 수 counter가 표시된다.
 - 입력한 요청사항이 어디든 예약 draft에 포함된다.

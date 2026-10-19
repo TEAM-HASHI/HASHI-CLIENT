@@ -1,3 +1,8 @@
+import {
+  ANYWHERE_RESTAURANT_NAME_MAX_LENGTH,
+  ANYWHERE_RESTAURANT_ADDRESS_MAX_LENGTH,
+} from '@/features/reservation/constants/anywhereReservation'
+
 import { BackIcon } from '@hashi/hds-icons'
 import { Calendar, Header, IconButton } from '@hashi/hds-ui'
 import { useState } from 'react'
@@ -69,7 +74,7 @@ export const AnywhereReservationPage = () => {
             <ReservationUnderlineTextField
               label="식당명"
               name="restaurantName"
-              maxLength={200}
+              maxLength={ANYWHERE_RESTAURANT_NAME_MAX_LENGTH}
               onValueChange={fields.restaurantName.onValueChange}
               placeholder="식당명을 입력해주세요."
               value={fields.restaurantName.value}
@@ -77,7 +82,7 @@ export const AnywhereReservationPage = () => {
             <ReservationUnderlineTextField
               label="식당 주소"
               name="restaurantAddress"
-              maxLength={200}
+              maxLength={ANYWHERE_RESTAURANT_ADDRESS_MAX_LENGTH}
               onValueChange={fields.restaurantAddress.onValueChange}
               placeholder="식당 주소를 입력해주세요."
               value={fields.restaurantAddress.value}
