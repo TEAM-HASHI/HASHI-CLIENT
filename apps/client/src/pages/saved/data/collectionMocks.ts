@@ -88,7 +88,7 @@ const collections: SavedCollection[] = [
   {
     id: 'spring',
     name: '2026 도쿄 봄 여행',
-    description: '여행 가기 전에 저장해둔 맛집들 중에서 꼭 가보고 싶은 곳',
+    description: '여행 전에 저장한 맛집 중 꼭 가보고 싶은 곳',
     createdAt: '2026-10-07T00:00:00Z',
     isPublic: true,
     color: 'red',

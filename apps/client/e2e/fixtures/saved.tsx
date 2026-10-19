@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
-  createMemoryRouter,
+  createHashRouter,
   RouterProvider,
   useLocation,
   useNavigate,
@@ -9,7 +9,13 @@ import {
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import '@/app/styles/global.css'
+import { CollectionFormPage } from '@/pages/saved/CollectionFormPage'
+import { getCollectionDetailPath } from '@/app/router/routePaths'
+import { getCollectionSaveRestaurantId } from '@/pages/saved/utils/collectionNavigation'
 import { SavedPage } from '@/pages/saved/SavedPage'
+import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
+import { useCollectionData } from '@/pages/saved/data/useCollectionData'
+import { CollectionSaveDialog } from '@/pages/saved/components/CollectionSaveDialog'
 import { CollectionDragPanelContent } from '@/pages/saved/components/CollectionDragPanelContent'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import type { CollectionData, CollectionViewState } from '@/pages/saved/types'
@@ -28,7 +34,10 @@ const longRestaurants = Array.from({ length: 40 }, (_, index) => ({
 const longCollection = {
   ...collectionMocks.collections[0],
   name: '가'.repeat(20),
-  description: scenario === 'multiline' ? '가\n'.repeat(50) : '가'.repeat(100),
+  description:
+    scenario === 'multiline'
+      ? '가'.repeat(14) + '\n' + '나'.repeat(15)
+      : '가'.repeat(30),
   restaurants: longRestaurants.map((restaurant, index) => ({
     restaurantId: restaurant.id,
     savedAt: new Date(Date.UTC(2026, 9, 7, 0, 0, 40 - index)).toISOString(),
@@ -48,6 +57,7 @@ const data: CollectionData =
       : collectionMocks
 
 const PanelFixture = () => {
+  const { data, setData } = useCollectionData()
   const location = useLocation()
   const navigate = useNavigate()
   const [view, setView] = useState<CollectionViewState>(() =>
@@ -79,6 +89,7 @@ const PanelFixture = () => {
       {!closed && (
         <CollectionDragPanelContent
           data={data}
+          onDataChange={setData}
           view={view}
           onViewChange={(next) => {
             setView(next)
@@ -86,8 +97,15 @@ const PanelFixture = () => {
           }}
           availableHeight={availableHeight}
           onClose={() => {
-            setClosed(true)
-            navigate('/map', { replace: true, state: null })
+            if (view.collectionId) {
+              navigate(
+                `${getCollectionDetailPath(view.collectionId)}?sort=${view.sort}&category=${view.category}`,
+                { replace: true, state: view },
+              )
+            } else {
+              setClosed(true)
+              navigate('/map', { replace: true, state: null })
+            }
           }}
           onRestaurantSelect={() => {}}
         />
@@ -96,33 +114,56 @@ const PanelFixture = () => {
   )
 }
 
-const router = createMemoryRouter(
-  [
-    {
-      element: <BottomNavigationLayout />,
-      children: [
-        { path: '/saved', element: <SavedPage data={data} /> },
-        { path: '/map', element: <PanelFixture /> },
-      ],
-    },
-  ],
+const SavedFixture = () => {
+  const location = useLocation()
+  const [saving, setSaving] = useState(
+    () => getCollectionSaveRestaurantId(location.state) ?? params.get('save'),
+  )
+  return (
+    <>
+      <SavedPage />
+      {params.get('localSave') && (
+        <button onClick={() => setSaving(params.get('localSave'))}>
+          식당 저장 열기
+        </button>
+      )}
+      {saving && (
+        <CollectionSaveDialog
+          restaurantId={saving}
+          onClose={() => setSaving(null)}
+        />
+      )}
+    </>
+  )
+}
+
+if (!window.location.hash) {
+  window.history.replaceState(
+    null,
+    '',
+    `${window.location.pathname}${window.location.search}#${params.has('panel') ? '/map' : '/saved'}`,
+  )
+}
+const router = createHashRouter([
   {
-    initialEntries: [
-      params.has('panel')
-        ? {
-            pathname: '/map',
-            state:
-              params.get('panel') === 'detail'
-                ? { collectionId: 'spring', sort: 'latest', category: 'all' }
-                : INITIAL_COLLECTION_VIEW,
-          }
-        : '/saved',
+    element: <BottomNavigationLayout />,
+    children: [
+      { path: '/saved', element: <SavedFixture /> },
+      { path: '/saved/collections/:collectionId', element: <SavedFixture /> },
+      { path: '/map', element: <PanelFixture /> },
     ],
   },
-)
+  { path: '/saved/collections/new', element: <CollectionFormPage /> },
+  {
+    path: '/saved/collections/:collectionId/edit',
+    element: <CollectionFormPage />,
+  },
+])
 
 createRoot(document.getElementById('root')!).render(
   <main className="app-mobile-frame min-h-dvh bg-white">
-    <RouterProvider router={router} />
+    <CollectionDataProvider initialData={data}>
+      <RouterProvider router={router} />
+    </CollectionDataProvider>
   </main>,
 )

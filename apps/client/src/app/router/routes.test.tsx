@@ -6,7 +6,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
 import { appRoutes } from '@/app/router/routes'
+import type { PropsWithChildren } from 'react'
+import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
 import { createQueryClient } from '@/shared/lib/queryClient'
+
+vi.mock('@/app/providers/AuthSessionRestoreGate', () => ({
+  AuthSessionRestoreGate: ({ children }: PropsWithChildren) => children,
+}))
 
 vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
   getMagazineBanners: vi.fn(async () => ({ banners: [] })),
@@ -44,7 +50,30 @@ describe('appRoutes', () => {
   afterEach(() => {
     cleanup()
     document.body.style.overflow = ''
+    clearAuthSession()
   })
+
+  it.each([
+    ['/saved', '저장 컬렉션', false],
+    ['/saved/collections/spring', '2026 도쿄 봄 여행', false],
+    ['/saved/collections/new', '새 컬렉션 만들기', true],
+    ['/saved/collections/spring/edit', '컬렉션 수정', true],
+  ] as const)(
+    '실제 appRoutes에서 인증된 사용자의 %s를 올바른 레이아웃으로 연다',
+    async (path, name, form) => {
+      setAccessToken('test-session')
+      renderRoute(path)
+      expect(
+        await screen.findByRole(form ? 'region' : 'heading', { name }),
+      ).toBeVisible()
+      if (form) expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+      else
+        expect(screen.getByRole('button', { name: '저장' })).toHaveAttribute(
+          'aria-current',
+          'page',
+        )
+    },
+  )
 
   it('renders HashiPickPage from a direct URL entry', async () => {
     renderRoute(ROUTES.hashiPickRestaurants)

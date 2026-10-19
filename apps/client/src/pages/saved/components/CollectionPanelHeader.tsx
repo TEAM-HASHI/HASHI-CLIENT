@@ -8,6 +8,7 @@ import {
 } from '@/pages/saved/types'
 import type { CollectionViewState, SavedCollection } from '@/pages/saved/types'
 import { cn } from '@/shared/utils'
+import { normalizeCollectionDescription } from '@/pages/saved/utils/collectionMutations'
 
 type CollectionPanelHeaderProps = {
   collection: SavedCollection
@@ -72,7 +73,7 @@ export const CollectionPanelHeader = ({
         </div>
         {collection.description && (
           <p className="typo-body-6 text-cool-gray-400 mt-2 leading-[1.36] [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
-            {collection.description}
+            {normalizeCollectionDescription(collection.description)}
           </p>
         )}
       </div>

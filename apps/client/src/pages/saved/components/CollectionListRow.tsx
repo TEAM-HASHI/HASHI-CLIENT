@@ -28,6 +28,7 @@ export const CollectionListRow = ({
   >
     <button
       type="button"
+      aria-label={`${collection.name} 컬렉션 열기`}
       className={cn(
         'flex min-w-0 flex-1 text-left focus-visible:outline-2',
         compact ? 'items-center gap-3' : 'items-start gap-4',
