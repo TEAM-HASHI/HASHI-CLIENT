@@ -1,6 +1,11 @@
 import { lazy } from 'react'
 
 export const lazyPages = {
+  MapRegionsPage: lazy(() =>
+    import('@/pages/mapRegions/MapRegionsPage').then(({ MapRegionsPage }) => ({
+      default: MapRegionsPage,
+    })),
+  ),
   RestaurantLocationsPage: lazy(() =>
     import('@/pages/restaurantLocations/RestaurantLocationsPage').then(
       ({ RestaurantLocationsPage }) => ({ default: RestaurantLocationsPage }),

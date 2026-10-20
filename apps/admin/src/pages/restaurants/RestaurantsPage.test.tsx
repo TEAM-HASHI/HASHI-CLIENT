@@ -27,6 +27,9 @@ vi.mock('@/pages/restaurants/mutations/useRestaurantMutations', () => ({
 }))
 
 const deleteMock = vi.fn()
+vi.mock('@/features/mapRegion/components/RestaurantRegionAssignment', () => ({
+  RestaurantRegionAssignment: () => null,
+}))
 vi.mock('@/features/restaurantLocation/api/restaurantLocationApi', () => ({
   restaurantLocationApi: { preview: vi.fn() },
 }))
