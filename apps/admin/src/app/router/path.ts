@@ -4,6 +4,7 @@ export const ROUTES = {
   dashboard: '/admin/dashboard',
   users: '/admin/users',
   restaurants: '/admin/restaurants',
+  restaurantLocations: '/admin/restaurants/locations',
   reservations: '/admin/reservations',
   magazines: '/admin/magazines',
   notices: '/admin/notices',
