@@ -6,4 +6,7 @@ export const ROUTES = {
   restaurants: '/admin/restaurants',
   reservations: '/admin/reservations',
   magazines: '/admin/magazines',
+  notices: '/admin/notices',
+  noticeNew: '/admin/notices/new',
+  noticeDetail: '/admin/notices/:noticeId',
 } as const

@@ -8,6 +8,8 @@
 
 ## Query Map
 
+공지사항 관리는 `pages/notices/NoticesPage.spec.md`를 따른다. 관리자 전용 목록·상세·생성·수정·게시·삭제와 NOTICE media asset 업로드를 연결하며 별도 generated 계약을 사용한다. `pnpm --filter @hashi/admin gen:notice-api-types`로 해당 범위만 갱신한다.
+
 | UI                        | Endpoint                                     | Query mode/key                                                 | States                                   |
 | ------------------------- | -------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------- |
 | Dashboard/reservations    | `GET /api/v1/admin/reservations`             | finite query, `adminQueryKeys.reservations.*`                  | loading/error/empty/success              |

@@ -1,6 +1,16 @@
 import { lazy } from 'react'
 
 export const lazyPages = {
+  NoticesPage: lazy(() =>
+    import('@/pages/notices/NoticesPage').then(({ NoticesPage }) => ({
+      default: NoticesPage,
+    })),
+  ),
+  NoticeEditorPage: lazy(() =>
+    import('@/pages/notices/NoticeEditorPage').then(({ NoticeEditorPage }) => ({
+      default: NoticeEditorPage,
+    })),
+  ),
   LoginPage: lazy(() =>
     import('@/pages/login/LoginPage').then(({ LoginPage }) => ({
       default: LoginPage,
