@@ -31,11 +31,44 @@ export interface PlaceCandidates {
   addressRevision: number
   candidates: PlaceCandidate[]
 }
+export type LocationPreviewInput =
+  components['schemas']['PreviewRestaurantLocationRequest']
+
+const validCandidates = (items: PlaceCandidate[]) =>
+  Array.isArray(items) &&
+  items.every(
+    (item) =>
+      item &&
+      typeof item.displayName === 'string' &&
+      typeof item.address === 'string' &&
+      Number.isFinite(item.latitude) &&
+      Math.abs(item.latitude) <= 90 &&
+      Number.isFinite(item.longitude) &&
+      Math.abs(item.longitude) <= 180 &&
+      typeof item.selectionToken === 'string' &&
+      item.selectionToken.length > 0 &&
+      item.selectionToken.length <= 2048 &&
+      Number.isFinite(Date.parse(item.selectionExpiresAt)),
+  )
 
 const endpoint = '/api/v1/admin/restaurants'
 const locationPath = (id: number) => `${endpoint}/${id}/location`
 
 export const restaurantLocationApi = {
+  async preview(input: LocationPreviewInput, signal?: AbortSignal) {
+    const result = await request<{ candidates: PlaceCandidate[] }>(
+      `${endpoint}/location-preview`,
+      {
+        method: 'post',
+        json: input,
+        signal,
+        cache: 'no-store',
+      },
+    )
+    if (!validCandidates(result?.candidates))
+      throw new Error('장소 후보 응답을 확인할 수 없습니다. 다시 검색해주세요.')
+    return result
+  },
   list: (filters: LocationFilters, signal?: AbortSignal) =>
     request<LocationReviews>(`${endpoint}/locations`, {
       searchParams: { ...filters, size: 20 },
@@ -66,21 +99,7 @@ export const restaurantLocationApi = {
     if (
       result.restaurantId !== id ||
       result.addressRevision !== revision ||
-      !Array.isArray(result.candidates) ||
-      result.candidates.some(
-        (item) =>
-          !item ||
-          typeof item.displayName !== 'string' ||
-          typeof item.address !== 'string' ||
-          !Number.isFinite(item.latitude) ||
-          Math.abs(item.latitude) > 90 ||
-          !Number.isFinite(item.longitude) ||
-          Math.abs(item.longitude) > 180 ||
-          typeof item.selectionToken !== 'string' ||
-          !item.selectionToken ||
-          item.selectionToken.length > 2048 ||
-          !Number.isFinite(Date.parse(item.selectionExpiresAt)),
-      )
+      !validCandidates(result.candidates)
     )
       throw new Error('장소 후보 응답을 확인할 수 없습니다. 다시 검색해주세요.')
     return result
