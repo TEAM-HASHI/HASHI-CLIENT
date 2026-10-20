@@ -23,4 +23,14 @@ describe('magazineCatalogApi', () => {
     expect(options?.method).toBe('get')
     expect(options?.searchParams?.toString()).toBe('cursor=12&size=20')
   })
+
+  it.each([null, { magazineId: 99 }])(
+    'rejects missing or mismatched detail instead of prefilling another magazine: %j',
+    async (data) => {
+      requestMock.mockResolvedValue(data)
+      await expect(magazineCatalogApi.detail(5)).rejects.toThrow(
+        '상세 응답이 올바르지 않습니다',
+      )
+    },
+  )
 })
