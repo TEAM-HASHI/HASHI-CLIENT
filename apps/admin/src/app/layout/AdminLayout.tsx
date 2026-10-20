@@ -19,11 +19,6 @@ import { cn } from '@/shared/utils/cn'
 
 const navigationItems = [
   {
-    label: '공지사항 관리',
-    to: ROUTES.notices,
-    icon: <NoteIcon aria-hidden="true" className="size-5" />,
-  },
-  {
     label: '대시보드',
     to: ROUTES.dashboard,
     icon: <HomeIcon aria-hidden="true" className="size-5" />,
@@ -47,6 +42,16 @@ const navigationItems = [
     label: '매거진 관리',
     to: ROUTES.magazines,
     icon: <MagazineIcon aria-hidden="true" className="size-5" />,
+  },
+  {
+    label: '공지사항 관리',
+    to: ROUTES.notices,
+    icon: <NoteIcon aria-hidden="true" className="size-5" />,
+  },
+  {
+    label: '이용약관 관리',
+    to: ROUTES.terms,
+    icon: <NoteIcon aria-hidden="true" className="size-5" />,
   },
 ]
 
