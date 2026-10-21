@@ -1,3 +1,4 @@
+import { showToast } from '@hashi/hds-ui'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   act,
@@ -16,7 +17,16 @@ import { deleteCollection } from '@/pages/saved/api/deleteCollection'
 import { removeSavedRestaurants } from '@/pages/saved/api/removeSavedRestaurants'
 import { CollectionDeleteQueryDialog } from '@/pages/saved/components/CollectionDeleteQueryDialog'
 import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
-import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
+import {
+  clearAuthSession,
+  setAccessToken,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
+
+vi.mock('@hashi/hds-ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@hashi/hds-ui')>()),
+  showToast: vi.fn(),
+}))
 
 vi.mock('@/pages/saved/api/getCollection', () => ({ getCollection: vi.fn() }))
 vi.mock('@/pages/saved/api/deleteCollection', () => ({
@@ -151,12 +161,16 @@ describe('컬렉션 서버 삭제 확인', () => {
     expect(await screen.findByRole('alert')).toBeVisible()
     expect(onDeleted).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
+    expect(showToast).not.toHaveBeenCalled()
     expect(client.getQueryData(collectionQueryKeys.detail(8))).toEqual(detail)
     await user.click(screen.getByRole('button', { name: '삭제하기' }))
     await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1))
     expect(onClose).toHaveBeenCalledTimes(1)
     expect(client.getQueryData(collectionQueryKeys.detail(8))).toBeUndefined()
     expect(deleteCollection).toHaveBeenNthCalledWith(2, 8)
+    expect(showToast).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ children: '컬렉션이 삭제되었어요.' }),
+    )
   })
 
   it('삭제 대기 중 화면을 떠났으면 늦은 성공 응답으로 복귀시키지 않는다', async () => {
@@ -174,6 +188,26 @@ describe('컬렉션 서버 삭제 확인', () => {
     await act(async () => finish())
     expect(onDeleted).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
+    expect(showToast).not.toHaveBeenCalled()
+  })
+
+  it('계정 변경 후 도착한 삭제 성공에는 완료 토스트를 표시하지 않는다', async () => {
+    startAuthenticatedSession('account-a', 1)
+    let finish!: () => void
+    vi.mocked(deleteCollection).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve
+      }),
+    )
+    const { user, onClose, onDeleted } = setup('collection')
+    const confirm = screen.getByRole('button', { name: '삭제하기' })
+    await waitFor(() => expect(confirm).toBeEnabled())
+    await user.click(confirm)
+    act(() => startAuthenticatedSession('account-b', 2))
+    await act(async () => finish())
+    expect(showToast).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+    expect(onDeleted).not.toHaveBeenCalled()
   })
 
   it('다른 사람의 컬렉션은 삭제 요청을 보내지 않는다', async () => {

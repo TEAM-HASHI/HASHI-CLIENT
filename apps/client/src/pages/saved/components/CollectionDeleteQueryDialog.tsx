@@ -1,7 +1,8 @@
 import { getAuthSessionVersion } from '@/shared/auth/authSession'
 import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
 
-import { Button } from '@hashi/hds-ui'
+import { CheckIcon } from '@hashi/hds-icons'
+import { Button, showToast, toastQueue } from '@hashi/hds-ui'
 import { useEffect, useRef } from 'react'
 
 import { isValidCollectionId } from '@/pages/saved/api/collectionReadContracts'
@@ -90,6 +91,11 @@ const CollectionDeleteQueryDialogContent = (
           await deleteCollection.mutateAsync(props.collectionId)
           if (!mounted.current || sessionVersion !== getAuthSessionVersion())
             return
+          toastQueue.clear()
+          showToast({
+            icon: <CheckIcon className="text-success size-6.5" />,
+            children: '컬렉션이 삭제되었어요.',
+          })
           props.onClose()
           props.onDeleted()
         }
