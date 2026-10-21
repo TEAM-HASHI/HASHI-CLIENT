@@ -8,7 +8,7 @@ import {
   InputField,
   Textarea,
 } from '@hashi/hds-ui'
-import { useId, useLayoutEffect, useRef, useState } from 'react'
+import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useBlocker } from 'react-router-dom'
 import { CollectionCover } from '@/pages/saved/components/CollectionCover'
 import { COLLECTION_COVER_COLORS } from '@/pages/saved/data/collectionPalette'
@@ -54,6 +54,8 @@ export const CollectionForm = ({
   collections,
   onSubmit,
   onSubmitSuccess,
+  nameCheckPending = false,
+  nameCheckFeedback,
   onClose,
   onDiscard = onClose,
 }: {
@@ -64,6 +66,8 @@ export const CollectionForm = ({
   collections: readonly Pick<SavedCollection, 'id' | 'name'>[]
   onSubmit: (draft: CollectionDraft) => void | Promise<void>
   onSubmitSuccess?: () => void
+  nameCheckFeedback?: ReactNode
+  nameCheckPending?: boolean
   onClose: () => void
   onDiscard?: () => void
 }) => {
@@ -101,8 +105,11 @@ export const CollectionForm = ({
     (hasServerDuplicateName ||
       isDuplicateCollectionName(draft, collections, collection?.id))
   const canSubmit =
+    !nameCheckPending &&
     !isSubmitted &&
     !isComposing &&
+    !overLimit.name &&
+    !overLimit.description &&
     !error &&
     !hasDuplicateName &&
     (!collection || changed)
@@ -274,6 +281,7 @@ export const CollectionForm = ({
               </span>
             </div>
           </div>
+          {nameCheckFeedback}
           <fieldset className="w-full pb-7" disabled={isSubmitted}>
             <legend className="typo-sub-header-1 text-primary-200">
               색상 선택

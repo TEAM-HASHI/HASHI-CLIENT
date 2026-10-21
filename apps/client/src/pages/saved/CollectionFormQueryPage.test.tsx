@@ -1,5 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   createMemoryRouter,
@@ -12,6 +19,7 @@ import { CollectionFormQueryPage } from '@/pages/saved/CollectionFormQueryPage'
 import { createCollection } from '@/pages/saved/api/createCollection'
 import { updateCollection } from '@/pages/saved/api/updateCollection'
 import { getCollection } from '@/pages/saved/api/getCollection'
+import { getCollections } from '@/pages/saved/api/getCollections'
 import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
 import { ApiError } from '@/shared/api/apiError'
 import { captureError } from '@/shared/lib/sentry'
@@ -28,6 +36,7 @@ vi.mock('@/pages/saved/api/updateCollection', () => ({
   updateCollection: vi.fn(),
 }))
 vi.mock('@/pages/saved/api/getCollection', () => ({ getCollection: vi.fn() }))
+vi.mock('@/pages/saved/api/getCollections', () => ({ getCollections: vi.fn() }))
 vi.mock('@/shared/lib/sentry', () => ({ captureError: vi.fn() }))
 
 const detail = {
@@ -101,6 +110,12 @@ const setup = (editing = false) => {
 beforeEach(() => {
   vi.resetAllMocks()
   setAccessToken('test-session')
+  vi.mocked(getCollections).mockResolvedValue({
+    collections: [],
+    totalCount: 0,
+    hasNext: false,
+    nextCursor: undefined,
+  })
 })
 afterEach(() => {
   cleanup()
@@ -109,6 +124,71 @@ afterEach(() => {
 })
 
 describe('컬렉션 API 폼 연결', () => {
+  it('수정 중인 컬렉션 자신의 이름은 중복으로 막지 않는다', async () => {
+    vi.mocked(getCollection).mockResolvedValue(detail)
+    vi.mocked(getCollections).mockResolvedValue({
+      collections: [detail],
+      totalCount: 1,
+      hasNext: false,
+    })
+    const { user } = setup(true)
+    await screen.findByDisplayValue('여행')
+    await user.click(screen.getByRole('radio', { name: '노랑' }))
+    expect(screen.queryByText('중복된 컬렉션명입니다.')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '저장하기' })).toBeEnabled()
+  })
+
+  it('다음 페이지의 이름도 입력 중 중복 안내하고 서버 생성 요청을 막는다', async () => {
+    vi.mocked(getCollections)
+      .mockResolvedValueOnce({
+        collections: [{ collectionId: 7, name: '다른 이름' }],
+        totalCount: 2,
+        hasNext: true,
+        nextCursor: 7,
+      })
+      .mockResolvedValueOnce({
+        collections: [{ collectionId: 8, name: '여행' }],
+        totalCount: 2,
+        hasNext: false,
+        nextCursor: undefined,
+      })
+    const { user } = setup()
+    await user.type(screen.getByLabelText('컬렉션명'), '  여행  ')
+    await user.click(screen.getByRole('radio', { name: '빨강' }))
+    expect(await screen.findByText('중복된 컬렉션명입니다.')).toBeVisible()
+    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+    expect(getCollections).toHaveBeenCalledWith(
+      expect.objectContaining({ cursor: 7 }),
+      expect.any(AbortSignal),
+    )
+    expect(createCollection).not.toHaveBeenCalled()
+    await user.clear(screen.getByLabelText('컬렉션명'))
+    await user.type(screen.getByLabelText('컬렉션명'), '새 이름')
+    expect(screen.queryByText('중복된 컬렉션명입니다.')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled()
+  })
+
+  it('이름 목록 확인 중과 실패 시 제출을 막고 재조회 후 입력을 유지한다', async () => {
+    let reject!: (error: Error) => void
+    vi.mocked(getCollections).mockReturnValueOnce(
+      new Promise((_, fail) => {
+        reject = fail
+      }),
+    )
+    const { user } = setup()
+    await user.type(screen.getByLabelText('컬렉션명'), '새 이름')
+    await user.click(screen.getByRole('radio', { name: '빨강' }))
+    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+    await act(async () => reject(new Error('network')))
+    expect(await screen.findByRole('alert')).toBeVisible()
+    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: '다시 시도' }))
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled(),
+    )
+    expect(screen.getByLabelText('컬렉션명')).toHaveValue('새 이름')
+  })
+
   it('계정 변경 시 입력을 비우고 이전 생성 응답으로 복귀하지 않는다', async () => {
     startAuthenticatedSession('account-a', 1)
     let finish!: (value: typeof detail) => void
