@@ -9,6 +9,8 @@ import { getCollection } from '@/pages/saved/api/getCollection'
 import { getCollections } from '@/pages/saved/api/getCollections'
 import { getSavedRestaurants } from '@/pages/saved/api/getSavedRestaurants'
 import { SavedQueryPage } from '@/pages/saved/SavedQueryPage'
+import { HttpStatusError } from '@/shared/api/apiError'
+import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
 import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
 
 vi.mock('@/pages/saved/api/getCollection', () => ({ getCollection: vi.fn() }))
@@ -245,11 +247,75 @@ describe('컬렉션 서버 조회 화면', () => {
     expect(router.state.location.search).toBe('?sort=rating&category=cafe')
   })
 
-  it('인증 준비 전에는 보호 API를 요청하지 않는다', () => {
+  it('비로그인 상태에서는 내 컬렉션 목록을 요청하지 않는다', () => {
     clearAuthSession()
-    setup('/saved/collections/8')
+    setup('/saved')
     expect(getCollection).not.toHaveBeenCalled()
     expect(getCollections).not.toHaveBeenCalled()
     expect(getSavedRestaurants).not.toHaveBeenCalled()
+  })
+  it('비로그인 공개 상세는 조회하고 소유자 캐시·편집 동작은 사용하지 않는다', async () => {
+    clearAuthSession()
+    vi.mocked(getCollection).mockResolvedValue({
+      collectionId: 8,
+      name: '공개 여행',
+      owner: false,
+      savedCount: 1,
+    })
+    vi.mocked(getSavedRestaurants).mockResolvedValue({
+      content: [{ restaurantId: 55, name: '공개 식당' }],
+      hasNext: false,
+    })
+    const actions = vi.fn(() => <button>편집하기</button>)
+    const { client } = setup('/saved/collections/8', {
+      renderDetailActions: actions,
+      renderRestaurantActions: actions,
+    })
+    client.setQueryData(collectionQueryKeys.detail(8), {
+      collectionId: 8,
+      name: '이전 회원의 비공개 정보',
+      owner: true,
+    })
+    expect(
+      await screen.findByRole('heading', { name: '공개 여행' }),
+    ).toBeVisible()
+    expect(
+      await screen.findByRole('button', { name: '공개 식당' }),
+    ).toBeVisible()
+    expect(
+      screen.queryByText('이전 회원의 비공개 정보'),
+    ).not.toBeInTheDocument()
+    expect(getCollections).not.toHaveBeenCalled()
+    expect(actions).not.toHaveBeenCalled()
+  })
+
+  it('공개 상세 재조회가 404이면 이전 이름·식당을 더 이상 표시하지 않는다', async () => {
+    clearAuthSession()
+    vi.mocked(getCollection).mockResolvedValue({
+      collectionId: 8,
+      name: '공개 여행',
+      owner: false,
+    })
+    vi.mocked(getSavedRestaurants).mockResolvedValue({
+      content: [{ restaurantId: 55, name: '공개 식당' }],
+      hasNext: false,
+    })
+    const { client } = setup('/saved/collections/8')
+    expect(
+      await screen.findByRole('button', { name: '공개 식당' }),
+    ).toBeVisible()
+    vi.mocked(getCollection).mockRejectedValue(new HttpStatusError(404))
+    await act(async () => {
+      await client.invalidateQueries({
+        queryKey: collectionQueryKeys.details(),
+      })
+    })
+    expect(await screen.findByRole('alert')).toBeVisible()
+    expect(
+      screen.queryByRole('heading', { name: '공개 여행' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: '공개 식당' }),
+    ).not.toBeInTheDocument()
   })
 })

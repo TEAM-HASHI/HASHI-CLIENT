@@ -9,11 +9,12 @@ import { getSavedRestaurantRequestParams } from '@/pages/saved/utils/collectionR
 export const savedRestaurantsInfiniteQueryOptions = (
   collectionId: number | null,
   filters: SavedRestaurantQueryFiltersTypes | null = {},
+  publicView = false,
 ) => {
   const params =
     filters === null ? null : getSavedRestaurantRequestParams(filters)
   return infiniteQueryOptions({
-    queryKey: collectionQueryKeys.restaurants(collectionId, params),
+    queryKey: collectionQueryKeys.restaurants(collectionId, params, publicView),
     queryFn: ({ pageParam, signal }) => {
       if (!isValidCollectionId(collectionId) || params === null)
         throw new Error('A valid collectionId and enabled filters are required')
@@ -27,6 +28,7 @@ export const savedRestaurantsInfiniteQueryOptions = (
     getNextPageParam: (lastPage) =>
       lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined,
     enabled: isValidCollectionId(collectionId) && params !== null,
+    ...(publicView && { gcTime: 0 }),
     throwOnError: false,
   })
 }
@@ -34,5 +36,8 @@ export const savedRestaurantsInfiniteQueryOptions = (
 export const useSavedRestaurantsInfiniteQuery = (
   collectionId: number | null,
   filters: SavedRestaurantQueryFiltersTypes | null = {},
+  publicView = false,
 ) =>
-  useInfiniteQuery(savedRestaurantsInfiniteQueryOptions(collectionId, filters))
+  useInfiniteQuery(
+    savedRestaurantsInfiniteQueryOptions(collectionId, filters, publicView),
+  )

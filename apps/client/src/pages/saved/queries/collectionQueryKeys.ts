@@ -9,17 +9,23 @@ export const collectionQueryKeys = {
   infiniteList: (params: CollectionsListFiltersTypes | null) =>
     [...collectionQueryKeys.lists(), 'infinite', params] as const,
   details: () => [...collectionQueryKeys.all, 'detail'] as const,
-  detail: (collectionId: number | null) =>
-    [...collectionQueryKeys.details(), collectionId] as const,
+  detail: (collectionId: number | null, publicView = false) =>
+    [
+      ...collectionQueryKeys.details(),
+      collectionId,
+      ...(publicView ? ['public'] : []),
+    ] as const,
   restaurantLists: (collectionId: number | null) =>
     [...collectionQueryKeys.all, 'restaurants', collectionId] as const,
   restaurants: (
     collectionId: number | null,
     params: SavedRestaurantsFiltersTypes | null,
+    publicView = false,
   ) =>
     [
       ...collectionQueryKeys.restaurantLists(collectionId),
       'infinite',
       params,
+      ...(publicView ? ['public'] : []),
     ] as const,
 }

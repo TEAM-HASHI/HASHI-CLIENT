@@ -39,6 +39,7 @@ import {
   mapCollectionSummary,
   mapSavedRestaurant,
 } from '@/pages/saved/utils/collectionReadAdapters'
+import { checkIsNotFoundError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import {
   createListReturnStore,
@@ -81,7 +82,8 @@ export const SavedQueryPage = ({
   const numericId =
     routeId && /^[1-9]\d*$/.test(routeId) ? Number(routeId) : null
   const validId = isValidCollectionId(numericId)
-  const enabledId = isAuthenticated && validId ? numericId : null
+  const enabledId = validId ? numericId : null
+  const publicView = !isAuthenticated
   const restored = isCollectionMapState(location.state)
     ? location.state
     : INITIAL_COLLECTION_VIEW
@@ -98,16 +100,20 @@ export const SavedQueryPage = ({
   const collectionsQuery = useCollectionsInfiniteQuery(
     isAuthenticated && !detail ? { size: 20 } : null,
   )
-  const detailQuery = useCollectionQuery(enabledId)
-  const restaurantsQuery = useSavedRestaurantsInfiniteQuery(enabledId, {
-    sort,
-    category,
-    size: 20,
-  })
+  const detailQuery = useCollectionQuery(enabledId, publicView)
+  const restaurantsQuery = useSavedRestaurantsInfiniteQuery(
+    enabledId,
+    { sort, category, size: 20 },
+    publicView,
+  )
   const listQuery = detail ? restaurantsQuery : collectionsQuery
-  const collection = detailQuery.data
-    ? mapCollectionDetail(detailQuery.data)
-    : undefined
+  const accessLost =
+    checkIsNotFoundError(detailQuery.error) ||
+    checkIsNotFoundError(restaurantsQuery.error)
+  const collection =
+    !accessLost && detailQuery.data
+      ? mapCollectionDetail(detailQuery.data)
+      : undefined
   const collections = (collectionsQuery.data?.pages ?? []).flatMap((page) =>
     (page.collections ?? []).map(mapCollectionSummary),
   )
@@ -117,7 +123,9 @@ export const SavedQueryPage = ({
   const isPending = listQuery.isPending || (detail && detailQuery.isPending)
   const error = (detail ? detailQuery.error : null) ?? listQuery.error
   const hasContent =
-    listQuery.data !== undefined && (!detail || collection !== undefined)
+    !accessLost &&
+    listQuery.data !== undefined &&
+    (!detail || collection !== undefined)
   // 분류별 전체 개수는 정책 확정 전까지 추측하거나 로드된 항목 수로 대체하지 않는다.
   const count = detail
     ? category === 'all'
@@ -139,7 +147,11 @@ export const SavedQueryPage = ({
     [scrollRef],
   )
   const loadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
-    enabled: isAuthenticated && hasContent && listQuery.hasNextPage && !error,
+    enabled:
+      (detail || isAuthenticated) &&
+      hasContent &&
+      listQuery.hasNextPage &&
+      !error,
     isLoading: listQuery.isFetching,
     root: scrollRoot,
     onIntersect: () => {
@@ -178,7 +190,7 @@ export const SavedQueryPage = ({
   )
 
   if (detail && !validId) return <Navigate to={ROUTES.saved} replace />
-  if (!isAuthenticated) return null
+  if (!detail && !isAuthenticated) return null
 
   return (
     <SavedPageLayout
@@ -191,7 +203,7 @@ export const SavedQueryPage = ({
       }}
       onCreate={onCreate}
       headerActions={
-        collection?.owner === true
+        isAuthenticated && collection?.owner === true
           ? renderDetailActions?.(collection)
           : undefined
       }
@@ -240,7 +252,7 @@ export const SavedQueryPage = ({
                   restaurant={restaurant}
                   onSelect={selectRestaurant}
                   moreAction={
-                    collection?.owner === true
+                    isAuthenticated && collection?.owner === true
                       ? (renderRestaurantActions?.(restaurant, collection) ??
                         false)
                       : false
