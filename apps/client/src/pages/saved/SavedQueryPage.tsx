@@ -126,11 +126,9 @@ export const SavedQueryPage = ({
     !accessLost &&
     listQuery.data !== undefined &&
     (!detail || collection !== undefined)
-  // 분류별 전체 개수는 정책 확정 전까지 추측하거나 로드된 항목 수로 대체하지 않는다.
+  // 전체·분류별 모두 서버의 전체 결과 수를 사용하며 로드된 항목 수로 대체하지 않는다.
   const count = detail
-    ? category === 'all'
-      ? collection?.savedCount
-      : undefined
+    ? restaurantsQuery.data?.pages[0]?.totalCount
     : collectionsQuery.data?.pages[0]?.totalCount
 
   const { scrollRef, capture } = useListReturnRestoration({
