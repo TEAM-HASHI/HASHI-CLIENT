@@ -1,3 +1,7 @@
+import { getAuthSessionVersion } from '@/shared/auth/authSession'
+import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+import { runWithCollectionSession } from '@/pages/saved/utils/collectionSession'
+
 import { infiniteQueryOptions, useInfiniteQuery } from '@tanstack/react-query'
 
 import { getSavedRestaurants } from '@/pages/saved/api/getSavedRestaurants'
@@ -10,18 +14,26 @@ export const savedRestaurantsInfiniteQueryOptions = (
   collectionId: number | null,
   filters: SavedRestaurantQueryFiltersTypes | null = {},
   publicView = false,
+  sessionVersion = getAuthSessionVersion(),
 ) => {
   const params =
     filters === null ? null : getSavedRestaurantRequestParams(filters)
   return infiniteQueryOptions({
-    queryKey: collectionQueryKeys.restaurants(collectionId, params, publicView),
+    queryKey: collectionQueryKeys.restaurants(
+      collectionId,
+      params,
+      publicView,
+      sessionVersion,
+    ),
     queryFn: ({ pageParam, signal }) => {
       if (!isValidCollectionId(collectionId) || params === null)
         throw new Error('A valid collectionId and enabled filters are required')
-      return getSavedRestaurants(
-        collectionId,
-        { ...params, ...(pageParam !== null && { cursor: pageParam }) },
-        signal,
+      return runWithCollectionSession(sessionVersion, () =>
+        getSavedRestaurants(
+          collectionId,
+          { ...params, ...(pageParam !== null && { cursor: pageParam }) },
+          signal,
+        ),
       )
     },
     initialPageParam: null as string | null,
@@ -37,7 +49,14 @@ export const useSavedRestaurantsInfiniteQuery = (
   collectionId: number | null,
   filters: SavedRestaurantQueryFiltersTypes | null = {},
   publicView = false,
-) =>
-  useInfiniteQuery(
-    savedRestaurantsInfiniteQueryOptions(collectionId, filters, publicView),
+) => {
+  const sessionVersion = useCollectionSessionVersion()
+  return useInfiniteQuery(
+    savedRestaurantsInfiniteQueryOptions(
+      collectionId,
+      filters,
+      publicView,
+      sessionVersion,
+    ),
   )
+}

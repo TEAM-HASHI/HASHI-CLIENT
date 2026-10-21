@@ -1,6 +1,9 @@
+import { getAuthSessionVersion } from '@/shared/auth/authSession'
+import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
-import { useState, type ComponentProps } from 'react'
+import { useRef, useState, type ComponentProps } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -73,6 +76,8 @@ const getChangedFields = (
 
 /** 제품 라우트 전환은 관리 API 화면과 함께 진행한다. */
 export const CollectionFormQueryPage = () => {
+  const sessionVersion = useCollectionSessionVersion()
+  const initialSessionVersion = useRef(sessionVersion)
   const { collectionId } = useParams<{ collectionId: string }>()
   const { isAuthenticated } = useAuthStatus()
   const editing = collectionId !== undefined
@@ -85,7 +90,9 @@ export const CollectionFormQueryPage = () => {
     isAuthenticated && validId ? numericId : null,
   )
   const collection = getEditableCollection(query.data)
-  const handleClose = useCollectionFormClose()
+  const handleClose = useCollectionFormClose(
+    initialSessionVersion.current === sessionVersion,
+  )
   if (editing && !validId) return <Navigate to={ROUTES.saved} replace />
   if (!isAuthenticated) return null
   if (editing && !collection) {
@@ -130,22 +137,29 @@ export const CollectionFormQueryPage = () => {
   }
 
   return (
-    <CollectionApiForm key={collectionId ?? 'new'} collection={collection} />
+    <CollectionApiForm
+      key={`${collectionId ?? 'new'}:${sessionVersion}`}
+      collection={collection}
+      onClose={handleClose}
+    />
   )
 }
 
 const CollectionApiForm = ({
   collection: initialCollection,
+  onClose,
 }: {
+  onClose: () => void
   collection?: FormCollection
 }) => {
+  const sessionVersion = useCollectionSessionVersion()
   // 백그라운드 상세 갱신이 입력 중인 폼과 PATCH 비교 기준을 바꾸지 않는다.
   const [collection] = useState(initialCollection)
   const navigate = useNavigate()
   // 폼이 오류를 인라인으로 안내한다. 공통 토스트는 중복 표시하지 않고 진단 기록은 유지한다.
   const create = useCreateCollectionMutation(captureError)
   const update = useUpdateCollectionMutation(captureError)
-  const handleClose = useCollectionFormClose()
+  const handleClose = onClose
 
   return (
     <CollectionForm
@@ -153,7 +167,9 @@ const CollectionApiForm = ({
       collections={[]}
       onClose={handleClose}
       onDiscard={() => navigate(ROUTES.saved, { replace: true })}
-      onSubmitSuccess={handleClose}
+      onSubmitSuccess={() => {
+        if (sessionVersion === getAuthSessionVersion()) handleClose()
+      }}
       onSubmit={async (draft) => {
         if (collection) {
           await update.mutateAsync({
@@ -174,10 +190,10 @@ const CollectionApiForm = ({
   )
 }
 
-const useCollectionFormClose = () => {
+const useCollectionFormClose = (allowRestore: boolean) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const returnTo = getCollectionReturn(location.state)
+  const returnTo = getCollectionReturn(allowRestore ? location.state : null)
   const handleClose = () => {
     if (returnTo.key) navigate(-1)
     else

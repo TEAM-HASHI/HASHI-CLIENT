@@ -1,3 +1,5 @@
+import { collectionMutationOptions } from '@/pages/saved/mutations/collectionMutationOptions'
+
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { createCollection } from '@/pages/saved/api/createCollection'
@@ -10,36 +12,42 @@ export const useCreateCollectionMutation = (
   onError?: (error: Error) => void,
 ) => {
   const queryClient = useQueryClient()
-  return useMutation({
-    ...(onError && { onError: (error: Error) => onError(error) }),
-    mutationFn: createCollection,
-    onSuccess: async (detail) => {
-      await synchronizeCollectionHeader(queryClient, detail)
-      await queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.lists(),
-      })
-    },
-  })
+  return useMutation(
+    collectionMutationOptions(
+      queryClient,
+      createCollection,
+      async (detail, _variables, sessionVersion) => {
+        await synchronizeCollectionHeader(queryClient, detail, sessionVersion)
+        await queryClient.invalidateQueries({
+          queryKey: collectionQueryKeys.lists(sessionVersion),
+        })
+      },
+      onError,
+    ),
+  )
 }
 
 export const useUpdateCollectionMutation = (
   onError?: (error: Error) => void,
 ) => {
   const queryClient = useQueryClient()
-  return useMutation({
-    ...(onError && { onError: (error: Error) => onError(error) }),
-    mutationFn: ({
-      collectionId,
-      body,
-    }: {
-      collectionId: number
-      body: UpdateCollectionBody
-    }) => updateCollection(collectionId, body),
-    onSuccess: async (detail) => {
-      await synchronizeCollectionHeader(queryClient, detail)
-      await queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.lists(),
-      })
-    },
-  })
+  return useMutation(
+    collectionMutationOptions(
+      queryClient,
+      ({
+        collectionId,
+        body,
+      }: {
+        collectionId: number
+        body: UpdateCollectionBody
+      }) => updateCollection(collectionId, body),
+      async (detail, _variables, sessionVersion) => {
+        await synchronizeCollectionHeader(queryClient, detail, sessionVersion)
+        await queryClient.invalidateQueries({
+          queryKey: collectionQueryKeys.lists(sessionVersion),
+        })
+      },
+      onError,
+    ),
+  )
 }
