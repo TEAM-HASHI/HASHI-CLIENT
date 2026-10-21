@@ -6,6 +6,7 @@ import { ROUTES } from '@/app/router/path'
 import AsyncBoundary from '@/app/providers/AsyncBoundary'
 import { AuthSessionRestoreGate } from '@/app/providers/AuthSessionRestoreGate'
 import { trackPageView } from '@/shared/lib/analytics'
+import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
 
 export const RootLayout = () => {
   const { hash = '', pathname, search = '' } = useLocation()
@@ -36,7 +37,9 @@ export const RootLayout = () => {
       <main className="app-mobile-frame min-h-dvh bg-white">
         <AsyncBoundary resetKeys={[routeResetKey]}>
           <AuthSessionRestoreGate pathname={pathname}>
-            <Outlet />
+            <CollectionDataProvider>
+              <Outlet />
+            </CollectionDataProvider>
           </AuthSessionRestoreGate>
         </AsyncBoundary>
       </main>

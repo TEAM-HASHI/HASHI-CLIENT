@@ -6,14 +6,14 @@ import {
   type UpdateMagazineBody,
 } from '@/shared/api/magazineApi'
 
-const useInvalidateMagazineLists = () => {
+const useInvalidateMagazineQueries = () => {
   const queryClient = useQueryClient()
   return () =>
-    queryClient.invalidateQueries({ queryKey: magazineQueryKeys.lists() })
+    queryClient.invalidateQueries({ queryKey: magazineQueryKeys.all })
 }
 
 export const useCreateMagazineMutation = () => {
-  const invalidate = useInvalidateMagazineLists()
+  const invalidate = useInvalidateMagazineQueries()
   return useMutation({
     mutationFn: (input: CreateMagazineBody) =>
       magazineApi.createMagazine(input),
@@ -22,7 +22,7 @@ export const useCreateMagazineMutation = () => {
 }
 
 export const useUpdateMagazineMutation = () => {
-  const invalidate = useInvalidateMagazineLists()
+  const invalidate = useInvalidateMagazineQueries()
   return useMutation({
     mutationFn: ({
       magazineId,
@@ -36,7 +36,7 @@ export const useUpdateMagazineMutation = () => {
 }
 
 export const useDeleteMagazineMutation = () => {
-  const invalidate = useInvalidateMagazineLists()
+  const invalidate = useInvalidateMagazineQueries()
   return useMutation({
     mutationFn: magazineApi.deleteMagazine,
     onSuccess: invalidate,

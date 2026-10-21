@@ -37,9 +37,9 @@ export const REVIEW_KEYWORDS: ReviewKeywordOption[] = [
     Icon: LeafIcon,
   },
   {
-    id: 'traditionalAtmosphere',
-    code: 'TRADITIONAL_ATMOSPHERE',
-    label: '전통적이에요',
+    id: 'soloDining',
+    code: 'GOOD_FOR_SOLO_DINING',
+    label: '혼밥하기 좋아요',
     Icon: SoloIcon,
   },
   {

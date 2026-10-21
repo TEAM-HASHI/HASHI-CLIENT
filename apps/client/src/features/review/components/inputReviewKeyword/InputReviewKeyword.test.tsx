@@ -53,7 +53,7 @@ describe('InputReviewKeyword', () => {
       screen.getByRole('button', { name: '향신료가 강하지 않아요' }),
     ).toHaveAttribute('aria-pressed', 'false')
     expect(
-      screen.getByRole('button', { name: '전통적이에요' }),
+      screen.getByRole('button', { name: '혼밥하기 좋아요' }),
     ).toHaveAttribute('aria-pressed', 'false')
     expect(
       screen.getByRole('button', { name: '직원분이 친절해요' }),
@@ -92,6 +92,23 @@ describe('InputReviewKeyword', () => {
     expect(
       screen.getByRole('button', { name: '직원분이 친절해요' }),
     ).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('renders the solo dining icon and toggles the replacement keyword', () => {
+    const handleSelectedKeywordIdsChange = vi.fn()
+    render(
+      <InputReviewKeyword
+        onSelectedKeywordIdsChange={handleSelectedKeywordIdsChange}
+      />,
+    )
+    const keyword = screen.getByRole('button', { name: '혼밥하기 좋아요' })
+
+    expect(keyword.querySelector('svg')).not.toBeNull()
+    expect(
+      screen.queryByRole('button', { name: '전통적이에요' }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(keyword)
+    expect(handleSelectedKeywordIdsChange).toHaveBeenCalledWith(['soloDining'])
   })
 
   it('adds an unselected keyword when fewer than three keywords are selected', () => {
