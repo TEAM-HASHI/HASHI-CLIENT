@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import {
+  generatePath,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { useDeleteReviewMutation } from '@/features/review/mutations/useDeleteReviewMutation'
@@ -49,8 +54,6 @@ export const useReviewDetailPage = () => {
     [reviewDetailQuery.data],
   )
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isEditComingSoonDialogOpen, setIsEditComingSoonDialogOpen] =
-    useState(false)
 
   const handleBackClick = () => {
     navigate(returnTo ?? WRITTEN_REVIEWS_LOCATION)
@@ -79,11 +82,15 @@ export const useReviewDetailPage = () => {
   }
 
   const handleEditClick = () => {
-    setIsEditComingSoonDialogOpen(true)
-  }
+    if (validReviewId === null) {
+      return
+    }
 
-  const handleEditComingSoonDialogOpenChange = (open: boolean) => {
-    setIsEditComingSoonDialogOpen(open)
+    navigate(
+      generatePath(ROUTES.reviewEdit, {
+        reviewId: String(validReviewId),
+      }),
+    )
   }
 
   const handleRetryClick = () => {
@@ -94,7 +101,6 @@ export const useReviewDetailPage = () => {
     isError: validReviewId === null || reviewDetailQuery.isError,
     isDeleteDialogOpen,
     isDeletePending: deleteReviewMutation.isPending,
-    isEditComingSoonDialogOpen,
     isInvalidReviewId: validReviewId === null,
     isPending: validReviewId !== null && reviewDetailQuery.isPending,
     reviewDetail,
@@ -103,7 +109,6 @@ export const useReviewDetailPage = () => {
     handleDeleteClick,
     handleDeleteDialogOpenChange,
     handleEditClick,
-    handleEditComingSoonDialogOpenChange,
     handleRetryClick,
   }
 }

@@ -151,9 +151,9 @@ export const useMyReviewsPage = () => {
     handleCloseReviewMenu,
     handleDeleteReview,
     handleNavigateToReviewDetail,
+    handleNavigateToReviewEdit,
     handleNavigateToReviewNew,
     handleNavigateToTodayRestaurant,
-    handleNavigateToReviewEdit,
     handleRetry,
     handleToggleReviewMenu,
   }
