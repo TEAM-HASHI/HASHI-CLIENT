@@ -28,7 +28,6 @@ export const CollectionPanelList = ({
           컬렉션{' '}
           <span className="font-semibold">{data.collections.length}</span>개
         </h2>
-        <span className="typo-body-6 text-cool-gray-600">최신순</span>
       </div>
       <div className="px-5">
         <button
