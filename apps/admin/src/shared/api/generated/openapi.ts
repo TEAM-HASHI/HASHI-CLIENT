@@ -711,8 +711,9 @@ export interface components {
         | 'MAGAZINE_THUMBNAIL'
         | 'MAGAZINE_CARD_NEWS'
         | 'NOTICE_DETAIL'
+        | 'PHOTO_DETAIL'
       /** @enum {string} */
-      status?: 'PROCESSING' | 'READY' | 'FAILED'
+      status?: 'PROCESSING' | 'READY' | 'FAILED' | 'UNAVAILABLE'
       defaultSource?: components['schemas']['Source']
       sourceSets?: components['schemas']['SourceSet'][]
     }
