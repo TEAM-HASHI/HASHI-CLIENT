@@ -1,5 +1,5 @@
 import { LinkIcon } from '@hashi/hds-icons'
-import { Button, IconButton, showToast, toastQueue } from '@hashi/hds-ui'
+import { Button, showToast, toastQueue } from '@hashi/hds-ui'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
@@ -73,7 +73,6 @@ const SavedApiScreen = () => {
       : null)
   const mounted = useRef(true)
   const copying = useRef(false)
-  const [isCopying, setIsCopying] = useState(false)
   useEffect(() => {
     mounted.current = true
     return () => {
@@ -83,7 +82,6 @@ const SavedApiScreen = () => {
   const copyCollectionLink = async (id: string) => {
     if (copying.current) return
     copying.current = true
-    setIsCopying(true)
     let copied = false
     try {
       copied = await copyUrlToClipboard(getCollectionDetailPath(id))
@@ -91,7 +89,6 @@ const SavedApiScreen = () => {
       // Clipboard support/permission failures do not undo a successful publish.
     } finally {
       copying.current = false
-      if (mounted.current) setIsCopying(false)
     }
     if (!mounted.current) return
     toastQueue.clear()
@@ -163,7 +160,6 @@ const SavedApiScreen = () => {
         renderCollectionActions={(collection) => (
           <CollectionEditMenu
             name={collection.name ?? ''}
-            context="panel"
             onShare={
               collection.isPublic === undefined
                 ? undefined
@@ -180,30 +176,23 @@ const SavedApiScreen = () => {
           />
         )}
         renderDetailActions={(collection) => (
-          <>
-            {collection.isPublic !== undefined && (
-              <IconButton
-                size="xs"
-                aria-label="컬렉션 공유"
-                disabled={isCopying}
-                onClick={() => share(collection)}
-              >
-                <LinkIcon className="size-6" />
-              </IconButton>
-            )}
-            <CollectionActionMenu
-              label="컬렉션 더보기"
-              onManage={() =>
-                navigate(
-                  `${getCollectionRestaurantEditPath(collection.id)}?${new URLSearchParams({ sort, category })}`,
-                  { state: { collectionEditorReturnKey: location.key } },
-                )
-              }
-              onDelete={() =>
-                setManagement({ collectionId: collection.id, type: 'delete' })
-              }
-            />
-          </>
+          <CollectionActionMenu
+            label="컬렉션 더보기"
+            onShare={
+              collection.isPublic === undefined
+                ? undefined
+                : () => share(collection)
+            }
+            onManage={() =>
+              navigate(
+                `${getCollectionRestaurantEditPath(collection.id)}?${new URLSearchParams({ sort, category })}`,
+                { state: { collectionEditorReturnKey: location.key } },
+              )
+            }
+            onDelete={() =>
+              setManagement({ collectionId: collection.id, type: 'delete' })
+            }
+          />
         )}
         renderRestaurantActions={(restaurant, collection) => (
           <CollectionActionMenu

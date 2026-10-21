@@ -183,7 +183,16 @@ describe('appRoutes', () => {
       '/saved/collections/8?sort=rating&category=cafe',
     )
     const user = userEvent.setup()
-    await user.click(await screen.findByRole('button', { name: '컬렉션 공유' }))
+    expect(
+      screen.queryByRole('button', { name: '컬렉션 공유' }),
+    ).not.toBeInTheDocument()
+    await user.click(
+      await screen.findByRole('button', { name: '컬렉션 더보기' }),
+    )
+    expect(
+      screen.getAllByRole('menuitem').map((item) => item.textContent),
+    ).toEqual(['편집하기', '공유하기', '삭제하기'])
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
     await waitFor(() =>
       expect(copyUrlToClipboard).toHaveBeenCalledWith('/saved/collections/8'),
     )
@@ -210,9 +219,12 @@ describe('appRoutes', () => {
     )
     const { router } = await renderRoute('/saved/collections/8')
     const user = userEvent.setup()
-    const share = await screen.findByRole('button', { name: '컬렉션 공유' })
-    await user.dblClick(share)
-    expect(share).toBeDisabled()
+    await user.click(
+      await screen.findByRole('button', { name: '컬렉션 더보기' }),
+    )
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
+    await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
     expect(copyUrlToClipboard).toHaveBeenCalledTimes(1)
     await act(async () => {
       await router.navigate('/saved')
@@ -251,7 +263,10 @@ describe('appRoutes', () => {
       await user.click(
         await screen.findByRole('button', { name: 'API 여행 더보기' }),
       )
-      await user.click(screen.getByRole('menuitem', { name: '링크 복사' }))
+      expect(
+        screen.getAllByRole('menuitem').map((item) => item.textContent),
+      ).toEqual(['수정하기', '공유하기', '삭제하기'])
+      await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
     }
     await openShare()
     await user.click(await screen.findByRole('button', { name: '취소하기' }))

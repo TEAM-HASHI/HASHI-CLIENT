@@ -528,7 +528,6 @@ Figma 파일은 `UHaom01PvoRx2wRCYa1kS1`이다.
 
 - 최종 lint·E2E 타입·diff 검사와 client 프로덕션 빌드(TypeScript/PWA generateSW 포함)를 검증 복사본에서 통과했다. 변경된 7개 파일의 바이트 동일성을 원본과 비교한다. 검증 당시 원본의 `.git/HEAD`도 dataless 상태로 Git 조회가 지연되었다. 후속 점검에서 Git 내부 오프라인 파일을 다운로드하여 원본의 status·diff·diff --check 및 객체 연결성 검사를 통과했다. Git 객체 삭제·교체나 이력 변경은 하지 않았다.
 
-
 ### 2026-10-21 확정된 입력·선택 정책
 
 최신 HASHI-PLAN f11be8f와 사용자 회신으로 전체 선택은 이미 불러온 식당만 포함한다.
