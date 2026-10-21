@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { useMyPointBalanceQuery } from '@/features/point'
 import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
 import { useMyProfileSummaryQuery } from '@/features/user'
@@ -11,15 +12,11 @@ import {
 } from '@/pages/mypage/constants/mypageMenu'
 import type { MypageMenuAction, MypageSummary } from '@/pages/mypage/types'
 
-const DEFAULT_MYPAGE_SUMMARY: MypageSummary = {
-  nickname: '하시',
-  profileImageUrl: null,
-  availablePoint: 0,
-  myReviewCount: 0,
-}
-
 export const useMypagePage = () => {
   const navigate = useNavigate()
+  const logoutMutation = useLogoutMutation(() => {
+    navigate(ROUTES.loginRequired, { replace: true })
+  })
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
   const myReviewCountQuery = useMyReviewCountQuery()
   const pointBalanceQuery = useMyPointBalanceQuery()
@@ -38,12 +35,9 @@ export const useMypagePage = () => {
     pointBalanceQuery.isPending ||
     myReviewCountQuery.isPending
 
-  const summary = {
-    nickname:
-      profileSummaryQuery.data?.nickname ?? DEFAULT_MYPAGE_SUMMARY.nickname,
-    profileImageUrl:
-      profileSummaryQuery.data?.profileImageUrl ??
-      DEFAULT_MYPAGE_SUMMARY.profileImageUrl,
+  const summary: MypageSummary = {
+    nickname: profileSummaryQuery.data?.nickname ?? '하시',
+    profileImageUrl: profileSummaryQuery.data?.profileImageUrl ?? null,
     availablePoint: pointBalanceQuery.data?.availablePoint ?? 0,
     myReviewCount: myReviewCountQuery.data?.myReviewCount ?? 0,
   }
@@ -56,6 +50,12 @@ export const useMypagePage = () => {
   }
 
   const handleMenuAction = (action: MypageMenuAction) => {
+    if (action.type === 'logout') {
+      if (!logoutMutation.isPending) {
+        logoutMutation.mutate()
+      }
+      return
+    }
     if (action.type === 'comingSoon') {
       setIsComingSoonOpen(true)
       return
@@ -68,6 +68,7 @@ export const useMypagePage = () => {
   }
 
   return {
+    isLoggingOut: logoutMutation.isPending,
     isComingSoonOpen,
     isLoading,
     menuSections: mypageMenuSections,

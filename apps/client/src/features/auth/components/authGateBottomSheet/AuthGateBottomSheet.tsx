@@ -2,6 +2,7 @@ import { BottomSheet } from '@hashi/hds-ui'
 
 import loginImage from '@/shared/assets/images/login.webp'
 import { KakaoStartButton } from '@/shared/components/kakaoStartButton'
+import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 
 type AuthGateBottomSheetProps = {
   open: boolean
@@ -14,11 +15,12 @@ export const AuthGateBottomSheet = ({
   onOpenChange,
   onKakaoPress,
 }: AuthGateBottomSheetProps) => {
+  const { isAuthenticated } = useAuthStatus()
   return (
     <BottomSheet
       aria-label="로그인 안내"
       className="rounded-t-[20px]"
-      open={open}
+      open={open && !isAuthenticated}
       onOpenChange={onOpenChange}
       showCloseButton={false}
       showHandle={false}

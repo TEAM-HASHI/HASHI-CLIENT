@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { StrictMode } from 'react'
-import { cleanup, render, waitFor } from '@testing-library/react'
+import { act, cleanup, render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
@@ -8,7 +8,8 @@ import { getAuthMe } from '@/features/auth/api/getAuthMe'
 import { requestKakaoLogin } from '@/features/auth/api/kakaoLogin'
 import {
   clearAuthSession,
-  setAccessToken,
+  getAccessToken,
+  startAuthenticatedSession,
   setOnboardingSession,
 } from '@/shared/auth/authSession'
 import { consumeKakaoOAuthState } from '@/features/auth/utils/kakaoOAuth'
@@ -41,11 +42,17 @@ vi.mock('@/features/auth/api/kakaoLogin', () => ({
   requestKakaoLogin: vi.fn(),
 }))
 
-vi.mock('@/shared/auth/authSession', () => ({
-  clearAuthSession: vi.fn(),
-  setAccessToken: vi.fn(),
-  setOnboardingSession: vi.fn(),
-}))
+vi.mock('@/shared/auth/authSession', async () => {
+  const actual = await vi.importActual<
+    typeof import('@/shared/auth/authSession')
+  >('@/shared/auth/authSession')
+  return {
+    ...actual,
+    clearAuthSession: vi.fn(actual.clearAuthSession),
+    startAuthenticatedSession: vi.fn(actual.startAuthenticatedSession),
+    setOnboardingSession: vi.fn(actual.setOnboardingSession),
+  }
+})
 
 vi.mock('@/features/auth/utils/kakaoOAuth', () => ({
   consumeKakaoOAuthState: vi.fn(),
@@ -55,11 +62,13 @@ const mockedConsumeKakaoOAuthState = vi.mocked(consumeKakaoOAuthState)
 const mockedRequestKakaoLogin = vi.mocked(requestKakaoLogin)
 const mockedGetAuthMe = vi.mocked(getAuthMe)
 const mockedClearAuthSession = vi.mocked(clearAuthSession)
-const mockedSetAccessToken = vi.mocked(setAccessToken)
+const mockedSetAccessToken = vi.mocked(startAuthenticatedSession)
 const mockedSetOnboardingSession = vi.mocked(setOnboardingSession)
 
 describe('KakaoOAuthCallbackPage', () => {
   beforeEach(() => {
+    clearAuthSession()
+    vi.clearAllMocks()
     mockSearch.value = '?code=kakao-code&state=state-123'
     mockedConsumeKakaoOAuthState.mockReturnValue({
       state: 'state-123',
@@ -78,6 +87,7 @@ describe('KakaoOAuthCallbackPage', () => {
 
   afterEach(() => {
     cleanup()
+    clearAuthSession()
     vi.clearAllMocks()
   })
 
@@ -111,7 +121,7 @@ describe('KakaoOAuthCallbackPage', () => {
     render(<KakaoOAuthCallbackPage />)
 
     await waitFor(() => {
-      expect(mockedSetAccessToken).toHaveBeenCalledWith('access-token')
+      expect(mockedSetAccessToken).toHaveBeenCalledWith('access-token', 1)
     })
     expect(mockedRequestKakaoLogin).toHaveBeenCalledWith('kakao-code')
     expect(mockedGetAuthMe).toHaveBeenCalledWith('access-token')
@@ -184,7 +194,75 @@ describe('KakaoOAuthCallbackPage', () => {
     )
 
     await waitFor(() => {
-      expect(mockedRequestKakaoLogin).toHaveBeenCalledTimes(1)
+      expect(mockedSetAccessToken).toHaveBeenCalledWith('access-token', 1)
     })
+    expect(mockedRequestKakaoLogin).toHaveBeenCalledTimes(1)
   })
+
+  it.each(['member', 'onboarding', 'failure'] as const)(
+    'ignores a late %s login response after leaving the callback page',
+    async (outcome) => {
+      let resolveLogin!: (
+        value: Awaited<ReturnType<typeof requestKakaoLogin>>,
+      ) => void
+      let rejectLogin!: (cause: Error) => void
+      mockedRequestKakaoLogin.mockImplementationOnce(
+        () =>
+          new Promise((resolve, reject) => {
+            resolveLogin = resolve
+            rejectLogin = reject
+          }),
+      )
+      const { unmount } = render(<KakaoOAuthCallbackPage />)
+      unmount()
+      await act(async () => {
+        if (outcome === 'failure') rejectLogin(new Error('late failure'))
+        else
+          resolveLogin({
+            registered: outcome === 'member',
+            accessToken: 'late-token',
+          })
+      })
+      expect(mockedSetAccessToken).not.toHaveBeenCalled()
+      expect(mockedSetOnboardingSession).not.toHaveBeenCalled()
+      expect(mockedClearAuthSession).not.toHaveBeenCalled()
+      expect(mockNavigate).not.toHaveBeenCalled()
+    },
+  )
+
+  it.each([
+    ['login', 'success'],
+    ['login', 'failure'],
+    ['logout', 'success'],
+    ['logout', 'failure'],
+  ] as const)(
+    'ignores a late auth check %s/%s after the session changes',
+    async (sessionChange, outcome) => {
+      let resolveAuth!: (value: Awaited<ReturnType<typeof getAuthMe>>) => void
+      let rejectAuth!: (cause: Error) => void
+      mockedGetAuthMe.mockImplementationOnce(
+        () =>
+          new Promise((resolve, reject) => {
+            resolveAuth = resolve
+            rejectAuth = reject
+          }),
+      )
+      render(<KakaoOAuthCallbackPage />)
+      await waitFor(() => expect(mockedGetAuthMe).toHaveBeenCalledOnce())
+      if (sessionChange === 'login')
+        startAuthenticatedSession('new-session-token')
+      else clearAuthSession()
+      vi.clearAllMocks()
+      await act(async () => {
+        if (outcome === 'failure') rejectAuth(new Error('late failure'))
+        else resolveAuth({ role: 'USER', subjectId: 1 })
+      })
+      expect(getAccessToken()).toBe(
+        sessionChange === 'login' ? 'new-session-token' : undefined,
+      )
+      expect(mockedSetAccessToken).not.toHaveBeenCalled()
+      expect(mockedClearAuthSession).not.toHaveBeenCalled()
+      expect(mockNavigate).not.toHaveBeenCalled()
+    },
+  )
 })

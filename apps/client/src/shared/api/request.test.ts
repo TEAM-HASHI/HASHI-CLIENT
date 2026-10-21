@@ -9,6 +9,7 @@ import {
   clearAuthSession,
   getAccessToken,
   setAccessToken,
+  startAuthenticatedSession,
 } from '@/shared/auth/authSession'
 
 vi.mock('@/shared/api/apiClient', () => ({
@@ -21,6 +22,16 @@ vi.mock('@/shared/api/requestTokenReissue', () => ({
 
 const mockedApiClient = vi.mocked(apiClient)
 const mockedRequestTokenReissue = vi.mocked(requestTokenReissue)
+
+const createDeferred = <T>() => {
+  let resolve!: (value: T) => void
+  let reject!: (reason: unknown) => void
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+  return { promise, resolve, reject }
+}
 
 const createHttpResponse = ({
   ok,
@@ -345,6 +356,101 @@ describe('request', () => {
     )
   })
 
+  it('does not restore a session when token reissue completes after logout', async () => {
+    setAccessToken('expired-access-token')
+    let resolveReissue!: (value: { accessToken: string }) => void
+    mockedRequestTokenReissue.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveReissue = resolve
+        }),
+    )
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: false,
+        status: 401,
+        body: {
+          success: false,
+          code: 'COMMON-401',
+          message: '인증 필요',
+          data: null,
+          timestamp: '2026-10-05',
+          path: '/api/v1/users/me',
+        },
+      }) as never,
+    )
+    const pending = request('api/v1/users/me')
+    const rejection = expect(pending).rejects.toMatchObject({ status: 401 })
+    await vi.waitFor(() =>
+      expect(mockedRequestTokenReissue).toHaveBeenCalledOnce(),
+    )
+    clearAuthSession()
+    resolveReissue({ accessToken: 'late-access-token' })
+    await rejection
+    expect(getAccessToken()).toBeUndefined()
+    expect(mockedApiClient).toHaveBeenCalledOnce()
+  })
+
+  it('isolates pending token reissues when a new login completes without logout', async () => {
+    const resolvers: ((value: { accessToken: string }) => void)[] = []
+    mockedRequestTokenReissue.mockImplementation(
+      () => new Promise((resolve) => resolvers.push(resolve)),
+    )
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: false,
+        status: 401,
+        body: {
+          success: false,
+          code: 'COMMON-401',
+          message: '인증 필요',
+          data: null,
+          timestamp: '2026-10-12',
+          path: '/api/v1/users/me',
+        },
+      }) as never,
+    )
+    setAccessToken('old-session')
+    const oldRequest = request('api/v1/users/me')
+    const oldRejection = expect(oldRequest).rejects.toMatchObject({
+      status: 401,
+    })
+    await vi.waitFor(() => expect(resolvers).toHaveLength(1))
+
+    startAuthenticatedSession('new-session')
+    const newRequest = request('api/v1/users/me')
+    const newResult = expect(newRequest).resolves.toEqual({ id: 2 })
+    await vi.waitFor(() => expect(resolvers).toHaveLength(2))
+    resolvers[0]({ accessToken: 'old-refreshed-token' })
+    await oldRejection
+    expect(getAccessToken()).toBe('new-session')
+
+    const concurrentRequest = request('api/v1/users/me')
+    const concurrentResult = expect(concurrentRequest).resolves.toEqual({
+      id: 2,
+    })
+    await vi.waitFor(() => expect(mockedApiClient).toHaveBeenCalledTimes(3))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(resolvers).toHaveLength(2)
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: true,
+        status: 200,
+        body: {
+          success: true,
+          code: 'SUCCESS',
+          message: 'ok',
+          data: { id: 2 },
+        },
+      }) as never,
+    )
+    resolvers[1]({ accessToken: 'new-refreshed-token' })
+    await newResult
+    await concurrentResult
+    expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(2)
+    expect(getAccessToken()).toBe('new-refreshed-token')
+  })
+
   it('reissues token on auth 401 and retries the original request once', async () => {
     mockedApiClient
       .mockResolvedValueOnce(
@@ -438,9 +544,7 @@ describe('request', () => {
         },
       }) as never,
     )
-    mockedRequestTokenReissue.mockRejectedValue(
-      new Error('Refresh token expired.'),
-    )
+    mockedRequestTokenReissue.mockRejectedValue(new HttpStatusError(401))
 
     await expect(request('restaurants/me')).rejects.toMatchObject({
       name: 'ApiError',
@@ -449,6 +553,44 @@ describe('request', () => {
 
     expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
     expect(getAccessToken()).toBeUndefined()
+  })
+
+  it('preserves the session when reissue fails temporarily', async () => {
+    setAccessToken('existing-token')
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: false,
+        status: 401,
+        body: {
+          success: false,
+          code: 'AUTH-002',
+          message: '만료',
+          data: null,
+          timestamp: '2026-10-12',
+          path: '/api/v1/users/me',
+        },
+      }) as never,
+    )
+    mockedRequestTokenReissue.mockRejectedValue(new HttpStatusError(503))
+    await expect(request('api/v1/users/me')).rejects.toMatchObject({
+      status: 503,
+    })
+    expect(getAccessToken()).toBe('existing-token')
+  })
+
+  it('does not inject a development token into cookie-based auth checks', async () => {
+    vi.stubEnv('VITE_DEV_USER_ACCESS_TOKEN', 'development-token')
+    mockedApiClient.mockResolvedValue(
+      createHttpResponse({
+        ok: true,
+        status: 200,
+        body: { success: true, code: 'SUCCESS', message: 'ok', data: null },
+      }) as never,
+    )
+    await request('api/v1/auth/me', { credentials: 'include' })
+    expect(mockedApiClient).toHaveBeenCalledWith('api/v1/auth/me', {
+      credentials: 'include',
+    })
   })
 
   it('does not reissue for auth endpoints to avoid retry loops', async () => {
@@ -529,4 +671,48 @@ describe('request', () => {
     expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
     expect(mockedApiClient).toHaveBeenCalledTimes(4)
   })
+
+  it('does not start recovery for a 401 delivered after the originating session ended', async () => {
+    setAccessToken('account-a')
+    const response = createDeferred<Awaited<ReturnType<typeof apiClient>>>()
+    mockedApiClient.mockReturnValueOnce(response.promise as never)
+    mockedRequestTokenReissue.mockResolvedValue({ accessToken: 'stale-token' })
+    const pending = request('users/me').catch((error: unknown) => error)
+
+    clearAuthSession()
+    setAccessToken('account-b')
+    response.resolve(createHttpResponse({ ok: false, status: 401 }) as never)
+    const error = await pending
+
+    expect(mockedRequestTokenReissue).not.toHaveBeenCalled()
+    expect(mockedApiClient).toHaveBeenCalledTimes(1)
+    expect(getAccessToken()).toBe('account-b')
+    expect(error).toMatchObject({ status: 401 })
+  })
+
+  it.each(['success', 'failure'])(
+    'does not mutate a newer session or replay an old request after late refresh %s',
+    async (outcome) => {
+      setAccessToken('account-a')
+      const refresh = createDeferred<{ accessToken: string }>()
+      mockedRequestTokenReissue.mockReturnValueOnce(refresh.promise)
+      mockedApiClient.mockResolvedValue(
+        createHttpResponse({ ok: false, status: 401 }) as never,
+      )
+      const pending = request('users/me').catch((error: unknown) => error)
+      await vi.waitFor(() =>
+        expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1),
+      )
+
+      clearAuthSession()
+      setAccessToken('account-b')
+      if (outcome === 'success') refresh.resolve({ accessToken: 'stale-token' })
+      else refresh.reject(new Error('old refresh failed'))
+      const error = await pending
+
+      expect(getAccessToken()).toBe('account-b')
+      expect(mockedApiClient).toHaveBeenCalledTimes(1)
+      expect(error).toMatchObject({ status: 401 })
+    },
+  )
 })
