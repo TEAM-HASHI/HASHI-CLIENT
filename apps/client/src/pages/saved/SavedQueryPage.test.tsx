@@ -152,6 +152,7 @@ describe('컬렉션 서버 조회 화면', () => {
     )
     vi.mocked(getSavedRestaurants).mockResolvedValue({
       content: [{ restaurantId: 55, name: '스시', rating: 4.8 }],
+      totalCount: 12,
       hasNext: false,
     })
     const actions = vi.fn(() => <button>편집하기</button>)
@@ -170,6 +171,7 @@ describe('컬렉션 서버 조회 화면', () => {
       { sort: 'review', placeType: 'cafe', size: 20 },
       expect.any(AbortSignal),
     )
+    expect(screen.getByText('총 12곳')).toBeVisible()
     expect(screen.queryByText('총 1곳')).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: '컬렉션 더보기' }),
@@ -189,18 +191,23 @@ describe('컬렉션 서버 조회 화면', () => {
     vi.mocked(getSavedRestaurants)
       .mockResolvedValueOnce({
         content: [{ restaurantId: 55, name: '스시' }],
+        totalCount: 100,
         hasNext: false,
       })
       .mockResolvedValueOnce({
         content: [{ restaurantId: 56, name: '라떼' }],
+        totalCount: 12,
         hasNext: false,
       })
+      .mockResolvedValueOnce({ content: [], totalCount: 0, hasNext: false })
     const { user, router } = setup('/saved/collections/8')
     expect(await screen.findByRole('button', { name: '스시' })).toBeVisible()
     expect(screen.getByText('총 100곳')).toBeVisible()
     await user.click(screen.getByRole('button', { name: '분류 선택' }))
     await user.click(screen.getByRole('menuitemradio', { name: '카페' }))
     expect(await screen.findByRole('button', { name: '라떼' })).toBeVisible()
+    expect(screen.getByText('총 12곳')).toBeVisible()
+    expect(screen.queryByText('총 100곳')).not.toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: '스시' }),
     ).not.toBeInTheDocument()
@@ -210,6 +217,10 @@ describe('컬렉션 서버 조회 화면', () => {
       { sort: 'latest', placeType: 'cafe', size: 20 },
       expect.any(AbortSignal),
     )
+    await user.click(screen.getByRole('button', { name: '분류 선택' }))
+    await user.click(screen.getByRole('menuitemradio', { name: '주점' }))
+    expect(await screen.findByText('총 0곳')).toBeVisible()
+    expect(screen.queryByText('총 12곳')).not.toBeInTheDocument()
   })
 
   it('식당 상세에서 돌아오면 추가 페이지·정렬·분류와 내부 스크롤을 복원한다', async () => {
@@ -220,9 +231,14 @@ describe('컬렉션 서버 조회 화면', () => {
     })
     vi.mocked(getSavedRestaurants).mockImplementation(async (_id, params) =>
       params?.cursor
-        ? { content: [{ restaurantId: 56, name: '라떼' }], hasNext: false }
+        ? {
+            content: [{ restaurantId: 56, name: '라떼' }],
+            totalCount: 12,
+            hasNext: false,
+          }
         : {
             content: [{ restaurantId: 55, name: '커피' }],
+            totalCount: 12,
             hasNext: true,
             nextCursor: 'next',
           },
@@ -234,6 +250,7 @@ describe('컬렉션 서버 조회 화면', () => {
     await waitFor(() => expect(observers.size).toBeGreaterThan(0))
     await intersect()
     expect(await screen.findByRole('button', { name: '라떼' })).toBeVisible()
+    expect(screen.getByText('총 12곳')).toBeVisible()
     screen.getByRole('region', { name: '저장 식당 목록' }).scrollTop = 312
     await user.click(screen.getByRole('button', { name: '라떼' }))
     expect(await screen.findByText('식당 상세')).toBeVisible()

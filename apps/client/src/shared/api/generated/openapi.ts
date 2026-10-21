@@ -1751,8 +1751,8 @@ export interface components {
              */
             color: string;
             /**
-             * @description 설명(선택). 입력값은 공백을 포함해 최대 100자이며 앞뒤 공백은 제거하고 중간 공백은 유지합니다. 생략·null·빈 문자열·공백만 입력하면 설명 없이 저장합니다.
-             * @example 여행 가기 전에 저장해둔 맛집들 중에서 꼭 가보고 싶은 곳
+             * @description 설명(선택). 입력값은 공백을 포함해 최대 30자이며 앞뒤 공백은 제거하고 중간 공백은 유지합니다. 줄바꿈 문자는 입력할 수 없습니다. 생략·null·빈 문자열·공백만 입력하면 설명 없이 저장합니다.
+             * @example 여행 전 꼭 가보고 싶은 맛집 모음
              */
             description?: string;
             /**
@@ -2003,7 +2003,7 @@ export interface components {
              */
             color?: string;
             /**
-             * @description 설명(선택). 생략·null이면 유지하고 빈 문자열·공백만 입력하면 삭제합니다. 입력값은 공백을 포함해 최대 100자이며 앞뒤 공백은 제거하고 중간 공백은 유지합니다.
+             * @description 설명(선택). 생략·null이면 유지하고 빈 문자열·공백만 입력하면 삭제합니다. 입력값은 공백을 포함해 최대 30자이며 앞뒤 공백은 제거하고 중간 공백은 유지합니다. 줄바꿈 문자는 입력할 수 없습니다.
              * @example 도쿄여행 야호
              */
             description?: string;
@@ -3171,6 +3171,8 @@ export interface components {
          */
         SavedRestaurantListResponse: {
             content?: components["schemas"]["SavedRestaurantResponse"][];
+            /** Format: int64 */
+            totalCount?: number;
             nextCursor?: string;
             hasNext?: boolean;
         };
