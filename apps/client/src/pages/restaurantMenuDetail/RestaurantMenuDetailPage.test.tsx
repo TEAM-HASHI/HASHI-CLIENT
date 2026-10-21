@@ -165,7 +165,12 @@ const renderPage = () => {
 
 describe('RestaurantMenuDetailPage', () => {
   beforeEach(() => {
-    vi.mocked(getRestaurantPhotoDataSource).mockReturnValue(null)
+    vi.mocked(getRestaurantPhotoDataSource).mockReturnValue({
+      key: 'test',
+      source: {
+        getPage: vi.fn().mockRejectedValue(new Error('photos unavailable')),
+      },
+    })
     mockParams.menuId = '100'
     mockParams.restaurantId = '10'
     mockedGetRestaurantSummary.mockResolvedValue(restaurantSummary)
@@ -230,7 +235,7 @@ describe('RestaurantMenuDetailPage', () => {
     expect(getPage).toHaveBeenCalledTimes(1)
   })
 
-  it('does not invent a photo count when the source is unavailable', async () => {
+  it('does not invent a photo count when the photo request fails', async () => {
     renderPage()
 
     expect(await screen.findByRole('tab', { name: '사진' })).toBeInTheDocument()
@@ -433,7 +438,7 @@ describe('RestaurantMenuDetailPage', () => {
     fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
 
     expect(mockNavigate).toHaveBeenCalledWith('/restaurants/today', {
-      state: { activeTab: 'review' },
+      state: { activeTab: 'review', restaurantId: 10 },
     })
   })
 
@@ -445,7 +450,7 @@ describe('RestaurantMenuDetailPage', () => {
     fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
 
     expect(mockNavigate).toHaveBeenCalledWith('/restaurants/today', {
-      state: { activeTab: 'photo' },
+      state: { activeTab: 'photo', restaurantId: 10 },
     })
   })
 

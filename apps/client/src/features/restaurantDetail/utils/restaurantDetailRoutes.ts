@@ -6,6 +6,7 @@ export type RestaurantMenuDetailSource = 'today' | 'detail'
 
 export interface RestaurantDetailLocationState {
   activeTab?: RestaurantDetailTab
+  restaurantId?: number
 }
 
 export interface RestaurantMenuDetailLocationState {
@@ -15,18 +16,27 @@ export interface RestaurantMenuDetailLocationState {
 export const getRestaurantDetailTabState = (
   state: unknown,
 ): RestaurantDetailLocationState => {
-  if (typeof state !== 'object' || state === null || !('activeTab' in state)) {
+  if (typeof state !== 'object' || state === null) {
     return {}
   }
 
-  const activeTab = (state as RestaurantDetailLocationState).activeTab
-
-  return activeTab === 'info' ||
+  const { activeTab, restaurantId } = state as RestaurantDetailLocationState
+  const result: RestaurantDetailLocationState = {}
+  if (
+    activeTab === 'info' ||
     activeTab === 'menu' ||
     activeTab === 'photo' ||
     activeTab === 'review'
-    ? { activeTab }
-    : {}
+  )
+    result.activeTab = activeTab
+  if (
+    typeof restaurantId === 'number' &&
+    Number.isSafeInteger(restaurantId) &&
+    restaurantId > 0
+  ) {
+    result.restaurantId = restaurantId
+  }
+  return result
 }
 
 export const getRestaurantMenuDetailSourceState = (

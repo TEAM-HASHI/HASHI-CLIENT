@@ -17,6 +17,7 @@ vi.mock('@/features/restaurantDetail/api/restaurantPhotoSource', () => ({
 }))
 
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
+import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
 import { getRestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
@@ -31,7 +32,9 @@ const { mockStartKakaoOAuth } = vi.hoisted(() => ({
 }))
 const { mockLocationStore } = vi.hoisted(() => ({
   mockLocationStore: {
-    state: undefined as { activeTab?: string } | undefined,
+    state: undefined as
+      | { activeTab?: string; restaurantId?: number }
+      | undefined,
   },
 }))
 const { mockAuthStore } = vi.hoisted(() => ({
@@ -105,6 +108,9 @@ vi.mock(
     getRandomRestaurantRecommendation: vi.fn(),
   }),
 )
+vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
+  getRestaurantSummary: vi.fn(),
+}))
 vi.mock(
   '@/features/restaurantDetail/api/getRestaurantStoreInformation',
   () => ({
@@ -243,8 +249,27 @@ const renderTodayRestaurantPage = () => {
 }
 
 describe('TodayRestaurantPage', () => {
+  it('restores the menu restaurant instead of requesting a new random recommendation', async () => {
+    mockLocationStore.state = { activeTab: 'photo', restaurantId: 11 }
+    vi.mocked(getRestaurantSummary).mockResolvedValue(nextRestaurantSummary)
+    renderTodayRestaurantPage()
+    expect(
+      await screen.findByRole('heading', { name: '하시 라멘' }),
+    ).toBeInTheDocument()
+    expect(getRestaurantSummary).toHaveBeenCalledWith(11)
+    expect(mockedGetRandomRestaurantRecommendation).not.toHaveBeenCalled()
+  })
+
   beforeEach(() => {
-    mockPhotoDataSource.mockReturnValue(null)
+    mockPhotoDataSource.mockReturnValue({
+      key: 'test',
+      source: {
+        getPage: vi.fn().mockResolvedValue({
+          photos: [],
+          counts: { all: 0, representative: 0, menu: 0, review: 0 },
+        }),
+      },
+    })
     mockedGetRandomRestaurantRecommendation.mockResolvedValue(
       todayRestaurantSummary,
     )
@@ -410,11 +435,11 @@ describe('TodayRestaurantPage', () => {
 
     renderTodayRestaurantPage()
 
-    expect(await screen.findByRole('tab', { name: '사진' })).toHaveAttribute(
+    expect(await screen.findByRole('tab', { name: /사진/ })).toHaveAttribute(
       'aria-selected',
       'true',
     )
-    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('등록된 사진이 없어요.')).toBeInTheDocument()
   })
 
   it('starts Kakao OAuth from the login bottom sheet with the today path', async () => {
@@ -475,17 +500,17 @@ describe('TodayRestaurantPage', () => {
       .mockResolvedValueOnce(nextRestaurantSummary)
 
     renderTodayRestaurantPage()
-    fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
+    fireEvent.click(await screen.findByRole('tab', { name: /사진/ }))
     fireEvent.click(screen.getByRole('button', { name: '다시 추천 받기' }))
 
     expect(
       await screen.findByRole('heading', { name: '하시 라멘' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: '사진' })).toHaveAttribute(
+    expect(screen.getByRole('tab', { name: /사진/ })).toHaveAttribute(
       'aria-selected',
       'true',
     )
-    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('등록된 사진이 없어요.')).toBeInTheDocument()
   })
 
   it('copies the today restaurant link when share is pressed', async () => {

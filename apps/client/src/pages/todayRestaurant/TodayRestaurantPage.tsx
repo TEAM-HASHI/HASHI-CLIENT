@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
@@ -8,7 +8,10 @@ import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/a
 import type { RestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import { useRestaurantDetailActions } from '@/features/restaurantDetail/hooks/useRestaurantDetailActions'
 import { useRestaurantDetailContent } from '@/features/restaurantDetail/hooks/useRestaurantDetailContent'
-import { randomRestaurantRecommendationQueryOptions } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
+import {
+  randomRestaurantRecommendationQueryOptions,
+  restaurantSummaryQueryOptions,
+} from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
 import {
   getRestaurantDetailTabState,
   navigateBackOrReplace,
@@ -22,13 +25,24 @@ const TODAY_RESTAURANT_MENU_PAGE_SIZE = 10
 export const TodayRestaurantPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const initialTab = getRestaurantDetailTabState(location.state).activeTab
+  const { activeTab: initialTab, restaurantId: restoredRestaurantId } =
+    getRestaurantDetailTabState(location.state)
+  const queryClient = useQueryClient()
   const [recommendedSummary, setRecommendedSummary] =
     useState<RestaurantSummary | null>(null)
 
-  const randomRecommendationQuery = useQuery(
-    randomRestaurantRecommendationQueryOptions(),
-  )
+  const recommendationQuery = useQuery({
+    ...randomRestaurantRecommendationQueryOptions(),
+    enabled: restoredRestaurantId === undefined,
+  })
+  const restoredSummaryQuery = useQuery({
+    ...restaurantSummaryQueryOptions(restoredRestaurantId ?? 0),
+    enabled: restoredRestaurantId !== undefined,
+    refetchOnMount: false,
+  })
+  const randomRecommendationQuery = restoredRestaurantId
+    ? restoredSummaryQuery
+    : recommendationQuery
   const summary = recommendedSummary ?? randomRecommendationQuery.data
   const restaurantId = summary?.restaurantId ?? 0
   const hasRestaurantId = restaurantId > 0
@@ -55,6 +69,10 @@ export const TodayRestaurantPage = () => {
         excludeRestaurantId === undefined ? undefined : { excludeRestaurantId },
       ),
     onSuccess: (nextSummary) => {
+      queryClient.setQueryData(
+        restaurantSummaryQueryOptions(nextSummary.restaurantId).queryKey,
+        nextSummary,
+      )
       setRecommendedSummary(nextSummary)
       detailContent.resetDetailState(
         detailContent.activeTab === 'photo' ? 'photo' : 'info',

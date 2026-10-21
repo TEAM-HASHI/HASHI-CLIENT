@@ -54,6 +54,12 @@ export const useRestaurantDetailActions = ({
   }
 
   const handlePressMenuItem = (menuId: string) => {
+    if (menuDetailSource === 'today') {
+      navigate(getPathFromLocation(location), {
+        replace: true,
+        state: { ...location.state, restaurantId: Number(restaurantId) },
+      })
+    }
     navigate(getRestaurantMenuDetailPath(restaurantId, menuId), {
       state: { source: menuDetailSource },
     })
