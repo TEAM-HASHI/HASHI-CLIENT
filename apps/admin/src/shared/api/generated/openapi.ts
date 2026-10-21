@@ -4,6 +4,78 @@
  */
 
 export interface paths {
+  '/api/v1/admin/terms/{termsId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail']
+    put: operations['update']
+    post?: never
+    delete: operations['delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/restaurants/{restaurantId}/map-region': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * 식당 관광 지역 배정 또는 해제
+     * @description ADMIN 전용입니다. 식당 소속은 좌표나 cameraBounds에서 계산하지 않고 mapRegionId로 직접 지정합니다. 비활성 지역에도 공개 전에 미리 배정할 수 있습니다. mapRegionId:null은 소속만 해제하며 주소와 좌표는 유지합니다.
+     */
+    put: operations['assign']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/notices/{noticeId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_1']
+    put: operations['update_1']
+    post?: never
+    delete: operations['delete_1']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/map-regions/{code}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * 관광 지역 생성 또는 전체 설정 교체
+     * @description ADMIN 전용입니다. code가 멱등 키이므로 같은 code로 다시 PUT하면 기존 mapRegionId와 식당 배정을 유지한 채 name, clusterPosition, cameraBounds, displayOrder, active를 모두 교체합니다. clusterPosition은 클라이언트가 지역을 선택할 때 사용할 대표 중심점이며 cameraBounds 안에 있어야 합니다. cameraBounds는 지역 필터와 공개 집계에서 식당 좌표를 재검사하는 범위이고 식당 소속을 자동 배정하지 않습니다. 대표 좌표와 모든 경계는 소수 6자리로 정확히 표현되어야 합니다. 서버는 값을 반올림하지 않으며 35.6595001처럼 추가 정밀도가 필요한 값은 400입니다. active=true이면 cameraBounds가 서버 지원 범위 안에 있고 위도·경도 폭이 각각 1도 이하여야 합니다. GET /api/v1/restaurants/map/regions의 queryLimits로 지원 범위를 확인하세요. active=false는 지원 범위·1도 폭 검사를 적용하지 않지만 좌표 정밀도와 대표 좌표 포함 조건은 유지합니다. active=false로 바꾸면 공개 지역 목록에서 빠지고, 해당 지역을 참조하는 신규 조회와 기존 지도 세션의 다음 페이지가 RESTAURANT-012로 거절됩니다.
+     */
+    put: operations['upsert']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/auth/admin/logout': {
     parameters: {
       query?: never
@@ -44,6 +116,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/admin/terms': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['history']
+    put?: never
+    post: operations['create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/terms/{termsId}/publication': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['publish']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/admin/restaurants': {
     parameters: {
       query?: never
@@ -54,10 +158,122 @@ export interface paths {
     get?: never
     put?: never
     /**
-     * 식당 등록 — 식당·메뉴 사진은 presigned URL로 업로드를 마친 S3 키로 받는다.
-     * @description 식당 등록 — 식당·메뉴 사진은 presigned URL로 업로드를 마친 S3 키로 받는다.
+     * 식당 등록
+     * @description 식당 정보를 저장한 뒤 지도 위치 확인 작업을 비동기로 요청합니다.
+     *     201 응답은 식당 저장과 위치 작업 등록 성공을 뜻하며, Google 위치 확인 완료를 뜻하지 않습니다.
+     *     응답의 locationStatus와 addressRevision을 확인하고 위치 상태 조회 API로 최신 상태를 조회하세요.
+     *     등록 전에 POST /api/v1/admin/restaurants/location-preview로 후보를 확인할 수 있습니다.
+     *     지도에서 맞는 매장을 고른 뒤 후보의 selectionToken을 locationSelectionToken으로 보내세요.
+     *     같은 관리자가 이름·현지명·표시주소·기본주소를 변경하지 않고 10분 안에 등록해야 합니다.
+     *     토큰이 없으면 등록은 허용하고 기존 주소 자동 확인을 요청합니다. 확인 실패로 식당 정보가 삭제되지는 않습니다.
+     *     토큰이 있으면 선택한 Place ID의 상세 확인만 요청하며 주소 검색을 함께 반복하지 않습니다.
+     *     관리자의 후보 선택과 Google 상세 검증 완료는 다르므로 PENDING 동안에는 핀을 표시하지 마세요.
      */
-    post: operations['create']
+    post: operations['create_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/restaurants/{restaurantId}/location/retry': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * 식당 위치 확인 재요청
+     * @description 먼저 위치 상태 조회 API에서 최신 addressRevision을 읽어 expectedAddressRevision으로 보냅니다.
+     *     같은 revision의 PENDING 작업이 있으면 새 작업을 만들지 않고 현재 상태를 반환하며,
+     *     그 밖의 재시도 가능 상태는 PENDING 작업을 새로 요청합니다.
+     *     이름·현지명·주소 변경으로 revision이 달라졌거나 이미 READY이면 409를 반환합니다.
+     *     200 응답은 재요청 접수 성공을 뜻하며, Google 위치 확인 완료를 뜻하지 않습니다.
+     */
+    post: operations['retryLocation']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/restaurants/{restaurantId}/location/place-selection': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * 식당 Places 후보 선택
+     * @description 직전 후보 검색 응답의 addressRevision을 요청의 expectedAddressRevision으로 전달하고,
+     *     선택한 후보의 selectionToken으로 한 후보를 선택합니다.
+     *     토큰을 수정했거나 만료됐으면 400, 다른 관리자·변경된 식당 정보·현재 작업·상태이거나 PENDING이면 409입니다.
+     *     서버 인증 정보로 선택 관리자·선택 시각·확인 방식·당시 revision을 기록합니다.
+     *     응답의 confirmedByAdminLoginId는 확인자 내부 ID로 서버가 조회한 현재 로그인 ID이며 요청으로 받지 않습니다.
+     *     선택 직후 source는 null이며, Places Details 검증에 성공해 좌표를 저장하면 GOOGLE_PLACES가 됩니다.
+     *     선택 즉시 기존 승인 좌표를 제거하고 새 PLACE_DETAILS 작업을 PENDING으로 등록합니다.
+     *     200 응답은 선택 저장과 작업 등록 성공을 뜻하며 Places 상세 확인 완료를 뜻하지 않습니다.
+     *     locationStatus를 다시 조회해 READY와 validUntil을 확인하세요.
+     */
+    post: operations['selectLocationPlace']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/restaurants/{restaurantId}/location/place-candidates': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * 식당 Places 후보 검색
+     * @description 저장된 식당 현지명과 위치 확인 주소로 Google Places 후보를 새로 조회합니다.
+     *     클라이언트가 임의 검색어나 Place ID, 좌표를 보내지 않으며 서버가 일본·도쿄·지도 서비스 범위를 검증합니다.
+     *     외부 유료 호출이므로 화면 진입만으로 자동 호출하지 말고 관리자가 검색을 요청할 때 호출하세요.
+     *     검색 결과가 없거나 범위를 통과한 후보가 없으면 200과 빈 candidates를 반환합니다.
+     *     각 selectionToken은 검색 당시 관리자, restaurantId, addressRevision, requestId, Place ID에 묶여 10분 동안 유효합니다.
+     */
+    post: operations['searchLocationPlaces']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/restaurants/location-preview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * 식당 등록 전 위치 미리보기
+     * @description 식당을 저장하기 전에 현지 식당명과 주소로 Google Places 후보를 조회합니다.
+     *     geocodingAddress가 없으면 건물명·층을 포함한 address를 사용합니다. 아직 식당 ID는 필요하지 않습니다.
+     *     후보의 이름·지점·주소와 지도 위치를 확인해 맞는 매장을 고르고, selectionToken을 최종 등록의
+     *     locationSelectionToken으로 전달하세요. 클라이언트가 좌표나 Place ID를 직접 확정해 보내는 방식이 아닙니다.
+     *     후보를 고른 관리자만 10분 안에 같은 입력으로 등록할 수 있습니다. 이름·현지명·주소·기본주소를
+     *     하나라도 바꾸거나 토큰이 만료되면 다시 미리보기를 요청하세요.
+     *     candidates=[]는 정상 조회 결과 0건입니다. 429는 호출 예산 소진, 503은 설정 문제, 502는 Google 조회 실패입니다.
+     *     후보가 없어도 토큰 없이 식당 정보를 저장할 수 있습니다. 위치 확인이 완료될 때까지 핀만 숨깁니다.
+     *     후보 결과는 저장하지 말고, Google 지도와 필요한 Google/제3자 출처 표시를 함께 보여주세요.
+     */
+    post: operations['previewLocation']
     delete?: never
     options?: never
     head?: never
@@ -84,6 +300,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/admin/notices': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list']
+    put?: never
+    post: operations['create_2']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/notices/{noticeId}/publication': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['publish_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/admin/magazines': {
     parameters: {
       query?: never
@@ -96,8 +344,10 @@ export interface paths {
     /**
      * 매거진 등록 — 슬롯별 legacy key 또는 READY public asset ID를 받는다.
      * @description 매거진 등록 — 슬롯별 legacy key 또는 READY public asset ID를 받는다.
+     *      상세 화면 데이터(본문·카드뉴스·해시태그·연결 식당)는 선택이고 목록 순서가 노출 순서다.
+     *      삭제된 식당은 연결할 수 없으며, 없는 식당과 같이 MAGAZINE-002로 거절한다.
      */
-    post: operations['create_1']
+    post: operations['create_3']
     delete?: never
     options?: never
     head?: never
@@ -118,14 +368,22 @@ export interface paths {
      * 식당 삭제(soft delete) — 사용자 앱에서만 숨겨지고 기존 예약·리뷰는 유지된다.
      * @description 식당 삭제(soft delete) — 사용자 앱에서만 숨겨지고 기존 예약·리뷰는 유지된다.
      */
-    delete: operations['delete']
+    delete: operations['delete_2']
     options?: never
     head?: never
     /**
-     * 식당 부분 수정 — 보낸 필드만 변경하며, 컬렉션(이미지·메뉴·해시태그·큐레이션)은 전체 교체한다.
-     * @description 식당 부분 수정 — 보낸 필드만 변경하며, 컬렉션(이미지·메뉴·해시태그·큐레이션)은 전체 교체한다.
+     * 식당 부분 수정
+     * @description 보낸 필드만 변경합니다. address는 건물명·층까지 보존하는 화면 표시 주소이고,
+     *     geocodingAddress는 Google 위치 확인에만 쓰는 별도 지정 주소입니다.
+     *     geocodingAddress를 생략하거나 null로 보내면 address가 그대로일 때 기존 별도 지정 주소를 유지합니다.
+     *     address만 변경하면 기존 별도 지정 주소를 삭제하고 새 address를 위치 확인 기준으로 사용합니다.
+     *     이름(name/localName) 또는 표시 주소(address)가 실제로 달라지면 기존 좌표와 관리자 확인을 무효화하고 다시 확인합니다.
+     *     조회용 기본 주소가 같아도 층수·지점명 등 표시 정보가 바뀌면 같은 규칙을 적용합니다.
+     *     geocodingAddress의 공백 문자열은 별도 지정 주소를 명시적으로 삭제하고 현재 address를 사용한다는 뜻입니다.
+     *     동일한 값을 다시 보내거나 위치와 무관한 소개·가격만 바꾸면 위치와 revision을 유지합니다.
+     *     200 응답은 식당 저장과 필요한 위치 작업 등록 성공을 뜻하며, Google 위치 확인 완료를 뜻하지 않습니다.
      */
-    patch: operations['update']
+    patch: operations['update_2']
     trace?: never
   }
   '/api/v1/admin/magazines/{magazineId}': {
@@ -142,14 +400,17 @@ export interface paths {
      * 매거진 삭제.
      * @description 매거진 삭제.
      */
-    delete: operations['delete_1']
+    delete: operations['delete_3']
     options?: never
     head?: never
     /**
      * 매거진 부분 수정 — 보낸 필드만 변경된다.
      * @description 매거진 부분 수정 — 보낸 필드만 변경된다.
+     *      카드뉴스·해시태그·연결 식당은 보내면 전체 교체하며 빈 목록은 모두 지운다.
+     *      카드뉴스에서 빠진 asset은 같은 트랜잭션에서 사용 종료 처리된다.
+     *      삭제된 식당은 연결할 수 없으며, 없는 식당과 같이 MAGAZINE-002로 거절한다.
      */
-    patch: operations['update_1']
+    patch: operations['update_3']
     trace?: never
   }
   '/api/v1/admin/users': {
@@ -165,6 +426,75 @@ export interface paths {
      *      기본 정렬은 닉네임 가나다순, sort=CREATED_AT이면 가입일 최신순. keyword는 닉네임 부분 일치 검색.
      */
     get: operations['getUsers']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/terms/types': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['types']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/restaurants/{restaurantId}/location': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * 식당 위치 처리 상태 조회
+     * @description 식당 저장과 별도로 진행되는 최신 위치 확인 상태를 조회합니다.
+     *     UNRESOLVED는 위치 행 없음, PENDING은 처리 중, READY는 위치 확인 완료,
+     *     RETRY_WAIT는 자동 재시도 대기, REVIEW_REQUIRED는 관리자 확인 필요, FAILED는 자동 처리 중단입니다.
+     *     READY여도 validUntil이 현재보다 늦어야 지도에서 사용할 수 있습니다.
+     *     재시도 화면은 서버가 계산한 canRetry와 addressRevision을 함께 사용하고, 응답은 저장하지 말고 매번 최신 상태를 조회하세요.
+     */
+    get: operations['getLocation']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/admin/restaurants/locations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * 식당 위치 검토 목록 조회
+     * @description 활성 식당을 locationStatus로 필터링해 restaurantId 오름차순으로 조회합니다.
+     *     status 기본값은 REVIEW_REQUIRED이며 UNRESOLVED는 아직 위치 행이 없는 식당입니다.
+     *     source는 GOOGLE_GEOCODING, GOOGLE_PLACES 또는 ADMIN으로 좁힐 때만 보내며, 승인 위치가 없는 행의 source는 null입니다.
+     *     각 항목의 attempt와 failureCode는 위치의 현재 requestId와 일치하는 작업에서만 가져옵니다.
+     *     confirmedByAdminId는 확인자 내부 ID, confirmedByAdminLoginId는 현재 계정의 표시용 로그인 ID입니다.
+     *     자동 확인·과거 확인자 기록 없음·계정 삭제 시 로그인 ID는 null이며, 확인자 계정은 페이지 단위로 함께 조회합니다.
+     *     READY는 validUntil이 현재보다 늦어야 실제 지도 위치로 사용할 수 있습니다.
+     *     재시도는 canRetry가 true인 항목의 최신 addressRevision을 expectedAddressRevision으로 보내세요.
+     *     page는 0부터 시작하며 같은 응답의 totalCount와 totalPages는 조회한 목록과 같은 DB snapshot 기준입니다.
+     *     처리 중 상태가 바뀌면 페이지 사이의 항목과 총건수도 달라질 수 있습니다. 처리 후 현재 page를 다시 조회하세요.
+     */
+    get: operations['findLocationReviews']
     put?: never
     post?: never
     delete?: never
@@ -213,10 +543,295 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/admin/map-regions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * 관광 지역 설정 목록 조회
+     * @description ADMIN 전용입니다. 활성·비활성 지역을 모두 displayOrder, mapRegionId 순으로 반환합니다. 목록은 content, page, size, totalCount, totalPages를 반환하며 totalCount는 전체 지역 수입니다. active=false인 지역은 공개 지역 목록과 지역 필터에서 제외되지만 관리자 목록에는 남습니다.
+     */
+    get: operations['getRegions']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    SaveTermsRequest: {
+      /** @enum {string} */
+      type:
+        | 'SERVICE_TERMS'
+        | 'PRIVACY_POLICY'
+        | 'PERSONAL_DATA_COLLECTION'
+        | 'PERSONAL_DATA_THIRD_PARTY'
+        | 'RESERVATION_REFUND_POLICY'
+        | 'REVIEW_POLICY'
+        | 'POINT_TERMS'
+        | 'SERVICE_POLICY'
+      title: string
+      version: string
+      /** Format: date */
+      effectiveDate: string
+      clauses: components['schemas']['TermsClause'][]
+    }
+    /** @description 일반 텍스트 조항. 배열 순서대로 accordion을 표시한다. HTML은 렌더링하지 않는다. */
+    TermsClause: {
+      heading?: string
+      content?: string
+    }
+    AdminTermsResponse: {
+      /** Format: int64 */
+      termsId?: number
+      /** @enum {string} */
+      type?:
+        | 'SERVICE_TERMS'
+        | 'PRIVACY_POLICY'
+        | 'PERSONAL_DATA_COLLECTION'
+        | 'PERSONAL_DATA_THIRD_PARTY'
+        | 'RESERVATION_REFUND_POLICY'
+        | 'REVIEW_POLICY'
+        | 'POINT_TERMS'
+        | 'SERVICE_POLICY'
+      title?: string
+      version?: string
+      /** Format: date */
+      effectiveDate?: string
+      clauses?: components['schemas']['TermsClause'][]
+      status?: string
+      /** Format: date-time */
+      publishedAt?: string
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseAdminTermsResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['AdminTermsResponse']
+    }
+    /** @description null을 명시하면 소속을 해제한다. 필드 누락은 의도하지 않은 해제를 막기 위해 거절한다. */
+    SetRestaurantMapRegionRequest: {
+      /**
+       * Format: int64
+       * @description 직접 배정할 관광 지역 ID. null을 명시하면 소속만 해제하며 주소와 좌표는 유지
+       * @example 12
+       */
+      mapRegionId: number
+    }
+    Assignment: {
+      /**
+       * Format: int64
+       * @description 처리한 식당 ID
+       * @example 1001
+       */
+      restaurantId?: number
+      /**
+       * Format: int64
+       * @description 현재 배정된 관광 지역 ID. 소속 해제 후에는 null
+       * @example 12
+       */
+      mapRegionId?: number
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseAssignment: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['Assignment']
+    }
+    /** @description 본문 구조. text는 HTML이 아닌 일반 텍스트이며 줄바꿈을 그대로 표시한다. */
+    NoticeBlock: {
+      /** @enum {string} */
+      type?: 'PARAGRAPH' | 'BULLET_LIST' | 'ORDERED_LIST'
+      items?: components['schemas']['Span'][][]
+    }
+    /** @description 전체 저장 입력. 상세 서식·중복 이미지 검증은 support가 소유한다. */
+    SaveNoticeRequest: {
+      title: string
+      body: components['schemas']['NoticeBlock'][]
+      imageAssetIds: string[]
+    }
+    Span: {
+      text?: string
+      bold?: boolean
+      href?: string
+    }
+    AdminNoticeResponse: {
+      /** Format: int64 */
+      noticeId?: number
+      title?: string
+      body?: components['schemas']['NoticeBlock'][]
+      status?: string
+      /** Format: date-time */
+      publishedAt?: string
+      /** Format: date-time */
+      lastModifiedAt?: string
+      images?: components['schemas']['Attachment'][]
+      /** Format: date-time */
+      createdAt?: string
+      /** Format: date-time */
+      updatedAt?: string
+    }
+    Attachment: {
+      /** Format: uuid */
+      assetId?: string
+      image?: components['schemas']['MediaImage']
+    }
+    Candidate: {
+      url?: string
+      /** Format: int32 */
+      width?: number
+      /** Format: int32 */
+      height?: number
+    }
+    /** @description 클라이언트가 반응형 이미지 후보를 선택할 수 있는 공통 이미지 응답. */
+    MediaImage: {
+      /** Format: uuid */
+      assetId?: string
+      /** @enum {string} */
+      role?:
+        | 'PROFILE_AVATAR'
+        | 'RESTAURANT_THUMBNAIL'
+        | 'RESTAURANT_CARD'
+        | 'RESTAURANT_HERO'
+        | 'MENU_LIST'
+        | 'MENU_DETAIL'
+        | 'REVIEW_PREVIEW'
+        | 'REVIEW_DETAIL'
+        | 'MAGAZINE_BANNER'
+        | 'MAGAZINE_THUMBNAIL'
+        | 'MAGAZINE_CARD_NEWS'
+        | 'NOTICE_DETAIL'
+      /** @enum {string} */
+      status?: 'PROCESSING' | 'READY' | 'FAILED'
+      defaultSource?: components['schemas']['Source']
+      sourceSets?: components['schemas']['SourceSet'][]
+    }
+    Source: {
+      url?: string
+      /** Format: int32 */
+      width?: number
+      /** Format: int32 */
+      height?: number
+      mimeType?: string
+    }
+    SourceSet: {
+      mimeType?: string
+      candidates?: components['schemas']['Candidate'][]
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseAdminNoticeResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['AdminNoticeResponse']
+    }
+    Bounds: {
+      /**
+       * @description 남쪽 위도
+       * @example 35.640000
+       */
+      south: number
+      /**
+       * @description 북쪽 위도. south보다 커야 함
+       * @example 35.680000
+       */
+      north: number
+      /**
+       * @description 서쪽 경도
+       * @example 139.680000
+       */
+      west: number
+      /**
+       * @description 동쪽 경도. west보다 커야 함
+       * @example 139.720000
+       */
+      east: number
+    }
+    Position: {
+      /**
+       * @description 대표 중심점 위도
+       * @example 35.659500
+       */
+      latitude: number
+      /**
+       * @description 대표 중심점 경도
+       * @example 139.700500
+       */
+      longitude: number
+    }
+    /** @description PUT 전체 교체 요청. 대표 좌표 포함 여부와 저장 정밀도는 restaurant 모델에서 검사한다. */
+    UpsertMapRegionRequest: {
+      /**
+       * @description 클라이언트에 표시할 관광 지역명
+       * @example 시부야
+       */
+      name: string
+      /** @description 지역 선택 시 지도의 대표 중심점. cameraBounds 안에 있어야 하며 식당 배정에는 사용하지 않음. 좌표는 소수 6자리로 정확히 표현되는 값이어야 하고 서버가 반올림하지 않음 */
+      clusterPosition: components['schemas']['Position']
+      /** @description 지역 필터·공개 집계에서 식당의 유효 좌표를 재검사하는 경계. 식당 소속을 자동 결정하지 않음. 모든 경계는 소수 6자리로 정확히 표현되어야 하며 서버가 반올림하지 않음. active=true이면 서버 지원 범위 안에 있고 위도·경도 폭이 각각 1도 이하여야 함 */
+      cameraBounds: components['schemas']['Bounds']
+      /**
+       * Format: int32
+       * @description 공개 지역 목록의 표시 순서. 같은 값이면 mapRegionId 순
+       * @example 10
+       */
+      displayOrder: number
+      /**
+       * @description 공개 여부. false이면 공개 지역 목록에서 제외되고 해당 지역 ID로 지도 조회 시 RESTAURANT-012
+       * @example true
+       */
+      active: boolean
+    }
+    AdminMapRegionResponse: {
+      /**
+       * Format: int64
+       * @description 변하지 않는 관광 지역 ID
+       * @example 12
+       */
+      mapRegionId?: number
+      /**
+       * @description 생성·전체 교체의 멱등 키
+       * @example TOKYO_SHIBUYA
+       */
+      code?: string
+      /**
+       * @description 클라이언트 표시명
+       * @example 시부야
+       */
+      name?: string
+      /** @description 지역 선택 시 지도의 대표 중심점 */
+      clusterPosition?: components['schemas']['Position']
+      /** @description 지역 필터·공개 집계의 좌표 경계 */
+      cameraBounds?: components['schemas']['Bounds']
+      /**
+       * Format: int32
+       * @description 공개 지역 목록 표시 순서
+       * @example 10
+       */
+      displayOrder?: number
+      /**
+       * @description 공개 지역 목록과 지역 지도 조회에 노출되는지 여부
+       * @example true
+       */
+      active?: boolean
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseAdminMapRegionResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['AdminMapRegionResponse']
+    }
     /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
     SuccessResponseVoid: {
       success?: boolean
@@ -309,10 +924,15 @@ export interface components {
        */
       description: string
       /**
-       * @description 주소
+       * @description 사용자 화면에 표시할 전체 주소. 건물명·층 정보를 보존하며, geocodingAddress를 생략하면 Google 위치 확인에도 이 값을 사용
        * @example 도쿄도 도시마구 히가시이케부쿠로 1-1-1
        */
       address: string
+      /**
+       * @description Google 위치 확인에만 사용할 별도 지정 주소(선택). 화면에는 address의 건물명·층 정보를 그대로 보여주면서 검색에는 정제한 주소를 쓰기 위한 필드. 생략/null이면 address를 사용하고 공백은 허용하지 않음
+       * @example 東京都豊島区東池袋1-1-1
+       */
+      geocodingAddress?: string
       /**
        * @description 지역
        * @example 이케부쿠로
@@ -373,6 +993,8 @@ export interface components {
        */
       curationTypes?: string[]
       businessHours: components['schemas']['BusinessHourRequest'][]
+      /** @description 등록 전 위치 미리보기에서 관리자가 고른 후보의 selectionToken(선택). 같은 관리자가 검색 후 10분 안에 이름·현지명·표시주소·기본주소를 그대로 보내야 함. 생략/null이면 식당을 먼저 저장한 뒤 주소로 자동 위치 확인. 토큰을 보냈더라도 저장 직후는 PENDING이며 Places 상세 검증이 끝나야 핀 노출 */
+      locationSelectionToken?: string
     }
     /** @description 메뉴 항목 — 목록 전체가 함께 저장되므로 각 항목은 완전한 값으로 받는다. */
     MenuRequest: {
@@ -432,11 +1054,7 @@ export interface components {
       priceAmount?: number
       main?: boolean
     }
-    /**
-     * @description 어드민 식당 단건 응답(등록·수정 결과). 기존 URL 필드는 legacy 또는 READY media 호환용이며,
-     *      신규 이미지 필드는 상태와 반응형 후보를 전달한다. genre·curationTypes는 사용자 API와 같은
-     *      소문자 케밥 값이고, placeType(음식점 분류, #211)은 restaurant·cafe·bar다.
-     */
+    /** @description 어드민 식당 저장 결과. 저장 성공과 Google 위치 확인 완료는 별개이며 locationStatus로 후속 상태를 확인 */
     AdminRestaurantResponse: {
       /** Format: int64 */
       restaurantId?: number
@@ -444,7 +1062,10 @@ export interface components {
       localName?: string
       summary?: string
       description?: string
+      /** @description 사용자 화면에 표시할 전체 주소 */
       address?: string
+      /** @description Google 위치 확인에만 쓰는 별도 지정 주소. null이면 address를 위치 확인 기준으로 사용 */
+      geocodingAddress?: string
       area?: string
       genre?: string
       foodCategory?: string
@@ -463,34 +1084,24 @@ export interface components {
       businessHours?: components['schemas']['AdminRestaurantBusinessHourResponse'][]
       /** Format: date-time */
       createdAt?: string
-    }
-    Candidate: {
-      url?: string
-      /** Format: int32 */
-      width?: number
-      /** Format: int32 */
-      height?: number
-    }
-    /** @description 클라이언트가 반응형 이미지 후보를 선택할 수 있는 공통 이미지 응답. */
-    MediaImage: {
-      /** Format: uuid */
-      assetId?: string
-      /** @enum {string} */
-      role?:
-        | 'PROFILE_AVATAR'
-        | 'RESTAURANT_THUMBNAIL'
-        | 'RESTAURANT_CARD'
-        | 'RESTAURANT_HERO'
-        | 'MENU_LIST'
-        | 'MENU_DETAIL'
-        | 'REVIEW_PREVIEW'
-        | 'REVIEW_DETAIL'
-        | 'MAGAZINE_BANNER'
-        | 'MAGAZINE_THUMBNAIL'
-      /** @enum {string} */
-      status?: 'PROCESSING' | 'READY' | 'FAILED'
-      defaultSource?: components['schemas']['Source']
-      sourceSets?: components['schemas']['SourceSet'][]
+      /**
+       * @description 비동기 위치 처리 상태. PENDING 응답은 식당 저장과 작업 등록 성공이며 Google 위치 확인 완료가 아님
+       * @example PENDING
+       * @enum {string}
+       */
+      locationStatus?:
+        | 'UNRESOLVED'
+        | 'PENDING'
+        | 'READY'
+        | 'RETRY_WAIT'
+        | 'REVIEW_REQUIRED'
+        | 'FAILED'
+      /**
+       * Format: int64
+       * @description 위치 확인 기준 정보 변경 번호(addressRevision). 이름·현지명·표시주소·위치조회주소 변경에 따라 증가. 위치 재시도 전 상태 조회 API에서 최신 값을 확인
+       * @example 1
+       */
+      addressRevision?: number
     }
     /** @description 식당 Aggregate가 소유하는 stable 이미지 association과 media projection. */
     RestaurantImageInfo: {
@@ -501,24 +1112,189 @@ export interface components {
       image?: components['schemas']['MediaImage']
       legacyUrl?: string
     }
-    Source: {
-      url?: string
-      /** Format: int32 */
-      width?: number
-      /** Format: int32 */
-      height?: number
-      mimeType?: string
-    }
-    SourceSet: {
-      mimeType?: string
-      candidates?: components['schemas']['Candidate'][]
-    }
     /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
     SuccessResponseAdminRestaurantResponse: {
       success?: boolean
       code?: string
       message?: string
       data?: components['schemas']['AdminRestaurantResponse']
+    }
+    /** @description UNRESOLVED(위치 행 없음)의 revision은 0이다. */
+    RetryRestaurantLocationRequest: {
+      /**
+       * Format: int64
+       * @description 위치 상태 조회 응답의 최신 addressRevision. 이름·현지명·표시주소·위치조회주소 변경과 재시도의 충돌을 막는 조건값이며 UNRESOLVED는 0. 서버의 최신 값과 다르면 409
+       * @example 1
+       */
+      expectedAddressRevision: number
+    }
+    /** @description 식당 저장과 별도로 진행되는 지도 위치 확인 상태. 좌표나 내부 작업 식별자는 노출하지 않음 */
+    RestaurantLocationResponse: {
+      /**
+       * Format: int64
+       * @description 식당 ID
+       * @example 1001
+       */
+      restaurantId?: number
+      /**
+       * @description 위치 처리 상태: UNRESOLVED(위치 행 없음), PENDING(처리 중), READY(위치 확인 완료), RETRY_WAIT(자동 재시도 대기), REVIEW_REQUIRED(관리자 확인 필요), FAILED(자동 처리 중단)
+       * @example PENDING
+       * @enum {string}
+       */
+      locationStatus?:
+        | 'UNRESOLVED'
+        | 'PENDING'
+        | 'READY'
+        | 'RETRY_WAIT'
+        | 'REVIEW_REQUIRED'
+        | 'FAILED'
+      /**
+       * Format: int64
+       * @description 위치 확인 기준 정보 변경 번호(addressRevision, 필드명은 호환 유지). 이름·현지명·표시주소·위치조회주소가 바뀔 때 증가하며 재시도 요청의 expectedAddressRevision으로 사용
+       * @example 1
+       */
+      addressRevision?: number
+      /**
+       * @description 마지막 승인 위치의 출처. 승인 위치가 없으면 null
+       * @enum {string}
+       */
+      source?: 'GOOGLE_GEOCODING' | 'GOOGLE_PLACES' | 'ADMIN'
+      /**
+       * @description 현재 requestId 작업의 검증 방식. 작업이 없으면 null
+       * @enum {string}
+       */
+      verificationMode?: 'GEOCODING' | 'PLACE_DETAILS'
+      /**
+       * Format: date-time
+       * @description 마지막으로 승인된 좌표의 유효 기한(UTC). 현재 시각과 같거나 과거면 READY여도 지도에서 사용할 수 없으며, 승인 좌표가 없으면 null
+       */
+      validUntil?: string
+      /**
+       * Format: int32
+       * @description 현재 위치 작업의 provider 호출 시도 횟수. 아직 호출하지 않았거나 작업이 없으면 0
+       * @example 0
+       */
+      attempt?: number
+      /**
+       * Format: date-time
+       * @description RETRY_WAIT 상태의 다음 자동 재시도 예정 시각(UTC). 해당하지 않으면 null
+       */
+      nextAttemptAt?: string
+      /**
+       * @description 현재 작업의 최근 실패 사유 코드. 실패 기록이 없으면 null
+       * @example TRANSIENT_ERROR
+       */
+      failureCode?: string
+      /**
+       * @description 관리자 재시도 버튼 노출 여부. UNRESOLVED·RETRY_WAIT·REVIEW_REQUIRED·FAILED는 true, PENDING·READY는 false
+       * @example false
+       */
+      canRetry?: boolean
+      /** @description 확인 방식. AUTOMATIC은 자동 검증, ADMIN_PLACE_SELECTION은 관리자의 매장 후보 선택. 과거 기록이 없으면 null */
+      confirmationMethod?: string
+      /**
+       * Format: int64
+       * @description 후보를 선택한 관리자 ID. 서버 인증 정보에서 기록하며 자동 검증 또는 과거 기록이 없으면 null
+       */
+      confirmedByAdminId?: number
+      /**
+       * @description 확인한 관리자 계정의 현재 로그인 ID. 관리자 화면 표시용이며 확인 당시 값의 사본이 아님. 자동 검증·과거 기록 없음·계정 삭제 시 null
+       * @example hashi_admin
+       */
+      confirmedByAdminLoginId?: string
+      /**
+       * Format: date-time
+       * @description 위치 확인 시각(UTC). 관리자 선택은 선택 접수 시각이며 좌표 취득 완료 시각과 다름. 이 값만으로 핀 노출을 판단하지 않음. 새 후보는 READY 완료 후 표시하며 같은 매장 갱신 중의 기존 유효 핀은 유지
+       */
+      confirmedAt?: string
+      /**
+       * Format: int64
+       * @description 확인 당시 식당 정보 revision. 이름·주소가 바뀌면 이전 확인 기록을 초기화
+       */
+      confirmedRevision?: number
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseRestaurantLocationResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['RestaurantLocationResponse']
+    }
+    SelectRestaurantPlaceRequest: {
+      /**
+       * Format: int64
+       * @description 후보 검색 응답과 같은 최신 addressRevision(위치 확인 기준 정보 변경 번호)
+       * @example 2
+       */
+      expectedAddressRevision: number
+      /**
+       * @description 후보 검색 응답의 selectionToken. 발급받은 관리자만 10분 안에 한 번 선택 가능. 이름·주소가 바뀌거나 토큰을 수정하면 무효
+       * @example ZXlK...Q2Q
+       */
+      selectionToken: string
+    }
+    SearchRestaurantPlacesRequest: {
+      /**
+       * Format: int64
+       * @description 위치 상태 조회 응답의 최신 addressRevision(위치 확인 기준 정보 변경 번호). 이름·주소 변경으로 최신 값과 다르면 409
+       * @example 2
+       */
+      expectedAddressRevision: number
+    }
+    /** @description 저장된 식당명과 위치 확인 주소로 조회한 Google Places 후보 */
+    RestaurantPlacesSearchResponse: {
+      /**
+       * Format: int64
+       * @example 1001
+       */
+      restaurantId?: number
+      /**
+       * Format: int64
+       * @description 검색 시점의 위치 확인 기준 정보 변경 번호. 이름·현지명·표시주소·위치조회주소 변경 시 달라짐
+       * @example 2
+       */
+      addressRevision?: number
+      /** @description 도쿄 서비스 범위를 통과한 후보. 검색 결과가 없으면 빈 배열 */
+      candidates?: components['schemas']['Candidate'][]
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseRestaurantPlacesSearchResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['RestaurantPlacesSearchResponse']
+    }
+    /** @description 등록 전에 Google Places에서 매장을 찾을 입력. 검색 후 네 필드 중 하나라도 수정하면 다시 검색하세요 */
+    PreviewRestaurantLocationRequest: {
+      /**
+       * @description 최종 등록에 사용할 식당명
+       * @example 도쿄역 이카루가
+       */
+      name: string
+      /**
+       * @description 최종 등록에 사용할 현지 식당명. Places 검색에는 이 이름을 사용
+       * @example 東京駅 斑鳩
+       */
+      localName: string
+      /**
+       * @description 건물명·층을 포함한 표시 주소
+       * @example 東京都千代田区丸の内1-9-1 東京駅一番街 B1F
+       */
+      address: string
+      /** @description 검색용 별도 주소(선택). 생략/null이면 address를 사용하고 공백은 허용하지 않음 */
+      geocodingAddress?: string
+    }
+    /** @description 아직 식당을 저장하지 않은 Places 미리보기. 후보를 선택해 locationSelectionToken으로 등록 요청에 전달 */
+    RestaurantLocationPreviewResponse: {
+      /** @description 서비스 범위를 통과한 후보. 빈 배열은 정상 검색 결과 0건이며 오류와 다름 */
+      candidates?: components['schemas']['Candidate'][]
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseRestaurantLocationPreviewResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['RestaurantLocationPreviewResponse']
     }
     /** @description 어드민 예약 상태 변경 요청 — 자유 전이라 대상 상태만 받는다. */
     ChangeReservationStatusRequest: {
@@ -578,7 +1354,10 @@ export interface components {
       message?: string
       data?: components['schemas']['AdminReservationResponse']
     }
-    /** @description 어드민 매거진 등록 요청. 각 슬롯은 legacy key 또는 public asset ID 중 하나를 받는다. */
+    /**
+     * @description 어드민 매거진 등록 요청. 각 이미지 슬롯은 legacy key 또는 public asset ID 중 하나를 받는다.
+     *      상세 화면 데이터(content·cardNews·hashtags·restaurantIds)는 선택이며, 목록의 순서가 노출 순서다.
+     */
     CreateMagazineRequest: {
       /**
        * @description 매거진 제목
@@ -612,10 +1391,48 @@ export interface components {
        * @example https://www.instagram.com/p/abc123/
        */
       instagramRedirectUrl: string
-      bannerImageSourceValid?: boolean
-      thumbnailImageSourceValid?: boolean
+      /**
+       * @description 상세 본문(선택)
+       * @example 퇴근길에 들르기 좋은 이자카야를 모았습니다.
+       */
+      content?: string
+      /** @description 카드뉴스 이미지 목록(선택, 순서대로 노출) */
+      cardNews?: components['schemas']['MagazineCardNewsRequest'][]
+      /**
+       * @description 해시태그 목록(선택)
+       * @example [
+       *       "이자카야",
+       *       "퇴근길"
+       *     ]
+       */
+      hashtags?: string[]
+      /**
+       * @description 연결 식당 ID 목록(선택, 순서대로 노출)
+       * @example [
+       *       1001,
+       *       1002
+       *     ]
+       */
+      restaurantIds?: number[]
     }
-    /** @description 어드민 매거진 단건 응답. 기존 URL 필드를 유지하면서 슬롯별 최적화 이미지 응답을 추가한다. */
+    /** @description 카드뉴스 이미지 1장 — legacy key 또는 READY public asset ID 중 정확히 하나를 받는다. 목록의 순서가 노출 순서다. */
+    MagazineCardNewsRequest: {
+      /**
+       * @description 카드뉴스 이미지 S3 key(업로드 완료본)
+       * @example magazines/a1b2c3-card-1.jpg
+       */
+      imageKey?: string
+      /**
+       * Format: uuid
+       * @description 카드뉴스 이미지 public asset ID(purpose=MAGAZINE_CARD_NEWS)
+       * @example 0b9d6c52-7c0e-4b7a-9a59-3f4f2f1f6c11
+       */
+      imageAssetId?: string
+    }
+    /**
+     * @description 어드민 매거진 단건 응답. 기존 URL 필드를 유지하면서 슬롯별 최적화 이미지 응답을 추가한다.
+     *      cardNewsImages·restaurantIds는 노출 순서대로이며, 없으면 빈 목록이다.
+     */
     AdminMagazineResponse: {
       /** Format: int64 */
       magazineId?: number
@@ -627,6 +1444,22 @@ export interface components {
       instagramRedirectUrl?: string
       /** Format: date-time */
       createdAt?: string
+      content?: string
+      cardNewsImages?: components['schemas']['CardNewsImageResponse'][]
+      hashtags?: string[]
+      restaurantIds?: number[]
+    }
+    /**
+     * @description 카드뉴스 이미지 1장 — 식당 이미지 wrapper와 같은 형태다(image-delivery-contract §9.2).
+     *      legacyUrl은 asset ID가 없는 카드뉴스에만 있고, asset이 있으면 상태와 관계없이 null이다.
+     */
+    CardNewsImageResponse: {
+      /** Format: int64 */
+      cardNewsId?: number
+      /** Format: int32 */
+      displayOrder?: number
+      image?: components['schemas']['MediaImage']
+      legacyUrl?: string
     }
     /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
     SuccessResponseAdminMagazineResponse: {
@@ -642,18 +1475,19 @@ export interface components {
       imageAssetId?: string
     }
     /**
-     * @description 어드민 식당 부분 수정(PATCH) 요청 — null 필드는 변경하지 않는다(값 비우기 불가).
+     * @description 어드민 식당 부분 수정(PATCH) 요청 — null 필드는 변경하지 않는다.
+     *      geocodingAddress만 공백 문자열로 명시적 override 삭제가 가능하다.
      *      컬렉션은 전체 교체 의미다. null이면 유지하며, imageKeys·hashtags는 최소 1개를 유지해야 한다.
      *      businessHours는 보낼 경우 7개 요일을 중복 없이 모두 포함해야 한다.
      */
     UpdateRestaurantRequest: {
       /**
-       * @description 식당명(선택)
+       * @description 식당명(선택). 값이 바뀌면 기존 위치와 관리자 확인을 무효화하고 재확인
        * @example 야키니쿠 리키마루 이케부쿠로점
        */
       name?: string
       /**
-       * @description 현지(일본어) 식당명(선택, 공백 불가)
+       * @description 현지(일본어) 식당명(선택, 공백 불가). 값이 바뀌면 위치 재확인
        * @example 焼肉力丸 池袋東口店
        */
       localName?: string
@@ -668,10 +1502,15 @@ export interface components {
        */
       description?: string
       /**
-       * @description 주소(선택)
+       * @description 사용자 화면에 표시할 전체 주소(PATCH 선택). 건물명·층 정보를 보존. 이 값만 바꾸면 기존 geocodingAddress를 삭제하고 새 address를 위치 확인 기준으로 사용하며, 표시 주소가 바뀌면 기존 위치와 관리자 확인을 무효화하고 다시 요청
        * @example 도쿄도 도시마구 히가시이케부쿠로 1-1-1
        */
       address?: string
+      /**
+       * @description Google 위치 확인용 별도 지정 주소(PATCH). 생략/null은 address가 그대로일 때 기존 값을 유지하고, address 변경 시 기존 별도 지정 주소를 삭제함. 공백은 별도 지정 주소를 명시적으로 삭제하고 현재 address를 사용. 같은 기본 주소를 보내도 이름이나 표시 주소가 바뀌면 위치 재확인. 동일 입력은 기존 상태 유지
+       * @example 東京都豊島区東池袋1-1-1
+       */
+      geocodingAddress?: string
       /**
        * @description 지역(선택)
        * @example 이케부쿠로
@@ -733,7 +1572,10 @@ export interface components {
       curationTypes?: string[]
       businessHours?: components['schemas']['BusinessHourRequest'][]
     }
-    /** @description 어드민 매거진 부분 수정(PATCH) 요청 — null 필드는 변경하지 않는다. */
+    /**
+     * @description 어드민 매거진 부분 수정(PATCH) 요청 — null 필드는 변경하지 않는다.
+     *      cardNews·hashtags·restaurantIds는 보내면 전체 교체하며(빈 목록은 모두 지움), 목록의 순서가 노출 순서다.
+     */
     UpdateMagazineRequest: {
       /**
        * @description 매거진 제목(선택)
@@ -767,8 +1609,29 @@ export interface components {
        * @example https://www.instagram.com/p/def456/
        */
       instagramRedirectUrl?: string
-      bannerImageSourceValid?: boolean
-      thumbnailImageSourceValid?: boolean
+      /**
+       * @description 상세 본문(선택, 빈 문자열이면 본문을 지움)
+       * @example 퇴근길에 들르기 좋은 이자카야를 모았습니다.
+       */
+      content?: string
+      /** @description 카드뉴스 이미지 목록(선택, 보내면 전체 교체·순서대로 노출) */
+      cardNews?: components['schemas']['MagazineCardNewsRequest'][]
+      /**
+       * @description 해시태그 목록(선택, 보내면 전체 교체)
+       * @example [
+       *       "이자카야",
+       *       "퇴근길"
+       *     ]
+       */
+      hashtags?: string[]
+      /**
+       * @description 연결 식당 ID 목록(선택, 보내면 전체 교체·순서대로 노출)
+       * @example [
+       *       1001,
+       *       1002
+       *     ]
+       */
+      restaurantIds?: number[]
     }
     /** @description 어드민 회원 목록 응답 — offset 페이지네이션 메타(page·size·totalCount·totalPages) 포함. */
     AdminUserListResponse: {
@@ -803,6 +1666,172 @@ export interface components {
       code?: string
       message?: string
       data?: components['schemas']['AdminUserListResponse']
+    }
+    AdminTermsListResponse: {
+      terms?: components['schemas']['AdminTermsResponse'][]
+      /** Format: int32 */
+      page?: number
+      /** Format: int32 */
+      size?: number
+      /** Format: int64 */
+      totalCount?: number
+      /** Format: int32 */
+      totalPages?: number
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseAdminTermsListResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['AdminTermsListResponse']
+    }
+    AdminTermsTypeResponse: {
+      /** @enum {string} */
+      type?:
+        | 'SERVICE_TERMS'
+        | 'PRIVACY_POLICY'
+        | 'PERSONAL_DATA_COLLECTION'
+        | 'PERSONAL_DATA_THIRD_PARTY'
+        | 'RESERVATION_REFUND_POLICY'
+        | 'REVIEW_POLICY'
+        | 'POINT_TERMS'
+        | 'SERVICE_POLICY'
+      title?: string
+      /** Format: int64 */
+      currentTermsId?: number
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseListAdminTermsTypeResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['AdminTermsTypeResponse'][]
+    }
+    /** @description 식당 ID 오름차순 관리자 위치 검토 목록. page는 0부터 시작 */
+    RestaurantLocationReviewListResponse: {
+      /** @description 위치 검토 대상 식당 */
+      restaurants?: components['schemas']['RestaurantLocationReviewResponse'][]
+      /**
+       * Format: int32
+       * @description 현재 페이지 번호(0부터 시작)
+       * @example 0
+       */
+      page?: number
+      /**
+       * Format: int32
+       * @description 요청한 페이지 크기
+       * @example 20
+       */
+      size?: number
+      /**
+       * Format: int64
+       * @description 필터에 맞는 전체 식당 수
+       * @example 42
+       */
+      totalCount?: number
+      /**
+       * Format: int32
+       * @description 전체 페이지 수
+       * @example 3
+       */
+      totalPages?: number
+    }
+    /** @description 관리자 위치 검토 목록의 식당. 좌표와 내부 작업 식별자는 노출하지 않음 */
+    RestaurantLocationReviewResponse: {
+      /**
+       * Format: int64
+       * @description 식당 ID
+       * @example 1001
+       */
+      restaurantId?: number
+      /**
+       * @description 식당명
+       * @example 야키니쿠 리키마루 이케부쿠로점
+       */
+      name?: string
+      /**
+       * @description 화면에 표시하는 전체 주소
+       * @example 東京都豊島区東池袋1-1-1 架空ビル1F
+       */
+      address?: string
+      /**
+       * @description Google 위치 확인에만 쓰는 별도 지정 주소. null이면 address를 사용
+       * @example 東京都豊島区東池袋1-1-1
+       */
+      geocodingAddress?: string
+      /**
+       * @description 위치 처리 상태
+       * @example REVIEW_REQUIRED
+       * @enum {string}
+       */
+      locationStatus?:
+        | 'UNRESOLVED'
+        | 'PENDING'
+        | 'READY'
+        | 'RETRY_WAIT'
+        | 'REVIEW_REQUIRED'
+        | 'FAILED'
+      /**
+       * @description 마지막 승인 위치의 출처. 승인 위치가 없으면 null
+       * @example GOOGLE_PLACES
+       * @enum {string}
+       */
+      source?: 'GOOGLE_GEOCODING' | 'GOOGLE_PLACES' | 'ADMIN'
+      /**
+       * @description 현재 requestId 작업의 검증 방식
+       * @example PLACE_DETAILS
+       * @enum {string}
+       */
+      verificationMode?: 'GEOCODING' | 'PLACE_DETAILS'
+      /**
+       * Format: int64
+       * @description 위치 확인 기준 정보 변경 번호(addressRevision). 이름·현지명·표시주소·위치조회주소 변경에 따라 증가. 재시도 요청의 expectedAddressRevision으로 사용
+       * @example 2
+       */
+      addressRevision?: number
+      /**
+       * Format: date-time
+       * @description 승인 좌표의 유효 기한(UTC). 승인 좌표가 없으면 null
+       */
+      validUntil?: string
+      /**
+       * Format: int32
+       * @description 현재 requestId 작업의 provider 호출 시도 횟수
+       * @example 1
+       */
+      attempt?: number
+      /**
+       * Format: date-time
+       * @description 다음 자동 재시도 예정 시각(UTC). 해당하지 않으면 null
+       */
+      nextAttemptAt?: string
+      /**
+       * @description 현재 requestId 작업의 최근 실패 사유 코드. 없으면 null
+       * @example NO_RESULTS
+       */
+      failureCode?: string
+      /**
+       * @description 관리자 재시도 가능 여부
+       * @example true
+       */
+      canRetry?: boolean
+      /**
+       * Format: int64
+       * @description 후보를 선택한 관리자 내부 ID. 자동 검증 또는 과거 기록이 없으면 null
+       */
+      confirmedByAdminId?: number
+      /**
+       * @description 확인한 관리자 계정의 현재 로그인 ID. 관리자 화면 표시용이며 확인 당시 값의 사본이 아님. 자동 검증·과거 기록 없음·계정 삭제 시 null
+       * @example hashi_admin
+       */
+      confirmedByAdminLoginId?: string
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseRestaurantLocationReviewListResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['RestaurantLocationReviewListResponse']
     }
     /** @description 어드민 예약 목록 응답 — offset 페이지네이션 메타(page·size·totalCount·totalPages) 포함. */
     AdminReservationListResponse: {
@@ -841,6 +1870,73 @@ export interface components {
       message?: string
       data?: components['schemas']['AdminReservationUserResponse']
     }
+    AdminNoticeListResponse: {
+      notices?: components['schemas']['AdminNoticeSummaryResponse'][]
+      /** Format: int32 */
+      page?: number
+      /** Format: int32 */
+      size?: number
+      /** Format: int64 */
+      totalCount?: number
+      /** Format: int32 */
+      totalPages?: number
+    }
+    AdminNoticeSummaryResponse: {
+      /** Format: int64 */
+      noticeId?: number
+      title?: string
+      status?: string
+      /** Format: date-time */
+      publishedAt?: string
+      /** Format: date-time */
+      lastModifiedAt?: string
+      /** Format: date-time */
+      createdAt?: string
+      /** Format: date-time */
+      updatedAt?: string
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponseAdminNoticeListResponse: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['AdminNoticeListResponse']
+    }
+    Page: {
+      /** @description 현재 페이지의 지역 설정. 비활성 초안도 포함 */
+      content?: components['schemas']['AdminMapRegionResponse'][]
+      /**
+       * Format: int32
+       * @description 0부터 시작하는 현재 페이지
+       * @example 0
+       */
+      page?: number
+      /**
+       * Format: int32
+       * @description 요청한 페이지 크기
+       * @example 20
+       */
+      size?: number
+      /**
+       * Format: int64
+       * @description 활성·비활성 지역 전체 개수
+       * @example 3
+       */
+      totalCount?: number
+      /**
+       * Format: int32
+       * @description 전체 페이지 수
+       * @example 1
+       */
+      totalPages?: number
+    }
+    /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+    SuccessResponsePage: {
+      success?: boolean
+      code?: string
+      message?: string
+      data?: components['schemas']['Page']
+    }
   }
   responses: never
   parameters: never
@@ -850,6 +1946,421 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  detail: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        termsId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminTermsResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        termsId: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SaveTermsRequest']
+      }
+    }
+    responses: {
+      /** @description 이용약관 초안 수정 완료 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminTermsResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        termsId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 이용약관 초안 삭제 완료 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseVoid']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  assign: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /**
+         * @description 배정하거나 해제할 식당 ID
+         * @example 1001
+         */
+        restaurantId: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetRestaurantMapRegionRequest']
+      }
+    }
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAssignment']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  detail_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        noticeId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminNoticeResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  update_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        noticeId: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SaveNoticeRequest']
+      }
+    }
+    responses: {
+      /** @description 공지사항 수정 완료 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminNoticeResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  delete_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        noticeId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 공지사항 삭제 완료 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseVoid']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  upsert: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /**
+         * @description 안정적인 지역 코드. 대문자 영문으로 시작하는 대문자·숫자·밑줄 1~40자
+         * @example TOKYO_SHIBUYA
+         */
+        code: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpsertMapRegionRequest']
+      }
+    }
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminMapRegionResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
   logout: {
     parameters: {
       query?: never
@@ -934,7 +2445,160 @@ export interface operations {
       }
     }
   }
+  history: {
+    parameters: {
+      query: {
+        type:
+          | 'SERVICE_TERMS'
+          | 'PRIVACY_POLICY'
+          | 'PERSONAL_DATA_COLLECTION'
+          | 'PERSONAL_DATA_THIRD_PARTY'
+          | 'RESERVATION_REFUND_POLICY'
+          | 'REVIEW_POLICY'
+          | 'POINT_TERMS'
+          | 'SERVICE_POLICY'
+        page?: number
+        size?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminTermsListResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
   create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SaveTermsRequest']
+      }
+    }
+    responses: {
+      /** @description 이용약관 초안 저장 완료 */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminTermsResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  publish: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        termsId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 이용약관 게시 완료 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminTermsResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  create_1: {
     parameters: {
       query?: never
       header?: never
@@ -1002,6 +2666,346 @@ export interface operations {
           'application/json': unknown
         }
       }
+      /** @description 에러 응답 */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  retryLocation: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        restaurantId: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RetryRestaurantLocationRequest']
+      }
+    }
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseRestaurantLocationResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  selectLocationPlace: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        restaurantId: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SelectRestaurantPlaceRequest']
+      }
+    }
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseRestaurantLocationResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  searchLocationPlaces: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        restaurantId: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SearchRestaurantPlacesRequest']
+      }
+    }
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseRestaurantPlacesSearchResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  previewLocation: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PreviewRestaurantLocationRequest']
+      }
+    }
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseRestaurantLocationPreviewResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
     }
   }
   changeStatus: {
@@ -1058,7 +3062,151 @@ export interface operations {
       }
     }
   }
-  create_1: {
+  list: {
+    parameters: {
+      query?: {
+        page?: number
+        size?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminNoticeListResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  create_2: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SaveNoticeRequest']
+      }
+    }
+    responses: {
+      /** @description 공지사항 초안 저장 완료 */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminNoticeResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  publish_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        noticeId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 공지사항 게시 완료 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseAdminNoticeResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  create_3: {
     parameters: {
       query?: never
       header?: never
@@ -1128,7 +3276,7 @@ export interface operations {
       }
     }
   }
-  delete: {
+  delete_2: {
     parameters: {
       query?: never
       header?: never
@@ -1169,7 +3317,7 @@ export interface operations {
       }
     }
   }
-  update: {
+  update_2: {
     parameters: {
       query?: never
       header?: never
@@ -1241,7 +3389,7 @@ export interface operations {
       }
     }
   }
-  delete_1: {
+  delete_3: {
     parameters: {
       query?: never
       header?: never
@@ -1291,7 +3439,7 @@ export interface operations {
       }
     }
   }
-  update_1: {
+  update_3: {
     parameters: {
       query?: never
       header?: never
@@ -1407,6 +3555,170 @@ export interface operations {
       }
     }
   }
+  types: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseListAdminTermsTypeResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  getLocation: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        restaurantId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseRestaurantLocationResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  findLocationReviews: {
+    parameters: {
+      query?: {
+        /**
+         * @description 위치 처리 상태. 생략하면 REVIEW_REQUIRED
+         * @example REVIEW_REQUIRED
+         */
+        status?:
+          | 'UNRESOLVED'
+          | 'PENDING'
+          | 'READY'
+          | 'RETRY_WAIT'
+          | 'REVIEW_REQUIRED'
+          | 'FAILED'
+        /**
+         * @description 승인 위치 출처 필터. 생략하면 출처와 무관하게 조회
+         * @example GOOGLE_PLACES
+         */
+        source?: 'GOOGLE_GEOCODING' | 'GOOGLE_PLACES' | 'ADMIN'
+        /**
+         * @description 0부터 시작하는 페이지 번호. page × size는 2,147,483,647 이하여야 함
+         * @example 0
+         */
+        page?: number
+        /**
+         * @description 페이지 크기(기본 20, 최대 100)
+         * @example 20
+         */
+        size?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponseRestaurantLocationReviewListResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
   getReservations: {
     parameters: {
       query?: {
@@ -1473,6 +3785,65 @@ export interface operations {
         }
         content: {
           '*/*': components['schemas']['SuccessResponseAdminReservationUserResponse']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  getRegions: {
+    parameters: {
+      query?: {
+        /**
+         * @description 0부터 시작하는 페이지 번호. page × size가 2147483647을 넘으면 400
+         * @example 0
+         */
+        page?: number
+        /**
+         * @description 페이지 크기(1~100)
+         * @example 20
+         */
+        size?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description 요청에 성공했습니다 */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['SuccessResponsePage']
+          'application/json': unknown
+        }
+      }
+      /** @description 에러 응답 */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
           'application/json': unknown
         }
       }

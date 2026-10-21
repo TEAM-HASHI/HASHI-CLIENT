@@ -10,6 +10,7 @@
     "lint": "pnpm --dir ../.. exec eslint apps/admin --config eslint.config.js",
     "gen:api-types": "node scripts/generate-openapi-types.mjs --schema-env ADMIN_OPENAPI_SCHEMA_URL --output src/shared/api/generated/openapi.ts",
     "gen:user-api-types": "node scripts/generate-openapi-types.mjs --schema-env USER_OPENAPI_SCHEMA_URL --output src/shared/api/generated/user-openapi.ts",
+    "gen:notice-api-types": "node scripts/generate-openapi-types.mjs --schema-env ADMIN_OPENAPI_SCHEMA_URL --output src/shared/api/generated/notice-openapi.ts --scope notices",
     "gen:all-api-types": "pnpm gen:api-types && pnpm gen:user-api-types",
     "preview": "vite preview",
     "test": "vitest run --config vitest.config.ts"

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { restaurantQueryKeys } from '@/pages/restaurants/queries/restaurantQueryKeys'
+import { locationKeys } from '@/features/restaurantLocation/queries/locationQueries'
 import {
   restaurantApi,
   type CreateRestaurantBody,
@@ -23,6 +24,7 @@ export const useCreateRestaurantMutation = () => {
 
 export const useUpdateRestaurantMutation = () => {
   const invalidate = useInvalidateRestaurantLists()
+  const client = useQueryClient()
   return useMutation({
     mutationFn: ({
       restaurantId,
@@ -31,14 +33,35 @@ export const useUpdateRestaurantMutation = () => {
       restaurantId: number
       input: UpdateRestaurantBody
     }) => restaurantApi.updateRestaurant(restaurantId, input),
-    onSuccess: invalidate,
+    onSuccess: async (_result, { restaurantId }) => {
+      const prefillKey = [...restaurantQueryKeys.prefills(), restaurantId]
+      await client.cancelQueries({ queryKey: prefillKey })
+      void client.invalidateQueries({
+        queryKey: prefillKey,
+        refetchType: 'none',
+      })
+      void client.invalidateQueries({
+        queryKey: locationKeys.status(restaurantId),
+        exact: true,
+      })
+      void client.invalidateQueries({ queryKey: locationKeys.lists })
+      return invalidate()
+    },
   })
 }
 
 export const useDeleteRestaurantMutation = () => {
   const invalidate = useInvalidateRestaurantLists()
+  const client = useQueryClient()
   return useMutation({
     mutationFn: restaurantApi.deleteRestaurant,
-    onSuccess: invalidate,
+    onSuccess: (_result, restaurantId) => {
+      client.removeQueries({
+        queryKey: locationKeys.status(restaurantId),
+        exact: true,
+      })
+      void client.invalidateQueries({ queryKey: locationKeys.lists })
+      return invalidate()
+    },
   })
 }
