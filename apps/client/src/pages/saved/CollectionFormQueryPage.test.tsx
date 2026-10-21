@@ -15,7 +15,11 @@ import { getCollection } from '@/pages/saved/api/getCollection'
 import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
 import { ApiError } from '@/shared/api/apiError'
 import { captureError } from '@/shared/lib/sentry'
-import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
+import {
+  clearAuthSession,
+  setAccessToken,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
 
 vi.mock('@/pages/saved/api/createCollection', () => ({
   createCollection: vi.fn(),
@@ -105,6 +109,36 @@ afterEach(() => {
 })
 
 describe('컬렉션 API 폼 연결', () => {
+  it('계정 변경 시 입력을 비우고 이전 생성 응답으로 복귀하지 않는다', async () => {
+    startAuthenticatedSession('account-a', 1)
+    let finish!: (value: typeof detail) => void
+    vi.mocked(createCollection).mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve
+      }),
+    )
+    const { user, router, onError } = setup()
+    await user.type(screen.getByLabelText('컬렉션명'), 'A 초안')
+    await user.click(screen.getByRole('radio', { name: '빨강' }))
+    await user.click(screen.getByRole('button', { name: '만들기' }))
+    act(() => startAuthenticatedSession('account-b', 2))
+    expect(screen.getByLabelText('컬렉션명')).toHaveValue('')
+    await act(async () => finish(detail))
+    expect(router.state.location.pathname).toBe('/saved/collections/new')
+    expect(screen.getByLabelText('컬렉션명')).toHaveValue('')
+    expect(onError).not.toHaveBeenCalled()
+    expect(captureError).not.toHaveBeenCalled()
+    vi.mocked(createCollection).mockResolvedValue({
+      ...detail,
+      collectionId: 9,
+    })
+    await user.type(screen.getByLabelText('컬렉션명'), 'B 초안')
+    await user.click(screen.getByRole('radio', { name: '빨강' }))
+    await user.click(screen.getByRole('button', { name: '만들기' }))
+    await screen.findByText(/원래 화면/)
+    expect(router.state.location.state).toBeNull()
+  })
+
   it('생성 응답 전에는 복귀하지 않고 서버 ID를 캐시에 반영한 뒤 원래 저장 상태로 복귀한다', async () => {
     let finish!: (value: typeof detail) => void
     vi.mocked(createCollection).mockReturnValue(
@@ -119,15 +153,12 @@ describe('컬렉션 API 폼 연결', () => {
       target: { value: '첫 줄\n둘째 줄' },
     })
     await user.click(screen.getByRole('button', { name: '만들기' }))
-    expect(createCollection).toHaveBeenCalledExactlyOnceWith(
-      {
-        name: '  여행  ',
-        color: 'red',
-        description: '첫 줄 둘째 줄',
-        visibility: 'public',
-      },
-      expect.anything(),
-    )
+    expect(createCollection).toHaveBeenCalledExactlyOnceWith({
+      name: '  여행  ',
+      color: 'red',
+      description: '첫 줄 둘째 줄',
+      visibility: 'public',
+    })
     expect(router.state.location.pathname).toBe('/saved/collections/new')
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
     await act(async () => finish({ ...detail, collectionId: 42 }))

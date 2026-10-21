@@ -1,7 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, cleanup, renderHook } from '@testing-library/react'
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import type { PropsWithChildren } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import {
+  clearAuthSession,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
 
 import { deleteCollection } from '@/pages/saved/api/deleteCollection'
 import { moveSavedRestaurants } from '@/pages/saved/api/moveSavedRestaurants'
@@ -40,7 +45,97 @@ describe('collection management mutation cache synchronization', () => {
   beforeEach(() => {
     vi.resetAllMocks()
   })
-  afterEach(cleanup)
+  afterEach(() => {
+    cleanup()
+    clearAuthSession()
+  })
+
+  it.each(['save', 'remove', 'move', 'delete'] as const)(
+    'does not update the next account after late %s success',
+    async (action) => {
+      startAuthenticatedSession('account-a', 1)
+      let complete!: () => void
+      const request = new Promise<void>((resolve) => {
+        complete = resolve
+      })
+      const detail = { collectionId: 42, savedCount: 2 }
+      vi.mocked(saveRestaurant).mockImplementation(async () => {
+        await request
+        return detail
+      })
+      vi.mocked(removeSavedRestaurants).mockImplementation(async () => {
+        await request
+        return detail
+      })
+      vi.mocked(moveSavedRestaurants).mockImplementation(async () => {
+        await request
+        return {
+          sourceCollection: detail,
+          targetCollection: { collectionId: 43 },
+        }
+      })
+      vi.mocked(deleteCollection).mockImplementation(async () => {
+        await request
+      })
+      const onError = vi.fn()
+      const { client, wrapper } = createWrapper()
+      const { result } = renderHook(
+        () => ({
+          save: useSaveRestaurantMutation(onError),
+          remove: useRemoveSavedRestaurantsMutation(onError),
+          move: useMoveSavedRestaurantsMutation(onError),
+          delete: useDeleteCollectionMutation(onError),
+        }),
+        { wrapper },
+      )
+      let pending!: Promise<unknown>
+      await act(async () => {
+        pending = (
+          action === 'save'
+            ? result.current.save.mutateAsync({
+                collectionId: 42,
+                body: { restaurantId: 5 },
+              })
+            : action === 'remove'
+              ? result.current.remove.mutateAsync({
+                  collectionId: 42,
+                  restaurantIds: [5],
+                })
+              : action === 'move'
+                ? result.current.move.mutateAsync({
+                    collectionId: 42,
+                    body: { targetCollectionId: 43, restaurantIds: [5] },
+                  })
+                : result.current.delete.mutateAsync(42)
+        ).catch((error) => error)
+      })
+      await waitFor(() =>
+        expect(
+          {
+            save: saveRestaurant,
+            remove: removeSavedRestaurants,
+            move: moveSavedRestaurants,
+            delete: deleteCollection,
+          }[action],
+        ).toHaveBeenCalled(),
+      )
+      act(() => startAuthenticatedSession('account-b', 2))
+      const detailKey = collectionQueryKeys.detail(42)
+      const listKey = collectionQueryKeys.infiniteList({})
+      client.setQueryData(detailKey, { collectionId: 42, name: 'B 데이터' })
+      client.setQueryData(listKey, { pages: [] })
+      await act(async () => {
+        complete()
+        expect(await pending).toBeInstanceOf(Error)
+      })
+      expect(client.getQueryData(detailKey)).toEqual({
+        collectionId: 42,
+        name: 'B 데이터',
+      })
+      expect(client.getQueryState(listKey)?.isInvalidated).toBe(false)
+      expect(onError).not.toHaveBeenCalled()
+    },
+  )
 
   it.each(['save', 'remove'] as const)(
     'refreshes all filters of the affected restaurant list after %s',

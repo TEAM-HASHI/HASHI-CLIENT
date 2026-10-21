@@ -1,3 +1,6 @@
+import { getAuthSessionVersion } from '@/shared/auth/authSession'
+import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+
 import { LinkIcon } from '@hashi/hds-icons'
 import { Button, showToast, toastQueue } from '@hashi/hds-ui'
 import { useEffect, useRef, useState } from 'react'
@@ -43,20 +46,30 @@ import {
 
 export const SavedApiPage = () => {
   const location = useLocation()
-  return <SavedApiScreen key={location.pathname} />
+  const sessionVersion = useCollectionSessionVersion()
+  const initialSessionVersion = useRef(sessionVersion)
+  return (
+    <SavedApiScreen
+      key={`${location.pathname}:${sessionVersion}`}
+      restoreState={
+        initialSessionVersion.current === sessionVersion ? location.state : null
+      }
+    />
+  )
 }
 
-const SavedApiScreen = () => {
+const SavedApiScreen = ({ restoreState }: { restoreState: unknown }) => {
+  const sessionVersion = useCollectionSessionVersion()
   const { isAuthenticated } = useAuthStatus()
   const location = useLocation()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [management, setManagement] =
     useState<CollectionManagementAction | null>(() =>
-      getCollectionManagementAction(location.state),
+      getCollectionManagementAction(restoreState),
     )
   const [saveId, setSaveId] = useState(() =>
-    getCollectionSaveRestaurantId(location.state),
+    getCollectionSaveRestaurantId(restoreState),
   )
   const collectionId = management ? Number(management.collectionId) : null
   const restaurantIds = (management?.restaurantIds ?? []).map(Number)
@@ -90,7 +103,7 @@ const SavedApiScreen = () => {
     } finally {
       copying.current = false
     }
-    if (!mounted.current) return
+    if (!mounted.current || sessionVersion !== getAuthSessionVersion()) return
     toastQueue.clear()
     showToast({
       ...(copied && { icon: <LinkIcon className="size-6" /> }),
@@ -105,8 +118,8 @@ const SavedApiScreen = () => {
     else if (collection.isPublic === false)
       setManagement({ collectionId: collection.id, type: 'share' })
   }
-  const restoredView = isCollectionMapState(location.state)
-    ? location.state
+  const restoredView = isCollectionMapState(restoreState)
+    ? restoreState
     : INITIAL_COLLECTION_VIEW
   const sort =
     COLLECTION_SORT_OPTIONS.find((item) => item.value === params.get('sort'))
@@ -119,8 +132,8 @@ const SavedApiScreen = () => {
   // 생성 화면 복귀용 상태는 이번 화면에서만 사용한다.
   useEffect(() => {
     if (
-      !getCollectionManagementAction(location.state) &&
-      !getCollectionSaveRestaurantId(location.state)
+      !getCollectionManagementAction(restoreState) &&
+      !getCollectionSaveRestaurantId(restoreState)
     )
       return
     navigate(
@@ -128,12 +141,12 @@ const SavedApiScreen = () => {
       {
         replace: true,
         state: getCollectionManagementState(
-          getCollectionSaveState(location.state, null),
+          getCollectionSaveState(restoreState, null),
           null,
         ),
       },
     )
-  }, [location, navigate])
+  }, [location, navigate, restoreState])
 
   const close = () => {
     setManagement(null)
@@ -143,7 +156,7 @@ const SavedApiScreen = () => {
       {
         replace: true,
         state: getCollectionManagementState(
-          getCollectionSaveState(location.state, null),
+          getCollectionSaveState(restoreState, null),
           null,
         ),
       },
@@ -236,9 +249,14 @@ const SavedApiScreen = () => {
                   body: { visibility: 'public' },
                 })
               }
-              if (!mounted.current) return
+              if (
+                !mounted.current ||
+                sessionVersion !== getAuthSessionVersion()
+              )
+                return
               await copyCollectionLink(String(collectionId))
-              if (mounted.current) close()
+              if (mounted.current && sessionVersion === getAuthSessionVersion())
+                close()
             }}
           >
             {shareQuery.isPending && <p role="status">불러오는 중…</p>}
@@ -290,10 +308,7 @@ const SavedApiScreen = () => {
             mode="move"
             sourceCollectionId={collectionId}
             restaurantIds={restaurantIds}
-            createState={getCollectionManagementState(
-              location.state,
-              management,
-            )}
+            createState={getCollectionManagementState(restoreState, management)}
             onClose={close}
           />
         )}

@@ -1,6 +1,8 @@
+import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Checkbox, Header, IconButton } from '@hashi/hds-ui'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Navigate,
   useLocation,
@@ -37,6 +39,8 @@ const SELECTION_CLASS =
   'shrink-0 [&>span:first-of-type]:size-6 [&>span:first-of-type]:rounded-full [&>span:first-of-type]:border [&>span:first-of-type]:border-warm-gray-100 [&>span:first-of-type]:bg-white [&>span:first-of-type]:text-warm-gray-100 [&>span:first-of-type>svg]:size-5 [&>input:checked+span]:bg-cool-gray-900 [&>input:checked+span]:border-cool-gray-900 [&>input:checked+span]:text-white'
 
 export const CollectionEditorQueryPage = () => {
+  const sessionVersion = useCollectionSessionVersion()
+  const initialSessionVersion = useRef(sessionVersion)
   const { collectionId } = useParams<{ collectionId: string }>()
   const [params] = useSearchParams()
   const id =
@@ -53,7 +57,8 @@ export const CollectionEditorQueryPage = () => {
   if (!isValidCollectionId(id)) return <Navigate to={ROUTES.saved} replace />
   return (
     <CollectionEditorQuery
-      key={`${id}:${sort}:${category}`}
+      key={`${id}:${sort}:${category}:${sessionVersion}`}
+      restoreState={initialSessionVersion.current === sessionVersion}
       collectionId={id}
       sort={sort}
       category={category}
@@ -65,7 +70,9 @@ const CollectionEditorQuery = ({
   collectionId,
   sort,
   category,
+  restoreState,
 }: {
+  restoreState: boolean
   collectionId: number
   sort: (typeof COLLECTION_SORT_OPTIONS)[number]['value']
   category: (typeof COLLECTION_CATEGORY_OPTIONS)[number]['value']
@@ -74,7 +81,9 @@ const CollectionEditorQuery = ({
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStatus()
   const [restored] = useState(() => {
-    const action = getCollectionManagementAction(location.state)
+    const action = restoreState
+      ? getCollectionManagementAction(location.state)
+      : null
     return action?.collectionId === String(collectionId) &&
       action.type === 'edit'
       ? action
@@ -116,7 +125,9 @@ const CollectionEditorQuery = ({
   })
   // 생성에서 돌아온 선택은 이번 편집에서만 소비한다.
   useEffect(() => {
-    const action = getCollectionManagementAction(location.state)
+    const action = restoreState
+      ? getCollectionManagementAction(location.state)
+      : null
     if (
       action?.collectionId !== String(collectionId) ||
       action.type !== 'edit' ||

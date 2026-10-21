@@ -8,21 +8,29 @@ import type { MoveSavedRestaurantsBody } from '@/pages/saved/api/moveSavedRestau
 import { removeSavedRestaurants } from '@/pages/saved/api/removeSavedRestaurants'
 import { saveRestaurant } from '@/pages/saved/api/saveRestaurant'
 import type { SaveRestaurantBody } from '@/pages/saved/api/saveRestaurant'
+import { collectionMutationOptions } from '@/pages/saved/mutations/collectionMutationOptions'
 import { synchronizeCollectionHeader } from '@/pages/saved/mutations/synchronizeCollectionHeader'
 import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
+import { assertCollectionSession } from '@/pages/saved/utils/collectionSession'
 
 const synchronizeSavedCollections = async (
   queryClient: QueryClient,
   details: CollectionDetailData[],
+  sessionVersion: number,
 ) => {
   const ids = await Promise.all(
-    details.map((detail) => synchronizeCollectionHeader(queryClient, detail)),
+    details.map((detail) =>
+      synchronizeCollectionHeader(queryClient, detail, sessionVersion),
+    ),
   )
+  assertCollectionSession(sessionVersion)
   await Promise.all([
-    queryClient.invalidateQueries({ queryKey: collectionQueryKeys.lists() }),
+    queryClient.invalidateQueries({
+      queryKey: collectionQueryKeys.lists(sessionVersion),
+    }),
     ...ids.map((id) =>
       queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.restaurantLists(id),
+        queryKey: collectionQueryKeys.restaurantLists(id, sessionVersion),
       }),
     ),
   ])
@@ -30,76 +38,99 @@ const synchronizeSavedCollections = async (
 
 export const useSaveRestaurantMutation = (onError?: (error: Error) => void) => {
   const queryClient = useQueryClient()
-  return useMutation({
-    ...(onError && { onError: (error: Error) => onError(error) }),
-    mutationFn: ({
-      collectionId,
-      body,
-    }: {
-      collectionId: number
-      body: SaveRestaurantBody
-    }) => saveRestaurant(collectionId, body),
-    onSuccess: (detail) => synchronizeSavedCollections(queryClient, [detail]),
-  })
+  return useMutation(
+    collectionMutationOptions(
+      queryClient,
+      ({
+        collectionId,
+        body,
+      }: {
+        collectionId: number
+        body: SaveRestaurantBody
+      }) => saveRestaurant(collectionId, body),
+      (detail, _variables, version) =>
+        synchronizeSavedCollections(queryClient, [detail], version),
+      onError,
+    ),
+  )
 }
 
 export const useRemoveSavedRestaurantsMutation = (
   onError?: (error: Error) => void,
 ) => {
   const queryClient = useQueryClient()
-  return useMutation({
-    ...(onError && { onError: (error: Error) => onError(error) }),
-    mutationFn: ({
-      collectionId,
-      restaurantIds,
-    }: {
-      collectionId: number
-      restaurantIds: readonly number[]
-    }) => removeSavedRestaurants(collectionId, restaurantIds),
-    onSuccess: (detail) => synchronizeSavedCollections(queryClient, [detail]),
-  })
+  return useMutation(
+    collectionMutationOptions(
+      queryClient,
+      ({
+        collectionId,
+        restaurantIds,
+      }: {
+        collectionId: number
+        restaurantIds: readonly number[]
+      }) => removeSavedRestaurants(collectionId, restaurantIds),
+      (detail, _variables, version) =>
+        synchronizeSavedCollections(queryClient, [detail], version),
+      onError,
+    ),
+  )
 }
 
 export const useMoveSavedRestaurantsMutation = (
   onError?: (error: Error) => void,
 ) => {
   const queryClient = useQueryClient()
-  return useMutation({
-    ...(onError && { onError: (error: Error) => onError(error) }),
-    mutationFn: ({
-      collectionId,
-      body,
-    }: {
-      collectionId: number
-      body: MoveSavedRestaurantsBody
-    }) => moveSavedRestaurants(collectionId, body),
-    onSuccess: (result) =>
-      synchronizeSavedCollections(queryClient, [
-        result.sourceCollection,
-        result.targetCollection,
-      ]),
-  })
+  return useMutation(
+    collectionMutationOptions(
+      queryClient,
+      ({
+        collectionId,
+        body,
+      }: {
+        collectionId: number
+        body: MoveSavedRestaurantsBody
+      }) => moveSavedRestaurants(collectionId, body),
+      (result, _variables, version) =>
+        synchronizeSavedCollections(
+          queryClient,
+          [result.sourceCollection, result.targetCollection],
+          version,
+        ),
+      onError,
+    ),
+  )
 }
 
 export const useDeleteCollectionMutation = (
   onError?: (error: Error) => void,
 ) => {
   const queryClient = useQueryClient()
-  return useMutation({
-    ...(onError && { onError: (error: Error) => onError(error) }),
-    mutationFn: deleteCollection,
-    onSuccess: async (_, collectionId) => {
-      const detailKey = collectionQueryKeys.detail(collectionId)
-      const restaurantsKey = collectionQueryKeys.restaurantLists(collectionId)
-      await Promise.all([
-        queryClient.cancelQueries({ queryKey: detailKey, exact: true }),
-        queryClient.cancelQueries({ queryKey: restaurantsKey }),
-      ])
-      queryClient.removeQueries({ queryKey: detailKey, exact: true })
-      queryClient.removeQueries({ queryKey: restaurantsKey })
-      await queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.lists(),
-      })
-    },
-  })
+  return useMutation(
+    collectionMutationOptions(
+      queryClient,
+      deleteCollection,
+      async (_data, collectionId, version) => {
+        const detailKey = collectionQueryKeys.detail(
+          collectionId,
+          false,
+          version,
+        )
+        const restaurantsKey = collectionQueryKeys.restaurantLists(
+          collectionId,
+          version,
+        )
+        await Promise.all([
+          queryClient.cancelQueries({ queryKey: detailKey, exact: true }),
+          queryClient.cancelQueries({ queryKey: restaurantsKey }),
+        ])
+        assertCollectionSession(version)
+        queryClient.removeQueries({ queryKey: detailKey, exact: true })
+        queryClient.removeQueries({ queryKey: restaurantsKey })
+        await queryClient.invalidateQueries({
+          queryKey: collectionQueryKeys.lists(version),
+        })
+      },
+      onError,
+    ),
+  )
 }

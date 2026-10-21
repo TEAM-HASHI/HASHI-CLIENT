@@ -1,3 +1,5 @@
+import { getAuthSessionVersion } from '@/shared/auth/authSession'
+
 import type {
   CollectionsListFiltersTypes,
   SavedRestaurantsFiltersTypes,
@@ -5,24 +7,45 @@ import type {
 
 export const collectionQueryKeys = {
   all: ['collections'] as const,
-  lists: () => [...collectionQueryKeys.all, 'list'] as const,
-  infiniteList: (params: CollectionsListFiltersTypes | null) =>
-    [...collectionQueryKeys.lists(), 'infinite', params] as const,
-  details: () => [...collectionQueryKeys.all, 'detail'] as const,
-  detail: (collectionId: number | null, publicView = false) =>
+  lists: (sessionVersion = getAuthSessionVersion()) =>
+    [...collectionQueryKeys.all, sessionVersion, 'list'] as const,
+  infiniteList: (
+    params: CollectionsListFiltersTypes | null,
+    sessionVersion = getAuthSessionVersion(),
+  ) =>
+    [...collectionQueryKeys.lists(sessionVersion), 'infinite', params] as const,
+  details: (sessionVersion = getAuthSessionVersion()) =>
+    [...collectionQueryKeys.all, sessionVersion, 'detail'] as const,
+  detail: (
+    collectionId: number | null,
+    publicView = false,
+    sessionVersion = getAuthSessionVersion(),
+  ) =>
     [
-      ...collectionQueryKeys.details(),
+      ...collectionQueryKeys.details(sessionVersion),
       collectionId,
       ...(publicView ? ['public'] : []),
     ] as const,
-  restaurantLists: (collectionId: number | null) =>
-    [...collectionQueryKeys.all, 'restaurants', collectionId] as const,
+  restaurantLists: (
+    collectionId: number | null,
+    sessionVersion = getAuthSessionVersion(),
+  ) =>
+    [
+      ...collectionQueryKeys.all,
+      sessionVersion,
+      'restaurants',
+      collectionId,
+    ] as const,
   movePlan: (
     targetCollectionId: number | null,
     restaurantIds: readonly number[],
+    sessionVersion = getAuthSessionVersion(),
   ) =>
     [
-      ...collectionQueryKeys.restaurantLists(targetCollectionId),
+      ...collectionQueryKeys.restaurantLists(
+        targetCollectionId,
+        sessionVersion,
+      ),
       'move-plan',
       restaurantIds,
     ] as const,
@@ -30,9 +53,10 @@ export const collectionQueryKeys = {
     collectionId: number | null,
     params: SavedRestaurantsFiltersTypes | null,
     publicView = false,
+    sessionVersion = getAuthSessionVersion(),
   ) =>
     [
-      ...collectionQueryKeys.restaurantLists(collectionId),
+      ...collectionQueryKeys.restaurantLists(collectionId, sessionVersion),
       'infinite',
       params,
       ...(publicView ? ['public'] : []),

@@ -17,7 +17,11 @@ import { getSavedRestaurants } from '@/pages/saved/api/getSavedRestaurants'
 import { appRoutes } from '@/app/router/routes'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import type { PropsWithChildren } from 'react'
-import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
+import {
+  clearAuthSession,
+  setAccessToken,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
 import { createQueryClient } from '@/shared/lib/queryClient'
 
 vi.mock('@/shared/utils/clipboard', () => ({ copyUrlToClipboard: vi.fn() }))
@@ -291,6 +295,39 @@ describe('appRoutes', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 
+  it('계정 변경 시 공유창을 닫고 이전 공개 전환 응답으로 복사하지 않는다', async () => {
+    startAuthenticatedSession('account-a', 1)
+    let finish!: (value: Awaited<ReturnType<typeof updateCollection>>) => void
+    vi.mocked(updateCollection).mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve
+      }),
+    )
+    const { router } = await renderRoute('/saved')
+    const user = userEvent.setup()
+    await user.click(
+      await screen.findByRole('button', { name: 'API 여행 더보기' }),
+    )
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
+    await user.click(
+      await screen.findByRole('button', { name: '공개 후 공유' }),
+    )
+    vi.mocked(getCollections).mockResolvedValue({
+      collections: [{ collectionId: 9, name: 'B 목록' }],
+      hasNext: false,
+      totalCount: 1,
+    })
+    act(() => startAuthenticatedSession('account-b', 2))
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    await screen.findByRole('button', { name: 'B 목록 컬렉션 열기' })
+    await act(async () =>
+      finish({ collectionId: 8, visibility: 'public', owner: true }),
+    )
+    expect(copyUrlToClipboard).not.toHaveBeenCalled()
+    expect(showToast).not.toHaveBeenCalled()
+    expect(router.state.location.pathname).toBe('/saved')
+  })
+
   it('제품 목록에서 생성·수정·삭제 API를 호출하고 성공 후 갱신된 목록으로 복귀한다', async () => {
     setAccessToken('test-session')
     let detail = {
@@ -356,7 +393,7 @@ describe('appRoutes', () => {
       expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument(),
     )
     expect(await screen.findByText('총 0개')).toBeVisible()
-    expect(deleteCollection).toHaveBeenLastCalledWith(42, expect.anything())
+    expect(deleteCollection).toHaveBeenLastCalledWith(42)
   })
 
   afterEach(() => {

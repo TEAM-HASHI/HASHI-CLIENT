@@ -156,7 +156,7 @@ describe('컬렉션 서버 삭제 확인', () => {
     await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1))
     expect(onClose).toHaveBeenCalledTimes(1)
     expect(client.getQueryData(collectionQueryKeys.detail(8))).toBeUndefined()
-    expect(deleteCollection).toHaveBeenNthCalledWith(2, 8, expect.anything())
+    expect(deleteCollection).toHaveBeenNthCalledWith(2, 8)
   })
 
   it('삭제 대기 중 화면을 떠났으면 늦은 성공 응답으로 복귀시키지 않는다', async () => {

@@ -1,3 +1,8 @@
+import { runWithCollectionSession } from '@/pages/saved/utils/collectionSession'
+
+import { getAuthSessionVersion } from '@/shared/auth/authSession'
+import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+
 import { Button } from '@hashi/hds-ui'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
@@ -39,6 +44,21 @@ type CollectionTargetQueryDialogProps = {
 export const CollectionTargetQueryDialog = (
   props: CollectionTargetQueryDialogProps,
 ) => {
+  const sessionVersion = useCollectionSessionVersion()
+  const initialSessionVersion = useRef(sessionVersion)
+  return (
+    <CollectionTargetQueryDialogContent
+      key={sessionVersion}
+      {...props}
+      restoreSelection={initialSessionVersion.current === sessionVersion}
+    />
+  )
+}
+
+const CollectionTargetQueryDialogContent = (
+  props: CollectionTargetQueryDialogProps & { restoreSelection: boolean },
+) => {
+  const sessionVersion = useCollectionSessionVersion()
   const location = useLocation()
   const { isAuthenticated } = useAuthStatus()
   const mounted = useRef(true)
@@ -49,7 +69,7 @@ export const CollectionTargetQueryDialog = (
     }
   }, [])
   const [selectedId, setSelectedId] = useState(() =>
-    getCollectionSaveSelectedId(location.state),
+    getCollectionSaveSelectedId(props.restoreSelection ? location.state : null),
   )
   const [listRoot, setListRoot] = useState<HTMLDivElement | null>(null)
   const moving = props.mode === 'move'
@@ -80,7 +100,11 @@ export const CollectionTargetQueryDialog = (
   )
   const targetId = selected ? Number(selected.id) : null
   const planQuery = useQuery({
-    queryKey: collectionQueryKeys.movePlan(targetId, restaurantIds),
+    queryKey: collectionQueryKeys.movePlan(
+      targetId,
+      restaurantIds,
+      sessionVersion,
+    ),
     queryFn: ({ signal }) => {
       if (
         !isValidCollectionId(targetId) ||
@@ -88,7 +112,9 @@ export const CollectionTargetQueryDialog = (
         !restaurantIds.every(isValidCollectionId)
       )
         throw new Error('Move target is not ready')
-      return getCollectionMovePlan(targetId, restaurantIds, signal)
+      return runWithCollectionSession(sessionVersion, () =>
+        getCollectionMovePlan(targetId, restaurantIds, signal),
+      )
     },
     enabled: enabled && moving && sourceOwned && isValidCollectionId(targetId),
     staleTime: 0,
@@ -235,7 +261,8 @@ export const CollectionTargetQueryDialog = (
               void listQuery.refetch()
             throw cause
           }
-          if (mounted.current) props.onClose()
+          if (mounted.current && sessionVersion === getAuthSessionVersion())
+            props.onClose()
         } else {
           if (!sourceOwned || !planReady || !planQuery.data.movableIds.length)
             return
@@ -250,7 +277,8 @@ export const CollectionTargetQueryDialog = (
               void planQuery.refetch()
             throw cause
           }
-          if (!mounted.current) return
+          if (!mounted.current || sessionVersion !== getAuthSessionVersion())
+            return
           props.onMoved?.(movedIds)
           props.onClose()
         }

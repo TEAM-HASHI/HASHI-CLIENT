@@ -1,3 +1,6 @@
+import { getAuthSessionVersion } from '@/shared/auth/authSession'
+import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+
 import { Button } from '@hashi/hds-ui'
 import { useEffect, useRef } from 'react'
 
@@ -29,6 +32,14 @@ type CollectionDeleteQueryDialogProps = {
 export const CollectionDeleteQueryDialog = (
   props: CollectionDeleteQueryDialogProps,
 ) => {
+  const sessionVersion = useCollectionSessionVersion()
+  return <CollectionDeleteQueryDialogContent key={sessionVersion} {...props} />
+}
+
+const CollectionDeleteQueryDialogContent = (
+  props: CollectionDeleteQueryDialogProps,
+) => {
+  const sessionVersion = useCollectionSessionVersion()
   const mounted = useRef(true)
   useEffect(() => {
     mounted.current = true
@@ -71,12 +82,14 @@ export const CollectionDeleteQueryDialog = (
             collectionId: props.collectionId,
             restaurantIds: props.restaurantIds,
           })
-          if (!mounted.current) return
+          if (!mounted.current || sessionVersion !== getAuthSessionVersion())
+            return
           props.onRemoved?.(props.restaurantIds)
           props.onClose()
         } else {
           await deleteCollection.mutateAsync(props.collectionId)
-          if (!mounted.current) return
+          if (!mounted.current || sessionVersion !== getAuthSessionVersion())
+            return
           props.onClose()
           props.onDeleted()
         }

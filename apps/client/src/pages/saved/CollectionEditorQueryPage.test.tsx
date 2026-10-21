@@ -14,7 +14,11 @@ import { getCollections } from '@/pages/saved/api/getCollections'
 import { getSavedRestaurants } from '@/pages/saved/api/getSavedRestaurants'
 import { removeSavedRestaurants } from '@/pages/saved/api/removeSavedRestaurants'
 import { moveSavedRestaurants } from '@/pages/saved/api/moveSavedRestaurants'
-import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
+import {
+  clearAuthSession,
+  setAccessToken,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
 
 vi.mock('@/pages/saved/api/getCollection', () => ({ getCollection: vi.fn() }))
 vi.mock('@/pages/saved/api/getCollections', () => ({ getCollections: vi.fn() }))
@@ -99,6 +103,22 @@ afterEach(() => {
   observers.clear()
   clearAuthSession()
   vi.unstubAllGlobals()
+})
+
+it('계정 변경 시 같은 식당 ID라도 이전 선택을 복원하지 않는다', async () => {
+  startAuthenticatedSession('account-a', 1)
+  vi.mocked(getSavedRestaurants).mockResolvedValue({
+    content: [{ restaurantId: 55, name: '커피' }],
+    hasNext: false,
+  })
+  const { user } = setup()
+  await user.click(await screen.findByRole('checkbox', { name: '커피 선택' }))
+  expect(screen.getByRole('button', { name: '삭제 1' })).toBeEnabled()
+  act(() => startAuthenticatedSession('account-b', 2))
+  expect(
+    await screen.findByRole('checkbox', { name: '커피 선택' }),
+  ).not.toBeChecked()
+  expect(screen.getByRole('button', { name: '삭제' })).toBeDisabled()
 })
 
 it('추가 조회 실패와 삭제 실패에도 기존 선택을 유지하고 성공한 ID만 해제한다', async () => {
