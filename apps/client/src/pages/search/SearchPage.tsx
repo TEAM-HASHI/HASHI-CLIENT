@@ -180,11 +180,14 @@ export const SearchPage = () => {
           <>
             {searchRestaurantsQuery.isLoading ? (
               <SearchResultSkeleton />
-            ) : searchRestaurantsQuery.isError ? (
+            ) : searchRestaurantsQuery.isError && restaurants.length === 0 ? (
               <SearchErrorState onRetry={retrySearchRestaurants} />
             ) : restaurants.length > 0 ? (
               <>
                 <RestaurantResultList restaurants={restaurants} />
+                {searchRestaurantsQuery.isError && (
+                  <SearchErrorState onRetry={retrySearchRestaurants} />
+                )}
                 <div ref={loadMoreRef} aria-hidden="true" />
                 {searchRestaurantsQuery.isFetchingNextPage && (
                   <SearchResultSkeleton />
