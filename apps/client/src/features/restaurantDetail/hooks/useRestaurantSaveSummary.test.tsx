@@ -4,7 +4,6 @@ import type { PropsWithChildren } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useRestaurantSaveSummary } from '@/features/restaurantDetail/hooks/useRestaurantSaveSummary'
-import { restaurantSaveQueryKeys } from '@/features/restaurantDetail/queries/restaurantSaveQueryOptions'
 import { request } from '@/shared/api/request'
 import {
   clearAuthSession,
@@ -40,41 +39,29 @@ afterEach(() => {
 
 describe('useRestaurantSaveSummary', () => {
   it.each(['guest', 'onboarding'])(
-    'only reads the public count for %s',
+    'reuses the supplied count without requesting private saved state for %s',
     async (status) => {
       if (status === 'onboarding') setOnboardingSession()
-      mockedRequest.mockResolvedValue({
-        restaurants: [{ restaurantId: 10, saveCount: 7 }],
-      })
-      const { result } = renderHook(() => useRestaurantSaveSummary(10), {
+      const { result } = renderHook(() => useRestaurantSaveSummary(10, 7), {
         wrapper,
       })
-      expect(result.current).toEqual({ saveCount: undefined, saved: false })
-      await waitFor(() => expect(result.current.saveCount).toBe(7))
-      expect(result.current.saved).toBe(false)
-      expect(mockedRequest).toHaveBeenCalledTimes(1)
-      expect(client.getQueryData(restaurantSaveQueryKeys.count(10))).toEqual({
-        saveCount: 7,
-      })
+      expect(result.current).toEqual({ saveCount: 7, saved: false })
+      expect(mockedRequest).not.toHaveBeenCalled()
     },
   )
 
   it('isolates saved state across logout and login while sharing the public count', async () => {
     setAccessToken('account-a')
-    mockedRequest.mockImplementation(async (path) => ({
-      restaurants: [
-        path.includes('save-counts')
-          ? { restaurantId: 10, saveCount: 7 }
-          : { restaurantId: 10, saved: true },
-      ],
-    }))
-    const { result } = renderHook(() => useRestaurantSaveSummary(10), {
+    mockedRequest.mockResolvedValue({
+      restaurants: [{ restaurantId: 10, saved: true }],
+    })
+    const { result } = renderHook(() => useRestaurantSaveSummary(10, 7), {
       wrapper,
     })
     await waitFor(() => expect(result.current.saved).toBe(true))
     act(() => setAccessToken('account-a-refreshed'))
     expect(result.current).toEqual({ saveCount: 7, saved: true })
-    expect(mockedRequest).toHaveBeenCalledTimes(2)
+    expect(mockedRequest).toHaveBeenCalledTimes(1)
     act(() => clearAuthSession())
     expect(result.current).toEqual({ saveCount: 7, saved: false })
     let resolveSaved!: (value: unknown) => void
@@ -94,8 +81,8 @@ describe('useRestaurantSaveSummary', () => {
     )
     expect(result.current.saved).toBe(false)
     expect(
-      mockedRequest.mock.calls.filter(([path]) => path.includes('save-counts')),
-    ).toHaveLength(1)
+      mockedRequest.mock.calls.filter(([path]) => path.endsWith('/summary')),
+    ).toHaveLength(0)
     expect(
       JSON.stringify(
         client
@@ -109,14 +96,13 @@ describe('useRestaurantSaveSummary', () => {
   it('ignores a late saved response from a previous account', async () => {
     setAccessToken('account-a')
     let resolveOld!: (value: unknown) => void
-    mockedRequest.mockImplementation((path) =>
-      path.includes('save-counts')
-        ? Promise.resolve({ restaurants: [{ restaurantId: 10, saveCount: 7 }] })
-        : new Promise((resolve) => {
-            resolveOld = resolve
-          }),
+    mockedRequest.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveOld = resolve
+        }),
     )
-    const { result } = renderHook(() => useRestaurantSaveSummary(10), {
+    const { result } = renderHook(() => useRestaurantSaveSummary(10, 7), {
       wrapper,
     })
     await waitFor(() => expect(result.current.saveCount).toBe(7))
@@ -127,7 +113,7 @@ describe('useRestaurantSaveSummary', () => {
       clearAuthSession()
       setAccessToken('account-b')
     })
-    await waitFor(() => expect(mockedRequest).toHaveBeenCalledTimes(3))
+    await waitFor(() => expect(mockedRequest).toHaveBeenCalledTimes(2))
     await act(async () =>
       resolveOld({ restaurants: [{ restaurantId: 10, saved: true }] }),
     )
@@ -136,14 +122,10 @@ describe('useRestaurantSaveSummary', () => {
 
   it('does not reuse saved state after session changes while unmounted', async () => {
     setAccessToken('account-a')
-    mockedRequest.mockImplementation(async (path) => ({
-      restaurants: [
-        path.includes('save-counts')
-          ? { restaurantId: 10, saveCount: 7 }
-          : { restaurantId: 10, saved: true },
-      ],
-    }))
-    const first = renderHook(() => useRestaurantSaveSummary(10), { wrapper })
+    mockedRequest.mockResolvedValue({
+      restaurants: [{ restaurantId: 10, saved: true }],
+    })
+    const first = renderHook(() => useRestaurantSaveSummary(10, 7), { wrapper })
     await waitFor(() => expect(first.result.current.saved).toBe(true))
     first.unmount()
     clearAuthSession()
@@ -151,24 +133,13 @@ describe('useRestaurantSaveSummary', () => {
     mockedRequest.mockResolvedValue({
       restaurants: [{ restaurantId: 10, saved: false }],
     })
-    const second = renderHook(() => useRestaurantSaveSummary(10), { wrapper })
+    const second = renderHook(() => useRestaurantSaveSummary(10, 7), {
+      wrapper,
+    })
     expect(second.result.current).toEqual({ saveCount: 7, saved: false })
     await waitFor(() => expect(client.isFetching()).toBe(0))
     expect(second.result.current.saved).toBe(false)
-    expect(mockedRequest).toHaveBeenCalledTimes(3)
-  })
-
-  it('successfully caches an omitted count without turning it into zero', async () => {
-    mockedRequest.mockResolvedValue({ restaurants: [] })
-    const { result } = renderHook(() => useRestaurantSaveSummary(10), {
-      wrapper,
-    })
-    await waitFor(() =>
-      expect(
-        client.getQueryState(restaurantSaveQueryKeys.count(10))?.status,
-      ).toBe('success'),
-    )
-    expect(result.current).toEqual({ saveCount: undefined, saved: false })
+    expect(mockedRequest).toHaveBeenCalledTimes(2)
   })
 
   it('keeps optional read failures local without inventing a count', async () => {

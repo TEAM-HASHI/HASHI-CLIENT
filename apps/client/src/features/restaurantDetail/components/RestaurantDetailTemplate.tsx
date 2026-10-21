@@ -96,7 +96,10 @@ export const RestaurantDetailTemplate = ({
   const { isTabBarFixed, markerRef } = useRestaurantDetailTabBarFixed()
   const hasScrolledToInitialTabRef = useRef(false)
   const handleShare = useShareLink(shareUrl)
-  const saves = useRestaurantSaveSummary(Number(restaurant.id))
+  const saves = useRestaurantSaveSummary(
+    Number(restaurant.id),
+    restaurant.saveCount,
+  )
   const photos = useRestaurantPhotos(
     Number(restaurant.id),
     activeTab === 'photo',

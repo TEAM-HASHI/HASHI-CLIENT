@@ -243,6 +243,7 @@ export const createRestaurantDetailViewModel = ({
     localName: summary.localName ?? '',
     rating: averageRating ?? summary.rating ?? 0,
     reviewCount: reviewCount ?? summary.reviewCount ?? 0,
+    saveCount: summary.saveCount,
     ratingDistribution: createRatingDistribution(ratingDistribution),
     summary: summary.summary ?? '',
     address: summary.address,
