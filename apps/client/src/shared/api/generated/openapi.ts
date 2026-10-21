@@ -699,8 +699,20 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 식당 목록 조회 — 키워드·장르·정렬·유형 필터(커서 페이지네이션).
-         * @description 식당 목록 조회 — 키워드·장르·정렬·유형 필터(커서 페이지네이션).
+         * 식당 목록 및 일반 검색
+         * @description keyword가 있으면 식당명·메뉴명·해시태그를 대소문자 구분 없이 부분 검색합니다.
+         *     여러 단어는 OR 조건이며, 중복 단어는 한 번만 계산합니다. 예: 스시 라멘.
+         *     #스시는 해시태그만 검색합니다. URL에서는 #을 %23으로 인코딩하세요.
+         *     검색어 앞뒤 공백을 제거하며 최대 30자(Unicode 코드 포인트 기준)입니다. #만 있거나 태그 안에 공백이 있으면 400입니다.
+         *     keyword 생략·공백은 기존 전체 목록 조회입니다. 초기 검색 화면에서는 클라이언트가 검색 요청을 생략합니다.
+         *     검색 basic: 일치 단어 수 → 식당명 일치 수 → 메뉴명 일치 수 → 해시태그 일치 수 → ID 내림차순.
+         *     popular: 리뷰 수 → 별점 → ID 내림차순. 검색 rating: 별점 → 리뷰 수 → ID 내림차순.
+         *     keyword 없는 기존 목록의 basic(ID), rating(별점·ID) 순서는 유지합니다.
+         *     기본 10개, 최대 50개입니다. hasNext=true일 때 nextCursor를 그대로 보내세요.
+         *     검색어·장르·유형·정렬 변경 시 cursor를 빼고 첫 페이지부터 요청하세요. 조건이 다른 검색 커서는 400입니다.
+         *     이전 버전의 검색 커서도 400이므로 배포 후 첫 페이지를 다시 조회하세요.
+         *     추가 조회 중 식당 정보·별점·리뷰 수가 바뀌면 순서가 달라질 수 있습니다. 고정된 검색 스냅샷은 아닙니다.
+         *     결과 없음은 200과 빈 content, hasNext=false이며 조회 오류와 구분됩니다.
          */
         get: operations["getRestaurants"];
         put?: never;
@@ -995,7 +1007,11 @@ export interface paths {
         /**
          * 지도 관광 지역 조회
          * @description 최초 카메라 범위, 서버가 허용하는 조회 범위와 크기, 활성 관광 지역의 클러스터 위치와
-         *     카메라 범위를 반환한다. 식당 수가 0인 활성 지역도 포함하며 응답은 캐시하지 않는다.
+         *     카메라 범위를 반환한다. 식당 수는 수동 지정된 지역 소속 중 지원 영역의 유효 위치만 센다.
+         *     기본 화면 밖 식당도 집계하며 카메라 범위는 기본 화면과 집계 대상 식당을 포함하도록 확장한다.
+         *     확장 범위가 queryLimits의 제한을 넘으면 검증된 기본 화면을 반환한다.
+         *     이때 식당 수는 전체 소속 기준을 유지하므로 첫 화면의 목록 수보다 클 수 있다.
+         *     식당 수가 0인 활성 지역은 기본 화면 범위로 포함하며 응답은 캐시하지 않는다.
          */
         get: operations["getRegions"];
         put?: never;
@@ -2864,13 +2880,13 @@ export interface components {
             name?: string;
             /**
              * Format: int64
-             * @description 지역 ID와 cameraBounds를 모두 만족하는 현재 표시 가능 식당 수
+             * @description 수동 지정된 지역 소속 중 지원 영역 안의 현재 표시 가능 식당 수
              * @example 24
              */
             restaurantCount?: number;
             /** @description 관광 지역 클러스터 표시 위치 */
             clusterPosition?: components["schemas"]["PositionResponse"];
-            /** @description 관광 지역 선택 뒤 카메라를 맞출 범위 */
+            /** @description 조회 한도 안에서 기본 화면과 집계 대상 식당을 포함한 범위. 확장 범위가 한도를 넘으면 기본 화면을 반환하므로 전체 식당이 한 화면에 보이지 않을 수 있음 */
             cameraBounds?: components["schemas"]["BoundsResponse"];
             /**
              * Format: int32
@@ -5449,9 +5465,13 @@ export interface operations {
     getRestaurants: {
         parameters: {
             query?: {
+                /** @description 일반 검색어 또는 #태그. 예: 스시 라멘 / #가성비 */
                 keyword?: string;
+                /** @description 전체 all(기본), sushi, noodle, rice-bowl, nabe, fried, grill, etc */
                 genre?: string;
+                /** @description basic(기본·검색 정확도순), popular(인기순), rating(별점순) */
                 sort?: string;
+                /** @description all(기본), sns-hot, popular, hashi-pick */
                 type?: string;
                 cursor?: string;
                 size?: number;
@@ -5959,7 +5979,7 @@ export interface operations {
                 west?: number;
                 /** @description 새 조회 필수. 현재 viewport의 동쪽 경도 */
                 east?: number;
-                /** @description 새 조회 선택. 활성 관광 지역 ID */
+                /** @description 새 조회 선택. 수동 배정된 활성 관광 지역 ID. 요청 viewport 조건도 함께 적용하며 지역 기본 화면으로 추가 제한하지 않음 */
                 mapRegionId?: number;
                 /** @description 새 조회 선택, 최대 30자. 일반 검색은 공백 구분 OR 토큰으로 식당명·메뉴명·해시태그를 찾는다. #단일태그는 해시태그에서만 리터럴 부분 검색하며 # 뒤가 비거나 공백을 포함하면 400 */
                 keyword?: string;
