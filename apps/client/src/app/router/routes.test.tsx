@@ -1,3 +1,5 @@
+import { showToast } from '@hashi/hds-ui'
+import { copyUrlToClipboard } from '@/shared/utils/clipboard'
 import '@testing-library/jest-dom/vitest'
 import userEvent from '@testing-library/user-event'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -18,6 +20,12 @@ import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaur
 import type { PropsWithChildren } from 'react'
 import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
 import { createQueryClient } from '@/shared/lib/queryClient'
+
+vi.mock('@/shared/utils/clipboard', () => ({ copyUrlToClipboard: vi.fn() }))
+vi.mock('@hashi/hds-ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@hashi/hds-ui')>()),
+  showToast: vi.fn(),
+}))
 
 vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
   getRestaurantSummary: vi.fn(),
@@ -87,6 +95,9 @@ const renderRoute = async (initialEntry: string) => {
 
 describe('appRoutes', () => {
   beforeEach(() => {
+    vi.mocked(updateCollection).mockReset()
+    vi.mocked(copyUrlToClipboard).mockReset().mockResolvedValue(true)
+    vi.mocked(showToast).mockClear()
     vi.mocked(getCollection).mockResolvedValue({
       collectionId: 8,
       name: 'API 여행',
@@ -97,7 +108,14 @@ describe('appRoutes', () => {
       savedCount: 1,
     })
     vi.mocked(getCollections).mockResolvedValue({
-      collections: [{ collectionId: 8, name: 'API 여행', savedCount: 1 }],
+      collections: [
+        {
+          collectionId: 8,
+          name: 'API 여행',
+          savedCount: 1,
+          visibility: 'private',
+        },
+      ],
       totalCount: 1,
       hasNext: false,
     })
@@ -150,6 +168,120 @@ describe('appRoutes', () => {
     await waitFor(() =>
       expect(router.state.location.pathname).toBe('/login-required'),
     )
+  })
+
+  it('공개 컬렉션은 상세 주소만 복사하고 공개 전환 요청 없이 성공을 안내한다', async () => {
+    setAccessToken('test-session')
+    vi.mocked(getCollection).mockResolvedValue({
+      collectionId: 8,
+      name: '공개 여행',
+      visibility: 'public',
+      owner: true,
+    })
+    const previousCalls = vi.mocked(updateCollection).mock.calls.length
+    const { router } = await renderRoute(
+      '/saved/collections/8?sort=rating&category=cafe',
+    )
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: '컬렉션 공유' }))
+    await waitFor(() =>
+      expect(copyUrlToClipboard).toHaveBeenCalledWith('/saved/collections/8'),
+    )
+    expect(updateCollection).toHaveBeenCalledTimes(previousCalls)
+    expect(showToast).toHaveBeenCalledWith(
+      expect.objectContaining({ children: '컬렉션 링크가 복사되었어요.' }),
+    )
+    expect(router.state.location.search).toBe('?sort=rating&category=cafe')
+  })
+
+  it('복사 대기 중 중복 요청을 막고 화면 이탈 후에는 토스트를 띄우지 않는다', async () => {
+    setAccessToken('test-session')
+    vi.mocked(getCollection).mockResolvedValue({
+      collectionId: 8,
+      name: '공개 여행',
+      visibility: 'public',
+      owner: true,
+    })
+    let finish!: (copied: boolean) => void
+    vi.mocked(copyUrlToClipboard).mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve
+      }),
+    )
+    const { router } = await renderRoute('/saved/collections/8')
+    const user = userEvent.setup()
+    const share = await screen.findByRole('button', { name: '컬렉션 공유' })
+    await user.dblClick(share)
+    expect(share).toBeDisabled()
+    expect(copyUrlToClipboard).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      await router.navigate('/saved')
+    })
+    await act(async () => {
+      finish(true)
+    })
+    expect(showToast).not.toHaveBeenCalled()
+  })
+
+  it('비공개 공유는 취소·전환 실패를 보존하고 복사만 실패하면 공개를 유지한다', async () => {
+    setAccessToken('test-session')
+    let detail = {
+      collectionId: 8,
+      name: 'API 여행',
+      visibility: 'private',
+      owner: true,
+    }
+    vi.mocked(getCollection).mockImplementation(async () => detail)
+    vi.mocked(getCollections).mockImplementation(async () => ({
+      collections: [detail],
+      totalCount: 1,
+      hasNext: false,
+    }))
+    vi.mocked(updateCollection)
+      .mockReset()
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockImplementation(async () => {
+        detail = { ...detail, visibility: 'public' }
+        return detail
+      })
+    vi.mocked(copyUrlToClipboard).mockResolvedValue(false)
+    const { router } = await renderRoute('/saved')
+    const user = userEvent.setup()
+    const openShare = async () => {
+      await user.click(
+        await screen.findByRole('button', { name: 'API 여행 더보기' }),
+      )
+      await user.click(screen.getByRole('menuitem', { name: '링크 복사' }))
+    }
+    await openShare()
+    await user.click(await screen.findByRole('button', { name: '취소하기' }))
+    expect(updateCollection).not.toHaveBeenCalled()
+    expect(copyUrlToClipboard).not.toHaveBeenCalled()
+    await openShare()
+    await user.click(
+      await screen.findByRole('button', { name: '공개 후 공유' }),
+    )
+    expect(await screen.findByRole('alert')).toBeVisible()
+    expect(detail.visibility).toBe('private')
+    expect(copyUrlToClipboard).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: '공개 후 공유' }))
+    await waitFor(() =>
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument(),
+    )
+    expect(detail.visibility).toBe('public')
+    expect(updateCollection).toHaveBeenLastCalledWith(8, {
+      visibility: 'public',
+    })
+    expect(showToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        children: '링크를 복사하지 못했습니다. 다시 시도해주세요.',
+      }),
+    )
+    expect(router.state.location.pathname).toBe('/saved')
+    await openShare()
+    await waitFor(() => expect(copyUrlToClipboard).toHaveBeenCalledTimes(2))
+    expect(updateCollection).toHaveBeenCalledTimes(2)
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 
   it('제품 목록에서 생성·수정·삭제 API를 호출하고 성공 후 갱신된 목록으로 복귀한다', async () => {

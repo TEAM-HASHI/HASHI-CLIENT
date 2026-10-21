@@ -5,7 +5,7 @@
 제품 라우트는 목 화면 대신 `SavedApiPage`, `CollectionFormQueryPage`, `CollectionEditorQueryPage`를 사용한다.
 현재 API 계약·오류·캐시·보류 사항은 [CollectionApi.spec.md](./CollectionApi.spec.md)를 따른다.
 아래 퍼블리싱의 목 Provider·전체 선택·공유 항목은 기존 fixture 계약과 변경 이력을 설명한다.
-제품의 필터별 개수·실제 공유 링크와 #221 인증 세션 연결은 별도 보류 상태다. 전체 선택은 CollectionApi.spec.md의 2026-10-21 확정 정책을 따른다.
+제품의 필터별 개수와 #221 인증 세션 연결은 별도 보류 상태다. 실제 공유는 CollectionApi.spec.md의 승인된 기존 상세 주소로 연결한다. 전체 선택은 CollectionApi.spec.md의 2026-10-21 확정 정책을 따른다.
 2026-10-20 재대조 후 공개 상세의 비로그인 읽기는 연결했다. 아래 퍼블리싱 이력보다 CollectionApi.spec.md의 현재 계약을 우선한다.
 
 ## PR #218 리뷰 반영 기준 (2026-10-18)
