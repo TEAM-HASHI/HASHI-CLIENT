@@ -2,17 +2,16 @@
 
 ## 범위와 PR 구조
 
-- 기반은 #226 `chore/HASHI-229-api-type`과 컬렉션 UI가 병합된 최신 `develop`이다.
+- 기반은 #226 OpenAPI 타입과 컬렉션 UI·인증 PR #221이 병합된 최신 `develop`이다.
 - 조회 3개 → 생성·수정 2개 → 식당 관리·컬렉션 삭제 4개의 순서로 PR을 쌓는다.
-- 각 PR의 base는 직전 브랜치다. #226 병합 후 첫 PR의 base와 diff를 `develop` 기준으로 정리한다.
+- 첫 조회 PR #240의 base는 `develop`이며, #243 생성·수정 → #244 식당 관리 순으로 쌓는다.
 
 | PR                    | 브랜치                                     | base                                 |
 | --------------------- | ------------------------------------------ | ------------------------------------ |
-| 조회                  | `feat/HASHI-224-collection-read-api`       | `chore/HASHI-229-api-type`           |
-| 생성·수정             | `feat/HASHI-224-collection-form-api`       | `feat/HASHI-224-collection-read-api` |
-| 식당 관리·컬렉션 삭제 | `feat/HASHI-224-collection-management-api` | `feat/HASHI-224-collection-form-api` |
+| 조회                  | `feat/HASHI-224-collection-read-api`       | `develop`                            |
+| 생성·수정             | `feat/HASHI-238-collection-form-api`       | `feat/HASHI-224-collection-read-api` |
+| 식당 관리·컬렉션 삭제 | `feat/HASHI-239-collection-management-api` | `feat/HASHI-238-collection-form-api` |
 
-현재 로컬 조회 브랜치만 생성되어 있다. 후속 브랜치는 앞 단계의 승인된 커밋을 기준으로 생성하며,
 각 PR 범위에 속하는 파일만 커밋한다. 원래 작업 공간의 기존 API 브랜치와 파일은 보존한다.
 
 - 식당 상세 저장 버튼, 지도 핀 및 식당별 저장 여부·저장 수 API 연결은 제외한다.
@@ -134,7 +133,6 @@
 - `VITE_API_BASE_URL` 없이 테스트한다. 실제 API base URL이나 계정 데이터에 의존하지 않는다.
 - 제품 화면의 loading/error/empty/retry, 계정별 cache 격리, 실제 인증 조회는 제품 연결 단계의 별도 검증이다.
 - 스타일만 확인하는 테스트는 추가하지 않는다.
-
 
 ## HASHI-224 공개 조회 보완 (2026-10-21)
 
