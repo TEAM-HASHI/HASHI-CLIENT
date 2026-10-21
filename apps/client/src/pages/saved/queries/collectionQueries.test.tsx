@@ -3,6 +3,12 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import type { PropsWithChildren } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  clearAuthSession,
+  setAccessToken,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
+
 import { getCollection } from '@/pages/saved/api/getCollection'
 import { getCollections } from '@/pages/saved/api/getCollections'
 import { getSavedRestaurants } from '@/pages/saved/api/getSavedRestaurants'
@@ -55,7 +61,68 @@ describe('collection query keys', () => {
 
 describe('collection read hooks', () => {
   beforeEach(() => vi.resetAllMocks())
-  afterEach(cleanup)
+  afterEach(() => {
+    cleanup()
+    clearAuthSession()
+  })
+
+  it('switches account caches immediately and ignores the previous account response', async () => {
+    startAuthenticatedSession('account-a', 1)
+    const firstKey = collectionQueryKeys.infiniteList({})
+    let completeFirst!: (
+      value: Awaited<ReturnType<typeof getCollections>>,
+    ) => void
+    vi.mocked(getCollections)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            completeFirst = resolve
+          }),
+      )
+      .mockResolvedValue({
+        collections: [{ collectionId: 2, name: 'B 목록' }],
+        hasNext: false,
+      })
+    const { wrapper } = createWrapper()
+    const { result } = renderHook(() => useCollectionsInfiniteQuery({}), {
+      wrapper,
+    })
+    await waitFor(() => expect(getCollections).toHaveBeenCalledTimes(1))
+    act(() => startAuthenticatedSession('account-b', 2))
+    expect(collectionQueryKeys.infiniteList({})).not.toEqual(firstKey)
+    await waitFor(() =>
+      expect(result.current.data?.pages[0].collections?.[0].name).toBe(
+        'B 목록',
+      ),
+    )
+    await act(async () => {
+      completeFirst({
+        collections: [{ collectionId: 1, name: 'A 목록' }],
+        hasNext: false,
+      })
+    })
+    expect(result.current.data?.pages[0].collections?.[0].name).toBe('B 목록')
+    const secondKey = collectionQueryKeys.infiniteList({})
+    act(() => setAccessToken('account-b-refreshed', 2))
+    expect(collectionQueryKeys.infiniteList({})).toEqual(secondKey)
+  })
+
+  it('separates all collection resource keys after logout and relogin', () => {
+    startAuthenticatedSession('account-a', 1)
+    const previous = [
+      collectionQueryKeys.infiniteList({}),
+      collectionQueryKeys.detail(8),
+      collectionQueryKeys.restaurants(8, {}),
+    ]
+    clearAuthSession()
+    startAuthenticatedSession('account-b', 2)
+    const next = [
+      collectionQueryKeys.infiniteList({}),
+      collectionQueryKeys.detail(8),
+      collectionQueryKeys.restaurants(8, {}),
+    ]
+    next.forEach((key, index) => expect(key).not.toEqual(previous[index]))
+  })
 
   it('requests the detail, shares its factory key and exposes the unmodified DTO', async () => {
     const detail = { collectionId: 8, owner: true }
