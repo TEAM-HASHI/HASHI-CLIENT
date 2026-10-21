@@ -234,7 +234,7 @@ describe('CollectionForm', () => {
     }
   })
 
-  it('한글 조합으로 제한을 넘겨도 입력값과 실제 글자 수를 유지한다', () => {
+  it('한글 조합 중에는 원문을 유지하고 확정 시 이름을 20자로 제한한다', () => {
     renderForm(
       <CollectionForm collections={[]} onSubmit={vi.fn()} onClose={vi.fn()} />,
     )
@@ -245,8 +245,8 @@ describe('CollectionForm', () => {
     expect(input).toHaveValue('가'.repeat(21))
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
     fireEvent.compositionEnd(input)
-    expect(input).toHaveValue('가'.repeat(21))
-    expect(screen.getByText('/20').parentElement).toHaveTextContent('21 /20')
+    expect(input).toHaveValue('가'.repeat(20))
+    expect(screen.getByText('/20').parentElement).toHaveTextContent('20 /20')
     expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()
   })
   it('브라우저 뒤로가기도 수정 폐기를 확인하고 저장하지 않고 닫는다', async () => {
@@ -315,19 +315,19 @@ describe('CollectionForm', () => {
       }),
     )
   })
-  it('제한을 넘긴 이름을 유지하고 오류와 실제 글자 수를 표시한다', () => {
+  it('이름은 20자를 넘는 입력을 차단하고 초과 시도 오류를 표시한다', () => {
     renderForm(
       <CollectionForm collections={[]} onSubmit={vi.fn()} onClose={vi.fn()} />,
     )
     fireEvent.change(screen.getByLabelText('컬렉션명'), {
       target: { value: '가'.repeat(21) },
     })
-    expect(screen.getByLabelText('컬렉션명')).toHaveValue('가'.repeat(21))
+    expect(screen.getByLabelText('컬렉션명')).toHaveValue('가'.repeat(20))
     expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()
-    expect(screen.getByText('/20').parentElement).toHaveTextContent('21 /20')
+    expect(screen.getByText('/20').parentElement).toHaveTextContent('20 /20')
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
   })
-  it('설명은 한글 조합 중 31자를 보존하고 30자로 수정하면 제출할 수 있다', () => {
+  it('설명은 한글 조합을 방해하지 않고 확정 시 30자로 제한한다', () => {
     renderForm(
       <CollectionForm collections={[]} onSubmit={vi.fn()} onClose={vi.fn()} />,
     )
@@ -341,14 +341,16 @@ describe('CollectionForm', () => {
     expect(description).toHaveValue('가'.repeat(31))
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
     fireEvent.compositionEnd(description)
-    expect(screen.getByText('/30').parentElement).toHaveTextContent('31/30')
+    expect(description).toHaveValue('가'.repeat(30))
+    expect(screen.getByText('/30').parentElement).toHaveTextContent('30/30')
     expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()
-    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled()
 
-    fireEvent.change(description, { target: { value: '가'.repeat(30) } })
+    fireEvent.change(description, { target: { value: '가'.repeat(29) } })
     expect(
       screen.queryByText('글자 수 제한을 초과했어요.'),
     ).not.toBeInTheDocument()
+    fireEvent.change(description, { target: { value: '가'.repeat(30) } })
     expect(screen.getByText('/30').parentElement).toHaveTextContent('30/30')
     expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled()
   })
@@ -426,4 +428,24 @@ describe('CollectionForm', () => {
       expect.objectContaining({ name: '  수정 이름  ' }),
     )
   })
+})
+
+it('서버의 기존 긴 설명은 진입 시 자르지 않고 사용자가 줄여야 저장한다', () => {
+  renderForm(
+    <CollectionForm
+      collection={{
+        ...collectionMocks.collections[0],
+        description: '가'.repeat(40),
+      }}
+      collections={[]}
+      onSubmit={vi.fn()}
+      onClose={vi.fn()}
+    />,
+  )
+  const description = screen.getByLabelText('설명')
+  expect(description).toHaveValue('가'.repeat(40))
+  expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
+  fireEvent.change(description, { target: { value: '가'.repeat(30) } })
+  expect(description).toHaveValue('가'.repeat(30))
+  expect(screen.getByRole('button', { name: '저장하기' })).toBeEnabled()
 })

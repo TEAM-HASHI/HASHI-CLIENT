@@ -147,10 +147,11 @@ export const CollectionForm = ({
     if (key === 'name') setSubmitError(null)
     if (!composing.current)
       setOverLimit((current) => ({ ...current, [key]: next.length > limit }))
-    setDraft((current) => ({
-      ...current,
-      [key]: next,
-    }))
+    // 기존 서버 원문은 자르지 않는다. 새 입력은 조합이 끝난 뒤 제한한다.
+    const value = composing.current
+      ? next
+      : next.slice(0, Math.max(limit, initial[key].length))
+    setDraft((current) => ({ ...current, [key]: value }))
   }
   const startComposition = () => {
     composing.current = true
@@ -161,11 +162,9 @@ export const CollectionForm = ({
     limit: number,
     next: string,
   ) => {
-    if (key === 'name') setSubmitError(null)
     composing.current = false
     setIsComposing(false)
-    setOverLimit((current) => ({ ...current, [key]: next.length > limit }))
-    setDraft((current) => ({ ...current, [key]: next }))
+    changeText(key, limit, next)
   }
 
   return (
