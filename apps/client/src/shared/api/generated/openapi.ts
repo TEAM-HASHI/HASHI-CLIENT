@@ -699,8 +699,20 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 식당 목록 조회 — 키워드·장르·정렬·유형 필터(커서 페이지네이션).
-         * @description 식당 목록 조회 — 키워드·장르·정렬·유형 필터(커서 페이지네이션).
+         * 식당 목록 및 일반 검색
+         * @description keyword가 있으면 식당명·메뉴명·해시태그를 대소문자 구분 없이 부분 검색합니다.
+         *     여러 단어는 OR 조건이며, 중복 단어는 한 번만 계산합니다. 예: 스시 라멘.
+         *     #스시는 해시태그만 검색합니다. URL에서는 #을 %23으로 인코딩하세요.
+         *     검색어 앞뒤 공백을 제거하며 최대 30자(Unicode 코드 포인트 기준)입니다. #만 있거나 태그 안에 공백이 있으면 400입니다.
+         *     keyword 생략·공백은 기존 전체 목록 조회입니다. 초기 검색 화면에서는 클라이언트가 검색 요청을 생략합니다.
+         *     검색 basic: 일치 단어 수 → 식당명 일치 수 → 메뉴명 일치 수 → 해시태그 일치 수 → ID 내림차순.
+         *     popular: 리뷰 수 → 별점 → ID 내림차순. 검색 rating: 별점 → 리뷰 수 → ID 내림차순.
+         *     keyword 없는 기존 목록의 basic(ID), rating(별점·ID) 순서는 유지합니다.
+         *     기본 10개, 최대 50개입니다. hasNext=true일 때 nextCursor를 그대로 보내세요.
+         *     검색어·장르·유형·정렬 변경 시 cursor를 빼고 첫 페이지부터 요청하세요. 조건이 다른 검색 커서는 400입니다.
+         *     이전 버전의 검색 커서도 400이므로 배포 후 첫 페이지를 다시 조회하세요.
+         *     추가 조회 중 식당 정보·별점·리뷰 수가 바뀌면 순서가 달라질 수 있습니다. 고정된 검색 스냅샷은 아닙니다.
+         *     결과 없음은 200과 빈 content, hasNext=false이며 조회 오류와 구분됩니다.
          */
         get: operations["getRestaurants"];
         put?: never;
@@ -5449,9 +5461,13 @@ export interface operations {
     getRestaurants: {
         parameters: {
             query?: {
+                /** @description 일반 검색어 또는 #태그. 예: 스시 라멘 / #가성비 */
                 keyword?: string;
+                /** @description 전체 all(기본), sushi, noodle, rice-bowl, nabe, fried, grill, etc */
                 genre?: string;
+                /** @description basic(기본·검색 정확도순), popular(인기순), rating(별점순) */
                 sort?: string;
+                /** @description all(기본), sns-hot, popular, hashi-pick */
                 type?: string;
                 cursor?: string;
                 size?: number;
