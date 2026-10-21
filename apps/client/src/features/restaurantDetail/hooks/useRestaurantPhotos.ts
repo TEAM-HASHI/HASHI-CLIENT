@@ -1,45 +1,39 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { getRestaurantPhotoDataSource } from '@/features/restaurantDetail/api/restaurantPhotoSource'
-import {
-  restaurantPhotoCountsQueryOptions,
-  restaurantPhotosQueryOptions,
-} from '@/features/restaurantDetail/queries/restaurantPhotoQueryOptions'
+import { restaurantPhotosQueryOptions } from '@/features/restaurantDetail/queries/restaurantPhotoQueryOptions'
 import type {
+  RestaurantPhotoCounts,
   RestaurantPhotoFilter,
-  RestaurantPhotoSource,
 } from '@/features/restaurantDetail/types/restaurantPhoto'
 
-const unavailableSource: RestaurantPhotoSource = {
-  getPage: async () => {
-    throw new Error('Restaurant photo data source is not configured')
-  },
-}
-
 export const useRestaurantPhotos = (restaurantId: number, active: boolean) => {
-  const dataSource = getRestaurantPhotoDataSource()
-  const source = dataSource?.source ?? unavailableSource
-  const sourceKey = dataSource?.key ?? 'unavailable'
+  const { source, key: sourceKey } = getRestaurantPhotoDataSource()
   const [selection, setSelection] = useState({
     restaurantId,
     filter: 'all' as RestaurantPhotoFilter,
     revision: 0,
+    active,
+    hasOpened: active,
+    counts: undefined as RestaurantPhotoCounts | undefined,
   })
-  if (selection.restaurantId !== restaurantId) {
+  if (selection.restaurantId !== restaurantId || selection.active !== active) {
+    const changedRestaurant = selection.restaurantId !== restaurantId
     setSelection({
       restaurantId,
-      filter: 'all',
-      revision: selection.revision + 1,
+      filter: changedRestaurant ? 'all' : selection.filter,
+      revision:
+        selection.revision +
+        (changedRestaurant || (active && selection.hasOpened) ? 1 : 0),
+      active,
+      hasOpened: changedRestaurant ? active : selection.hasOpened || active,
+      counts: changedRestaurant ? undefined : selection.counts,
     })
   }
   const filter =
     selection.restaurantId === restaurantId ? selection.filter : 'all'
-  const enabled = dataSource !== null && restaurantId > 0
-  const countsQuery = useQuery({
-    ...restaurantPhotoCountsQueryOptions(source, sourceKey, restaurantId),
-    enabled,
-  })
+  const enabled = restaurantId > 0
   const query = useInfiniteQuery({
     ...restaurantPhotosQueryOptions(
       source,
@@ -48,18 +42,29 @@ export const useRestaurantPhotos = (restaurantId: number, active: boolean) => {
       filter,
       selection.revision,
     ),
-    enabled: enabled && active,
+    enabled: enabled && (active || !selection.hasOpened),
   })
+  const pageCounts = query.data?.pages[0]?.counts
+  if (
+    selection.restaurantId === restaurantId &&
+    pageCounts !== undefined &&
+    pageCounts !== selection.counts
+  ) {
+    setSelection((previous) => ({ ...previous, counts: pageCounts }))
+  }
 
   return {
     enabled,
     filter,
-    counts: query.data?.pages[0]?.counts ?? countsQuery.data,
+    counts:
+      pageCounts ??
+      (selection.restaurantId === restaurantId ? selection.counts : undefined),
     photos: query.data?.pages.flatMap((page) => page.photos) ?? [],
     query,
     selectFilter: (nextFilter: RestaurantPhotoFilter) => {
       if (nextFilter === filter) return
       setSelection((previous) => ({
+        ...previous,
         restaurantId,
         filter: nextFilter,
         revision: previous.revision + 1,

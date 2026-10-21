@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   restaurantPhotosQueryOptions,
-  restaurantPhotoCountsQueryOptions,
   restaurantPhotoQueryKeys,
 } from '@/features/restaurantDetail/queries/restaurantPhotoQueryOptions'
 import type { RestaurantPhotoSource } from '@/features/restaurantDetail/types/restaurantPhoto'
@@ -11,9 +10,9 @@ import type { RestaurantPhotoSource } from '@/features/restaurantDetail/types/re
 describe('restaurant photo queries', () => {
   it('invalidates all photo lists and counts for only the reviewed restaurant', async () => {
     const client = new QueryClient()
-    const counts = restaurantPhotoQueryKeys.counts('preview', 10)
+    const counts = restaurantPhotoQueryKeys.list('preview', 10, 'all', 0)
     const list = restaurantPhotoQueryKeys.list('preview', 10, 'review', 0)
-    const other = restaurantPhotoQueryKeys.counts('preview', 20)
+    const other = restaurantPhotoQueryKeys.list('preview', 20, 'all', 0)
     for (const key of [counts, list, other]) client.setQueryData(key, {})
     await client.invalidateQueries({
       queryKey: restaurantPhotoQueryKeys.restaurant(10),
@@ -63,9 +62,6 @@ describe('restaurant photo queries', () => {
     ).not.toEqual(base)
     expect(
       restaurantPhotosQueryOptions(source, 'preview', 10, 'all', 1).queryKey,
-    ).not.toEqual(base)
-    expect(
-      restaurantPhotoCountsQueryOptions(source, 'preview', 10).queryKey,
     ).not.toEqual(base)
   })
 })

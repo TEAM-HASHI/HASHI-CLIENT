@@ -4,7 +4,10 @@ import { useState } from 'react'
 import { RestaurantImage } from '@/features/restaurantDetail/components/RestaurantImage'
 import { RestaurantPhotoViewer } from '@/features/restaurantDetail/components/RestaurantPhotoViewer'
 import type { useRestaurantPhotos } from '@/features/restaurantDetail/hooks/useRestaurantPhotos'
-import type { RestaurantPhotoFilter } from '@/features/restaurantDetail/types/restaurantPhoto'
+import type {
+  RestaurantPhoto,
+  RestaurantPhotoFilter,
+} from '@/features/restaurantDetail/types/restaurantPhoto'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { useInfiniteScrollTrigger } from '@/shared/hooks/useInfiniteScrollTrigger'
 
@@ -18,6 +21,47 @@ const FILTERS: { value: RestaurantPhotoFilter; label: string }[] = [
 interface RestaurantPhotoSectionProps {
   model: ReturnType<typeof useRestaurantPhotos>
   onResetScroll: () => void
+}
+
+const PhotoButton = ({
+  photo,
+  index,
+  onClick,
+}: {
+  photo: RestaurantPhoto
+  index: number
+  onClick: () => void
+}) => {
+  const [loadedRatio, setLoadedRatio] = useState<number>()
+  const ratio =
+    photo.width > 0 && photo.height > 0
+      ? photo.width / photo.height
+      : (loadedRatio ?? 1)
+  return (
+    <button
+      type="button"
+      aria-label={`${index + 1}번째 사진 보기`}
+      className="block w-full overflow-hidden rounded-[5px]"
+      style={{ aspectRatio: ratio }}
+      onClick={onClick}
+    >
+      <RestaurantImage
+        src={photo.thumbnailUrl}
+        className="size-full object-cover"
+        markSize="lg"
+        onLoad={({ currentTarget }) => {
+          if (
+            currentTarget.naturalWidth > 0 &&
+            currentTarget.naturalHeight > 0
+          ) {
+            setLoadedRatio(
+              currentTarget.naturalWidth / currentTarget.naturalHeight,
+            )
+          }
+        }}
+      />
+    </button>
+  )
 }
 
 export const RestaurantPhotoSection = ({
@@ -83,20 +127,12 @@ export const RestaurantPhotoSection = ({
             <div key={column} className="flex min-w-0 flex-col gap-5">
               {photos.map((photo, index) =>
                 index % 2 === column ? (
-                  <button
-                    type="button"
-                    key={photo.id}
-                    aria-label={`${index + 1}번째 사진 보기`}
-                    className="block w-full overflow-hidden rounded-[5px]"
-                    style={{ aspectRatio: `${photo.width} / ${photo.height}` }}
+                  <PhotoButton
+                    key={`${photo.id}:${photo.thumbnailUrl}`}
+                    photo={photo}
+                    index={index}
                     onClick={() => setViewerIndex(index)}
-                  >
-                    <RestaurantImage
-                      src={photo.thumbnailUrl}
-                      className="size-full object-cover"
-                      markSize="lg"
-                    />
-                  </button>
+                  />
                 ) : null,
               )}
             </div>
