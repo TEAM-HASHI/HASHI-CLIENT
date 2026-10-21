@@ -11,6 +11,7 @@
 | 조회                  | `feat/HASHI-224-collection-read-api`       | `develop`                            |
 | 생성·수정             | `feat/HASHI-238-collection-form-api`       | `feat/HASHI-224-collection-read-api` |
 | 식당 관리·컬렉션 삭제 | `feat/HASHI-239-collection-management-api` | `feat/HASHI-238-collection-form-api` |
+
 Jira는 조회 `HASHI-224`, 생성·수정 `HASHI-238`, 식당 관리·컬렉션 삭제 `HASHI-239`로 분리한다.
 브랜치명·커밋 메시지·PR 제목·본문은 각 Jira 번호를 사용한다.
 Stack은 develop → #240 → #243 → #244이다. 출발 브랜치 변경으로 닫힌 #241·#242는 각각 #243·#244가 대체한다.

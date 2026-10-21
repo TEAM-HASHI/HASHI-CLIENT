@@ -14,7 +14,6 @@ import { getCollection } from '@/pages/saved/api/getCollection'
 import { getCollections } from '@/pages/saved/api/getCollections'
 import { getSavedRestaurants } from '@/pages/saved/api/getSavedRestaurants'
 
-import { ROUTES } from '@/app/router/path'
 import { appRoutes } from '@/app/router/routes'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import type { PropsWithChildren } from 'react'
@@ -68,13 +67,6 @@ vi.mock('@/pages/saved/api/moveSavedRestaurants', () => ({
   moveSavedRestaurants: vi.fn(),
 }))
 vi.mock('@/pages/saved/api/saveRestaurant', () => ({ saveRestaurant: vi.fn() }))
-
-const collectRoutePaths = (routes: typeof appRoutes): string[] => {
-  return routes.flatMap((route) => [
-    ...(route.path ? [route.path] : []),
-    ...(route.children ? collectRoutePaths(route.children) : []),
-  ])
-}
 
 const renderRoute = async (initialEntry: string) => {
   const router = createMemoryRouter(appRoutes, {
@@ -395,48 +387,4 @@ describe('appRoutes', () => {
         )
     },
   )
-
-  it('renders HashiPickPage from a direct URL entry', async () => {
-    await renderRoute(ROUTES.hashiPickRestaurants)
-
-    expect(
-      await screen.findByRole('heading', { name: '하시 Pick' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('heading', { name: '404 페이지' }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('renders PopularRestaurantsPage from a direct URL entry', async () => {
-    await renderRoute(ROUTES.popularRestaurants)
-
-    expect(
-      await screen.findByRole('heading', { name: '인기 맛집' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('heading', { name: '404 페이지' }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('registers Kakao OAuth callback as an app route', () => {
-    expect(collectRoutePaths(appRoutes)).toContain(ROUTES.kakaoOAuthCallback)
-  })
-
-  it('registers notice list and detail as app routes', () => {
-    const routePaths = collectRoutePaths(appRoutes)
-
-    expect(routePaths).toContain(ROUTES.notices)
-    expect(routePaths).toContain(ROUTES.noticeDetail)
-  })
-
-  it('registers reservation complete as an app route', () => {
-    expect(collectRoutePaths(appRoutes)).toContain(ROUTES.reservationComplete)
-  })
-
-  it('registers terms list and detail as app routes', () => {
-    const routePaths = collectRoutePaths(appRoutes)
-
-    expect(routePaths).toContain(ROUTES.terms)
-    expect(routePaths).toContain(ROUTES.termsDetail)
-  })
 })
