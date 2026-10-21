@@ -319,6 +319,7 @@ describe('CollectionForm', () => {
     renderForm(
       <CollectionForm collections={[]} onSubmit={vi.fn()} onClose={vi.fn()} />,
     )
+    fireEvent.click(screen.getByRole('radio', { name: '빨강' }))
     fireEvent.change(screen.getByLabelText('컬렉션명'), {
       target: { value: '가'.repeat(21) },
     })
@@ -326,6 +327,13 @@ describe('CollectionForm', () => {
     expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()
     expect(screen.getByText('/20').parentElement).toHaveTextContent('20 /20')
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+    fireEvent.change(screen.getByLabelText('컬렉션명'), {
+      target: { value: '가'.repeat(19) },
+    })
+    expect(
+      screen.queryByText('글자 수 제한을 초과했어요.'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled()
   })
   it('설명은 한글 조합을 방해하지 않고 확정 시 30자로 제한한다', () => {
     renderForm(
@@ -344,7 +352,7 @@ describe('CollectionForm', () => {
     expect(description).toHaveValue('가'.repeat(30))
     expect(screen.getByText('/30').parentElement).toHaveTextContent('30/30')
     expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()
-    expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
 
     fireEvent.change(description, { target: { value: '가'.repeat(29) } })
     expect(

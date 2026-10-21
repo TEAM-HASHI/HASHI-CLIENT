@@ -3,7 +3,7 @@ import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSe
 
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
-import { useRef, useState, type ComponentProps } from 'react'
+import { useEffect, useRef, useState, type ComponentProps } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -16,6 +16,7 @@ import {
   useCreateCollectionMutation,
   useUpdateCollectionMutation,
 } from '@/pages/saved/mutations/useCollectionFormMutations'
+import { useCollectionsInfiniteQuery } from '@/pages/saved/queries/useCollectionsInfiniteQuery'
 import { useCollectionQuery } from '@/pages/saved/queries/useCollectionQuery'
 import { mapCollectionDetail } from '@/pages/saved/utils/collectionReadAdapters'
 import {
@@ -160,11 +161,48 @@ const CollectionApiForm = ({
   const create = useCreateCollectionMutation(captureError)
   const update = useUpdateCollectionMutation(captureError)
   const handleClose = onClose
+  const names = useCollectionsInfiniteQuery({})
+  const { hasNextPage, isFetching, isError, fetchNextPage } = names
+  useEffect(() => {
+    if (hasNextPage && !isFetching && !isError) void fetchNextPage()
+  }, [hasNextPage, isFetching, isError, fetchNextPage])
+  const collections = (names.data?.pages ?? []).flatMap((page) =>
+    (page.collections ?? []).map((item) => ({
+      id: String(item.collectionId),
+      name: item.name ?? '',
+    })),
+  )
+  const nameCheckPending =
+    names.isPending || isFetching || hasNextPage || isError
 
   return (
     <CollectionForm
       collection={collection}
-      collections={[]}
+      collections={collections}
+      nameCheckPending={nameCheckPending}
+      nameCheckFeedback={
+        names.isError ? (
+          <div className="flex items-center gap-3 pb-5">
+            <p role="alert" className="typo-body-7 text-primary-200">
+              {getErrorPresentation(names.error).message}
+            </p>
+            <Button
+              size="sm"
+              variant="neutral"
+              disabled={isFetching}
+              onClick={() => {
+                void names.refetch()
+              }}
+            >
+              다시 시도
+            </Button>
+          </div>
+        ) : nameCheckPending ? (
+          <p role="status" className="typo-body-7 text-primary-200 pb-5">
+            불러오는 중…
+          </p>
+        ) : null
+      }
       onClose={handleClose}
       onDiscard={() => navigate(ROUTES.saved, { replace: true })}
       onSubmitSuccess={() => {
