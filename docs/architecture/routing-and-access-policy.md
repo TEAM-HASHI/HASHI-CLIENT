@@ -55,6 +55,11 @@
 | 이용약관 페이지       | `/terms`                                   | 마이페이지에서 진입하며 하단 네비게이션(`마이`)을 포함합니다.                      |
 | 이용약관 상세 페이지  | `/terms/:policyId`                         | 정적 약관 콘텐츠의 조항을 Accordion으로 보여줍니다.                                |
 
+컬렉션 상세 `/saved/collections/:collectionId`는 공개 route다. 서버가 공개 범위를 판정하며,
+공개 컬렉션은 비로그인도 조회하고 비공개·삭제·미존재 컬렉션은 404 안내를 표시한다.
+비로그인 조회는 회원 조회 캐시와 분리하고, 내 목록·생성·수정·편집은 계속 인증으로 보호한다.
+상세의 관리 동작은 인증된 소유자에게만 표시한다. 이 경로를 공유 URL로 확정한 것은 아니다.
+
 ## Auth Only Routes
 
 | Page                  | Path                                                | Notes                                                                                                                                                     |
@@ -65,7 +70,6 @@
 | 리뷰 수정 페이지      | `/reviews/:reviewId/edit`                           |                                                                                                                                                           |
 | 저장 페이지           | `/saved`                                            | API 기반 컬렉션 목록과 추가 조회를 제공합니다.                                                                                                            |
 | 컬렉션 생성           | `/saved/collections/new`                            | 독립 폼 페이지이며 하단 내비게이션을 표시하지 않습니다.                                                                                                   |
-| 컬렉션 상세           | `/saved/collections/:collectionId`                  | API 상세와 URL 정렬·분류를 표시합니다. 잘못된 형식의 ID는 `/saved`로, 조회 실패는 인라인 재시도로 처리합니다.                                             |
 | 컬렉션 수정           | `/saved/collections/:collectionId/edit`             | 독립 폼 페이지이며 변경이 있는 뒤로가기에 폐기 확인을 표시합니다.                                                                                         |
 | 컬렉션 식당 편집      | `/saved/collections/:collectionId/restaurants/edit` | 소유자만 사용하는 독립 API 편집 페이지이며 하단 내비게이션 없이 개별 선택·이동·삭제를 제공합니다. 잘못된 형식의 ID는 `/saved`로 복귀합니다.               |
 | 마이 페이지           | `/mypage`                                           |                                                                                                                                                           |

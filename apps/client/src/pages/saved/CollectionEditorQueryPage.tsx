@@ -99,6 +99,8 @@ const CollectionEditorQuery = ({
   const selectedIds = selected.filter((id) =>
     restaurants.some((restaurant) => restaurant.id === id),
   )
+  const allSelected =
+    restaurants.length > 0 && selectedIds.length === restaurants.length
   const error =
     detailQuery.error ??
     (detailQuery.data && !owned ? new HttpStatusError(403) : listQuery.error)
@@ -182,8 +184,17 @@ const CollectionEditorQuery = ({
             <Checkbox
               className={SELECTION_CLASS}
               aria-label="전체 선택"
-              disabled
-              checked={false}
+              disabled={!canEdit || !restaurants.length}
+              checked={allSelected}
+              ref={(node) => {
+                if (node)
+                  node.indeterminate = selectedIds.length > 0 && !allSelected
+              }}
+              onChange={() =>
+                setSelected(
+                  allSelected ? [] : restaurants.map((item) => item.id),
+                )
+              }
             >
               <span className="typo-body-5 text-primary-200">전체 선택</span>
             </Checkbox>

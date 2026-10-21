@@ -45,6 +45,10 @@ export const appRoutes: RouteObject[] = [
             element: lazyPages.noticeDetail(),
           },
           {
+            path: ROUTES.collectionDetail,
+            element: lazyPages.saved(),
+          },
+          {
             path: ROUTES.terms,
             element: lazyPages.terms(),
           },
@@ -131,7 +135,6 @@ export const appRoutes: RouteObject[] = [
                 index: true,
                 element: lazyPages.saved(),
               },
-              { path: ROUTES.collectionDetail, element: lazyPages.saved() },
             ],
           },
           {

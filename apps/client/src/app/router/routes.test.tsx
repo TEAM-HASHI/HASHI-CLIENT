@@ -122,6 +122,36 @@ describe('appRoutes', () => {
     expect(router.state.location.pathname).toBe('/restaurants/55')
   })
 
+  it('비로그인 공개 상세는 열고 내 목록·쓰기 화면은 인증으로 보호한다', async () => {
+    clearAuthSession()
+    vi.mocked(getCollection).mockResolvedValue({
+      collectionId: 8,
+      name: '공개 여행',
+      visibility: 'public',
+      owner: false,
+    })
+    const { router } = await renderRoute('/saved/collections/8')
+    expect(
+      await screen.findByRole('heading', { name: '공개 여행' }),
+    ).toBeVisible()
+    expect(getCollections).not.toHaveBeenCalled()
+    expect(
+      screen.queryByRole('button', { name: '컬렉션 더보기' }),
+    ).not.toBeInTheDocument()
+    await act(async () => {
+      await router.navigate('/saved/collections/8/edit')
+    })
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/login-required'),
+    )
+    await act(async () => {
+      await router.navigate('/saved')
+    })
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/login-required'),
+    )
+  })
+
   it('제품 목록에서 생성·수정·삭제 API를 호출하고 성공 후 갱신된 목록으로 복귀한다', async () => {
     setAccessToken('test-session')
     let detail = {

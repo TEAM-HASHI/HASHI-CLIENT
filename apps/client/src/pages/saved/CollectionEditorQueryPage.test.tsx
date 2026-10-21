@@ -132,7 +132,7 @@ it('추가 조회 실패와 삭제 실패에도 기존 선택을 유지하고 �
   ).toBeChecked()
   await user.click(screen.getByRole('button', { name: '다시 시도' }))
   await user.click(await screen.findByRole('checkbox', { name: '라떼 선택' }))
-  expect(screen.getByRole('checkbox', { name: '전체 선택' })).toBeDisabled()
+  expect(screen.getByRole('checkbox', { name: '전체 선택' })).toBeChecked()
   await user.click(screen.getByRole('button', { name: '삭제 2' }))
   await user.click(screen.getByRole('button', { name: '삭제하기' }))
   expect(await screen.findByRole('alert')).toBeVisible()
@@ -201,4 +201,45 @@ it('타인 소유 컬렉션은 편집 목록과 쓰기 액션을 노출하지 �
   expect(getSavedRestaurants).not.toHaveBeenCalled()
   await user.click(screen.getByRole('button', { name: '편집 종료' }))
   expect(await screen.findByText('상세 복귀')).toBeVisible()
+})
+
+it('전체 선택은 불러온 목록만 선택하고 추가 페이지는 자동 선택하지 않는다', async () => {
+  vi.mocked(getSavedRestaurants)
+    .mockResolvedValueOnce({
+      content: [{ restaurantId: 55, name: '커피' }],
+      hasNext: true,
+      nextCursor: 'next',
+    })
+    .mockResolvedValueOnce({
+      content: [{ restaurantId: 56, name: '라떼' }],
+      hasNext: false,
+    })
+  const { user } = setup()
+  await screen.findByRole('checkbox', { name: '커피 선택' })
+  const all = screen.getByRole('checkbox', { name: '전체 선택' })
+  await user.click(all)
+  expect(screen.getByRole('checkbox', { name: '커피 선택' })).toBeChecked()
+  expect(screen.getByRole('button', { name: '삭제 1' })).toBeEnabled()
+  expect(getSavedRestaurants).toHaveBeenCalledTimes(1)
+  await waitFor(() => expect(observers.size).toBeGreaterThan(0))
+  await act(async () => {
+    for (const cb of [...observers])
+      cb(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      )
+  })
+  expect(
+    await screen.findByRole('checkbox', { name: '라떼 선택' }),
+  ).not.toBeChecked()
+  expect(all).toBePartiallyChecked()
+  expect(screen.getByRole('button', { name: '삭제 1' })).toBeEnabled()
+  await user.click(all)
+  expect(screen.getByRole('checkbox', { name: '라떼 선택' })).toBeChecked()
+  expect(all).toBeChecked()
+  expect(screen.getByRole('button', { name: '삭제 2' })).toBeEnabled()
+  await user.click(all)
+  expect(screen.getByRole('checkbox', { name: '커피 선택' })).not.toBeChecked()
+  expect(screen.getByRole('checkbox', { name: '라떼 선택' })).not.toBeChecked()
+  expect(screen.getByRole('button', { name: '삭제' })).toBeDisabled()
 })

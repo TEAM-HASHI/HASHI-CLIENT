@@ -6,6 +6,7 @@ import {
   getCollectionEditPath,
   getCollectionRestaurantEditPath,
 } from '@/app/router/routePaths'
+import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 import { isValidCollectionId } from '@/pages/saved/api/collectionReadContracts'
 import {
   CollectionActionMenu,
@@ -35,6 +36,7 @@ export const SavedApiPage = () => {
 }
 
 const SavedApiScreen = () => {
+  const { isAuthenticated } = useAuthStatus()
   const location = useLocation()
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -149,15 +151,18 @@ const SavedApiScreen = () => {
           />
         )}
       />
-      {isValidCollectionId(collectionId) && management?.type === 'delete' && (
-        <CollectionDeleteQueryDialog
-          kind="collection"
-          collectionId={collectionId}
-          onClose={close}
-          onDeleted={() => navigate(ROUTES.saved, { replace: true })}
-        />
-      )}
-      {isValidCollectionId(collectionId) &&
+      {isAuthenticated &&
+        isValidCollectionId(collectionId) &&
+        management?.type === 'delete' && (
+          <CollectionDeleteQueryDialog
+            kind="collection"
+            collectionId={collectionId}
+            onClose={close}
+            onDeleted={() => navigate(ROUTES.saved, { replace: true })}
+          />
+        )}
+      {isAuthenticated &&
+        isValidCollectionId(collectionId) &&
         validSelection &&
         management?.type === 'remove' && (
           <CollectionDeleteQueryDialog
@@ -167,7 +172,8 @@ const SavedApiScreen = () => {
             onClose={close}
           />
         )}
-      {isValidCollectionId(collectionId) &&
+      {isAuthenticated &&
+        isValidCollectionId(collectionId) &&
         validSelection &&
         management?.type === 'move' && (
           <CollectionTargetQueryDialog
@@ -181,13 +187,15 @@ const SavedApiScreen = () => {
             onClose={close}
           />
         )}
-      {saveId !== null && isValidCollectionId(Number(saveId)) && (
-        <CollectionTargetQueryDialog
-          mode="save"
-          restaurantId={Number(saveId)}
-          onClose={close}
-        />
-      )}
+      {isAuthenticated &&
+        saveId !== null &&
+        isValidCollectionId(Number(saveId)) && (
+          <CollectionTargetQueryDialog
+            mode="save"
+            restaurantId={Number(saveId)}
+            onClose={close}
+          />
+        )}
     </>
   )
 }
