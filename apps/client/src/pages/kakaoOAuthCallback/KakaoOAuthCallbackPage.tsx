@@ -6,7 +6,8 @@ import { getAuthMe } from '@/features/auth/api/getAuthMe'
 import { requestKakaoLogin } from '@/features/auth/api/kakaoLogin'
 import {
   clearAuthSession,
-  setAccessToken,
+  getAuthSessionVersion,
+  startAuthenticatedSession,
   setOnboardingSession,
 } from '@/shared/auth/authSession'
 import { consumeKakaoOAuthState } from '@/features/auth/utils/kakaoOAuth'
@@ -24,6 +25,15 @@ export const KakaoOAuthCallbackPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const hasHandledCallbackRef = useRef(false)
+  const callbackSearch = searchParams.toString()
+  const activeCallbackRef = useRef<string | undefined>(undefined)
+
+  useEffect(() => {
+    activeCallbackRef.current = callbackSearch
+    return () => {
+      activeCallbackRef.current = undefined
+    }
+  }, [callbackSearch])
 
   useEffect(() => {
     if (hasHandledCallbackRef.current) {
@@ -31,16 +41,21 @@ export const KakaoOAuthCallbackPage = () => {
     }
 
     hasHandledCallbackRef.current = true
+    const sessionVersion = getAuthSessionVersion()
+    const isCurrentCallback = () =>
+      activeCallbackRef.current === callbackSearch &&
+      getAuthSessionVersion() === sessionVersion
 
     const processCallback = async () => {
-      const code = searchParams.get('code')
+      const callbackParams = new URLSearchParams(callbackSearch)
+      const code = callbackParams.get('code')
 
       if (!code) {
         navigate(ROUTES.loginRequired, { replace: true })
         return
       }
 
-      const oauthState = consumeKakaoOAuthState(searchParams.get('state'))
+      const oauthState = consumeKakaoOAuthState(callbackParams.get('state'))
 
       if (!oauthState) {
         navigate(ROUTES.loginRequired, { replace: true })
@@ -49,6 +64,7 @@ export const KakaoOAuthCallbackPage = () => {
 
       try {
         const loginResult = await requestKakaoLogin(code)
+        if (!isCurrentCallback()) return
 
         if (!loginResult.registered) {
           setOnboardingSession()
@@ -61,21 +77,26 @@ export const KakaoOAuthCallbackPage = () => {
         }
 
         const authMe = await getAuthMe(loginResult.accessToken)
+        if (!isCurrentCallback()) return
 
         if (authMe.role !== 'USER') {
           throw new Error('Invalid user session.')
         }
 
-        setAccessToken(loginResult.accessToken)
+        startAuthenticatedSession(
+          loginResult.accessToken,
+          authMe.subjectId ?? undefined,
+        )
         navigate(oauthState.redirectTo ?? ROUTES.home, { replace: true })
       } catch {
+        if (!isCurrentCallback()) return
         clearAuthSession()
         navigate(ROUTES.loginRequired, { replace: true })
       }
     }
 
     void processCallback()
-  }, [navigate, searchParams])
+  }, [navigate, callbackSearch])
 
   return <LoadingScreen message="로그인 중이에요" />
 }

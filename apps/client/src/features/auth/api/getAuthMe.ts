@@ -27,13 +27,7 @@ const checkIsAuthMe = (value: unknown): value is AuthMe => {
 
 export const getAuthMe = async (accessToken?: string) => {
   const authMe = await request<AuthMe>('api/v1/auth/me', {
-    ...(accessToken
-      ? {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      : {}),
+    headers: { Authorization: accessToken ? `Bearer ${accessToken}` : '' },
     credentials: 'include',
   })
 
