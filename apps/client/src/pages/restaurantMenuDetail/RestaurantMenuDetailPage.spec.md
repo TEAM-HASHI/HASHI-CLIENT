@@ -27,7 +27,7 @@
 - [ ] Header는 77px 높이로 식당명을 한 줄 말줄임 처리하고 뒤로가기, 공유 액션을 제공합니다.
 - [ ] 공유 클릭 시 `ROUTES.restaurantMenuDetail` 기준 메뉴 상세 링크를 현재 origin 기준 absolute URL로 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
 - [ ] 매장 정보, 메뉴, 사진, 리뷰 탭을 표시하고 `메뉴` 탭을 선택 상태로 둡니다.
-- [ ] 사진 탭은 식당 상세와 동일한 사진 source/cache의 전체 공개 사진 수를 표시합니다. source 미연결 또는 개수 조회 실패 시 임의의 숫자를 표시하지 않습니다. 목데이터는 개발 환경에만 적용합니다.
+- [ ] 사진 탭은 식당 상세와 동일한 실제 사진 API/cache의 전체 공개 사진 수를 표시하며, 개수 조회 실패 시 임의의 숫자를 표시하지 않습니다.
 - [ ] 메뉴 상세 route 진입 또는 `menuId` 변경 시 페이지 스크롤을 최상단으로 초기화합니다.
 - [ ] 선택 메뉴 `detailImage`와 다른 메뉴 `listImage`는 MediaImage READY의 `defaultSource.url`을 사용합니다. asset이 없을 때만 기존 `imageUrl`을 사용하고 PROCESSING/FAILED 또는 로드 실패는 HDS `ImageFallback`으로 표시합니다.
 - [ ] route param `restaurantId`, `menuId`가 유효한 양의 정수가 아니면 `NotFoundPage`를 표시합니다.
@@ -50,8 +50,9 @@
 
 ## Data Dependencies
 
-- 사진 개수는 기존 `useRestaurantPhotos(restaurantId, false)`의 counts query를 재사용합니다. 메뉴 상세에서는 사진 목록 infinite query를 실행하지 않습니다.
-- 통합 사진 목록/필터/count API 계약은 미확정입니다. DEV 전용 목데이터만 사용하며 운영에서는 미확인 개수를 표시하지 않습니다.
+- 오늘의 식당 복귀 시 `activeTab`과 `restaurantId`를 전달해 재추천한 식당을 유지합니다.
+- 사진 개수는 `useRestaurantPhotos(restaurantId, false)`의 첫 페이지 응답을 재사용합니다. 메뉴 상세에서는 사진 추가 페이지를 조회하지 않습니다.
+- 사진 API는 `GET /api/v1/restaurants/{restaurantId}/photos?filter=ALL`이며 `counts.all`을 표시합니다. 목데이터를 런타임에 연결하지 않습니다.
 
 - query: restaurant summary
 - endpoint: `GET /api/v1/restaurants/{restaurantId}/summary`
@@ -92,9 +93,9 @@
 - error state: 최초 실패는 다른 메뉴 영역 재시도; 추가 조회 실패는 기존 목록 유지 및 실패한 cursor 재시도. 이 목록 오류는 page critical error에 포함하지 않음
 
 - query: restaurant save summary (`useRestaurantSaveSummary`)
-- endpoints: 공개 `GET /api/v1/restaurants/save-counts`, 로그인 전용 `GET /api/v1/users/me/restaurant-saves`; query `restaurantIds`
+- endpoints: 저장 수는 공개 summary의 `saveCount`를 사용합니다. 로그인 전용 저장 여부는 `GET /api/v1/users/me/restaurant-saves?restaurantIds=...`로 조회합니다.
 - enabled condition: 유효한 식당 ID; saved-state query는 로그인 시에만 실행
-- cache: count는 식당 ID, saved는 식당 ID + `sessionVersion`으로 분리하며 로그아웃/세션 전환 시 이전 saved 응답을 재사용하지 않음
+- cache: 저장 수는 기존 식당 summary 캐시를 공유해 별도 save-counts 요청을 보내지 않습니다. saved는 식당 ID + `sessionVersion`으로 분리합니다.
 - fallback: count 미확인/실패 시 숫자를 숨기고 saved는 false; 임의의 `0`을 만들지 않음
 
 ## State

@@ -34,7 +34,7 @@
 - [ ] 잘못된 ID 또는 초기 요약/매장 정보 조회 실패는 `NotFoundPage`로 표시하며 두 critical query는 자동 재시도하지 않습니다.
 - [ ] 매장 정보, 메뉴, 사진, 리뷰 탭을 같은 페이지 상태로 전환합니다.
 - [ ] 사진 탭은 같은 상세 템플릿 안에서 전환하며, 일반 식당과 오늘의 식당 모두 아래 Photo Policy의 공통 기준을 따릅니다.
-- [ ] 사진 UI와 count는 개발·테스트 환경에서 목데이터로 구현하며, 데이터 공급 부분을 분리해 실제 API 연결은 후속 작업으로 둡니다. 운영 빌드에는 목데이터를 연결하지 않고 기존 빈 상태를 유지하며 확인되지 않은 count를 표시하지 않습니다.
+- [ ] 사진 UI와 count는 실제 사진 조회 API를 사용하며, 운영 빌드에서도 같은 계약으로 동작합니다. 저장·해제는 컬렉션 API 연동 후속 작업으로 남깁니다.
 - [ ] 사진 필터 칩에는 각 분류의 공개 사진 수를 표시하고, 상단 `사진 N`은 선택한 필터와 무관한 해당 식당의 전체 공개 사진 수를 표시합니다.
 - [ ] 매장 정보 탭의 `오시는 길`은 제목과 주소만 표시합니다. 실제 지도 연동 전까지 회색 placeholder 및 해당 영역의 공간은 노출하지 않습니다.
 - `GET /api/v1/restaurants/{restaurantId}/map-location`은 확인된 서버 endpoint이며 지도 preview 연동만 후속 작업입니다.
@@ -67,10 +67,10 @@
 - 기준: 기획팀 확인 및 HASHI-PLAN `db27b1e4595b1d1976cedb17f840a7a0e207e5f6`.
 - 공통 원문: [RESTAURANT_PHOTO](https://github.com/TEAM-HASHI/HASHI-PLAN/blob/db27b1e4595b1d1976cedb17f840a7a0e207e5f6/02_PRODUCT_SPEC/RESTAURANT/RESTAURANT_PHOTO/RESTAURANT_PHOTO.md).
 - 오늘의 식당 원문: [RES_TODAY_RESTAURANT_PHOTOS](https://github.com/TEAM-HASHI/HASHI-PLAN/blob/db27b1e4595b1d1976cedb17f840a7a0e207e5f6/02_PRODUCT_SPEC/RESTAURANT/RES_TODAY_RESTAURANT_PHOTOS/RES_TODAY_RESTAURANT_PHOTOS.md).
-- 현재 구현: 개발 환경에서는 `RestaurantPhotoSection`에 필터, 2열 목록, 추가 조회, 상태 처리와 사진 전용 뷰어를 연결합니다. 실제 API 연동과 실데이터 검증은 완료 범위에 포함하지 않습니다.
+- 현재 구현: `GET /api/v1/restaurants/{restaurantId}/photos`를 연결하며 개발·운영 모두 실제 응답을 사용합니다. 기존 필터, 2열 목록, 추가 조회, 상태 처리와 사진 전용 뷰어를 유지합니다.
 - 디자인 기준: [사진 목록 및 뷰어](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=7573-79532). 사진 목록은 좌우 20px, 열 사이 21px, 세로 간격 20px, 모서리 5px을 적용합니다. Figma의 구 필터명 대신 확정된 기획 필터와 개수 정책을 적용합니다.
-- 목데이터는 Figma 체크무늬 자산을 사용하는 개발 전용 예시 45건이며 실제 식당 사진이나 건수가 아닙니다. `import.meta.env.DEV` 분기에서만 동적으로 불러옵니다.
-- 이미지 메타데이터는 PNG 실제 크기인 256x256과 일치시킵니다. 다양한 가로/세로 원본 샘플 검증은 별도로 남아 있으며, Figma의 예시 높이를 이미지 원본 크기로 사용하지 않습니다.
+- 런타임에서 개발용 목 사진을 불러오지 않습니다. 사진 순서와 중복 제거, 필터별 집계는 서버 결과를 사용합니다.
+- READY asset은 `image.defaultSource`의 URL과 크기를 사용합니다. 처리 중·실패·UNAVAILABLE은 기본 이미지를 표시하고, legacy 사진은 `imageUrl`과 이미지의 원본 비율을 사용합니다.
 - 필터 영역은 75px, 상단 여백 20px, 칩 높이 36px입니다. 데이터 공급 선택은 `api/restaurantPhotoSource.ts`에서 담당하고 화면 훅은 공급자의 활성 여부와 조회 인터페이스만 사용합니다.
 - 미확정: 현재 확대 2배/최대 4배, 로딩 스켈레톤, 오류 문구/배치, 뷰어 추가 조회 실패의 재시도 버튼은 기획/디자인 확인 전 임시 구현입니다. 확정 규격으로 간주하지 않습니다.
 - 기본 필터는 `전체`이며, `전체 / 대표사진 / 메뉴사진 / 리뷰사진` 칩과 각 분류의 공개 사진 수를 한 줄 가로 스크롤로 표시합니다. 동영상은 이번 스프린트에서 제외합니다.
@@ -148,17 +148,17 @@
   - next page trigger: 공통 `useInfiniteScrollTrigger` sentinel intersect
 
 - query: restaurant photos
-- endpoint: 통합 사진 목록/필터/count 계약 미확정 (임의 endpoint를 만들지 않음)
-- status: 개발·테스트 전용 목데이터 기반 UI 구현, 실제 API 연동은 후속
-- data source: `RestaurantPhotoSource`는 클라이언트 내부 인터페이스이며 서버 계약이 아닙니다. `createRestaurantPhotoSource`에서 목데이터를 제공하고 실제 API는 계약 확인 후 adapter로 연결합니다.
+- endpoint: `GET /api/v1/restaurants/{restaurantId}/photos`
+- status: 실제 API 연동. filter는 ALL / REPRESENTATIVE / MENU / REVIEW이며 최초 cursor는 생략합니다.
+- data source: `api/restaurantPhotoSource.ts`에서 generated 응답을 기존 `RestaurantPhotoSource` 인터페이스로 변환합니다. 요청 취소와 no-store를 적용합니다.
 - pagination: 최초 및 추가 조회 각각 20장, 필터 변경 시 목록과 스크롤 초기화
 - loading/empty/error: 개발 UI에서 Photo Policy 기준으로 구분합니다. 공통 빈 상태·버튼·이미지 fallback을 사용하며 상태별 최종 시각 디자인 확인은 별도입니다.
-- count: 칩별 공개 사진 수 및 필터와 무관한 전체 공개 사진 수. 실제 응답 필드명은 서버 확인 대기
+- count: 칩별 개수는 `counts`, 상단 전체 개수는 `counts.all`을 사용합니다. `hasNext`가 true일 때만 `nextCursor`로 추가 조회하며 누락·반복 커서는 오류로 처리합니다.
 
 - query: restaurant save summary (`useRestaurantSaveSummary`)
-- endpoints: 공개 `GET /api/v1/restaurants/save-counts`, 로그인 전용 `GET /api/v1/users/me/restaurant-saves`; query `restaurantIds`
+- endpoints: 저장 수는 공개 summary의 `saveCount`를 사용합니다. 로그인 전용 저장 여부는 `GET /api/v1/users/me/restaurant-saves?restaurantIds=...`로 조회합니다.
 - enabled condition: 유효한 식당 ID; saved-state query는 로그인 시에만 실행
-- cache: count는 식당 ID, saved는 식당 ID + `sessionVersion`으로 분리하며 로그아웃/세션 전환 시 이전 saved 응답을 재사용하지 않음
+- cache: 저장 수는 기존 식당 summary 캐시를 공유해 별도 save-counts 요청을 보내지 않습니다. saved는 식당 ID + `sessionVersion`으로 분리합니다.
 - fallback: count 미확인/실패 시 숫자를 숨기고 saved는 false; 임의의 `0`을 만들지 않음
 
 ### Mutation
@@ -186,7 +186,7 @@
   - restaurant store information
   - restaurant menus infinite pages
   - restaurant reviews infinite pages
-  - restaurant photos: 개발 전용 목록 페이지 및 count query, 실제 API 연동은 후속
+  - restaurant photos: 첫 페이지 응답의 개수와 목록을 공유하고, 사진 탭 재진입 시 첫 페이지만 다시 조회
 - derived state:
   - bottom bar variant from page variant
   - `RestaurantMainResponse` + `RestaurantStoreInformationResponse` + menu/review pages to `RestaurantDetail`
@@ -322,4 +322,4 @@ RestaurantDetailPage
 - [ ] 사진 2열 원본 비율, 20장 추가 조회, 필터 변경 시 목록 및 스크롤 초기화 확인
 - [ ] 사진 뷰어 선택 위치, 확대, 스와이프, 인디케이터 및 닫기 후 위치 복원 확인
 - [ ] 사진 로딩, 빈 결과, 최초 및 추가 조회 재시도, 개별 이미지 실패 상태 확인
-- [ ] 운영 빌드에는 목데이터와 가짜 사진 count가 연결되지 않는지 확인
+- [ ] 운영 빌드에서도 실제 사진 API를 호출하고 목데이터나 가짜 count를 사용하지 않는지 확인
