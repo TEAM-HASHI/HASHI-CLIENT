@@ -171,6 +171,7 @@ describe('SearchPage', () => {
 
   beforeEach(() => {
     mockGetSearchKeywordRecommendations.mockResolvedValue(['아끼소바'])
+    mockGetRestaurants.mockReset()
     mockGetRestaurants.mockImplementation(({ genre, keyword, sort }) => {
       const normalizedKeyword = keyword.trim().toLowerCase()
       const restaurants = searchRestaurantFixtures
@@ -442,6 +443,53 @@ describe('SearchPage', () => {
         size: 10,
       })
     })
+  })
+
+  it('keeps loaded results after a next-page failure and retries only the failed cursor', async () => {
+    const user = userEvent.setup()
+    const { triggerAllIntersects } = mockIntersectionObserver()
+    const first = convertSearchRestaurantFixtureToSummary(
+      searchRestaurantFixtures[0],
+    )
+    const next = convertSearchRestaurantFixtureToSummary(
+      searchRestaurantFixtures[2],
+    )
+    let resolveRetry!: (value: unknown) => void
+    mockGetRestaurants
+      .mockResolvedValueOnce({
+        restaurants: [first],
+        hasNext: true,
+        nextCursor: 'next',
+      })
+      .mockRejectedValueOnce(new Error('next page failed'))
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveRetry = resolve
+          }),
+      )
+    renderSearchPageWithRoutes(`${ROUTES.search}?keyword=%23가성비`)
+    await screen.findByText(first.name)
+    triggerAllIntersects()
+    await screen.findByRole('button', { name: '다시 시도' })
+    expect(screen.getByText(first.name)).toBeInTheDocument()
+    triggerAllIntersects()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(2)
+
+    await user.click(screen.getByRole('button', { name: '다시 시도' }))
+    expect(screen.getByText(first.name)).toBeInTheDocument()
+    expect(mockGetRestaurants).toHaveBeenLastCalledWith(
+      expect.objectContaining({ keyword: '#가성비', cursor: 'next' }),
+    )
+    triggerAllIntersects()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(3)
+    resolveRetry({ restaurants: [next], hasNext: false })
+    expect(await screen.findByText(next.name)).toBeInTheDocument()
+    expect(screen.getByText(first.name)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: '다시 시도' }),
+    ).not.toBeInTheDocument()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(3)
   })
 
   it('does not request the same next restaurant page twice when the sentinel intersects repeatedly in one render cycle', async () => {
