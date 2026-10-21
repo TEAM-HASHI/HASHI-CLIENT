@@ -19,6 +19,12 @@ import type { SuccessResponse } from '@/shared/api/types'
 
 const normalizePath = (path: string) => path.replace(/^\/+/, '')
 
+const expiredAuthSessions = new WeakMap<Error, number>()
+
+export const checkIsCurrentSessionExpiredError = (error: unknown) =>
+  error instanceof Error &&
+  expiredAuthSessions.get(error) === getAuthSessionVersion()
+
 let pendingTokenReissue:
   | { sessionVersion: number; promise: Promise<string> }
   | undefined
@@ -168,8 +174,16 @@ export const requestSuccessResponse = async <TData>(
     } catch (reissueCause) {
       if (checkIsAuthRequiredError(reissueCause)) {
         if (getAuthSessionVersion() === sessionVersion) {
+          if (reissueCause instanceof Error)
+            expiredAuthSessions.set(reissueCause, sessionVersion + 1)
           clearAuthSession()
         }
+        if (
+          cause instanceof Error &&
+          reissueCause instanceof Error &&
+          expiredAuthSessions.get(reissueCause) === sessionVersion + 1
+        )
+          expiredAuthSessions.set(cause, sessionVersion + 1)
         throw cause
       }
       if (getAuthSessionVersion() !== sessionVersion) throw cause
