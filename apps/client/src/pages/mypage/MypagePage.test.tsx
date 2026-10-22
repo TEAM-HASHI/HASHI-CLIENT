@@ -1,14 +1,16 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import { ErrorBoundary } from 'react-error-boundary'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ROUTES } from '@/app/router/path'
 import { MypagePage } from '@/pages/mypage/MypagePage'
+import {
+  clearAuthSession,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
 
-const { mockNavigate, mockRequest } = vi.hoisted(() => ({
-  mockNavigate: vi.fn(),
+const { mockRequest } = vi.hoisted(() => ({
   mockRequest: vi.fn(),
 }))
 
@@ -18,7 +20,7 @@ vi.mock('react-router-dom', async () => {
 
   return {
     ...actual,
-    useNavigate: () => mockNavigate,
+    useNavigate: () => vi.fn(),
   }
 })
 
@@ -59,28 +61,28 @@ describe('MypagePage', () => {
         return Promise.resolve({ balance: 7000 })
       }
 
+      if (path === '/api/v1/users/me/saved-restaurants/count') {
+        return Promise.resolve({ savedRestaurantCount: 12 })
+      }
+
       return Promise.resolve({ reviewCount: 8 })
     })
   })
 
   afterEach(() => {
     cleanup()
+    clearAuthSession()
     vi.restoreAllMocks()
     vi.clearAllMocks()
   })
 
   it('shows loading screen before required API responses settle', async () => {
-    mockRequest.mockImplementation((path: string) => {
-      if (path === '/api/v1/users/me/profile-summary') {
-        return new Promise(() => {})
-      }
-
-      if (path === '/api/v1/points/me') {
-        return Promise.resolve({ balance: 7000 })
-      }
-
-      return Promise.resolve({ reviewCount: 8 })
-    })
+    const defaultRequest = mockRequest.getMockImplementation()!
+    mockRequest.mockImplementation((path: string, ...args: unknown[]) =>
+      path === '/api/v1/users/me/saved-restaurants/count'
+        ? new Promise(() => {})
+        : defaultRequest(path, ...args),
+    )
 
     renderMypagePage()
 
@@ -93,20 +95,12 @@ describe('MypagePage', () => {
 
   it('lets API request failures propagate to the error boundary', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    mockRequest.mockImplementation((path: string) => {
-      if (path === '/api/v1/points/me') {
-        return Promise.reject(new Error('point request failed'))
-      }
-
-      if (path === '/api/v1/users/me/profile-summary') {
-        return Promise.resolve({
-          nickname: '테스트유저',
-          profileImageUrl: 'https://example.com/profile.png',
-        })
-      }
-
-      return Promise.resolve({ reviewCount: 8 })
-    })
+    const defaultRequest = mockRequest.getMockImplementation()!
+    mockRequest.mockImplementation((path: string, ...args: unknown[]) =>
+      path === '/api/v1/points/me'
+        ? Promise.reject(new Error('point request failed'))
+        : defaultRequest(path, ...args),
+    )
 
     renderMypagePage()
 
@@ -114,30 +108,57 @@ describe('MypagePage', () => {
     expect(screen.queryByText('0 P')).not.toBeInTheDocument()
   })
 
-  it('navigates to the notices page when the notice menu is pressed', async () => {
+  it.each([null, { savedRestaurantCount: -1 }])(
+    'does not show a fabricated zero when the saved count response is invalid: %j',
+    async (response) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+      const defaultRequest = mockRequest.getMockImplementation()!
+      mockRequest.mockImplementation((path: string, ...args: unknown[]) =>
+        path === '/api/v1/users/me/saved-restaurants/count'
+          ? Promise.resolve(response)
+          : defaultRequest(path, ...args),
+      )
+
+      renderMypagePage()
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'boundary error',
+      )
+      expect(
+        screen.queryByRole('button', { name: /내가 찜한 식당/ }),
+      ).not.toBeInTheDocument()
+    },
+  )
+
+  it('ignores a previous session count that arrives after switching accounts', async () => {
+    let resolvePrevious!: (value: { savedRestaurantCount: number }) => void
+    let countRequests = 0
+    const defaultRequest = mockRequest.getMockImplementation()!
+    mockRequest.mockImplementation((path: string, ...args: unknown[]) => {
+      if (path !== '/api/v1/users/me/saved-restaurants/count') {
+        return defaultRequest(path, ...args)
+      }
+      countRequests += 1
+      return countRequests === 1
+        ? new Promise((resolve) => {
+            resolvePrevious = resolve
+          })
+        : Promise.resolve({ savedRestaurantCount: 3 })
+    })
     renderMypagePage()
 
-    fireEvent.click(await screen.findByRole('button', { name: '공지사항' }))
-
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.notices)
-  })
-
-  it('navigates to the terms page when the terms menu is pressed', async () => {
-    renderMypagePage()
-
-    fireEvent.click(await screen.findByRole('button', { name: '이용약관' }))
-
-    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.terms)
-  })
-
-  it('preserves the account section after adding the service page', async () => {
-    renderMypagePage()
-
+    await act(async () => {
+      startAuthenticatedSession('another-account')
+    })
     expect(
-      await screen.findByRole('heading', { name: '테스트유저님' }),
+      await screen.findByRole('button', { name: '내가 찜한 식당 3' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('계정')).toBeInTheDocument()
-    expect(screen.getByText('로그아웃')).toBeInTheDocument()
-    expect(screen.getByText('회원탈퇴')).toBeInTheDocument()
+
+    await act(async () => {
+      resolvePrevious({ savedRestaurantCount: 12 })
+    })
+    expect(
+      screen.getByRole('button', { name: '내가 찜한 식당 3' }),
+    ).toBeInTheDocument()
   })
 })

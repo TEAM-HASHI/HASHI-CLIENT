@@ -927,7 +927,7 @@ test('제품 컬렉션 라우트에서 HTTP 기반 생성·편집·삭제와 실
   await expect(
     page.getByRole('button', { name: '브라우저 여행 컬렉션 열기' }),
   ).toBeVisible()
-  expect(collection?.description).toBe('설명 수정')
+  expect(collection).toMatchObject({ description: '설명 수정' })
   await page.getByRole('button', { name: '브라우저 여행 더보기' }).click()
   await page.getByRole('menuitem', { name: '삭제하기' }).click()
   await page.getByRole('button', { name: '삭제하기', exact: true }).click()

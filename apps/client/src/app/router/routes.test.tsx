@@ -23,6 +23,8 @@ import {
   startAuthenticatedSession,
 } from '@/shared/auth/authSession'
 import { createQueryClient } from '@/shared/lib/queryClient'
+import { ROUTES } from '@/app/router/path'
+import { clearMapSession } from '@/pages/map/utils/mapSession'
 import { HttpStatusError } from '@/shared/api/apiError'
 
 vi.mock('@/shared/utils/clipboard', () => ({ copyUrlToClipboard: vi.fn() }))
@@ -73,6 +75,19 @@ vi.mock('@/pages/saved/api/moveSavedRestaurants', () => ({
 }))
 vi.mock('@/pages/saved/api/saveRestaurant', () => ({ saveRestaurant: vi.fn() }))
 
+vi.mock('@vis.gl/react-google-maps', () => ({
+  APIProvider: ({ children }: PropsWithChildren) => children,
+  Map: ({ children }: PropsWithChildren) => children,
+  AdvancedMarker: ({ children }: PropsWithChildren) => children,
+  useApiLoadingStatus: () => 'LOADED',
+  APILoadingStatus: {
+    LOADED: 'LOADED',
+    FAILED: 'FAILED',
+    AUTH_FAILURE: 'AUTH_FAILURE',
+  },
+  useMap: () => null,
+}))
+
 const renderRoute = async (initialEntry: string) => {
   const router = createMemoryRouter(appRoutes, {
     initialEntries: [initialEntry],
@@ -91,7 +106,54 @@ const renderRoute = async (initialEntry: string) => {
 }
 
 describe('appRoutes', () => {
+  it('renders the public map preview and bottom navigation on direct entry', async () => {
+    await renderRoute(ROUTES.map)
+
+    expect(
+      await screen.findByRole('heading', { name: '도쿄 맛집 지도' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('searchbox', { name: '식당 혹은 메뉴 검색' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('navigation')).toBeInTheDocument()
+  })
+
+  it('removes covered navigation from accessibility when map detail fills the screen', async () => {
+    const user = userEvent.setup()
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        right: 393,
+        bottom: 768,
+        width: 393,
+        height: 768,
+        toJSON: () => ({}),
+      })
+    try {
+      await renderRoute(ROUTES.map)
+      await user.click(
+        await screen.findByRole('button', {
+          name: '코코네 돈카츠 신도심점 상세 보기',
+        }),
+      )
+      screen.getByRole('slider', { name: '식당 상세 높이 조절' }).focus()
+      await user.keyboard('{End}')
+      expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+      await user.keyboard('{Escape}')
+      expect(screen.getByRole('navigation')).toBeVisible()
+    } finally {
+      rect.mockRestore()
+    }
+  })
   beforeEach(() => {
+    clearAuthSession()
+    clearMapSession()
+    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
+    vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
     vi.mocked(updateCollection).mockReset()
     vi.mocked(copyUrlToClipboard).mockReset().mockResolvedValue(true)
     vi.mocked(showToast).mockClear()
@@ -469,6 +531,9 @@ describe('appRoutes', () => {
   })
 
   afterEach(() => {
+    clearMapSession()
+    vi.unstubAllEnvs()
+    document.body.style.overflow = ''
     cleanup()
     document.body.style.overflow = ''
     clearAuthSession()

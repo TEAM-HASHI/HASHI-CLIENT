@@ -4,13 +4,15 @@ import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
 export const createMypagePrimaryMenuItems = ({
   myReviewCount,
+  savedRestaurantCount,
 }: {
   myReviewCount: number
+  savedRestaurantCount: number
 }): MypageMenuItem[] => [
   {
     id: 'saved-restaurants',
     label: '내가 찜한 식당',
-    count: 0,
+    count: savedRestaurantCount,
     highlighted: true,
     action: {
       type: 'comingSoon',

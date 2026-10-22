@@ -46,6 +46,8 @@
 
 ## Official Docs
 
+- 지도: `@vis.gl/react-google-maps@1.10.1` (Current, client 전용). [공식 문서](https://visgl.github.io/react-google-maps/). Google Maps JavaScript SDK와 Advanced Marker를 연결하며 식당 데이터 API와는 별개입니다.
+
 - Package manager: [pnpm](https://pnpm.io/)
 - Monorepo: [Turborepo](https://turborepo.dev/docs)
 - Language: [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/docs/)

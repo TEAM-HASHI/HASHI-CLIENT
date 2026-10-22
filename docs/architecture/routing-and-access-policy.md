@@ -140,4 +140,7 @@
 저장 목록·컬렉션 상세는 API 기반 화면이며 BottomNavigationLayout을 사용합니다.
 제품 라우트는 `SavedApiPage`·`CollectionFormQueryPage`·`CollectionEditorQueryPage`로 lazy load합니다.
 목 데이터 Provider는 제품 RootLayout에서 사용하지 않으며 지도/퍼블리싱 fixture에서만 명시적으로 제공합니다.
-컬렉션 생성·수정·식당 편집은 하단 내비게이션 없는 독립 페이지입니다. 지도(`/map`)는 아직 준비중 페이지입니다.
+컬렉션 생성·수정·식당 편집은 하단 내비게이션 없는 독립 페이지입니다.
+지도(`/map`)는 샘플 지도·검색·필터·목록·상세·사진 보기 화면을 제공합니다.
+지도 SDK는 Google Maps를 사용합니다. 식당 데이터와 좌표는 샘플임을 표시하며 실제 식당 검색·저장/예약 API는 연결하지 않습니다.
+지도 검색은 `/search`에 검증된 map context를 전달하고 replace navigation으로 복귀합니다. 지도 상태는 메모리에서 이탈 후 5분 미만 복원하며, 활성 지도 탭 재선택은 reset route state를 전달해 즉시 초기화합니다. 일반 검색 URL과 접근 정책은 변경하지 않습니다.

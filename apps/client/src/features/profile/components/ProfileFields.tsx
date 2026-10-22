@@ -7,6 +7,7 @@ const PROFILE_INPUT_CLASS_NAME =
   'border-0 bg-primary-100 px-3 [&>input:not(:disabled)]:text-primary-200 [&:has(>input:focus-visible)]:outline-none'
 
 interface ProfileFieldState {
+  disabled?: boolean
   value: string
   onValueChange: (value: string) => void
   onBlur?: () => void
@@ -40,6 +41,7 @@ export const ProfileFields = ({
           className={PROFILE_INPUT_CLASS_NAME}
           disabled={disabled}
           label="닉네임"
+          maxLength={50}
           onBlur={fields.nickname.onBlur}
           onChange={(event) => {
             fields.nickname.onValueChange(event.target.value)
@@ -63,7 +65,7 @@ export const ProfileFields = ({
           }
           autoComplete="name"
           className={PROFILE_INPUT_CLASS_NAME}
-          disabled={disabled}
+          disabled={disabled || fields.englishName.disabled}
           label="영문 이름 (선택)"
           maxLength={PROFILE_ENGLISH_NAME_MAX_LENGTH}
           onChange={(event) => {
@@ -114,6 +116,7 @@ export const ProfileFields = ({
           inputMode="email"
           aria-invalid={Boolean(fields.email.errorMessage)}
           label="이메일"
+          maxLength={255}
           onBlur={fields.email.onBlur}
           onChange={(event) => {
             fields.email.onValueChange(event.target.value)

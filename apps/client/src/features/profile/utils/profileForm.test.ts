@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   checkIsValidBirthDate,
@@ -6,6 +6,16 @@ import {
 } from '@/features/profile/utils/profileForm'
 
 describe('profileForm utils', () => {
+  it('rejects today rather than treating midnight as a past birth date', () => {
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date(2026, 9, 17, 15))
+      expect(checkIsValidBirthDate('20261017')).toBe(false)
+      expect(checkIsValidBirthDate('20261016')).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
   it('validates real birth dates in YYYYMMDD format', () => {
     expect(checkIsValidBirthDate('20260708')).toBe(true)
     expect(checkIsValidBirthDate('20260230')).toBe(false)

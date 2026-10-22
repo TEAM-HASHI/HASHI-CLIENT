@@ -8,17 +8,19 @@ Jira: HASHI-106
 
 - 이 브랜치는 마이페이지의 프로필, 주요 메뉴 버튼, 서비스 이용 및 계정 메뉴의 리디자인을 반영합니다.
 - 아래 MVP 제외 항목은 현재 구현 상태를 설명하며, 최신 기획에서 기능을 제외한다는 의미는 아닙니다.
-- 프로필 수정, 회원탈퇴, 내부 공지사항 화면 연결은 각각의 기능 브랜치 병합 시 유지합니다.
-- 저장 식당 수 조회 및 화면 이동, 포인트 화면 이동은 후속 기능 작업으로 남아 있습니다.
+- 프로필 수정과 회원탈퇴 API는 각 전용 페이지에서 연동되어 있으며, 마이페이지는 해당 페이지로 이동합니다. 내부 공지사항 화면 연결도 유지합니다.
+- 저장 식당 수는 `GET /api/v1/users/me/saved-restaurants/count`로 조회합니다. 저장 식당 목록 이동과 포인트 화면 이동은 후속 기능 작업으로 남아 있습니다.
+- 저장 식당 수는 진입할 때마다 재조회하며 HTTP 캐시를 사용하지 않습니다. 다른 조회의 공통 캐시 정책은 유지합니다.
+- 저장 식당 수 캐시는 인증 세션별로 분리하며, 계정 변경 전의 늦은 응답이 새 세션의 숫자를 덮어쓰지 않습니다.
 - 조회 캐시는 공통 30초 정책을 유지하며, 리뷰 작성 및 예약 생성·취소 성공 시 포인트 잔액을 무효화합니다. 리뷰 작성·삭제 성공 시 작성한 리뷰 수를 무효화합니다.
-- 프로필 수정 API 연동 시 수정 성공 처리에서 `MY_PROFILE_SUMMARY_QUERY_KEY`를 무효화해야 합니다. 다른 기기나 서버에서 변경된 정보를 진입 즉시 반영할지는 별도의 최신 조회 정책으로 확정해야 합니다.
+- 프로필 수정에서 서버에 변경사항이 저장되면 `MY_INFO_QUERY_KEY`와 `MY_PROFILE_SUMMARY_QUERY_KEY`를 무효화합니다. 다른 기기나 서버에서 변경된 정보를 진입 즉시 반영할지는 별도의 최신 조회 정책으로 확정해야 합니다.
 
 ## Purpose
 
 - 로그인한 사용자가 마이 페이지에서 본인의 프로필, 사용 가능 포인트, 마이 리뷰 개수, 고객지원 메뉴를 확인할 수 있게 합니다.
 - 마이 페이지는 하단 네비게이션의 `마이` 탭 진입 화면입니다.
-- 내가 찜한 식당과 회원탈퇴 API 연동은 MVP 범위에서 제외합니다.
-- 프로필 수정 버튼은 `/profile/edit`로 이동하고, 저장 API는 후속 작업으로 남깁니다.
+- 내가 찜한 식당 목록 이동은 후속 작업으로 남아 있습니다.
+- 프로필 수정 버튼은 `/profile/edit`로 이동하며, 조회·저장·사진 변경 및 삭제는 프로필 수정 페이지가 담당합니다.
 - 미연동 기능은 UI를 노출하고, 각 기능의 준비 상태에 따라 안내 모달 또는 별도 페이지로 연결합니다.
 
 ## Route
@@ -50,6 +52,8 @@ apps/client/src/pages/mypage/
 ├── MypagePage.tsx
 ├── MypagePage.test.tsx
 ├── MypagePage.spec.md
+├── api/
+│   └── getMySavedRestaurantCount.ts
 ├── components/
 │   ├── MypageProfile.tsx
 │   ├── MypagePointSummary.tsx
@@ -112,8 +116,8 @@ apps/client/src/features/user/
 - [x] 예약/리뷰 관련 주요 메뉴를 보여줍니다.
   - 내가 찜한 식당
   - 마이 리뷰
-- [x] 내가 찜한 식당 메뉴는 MVP 구현에서 제외합니다.
-- [x] 내가 찜한 식당 count는 서버 조회 없이 `0`으로 표시합니다.
+- [x] 내가 찜한 식당 목록 이동은 후속 작업으로 유지합니다.
+- [x] 내가 찜한 식당 count는 서버의 `savedRestaurantCount`로 표시합니다.
 - [x] 내가 찜한 식당 메뉴 클릭 시 shared `ComingSoonDialog`를 띄웁니다.
 - [x] 마이 리뷰 count는 `GET /api/v1/reviews/me/count`로 조회합니다.
 - [x] 마이 리뷰 메뉴는 사용자가 작성한 리뷰 또는 작성 가능한 리뷰를 확인하는 페이지로 이동합니다.
@@ -136,7 +140,7 @@ apps/client/src/features/user/
 - 프로필 정보 API 연동 및 표시
 - 사용 가능 포인트 API 연동 및 표시
 - 내가 찜한 식당 메뉴 UI 표시
-- 내가 찜한 식당 count `0` 고정 표시
+- 내가 찜한 식당 count API 연동 및 표시
 - 내가 찜한 식당 클릭 시 준비중 모달 표시
 - 마이 리뷰 count API 연동 및 표시
 - 마이 리뷰 페이지 이동
@@ -147,13 +151,14 @@ apps/client/src/features/user/
 - 계정 섹션 UI 표시
 - 로그아웃 성공 시 인증 정보와 캐시 정리 후 로그인 화면 이동
 - 회원탈퇴 페이지 이동
+- 프로필 수정 페이지의 API 연동 및 저장 후 프로필 요약 갱신
+- 회원탈퇴 페이지의 API 연동 및 탈퇴 완료 후 세션·캐시 정리
 
 ### Excluded
 
-- 프로필 수정 API 연동
-- 내가 찜한 식당 기능 및 count API 연동
+- 내가 찜한 식당 목록 이동
+- 포인트 화면 이동
 - 로그아웃 API 운영 배포 후 운영 환경 동작 확인
-- 회원탈퇴 API 연동 및 탈퇴 처리
 
 MVP 제외 항목은 디자인에 노출되는 범위와 노출되지 않는 범위를 구분합니다.
 
@@ -237,8 +242,8 @@ type ComingSoonDialogProps = {
 
 #### 내가 찜한 식당
 
-- MVP 제외입니다.
-- count는 서버 조회 없이 `0`으로 표시합니다.
+- count는 `GET /api/v1/users/me/saved-restaurants/count`의 `savedRestaurantCount`로 표시합니다.
+- 여러 컬렉션에 저장한 동일 식당은 한 번만 세며 삭제된 식당은 제외합니다. 집계는 서버가 담당합니다.
 - 사용자가 클릭하면 `ComingSoonDialog`를 띄웁니다.
 - 강조 카드 배경은 `bg-cool-gray-800` 토큰을 사용합니다.
 
@@ -275,8 +280,8 @@ type ComingSoonDialogProps = {
 
 - 로그아웃과 회원탈퇴 메뉴를 표시합니다.
 - 로그아웃 성공 시 인증 정보와 전체 Query 캐시를 정리하고 로그인 화면으로 이동합니다. 공개 조회에도 사용자별 찜 상태 등이 포함될 수 있으므로 캐시를 함께 비웁니다. 실패 시 세션을 유지하고 공통 오류 토스트를 표시하며, 요청 중에는 로그아웃 버튼을 비활성화합니다.
-- 요청 시작 이후 세션 버전이 변경되면 이전 로그아웃의 성공 응답으로 현재 세션·캐시를 정리하거나 화면을 이동하지 않습니다.
-- 회원탈퇴는 `ROUTES.withdrawal`로 이동하며 실제 탈퇴 API는 연결하지 않습니다.
+- 요청 시작 이후 다른 인증 세션으로 변경되면 이전 로그아웃의 성공 응답을 무시합니다. 인증 만료로 이미 비로그인이 된 경우에는 캐시 정리와 로그인 화면 이동을 마무리합니다.
+- 회원탈퇴는 `ROUTES.withdrawal`로 이동합니다. 탈퇴 요청과 예외 처리는 해당 페이지가 담당하며, 완료 시 세션과 캐시를 정리하고 로그인 화면으로 이동합니다.
 - 서비스 이용 영역과 같은 `MypageMenuSection` 레이아웃을 재사용합니다.
 
 ## Data Dependencies
@@ -388,21 +393,17 @@ type MypageSummary = {
   profileImageUrl?: string | null
   availablePoint: number
   myReviewCount: number
+  savedRestaurantCount: number
 }
 ```
 
-찜한 식당 count는 이번 MVP에서 API를 호출하지 않고 `createMypagePrimaryMenuItems` 내부에서 항상 `0`으로 고정합니다.
+찜한 식당 count는 `GET /api/v1/users/me/saved-restaurants/count`로 조회하고 `createMypagePrimaryMenuItems`에 전달합니다. 유효한 0 이상의 정수만 허용하며 응답 누락이나 잘못된 값은 오류로 처리합니다.
 
 ### Mutation
 
-MVP 범위에서는 mutation이 없습니다.
-
-추후 확장 후보:
-
-- 프로필 수정 API 연동
-- 내가 찜한 식당 목록
-- 로그아웃
-- 회원탈퇴
+- 마이페이지는 `useLogoutMutation`으로 로그아웃을 요청합니다. 성공 시 전체 Query 캐시와 인증 세션을 정리하고 `ROUTES.loginRequired`로 이동합니다.
+- 프로필 수정 mutation은 프로필 수정 페이지가 담당합니다. 서버 변경 후 내 정보와 프로필 요약 캐시를 무효화합니다.
+- 회원탈퇴 mutation은 회원탈퇴 페이지가 담당합니다. 요청 중 중복 제출과 화면 이탈을 막고, 실패 시 동의를 유지하며, 완료 시 세션과 캐시를 정리합니다.
 
 ## State
 
@@ -418,10 +419,7 @@ server state:
 - 프로필 이미지
 - 사용 가능 포인트
 - 마이 리뷰 개수
-
-MVP fixed state:
-
-- 찜한 식당 개수: `0`
+- 찜한 식당 개수
 
 derived state:
 
@@ -438,6 +436,7 @@ derived state:
 - 프로필 수정: `ROUTES.profileEdit`
 - 공지사항: `ROUTES.notices`
 - 이용약관: `ROUTES.terms`
+- 회원탈퇴: `ROUTES.withdrawal`
 
 외부 이동:
 
@@ -449,14 +448,13 @@ derived state:
 - URL이 확정된 외부 메뉴는 `a`로 렌더링하고 `href`, `target="_blank"`, `rel="noreferrer"`를 사용합니다.
 - 외부 URL은 `mypageMenu` 상수에서 관리하며, URL 확정 시 상수만 교체합니다.
 
-MVP 제외:
+후속 작업:
 
-- 프로필 수정 API 연동
-- 내가 찜한 식당
+- 내가 찜한 식당 목록 이동
+- 포인트 화면 이동
 - 로그아웃 API 운영 환경 배포 확인
-- 회원탈퇴 실제 처리
 
-상호작용 가능한 MVP 제외 기능 클릭:
+메뉴 동작:
 
 - 내가 찜한 식당: shared `ComingSoonDialog` open
 - 로그아웃: API 성공 후 인증 정보와 캐시 정리, `ROUTES.loginRequired`로 replace 이동
@@ -504,6 +502,7 @@ feature api:
 - `features/review/queries/useMyReviewCountQuery`
 - `features/user/api/getMyProfileSummary`
 - `features/user/hooks/useMyProfileSummaryQuery`
+- 저장 식당 수 API는 `pages/mypage/api/getMySavedRestaurantCount`에 두며, 조회와 세션 구독은 `useMypagePage`에서 관리합니다.
 
 constants:
 
@@ -540,7 +539,7 @@ types:
 - 마이페이지 필수 query 중 하나라도 실패하면 페이지 hook에서 해당 error를 throw해 `AsyncBoundary`로 전달합니다.
 - 4xx API 에러도 마이페이지에서는 fallback 값을 실제 사용자 데이터처럼 보여주지 않고 `AsyncBoundary`로 전달합니다.
 - endpoint 함수의 fallback 정규화는 API 요청이 성공했지만 응답 값이 비어 있는 경우에만 사용합니다.
-- 내가 찜한 식당 count `0`은 API 실패 fallback이 아니라 MVP 제외 범위에 따른 고정 표시입니다.
+- 찜한 식당 수 요청 실패 또는 응답 계약 위반도 `AsyncBoundary`로 전달하며 `0`으로 숨기지 않습니다.
 
 ### Empty
 
@@ -549,7 +548,7 @@ types:
   - 프로필 이미지 없음: HDS `Avatar`의 guest fallback
   - 포인트 이력 없음: 유효한 `{ balance: 0 }` 응답을 `0 P`로 표시
   - 리뷰 없음: 서버의 유효한 `reviewCount: 0` 응답을 `0`으로 표시
-  - 찜한 식당 개수: MVP 고정값 `0`
+  - 찜한 식당 없음: 서버의 유효한 `savedRestaurantCount: 0`을 `0`으로 표시
 
 ## Accessibility
 
@@ -574,7 +573,8 @@ types:
 - `GET /api/v1/points/me` 결과가 `{ balance: 0 }`이면 `0 P`로 표시되는지 확인
 - `GET /api/v1/points/me` 결과가 `null`이거나 `balance`가 없으면 계약 위반 오류를 `AsyncBoundary`로 전달하는지 확인
 - `GET /api/v1/reviews/me/count` 결과의 `reviewCount`가 마이 리뷰 count로 표시되는지 확인
-- 내가 찜한 식당 count가 API 없이 `0`으로 표시되는지 확인
+- 서버의 `savedRestaurantCount`가 내가 찜한 식당 count로 표시되는지 확인
+- 저장 수 응답이 null이거나 값이 누락·잘못된 경우 `0` 대신 오류 화면을 표시하는지 확인
 - 내가 찜한 식당 클릭 시 준비중 모달이 열리는지 확인
 - 마이 리뷰 클릭 시 `/my-reviews`로 이동하는지 확인
 - 문의하기/개선 제안 클릭 시 카카오톡 채널이 열리는지 확인

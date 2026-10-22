@@ -3,7 +3,7 @@ import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSe
 
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
-import { useEffect, useRef, useState, type ComponentProps } from 'react'
+import { useEffect, useState, type ComponentProps } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -78,7 +78,7 @@ const getChangedFields = (
 /** 제품 생성·수정 라우트에서 서버 데이터와 폼 제출을 연결한다. */
 export const CollectionFormQueryPage = () => {
   const sessionVersion = useCollectionSessionVersion()
-  const initialSessionVersion = useRef(sessionVersion)
+  const [initialSessionVersion] = useState(sessionVersion)
   const { collectionId } = useParams<{ collectionId: string }>()
   const { isAuthenticated } = useAuthStatus()
   const editing = collectionId !== undefined
@@ -92,7 +92,7 @@ export const CollectionFormQueryPage = () => {
   )
   const collection = getEditableCollection(query.data)
   const handleClose = useCollectionFormClose(
-    initialSessionVersion.current === sessionVersion,
+    initialSessionVersion === sessionVersion,
   )
   if (editing && !validId) return <Navigate to={ROUTES.saved} replace />
   if (!isAuthenticated) return null
