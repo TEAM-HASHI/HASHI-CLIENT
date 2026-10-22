@@ -13,27 +13,48 @@ import { checkIsSupportedReviewPhotoFile } from '@/features/review/utils'
 type UseReviewPhotoUploaderParams = {
   disabled: boolean
   photoFiles: File[]
+  photoUrls: string[]
   onPhotoFilesChange?: (files: File[]) => void
+  onPhotoUrlsChange?: (urls: string[]) => void
+}
+
+type PhotoPreviewItem = {
+  id: string
+  name: string
+  src: string
+  shouldRevokeSrc: boolean
 }
 
 export const useReviewPhotoUploader = ({
   disabled,
   photoFiles,
+  photoUrls,
   onPhotoFilesChange,
+  onPhotoUrlsChange,
 }: UseReviewPhotoUploaderParams) => {
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [photoErrorMessage, setPhotoErrorMessage] = useState('')
   const photoPreviewItems = useMemo(
     () =>
-      photoFiles.map((photoFile, index) => ({
-        id: `${photoFile.name}-${photoFile.lastModified}-${photoFile.size}-${index}`,
-        name: photoFile.name,
-        src: URL.createObjectURL(photoFile),
-      })),
-    [photoFiles],
+      [
+        ...photoUrls.map((photoUrl, index) => ({
+          id: `existing-${photoUrl}-${index}`,
+          name: `기존 리뷰 사진 ${index + 1}`,
+          src: photoUrl,
+          shouldRevokeSrc: false,
+        })),
+        ...photoFiles.map((photoFile, index) => ({
+          id: `${photoFile.name}-${photoFile.lastModified}-${photoFile.size}-${index}`,
+          name: photoFile.name,
+          src: URL.createObjectURL(photoFile),
+          shouldRevokeSrc: true,
+        })),
+      ] satisfies PhotoPreviewItem[],
+    [photoFiles, photoUrls],
   )
-  const hasSelectedPhotoFiles = photoFiles.length > 0
-  const hasReachedMaxPhotoCount = photoFiles.length >= REVIEW_PHOTO_MAX_COUNT
+  const hasSelectedPhotoFiles = photoPreviewItems.length > 0
+  const hasReachedMaxPhotoCount =
+    photoPreviewItems.length >= REVIEW_PHOTO_MAX_COUNT
 
   const openPhotoFileDialog = () => {
     if (disabled || hasReachedMaxPhotoCount) {
@@ -46,7 +67,7 @@ export const useReviewPhotoUploader = ({
   const handlePhotoInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedPhotoFiles = Array.from(event.currentTarget.files ?? [])
     const availablePhotoCount = Math.max(
-      REVIEW_PHOTO_MAX_COUNT - photoFiles.length,
+      REVIEW_PHOTO_MAX_COUNT - photoUrls.length - photoFiles.length,
       0,
     )
     const supportedPhotoFiles = selectedPhotoFiles.filter(
@@ -84,14 +105,28 @@ export const useReviewPhotoUploader = ({
 
   const handlePhotoDeleteClick = (deleteIndex: number) => {
     setPhotoErrorMessage('')
+    if (deleteIndex < photoUrls.length) {
+      onPhotoUrlsChange?.(
+        photoUrls.filter((_, photoUrlIndex) => photoUrlIndex !== deleteIndex),
+      )
+
+      return
+    }
+
+    const photoFileIndex = deleteIndex - photoUrls.length
+
     onPhotoFilesChange?.(
-      photoFiles.filter((_, photoFileIndex) => photoFileIndex !== deleteIndex),
+      photoFiles.filter((_, index) => index !== photoFileIndex),
     )
   }
 
   useEffect(() => {
     return () => {
-      photoPreviewItems.forEach(({ src }) => URL.revokeObjectURL(src))
+      photoPreviewItems.forEach(({ shouldRevokeSrc, src }) => {
+        if (shouldRevokeSrc) {
+          URL.revokeObjectURL(src)
+        }
+      })
     }
   }, [photoPreviewItems])
 

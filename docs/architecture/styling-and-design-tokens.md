@@ -60,13 +60,32 @@ Tailwind CSS를 사용하는 경우:
 
 현재 제공하는 utility namespace는 다음과 같습니다.
 
-- Colors: `primary`, `secondary`, `cool-gray`, `warm-gray`, semantic colors
+- Colors: `primary`, `secondary`, `cool-gray`, `warm-gray`, `palette-*-soft/strong`, semantic colors
 - Gradients: `gradient-01`, `background-image-gradient-01`
 - Shadows: `shadow-header`
 - Motion: `animate-bottom-sheet-overlay-in`, `animate-bottom-sheet-overlay-out`, `animate-bottom-sheet-panel-in`, `animate-bottom-sheet-panel-out`, `animate-toast-enter`, `animate-toast-with-timeout`
 - Typography: `typo-header-*`, `typo-sub-header-*`, `typo-body-*`, `typo-caption-*`, `typo-long-body-1`
 - Font family: `font-sans` maps to `Pretendard` first, then system fallback
 - Z-index: `z-base`, `z-raised`, `z-fixed`, `z-overlay`, `z-modal`, `z-toast`
+
+### Chromatic Palette
+
+PR #218 리뷰에 따라 컬렉션 커버와 색상 선택에서 반복되는 Figma 6색의 실제 값은 HDS에서 관리한다.
+기존 토큰과 정확히 일치하는 빨강 배경과 초록 전경은 재사용하며, 나머지는 제품 상태를 담지 않는
+`palette-{hue}-{soft|strong}` 색상 토큰으로 추가한다. 컬렉션 enum과 토큰의 연결은 앱에 둔다.
+
+| 색상   | 배경 토큰             | 전경 토큰               |
+| ------ | --------------------- | ----------------------- |
+| red    | `primary-400`         | `palette-red-strong`    |
+| orange | `palette-orange-soft` | `palette-orange-strong` |
+| yellow | `palette-yellow-soft` | `palette-yellow-strong` |
+| green  | `palette-green-soft`  | `secondary-500`         |
+| blue   | `palette-blue-soft`   | `palette-blue-strong`   |
+| purple | `palette-purple-soft` | `palette-purple-strong` |
+
+추가 팔레트의 디자인 근거는 Figma `UHaom01PvoRx2wRCYa1kS1`, 커버 `8317:38262` 및 색상 참고
+`8317:33661`, `8317:33646`이다. 기존 Design system canvas 토큰을 바꾸는 대신,
+리뷰 요청으로 확인된 팔레트를 추가한다. `soft/strong`은 명암 역할이며 대비 접근성을 보장하는 등급은 아니다.
 
 App entry CSS example:
 

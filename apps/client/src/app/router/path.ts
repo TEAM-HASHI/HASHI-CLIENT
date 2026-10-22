@@ -1,6 +1,10 @@
 export const ROUTES = {
   home: '/',
   saved: '/saved',
+  collectionNew: '/saved/collections/new',
+  collectionDetail: '/saved/collections/:collectionId',
+  collectionEdit: '/saved/collections/:collectionId/edit',
+  collectionRestaurantEdit: '/saved/collections/:collectionId/restaurants/edit',
   map: '/map',
   comingSoon: '/coming-soon',
   search: '/search',
@@ -20,6 +24,8 @@ export const ROUTES = {
   profileNew: '/profile/new',
   profileEdit: '/profile/edit',
   withdrawal: '/withdrawal',
+  notices: '/notices',
+  noticeDetail: '/notices/:noticeId',
   terms: '/terms',
   termsDetail: '/terms/:policyId',
   restaurantReservationNew: '/restaurants/:restaurantId/reservations/new',
@@ -27,6 +33,7 @@ export const ROUTES = {
   reservationRequest: '/reservations/request',
   myReservations: '/my-reservations',
   reservationDetail: '/reservations/:reservationId',
+  reservationComplete: '/reservations/:reservationId/complete',
   loginRequired: '/login-required',
   kakaoOAuthCallback: '/oauth/callback/kakao',
 } as const

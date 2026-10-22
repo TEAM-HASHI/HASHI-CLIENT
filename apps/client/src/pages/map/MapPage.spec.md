@@ -260,6 +260,8 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 
 ## Verification
 
+- 2026-10-22 develop 충돌 해결 검증: client 전체 187개 파일 / 1,055개 테스트, localhost:5173 Chromium 지도 E2E 15개 통과. Client lint/typecheck/build, HDS Icons lint/typecheck/build, root format:check 및 git diff --check 통과. 지도 검색 왕복과 공통 검색어 검증, 최신 저장·컬렉션 route를 함께 유지한다. 실제 식당 API 연동은 HASHI-232의 별도 범위다.
+
 - 추가 유즈케이스 검증: 지도·검색·탭 단위 테스트 98개 통과. 실제 Google Maps를 사용하는 Chromium E2E 13개 통과(localhost:5714, SDK 실패는 요청 차단 후 재시도로 검증).
 - `pnpm --filter @hashi/client test`: 158개 파일 / 752개 테스트 통과. `typecheck`, `lint`, `build`, 변경 범위 root ESLint, Prettier, `git diff --check` 통과.
 - 최종 리뷰 회귀: 상세 닫기 시 무필터 지역 묶음 복원, 세션 최소 줌 보존, 패널 크기 변경을 사용자 확대와 구분. 실제 모바일 기기 검증 및 실제 식당 API의 서버 오류·세션·좌표 만료 검증은 별도다.

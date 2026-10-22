@@ -51,7 +51,10 @@ const getBottomNavigationValue = (
     return 'myReservations'
   }
 
-  if (targetPathname === ROUTES.saved) {
+  if (
+    targetPathname === ROUTES.saved ||
+    matchPath(ROUTES.collectionDetail, targetPathname)
+  ) {
     return 'save'
   }
 
@@ -61,6 +64,7 @@ const getBottomNavigationValue = (
 
   if (
     targetPathname === ROUTES.mypage ||
+    matchPath({ path: ROUTES.notices, end: false }, targetPathname) ||
     matchPath({ path: ROUTES.terms, end: false }, targetPathname)
   ) {
     return 'mypage'

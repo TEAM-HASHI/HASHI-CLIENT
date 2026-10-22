@@ -1,13 +1,15 @@
-import { BackIcon, CancelIcon } from '@hashi/hds-icons'
+import { BackIcon } from '@hashi/hds-icons'
 import { IconButton, SearchBar } from '@hashi/hds-ui'
 import type { Ref } from 'react'
 import type { SyntheticEvent } from 'react'
+import { MAX_SEARCH_KEYWORD_LENGTH } from '@/pages/search/utils/searchKeyword'
 
 interface SearchHeaderProps {
   inputRef: Ref<HTMLInputElement>
   keyword: string
   onBackClick: () => void
   onKeywordChange: (keyword: string) => void
+  onKeywordClear: () => void
   onSearchSubmit: () => void
 }
 
@@ -16,6 +18,7 @@ export const SearchHeader = ({
   keyword,
   onBackClick,
   onKeywordChange,
+  onKeywordClear,
   onSearchSubmit,
 }: SearchHeaderProps) => {
   const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
@@ -25,7 +28,7 @@ export const SearchHeader = ({
 
   return (
     <form
-      className="flex w-full items-center gap-2.5 px-5 pt-[30px] pb-[9px]"
+      className="flex w-full items-center gap-2.5 px-5 pt-[30px] pb-1"
       onSubmit={handleSubmit}
       role="search"
     >
@@ -37,28 +40,24 @@ export const SearchHeader = ({
       >
         <BackIcon className="size-6" />
       </IconButton>
-      <div className="relative min-w-0 flex-1">
-        <SearchBar
-          ref={inputRef}
-          aria-label="식당 또는 메뉴 검색"
-          className="min-w-0 flex-1"
-          inputClassName={keyword ? 'pr-8' : undefined}
-          onChange={(event) => {
-            onKeywordChange(event.target.value)
-          }}
-          placeholder="식당 혹은 메뉴를 검색해보세요"
-          value={keyword}
-        />
-        {keyword && (
-          <IconButton
-            aria-label="검색어 지우기"
-            className="absolute top-0 right-0 size-11"
-            onClick={() => onKeywordChange('')}
-          >
-            <CancelIcon className="size-6" />
-          </IconButton>
-        )}
-      </div>
+      <SearchBar
+        ref={inputRef}
+        aria-label="식당 또는 메뉴 검색"
+        className="min-w-0 flex-1"
+        autoComplete="off"
+        enterKeyHint="search"
+        maxLength={MAX_SEARCH_KEYWORD_LENGTH}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && event.nativeEvent.isComposing)
+            event.preventDefault()
+        }}
+        onChange={(event) => {
+          onKeywordChange(event.target.value)
+        }}
+        onClear={onKeywordClear}
+        placeholder="검색어를 입력해보세요"
+        value={keyword}
+      />
     </form>
   )
 }

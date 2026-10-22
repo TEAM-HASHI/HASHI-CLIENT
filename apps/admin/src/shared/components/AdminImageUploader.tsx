@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import type { UploadedImage, UploadUsage } from '@/shared/api/uploadApi'
 import {
@@ -6,11 +6,20 @@ import {
   type AdminImageUploadStatus,
 } from '@/shared/hooks/useAdminImageUpload'
 
+export interface ImagePreviewFrame {
+  label: string
+  aspectRatio: string
+}
+
 interface AdminImageUploaderProps {
   label: string
   usage: UploadUsage
   value: UploadedImage[]
+  /** 앱에서 실제로 잘려 보이는 비율. 첫 번째는 크게, 나머지는 작은 썸네일로 보여준다. */
+  previewFrames: readonly [ImagePreviewFrame, ...ImagePreviewFrame[]]
   multiple?: boolean
+  preserveOrder?: boolean
+  maxFiles?: number
   representativeLabel?: boolean
   onChange: (value: UploadedImage[]) => void
   onStatusChange?: (status: AdminImageUploadStatus) => void
@@ -20,24 +29,38 @@ export const AdminImageUploader = ({
   label,
   usage,
   value,
+  previewFrames,
   multiple = false,
+  preserveOrder = false,
+  maxFiles = Infinity,
   representativeLabel = false,
   onChange,
   onStatusChange,
 }: AdminImageUploaderProps) => {
+  const [primaryFrame, ...secondaryFrames] = previewFrames
   const valueRef = useRef(value)
+  const uploadOrders = useRef(new Map<string, number>())
+  const [limitError, setLimitError] = useState('')
 
   useEffect(() => {
     valueRef.current = value
   }, [value])
 
   const handleUploaded = useCallback(
-    (uploaded: UploadedImage) => {
-      const nextValue = multiple ? [...valueRef.current, uploaded] : [uploaded]
+    (uploaded: UploadedImage, order: number) => {
+      const nextValue = multiple ? [...valueRef.current] : []
+      const index = preserveOrder
+        ? nextValue.findIndex(
+            (image) =>
+              (uploadOrders.current.get(image.fileKey) ?? -Infinity) > order,
+          )
+        : -1
+      nextValue.splice(index < 0 ? nextValue.length : index, 0, uploaded)
+      if (preserveOrder) uploadOrders.current.set(uploaded.fileKey, order)
       valueRef.current = nextValue
       onChange(nextValue)
     },
-    [multiple, onChange],
+    [multiple, onChange, preserveOrder],
   )
   const { items, status, addFiles, retry, remove } = useAdminImageUpload({
     usage,
@@ -50,8 +73,17 @@ export const AdminImageUploader = ({
 
   const handleFiles = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
-    if (files.length > 0) void addFiles(multiple ? files : files.slice(0, 1))
     event.target.value = ''
+    setLimitError('')
+    const selected = multiple ? files : files.slice(0, 1)
+    if (
+      multiple &&
+      valueRef.current.length + items.length + selected.length > maxFiles
+    ) {
+      setLimitError(`이미지는 최대 ${maxFiles}장까지 선택할 수 있습니다.`)
+      return
+    }
+    if (selected.length > 0) void addFiles(selected)
   }
 
   const move = (index: number, offset: -1 | 1) => {
@@ -83,6 +115,12 @@ export const AdminImageUploader = ({
         </p>
       </div>
 
+      {limitError ? (
+        <p role="alert" className="text-sm text-red-600">
+          {limitError}
+        </p>
+      ) : null}
+
       {value.length > 0 ? (
         <ul className="grid gap-3 sm:grid-cols-2">
           {value.map((image, index) => (
@@ -90,10 +128,13 @@ export const AdminImageUploader = ({
               key={image.fileKey}
               className="border-cool-gray-100 overflow-hidden rounded-lg border bg-white"
             >
-              <div className="bg-cool-gray-50 relative aspect-[16/10]">
+              <div
+                className="bg-cool-gray-50 relative"
+                style={{ aspectRatio: primaryFrame.aspectRatio }}
+              >
                 <img
                   src={image.fileUrl}
-                  alt={`${image.fileName} 미리보기`}
+                  alt={`${image.fileName} ${primaryFrame.label} 미리보기`}
                   className="size-full object-cover"
                 />
                 {representativeLabel && index === 0 ? (
@@ -101,8 +142,31 @@ export const AdminImageUploader = ({
                     대표 이미지
                   </span>
                 ) : null}
+                <span className="absolute right-2 bottom-2 rounded bg-black/60 px-2 py-1 text-xs font-semibold text-white">
+                  {primaryFrame.label}
+                </span>
               </div>
               <div className="space-y-2 p-3">
+                {secondaryFrames.length > 0 ? (
+                  <div className="flex flex-wrap gap-3">
+                    {secondaryFrames.map((frame) => (
+                      <figure
+                        key={frame.label}
+                        className="flex items-center gap-1.5"
+                      >
+                        <img
+                          src={image.fileUrl}
+                          alt={`${image.fileName} ${frame.label} 미리보기`}
+                          className="h-12 rounded-[5px] object-cover"
+                          style={{ aspectRatio: frame.aspectRatio }}
+                        />
+                        <figcaption className="text-cool-gray-500 text-xs">
+                          {frame.label}
+                        </figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                ) : null}
                 <p className="text-cool-gray-800 truncate text-sm font-semibold">
                   {image.fileName}
                 </p>
@@ -123,9 +187,10 @@ export const AdminImageUploader = ({
                   </SmallButton>
                   <SmallButton
                     label={`${image.fileName} 삭제`}
-                    onClick={() =>
+                    onClick={() => {
+                      setLimitError('')
                       onChange(value.filter((_, i) => i !== index))
-                    }
+                    }}
                   >
                     삭제
                   </SmallButton>
@@ -170,7 +235,10 @@ export const AdminImageUploader = ({
               ) : null}
               <SmallButton
                 label={`${item.file.name} 항목 삭제`}
-                onClick={() => remove(item.id)}
+                onClick={() => {
+                  setLimitError('')
+                  remove(item.id)
+                }}
               >
                 제거
               </SmallButton>

@@ -1,7 +1,12 @@
 import { useMutation } from '@tanstack/react-query'
+import { useEffect, useRef } from 'react'
 
 import { ROUTES } from '@/app/router/path'
-import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
+import {
+  clearAuthSession,
+  getAuthSessionVersion,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
 import { requestOnboarding } from '@/pages/profileNew/api/requestOnboarding'
 import type { ProfileDraft } from '@/features/profile/hooks/useProfileForm'
 import { createOnboardingRequestBody } from '@/pages/profileNew/utils/profileNewForm'
@@ -27,8 +32,20 @@ export const useProfileNewMutation = ({
   setFieldError,
   setFormError,
 }: UseProfileNewMutationOptions) => {
+  const isMountedRef = useRef(false)
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+  const canApplyResponse = (sessionVersion: number | undefined) =>
+    isMountedRef.current && getAuthSessionVersion() === sessionVersion
+
   return useMutation({
+    onMutate: () => getAuthSessionVersion(),
     mutationFn: async (profileDraft: ProfileDraft) => {
+      const sessionVersion = getAuthSessionVersion()
       const profileImageFile =
         profileDraft.profileImageChange.type === 'replace'
           ? profileDraft.profileImageChange.file
@@ -37,15 +54,20 @@ export const useProfileNewMutation = ({
         ? await getUploadedProfileImageKey(profileImageFile)
         : undefined
 
+      if (!canApplyResponse(sessionVersion)) {
+        throw new Error('Onboarding session changed during submission')
+      }
       return requestOnboarding(
         createOnboardingRequestBody(profileDraft, profileImageKey),
       )
     },
-    onSuccess: ({ accessToken }) => {
-      setAccessToken(accessToken)
+    onSuccess: ({ accessToken, userId }, _variables, sessionVersion) => {
+      if (!canApplyResponse(sessionVersion)) return
+      startAuthenticatedSession(accessToken, userId)
       navigateTo(getRedirectPath())
     },
-    onError: (error) => {
+    onError: (error, _variables, sessionVersion) => {
+      if (!canApplyResponse(sessionVersion)) return
       if (
         checkHasHttpStatus(error) &&
         (error.status === 401 || error.status === 403)

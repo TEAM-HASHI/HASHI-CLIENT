@@ -12,6 +12,17 @@ const lazyRoute = <T extends LazyRouteModule>(importPage: () => Promise<T>) => {
 
 const SearchPage = lazyRoute(() => import('@/pages/search'))
 const MapPage = lazyRoute(() => import('@/pages/map'))
+const CollectionFormPage = lazyRoute(() =>
+  import('@/pages/saved/CollectionFormPage').then((module) => ({
+    default: module.CollectionFormPage,
+  })),
+)
+const CollectionEditorPage = lazyRoute(() =>
+  import('@/pages/saved/CollectionEditorPage').then((module) => ({
+    default: module.CollectionEditorPage,
+  })),
+)
+const SavedPage = lazyRoute(() => import('@/pages/saved'))
 const ComingSoonPage = lazyRoute(() => import('@/pages/comingSoon'))
 const TodayRestaurantPage = lazyRoute(() => import('@/pages/todayRestaurant'))
 const RestaurantDetailPage = lazyRoute(() => import('@/pages/restaurantDetail'))
@@ -35,6 +46,8 @@ const MypagePage = lazyRoute(() => import('@/pages/mypage'))
 const ProfileNewPage = lazyRoute(() => import('@/pages/profileNew'))
 const ProfileEditPage = lazyRoute(() => import('@/pages/profileEdit'))
 const WithdrawalPage = lazyRoute(() => import('@/pages/withdrawal'))
+const NoticesPage = lazyRoute(() => import('@/pages/notices'))
+const NoticeDetailPage = lazyRoute(() => import('@/pages/noticeDetail'))
 const TermsPage = lazyRoute(() => import('@/pages/terms'))
 const TermsDetailPage = lazyRoute(() => import('@/pages/termsDetail'))
 const RestaurantReservationNewPage = lazyRoute(
@@ -50,6 +63,9 @@ const MyReservationsPage = lazyRoute(() => import('@/pages/myReservations'))
 const ReservationDetailPage = lazyRoute(
   () => import('@/pages/reservationDetail'),
 )
+const ReservationCompletePage = lazyRoute(
+  () => import('@/pages/reservationComplete'),
+)
 const LoginRequiredPage = lazyRoute(() => import('@/pages/loginRequired'))
 const KakaoOAuthCallbackPage = lazyRoute(
   () => import('@/pages/kakaoOAuthCallback'),
@@ -62,6 +78,9 @@ const lazyPage = (Page: ReturnType<typeof lazy>) => {
 
 export const lazyPages = {
   map: () => lazyPage(MapPage),
+  saved: () => lazyPage(SavedPage),
+  collectionForm: () => lazyPage(CollectionFormPage),
+  collectionEditor: () => lazyPage(CollectionEditorPage),
   comingSoon: () => lazyPage(ComingSoonPage),
   search: () => lazyPage(SearchPage),
   todayRestaurant: () => lazyPage(TodayRestaurantPage),
@@ -80,6 +99,8 @@ export const lazyPages = {
   profileNew: () => lazyPage(ProfileNewPage),
   profileEdit: () => lazyPage(ProfileEditPage),
   withdrawal: () => lazyPage(WithdrawalPage),
+  notices: () => lazyPage(NoticesPage),
+  noticeDetail: () => lazyPage(NoticeDetailPage),
   terms: () => lazyPage(TermsPage),
   termsDetail: () => lazyPage(TermsDetailPage),
   restaurantReservationNew: () => lazyPage(RestaurantReservationNewPage),
@@ -87,6 +108,7 @@ export const lazyPages = {
   reservationRequest: () => lazyPage(ReservationRequestPage),
   myReservations: () => lazyPage(MyReservationsPage),
   reservationDetail: () => lazyPage(ReservationDetailPage),
+  reservationComplete: () => lazyPage(ReservationCompletePage),
   loginRequired: () => lazyPage(LoginRequiredPage),
   kakaoOAuthCallback: () => lazyPage(KakaoOAuthCallbackPage),
   notFound: () => lazyPage(NotFoundPage),

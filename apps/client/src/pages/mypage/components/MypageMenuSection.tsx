@@ -5,6 +5,7 @@ import type {
 } from '@/pages/mypage/types'
 
 type MypageMenuSectionProps = {
+  isLoggingOut?: boolean
   section: MypageMenuSectionType
   onMenuPress: (action: MypageMenuAction) => void
 }
@@ -12,6 +13,7 @@ type MypageMenuSectionProps = {
 export const MypageMenuSection = ({
   section,
   onMenuPress,
+  isLoggingOut,
 }: MypageMenuSectionProps) => {
   return (
     <section>
@@ -22,6 +24,7 @@ export const MypageMenuSection = ({
         {section.items.map((item) => (
           <MenuItem
             action={item.action}
+            disabled={item.action.type === 'logout' && isLoggingOut}
             key={item.id}
             label={item.label}
             onPress={onMenuPress}

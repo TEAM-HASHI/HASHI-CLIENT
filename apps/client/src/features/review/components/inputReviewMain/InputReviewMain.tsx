@@ -18,19 +18,24 @@ export interface InputReviewMainProps extends Omit<
 > {
   value?: string
   photoFiles?: File[]
+  photoUrls?: string[]
   onValueChange?: (value: string) => void
   onPhotoFilesChange?: (files: File[]) => void
+  onPhotoUrlsChange?: (urls: string[]) => void
   maxLength?: number
   disabled?: boolean
 }
 
 const EMPTY_PHOTO_FILES: File[] = []
+const EMPTY_PHOTO_URLS: string[] = []
 
 export const InputReviewMain = ({
   value = '',
   photoFiles = EMPTY_PHOTO_FILES,
+  photoUrls = EMPTY_PHOTO_URLS,
   onValueChange,
   onPhotoFilesChange,
+  onPhotoUrlsChange,
   maxLength = REVIEW_TEXT_MAX_LENGTH,
   disabled = false,
   className,
@@ -52,7 +57,9 @@ export const InputReviewMain = ({
   } = useReviewPhotoUploader({
     disabled,
     onPhotoFilesChange,
+    onPhotoUrlsChange,
     photoFiles,
+    photoUrls,
   })
   const reviewTextLength = Math.min(value.length, maxLength)
   const hasStartedValidation = hasReviewTextBlurred || reviewTextLength > 0
@@ -102,6 +109,7 @@ export const InputReviewMain = ({
             aria-label="리뷰 내용"
             disabled={disabled}
             maxLength={maxLength}
+            maxLengthBehavior="prevent"
             placeholder="리뷰를 작성해 주세요."
             showCounter={false}
             textareaClassName="typo-long-body-1 min-h-57.5 p-5 focus-visible:border-warm-gray-100 focus-visible:outline-none"

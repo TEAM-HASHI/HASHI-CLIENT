@@ -6,10 +6,20 @@ export type MagazineCatalogParams = NonNullable<
   paths['/api/v1/magazines']['get']['parameters']['query']
 >
 export type MagazineCatalogData = components['schemas']['MagazineListResponse']
+export type MagazineDetailData = components['schemas']['MagazineDetailResponse']
 export type MagazineCatalogItem =
   components['schemas']['MagazineSummaryResponse']
 
 export const magazineCatalogApi = {
+  async detail(magazineId: number, signal?: AbortSignal) {
+    const data = await request<MagazineDetailData>(
+      `${ADMIN_ENDPOINTS.publicMagazines}/${magazineId}`,
+      { method: 'get', signal },
+    )
+    if (!data || data.magazineId !== magazineId)
+      throw new Error('매거진 상세 응답이 올바르지 않습니다.')
+    return data
+  },
   list(params: MagazineCatalogParams = {}) {
     const searchParams = new URLSearchParams()
 

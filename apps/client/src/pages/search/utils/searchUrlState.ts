@@ -9,6 +9,7 @@ import type {
   SearchRestaurantsParams,
   SearchSortValue,
 } from '@/pages/search/types'
+import { getSearchKeywordError } from '@/pages/search/utils/searchKeyword'
 
 const checkIsSearchSortValue = (
   value: string | null,
@@ -25,12 +26,13 @@ export const parseSearchUrlState = (
 ): SearchRestaurantsParams => {
   const urlSort = searchParams.get('sort')
   const urlFoodCategory = searchParams.get('category')
+  const keyword = searchParams.get('keyword')?.trim() ?? ''
 
   return {
     category: checkIsFoodCategoryValue(urlFoodCategory)
       ? urlFoodCategory
       : DEFAULT_FOOD_CATEGORY_VALUE,
-    keyword: searchParams.get('keyword')?.trim() ?? '',
+    keyword: getSearchKeywordError(keyword) ? '' : keyword,
     sort: checkIsSearchSortValue(urlSort) ? urlSort : DEFAULT_SORT_VALUE,
   }
 }
