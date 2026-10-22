@@ -1,19 +1,21 @@
 # MapPage
 
-Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/coordinates remain explicitly labelled samples. Restaurant API integration is deferred.
+Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps SDK and public map/detail/photo queries connected. Live Google Maps and backend restaurant results were verified at localhost:5173 after the web-key referrer restriction was updated on 2026-10-22.
 
 ## 추가 유즈케이스 설계 (2026-10-17 갱신)
 
-이 절은 승인된 목표다. 프론트 구현은 샘플 데이터 경계 안에서 검증한다. 실제 상세 조회 실패, 서버 cursor/세션 만료 및 좌표 출처 표시는 실데이터 연동 시 별도 구현·검증한다.
+이 절은 승인된 목표다. HASHI-232는 서버 지역·목록·좌표·상세 계약을 연결한다. 자동 테스트의 응답 대역과 운영 데이터를 구분하며, 지역 설정 503을 샘플 성공 데이터로 대체하지 않는다.
 
 ### 기준과 범위
 
-- HASHI-PLAN `a2990f8`의 MAP_MAIN, MAP_FILTERED, MAP_RESTAURANT_DETAIL을 기준으로 한다. DEC-001도 최신 지역 묶음 복원 정책으로 정리되었다.
+- HASHI-PLAN 원격 main `f11be8f`의 MAP_MAIN, MAP_FILTERED, MAP_RESTAURANT_DETAIL 및 위임된 RESTAURANT_REVIEW를 기준으로 재검토했다. DEC-001도 최신 지역 묶음 복원 정책으로 정리되었다.
 - 사용자 확정: 빈 결과는 그림에 남은 핀이 아니라 기획 문서의 핀 제거 규칙을 따른다.
+- 사용자 확정(2026-10-22): Figma `10218:91473` 기준으로 검색·카테고리 결과 0건도 토스트만 표시하고 시트는 30px 핸들만 남긴다. 빈 결과 시트를 확장하지 않으며 기존 기획의 일반 높이 빈 상태 시트보다 이 결정을 우선한다.
+- 로딩 디자인: [적용 화면 모음](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10577-100033). 지도/목록 최초·재조회, 선택 식당 요약, 상세 매장 정보, 목록 추가 조회에 기존 80px Figma 스피너를 재사용한다.
 - 사용자 확정: 카테고리 순서는 현재 코드의 `전체 → 음식점 → 주점 → 카페`를 유지한다.
 - Figma 추가 유즈케이스: [재검색](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10043-182001), [스피너](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10057-135279), [오류](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=9984-85562), [토스트](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10043-183098), [검색 X](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=9984-55671), [상세 닫기](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=9965-71086).
 - 지도와 검색의 프론트 동작, 화면 상태, 복원 흐름을 구현한다. 컬렉션 자체 및 예약 기능의 신규 구현은 제외한다.
-- 실제 식당 API 지원 여부는 구현 전 계약을 확인한다. 확인되지 않은 endpoint나 좌표 필드를 만들지 않는다. 미지원 기능은 샘플 데이터 경계를 유지하고 실연동 완료로 표시하지 않는다. 오류·추가 조회는 테스트 대역으로 검증하며 운영 화면에 가짜 오류나 성공을 만들지 않는다.
+- 실제 식당 API 지원 여부는 구현 전 계약을 확인한다. 확인되지 않은 endpoint나 좌표 필드를 만들지 않는다. 미지원 기능은 명시적 미지원 상태로 표시한다. 오류·추가 조회는 테스트 대역으로 검증하며 운영 화면에 가짜 오류나 성공을 만들지 않는다.
 
 ### 지도·조회 상태 분리
 
@@ -37,6 +39,7 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - 검색 입력 X는 입력값을 비운다. 지도에 적용된 검색어를 해제하는 동작은 현재 viewport를 유지한 첫 페이지 재조회로 연결한다. 단순 입력 draft 변경과 적용 조건 변경을 구분한다.
 - 검색 결과 1개는 해당 식당으로 이동하고, 여러 개는 전체 결과가 보이게 fit한다. 결과가 없으면 현재 카메라를 유지한다.
 - 카테고리 재선택은 해당 필터를 해제한다. 카테고리·정렬·검색 변경은 목록 스크롤, 기존 결과와 핀을 초기화하고 첫 페이지를 조회한다.
+- 정렬만 바꾸더라도 사용자가 이동한 현재 viewport로 요청한다. 서버 querySessionId는 검색·카테고리뿐 아니라 요청 bounds 네 값까지 동일하고 만료되지 않았을 때만 재사용한다. 로딩으로 정렬 trigger가 사라졌다면 결과 표시 후 포커스를 복원한다.
 - 조회마다 식별자를 부여하여 최신 조건의 결과만 반영한다. 조건 변경 전 추가 조회 결과도 폐기한다. 동일 다음 페이지 중복 요청 및 중복 식당 추가를 막는다.
 - 조회 도중 사용자가 지도를 이동하면 성공 응답 시 요청 당시 카메라로 복귀한다. 검색 결과의 1개 이동/여러 개 fit은 그 다음 적용한다. 실패 시 현재 지도를 강제 이동하지 않는다.
 - 실제 데이터 계약이 지원하면 최초 10개와 다음 10개를 조회한다. 지도 핀은 로드된 목록과 동일한 결과를 사용한다. 계약 미지원 시 실제 페이지네이션으로 주장하지 않는다.
@@ -45,23 +48,25 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 
 ### UI 상태와 재시도
 
-| 상황                         | 화면 및 동작                                                                                                                                                           |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 지도 SDK 로딩                | 지도 중앙 스피너, 접근 가능한 로딩 안내                                                                                                                                |
-| 지도 실패                    | 목록·상세·지도 버튼을 숨기고 흰 지도 영역 중앙에 `지도를 불러오지 못했어요!` 및 `다시 시도하기`; 페이지 재로드로 SDK 재시도                                            |
-| 목록 최초·재조회 로딩        | 이전 목록·핀 제거, 지도·목록 영역 스피너                                                                                                                               |
-| 목록 최초·재조회 실패        | 지도·조건 유지, 시트를 일반 높이로 열어 제목·정렬 없이 오류 그림과 `식당 목록을 불러오지 못했어요!` 및 동일 요청 재시도 표시. 요청 중 시트가 접혀도 실패 시 다시 연다. |
-| 추가 조회 실패               | 기존 목록·핀 유지, 목록 하단 272px 오류 블록에 그림·안내문·다음 페이지 재시도                                                                                          |
-| 영역 재검색 결과 없음        | 지도 유지, 핀 제거, 목록 시트는 최소 높이로 유지하고 확장하지 않는다. `이 지역에는 아직 등록된 맛집이 없어요.` 토스트 1회                                              |
-| 검색·카테고리 조건 결과 없음 | 조건 유지, 핀 제거, 일반 높이 시트에 `조건에 맞는 맛집이 없어요.` 빈 상태와 동일 문구 경고 토스트 1회 표시. 오류 그림·재시도·초기화 버튼은 표시하지 않는다.            |
-| 상세 조회 실패               | 상세 닫기, 직전 지도·목록 복원, `식당 정보를 불러오지 못했어요.` 토스트; 재선택으로 재시도                                                                             |
+| 상황                         | 화면 및 동작                                                                                                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 지도 SDK 로딩                | 지도 중앙 스피너, 접근 가능한 로딩 안내                                                                                                                                  |
+| 지도 실패                    | 목록·상세·지도 버튼을 숨기고 흰 지도 영역 중앙에 `지도를 불러오지 못했어요!` 및 `다시 시도하기`; 페이지 재로드로 SDK 재시도                                              |
+| 목록 최초·재조회 로딩        | 이전 목록·핀 제거, 지도·목록 영역 스피너                                                                                                                                 |
+| 목록 최초·재조회 실패        | 지도·조건 유지, 시트를 일반 높이로 열어 제목·정렬 없이 오류 그림과 `식당 목록을 불러오지 못했어요!` 및 동일 요청 재시도 표시. 요청 중 시트가 접혀도 실패 시 다시 연다.   |
+| 추가 조회 실패               | 기존 목록·핀 유지, 목록 하단 272px 오류 블록에 그림·안내문·다음 페이지 재시도                                                                                            |
+| 영역 재검색 결과 없음        | 지도 유지, 핀 제거, 목록 시트는 최소 높이로 유지하고 확장하지 않는다. `이 지역에는 아직 등록된 맛집이 없어요.` 토스트 1회                                                |
+| 검색·카테고리 조건 결과 없음 | 조건 유지, 핀 제거, `조건에 맞는 맛집이 없어요.` 경고 토스트 1회. 시트는 30px 핸들만 유지하고 확장하지 않는다. 시트 본문·오류 그림·재시도·초기화 버튼은 표시하지 않는다. |
+| 상세 조회 실패               | 상세 닫기, 직전 지도·목록 복원, `식당 정보를 불러오지 못했어요.` 토스트; 재선택으로 재시도                                                                               |
 
 - 빈 결과 분기는 요청 원인으로 정한다. 재검색 버튼은 지역 안내, 검색·카테고리 변경은 조건 안내를 사용한다. 정렬·추가 조회는 현재 결과 집합의 빈 상태 종류를 유지한다.
-- 빈 결과 동작은 `HASHI-PLAN/02_PRODUCT_SPEC/MAP/MAP_MAIN/MAP_MAIN.md` 4.5를 따른다. 지역 0건은 시트를 열지 않고, 검색·필터 0건은 일반 높이 빈 상태 시트와 토스트를 표시한다. 오류 그림과 토스트 아이콘은 기존 Figma 자산을 유지한다. 검색어 X와 카테고리 chip으로 조건을 변경한다.
+- 빈 결과 문구는 `HASHI-PLAN/02_PRODUCT_SPEC/MAP/MAP_MAIN/MAP_MAIN.md` 4.5를 따른다. 시트 동작은 2026-10-22 사용자 승인에 따라 지역·검색·필터 0건 모두 핸들만 유지한다. 검색어 X와 카테고리 chip으로 조건을 변경하여 결과가 돌아오면 일반 높이로 다시 연다. API 오류는 빈 결과로 취급하지 않고 오류·재시도 시트를 유지한다.
 - 오류 그림은 원본 SVG 48×29.2944px을 48×27.758px 레이아웃 슬롯에서 아래로 넘겨 표시한다. 그림→안내문 17px, 안내문→재시도 34px, 버튼 98×36px. 목록 오류 그림은 시트 상단에서 97px(핸들 30px+여백 67px)에 위치한다.
 - 토스트는 렌더링마다 반복하지 않고 최신 요청의 결과 이벤트마다 1회 표시한다. 오래된 응답은 토스트도 표시하지 않는다.
 - 빈 결과 토스트는 Figma `10218:91472`의 경고 SVG(26×26, 투명 배경·밝은 삼각형 테두리·빨간 느낌표)를 사용한다. 공통 Toast의 높이 60px, 아이콘과 문구 간격 11px을 유지한다.
 - 공통 토스트·버튼·아이콘을 재사용한다. 문구와 요청 재시도 책임은 페이지에 둔다. 스피너는 reduced-motion과 보조기기 안내를 고려한다.
+- 목록 로딩은 Figma `10577:100348`처럼 제목·정렬 없이 80px 스피너만 표시한다. 일반 312px 패널에서 스피너의 상단은 패널 상단으로부터 143px이며, 짧거나 확장된 패널에서는 본문 영역 내 중앙 정렬한다.
+- 선택 식당 요약을 조회하는 동안은 모든 바텀시트 로딩 디자인에 따라 시트 본문의 제목·메타·사진 대신 스피너를 표시한다. 매장 정보 탭 조회도 스피너를 사용한다. 다음 페이지 로딩은 `10577:100901`의 272px 영역 중앙에 80px 스피너를 놓되 기존 식당 목록은 유지한다. 완료/실패 시 스피너를 제거하고 각각 결과/기존 오류 처리로 전환한다.
 
 ### 상세·복원 정책
 
@@ -69,6 +74,9 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - 선택 전에 카메라·표시 모드(지역 묶음/개별 핀)·목록 시트 상태를 기록한다. X로 닫으면 이를 함께 복원하고 선택을 해제한다. 소수점 줌 구간에서도 선택 이후의 표시 모드로 다시 판단하지 않는다. 상세 상태에서 탭을 왕복해도 선택 전 표시 모드를 보존한다.
 - SDK 로딩 중 선택하여 저장된 카메라가 없으면 최초 지역 영역으로 fit한다. 검색어·카테고리·정렬·조회 결과는 초기화하지 않는다. 목록 스크롤과 상세 내부 탭·스크롤은 닫기 후 복원 대상이 아니다.
 - 상세 재진입은 기본 정보 탭에서 시작한다. 사진 모달의 포커스 복원과 확장 상세의 배경 격리는 유지한다.
+- 메뉴 카드 선택은 기존 메뉴 상세 route에 `source: 'map'`을 전달한다. 메뉴 상세의 뒤로가기/다른 탭은 지도 상세의 메뉴/선택 탭으로 복귀한다. 다른 메뉴 탐색은 replace하여 메뉴 간 history 루프를 만들지 않는다. 복귀용 탭 state는 한 번 적용하고 제거하며, 이후 브라우저 뒤로가기는 최신 지도 세션 탭을 복원한다.
+- 지도 상세 리뷰 진입은 최신순·5개 단위 첫 페이지를 새로 조회한다. 다른 탭에서 재진입하거나 메뉴 상세에서 리뷰 탭으로 직접 복귀해도 이전 커서 페이지를 유지하지 않는다. 탭 클릭 시 리뷰 영역 시작점으로 스크롤한다. 사진 모달 닫기는 리뷰 재진입이 아니다.
+- 복원 중 새 목록 조회가 진행 중이면 선택을 유지한다. 성공 응답이 확정된 뒤 선택 식당이 결과에 없으면 상세를 닫고 직전 지도·목록 및 상세 실패 토스트를 복원한다.
 - 예약 화면을 실제로 연결하는 시점에는 취소·복귀 시 상세 탭·스크롤·시트 높이 복원을 지원해야 한다. 미연동 상태에서 예약 성공이나 이동을 모방하지 않는다.
 - 탭 이탈 또는 백그라운드 전환 시각부터 5분 미만이면 카메라·조건·로드된 결과·선택·시트 상태를 복원한다. 정확히 5분 이상이면 만료로 처리한다.
 - 이탈 시점은 중복 이벤트로 연장하지 않는다. 복귀하면 만료 여부를 판정하고 다음 이탈을 새로 기록한다. 복원 중 진행 중이던 요청은 성공 결과처럼 저장하지 않는다.
@@ -84,7 +92,7 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - `utils/mapDisplayPolicy.ts`: 줌 임계값과 지역 묶음/핀 전환 순수 함수.
 - `components/MapViewport.tsx`: 지도·마커 표시. 조건·조회 상태는 상위에서 주입한다.
 - `components/MapSearchAreaButton.tsx`, `components/MapStatusView.tsx`: 페이지 전용 버튼 및 상태 표시. 상태 표시 컴포넌트는 요청을 직접 실행하지 않는다.
-- 기존 `MapToolbar`, `MapRestaurantList`, `MapRestaurantDetail`은 유지하며 필요한 props만 조정한다. 샘플 데이터는 기존 data 모듈 밖으로 퍼뜨리지 않는다.
+- 기존 `MapToolbar`, `MapRestaurantList`, `MapRestaurantDetail`은 유지하며 필요한 props만 조정한다. 샘플 데이터는 테스트에서만 사용하며 운영 조회에 연결하지 않는다.
 - `/search` 및 `BottomNavigationLayout`은 지도 진입·복귀·재선택 연결만 변경한다. 검색 페이지가 map 페이지 내부 훅을 import하지 않는다. 실제 공유가 필요한 검색 맥락 계약만 feature 경계로 분리한다.
 - 공통 DragPanel을 계속 사용한다. HDS에는 지도 조건·라우트·API·제품 문구를 넣지 않는다. 새 상태 관리 라이브러리를 추가하지 않는다.
 
@@ -186,19 +194,23 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 ## Purpose / Route
 
 - `/map` (`ROUTES.map`), public, lazy page under BottomNavigationLayout. No new guard, redirect or query parameter.
-- Inspect Tokyo sample restaurants using area markers, category/search filters, a draggable list and selected restaurant details.
+- Inspect server-provided Tokyo restaurants using area markers, category/search filters, a draggable list and selected restaurant details.
 - Figma: https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=8317-32364.
 - Marker components: `8317:38190`; shared map shadow: `8317:40821`; map CTA states: `8317:40775` in the same file. Collection covers, collection pins and collection selection controls are outside this page's scope.
 
 ## Data Dependencies
 
 - Google Maps via @vis.gl/react-google-maps, using VITE_GOOGLE_MAPS_API_KEY and VITE_GOOGLE_MAPS_MAP_ID. No keys in source. Missing configuration, SDK/network timeout and authentication failure show a retry action (page reload, because SDK initialization is singleton).
-- Local, explicitly labelled sample restaurants. No geolocation, Places search, backend bounding-box query, save or reservation mutation.
-- Contract check (2026-10-13): live OpenAPI defines `GET /api/v1/restaurants/map/regions` (initial bounds, query limits, summaries) and `GET /api/v1/restaurants/map` (BBOX/filter, session sort, cursor-only next; maximum 10). Public regions returns HTTP 503 `RESTAURANT-017` (지도 설정이 준비되지 않았습니다). `queryMapPreview` remains an explicit sample source, not an automatic live-data fallback.
-- Future integration must honor coordinate `validUntil`, third-party attribution, server session expiry/410 recovery and 429/503 policies. Preview pagination tests do not verify live API behavior. No new server query keys or mutations are introduced.
-- Area labels in Figma include neighborhoods (우에노, 아사쿠사, 긴자), not only administrative wards. Sample areaCode is a local identifier, NOT a Japanese ward code.
-- Markers use latitude/longitude on the real map, but these sample coordinates are NOT verified restaurant locations. Counts derive from sample data. Regional summaries are not an automatic clustering algorithm.
-- Saved-list/save/reservation actions show the existing ComingSoonDialog. They do not navigate using fake restaurant ids or show successful saving.
+- Public `GET /api/v1/restaurants/map/regions`: initialBounds, supportedBounds/span limits, region IDs/counts/clusterPosition/cameraBounds. Camera mounts after configuration succeeds; configuration failure displays retry with no sample fallback. The former `503 / RESTAURANT-017` configuration failure was resolved; nine regions returned successfully on 2026-10-21.
+- Public `GET /api/v1/restaurants/map`: new BBOX/filter request, existing querySessionId+sort request, or opaque cursor-only next request; these modes are exclusive. Server order is retained, up to 10 per page, duplicate restaurant IDs are merged. Keyword fit uses the response's full searchResult bounds, not just loaded cards.
+- `queries/mapQueryKeys.ts` separates region/location/finite/infinite keys. Explicit query versions isolate repeated requests; requests forward AbortSignal and no-store. SDK, region configuration and restaurant-list errors remain separate UI states.
+- `GET /api/v1/restaurants/{id}/map-location` refreshes the selected coordinate. Expired validUntil removes coordinates and their third-party attributions together; resuming from background rechecks validity. Sources appear separately from Google attribution. Missing/unavailable selection closes details and restores the previous view.
+- Server session 410 recovers from the last successful normalized query; 429 disables retries for 60 seconds; transient 5xx gets one bounded retry. Configuration 014/017 does not retry automatically. Final 503 retains prior successful results with an explicit same-request retry. 016 prompts a narrower range/filter rather than silently changing conditions. Server expiry is separate from the five-minute UI memory snapshot.
+- HASHI-228 summary/store/menu/review API functions, query keys and view models are reused. Summary loads on selection; expanded information/menu/review load on demand. Hero images are capped at 10. Card photos have no three-photo truncation.
+- Public `GET /api/v1/restaurants/{id}/photos` supplies `ALL/REPRESENTATIVE/MENU/REVIEW`, server-owned 20-item pages, opaque `cursor`, `counts`, `totalCount`, `photos`, `hasNext` and `nextCursor`. No `size` is sent. Reuse `features/restaurantDetail`'s adapter, count/finite key and filter/revision/infinite key, `useRestaurantPhotos` and photo UI. Count reads start for a valid selection; gallery reads require the expanded photo tab. Summary photos are not used as the full gallery.
+- Photo filter changes clear the prior pages/cursor and reset panel scroll. Preserve server ordering/counts and deduplicate repeated `photoId` associations across mutable pages. READY assets use derivative URL/dimensions; legacy URL is allowed only without an asset, unknown dimensions use the image's natural ratio, unavailable assets use fallback slots. Network/5xx retries once; 4xx does not auto-retry. Initial failures show a gallery retry; next-page failures keep existing photos. The viewer uses the same filtered pages and HDS Dialog stack so Escape closes only the top viewer and restores thumbnail focus.
+- Batch save-count reads are public; personal saved-state reads require an authenticated session and auth-versioned keys. Results join by restaurant ID; absent counts are not fabricated as zero. Saved-list/save/reservation actions still show ComingSoonDialog; no mutation is implemented.
+- No client Places lookup or geolocation is introduced. Region names/IDs/counts are supplied by the server, not Japanese administrative codes or automatic marker clustering.
 
 ## Requirements / State
 
@@ -207,7 +219,7 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - The fitted initial camera zoom is the minimum zoom. Region labels reserve non-overlapping screen space without changing geographic anchors; displaced labels have a connector to the original anchor.
 - A restaurant/region selected before SDK readiness waits for the initial fit to finish, so its detail zoom cannot become the minimum. Zoom-out remains available to the initial overview level after selection.
 - `현재 위치에서 검색` uses the Figma pill and LocationIcon. It requires changed bounds after a user gesture regardless of category, not initial fit, area selection or restoration. Gestures collapse the active panel and clear the old area condition. Normal movement does not automatically query; clearing a category at overview zoom is the explicit exception.
-- Area click centers/zooms the real map and filters sample restaurants. A reset action fits all sample regions. Category and submitted keyword apply together. Sort: recommended, rating, reviews, deterministic recommendation tie-break.
+- Area click fits server cameraBounds and queries that region. Reset fits server initialBounds. Category and submitted keyword apply together. Sort uses server recommend/rating/reviews order, with no client re-ranking.
 - Search draft is separate from submitted keyword; empty results retain the search clear action and category chips, without an additional reset CTA. Filter changes clear selected restaurant. Same selected category toggles to all.
 - The toolbar opens `/search` with validated map route state. Search returns using replace navigation, retains category, and fits nonempty keyword results. Clearing keyword retains the camera. Ordinary search URL policy is unchanged.
 - A memory session retains camera, conditions, loaded results, selection and panel stages for less than five minutes after route/background departure. Pending requests are not saved as successful data. Active map-tab reselection resets; reload persistence is not provided.
@@ -215,8 +227,9 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - An expanded list exposes `지도로 보기` in the panel footer. It collapses the list to the handle without resetting conditions or scroll; focus returns to the handle. It is not shown in normal/collapsed or restaurant-detail states.
 - SDK failure hides the restaurant panels and floating map controls while retaining search/category controls and retry. Restaurant refetch displays a spinner on the map as well as the list; list failure hides the list heading/sort control.
 - Normal restaurant summary uses the floating map close button only; expanded detail retains its internal close button. Floating map controls are placed 20px above the panel.
-- Explicit viewport search captures conditions/bounds/camera. Latest request wins; stale responses produce neither results nor toast. Regional empty results collapse the list; condition empty results show a normal-height empty sheet, each with its warning toast. Nonempty first-page success reopens the normal sheet. Retry uses the failed request; next-page failure keeps loaded results and adds the illustrated inline error/retry block. Visible list-bottom intersection loads additional pages automatically, stopping on pending/error/end or a hidden/collapsed sheet.
-- Selecting a marker/card opens restaurant summary. Expanding shows information/menu/photo/review tabs, sticky title and tabs, and bottom reserve action. Unavailable menu/review data is described as preview/unconnected, not as a real server result.
+- Explicit viewport search captures conditions/bounds/camera. Latest request wins; stale responses produce neither results nor toast. Every successful empty result leaves only the non-expandable 30px handle and its region/condition warning toast (user approval, 2026-10-22). Nonempty first-page success reopens the normal sheet. A 503 after empty results opens the error/retry sheet, not an empty-state handle. Retry uses the failed request; next-page failure keeps loaded results and adds the illustrated inline error/retry block. Visible list-bottom intersection loads additional pages automatically, stopping on pending/error/end or a hidden/collapsed sheet.
+- A pointer-up click generated by map dragging cannot reselect a marker and reopen the collapsed detail. The next intentional pointer press or keyboard activation can select it normally.
+- Selecting a marker/card opens the real restaurant summary. Expanding shows information/menu/photo/review tabs, sticky title and tabs, and bottom reserve action. Menu/photo/review queries have independent loading/error/empty/retry and pagination.
 - Photo selection opens a modal carousel; Escape/close restores focus to the source thumbnail. Background is inert while photo modal is open.
 - Long titles truncate to one line with the full accessible name. Thumbnail failure uses HDS fallback.
 
@@ -240,26 +253,34 @@ Jira: HASHI-215. Status: Google Maps JavaScript SDK integrated; restaurant data/
 - HDS DragPanel (HASHI-214), Dialog, SearchBar, Chip, IconButton, Button, Thumbnail, Tabs, Carousel.
 - Normal panels stay nonmodal. Expanded details and photos use HDS Dialog for focus containment and background isolation.
 - Reuse HDS icons and app ComingSoonDialog. RestaurantDetailTemplate is not used because it owns window scrolling and photo API queries.
-- Page-local toolbar, map preview, cards, list, detail and photo viewer; no new package public API.
-- Sample photos live under shared/assets/images/map/preview. Static map backgrounds are no longer rendered. Restaurant images are props on preview records. Marker glyphs, the CTA icon and area tail are imported from @hashi/hds-icons.
+- Page-local toolbar, map viewport, cards, list, detail and photo viewer; no new package public API.
+- Legacy sample photos remain test fixtures only. Static map backgrounds are not rendered. Restaurant photos come from READY image projections (legacy URLs only when projections are absent). Marker glyphs, CTA icon and area tail are imported from @hashi/hds-icons.
 
 ## File Responsibilities
 
 - `MapPage.tsx`: composes toolbar, viewport, list/detail panels and dialogs.
-- `hooks/useMapPageState.ts`: conditions, selection, request lifecycle, preview pagination, stale-response rejection and camera requests.
+- `api/`: page-local GET functions, exclusive request serialization and runtime response adapters; no React or query state.
+- `queries/`: key factories/options and cursor-based infinite query; `hooks/useMapPageState.ts` coordinates conditions, server sessions, coordinate expiry, selection and camera requests.
+- `hooks/useMapRestaurantDetail.ts`: existing feature summary/store/menu/photo/review queries and detail UI state. Cached summary/store errors wait for an in-flight or paused re-selection retry to settle before closing details. `hooks/useMapRestaurantSaves.ts` enriches loaded records with batch read-only counts/personal state.
 - `hooks/useMapSession.ts`, `utils/mapSession.ts`: memory snapshots and expiry. `features/mapSearch` validates the contract shared with SearchPage.
 - `MapStatusView.tsx`, `MapSearchAreaButton.tsx`: presentation-only state UI and viewport-search CTA. Figma loading/error SVGs use shared assets; marker icons remain HDS icons.
-- `data/mapPreviewRestaurants.ts`: explicitly temporary sample restaurants/areas; UI components do not import it directly.
-- `utils/filterMapRestaurants.ts`, `utils/getMapAreaMarkers.ts`: pure filtering/sorting and area counts. Counts represent all supplied sample restaurants, independently of the active filters.
+- `data/mapPreviewRestaurants.ts`, `utils/filterMapRestaurants.ts`, `utils/getMapAreaMarkers.ts`: legacy fixtures/utilities exercised by tests only; not sources for runtime API results or region counts.
 - `utils/layoutMapAreaLabels.ts`: screen-space region label offsets using map zoom; never changes geographic anchors.
 - `components/MapViewport.tsx`: SDK provider, loading/failure state, geographic markers and explicit viewport search. Google attribution stays above the sheet because map height excludes the panel.
 - `hooks/useGoogleMapCamera.ts`: initial/reset overview, area selection and selected restaurant camera movement without recreating the map on filter/panel changes.
 - `components/MapAreaMarker.tsx`, `components/MapRestaurantMarker.tsx`: area and restaurant selection UI.
 - `components/MapRestaurantMeta.tsx`, `components/MapRestaurantImages.tsx`, `components/MapSaveAction.tsx`: page-local parts shared by cards and details. Details do not import parts through the card module.
-- `@hashi/hds-icons` exports RestaurantMarkerIcon, CafeMarkerIcon, BarMarkerIcon, MapViewIcon and MapPinTailIcon: original reusable vector artwork only. The app supplies size/color/disabled styling; routing, selection and sample data remain page-local.
+- `@hashi/hds-icons` exports RestaurantMarkerIcon, CafeMarkerIcon, BarMarkerIcon, MapViewIcon and MapPinTailIcon: original reusable vector artwork only. The app supplies size/color/disabled styling; routing, selection and domain data remain app-local.
 
 ## Verification
 
+- 2026-10-22 HASHI-232 develop 통합: client 전체 207개 파일 / 1,307개 테스트, localhost:5173 Chromium 지도 E2E 21개 통과. Client lint/typecheck/build, root format:check 및 git diff --check 통과. 실제 dev 지역 조회는 9개 지역과 초기 bounds를 반환했다. 브라우저 오류·로딩·페이지네이션 경로는 API 응답 대역으로 검증했으며, 최신 인증·프로필·관리자·컬렉션 구현을 유지한다.
+
+- 2026-10-22 재검토: `env -u VITE_API_BASE_URL pnpm --filter @hashi/client test --maxWorkers=2 --reporter=dot` 181개 파일 / 1,072개 테스트 통과. Client `lint`, `typecheck`, `build`, 변경 TS/TSX Prettier 검사 및 `git diff --check` 통과.
+- localhost:5173 Chromium 지도 E2E 21개 통과(1 worker, 실제 Google SDK + 식당 API 응답 대역). 로딩 패널의 80px 스피너와 상단 143px 위치, 선택 식당·추가 조회 스피너, 빈 결과 핸들 유지, SDK 실패 후 재시도, 상세 포커스, 모바일 드래그, 검색·카테고리 왕복을 포함한다. 실제 개발 서버의 식당 → 메뉴 상세 → 지도 리뷰 복귀 → 메뉴 재진입 → 브라우저 뒤로가기의 메뉴 탭 복원도 별도로 확인했다.
+- HASHI-232: API boundary/query-policy, controller session/sort/cursor/retry/expiry, detail lazy queries and batch saves are covered by deterministic request mocks. Updated route/page tests must not import real API clients or require API env values. Final command results are recorded in the implementation handoff; prior HASHI-215 counts below are historical, not proof of the API integration.
+- Regression coverage includes successful re-selection after cached detail errors, successive session expirations after a successful recovery, and stopping failed recovery loops. A recovered request that successfully settled may recover again on a later 410.
+- Live GET probes on 2026-10-21 confirmed regions, restaurant list, selected location, summary, store information, menus, reviews and photos. Live browser entry at localhost:5173 subsequently displayed Google Maps and real region/restaurant data after the referrer update. Mock-backed browser tests verify interaction/error paths, not backend failure behavior or real-device behavior.
 - 2026-10-22 develop 충돌 해결 검증: client 전체 187개 파일 / 1,055개 테스트, localhost:5173 Chromium 지도 E2E 15개 통과. Client lint/typecheck/build, HDS Icons lint/typecheck/build, root format:check 및 git diff --check 통과. 지도 검색 왕복과 공통 검색어 검증, 최신 저장·컬렉션 route를 함께 유지한다. 실제 식당 API 연동은 HASHI-232의 별도 범위다.
 
 - 추가 유즈케이스 검증: 지도·검색·탭 단위 테스트 98개 통과. 실제 Google Maps를 사용하는 Chromium E2E 13개 통과(localhost:5714, SDK 실패는 요청 차단 후 재시도로 검증).

@@ -175,6 +175,42 @@ describe('AnywhereReservationPage', () => {
     })
   })
 
+  it('uses API length limits and blocks values beyond them before navigation', () => {
+    render(<AnywhereReservationPage />)
+    const nameField = screen.getByLabelText('식당명')
+    const addressField = screen.getByLabelText('식당 주소')
+    expect(nameField).toHaveAttribute('maxlength', '100')
+    expect(addressField).toHaveAttribute('maxlength', '255')
+
+    fireEvent.change(nameField, { target: { value: '가'.repeat(100) } })
+    fireEvent.change(addressField, { target: { value: '나'.repeat(255) } })
+    fireEvent.change(screen.getByLabelText('예약자명'), {
+      target: { value: '김하시' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '어른 인원 늘리기' }))
+    fireEvent.click(screen.getByRole('button', { name: '2026년 6월 2일' }))
+    fireEvent.click(screen.getByRole('button', { name: '11:30' }))
+    const submitButton = screen.getByRole('button', { name: '다음' })
+    expect(submitButton).toBeEnabled()
+
+    // DOM maxLength를 우회한 값도 form 검증으로 차단한다.
+    fireEvent.change(nameField, { target: { value: '가'.repeat(101) } })
+    expect(submitButton).toBeDisabled()
+    fireEvent.click(submitButton)
+    expect(mockNavigate).not.toHaveBeenCalled()
+    fireEvent.change(nameField, { target: { value: '가'.repeat(100) } })
+    fireEvent.change(addressField, { target: { value: '나'.repeat(256) } })
+    expect(submitButton).toBeDisabled()
+    fireEvent.change(addressField, { target: { value: '나'.repeat(255) } })
+    fireEvent.click(submitButton)
+    expect(mockNavigate).toHaveBeenCalledWith(ROUTES.reservationRequest, {
+      state: expect.objectContaining({
+        restaurantName: '가'.repeat(100),
+        restaurantAddress: '나'.repeat(255),
+      }),
+    })
+  })
+
   it('shows 30-minute time slots like the restaurant reservation page', () => {
     render(<AnywhereReservationPage />)
 

@@ -8,9 +8,9 @@ import {
   StarFillIcon,
 } from '@hashi/hds-icons'
 import { Header, IconButton, showToast, toastQueue } from '@hashi/hds-ui'
-import type { Ref } from 'react'
 import { useCallback, useEffect, useRef } from 'react'
 
+import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
 import { RestaurantDetailHero } from '@/features/restaurantDetail/components/RestaurantDetailHero'
 import { RestaurantDetailTabs } from '@/features/restaurantDetail/components/RestaurantDetailTabs'
@@ -25,86 +25,78 @@ import {
   RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
 } from '@/features/restaurantDetail/constants/restaurantDetailLayout'
 import { useRestaurantDetailTabBarFixed } from '@/features/restaurantDetail/hooks/useRestaurantDetailTabBarFixed'
+import type { useRestaurantDetailContent } from '@/features/restaurantDetail/hooks/useRestaurantDetailContent'
+import type { useRestaurantDetailActions } from '@/features/restaurantDetail/hooks/useRestaurantDetailActions'
 import { useRestaurantPhotos } from '@/features/restaurantDetail/hooks/useRestaurantPhotos'
+import { useRestaurantSaveSummary } from '@/features/restaurantDetail/hooks/useRestaurantSaveSummary'
 import type {
   RestaurantDetail,
   RestaurantDetailTab,
   RestaurantDetailVariant,
 } from '@/features/restaurantDetail/types/restaurantDetail'
-import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
+import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import { useShareLink } from '@/shared/components/shareIconButton'
 import { cn, copyTextToClipboard } from '@/shared/utils'
 
 interface RestaurantDetailTemplateProps {
-  activeTab: RestaurantDetailTab
-  reviewImageViewerImageUrls: string[]
-  reviewImageViewerInitialIndex: number
-  isReviewImageViewerOpen: boolean
-  isReviewUnavailableModalOpen: boolean
-  restaurant: RestaurantDetail
-  hasMoreMenus: boolean
-  hasMoreReviews: boolean
-  isMenuListError: boolean
-  isReviewListError: boolean
-  isReviewListLoading: boolean
-  menuLoadMoreRef: Ref<HTMLDivElement>
-  reviewLoadMoreRef: Ref<HTMLDivElement>
-  selectedReviewSort: ReviewSortValue
+  content: ReturnType<typeof useRestaurantDetailContent> & {
+    restaurant: RestaurantDetail
+  }
+  actions: ReturnType<typeof useRestaurantDetailActions>
   shareUrl?: string
   shouldScrollToInitialTab?: boolean
   title: string
   variant: RestaurantDetailVariant
   onPressBack: () => void
-  onPressLike: () => void
-  onPressMenuItem: (menuId: string) => void
   onPressRecommendAgain?: () => void
-  onPressReservation: () => void
-  onPressReviewImage: (reviewId: string, imageIndex: number) => void
-  onPressWriteReview: () => void
-  onRetryMenuList: () => void
-  onRetryReviewList: () => void
-  onSelectReviewSort: (sort: ReviewSortValue) => void
-  onTabChange: (tab: RestaurantDetailTab) => void
-  onCloseReviewImageViewer: () => void
-  onCloseReviewUnavailableModal: () => void
 }
 
 export const RestaurantDetailTemplate = ({
-  activeTab,
-  reviewImageViewerImageUrls,
-  reviewImageViewerInitialIndex,
-  isReviewImageViewerOpen,
-  isReviewUnavailableModalOpen,
-  restaurant,
-  hasMoreMenus,
-  hasMoreReviews,
-  isMenuListError,
-  isReviewListError,
-  isReviewListLoading,
-  menuLoadMoreRef,
-  reviewLoadMoreRef,
-  selectedReviewSort,
+  content,
+  actions,
   shareUrl,
   shouldScrollToInitialTab = false,
   title,
   variant,
   onPressBack,
-  onPressLike,
-  onPressMenuItem,
   onPressRecommendAgain,
-  onPressReservation,
-  onPressReviewImage,
-  onPressWriteReview,
-  onRetryMenuList,
-  onRetryReviewList,
-  onSelectReviewSort,
-  onTabChange,
-  onCloseReviewImageViewer,
-  onCloseReviewUnavailableModal,
 }: RestaurantDetailTemplateProps) => {
+  const {
+    activeTab,
+    reviewImageViewerImageUrls,
+    reviewImageViewerInitialIndex,
+    isReviewImageViewerOpen,
+    isReviewUnavailableModalOpen,
+    restaurant,
+    hasMoreMenus,
+    hasMoreReviews,
+    isMenuListError,
+    isMenuListLoading,
+    isMenuNextPageError,
+    isReviewNextPageError,
+    isReviewListError,
+    isReviewListLoading,
+    menuLoadMoreRef,
+    reviewLoadMoreRef,
+    selectedReviewSort,
+    onPressReviewImage,
+    onRetryMenuList,
+    onRetryReviewList,
+    onSelectReviewSort,
+    onTabChange,
+    onCloseReviewImageViewer,
+    onCloseReviewUnavailableModal,
+  } = content
+  const {
+    onPressLike,
+    onPressMenuItem,
+    onPressReservation,
+    onPressWriteReview,
+  } = actions
   const { isTabBarFixed, markerRef } = useRestaurantDetailTabBarFixed()
   const hasScrolledToInitialTabRef = useRef(false)
   const handleShare = useShareLink(shareUrl)
+  const saves = useRestaurantSaveSummary(Number(restaurant.id))
   const photos = useRestaurantPhotos(
     Number(restaurant.id),
     activeTab === 'photo',
@@ -170,6 +162,8 @@ export const RestaurantDetailTemplate = ({
       <RestaurantMenuListSection
         hasMoreMenus={hasMoreMenus}
         isMenuListError={isMenuListError}
+        isLoading={isMenuListLoading}
+        isNextPageError={isMenuNextPageError}
         loadMoreRef={menuLoadMoreRef}
         menus={restaurant.menus}
         onPressMenuItem={onPressMenuItem}
@@ -185,6 +179,7 @@ export const RestaurantDetailTemplate = ({
       <RestaurantReviewSection
         hasMoreReviews={hasMoreReviews}
         isReviewListError={isReviewListError}
+        isNextPageError={isReviewNextPageError}
         isReviewListLoading={isReviewListLoading}
         loadMoreRef={reviewLoadMoreRef}
         onPressReviewImage={onPressReviewImage}
@@ -335,11 +330,25 @@ export const RestaurantDetailTemplate = ({
         open={isReviewUnavailableModalOpen}
       />
       <RestaurantBottomBar
-        likeCount={restaurant.likeCount}
+        likeCount={
+          saves.saveCount === undefined
+            ? ''
+            : saves.saveCount.toLocaleString('ko-KR')
+        }
+        saved={saves.saved}
         onPressLike={onPressLike}
         onPressRecommendAgain={onPressRecommendAgain}
         onPressReservation={onPressReservation}
         variant={variant}
+      />
+      <AuthGateBottomSheet
+        onKakaoPress={actions.onPressKakao}
+        onOpenChange={actions.onAuthGateOpenChange}
+        open={actions.isAuthGateOpen}
+      />
+      <ComingSoonDialog
+        onOpenChange={actions.onComingSoonOpenChange}
+        open={actions.isComingSoonOpen}
       />
     </main>
   )

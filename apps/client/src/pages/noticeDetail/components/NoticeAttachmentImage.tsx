@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 interface NoticeAttachmentImageProps {
   alt: string
-  src: string
+  src: string | null
 }
 
 export const NoticeAttachmentImage = ({
@@ -12,7 +12,7 @@ export const NoticeAttachmentImage = ({
 }: NoticeAttachmentImageProps) => {
   const [hasError, setHasError] = useState(false)
 
-  if (hasError) {
+  if (!src || hasError) {
     return <ImageFallback className="size-full" markSize="lg" />
   }
 

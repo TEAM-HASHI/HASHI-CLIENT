@@ -21,44 +21,13 @@ const props = {
   onClose: vi.fn(),
 }
 
-const originalShowModal = Object.getOwnPropertyDescriptor(
-  HTMLDialogElement.prototype,
-  'showModal',
-)
-const originalClose = Object.getOwnPropertyDescriptor(
-  HTMLDialogElement.prototype,
-  'close',
-)
-
 beforeEach(() => {
-  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
-    configurable: true,
-    value: function (this: HTMLDialogElement) {
-      this.setAttribute('open', '')
-    },
-  })
-  Object.defineProperty(HTMLDialogElement.prototype, 'close', {
-    configurable: true,
-    value: function (this: HTMLDialogElement) {
-      this.removeAttribute('open')
-    },
-  })
   vi.stubGlobal('scrollTo', vi.fn())
 })
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
-  if (originalShowModal)
-    Object.defineProperty(
-      HTMLDialogElement.prototype,
-      'showModal',
-      originalShowModal,
-    )
-  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal')
-  if (originalClose)
-    Object.defineProperty(HTMLDialogElement.prototype, 'close', originalClose)
-  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close')
 })
 
 describe('RestaurantPhotoViewer', () => {
@@ -90,15 +59,12 @@ describe('RestaurantPhotoViewer', () => {
     fireEvent.click(screen.getByRole('button', { name: '사진 상세보기 닫기' }))
     expect(props.onClose).toHaveBeenCalled()
   })
-  it('restores the scroll position and body styles on unmount', () => {
+  it('preserves the page position without a second manual body scroll lock', () => {
     vi.stubGlobal('scrollY', 240)
+    const initialStyles = document.body.style.cssText
     const { unmount } = render(<RestaurantPhotoViewer {...props} />)
-    expect(document.body.style.position).toBe('fixed')
     unmount()
-    expect(document.body.style.position).toBe('')
-    expect(window.scrollTo).toHaveBeenCalledWith({
-      top: 240,
-      behavior: 'instant',
-    })
+    expect(document.body.style.cssText).toBe(initialStyles)
+    expect(window.scrollY).toBe(240)
   })
 })

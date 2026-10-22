@@ -1,5 +1,13 @@
 # Page Spec: `Notices`
 
+## 2026-10-08 검증 결과
+
+- `pnpm test`: client 694개(142 파일), HDS 226개(25 파일) 통과.
+- `pnpm --filter @hashi/client lint`, `typecheck`, `build`: 통과.
+- `git diff --check`: 통과.
+- 실제 개발 API 목록은 HTTP 200 및 notices 0건이었다. 항상 게시 공지가 존재한다는 운영 전제를 충족하지 않아, 게시 후 실제 상세·무한 스크롤 확인이 필요하다.
+- 모바일 실기기 터치 및 실제 게시 데이터 기반 브라우저 QA는 미실행.
+
 Jira: HASHI-208
 
 ## Purpose
@@ -58,39 +66,38 @@ Jira: HASHI-208
 ### Query
 
 - query:
-  - `GET /api/v1/notices?cursor={cursor}&size=10` (가계약, `features/notice/types.ts` 참고)
+  - `GET /api/v1/notices?cursor={cursor}` (문자열 커서, 서버 고정 10개)
 - query key:
-  - `noticeQueryKeys.infiniteList(size)`
+  - `noticeQueryKeys.infiniteList()`
 - query mode:
   - `useInfiniteQuery`, `initialPageParam: null`, `hasNext`/`nextCursor`로 다음 페이지 판단
 - loading state:
   - `LoadingScreen`
 - error state:
   - 첫 페이지: 공통 `AsyncBoundary` 오류 화면
-  - 다음 페이지: 목록 하단 `다시 시도`
+  - 다음 페이지: 목록 하단 `다시 시도`. 이 query는 `throwOnError: false`로 전역 5xx 전파를 막고 첫 페이지 오류만 명시적으로 throw한다.
 - empty state:
-  - 범위 제외
+  - 공개된 공지가 없으면 `등록된 공지사항이 없어요.` 표시
 
 ### Mutation
 
 - mutation: none
 
-## Backend Contract (가계약)
+## Backend Contract
 
-공지사항 API는 기존 cursor 목록 형식과 기획 명세를 따르는 가계약이다. 2026-09-30 서버 `develop` (`053fdb3`) 및 열린 PR에서 endpoint를 찾지 못했고, dev-api OpenAPI 조회는 타임아웃이었다. 서버 계약과 실제 API 연결은 확인 대기다.
-Swagger가 확정되면 `features/notice/types.ts`를 generated 타입으로 교체하고 `features/notice/api`만 맞춘다.
+2026-10-08 실제 OpenAPI와 서버 `origin/develop e780c4c7`에서 API 계약을 확인했다. HASHI-PLAN `1c981e5` 기준이다.
+`features/notice/types.ts`는 generated 타입을 기반으로 서버 DTO의 필수 필드 및 nullable 커서를 보완한다. 커서는 해석하지 않고 그대로 전달한다. null data는 빈 목록으로 숨기지 않고 계약 오류로 처리한다.
 
 ```ts
-// GET /api/v1/notices?cursor=&size=10
+// GET /api/v1/notices?cursor={opaque-string}
 interface NoticeListData {
   notices: {
     noticeId: number
     title: string
-    publishedAt: string
-    updatedAt: string | null
+    lastModifiedAt: string
   }[]
   hasNext: boolean
-  nextCursor: number | null
+  nextCursor: string | null
 }
 ```
 
@@ -99,7 +106,7 @@ interface NoticeListData {
 `RootLayout`이 pathname 변경 시 맨 위로 스크롤한다. 목록 행 선택 시 sessionStorage(`hashi:notice-list-state`)에 `{ scrollY, pageCount }`를 저장한다.
 `POP`으로 돌아오면 저장한 페이지 수와 스크롤 높이를 충족할 때까지 다음 페이지를 순서대로 조회한 후 위치를 복원한다.
 복원 중에는 무한 스크롤 observer를 중지하여 중복 조회를 막는다. 캐시가 만료돼도 같은 흐름으로 복원하며, 조회 실패 시 기존 목록과 목표 위치를 유지하고 다시 시도한다.
-저장소를 사용할 수 없거나 값이 유효하지 않으면 복원을 건너뛴다. 목록 헤더 뒤로가기는 마이페이지로 replace 이동한다.
+저장소를 사용할 수 없거나 값이 유효하지 않으면 복원을 건너뛴다. 목록 헤더 뒤로가기는 앱 history index가 1 이상이면 이전 화면으로 이동하고, 직접 진입이면 마이페이지로 replace 이동한다.
 
 ## UI Structure
 
@@ -130,11 +137,11 @@ NoticesPage
 
 - 행: 좌우 20px, 상하 28px, 제목·날짜 간격 8px, `warm-gray-100` 하단 구분선
 - 제목: `typo-sub-header-2 text-black truncate` (Figma 16px/600 `#101010`)
-- 날짜: `typo-body-7 text-primary-200` (14px Regular, 2026-10-14 확인)
+- 날짜: `typo-body-7 text-primary-200` (14px Regular/400). 최신 Figma `UI [디자인 2차 스프린트]`의 `9343-111942` 내부 목록 항목 기준, 2026-10-19 확인.
 - 화살표: `NextIcon` 24px, `text-cool-gray-900`, 제목 영역 상단 정렬
 - 페이지 최소 높이: `app-mobile-bottom-nav-content`로 하단 내비게이션 높이를 제외한다.
 
-- 다음 아이콘: 24px (`size-6`)
+- 다음 아이콘: 24px (`size-6`), 제목·날짜 묶음과 상단 정렬 (`items-start`)
 
 ## Verification
 
@@ -148,3 +155,17 @@ NoticesPage
 - 상세 이동 시 `fromNoticeList` 상태와 목록 페이지 수·스크롤 저장을 회귀 테스트로 검증한다.
 
 - 2026-10-17 Figma 공지사항 섹션 `8317:34181` 원본을 직접 열어 목록·상세 구성과 기존 스타일 명세를 재확인했다. 이번 수정은 탐색 동작 회귀 테스트 복구이며 화면 구현 변경은 없다.
+
+## API Integration Verification (2026-10-17)
+
+- 개발 서버 GET /notices HTTP 200, notices=[]·nextCursor=null·hasNext=false 확인.
+- 최신 user OpenAPI와 공지·본문·이미지 DTO 타입 일치 확인. 서버 opaque cursor를 해석하지 않고 전달한다.
+- 실제 게시 공지가 없어 실데이터 상세·이미지 및 모바일 제스처 검증은 대기한다.
+
+- 2026-10-17 전체 142 files / 694 tests, lint·typecheck·build 통과. 빈 목록 안내 추가 테스트를 포함한 목록 12 tests 별도 통과.
+- localhost Origin(127.0.0.1:5192) 요청은 서버 HTTP 403 확인. 브라우저 실데이터 확인은 CORS 허용 환경에서 추가 필요.
+
+## Design Alignment Verification (2026-10-19)
+
+- 공지 목록·상세 테스트 22개 및 client lint·typecheck·build 통과.
+- 393px 브라우저에서 수정된 스타일 확인. 로컬 API 테스트 응답을 사용했으며 실제 게시 데이터 검증과 배포는 별도다.

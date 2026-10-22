@@ -21,8 +21,8 @@ describe('reservation draft validation', () => {
         ...draft,
         guestName: '가'.repeat(50),
         guests: { adult: 100, teen: 100, child: 100 },
-        restaurantName: '가'.repeat(200),
-        restaurantAddress: '가'.repeat(200),
+        restaurantName: '가'.repeat(100),
+        restaurantAddress: '가'.repeat(255),
         requestNote: '가'.repeat(1000),
       }),
     ).toBe(true)
@@ -48,9 +48,9 @@ describe('reservation draft validation', () => {
     ...['24:00', '12:60', '9:00', 'invalid'].map((time) => ({ time })),
     { requestNote: '가'.repeat(1001) },
     { restaurantName: ' ' },
-    { restaurantName: '가'.repeat(201) },
+    { restaurantName: '가'.repeat(101) },
     { restaurantAddress: ' ' },
-    { restaurantAddress: '가'.repeat(201) },
+    { restaurantAddress: '가'.repeat(256) },
   ])('rejects invalid draft fields: %j', (overrides) => {
     expect(checkIsReservationRequestDraft({ ...draft, ...overrides })).toBe(
       false,

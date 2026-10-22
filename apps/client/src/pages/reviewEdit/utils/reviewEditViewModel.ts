@@ -1,14 +1,25 @@
-import type { MyReviewDetailData } from '@/features/review/api/getMyReviewDetail'
 import {
-  getReviewKeywordByValue,
-  REVIEW_PHOTO_MAX_COUNT,
+  getReviewKeywordIcon,
+  REVIEW_KEYWORDS,
   type ReviewKeywordId,
 } from '@/features/review/constants'
+import type { InputReviewKeywordOption } from '@/features/review/components/inputReviewKeyword/InputReviewKeyword'
+import type {
+  ReviewEditContextData,
+  ValidReviewEditContextData,
+} from '@/pages/reviewEdit/api/getReviewEditContext'
+
+export interface ExistingReviewImage {
+  fileKey: string
+  imageUrl: string
+}
 
 export interface ReviewEditViewModel {
   guestSummary: string
-  photoUrls: string[]
+  images: ExistingReviewImage[]
+  keywordOptions: InputReviewKeywordOption[]
   rating: number
+  restaurantId?: number
   restaurantName: string
   reviewText: string
   selectedKeywordIds: ReviewKeywordId[]
@@ -50,38 +61,54 @@ const formatVisitedAt = (value: string | undefined) => {
 const formatGuestSummary = ({
   adultCount = 0,
   childCount = 0,
-}: MyReviewDetailData) => {
+  teenCount = 0,
+}: ReviewEditContextData) => {
   const guests = [
     adultCount > 0 ? `어른 ${adultCount}명` : null,
+    teenCount > 0 ? `청소년 ${teenCount}명` : null,
     childCount > 0 ? `어린이 ${childCount}명` : null,
   ].filter((guest): guest is string => guest !== null)
 
   return guests.length > 0 ? guests.join(' · ') : '인원 정보 없음'
 }
 
-const toSelectedKeywordIds = (keywords: string[] | undefined) =>
-  Array.from(
-    new Set(
-      (keywords ?? []).flatMap((keyword) => {
-        const reviewKeyword = getReviewKeywordByValue(keyword)
-
-        return reviewKeyword ? [reviewKeyword.id] : []
-      }),
-    ),
-  ).slice(0, 3)
-
 export const toReviewEditViewModel = (
-  data: MyReviewDetailData,
+  data: ValidReviewEditContextData,
 ): ReviewEditViewModel => {
   const restaurantName = data.restaurantName ?? '식당 정보 없음'
+  const keywordOptions = data.reviewKeywordOptions?.length
+    ? data.reviewKeywordOptions.flatMap(({ code, label }) =>
+        code
+          ? [
+              {
+                id: code,
+                label: label ?? code,
+                Icon: getReviewKeywordIcon({ code, label }),
+              },
+            ]
+          : [],
+      )
+    : REVIEW_KEYWORDS.map(({ code, label, Icon }) => ({
+        id: code,
+        label,
+        Icon,
+      }))
 
   return {
     guestSummary: formatGuestSummary(data),
-    photoUrls: (data.imageUrls ?? []).slice(0, REVIEW_PHOTO_MAX_COUNT),
+    images: data.images
+      .slice()
+      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+      .map(({ fileKey, imageUrl }) => ({
+        fileKey,
+        imageUrl,
+      })),
+    keywordOptions,
     rating: data.rating ?? 0,
+    restaurantId: data.restaurantId,
     restaurantName,
     reviewText: data.content ?? '',
-    selectedKeywordIds: toSelectedKeywordIds(data.keywords),
+    selectedKeywordIds: Array.from(new Set(data.selectedKeywordCodes ?? [])),
     thumbnailSrc: data.restaurantThumbnailUrl,
     visitedAt: formatVisitedAt(data.visitedAt),
   }

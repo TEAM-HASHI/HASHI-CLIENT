@@ -9,6 +9,8 @@ interface RestaurantMenuListSectionProps {
   menus: RestaurantMenu[]
   hasMoreMenus?: boolean
   isMenuListError?: boolean
+  isLoading?: boolean
+  isNextPageError?: boolean
   loadMoreRef?: Ref<HTMLDivElement>
   onPressMenuItem: (menuId: string) => void
   onRetryMenuList?: () => void
@@ -18,10 +20,18 @@ export const RestaurantMenuListSection = ({
   menus,
   hasMoreMenus = false,
   isMenuListError = false,
+  isLoading = false,
+  isNextPageError = false,
   loadMoreRef,
   onPressMenuItem,
   onRetryMenuList,
 }: RestaurantMenuListSectionProps) => {
+  if (isLoading)
+    return (
+      <p role="status" className="px-5 py-9 text-center">
+        메뉴를 불러오고 있어요.
+      </p>
+    )
   if (isMenuListError) {
     return (
       <section
@@ -93,7 +103,14 @@ export const RestaurantMenuListSection = ({
           </button>
         )
       })}
-      {hasMoreMenus && loadMoreRef ? (
+      {isNextPageError ? (
+        <div className="flex flex-col items-center gap-3 py-5">
+          <p role="alert">메뉴를 더 불러오지 못했어요.</p>
+          <Button size="sm" onClick={onRetryMenuList}>
+            메뉴 다시 불러오기
+          </Button>
+        </div>
+      ) : hasMoreMenus && loadMoreRef ? (
         <div
           ref={loadMoreRef}
           aria-hidden="true"

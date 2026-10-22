@@ -43,11 +43,72 @@ const noticeDetailFixture: NoticeDetail = {
   noticeId: 3,
   title: '[Hashi 첫 공지사항]',
   publishedAt: '2026-09-01T10:00:00',
-  updatedAt: '2026-09-06T10:00:00',
-  content: '<p>시스템 <strong>점검</strong>을 진행합니다.</p>',
+  lastModifiedAt: '2026-09-06T10:00:00',
+  status: 'PUBLISHED',
+  body: [
+    {
+      type: 'PARAGRAPH',
+      items: [
+        [
+          { text: '시스템 ', bold: false, href: null },
+          { text: '점검', bold: true, href: null },
+        ],
+      ],
+    },
+  ],
   images: [
-    { url: 'https://example.com/notice-1.png', width: 706, height: 354 },
-    { url: 'https://example.com/notice-2.png', width: 300, height: 600 },
+    {
+      assetId: 'image-1',
+      image: {
+        assetId: 'image-1',
+        role: 'NOTICE_DETAIL',
+        status: 'READY',
+        defaultSource: {
+          url: 'https://example.com/notice-1.png',
+          width: 706,
+          height: 354,
+          mimeType: 'image/png',
+        },
+        sourceSets: [
+          {
+            mimeType: 'image/png',
+            candidates: [
+              {
+                url: 'https://example.com/notice-1.png',
+                width: 706,
+                height: 354,
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      assetId: 'image-2',
+      image: {
+        assetId: 'image-2',
+        role: 'NOTICE_DETAIL',
+        status: 'READY',
+        defaultSource: {
+          url: 'https://example.com/notice-2.png',
+          width: 300,
+          height: 600,
+          mimeType: 'image/png',
+        },
+        sourceSets: [
+          {
+            mimeType: 'image/png',
+            candidates: [
+              {
+                url: 'https://example.com/notice-2.png',
+                width: 300,
+                height: 600,
+              },
+            ],
+          },
+        ],
+      },
+    },
   ],
 }
 
@@ -149,7 +210,7 @@ describe('NoticeDetailPage', () => {
       new ApiError(
         {
           success: false,
-          code: 'NOTICE-001',
+          code: 'SUPPORT-001',
           message: 'not found',
           data: null,
           timestamp: '',
@@ -164,5 +225,64 @@ describe('NoticeDetailPage', () => {
     expect(
       await screen.findByRole('heading', { name: '404 페이지' }),
     ).toBeInTheDocument()
+  })
+
+  it('returns direct entry to the notice list instead of browser history', async () => {
+    mockedGetNoticeDetail.mockResolvedValue(noticeDetailFixture)
+    renderNoticeDetailPage()
+    fireEvent.click(await screen.findByRole('button', { name: '뒤로가기' }))
+    expect(mockNavigate).toHaveBeenCalledWith('/notices', { replace: true })
+  })
+
+  it.each(['PROCESSING', 'FAILED', null] as const)(
+    'keeps a placeholder slot for a %s attachment without a source',
+    async (status) => {
+      mockedGetNoticeDetail.mockResolvedValue({
+        ...noticeDetailFixture,
+        images: [
+          {
+            assetId: 'image-1',
+            image:
+              status === null
+                ? null
+                : {
+                    assetId: 'image-1',
+                    role: 'NOTICE_DETAIL',
+                    status,
+                    defaultSource: null,
+                    sourceSets: [],
+                  },
+          },
+          noticeDetailFixture.images[1]!,
+        ],
+      })
+      renderNoticeDetailPage()
+      const first = await screen.findByRole('button', {
+        name: '첨부 이미지 1 크게 보기',
+      })
+      expect(screen.getByText('시스템')).toBeInTheDocument()
+      expect(screen.getByText('점검')).toBeInTheDocument()
+      expect(first.querySelector('[data-slot="image-fallback"]')).not.toBeNull()
+      expect(first.querySelector('img')).toBeNull()
+      expect(
+        screen.getByRole('img', { name: /첨부 이미지 2/ }),
+      ).toHaveAttribute('src', 'https://example.com/notice-2.png')
+      fireEvent.click(first)
+      expect(
+        screen
+          .getByRole('dialog')
+          .querySelector('[data-slot="image-fallback"]'),
+      ).not.toBeNull()
+    },
+  )
+
+  it('goes back when the back button is pressed', async () => {
+    mockedGetNoticeDetail.mockResolvedValue(noticeDetailFixture)
+
+    renderNoticeDetailPage({ fromNoticeList: true })
+
+    fireEvent.click(await screen.findByRole('button', { name: '뒤로가기' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith(-1)
   })
 })

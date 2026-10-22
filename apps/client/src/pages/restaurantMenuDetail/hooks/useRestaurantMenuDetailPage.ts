@@ -12,6 +12,7 @@ import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
 import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import type { RestaurantMenuListData } from '@/features/restaurantDetail/api/getRestaurantMenus'
 import { useRestaurantPhotos } from '@/features/restaurantDetail/hooks/useRestaurantPhotos'
+import { useRestaurantSaveSummary } from '@/features/restaurantDetail/hooks/useRestaurantSaveSummary'
 import {
   restaurantMenuQueryOptions,
   restaurantMenusInfiniteQueryOptions,
@@ -50,6 +51,9 @@ export const useRestaurantMenuDetailPage = () => {
   const parsedRestaurantId = parsePositiveIntegerParam(restaurantId)
   const parsedMenuId = parsePositiveIntegerParam(menuId)
   const hasValidParams = parsedRestaurantId !== null && parsedMenuId !== null
+  const saves = useRestaurantSaveSummary(
+    hasValidParams ? parsedRestaurantId : 0,
+  )
   const photos = useRestaurantPhotos(
     hasValidParams ? parsedRestaurantId : 0,
     false,
@@ -74,7 +78,7 @@ export const useRestaurantMenuDetailPage = () => {
     enabled: hasValidParams,
   })
   const canFetchNextOtherMenuPage =
-    menusQuery.hasNextPage && !menusQuery.isFetchingNextPage
+    menusQuery.hasNextPage && !menusQuery.isFetching && !menusQuery.isError
   const { fetchNextPage: fetchNextOtherMenuPage } = menusQuery
   const handleIntersectOtherMenu = useCallback(() => {
     if (canFetchNextOtherMenuPage) {
@@ -100,18 +104,15 @@ export const useRestaurantMenuDetailPage = () => {
     currentRestaurantId,
     currentMenuId,
   )
-  const requestError = summaryQuery.error ?? menuQuery.error ?? menusQuery.error
+  const requestError = summaryQuery.error ?? menuQuery.error
   const isNotFound =
     !hasValidParams ||
     checkIsNotFoundError(requestError) ||
     (!menuQuery.isPending && selectedMenu === null)
-  const isLoading =
-    summaryQuery.isPending || menuQuery.isPending || menusQuery.isPending
+  const isLoading = summaryQuery.isPending || menuQuery.isPending
   const restaurant = summaryQuery.data
     ? {
-        id: String(summaryQuery.data.restaurantId),
         name: summaryQuery.data.name,
-        likeCount: '0',
         reviewCount: summaryQuery.data.reviewCount ?? 0,
       }
     : null
@@ -127,6 +128,13 @@ export const useRestaurantMenuDetailPage = () => {
   }
 
   const handlePressBack = () => {
+    if (sourceState.source === 'map') {
+      navigate(ROUTES.map, {
+        replace: true,
+        state: { mapRestaurantId: currentRestaurantId, activeTab: 'menu' },
+      })
+      return
+    }
     navigateBackOrReplace(navigate, getReturnPath())
   }
 
@@ -160,6 +168,7 @@ export const useRestaurantMenuDetailPage = () => {
     }
 
     navigate(nextPath, {
+      ...(sourceState.source === 'map' ? { replace: true } : {}),
       state: { source: sourceState.source },
     })
   }
@@ -169,21 +178,36 @@ export const useRestaurantMenuDetailPage = () => {
       return
     }
 
+    if (sourceState.source === 'map') {
+      navigate(ROUTES.map, {
+        replace: true,
+        state: { mapRestaurantId: currentRestaurantId, activeTab: tab },
+      })
+      return
+    }
+
     navigate(getReturnPath(), {
       state: { activeTab: tab },
     })
   }
 
   return {
-    currentRestaurantId,
     error: requestError,
     isAuthGateOpen,
     isComingSoonOpen,
     isLoading,
     isNotFound,
     hasMoreOtherMenus: menusQuery.hasNextPage,
+    isOtherMenusError: menusQuery.isError && !menusQuery.data,
+    isOtherMenusLoading: menusQuery.isPending,
+    isOtherMenusNextPageError: menusQuery.isFetchNextPageError,
+    onRetryOtherMenus: () =>
+      menusQuery.isFetchNextPageError
+        ? menusQuery.fetchNextPage()
+        : menusQuery.refetch(),
+    saveCount: saves.saveCount,
+    saved: saves.saved,
     otherMenus: menus,
-    otherMenusForDisplay: menus,
     otherMenuLoadMoreRef,
     otherMenuTotalCount,
     photoCount: photos.enabled ? photos.counts?.all : undefined,

@@ -26,15 +26,26 @@ import { createQueryClient } from '@/shared/lib/queryClient'
 import { ROUTES } from '@/app/router/path'
 import { clearMapSession } from '@/pages/map/utils/mapSession'
 import { HttpStatusError } from '@/shared/api/apiError'
+import { getAuthMe } from '@/features/auth/api/getAuthMe'
+import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
+import {
+  createMapLocationFixture,
+  createMapPageFixture,
+  createMapStoreFixture,
+  createMapSummaryFixture,
+  mapRegionsFixture,
+} from '@/pages/map/__tests__/mapApiFixtures'
+import type { MapPageRequest } from '@/pages/map/api/mapApiTypes'
+
+vi.mock('@/features/auth/api/getAuthMe', () => ({ getAuthMe: vi.fn() }))
+vi.mock('@/shared/api/requestTokenReissue', () => ({
+  requestTokenReissue: vi.fn(),
+}))
 
 vi.mock('@/shared/utils/clipboard', () => ({ copyUrlToClipboard: vi.fn() }))
 vi.mock('@hashi/hds-ui', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@hashi/hds-ui')>()),
   showToast: vi.fn(),
-}))
-
-vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
-  getRestaurantSummary: vi.fn(),
 }))
 
 vi.mock('@/app/providers/AuthSessionRestoreGate', () => ({
@@ -74,6 +85,58 @@ vi.mock('@/pages/saved/api/moveSavedRestaurants', () => ({
   moveSavedRestaurants: vi.fn(),
 }))
 vi.mock('@/pages/saved/api/saveRestaurant', () => ({ saveRestaurant: vi.fn() }))
+vi.mock('@/pages/map/api/getMapRestaurantSaves', () => ({
+  getMapRestaurantSaveCounts: vi.fn(async () => ({})),
+  getMyMapRestaurantSaves: vi.fn(async () => ({})),
+}))
+
+vi.mock('@/pages/map/api/getMapRegions', () => ({
+  getMapRegions: vi.fn(async () => mapRegionsFixture),
+}))
+vi.mock('@/pages/map/api/getMapRestaurants', () => ({
+  getMapRestaurants: vi.fn(async (request: MapPageRequest) =>
+    createMapPageFixture(request),
+  ),
+}))
+vi.mock('@/pages/map/api/getMapRestaurantLocation', () => ({
+  getMapRestaurantLocation: vi.fn(async (id: string) =>
+    createMapLocationFixture(id),
+  ),
+}))
+vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
+  getRestaurantSummary: vi.fn(async (id: number) =>
+    createMapSummaryFixture(id),
+  ),
+}))
+vi.mock(
+  '@/features/restaurantDetail/api/getRestaurantStoreInformation',
+  () => ({
+    getRestaurantStoreInformation: vi.fn(async (id: number) =>
+      createMapStoreFixture(id),
+    ),
+  }),
+)
+vi.mock('@/features/restaurantDetail/api/getRestaurantMenus', () => ({
+  getRestaurantMenus: vi.fn(async () => ({ menus: [], hasNext: false })),
+}))
+vi.mock('@/features/restaurantDetail/api/getRestaurantReviews', () => ({
+  getRestaurantReviews: vi.fn(async () => ({
+    averageRating: 4.5,
+    reviewCount: 0,
+    reviews: [],
+    hasNext: false,
+  })),
+}))
+vi.mock('@/features/restaurantDetail/api/getRestaurantMain', () => ({
+  getRestaurantMain: vi.fn(),
+}))
+vi.mock('@/features/restaurantDetail/api/getRestaurantMenu', () => ({
+  getRestaurantMenu: vi.fn(),
+}))
+vi.mock(
+  '@/features/restaurantDetail/api/getRandomRestaurantRecommendation',
+  () => ({ getRandomRestaurantRecommendation: vi.fn() }),
+)
 
 vi.mock('@vis.gl/react-google-maps', () => ({
   APIProvider: ({ children }: PropsWithChildren) => children,
@@ -104,9 +167,53 @@ const renderRoute = async (initialEntry: string) => {
   })
   return { router }
 }
-
 describe('appRoutes', () => {
-  it('renders the public map preview and bottom navigation on direct entry', async () => {
+  beforeEach(() => {
+    clearAuthSession()
+    vi.mocked(requestTokenReissue).mockRejectedValue(
+      new HttpStatusError(401),
+    )
+    vi.mocked(getAuthMe).mockRejectedValue(new HttpStatusError(401))
+    clearMapSession()
+    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
+    vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
+    vi.mocked(getRestaurantSummary).mockImplementation(async (id: number) =>
+      createMapSummaryFixture(id),
+    )
+    vi.mocked(updateCollection).mockReset()
+    vi.mocked(copyUrlToClipboard).mockReset().mockResolvedValue(true)
+    vi.mocked(showToast).mockClear()
+    vi.mocked(getCollection).mockReset().mockResolvedValue({
+      collectionId: 8,
+      name: 'API 여행',
+      color: 'yellow',
+      description: '설명',
+      visibility: 'private',
+      owner: true,
+      savedCount: 1,
+    })
+    vi.mocked(getCollections).mockReset().mockResolvedValue({
+      collections: [
+        { collectionId: 8, name: 'API 여행', savedCount: 1, visibility: 'private' },
+      ],
+      totalCount: 1,
+      hasNext: false,
+    })
+    vi.mocked(getSavedRestaurants).mockReset().mockResolvedValue({
+      content: [{ restaurantId: 55, name: '서버 식당', rating: 4.8 }],
+      hasNext: false,
+    })
+  })
+
+  afterEach(() => {
+    cleanup()
+    clearAuthSession()
+    clearMapSession()
+    vi.unstubAllEnvs()
+    document.body.style.overflow = ''
+  })
+
+  it('renders the public API-backed map and bottom navigation on direct entry', async () => {
     await renderRoute(ROUTES.map)
 
     expect(
@@ -149,41 +256,6 @@ describe('appRoutes', () => {
       rect.mockRestore()
     }
   })
-  beforeEach(() => {
-    clearAuthSession()
-    clearMapSession()
-    vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
-    vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
-    vi.mocked(updateCollection).mockReset()
-    vi.mocked(copyUrlToClipboard).mockReset().mockResolvedValue(true)
-    vi.mocked(showToast).mockClear()
-    vi.mocked(getCollection).mockResolvedValue({
-      collectionId: 8,
-      name: 'API 여행',
-      color: 'yellow',
-      description: '설명',
-      visibility: 'private',
-      owner: true,
-      savedCount: 1,
-    })
-    vi.mocked(getCollections).mockResolvedValue({
-      collections: [
-        {
-          collectionId: 8,
-          name: 'API 여행',
-          savedCount: 1,
-          visibility: 'private',
-        },
-      ],
-      totalCount: 1,
-      hasNext: false,
-    })
-    vi.mocked(getSavedRestaurants).mockResolvedValue({
-      content: [{ restaurantId: 55, name: '서버 식당', rating: 4.8 }],
-      hasNext: false,
-    })
-  })
-
   it('컬렉션의 실제 서버 식당 ID로 상세 경로에 연결한다', async () => {
     setAccessToken('test-session')
     const { router } = await renderRoute('/saved/collections/8')
@@ -528,15 +600,6 @@ describe('appRoutes', () => {
     )
     expect(await screen.findByText('총 0개')).toBeVisible()
     expect(deleteCollection).toHaveBeenLastCalledWith(42)
-  })
-
-  afterEach(() => {
-    clearMapSession()
-    vi.unstubAllEnvs()
-    document.body.style.overflow = ''
-    cleanup()
-    document.body.style.overflow = ''
-    clearAuthSession()
   })
 
   it.each([

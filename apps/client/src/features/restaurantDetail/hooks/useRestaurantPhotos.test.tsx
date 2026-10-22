@@ -7,8 +7,7 @@ import { useRestaurantPhotos } from '@/features/restaurantDetail/hooks/useRestau
 
 const { getPage } = vi.hoisted(() => ({ getPage: vi.fn() }))
 vi.mock('@/features/restaurantDetail/api/restaurantPhotoSource', () => ({
-  getRestaurantPhotoDataSource: () =>
-    import.meta.env.DEV ? { key: 'test', source: { getPage } } : null,
+  getRestaurantPhotoDataSource: () => ({ key: 'test', source: { getPage } }),
 }))
 
 const counts = { all: 21, representative: 1, review: 20, menu: 0 }
@@ -89,6 +88,23 @@ describe('useRestaurantPhotos', () => {
     expect(result.current.isFetchNextPageError).toBe(false)
   })
 
+  it('does not duplicate a photo when a mutable next page repeats an existing association', async () => {
+    const { result } = renderHook(() => useRestaurantPhotos(10, true), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.photos).toHaveLength(20))
+    getPage.mockResolvedValueOnce({
+      photos: [photo('19'), photo('last')],
+      counts,
+    })
+    await act(async () => {
+      await result.current.query.fetchNextPage()
+    })
+    await waitFor(() => expect(result.current.photos.at(-1)?.id).toBe('last'))
+    expect(result.current.photos.map(({ id }) => id)).toHaveLength(21)
+    expect(result.current.photos.at(-1)?.id).toBe('last')
+  })
+
   it('resets the filter when the recommended restaurant changes', async () => {
     const { result, rerender } = renderHook(
       ({ id }) => useRestaurantPhotos(id, true),
@@ -103,9 +119,8 @@ describe('useRestaurantPhotos', () => {
     expect(result.current.filter).toBe('all')
   })
 
-  it('does not request mock photos or expose counts in production', () => {
-    vi.stubEnv('DEV', false)
-    const { result } = renderHook(() => useRestaurantPhotos(10, true), {
+  it('does not request photos or expose counts for an invalid restaurant id', () => {
+    const { result } = renderHook(() => useRestaurantPhotos(0, true), {
       wrapper,
     })
     expect(result.current.enabled).toBe(false)

@@ -1,3 +1,8 @@
+import {
+  ANYWHERE_RESTAURANT_NAME_MAX_LENGTH,
+  ANYWHERE_RESTAURANT_ADDRESS_MAX_LENGTH,
+} from '@/features/reservation/constants/anywhereReservation'
+
 type GuestType = 'adult' | 'teen' | 'child'
 
 export type ReservationGuestCounts = Record<GuestType, number>
@@ -127,8 +132,14 @@ const checkIsAnywhereReservationRequestDraft = (
     value.restaurantId === null &&
     typeof value.restaurantAddress === 'string' &&
     value.restaurantImageUrl === null &&
-    checkIsTextWithinLimit(value.restaurantName, 200) &&
-    checkIsTextWithinLimit(value.restaurantAddress, 200) &&
+    checkIsTextWithinLimit(
+      value.restaurantName,
+      ANYWHERE_RESTAURANT_NAME_MAX_LENGTH,
+    ) &&
+    checkIsTextWithinLimit(
+      value.restaurantAddress,
+      ANYWHERE_RESTAURANT_ADDRESS_MAX_LENGTH,
+    ) &&
     checkHasReservationRequestBaseFields(value)
   )
 }

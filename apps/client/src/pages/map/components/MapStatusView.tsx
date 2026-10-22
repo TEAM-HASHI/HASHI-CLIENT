@@ -6,10 +6,12 @@ export const MapStatusView = ({
   message,
   loading = false,
   onRetry,
+  retryDisabled,
 }: {
   message: string
   loading?: boolean
   onRetry?: () => void
+  retryDisabled?: boolean
 }) => (
   <div
     role={loading ? 'status' : 'alert'}
@@ -41,6 +43,7 @@ export const MapStatusView = ({
         variant="neutral"
         className="mt-8.5 w-24.5 px-2.5"
         onClick={onRetry}
+        disabled={retryDisabled}
       >
         다시 시도하기
       </Button>

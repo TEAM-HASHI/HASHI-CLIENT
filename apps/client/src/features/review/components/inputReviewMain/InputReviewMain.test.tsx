@@ -187,6 +187,29 @@ describe('InputReviewMain', () => {
     expect(handlePhotoUrlsChange).toHaveBeenCalledWith([])
   })
 
+  it('reports the existing photo index when photos have separate file keys', () => {
+    const handlePhotoUrlDelete = vi.fn()
+    const handlePhotoUrlsChange = vi.fn()
+
+    render(
+      <InputReviewMain
+        photoUrls={[
+          'https://cdn.hashi.kr/same.jpg',
+          'https://cdn.hashi.kr/same.jpg',
+        ]}
+        onPhotoUrlDelete={handlePhotoUrlDelete}
+        onPhotoUrlsChange={handlePhotoUrlsChange}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '기존 리뷰 사진 2 사진 삭제' }),
+    )
+
+    expect(handlePhotoUrlDelete).toHaveBeenCalledWith(1)
+    expect(handlePhotoUrlsChange).not.toHaveBeenCalled()
+  })
+
   it('removes a local file without changing existing API photo URLs', () => {
     const handlePhotoFilesChange = vi.fn()
     const handlePhotoUrlsChange = vi.fn()

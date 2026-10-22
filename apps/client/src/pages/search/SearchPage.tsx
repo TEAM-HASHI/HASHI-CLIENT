@@ -11,7 +11,10 @@ import { SearchFilterBar } from '@/pages/search/components/SearchFilterBar'
 import { SearchHeader } from '@/pages/search/components/SearchHeader'
 import { SearchIdlePanel } from '@/pages/search/components/SearchIdlePanel'
 import { SearchResultSkeleton } from '@/pages/search/components/SearchResultSkeleton'
-import { getSearchKeywordError } from '@/pages/search/utils/searchKeyword'
+import {
+  getSearchKeywordError,
+  MAX_SEARCH_KEYWORD_LENGTH,
+} from '@/pages/search/utils/searchKeyword'
 import {
   DEFAULT_FOOD_CATEGORY_VALUE,
   DEFAULT_SORT_VALUE,
@@ -47,9 +50,12 @@ export const SearchPage = () => {
     updateSearchUrlState,
   } = useSearchUrlState()
   const appliedKeyword = mapContext?.keyword ?? urlKeyword
+  const inputKeyword = mapContext
+    ? appliedKeyword.slice(0, MAX_SEARCH_KEYWORD_LENGTH)
+    : appliedKeyword
   const [keywordDraft, setKeywordDraft] = useState({
     appliedKeyword,
-    value: appliedKeyword,
+    value: inputKeyword,
   })
   const {
     recentSearchKeywords,
@@ -91,7 +97,7 @@ export const SearchPage = () => {
   if (keywordDraft.appliedKeyword !== appliedKeyword) {
     setKeywordDraft({
       appliedKeyword,
-      value: appliedKeyword,
+      value: inputKeyword,
     })
   }
 

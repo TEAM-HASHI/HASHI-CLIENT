@@ -1,35 +1,10 @@
-export type TermsPolicyId =
-  | 'hashi-terms'
-  | 'privacy-policy'
-  | 'privacy-consent'
-  | 'third-party-consent'
-  | 'refund-policy'
-  | 'review-policy'
-  | 'point-terms'
-  | 'service-policy'
+import type { components } from '@/shared/api/generated/openapi'
 
-export interface TermsListItem {
-  text: string
-  children?: TermsList
-}
-
-export interface TermsList {
-  ordered: boolean
-  items: TermsListItem[]
-}
-
-export type TermsContentBlock =
-  | { type: 'paragraph'; text: string; blankLineAfter?: boolean }
-  | ({ type: 'list' } & TermsList)
-
-export interface TermsClause {
-  title: string
-  blocks: TermsContentBlock[]
-}
-
-export interface TermsPolicy {
-  id: TermsPolicyId
-  title: string
-  effectiveDate: string
-  clauses: TermsClause[]
+export type TermsSummary = Required<
+  components['schemas']['TermsSummaryResponse']
+>
+export type TermsDetail = Required<
+  Omit<components['schemas']['TermsResponse'], 'clauses'>
+> & {
+  clauses: Required<components['schemas']['TermsClause']>[]
 }

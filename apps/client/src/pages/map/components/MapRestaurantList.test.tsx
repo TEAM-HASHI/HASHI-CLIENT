@@ -19,6 +19,14 @@ const props = {
   onSave: vi.fn(),
   onReset: vi.fn(),
 }
+it('shows only the loading indicator, without a title or sort controls during a fresh query', () => {
+  render(<MapRestaurantList {...props} status="loading" />)
+  expect(screen.getByRole('status')).toHaveTextContent(
+    '식당 목록을 불러오고 있어요.',
+  )
+  expect(screen.queryByRole('heading')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button')).not.toBeInTheDocument()
+})
 it('loads the next page at the visible list bottom, but stops on failure or exhaustion', () => {
   const observer = mockIntersectionObserver()
   const load = vi.fn()
@@ -61,6 +69,19 @@ it('shows the full error illustration and retries a failed next page', async () 
   await userEvent.click(screen.getByRole('button', { name: '다시 시도하기' }))
   expect(retry).toHaveBeenCalledOnce()
 })
+it('allows retry for retained results after a failed refresh even without a next cursor', async () => {
+  const retry = vi.fn()
+  const view = render(
+    <MapRestaurantList {...props} nextError onLoadNext={retry} retryDisabled />,
+  )
+  const button = screen.getByRole('button', { name: '다시 시도하기' })
+  expect(button).toBeDisabled()
+  await userEvent.click(button)
+  expect(retry).not.toHaveBeenCalled()
+  view.rerender(<MapRestaurantList {...props} nextError onLoadNext={retry} />)
+  await userEvent.click(button)
+  expect(retry).toHaveBeenCalledOnce()
+})
 it.each([{ active: false }, { loadingNext: true }])(
   'does not automatically load a hidden or pending list: %s',
   (state) => {
@@ -89,10 +110,14 @@ it.each([{ active: false }, { loadingNext: true }])(
     expect(load).toHaveBeenCalledOnce()
   },
 )
-it('shows no invented empty-state heading or reset action', () => {
+it('shows no empty-state body, heading or reset action', () => {
   render(<MapRestaurantList {...props} />)
   expect(screen.queryByRole('heading')).not.toBeInTheDocument()
   expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  expect(
+    screen.queryByText('조건에 맞는 맛집이 없어요.'),
+  ).not.toBeInTheDocument()
 })
 it('shows the error message and retries a failed initial request', async () => {
   const retry = vi.fn()

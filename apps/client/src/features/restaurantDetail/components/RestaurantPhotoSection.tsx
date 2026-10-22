@@ -88,12 +88,21 @@ export const RestaurantPhotoSection = ({
                     key={photo.id}
                     aria-label={`${index + 1}번째 사진 보기`}
                     className="block w-full overflow-hidden rounded-[5px]"
-                    style={{ aspectRatio: `${photo.width} / ${photo.height}` }}
+                    style={{
+                      aspectRatio:
+                        photo.width && photo.height
+                          ? `${photo.width} / ${photo.height}`
+                          : undefined,
+                    }}
                     onClick={() => setViewerIndex(index)}
                   >
                     <RestaurantImage
                       src={photo.thumbnailUrl}
-                      className="size-full object-cover"
+                      className={
+                        photo.width && photo.height
+                          ? 'size-full object-cover'
+                          : 'h-auto w-full [&:not(img)]:aspect-square'
+                      }
                       markSize="lg"
                     />
                   </button>

@@ -256,8 +256,9 @@ page-local에서 시작하고, page spec이나 PR에 "다른 page에서 재사�
   강하게 의존하는 제출 adapter이므로 page-local에 둡니다.
 - 리뷰 관련 `getMyReviews`, `getMyReviewDetail`은 삭제/수정/작성 후 같은
   `myReviewQueryKeys` cache synchronization 기준을 공유하므로 `features/review`에
-  둡니다. `reviewNew`의 작성 context, 이미지 업로드, 제출 adapter는 작성 page
-  전용 흐름이므로 다른 리뷰 page와 공유되기 전까지 page-local에 둡니다.
+  둡니다. `reviewNew`의 작성 context와 제출 adapter는 작성 page 전용으로
+  page-local에 둡니다. 작성·수정 화면이 함께 쓰는 리뷰 이미지 업로드는
+  `features/review/api`에 둡니다.
 
 ## Query Key Rules
 

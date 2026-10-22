@@ -1,10 +1,16 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import { showToast } from '@hashi/hds-ui'
 import { useNavigate } from 'react-router-dom'
 
 import { getRestaurantReviewNewPath } from '@/app/router/routePaths'
-import { visitedReservationsQueryOptions } from '@/features/review/queries/visitedReservations'
+import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
 import { checkIsAuthRequiredError } from '@/shared/api'
+import {
+  getAuthSessionVersion,
+  wasAuthSessionExpired,
+} from '@/shared/auth/authSession'
+import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 
 interface UseRestaurantReviewWriteNavigationParams {
   isAuthenticated: boolean
@@ -21,36 +27,50 @@ export const useRestaurantReviewWriteNavigation = ({
 }: UseRestaurantReviewWriteNavigationParams) => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const isCheckingReviewableReservationRef = useRef(false)
-  const [error, setError] = useState<unknown>(null)
+  const pending = useRef<object | null>(null)
+  useEffect(
+    () => () => {
+      pending.current = null
+    },
+    [restaurantId],
+  )
 
   const handlePressWriteReview = useCallback(async () => {
     if (!isAuthenticated) {
-      setError(null)
       onAuthRequired()
       return
     }
 
-    if (isCheckingReviewableReservationRef.current) {
-      return
-    }
-
-    isCheckingReviewableReservationRef.current = true
-    setError(null)
+    if (pending.current) return
+    const attempt = {}
+    pending.current = attempt
+    const session = getAuthSessionVersion()
+    const isCurrent = () =>
+      pending.current === attempt && getAuthSessionVersion() === session
 
     try {
-      const response = await queryClient.fetchQuery(
-        visitedReservationsQueryOptions({
+      const response = await queryClient.fetchQuery({
+        queryFn: () =>
+          getVisitedReservations({
+            restaurantId,
+            reviewStatus: 'unreviewed',
+            size: 1,
+          }),
+        queryKey: visitedReservationQueryKeys.reviewWrite(
           restaurantId,
-          reviewStatus: 'unreviewed',
-          size: 1,
-        }),
-      )
+          session,
+        ),
+        staleTime: 0,
+        retry: false,
+      })
+      if (!isCurrent()) return
       const writableReservation = response.content?.find(
         (reservation) =>
           reservation.reviewable === true &&
           typeof reservation.reservationId === 'number' &&
-          typeof reservation.restaurantId === 'number',
+          Number.isSafeInteger(reservation.reservationId) &&
+          reservation.reservationId > 0 &&
+          reservation.restaurantId === restaurantId,
       )
 
       if (!writableReservation) {
@@ -65,14 +85,23 @@ export const useRestaurantReviewWriteNavigation = ({
         ),
       )
     } catch (caughtError) {
+      if (
+        pending.current !== attempt ||
+        (!isCurrent() &&
+          !(
+            checkIsAuthRequiredError(caughtError) &&
+            wasAuthSessionExpired(session)
+          ))
+      )
+        return
       if (checkIsAuthRequiredError(caughtError)) {
         onAuthRequired()
         return
       }
 
-      setError(caughtError)
+      showToast({ children: '리뷰 작성 가능 여부를 확인하지 못했어요.' })
     } finally {
-      isCheckingReviewableReservationRef.current = false
+      if (pending.current === attempt) pending.current = null
     }
   }, [
     isAuthenticated,
@@ -84,7 +113,6 @@ export const useRestaurantReviewWriteNavigation = ({
   ])
 
   return {
-    error,
     onPressWriteReview: handlePressWriteReview,
   }
 }

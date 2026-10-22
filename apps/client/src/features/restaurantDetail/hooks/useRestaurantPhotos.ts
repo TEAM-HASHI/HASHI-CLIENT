@@ -8,6 +8,7 @@ import {
 } from '@/features/restaurantDetail/queries/restaurantPhotoQueryOptions'
 import type {
   RestaurantPhotoFilter,
+  RestaurantPhoto,
   RestaurantPhotoSource,
 } from '@/features/restaurantDetail/types/restaurantPhoto'
 
@@ -55,7 +56,13 @@ export const useRestaurantPhotos = (restaurantId: number, active: boolean) => {
     enabled,
     filter,
     counts: query.data?.pages[0]?.counts ?? countsQuery.data,
-    photos: query.data?.pages.flatMap((page) => page.photos) ?? [],
+    photos: [
+      ...new Map<string, RestaurantPhoto>(
+        query.data?.pages.flatMap((page) =>
+          page.photos.map((photo) => [photo.id, photo] as const),
+        ),
+      ).values(),
+    ],
     query,
     selectFilter: (nextFilter: RestaurantPhotoFilter) => {
       if (nextFilter === filter) return
