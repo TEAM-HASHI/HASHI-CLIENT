@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+import { removeRecentRestaurants } from '@/features/recentRestaurants/recentRestaurants'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -43,6 +44,10 @@ const RestaurantDetailContent = ({
   const initialTab = getRestaurantDetailTabState(location.state).activeTab
 
   const summaryQuery = useQuery(restaurantSummaryQueryOptions(restaurantId))
+  useEffect(() => {
+    if (checkIsNotFoundError(summaryQuery.error))
+      removeRecentRestaurants([restaurantId])
+  }, [restaurantId, summaryQuery.error])
   const detailContent = useRestaurantDetailContent({
     initialTab: initialTab ?? undefined,
     menuPageSize: RESTAURANT_DETAIL_MENU_PAGE_SIZE,

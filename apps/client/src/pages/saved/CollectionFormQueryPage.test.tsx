@@ -124,6 +124,40 @@ afterEach(() => {
 })
 
 describe('컬렉션 API 폼 연결', () => {
+  it.each(['조회 중', '조회 실패'] as const)(
+    '이름 목록 %s에도 기존 이름의 색상 수정은 저장하고 이름 변경은 확인을 기다린다',
+    async (state) => {
+      vi.mocked(getCollection).mockResolvedValue(detail)
+      vi.mocked(updateCollection).mockResolvedValue({
+        ...detail,
+        color: 'yellow',
+      })
+      if (state === '조회 중')
+        vi.mocked(getCollections).mockReturnValue(new Promise(() => {}))
+      else vi.mocked(getCollections).mockRejectedValue(new Error('network'))
+      const { user } = setup(true)
+      await screen.findByDisplayValue('여행')
+      if (state === '조회 실패')
+        await waitFor(() => expect(getCollections).toHaveBeenCalled())
+      await user.click(screen.getByRole('radio', { name: '노랑' }))
+      expect(screen.getByRole('button', { name: '저장하기' })).toBeEnabled()
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+      await user.type(screen.getByLabelText('컬렉션명'), ' 수정')
+      expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
+      if (state === '조회 실패')
+        expect(await screen.findByRole('alert')).toBeVisible()
+      await user.clear(screen.getByLabelText('컬렉션명'))
+      await user.type(screen.getByLabelText('컬렉션명'), '  여행  ')
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: '저장하기' }))
+      await waitFor(() =>
+        expect(updateCollection).toHaveBeenCalledExactlyOnceWith(8, {
+          color: 'yellow',
+        }),
+      )
+    },
+  )
+
   it('수정 중인 컬렉션 자신의 이름은 중복으로 막지 않는다', async () => {
     vi.mocked(getCollection).mockResolvedValue(detail)
     vi.mocked(getCollections).mockResolvedValue({

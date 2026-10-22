@@ -171,6 +171,7 @@ describe('SearchPage', () => {
 
   beforeEach(() => {
     mockGetSearchKeywordRecommendations.mockResolvedValue(['아끼소바'])
+    mockGetRestaurants.mockReset()
     mockGetRestaurants.mockImplementation(({ genre, keyword, sort }) => {
       const normalizedKeyword = keyword.trim().toLowerCase()
       const restaurants = searchRestaurantFixtures
@@ -182,7 +183,10 @@ describe('SearchPage', () => {
           ].some((value) => value.toLowerCase().includes(normalizedKeyword))
 
           return (
-            matchesKeyword && (genre === 'all' || restaurant.category === genre)
+            matchesKeyword &&
+            (genre === 'all' ||
+              restaurant.category === genre ||
+              (genre === 'sushi' && restaurant.category === 'sushiSashimi'))
           )
         })
         .sort((firstRestaurant, secondRestaurant) => {
@@ -202,6 +206,45 @@ describe('SearchPage', () => {
         restaurants: restaurants.map(convertSearchRestaurantFixtureToSummary),
       })
     })
+  })
+
+  it('does not submit or store invalid hashtag searches, including direct URL entry', async () => {
+    const user = userEvent.setup()
+    renderSearchPageWithRoutes(`${ROUTES.search}?keyword=%23`)
+    const input = screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' })
+    expect(mockGetRestaurants).not.toHaveBeenCalled()
+    await user.clear(input)
+    await user.type(input, '#도쿄 라멘{Enter}')
+    expect(mockGetRestaurants).not.toHaveBeenCalled()
+    expect(
+      window.localStorage.getItem('hashi:search:recent-keywords'),
+    ).toBeNull()
+    expect(input).toHaveValue('#도쿄 라멘')
+  })
+
+  it('keeps existing results during edits and resets filters only when a new search is submitted', async () => {
+    const user = userEvent.setup()
+    renderSearchPageWithRoutes(
+      `${ROUTES.search}?keyword=스시&sort=rating&category=sushiSashimi`,
+    )
+    await screen.findByText('스시 하루')
+    const input = screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' })
+    await user.clear(input)
+    await user.type(input, '야끼')
+    expect(screen.getByText('스시 하루')).toBeInTheDocument()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(1)
+    await user.clear(input)
+    await user.type(input, '아끼소바{Enter}')
+    await waitFor(() =>
+      expect(mockGetRestaurants).toHaveBeenLastCalledWith({
+        keyword: '아끼소바',
+        genre: 'all',
+        size: 10,
+      }),
+    )
+    expect(screen.getByTestId('location-state')).toHaveTextContent(
+      '?keyword=%EC%95%84%EB%81%BC%EC%86%8C%EB%B0%94',
+    )
   })
 
   it('clears the draft and applied conditions without searching, then uses default filters for the next search', async () => {
@@ -400,6 +443,53 @@ describe('SearchPage', () => {
         size: 10,
       })
     })
+  })
+
+  it('keeps loaded results after a next-page failure and retries only the failed cursor', async () => {
+    const user = userEvent.setup()
+    const { triggerAllIntersects } = mockIntersectionObserver()
+    const first = convertSearchRestaurantFixtureToSummary(
+      searchRestaurantFixtures[0],
+    )
+    const next = convertSearchRestaurantFixtureToSummary(
+      searchRestaurantFixtures[2],
+    )
+    let resolveRetry!: (value: unknown) => void
+    mockGetRestaurants
+      .mockResolvedValueOnce({
+        restaurants: [first],
+        hasNext: true,
+        nextCursor: 'next',
+      })
+      .mockRejectedValueOnce(new Error('next page failed'))
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveRetry = resolve
+          }),
+      )
+    renderSearchPageWithRoutes(`${ROUTES.search}?keyword=%23가성비`)
+    await screen.findByText(first.name)
+    triggerAllIntersects()
+    await screen.findByRole('button', { name: '다시 시도' })
+    expect(screen.getByText(first.name)).toBeInTheDocument()
+    triggerAllIntersects()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(2)
+
+    await user.click(screen.getByRole('button', { name: '다시 시도' }))
+    expect(screen.getByText(first.name)).toBeInTheDocument()
+    expect(mockGetRestaurants).toHaveBeenLastCalledWith(
+      expect.objectContaining({ keyword: '#가성비', cursor: 'next' }),
+    )
+    triggerAllIntersects()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(3)
+    resolveRetry({ restaurants: [next], hasNext: false })
+    expect(await screen.findByText(next.name)).toBeInTheDocument()
+    expect(screen.getByText(first.name)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: '다시 시도' }),
+    ).not.toBeInTheDocument()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(3)
   })
 
   it('does not request the same next restaurant page twice when the sentinel intersects repeatedly in one render cycle', async () => {

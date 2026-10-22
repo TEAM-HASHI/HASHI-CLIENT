@@ -96,6 +96,8 @@ export const CollectionForm = ({
     submitError instanceof ApiError && submitError.code === 'USER-007'
   const normalizedDraft = normalizeCollectionDraft(draft)
   const normalizedInitial = normalizeCollectionDraft(initial)
+  const needsNameCheck =
+    !collection || normalizedDraft.name !== normalizedInitial.name
   const changed = (['name', 'description', 'color', 'isPublic'] as const).some(
     (key) => normalizedDraft[key] !== normalizedInitial[key],
   )
@@ -105,7 +107,7 @@ export const CollectionForm = ({
     (hasServerDuplicateName ||
       isDuplicateCollectionName(draft, collections, collection?.id))
   const canSubmit =
-    !nameCheckPending &&
+    !(needsNameCheck && nameCheckPending) &&
     !isSubmitted &&
     !isComposing &&
     !overLimit.name &&
@@ -281,7 +283,7 @@ export const CollectionForm = ({
               </span>
             </div>
           </div>
-          {nameCheckFeedback}
+          {needsNameCheck && nameCheckFeedback}
           <fieldset className="w-full pb-7" disabled={isSubmitted}>
             <legend className="typo-sub-header-1 text-primary-200">
               색상 선택

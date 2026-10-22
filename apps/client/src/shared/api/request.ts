@@ -168,7 +168,7 @@ export const requestSuccessResponse = async <TData>(
     } catch (reissueCause) {
       if (checkIsAuthRequiredError(reissueCause)) {
         if (getAuthSessionVersion() === sessionVersion) {
-          clearAuthSession()
+          clearAuthSession('expired')
         }
         throw cause
       }
