@@ -33,6 +33,7 @@ export const CollectionFormPage = () => {
       collections={data.collections}
       onClose={handleClose}
       onDiscard={() => navigate(ROUTES.saved, { replace: true })}
+      onSubmitSuccess={handleClose}
       onSubmit={(draft) => {
         setData((current) =>
           collection
@@ -44,7 +45,6 @@ export const CollectionFormPage = () => {
                 new Date().toISOString(),
               ),
         )
-        handleClose()
       }}
     />
   )
