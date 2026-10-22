@@ -85,7 +85,7 @@ const restoreAuthSessionOnce = async (revalidate: boolean) => {
   } catch (cause) {
     if (!canRestore()) return
     if (!checkIsAuthRequiredError(cause)) throw cause
-    clearAuthSession()
+    clearAuthSession(previousStatus === 'authenticated' ? 'expired' : undefined)
   }
 }
 

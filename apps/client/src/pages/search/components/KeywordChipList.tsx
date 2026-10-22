@@ -19,7 +19,6 @@ export const KeywordChipList = ({
         {keywords.map((keyword) => (
           <li key={keyword}>
             <Chip
-              className="text-black"
               onSelectedChange={() => {
                 onKeywordSelect(keyword)
               }}
