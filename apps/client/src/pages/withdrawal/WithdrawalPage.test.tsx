@@ -127,6 +127,30 @@ describe('회원탈퇴 요청 흐름', () => {
     expect(showToast).toHaveBeenCalledTimes(1)
   })
 
+  it('finishes a pending withdrawal after its own session expires', async () => {
+    let resolve!: (value: Response) => void
+    vi.mocked(apiClient).mockImplementationOnce(
+      () =>
+        new Promise<Response>((done) => {
+          resolve = done
+        }) as never,
+    )
+    const { client, router } = setup()
+    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByRole('button', { name: '탈퇴하기' }))
+    await waitFor(() => expect(apiClient).toHaveBeenCalledOnce())
+    await act(async () => {
+      clearAuthSession('expired')
+      resolve(response())
+    })
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/login-required'),
+    )
+    expect(getAccessToken()).toBeUndefined()
+    expect(client.getQueryCache().getAll()).toHaveLength(0)
+    expect(showToast).not.toHaveBeenCalled()
+  })
+
   it.each([
     [404, 'USER-005'],
     [401, 'AUTH-001'],
@@ -179,9 +203,17 @@ describe('회원탈퇴 요청 흐름', () => {
     expect(router.state.location.pathname).toBe('/withdrawal')
   })
 
-  it.each(['authenticated', 'onboarding'] as const)(
-    'does not clear a new %s session when an older withdrawal completes',
-    async (status) => {
+  it.each([
+    ['authenticated', 200],
+    ['onboarding', 200],
+    ['logged-out', 200],
+    ['changed-then-logged-out', 200],
+    ['changed-then-logged-out', 401],
+    ['changed-then-logged-out', 409],
+    ['changed-then-expired', 200],
+  ] as const)(
+    'ignores an older withdrawal response after %s (%s)',
+    async (status, responseStatus) => {
       let resolve!: (value: Response) => void
       vi.mocked(apiClient).mockImplementationOnce(
         () =>
@@ -194,18 +226,38 @@ describe('회원탈퇴 요청 흐름', () => {
       fireEvent.click(screen.getByRole('button', { name: '탈퇴하기' }))
       await waitFor(() => expect(apiClient).toHaveBeenCalledOnce())
       if (status === 'authenticated') startAuthenticatedSession('new-session')
-      else setOnboardingSession()
+      else if (status === 'onboarding') setOnboardingSession()
+      else {
+        if (
+          status === 'changed-then-logged-out' ||
+          status === 'changed-then-expired'
+        ) {
+          startAuthenticatedSession('new-session')
+        }
+        clearAuthSession(
+          status === 'changed-then-expired' ? 'expired' : undefined,
+        )
+      }
       client.setQueryData(['my-profile'], { nickname: '새 사용자' })
       await act(async () => {
         await router.navigate('/mypage')
       })
       expect(router.state.location.pathname).toBe('/mypage')
       await act(async () => {
-        resolve(response())
+        resolve(
+          response(
+            responseStatus,
+            responseStatus === 401
+              ? 'AUTH-001'
+              : responseStatus === 409
+                ? 'RESERVATION-008'
+                : 'USER-204',
+          ),
+        )
       })
       await waitFor(() =>
         expect(client.getMutationCache().getAll()[0]?.state.status).toBe(
-          'success',
+          responseStatus === 200 ? 'success' : 'error',
         ),
       )
       expect(client.getQueryData(['my-profile'])).toEqual({

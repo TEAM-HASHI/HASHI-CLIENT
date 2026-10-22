@@ -11,6 +11,7 @@ import {
   clearAuthSession,
   getAuthSessionStatus,
   getAuthSessionVersion,
+  wasAuthSessionExpired,
 } from '@/shared/auth/authSession'
 import { captureError } from '@/shared/lib/sentry'
 
@@ -21,8 +22,7 @@ export const useWithdrawalPage = () => {
   const pendingSessionVersion = useRef<number | null>(null)
 
   const canHandleResponse = (version: number) =>
-    getAuthSessionVersion() === version ||
-    getAuthSessionStatus() === 'unauthenticated'
+    getAuthSessionVersion() === version || wasAuthSessionExpired(version)
 
   const finishWithdrawal = (version: number) => {
     if (!canHandleResponse(version)) return
