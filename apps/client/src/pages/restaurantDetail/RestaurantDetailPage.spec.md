@@ -25,24 +25,26 @@
   - unauthenticated: none
   - authenticated guest: none
 - auth status:
-  - uses `useAuthStatus`: yes, action-level auth gate only
+  - uses `useAuthStatus`: yes, action-level auth gate and authenticated saved-state query
 
 ## Requirements
 
 - [ ] Header title은 Figma 기준 `식당 상세 정보`로 표시합니다.
-- [ ] route param `restaurantId`를 page에서 읽고 식당 요약, 매장 정보, 메뉴 목록, 리뷰 목록 API를 조회합니다.
+- [ ] 유효한 `restaurantId`로 요약과 매장 정보를 먼저 조회합니다. 메뉴/리뷰는 해당 탭이 active일 때만 조회하며 초기 페이지 표시를 막지 않습니다.
+- [ ] 잘못된 ID 또는 초기 요약/매장 정보 조회 실패는 `NotFoundPage`로 표시하며 두 critical query는 자동 재시도하지 않습니다.
 - [ ] 매장 정보, 메뉴, 사진, 리뷰 탭을 같은 페이지 상태로 전환합니다.
 - [ ] 사진 탭은 같은 상세 템플릿 안에서 전환하며, 일반 식당과 오늘의 식당 모두 아래 Photo Policy의 공통 기준을 따릅니다.
 - [ ] 사진 UI와 count는 개발·테스트 환경에서 목데이터로 구현하며, 데이터 공급 부분을 분리해 실제 API 연결은 후속 작업으로 둡니다. 운영 빌드에는 목데이터를 연결하지 않고 기존 빈 상태를 유지하며 확인되지 않은 count를 표시하지 않습니다.
 - [ ] 사진 필터 칩에는 각 분류의 공개 사진 수를 표시하고, 상단 `사진 N`은 선택한 필터와 무관한 해당 식당의 전체 공개 사진 수를 표시합니다.
 - [ ] 매장 정보 탭의 `오시는 길`은 제목과 주소만 표시합니다. 실제 지도 연동 전까지 회색 placeholder 및 해당 영역의 공간은 노출하지 않습니다.
+- `GET /api/v1/restaurants/{restaurantId}/map-location`은 확인된 서버 endpoint이며 지도 preview 연동만 후속 작업입니다.
 - 추후 지도 연동 시 참고 규격: 주소 아래 간격 12px, 높이 145px, 너비는 부모 영역 전체, 모서리 반경 5px. 현재 화면에는 적용하지 않습니다.
 - [ ] 탭바는 Header 아래에 sticky로 고정됩니다.
 - [ ] 메뉴/사진/리뷰 탭 선택 시 탭바가 Header 바로 아래에 붙은 위치로 부드럽게 스크롤되어 해당 탭 콘텐츠를 초기 화면처럼 보여줍니다.
 - [ ] 매장 정보 탭 선택 시 페이지 최상단으로 부드럽게 스크롤됩니다.
 - [ ] 탭 선택 시 active underline은 선택된 탭으로 부드럽게 이동합니다.
-- [ ] 하단 fixed bar에는 36px `SaveBlankIcon` 북마크와 저장 수, `예약하기`가 표시됩니다. 북마크 버튼의 접근성 이름은 `저장하기`입니다.
-- [ ] 저장 API 연동은 후속 작업입니다. 기존 임시 건수 `0`을 유지하며, 로그인 사용자가 저장하기를 누르면 준비중 모달을 표시합니다.
+- [ ] 하단 fixed bar에는 36px 북마크와 공개 저장 수, `예약하기`가 표시됩니다. 로그인 사용자의 `saved`에 따라 아이콘과 `aria-pressed`를 반영하며 접근성 이름은 `저장하기`입니다.
+- [ ] 저장 chooser/쓰기 UI는 후속 작업입니다. 로그인 사용자가 저장하기를 누르면 준비중 모달을 표시합니다.
 - [ ] 식당 상세 페이지에는 `다시 추천 받기` 버튼이 없습니다.
 - [ ] 메뉴 카드 클릭 시 `ROUTES.restaurantMenuDetail`로 이동합니다.
 - [ ] 공유 클릭 시 `ROUTES.restaurantDetail` 기준 식당 상세 링크를 현재 origin 기준 absolute URL로 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
@@ -58,7 +60,8 @@
 
 ## Photo Policy
 
-- 상단 대표 이미지는 전달 순서대로 최대 10장만 표시합니다. 1~5장은 실제 개수, 6~10장은 점 6개를 표시하며, 이미지가 없으면 대체 이미지 1개만 표시하고 점은 숨깁니다.
+- 상단 대표 이미지는 `summary.heroImages`를 `displayOrder` 오름차순으로 안정 정렬한 복사본에서 최대 10장을 표시합니다. `image.status=READY`는 `defaultSource.url`, asset이 없으면 `legacyUrl`을 사용합니다. PROCESSING/FAILED는 legacy URL로 되돌리지 않고 대체 이미지 슬롯을 유지합니다. wrapper 목록이 없거나 비어 있으면 기존 `imageUrls`를 사용합니다.
+- 1~5장은 실제 개수, 6~10장은 점 6개를 표시하며, 이미지가 없으면 대체 이미지 1개만 표시하고 점은 숨깁니다.
 - 대표 이미지의 활성 점은 사용자 합의로 1~6번째 사진은 같은 순번의 점을 활성화하고, 7~10번째 사진은 6번째 점을 유지합니다. 이는 대표 이미지 원문에 명시된 정책이 아닌 구현 결정으로 기획 확인 대상입니다. 사진 탭의 전체 사진 6구간 분할 정책과 공통 Carousel 기본 정책은 변경하지 않습니다.
 
 - 기준: 기획팀 확인 및 HASHI-PLAN `db27b1e4595b1d1976cedb17f840a7a0e207e5f6`.
@@ -92,10 +95,10 @@
 - request params:
   - path: `restaurantId`
 - response data:
-  - `restaurantId`, `name`, `localName`, `rating`, `reviewCount`, `description`, `address`, `thumbnailUrl`, `imageUrls`, `reservationFee`, `availableDate`, `availableStartTime`, `availableEndTime`
-- loading state: summary/hero skeleton
-- error state: critical query 실패이므로 ErrorBoundary 또는 page error fallback
-- empty state: summary `data`가 없으면 page error fallback
+  - `restaurantId`, `name`, `localName`, `rating`, `reviewCount`, `summary`, `address`, `thumbnailUrl`, `thumbnailImage`, `imageUrls`, `heroImages`, `reservationFee`
+- loading state: 요약/매장 정보 준비 전 page `LoadingScreen`
+- error state: `NotFoundPage`, 자동 재시도 없음
+- empty state: 필수 요약 데이터가 없으면 `NotFoundPage`
 - refetch condition: route param `restaurantId` 변경
 
 - query: restaurant store information
@@ -105,21 +108,21 @@
   - path: `restaurantId`
 - response data:
   - `description`, `businessHours`, `priceRange`
-- loading state: 매장 정보 탭 skeleton
-- error state: 매장 정보 영역 error fallback
-- empty state: 매장 설명/영업시간/가격대가 없으면 비어 있는 항목은 숨김
+- loading state: 요약/매장 정보 준비 전 page `LoadingScreen`
+- error state: `NotFoundPage`, 자동 재시도 없음
+- empty state: 필수 응답 누락은 조회 실패로 처리하고 설명/영업시간/가격은 mapper fallback 적용
 - refetch condition: route param `restaurantId` 변경
 
 - query: restaurant menus infinite
 - endpoint: `GET /api/v1/restaurants/{restaurantId}/menus`
-- enabled condition: route param `restaurantId` is valid number
+- enabled condition: 유효한 `restaurantId`이고 메뉴 탭이 active
 - request params:
   - path: `restaurantId`
   - query: `cursor`, `size`
 - response data:
   - `content`, `nextCursor`, `hasNext`
-- loading state: 첫 메뉴 페이지가 준비되기 전에는 page `LoadingScreen`을 표시하고, 메뉴 영역 skeleton은 사용하지 않음
-- error state: 메뉴 영역 error fallback
+- loading state: 페이지는 유지하고 메뉴 영역에 로딩 문구 표시; 별도 skeleton 없음
+- error state: 최초 실패는 메뉴 영역 재시도, 추가 조회 실패는 기존 목록 유지 및 실패한 cursor 재시도
 - empty state: 메뉴가 없으면 shared `ListEmptyState`로 `메뉴 리스트를 준비중이에요.` 문구 표시
 - refetch condition: route param `restaurantId` 변경
 - pagination:
@@ -127,14 +130,16 @@
   - next page trigger: 메뉴 탭이 active일 때 공통 `useInfiniteScrollTrigger` sentinel intersect
 
 - query: restaurant reviews infinite
-- requested endpoint: `GET /api/v1/restaurants/{restaurantId}/reviews`
+- endpoint: `GET /api/v1/restaurants/{restaurantId}/reviews`
 - response data:
   - `averageRating`, `reviewCount`, `ratingDistribution`, `content`, `nextCursor`, `hasNext`
-- enabled condition: route param `restaurantId` is valid number
+- enabled condition: 유효한 `restaurantId`이고 리뷰 탭이 active
 - request params:
   - path `restaurantId`, query `sort`, `cursor`, `size`
 - loading state: 리뷰 목록 조회 또는 정렬 변경 중에는 리뷰 목록 영역에만 `RestaurantReviewListSkeleton` 표시
-- error state: 리뷰 영역 error fallback
+- error state: 최초 실패는 리뷰 영역 재시도, 추가 조회 실패는 기존 목록 유지 및 실패한 cursor 재시도
+- sort: 새 정렬 첫 페이지 조회 성공 시 선택 정렬/목록을 전환하며 실패 시 기존 정렬/목록을 유지하고 Toast 표시
+- re-entry: 메뉴 상세에서 리뷰 탭으로 돌아와도 기존 페이지 캐시를 초기화하고 최신순 첫 페이지부터 조회
 - empty state: 리뷰가 없으면 shared `ListEmptyState`로 `작성된 리뷰가 없습니다.` 문구 표시
 - rating distribution: API `ratingDistribution`의 `five`, `four`, `three`, `two`, `one` count를 `reviewCount` 기준 비율로 변환해 별점 막대 너비에 반영
 - refetch condition: route param `restaurantId` 또는 sort 변경
@@ -143,12 +148,18 @@
   - next page trigger: 공통 `useInfiniteScrollTrigger` sentinel intersect
 
 - query: restaurant photos
-- endpoint: TBD (서버 계약 확인 전 임의 확정하지 않음)
+- endpoint: 통합 사진 목록/필터/count 계약 미확정 (임의 endpoint를 만들지 않음)
 - status: 개발·테스트 전용 목데이터 기반 UI 구현, 실제 API 연동은 후속
 - data source: `RestaurantPhotoSource`는 클라이언트 내부 인터페이스이며 서버 계약이 아닙니다. `createRestaurantPhotoSource`에서 목데이터를 제공하고 실제 API는 계약 확인 후 adapter로 연결합니다.
 - pagination: 최초 및 추가 조회 각각 20장, 필터 변경 시 목록과 스크롤 초기화
 - loading/empty/error: 개발 UI에서 Photo Policy 기준으로 구분합니다. 공통 빈 상태·버튼·이미지 fallback을 사용하며 상태별 최종 시각 디자인 확인은 별도입니다.
 - count: 칩별 공개 사진 수 및 필터와 무관한 전체 공개 사진 수. 실제 응답 필드명은 서버 확인 대기
+
+- query: restaurant save summary (`useRestaurantSaveSummary`)
+- endpoints: 공개 `GET /api/v1/restaurants/save-counts`, 로그인 전용 `GET /api/v1/users/me/restaurant-saves`; query `restaurantIds`
+- enabled condition: 유효한 식당 ID; saved-state query는 로그인 시에만 실행
+- cache: count는 식당 ID, saved는 식당 ID + `sessionVersion`으로 분리하며 로그아웃/세션 전환 시 이전 saved 응답을 재사용하지 않음
+- fallback: count 미확인/실패 시 숫자를 숨기고 saved는 false; 임의의 `0`을 만들지 않음
 
 ### Mutation
 
@@ -179,9 +190,12 @@
 - derived state:
   - bottom bar variant from page variant
   - `RestaurantMainResponse` + `RestaurantStoreInformationResponse` + menu/review pages to `RestaurantDetail`
-  - like count fixed to `0` during MVP
+  - public save count and session-scoped authenticated saved state
 
 ## UI Structure
+
+페이지는 조회·오류·진입 경로를 담당하고 `content`와 `actions`를 공통 템플릿에 전달한다.
+탭·이미지 뷰어·작성 불가 모달 상태는 `useRestaurantDetailContent`가 관리하며, 인증 안내와 액션 연결은 `useRestaurantDetailActions` 및 템플릿이 공유한다.
 
 ```text
 RestaurantDetailPage
@@ -192,7 +206,7 @@ RestaurantDetailPage
     Sticky Tabs
     Active Tab Section
       RestaurantInfoSection
-        Map ImageFallback
+        Address (map preview deferred)
       RestaurantMenuListSection
       RestaurantPhotoSection
         RestaurantPhotoViewer
@@ -239,9 +253,10 @@ RestaurantDetailPage
   - `ReviewUnavailableModal`
 - feature api/query:
   - `getRestaurantSummary`
-  - `getStoreInformation`
+  - `getRestaurantStoreInformation`
   - `getRestaurantMenus`
-  - restaurant reviews list query, endpoint confirmation required
+  - `getRestaurantReviews`
+  - `useRestaurantSaveSummary`
   - restaurant detail view model mapper
 - shared hook:
   - `useInfiniteScrollTrigger`
@@ -268,7 +283,9 @@ RestaurantDetailPage
 
 - `TodayRestaurantPage`와 `RestaurantDetailPage`는 같은 상세 템플릿을 사용하므로 API 함수, query hook, 응답-to-UI mapper는 `features/restaurantDetail`에 둡니다.
 - route param `restaurantId`는 숫자로 변환/검증한 뒤 query key와 request path에 사용합니다. 유효하지 않은 값이면 서버 요청 전에 page error fallback으로 보냅니다.
-- 찜 기능은 MVP 제외입니다. 저장 API/저장 상태 query는 만들지 않고 UI count만 `0`으로 고정합니다.
+- 저장 수/저장 여부는 읽기 API를 사용하며 저장 chooser/쓰기 UI는 연결하지 않습니다.
+- 메뉴 `listImage`/`detailImage`, 리뷰 `reviewerProfileImage`는 READY `defaultSource.url`만 사용합니다. asset이 없을 때만 기존 URL을 사용하고 처리 중/실패 asset은 fallback 표시합니다.
+- 서버에 last-order 필드가 없으므로 `lastOrderTime`은 optional이며 `closeTime`으로 생성하지 않습니다. 현재 UI는 이 필드를 소비하지 않습니다.
 - 메뉴/리뷰 무한스크롤은 직접 `IntersectionObserver`를 page에 구현하지 않고, 공통 `useInfiniteScrollTrigger` 훅으로 sentinel ref와 intersect 상태를 받아 다음 페이지 요청을 트리거합니다.
 
 ## Styling

@@ -7,6 +7,9 @@ export type MypageSummary = {
 
 export type MypageMenuAction =
   | {
+      type: 'logout'
+    }
+  | {
       type: 'comingSoon'
     }
   | {

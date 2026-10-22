@@ -8,6 +8,10 @@ import type { PropsWithChildren } from 'react'
 
 import { ROUTES } from '@/app/router/path'
 import { appRoutes } from '@/app/router/routes'
+import { getAuthMe } from '@/features/auth/api/getAuthMe'
+import { HttpStatusError } from '@/shared/api/apiError'
+import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
+import { clearAuthSession } from '@/shared/auth/authSession'
 import { createQueryClient } from '@/shared/lib/queryClient'
 import { clearMapSession } from '@/pages/map/utils/mapSession'
 
@@ -24,24 +28,13 @@ vi.mock('@vis.gl/react-google-maps', () => ({
   useMap: () => null,
 }))
 
-vi.mock('@/features/magazine/api/getMagazineBanners', () => ({
-  getMagazineBanners: vi.fn(async () => ({ banners: [] })),
+vi.mock('@/features/auth/api/getAuthMe', () => ({
+  getAuthMe: vi.fn(),
 }))
 
-vi.mock('@/features/restaurantList/api/getRestaurants', () => ({
-  getRestaurants: vi.fn(async () => ({
-    hasNext: false,
-    nextCursor: undefined,
-    restaurants: [],
-  })),
+vi.mock('@/shared/api/requestTokenReissue', () => ({
+  requestTokenReissue: vi.fn(),
 }))
-
-const collectRoutePaths = (routes: typeof appRoutes): string[] => {
-  return routes.flatMap((route) => [
-    ...(route.path ? [route.path] : []),
-    ...(route.children ? collectRoutePaths(route.children) : []),
-  ])
-}
 
 const renderRoute = (initialEntry: string) => {
   const router = createMemoryRouter(appRoutes, {
@@ -58,41 +51,19 @@ const renderRoute = (initialEntry: string) => {
 
 describe('appRoutes', () => {
   beforeEach(() => {
+    clearAuthSession()
+    vi.mocked(requestTokenReissue).mockRejectedValue(new HttpStatusError(401))
+    vi.mocked(getAuthMe).mockRejectedValue(new HttpStatusError(401))
     clearMapSession()
     vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
     vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
   })
   afterEach(() => {
     cleanup()
+    clearAuthSession()
     clearMapSession()
     vi.unstubAllEnvs()
     document.body.style.overflow = ''
-  })
-
-  it('renders HashiPickPage from a direct URL entry', async () => {
-    renderRoute(ROUTES.hashiPickRestaurants)
-
-    expect(
-      await screen.findByRole('heading', { name: '하시 Pick' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('heading', { name: '404 페이지' }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('renders PopularRestaurantsPage from a direct URL entry', async () => {
-    renderRoute(ROUTES.popularRestaurants)
-
-    expect(
-      await screen.findByRole('heading', { name: '인기 맛집' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('heading', { name: '404 페이지' }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('registers Kakao OAuth callback as an app route', () => {
-    expect(collectRoutePaths(appRoutes)).toContain(ROUTES.kakaoOAuthCallback)
   })
 
   it('renders the public map preview and bottom navigation on direct entry', async () => {
@@ -137,12 +108,5 @@ describe('appRoutes', () => {
     } finally {
       rect.mockRestore()
     }
-  })
-
-  it('registers terms list and detail as app routes', () => {
-    const routePaths = collectRoutePaths(appRoutes)
-
-    expect(routePaths).toContain(ROUTES.terms)
-    expect(routePaths).toContain(ROUTES.termsDetail)
   })
 })

@@ -7,6 +7,7 @@ import type {
 import type { RestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
 import type { RestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import type { RestaurantDetail } from '@/features/restaurantDetail/types/restaurantDetail'
+import type { components } from '@/shared/api/generated/openapi'
 
 const DAY_LABEL_BY_API_DAY = {
   MONDAY: '월',
@@ -56,7 +57,9 @@ const formatBusinessHours = (
   const dayLabel = dayOfWeek ? DAY_LABEL_BY_API_DAY[dayOfWeek] : undefined
 
   if (hours.closed || !hours.openTime || !hours.closeTime) {
-    return dayLabel ? { day: dayLabel, hours: '휴무' } : null
+    return dayLabel
+      ? { day: dayLabel, hours: hours.closed ? '휴무' : '영업시간 정보 없음' }
+      : null
   }
 
   const breakHours =
@@ -88,26 +91,10 @@ const formatBusinessHoursSummary = (
   const dateLabel = formatDateLabel(now)
 
   if (!hasOpenBusinessHours(todayHours)) {
-    return `${dateLabel} 휴무`
+    return `${dateLabel} ${todayHours?.closed ? '휴무' : '영업시간 정보 없음'}`
   }
 
   return `${dateLabel} ${todayHours.openTime} ~ ${todayHours.closeTime}`
-}
-
-const formatLastOrderTime = (
-  businessHours: RestaurantStoreInformation['businessHours'],
-  now: Date,
-) => {
-  const todayApiDay = API_DAY_BY_DATE_DAY[now.getDay()]
-  const todayHours = businessHours.find(
-    (hours) => normalizeDayOfWeek(hours.dayOfWeek) === todayApiDay,
-  )
-
-  if (!hasOpenBusinessHours(todayHours)) {
-    return '영업시간 정보 없음'
-  }
-
-  return todayHours.closeTime
 }
 
 const formatPriceRange = (
@@ -154,8 +141,18 @@ const createRatingDistribution = (
   one: ratingDistribution?.one ?? 0,
 })
 
+const getImageUrl = (
+  image: components['schemas']['MediaImage'] | undefined,
+  legacyUrl: string | undefined,
+) =>
+  image
+    ? image.status === 'READY'
+      ? image.defaultSource?.url
+      : undefined
+    : legacyUrl
+
 export const createRestaurantMenusViewModel = (
-  menus: RestaurantMenuResponse[],
+  menus: (RestaurantMenuResponse | RestaurantMenuDetailResponse)[],
 ) =>
   menus.flatMap((menu) => {
     if (menu.menuId === undefined || !menu.name) {
@@ -169,7 +166,14 @@ export const createRestaurantMenusViewModel = (
       priceCurrency: menu.currency ?? 'JPY',
       price: menu.price === undefined ? '' : formatNumber(menu.price),
       isRepresentative: menu.main,
-      imageUrl: menu.imageUrl,
+      imageUrl: getImageUrl(
+        'detailImage' in menu
+          ? menu.detailImage
+          : 'listImage' in menu
+            ? menu.listImage
+            : undefined,
+        menu.imageUrl,
+      ),
     }
   })
 
@@ -188,8 +192,10 @@ const createReviews = (reviews: ReviewSummaryResponse[]) =>
     return {
       id: String(review.reviewId),
       reviewerName,
-      reviewerProfileImageUrl:
+      reviewerProfileImageUrl: getImageUrl(
+        review.reviewerProfileImage,
         review.reviewerProfileImageUrl ?? review.profileImageUrl,
+      ),
       rating: review.rating ?? 0,
       date: formatReviewDate(review.createdAt),
       content: review.content ?? '',
@@ -238,7 +244,6 @@ export const createRestaurantDetailViewModel = ({
     rating: averageRating ?? summary.rating ?? 0,
     reviewCount: reviewCount ?? summary.reviewCount ?? 0,
     ratingDistribution: createRatingDistribution(ratingDistribution),
-    likeCount: '0',
     summary: summary.summary ?? '',
     address: summary.address,
     businessHoursSummary: formatBusinessHoursSummary(
@@ -247,10 +252,17 @@ export const createRestaurantDetailViewModel = ({
     ),
     deposit: formatWon(summary.reservationFee),
     detailDescription: storeInformation.description ?? summary.summary ?? '',
-    lastOrderTime: formatLastOrderTime(storeInformation.businessHours, now),
     businessHours,
     priceRange: formatPriceRange(storeInformation.priceRange),
-    heroImages: summary.imageUrls,
+    heroImages:
+      Array.isArray(summary.heroImages) && summary.heroImages.length
+        ? [...summary.heroImages]
+            .sort(
+              (first, second) =>
+                (first?.displayOrder ?? 0) - (second?.displayOrder ?? 0),
+            )
+            .map((hero) => getImageUrl(hero?.image, hero?.legacyUrl))
+        : [...summary.imageUrls],
     menus: createRestaurantMenusViewModel(menus),
     reviews: createReviews(reviews),
   }

@@ -109,7 +109,7 @@ Jira: HASHI-112
 - request header:
   - `Authorization: Bearer {accessToken}`
 - follow-up API authorization:
-  - after `setAccessToken`, shared `request` injects the same bearer header unless a caller provides an explicit Authorization header.
+  - `startAuthenticatedSession`으로 새 세션을 시작하고, shared `request`가 해당 bearer header를 주입한다. 명시적인 Authorization header는 유지한다.
 - failure handling:
   - `ROUTES.loginRequired`로 replace 이동
 
@@ -117,6 +117,7 @@ Jira: HASHI-112
 
 - local state:
   - `hasHandledCallbackRef`: StrictMode 중복 실행 방어
+  - `activeCallbackRef`: 현재 콜백 URL과 페이지 활성 상태 확인. 페이지 이탈·URL 변경·세션 버전 변경 후 도착한 응답은 세션 변경과 이동을 실행하지 않는다.
 - URL state:
   - `code`
   - `state`

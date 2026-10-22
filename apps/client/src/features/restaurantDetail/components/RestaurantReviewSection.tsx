@@ -32,6 +32,7 @@ interface RestaurantReviewSectionProps {
   reviews: RestaurantReview[]
   hasMoreReviews: boolean
   isReviewListError?: boolean
+  isNextPageError?: boolean
   isReviewListLoading: boolean
   loadMoreRef: Ref<HTMLDivElement>
   selectedSort: ReviewSortValue
@@ -123,6 +124,7 @@ export const RestaurantReviewSection = ({
   reviews,
   hasMoreReviews,
   isReviewListError = false,
+  isNextPageError = false,
   isReviewListLoading,
   loadMoreRef,
   selectedSort,
@@ -192,18 +194,20 @@ export const RestaurantReviewSection = ({
           <h2 className="typo-sub-header-1 text-primary-200 flex gap-1">
             리뷰 <span className="text-warm-gray-300">{reviewCount}</span>
           </h2>
-          <div className="border-warm-gray-50 mt-4 flex h-[46px] gap-2 border-b">
-            {REVIEW_SORT_OPTIONS.map((option) => (
-              <Chip
-                className="h-8 px-3 py-0"
-                key={option.value}
-                onSelectedChange={() => onSelectSort(option.value)}
-                selected={selectedSort === option.value}
-              >
-                {option.label}
-              </Chip>
-            ))}
-          </div>
+          {reviewCount > 0 ? (
+            <div className="border-warm-gray-50 mt-4 flex h-[46px] gap-2 border-b">
+              {REVIEW_SORT_OPTIONS.map((option) => (
+                <Chip
+                  className="h-8 px-3 py-0"
+                  key={option.value}
+                  onSelectedChange={() => onSelectSort(option.value)}
+                  selected={selectedSort === option.value}
+                >
+                  {option.label}
+                </Chip>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className={REVIEW_CONTENT_WIDTH_CLASS_NAME}>
@@ -231,7 +235,7 @@ export const RestaurantReviewSection = ({
             reviews.map((review) => (
               <article
                 className="border-warm-gray-100 flex flex-col gap-4 overflow-hidden border-b pt-5 pb-7 last:border-b-0 last:pb-0"
-                key={review.id}
+                key={`${selectedSort}:${review.id}`}
               >
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
@@ -288,7 +292,14 @@ export const RestaurantReviewSection = ({
               </article>
             ))
           )}
-          {!isReviewListLoading && hasMoreReviews ? (
+          {isNextPageError ? (
+            <div className="flex flex-col items-center gap-3 py-5">
+              <p role="alert">리뷰를 더 불러오지 못했어요.</p>
+              <Button size="sm" onClick={onRetryReviewList}>
+                리뷰 다시 불러오기
+              </Button>
+            </div>
+          ) : !isReviewListLoading && hasMoreReviews ? (
             <div
               ref={loadMoreRef}
               aria-hidden="true"

@@ -138,6 +138,16 @@ export const SearchPage = () => {
     navigate(ROUTES.home)
   }
 
+  const handleKeywordClear = () => {
+    setKeyword('')
+    if (mapContext) return
+    updateSearchUrlState({
+      keyword: '',
+      sort: DEFAULT_SORT_VALUE,
+      category: DEFAULT_FOOD_CATEGORY_VALUE,
+    })
+  }
+
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <div className="app-mobile-fixed-top z-fixed bg-white">
@@ -146,6 +156,7 @@ export const SearchPage = () => {
           keyword={keyword}
           onBackClick={handleBackClick}
           onKeywordChange={setKeyword}
+          onKeywordClear={handleKeywordClear}
           onSearchSubmit={() => {
             submitSearch()
           }}

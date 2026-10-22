@@ -10,6 +10,36 @@ afterEach(() => {
 })
 
 describe('RestaurantDetailHero', () => {
+  it('keeps fallback slots in the carousel and recovers when their URLs become ready', () => {
+    const root = vi.spyOn(Carousel, 'Root')
+    const { container, rerender } = render(
+      <RestaurantDetailHero
+        imageUrls={[undefined, '/ready.webp', undefined]}
+      />,
+    )
+    const slides = container.querySelectorAll('[aria-roledescription="slide"]')
+    expect(slides).toHaveLength(3)
+    expect(
+      slides[0]?.querySelector('[data-slot="image-fallback"]'),
+    ).toBeInTheDocument()
+    expect(slides[1]?.querySelector('img')).toHaveAttribute(
+      'src',
+      '/ready.webp',
+    )
+    expect(
+      slides[2]?.querySelector('[data-slot="image-fallback"]'),
+    ).toBeInTheDocument()
+    act(() => root.mock.calls.at(-1)?.[0].onIndexChange?.(2))
+    rerender(
+      <RestaurantDetailHero
+        imageUrls={[undefined, '/ready.webp', '/new.webp']}
+      />,
+    )
+    expect(root.mock.calls.at(-1)?.[0].index).toBe(2)
+    const image = container.querySelector('img[src="/new.webp"]')
+    expect(image).toBeInTheDocument()
+  })
+
   it('keeps images 7 through 10 on the sixth dot in both directions', () => {
     const root = vi.spyOn(Carousel, 'Root')
     render(

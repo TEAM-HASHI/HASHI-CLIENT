@@ -6,7 +6,6 @@ import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestauran
 import { getRestaurantMenu } from '@/features/restaurantDetail/api/getRestaurantMenu'
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
-import { getRestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 
 vi.mock('@/shared/api/request', () => ({
@@ -19,6 +18,28 @@ describe('restaurant detail API', () => {
   beforeEach(() => {
     mockedRequest.mockReset()
   })
+
+  it.each([
+    null,
+    { content: [], hasNext: true },
+    { content: [], hasNext: true, nextCursor: 5 },
+  ])(
+    'rejects invalid list pagination instead of showing empty data or looping: %j',
+    async (response) => {
+      mockedRequest.mockResolvedValue(response)
+      await expect(
+        getRestaurantMenus({ restaurantId: 10, cursor: 5, size: 10 }),
+      ).rejects.toThrow()
+      await expect(
+        getRestaurantReviews({
+          restaurantId: 10,
+          cursor: 5,
+          size: 5,
+          sort: 'latest',
+        }),
+      ).rejects.toThrow()
+    },
+  )
 
   it('gets restaurant summary', async () => {
     mockedRequest.mockResolvedValue({
@@ -63,19 +84,6 @@ describe('restaurant detail API', () => {
 
     expect(mockedRequest).toHaveBeenCalledWith(
       '/api/v1/restaurants/recommendations/random?excludeRestaurantId=10',
-    )
-  })
-
-  it('gets restaurant store information', async () => {
-    mockedRequest.mockResolvedValue({
-      restaurantId: 10,
-      businessHours: [],
-    })
-
-    await getRestaurantStoreInformation(10)
-
-    expect(mockedRequest).toHaveBeenCalledWith(
-      '/api/v1/restaurants/10/store-information',
     )
   })
 
