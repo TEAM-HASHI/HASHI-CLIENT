@@ -1,4 +1,5 @@
 import { DragPanel, showToast } from '@hashi/hds-ui'
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
@@ -19,6 +20,7 @@ import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
 import { useMapPageState } from '@/pages/map/hooks/useMapPageState'
 import { useMapRestaurantSaves } from '@/pages/map/hooks/useMapRestaurantSaves'
 import { MapSavedCollectionsSheet } from '@/pages/map/components/MapSavedCollectionsSheet'
+import { CollectionTargetQueryDialog } from '@/pages/saved/components/CollectionTargetQueryDialog'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 import type { MapConditions, MapPanelStage } from '@/pages/map/types'
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
@@ -27,6 +29,7 @@ import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
 export const MapPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { isAuthenticated } = useAuthStatus()
   const [initial] = useState(() => readMapSession())
   const state = useMapPageState(initial)
@@ -39,6 +42,16 @@ export const MapPage = () => {
   const [previousStatus, setPreviousStatus] = useState(state.status)
   const [comingSoon, setComingSoon] = useState(false)
   const [savedCollectionsOpen, setSavedCollectionsOpen] = useState(false)
+  const [savingRestaurantId, setSavingRestaurantId] = useState<number | null>(null)
+  const openRestaurantSave = (restaurantId: string) => {
+    if (!isAuthenticated) {
+      navigate(ROUTES.loginRequired)
+      return
+    }
+    const id = Number(restaurantId)
+    if (!Number.isSafeInteger(id) || id <= 0) return
+    setSavingRestaurantId(id)
+  }
   const openSavedCollections = () => {
     if (!isAuthenticated) {
       navigate(ROUTES.loginRequired)
@@ -381,7 +394,7 @@ export const MapPage = () => {
                 handleConditionsChange({ sort })
               }}
               onSelect={handleSelect}
-              onSave={() => setComingSoon(true)}
+              onSave={openRestaurantSave}
             />
           </DragPanel>
         </div>
@@ -403,6 +416,17 @@ export const MapPage = () => {
               { state: { source: 'map' } },
             )
           }
+        />
+      )}
+      {isAuthenticated && savingRestaurantId !== null && (
+        <CollectionTargetQueryDialog
+          mode="save"
+          restaurantId={savingRestaurantId}
+          onClose={() => {
+            setSavingRestaurantId(null)
+            void queryClient.invalidateQueries({ queryKey: ['map', 'saved'] })
+            void queryClient.invalidateQueries({ queryKey: ['map', 'saveCounts'] })
+          }}
         />
       )}
       <MapSavedCollectionsSheet
