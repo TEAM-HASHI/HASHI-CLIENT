@@ -13,4 +13,4 @@
 - MapPinTailIcon preserves the original 8×5 silhouette; the app supplies its size and white color.
 - Collection assets are not imported. HDS contains reusable artwork only, without restaurant records, selection behavior, routes or map SDK dependencies.
 - Map background is rendered by Google Maps. Files in `preview/` remain sample photos, not authoritative coordinates.
-- `loading-spinner.svg`: Figma `10089:135605` original loading artwork (80×80); `error-mark.svg`: error frame `9984:106067` original empty/error illustration. These are page state illustrations, not duplicate marker glyphs. `MapStatusView` owns animation/reduced-motion and product copy.
+- `loading-spinner.svg`: Figma `10578:32112` loading artwork (80×80), with the exported white background rectangle removed so only the arc rotates over the map. Arc geometry, color and dimensions are preserved. `error-mark.svg`: error frame `9984:106067` original empty/error illustration. These are page state illustrations, not duplicate marker glyphs. `MapStatusView` owns animation/reduced-motion and product copy.

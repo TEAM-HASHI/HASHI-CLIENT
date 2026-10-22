@@ -516,6 +516,20 @@ test('initial list loading matches the Figma spinner-only panel geometry', async
     expect(spinner!.height).toBe(80)
     expect(spinner!.x - box!.x).toBeCloseTo(156.5, 0)
     expect(spinner!.y - box!.y).toBeCloseTo(143, 0)
+    const spinnerImage = panel.locator('[role="status"] img')
+    await expect(spinnerImage).toHaveJSProperty('complete', true)
+    const pixels = await spinnerImage.evaluate((element: HTMLImageElement) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = canvas.height = 80
+      const context = canvas.getContext('2d')!
+      context.drawImage(element, 0, 0)
+      return {
+        cornerAlpha: context.getImageData(0, 0, 1, 1).data[3],
+        centerAlpha: context.getImageData(40, 40, 1, 1).data[3],
+        arcAlpha: context.getImageData(40, 18, 1, 1).data[3],
+      }
+    })
+    expect(pixels).toEqual({ cornerAlpha: 0, centerAlpha: 0, arcAlpha: 255 })
     await page.screenshot({
       path: test.info().outputPath('figma-loading-panel.png'),
     })
