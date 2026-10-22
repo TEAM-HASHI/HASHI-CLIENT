@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { showToast } from '@hashi/hds-ui'
 
 import { ROUTES } from '@/app/router/path'
 import { parseMapSearchContext } from '@/features/mapSearch/utils/parseMapSearchContext'
@@ -102,8 +103,20 @@ export const SearchPage = () => {
     const normalizedKeyword = nextKeyword.trim()
 
     if (mapContext) {
-      if (!normalizedKeyword) {
-        setKeyword('')
+      if (!normalizedKeyword || normalizedKeyword === '#') {
+        if (!normalizedKeyword) setKeyword('')
+        showToast({ children: '검색어를 입력해주세요.' })
+        return
+      }
+      if (
+        normalizedKeyword.startsWith('#') &&
+        /\s/.test(normalizedKeyword.slice(1))
+      ) {
+        showToast({ children: '해시태그 검색에는 공백을 사용할 수 없어요.' })
+        return
+      }
+      if (normalizedKeyword.length > 30) {
+        setKeyword(normalizedKeyword.slice(0, 30))
         return
       }
       saveRecentSearchKeyword(normalizedKeyword)
@@ -154,6 +167,7 @@ export const SearchPage = () => {
         <SearchHeader
           inputRef={searchInputRef}
           keyword={keyword}
+          maxLength={mapContext ? 30 : undefined}
           onBackClick={handleBackClick}
           onKeywordChange={setKeyword}
           onKeywordClear={handleKeywordClear}

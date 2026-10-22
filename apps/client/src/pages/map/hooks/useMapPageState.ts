@@ -1,153 +1,382 @@
-import { useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { MapNewQuery, MapPageRequest } from '@/pages/map/api/mapApiTypes'
 import {
-  MAP_PREVIEW_AREAS,
-  MAP_PREVIEW_RESTAURANTS,
-} from '@/pages/map/data/mapPreviewRestaurants'
-import {
-  queryMapPreview,
-  type MapPreviewSource,
-} from '@/pages/map/data/queryMapPreview'
+  mapRegionsQueryOptions,
+  mapRestaurantLocationQueryOptions,
+} from '@/pages/map/queries/mapQueryOptions'
+import { useMapRestaurantsQuery } from '@/pages/map/queries/useMapRestaurantsQuery'
 import type {
   MapBounds,
   MapCameraSnapshot,
   MapConditions,
-  MapRestaurant,
   MapSessionSnapshot,
   MapPosition,
 } from '@/pages/map/types'
-import { getMapAreaMarkers } from '@/pages/map/utils/getMapAreaMarkers'
 import { getMapDisplayMode } from '@/pages/map/utils/mapDisplayPolicy'
+import { checkHasHttpStatus, isApiError } from '@/shared/api/apiError'
 
-const AREA_MARKERS = getMapAreaMarkers(
-  MAP_PREVIEW_AREAS,
-  MAP_PREVIEW_RESTAURANTS,
-)
 const INITIAL_CONDITIONS: MapConditions = {
   keyword: '',
   category: 'all',
   areaCode: null,
   sort: 'recommended',
 }
-type Reason = 'initial' | 'area' | 'viewport' | 'conditions' | 'sort' | 'search'
-type EmptyKind = 'region' | 'conditions'
+type Reason =
+  | 'initial'
+  | 'area'
+  | 'viewport'
+  | 'conditions'
+  | 'sort'
+  | 'search'
+  | 'recovery'
+interface MapRequest {
+  version: number
+  conditions: MapConditions
+  bounds: MapBounds | null
+  reason: Reason
+  camera: MapCameraSnapshot | null
+  sessionId?: string
+  recoveryQuery?: MapNewQuery
+  isFiltered: boolean
+}
+const apiSort = (sort: MapConditions['sort']) =>
+  sort === 'recommended' ? 'recommend' : sort
+const hasStatus = (error: unknown, status: number) =>
+  checkHasHttpStatus(error) && error.status === status
+const validTime = (value?: string) => !!value && Date.parse(value) > Date.now()
 
-export const useMapPageState = (
-  source: MapPreviewSource = queryMapPreview,
-  initial: MapSessionSnapshot | null = null,
-) => {
-  const [draft, setDraft] = useState(initial?.conditions.keyword ?? '')
+export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
+  const regions = useQuery(mapRegionsQueryOptions())
   const [conditions, setConditions] = useState(
     initial?.conditions ?? INITIAL_CONDITIONS,
   )
-  const [selectedId, setSelectedId] = useState<string | null>(
-    initial?.selectedId ?? null,
-  )
-  const [searchBounds, setSearchBounds] = useState<MapBounds | null>(
-    initial?.searchBounds ?? null,
-  )
+  const [draft, setDraft] = useState(initial?.conditions.keyword ?? '')
+  const [selectedId, setSelectedId] = useState(initial?.selectedId ?? null)
   const [resetVersion, setResetVersion] = useState(0)
+  const [isExploring, setIsExploring] = useState(initial?.isExploring ?? false)
+  const [cameraSnapshot, setCameraSnapshot] = useState(initial?.camera ?? null)
+  const camera = useRef(initial?.camera ?? null)
+  const [cameraRequest, setCameraRequest] = useState(initial?.camera ?? null)
   const [searchPositions, setSearchPositions] = useState<MapPosition[] | null>(
     null,
   )
-  const [isExploring, setIsExploring] = useState(initial?.isExploring ?? false)
-  const camera = useRef<MapCameraSnapshot | null>(initial?.camera ?? null)
-  const [cameraSnapshot, setCameraSnapshot] = useState(initial?.camera ?? null)
-  const [cameraRequest, setCameraRequest] = useState<MapCameraSnapshot | null>(
-    initial?.camera ?? null,
-  )
-  const [request, setRequest] = useState({
-    conditions: initial?.conditions ?? INITIAL_CONDITIONS,
-    bounds: initial?.searchBounds ?? (null as MapBounds | null),
-    restored: !!initial?.restaurants,
-    reason: 'initial' as Reason,
-    camera: null as MapCameraSnapshot | null,
-  })
-  const [restaurants, setRestaurants] = useState<MapRestaurant[]>(
-    initial?.restaurants ?? [],
-  )
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
-    initial?.restaurants ? 'success' : 'loading',
-  )
-  const [emptyKind, setEmptyKind] = useState<EmptyKind>(
+  const [emptyKind, setEmptyKind] = useState<'region' | 'conditions'>(
     initial?.emptyKind ?? 'conditions',
   )
   const [emptyEvent, setEmptyEvent] = useState<{
     id: number
-    kind: EmptyKind
+    kind: 'region' | 'conditions'
   } | null>(null)
-  const [nextCursor, setNextCursor] = useState<string | undefined>(
-    initial?.nextCursor,
+  const [notice, setNotice] = useState<{ id: number; message: string } | null>(
+    null,
   )
-  const [nextError, setNextError] = useState(false)
-  const [loadingNext, setLoadingNext] = useState(false)
-  const generation = useRef(0)
-  const nextPending = useRef(false)
-  const emptyKindRef = useRef<EmptyKind>(initial?.emptyKind ?? 'conditions')
-
-  useEffect(() => {
-    if (request.restored) return
-    const requestGeneration = generation
-    const id = ++generation.current
-    nextPending.current = false
-    void source(request)
-      .then((result) => {
-        if (generation.current !== id) return
-        setRestaurants(result.restaurants)
-        setNextCursor(result.nextCursor)
-        setStatus('success')
-        const kind =
-          request.reason === 'sort'
-            ? emptyKindRef.current
-            : request.reason === 'viewport' || request.reason === 'area'
-              ? 'region'
-              : 'conditions'
-        emptyKindRef.current = kind
-        setEmptyKind(kind)
-        if (!result.restaurants.length) setEmptyEvent({ id, kind })
-        if (request.camera) setCameraRequest({ ...request.camera })
-        if (request.reason === 'search' && request.conditions.keyword)
-          setSearchPositions(result.restaurants.map((item) => item.position))
-      })
-      .catch(() => {
-        if (generation.current === id) setStatus('error')
-      })
-    return () => {
-      requestGeneration.current++
+  const [clock, setClock] = useState(Date.now)
+  const [retryAt, setRetryAt] = useState(0)
+  const sequence = useRef(0)
+  const [request, setRequest] = useState<MapRequest>({
+    version: 0,
+    conditions: initial?.conditions ?? INITIAL_CONDITIONS,
+    bounds: initial?.searchBounds ?? null,
+    reason: 'initial',
+    camera: null,
+    isFiltered: !!initial?.searchBounds,
+  })
+  const [restored] = useState(() => {
+    const data = initial?.queryData
+    return data?.pages.length && validTime(data.pages.at(-1)?.expiresAt)
+      ? data
+      : undefined
+  })
+  const [lastSuccess, setLastSuccess] =
+    useState<MapSessionSnapshot['queryData']>(restored)
+  const lastSuccessRef = useRef(lastSuccess)
+  const bounds = request.bounds ?? regions.data?.initialBounds ?? null
+  const newQuery = useMemo<MapNewQuery | null>(() => {
+    if (request.recoveryQuery) return request.recoveryQuery
+    if (!bounds) return null
+    return {
+      ...bounds,
+      sort: apiSort(request.conditions.sort),
+      ...(request.conditions.areaCode
+        ? { mapRegionId: Number(request.conditions.areaCode) }
+        : {}),
+      ...(request.conditions.keyword.trim()
+        ? { keyword: request.conditions.keyword.trim() }
+        : {}),
+      ...(request.conditions.category !== 'all'
+        ? { placeType: request.conditions.category }
+        : {}),
     }
-  }, [request, source])
+  }, [bounds, request])
+  const inputError = useMemo(() => {
+    const limits = regions.data?.queryLimits
+    if (!newQuery || !limits || request.sessionId) return null
+    const { south, north, west, east } = newQuery
+    const supported = limits.supportedBounds
+    if (
+      south < supported.south ||
+      north > supported.north ||
+      west < supported.west ||
+      east > supported.east
+    )
+      return '이 지역은 아직 지도 검색을 지원하지 않아요.'
+    if (
+      north - south > limits.maxLatitudeSpan ||
+      east - west > limits.maxLongitudeSpan
+    )
+      return '지도를 더 확대해서 검색해주세요.'
+    const keyword = newQuery.keyword ?? ''
+    if (
+      keyword.length > 30 ||
+      (keyword.startsWith('#') &&
+        (keyword.length === 1 || /\s/.test(keyword.slice(1))))
+    )
+      return '검색어는 30자 이내로, 해시태그는 공백 없이 입력해주세요.'
+    return null
+  }, [newQuery, regions.data, request.sessionId])
+  const apiRequest = useMemo<MapPageRequest | null>(() => {
+    if (!regions.data || inputError) return null
+    return request.sessionId
+      ? {
+          querySessionId: request.sessionId,
+          sort: apiSort(request.conditions.sort),
+        }
+      : newQuery
+  }, [regions.data, inputError, request, newQuery])
+  const query = useMapRestaurantsQuery(
+    apiRequest,
+    request.version,
+    request.version === 0 ? restored : undefined,
+  )
+  const currentFirst = query.data?.pages[0]
+  const currentLast = query.data?.pages.at(-1)
+  const settled = useRef(restored ? 0 : -1)
+  useEffect(() => {
+    if (!query.data || !currentFirst || query.isFetchNextPageError) return
+    setLastSuccess(query.data)
+    lastSuccessRef.current = query.data
+    if (settled.current === request.version) return
+    settled.current = request.version
+    const kind =
+      request.reason === 'sort' || request.reason === 'recovery'
+        ? emptyKind
+        : request.reason === 'viewport' || request.reason === 'area'
+          ? 'region'
+          : 'conditions'
+    setEmptyKind(kind)
+    if (!currentFirst.restaurants.length)
+      setEmptyEvent({ id: ++sequence.current, kind })
+    if (request.camera) setCameraRequest({ ...request.camera })
+    if (request.reason === 'search' && request.conditions.keyword) {
+      const result = currentFirst.searchResult
+      const b = result?.bounds
+      setSearchPositions(
+        !b || !result?.totalCount
+          ? []
+          : result.totalCount === 1
+            ? [{ lat: b.south, lng: b.west }]
+            : [
+                { lat: b.south, lng: b.west },
+                { lat: b.north, lng: b.east },
+              ],
+      )
+    }
+  }, [query.data, query.isFetchNextPageError, currentFirst, request, emptyKind])
 
+  const handledError = useRef<Error | null>(null)
+  useEffect(() => {
+    const error = query.error
+    if (!error || query.isFetching || error === handledError.current) return
+    handledError.current = error
+    const prior = lastSuccessRef.current?.pages.at(-1)
+    // Only a failed recovery request is terminal. Once its first page succeeds,
+    // the resulting session may expire independently and must be recoverable.
+    if (
+      hasStatus(error, 410) &&
+      prior &&
+      (request.reason !== 'recovery' || settled.current === request.version)
+    ) {
+      const recovered: MapConditions = {
+        keyword: prior.query.keyword ?? '',
+        category: prior.query.placeType ?? 'all',
+        areaCode: prior.query.mapRegionId
+          ? String(prior.query.mapRegionId)
+          : null,
+        sort:
+          prior.query.sort === 'recommend' ? 'recommended' : prior.query.sort,
+      }
+      setConditions(recovered)
+      setSelectedId(null)
+      setRequest((current) => ({
+        ...current,
+        conditions: recovered,
+        bounds: {
+          south: prior.query.south,
+          north: prior.query.north,
+          west: prior.query.west,
+          east: prior.query.east,
+        },
+        version: current.version + 1,
+        reason: 'recovery',
+        sessionId: undefined,
+        recoveryQuery: prior.query,
+        camera: null,
+      }))
+      return
+    }
+    if (hasStatus(error, 429)) {
+      setRetryAt(Date.now() + 60_000)
+      setNotice({
+        id: ++sequence.current,
+        message: '지도 조회 요청이 많아요. 1분 후 다시 시도해주세요.',
+      })
+    } else if (isApiError(error) && error.code === 'RESTAURANT-016') {
+      setNotice({
+        id: ++sequence.current,
+        message: '지도를 확대하거나 검색 조건을 조정한 후 다시 시도해주세요.',
+      })
+    }
+  }, [query.error, query.isFetching, request.reason, request.version])
+
+  const preservePrevious =
+    hasStatus(query.error, 503) &&
+    !query.data &&
+    !!lastSuccess?.pages.some((page) => page.restaurants.length > 0)
+  const resultData = query.data ?? (preservePrevious ? lastSuccess : undefined)
+  const allRestaurants = useMemo(
+    () => [
+      ...new Map(
+        (resultData?.pages.flatMap((page) => page.restaurants) ?? []).map(
+          (item) => [item.id, item],
+        ),
+      ).values(),
+    ],
+    [resultData],
+  )
+  const location = useQuery({
+    ...mapRestaurantLocationQueryOptions(selectedId ?? ''),
+    enabled:
+      !!selectedId && allRestaurants.some((item) => item.id === selectedId),
+  })
+  // Expired coordinates and their sources must disappear, also after backgrounding.
+  useEffect(() => {
+    const deadlines = allRestaurants
+      .map((item) => Date.parse(item.validUntil ?? ''))
+      .filter((value) => value > Date.now())
+    if (location.data) deadlines.push(Date.parse(location.data.validUntil))
+    if (retryAt > Date.now()) deadlines.push(retryAt)
+    const next = Math.min(...deadlines.filter((value) => value > Date.now()))
+    const timer = Number.isFinite(next)
+      ? window.setTimeout(
+          () => setClock(Date.now()),
+          Math.min(next - Date.now() + 1, 2_147_483_647),
+        )
+      : undefined
+    const refresh = () => setClock(Date.now())
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener('pageshow', refresh)
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener('pageshow', refresh)
+    }
+  }, [allRestaurants, location.data, retryAt, clock])
+  const restaurants = useMemo(
+    () =>
+      allRestaurants.flatMap((item) => {
+        const coordinate =
+          item.id === selectedId && location.data ? location.data : item
+        if (
+          !coordinate.validUntil ||
+          Date.parse(coordinate.validUntil) <= Date.now()
+        )
+          return []
+        return [
+          {
+            ...item,
+            position: coordinate.position,
+            validUntil: coordinate.validUntil,
+            attributions: coordinate.attributions,
+          },
+        ]
+      }),
+    [allRestaurants, selectedId, location.data, clock],
+  )
+  const selectionFailed =
+    !!selectedId &&
+    (!!location.error ||
+      (query.isSuccess &&
+        !query.isFetching &&
+        !allRestaurants.some((item) => item.id === selectedId)) ||
+      (allRestaurants.some((item) => item.id === selectedId) &&
+        !restaurants.some((item) => item.id === selectedId)))
+  const status: 'loading' | 'success' | 'error' =
+    inputError || (query.isError && !query.data && !preservePrevious)
+      ? 'error'
+      : resultData
+        ? 'success'
+        : 'loading'
   const submit = (
     next: MapConditions,
-    bounds: MapBounds | null,
+    nextBounds: MapBounds | null,
     reason: Reason,
+    sessionId?: string,
   ) => {
-    generation.current++
-    setLoadingNext(false)
-    setNextError(false)
-    setStatus('loading')
-    setRestaurants([])
-    setNextCursor(undefined)
-    setEmptyEvent(null)
     setConditions(next)
-    setSearchBounds(bounds)
     setSelectedId(null)
+    setEmptyEvent(null)
     setCameraRequest(null)
     setSearchPositions(null)
-    setRequest({
-      restored: false,
+    setRetryAt(0)
+    setRequest((current) => ({
+      version: current.version + 1,
       conditions: next,
-      bounds,
+      bounds: nextBounds,
       reason,
+      sessionId,
+      isFiltered:
+        reason === 'initial'
+          ? false
+          : reason === 'sort'
+            ? current.isFiltered
+            : true,
       camera: reason === 'area' || reason === 'initial' ? null : camera.current,
-    })
+    }))
   }
   const handleConditionsChange = (patch: Partial<MapConditions>) => {
     const next = { ...conditions, ...patch }
-    const bounds = patch.areaCode
-      ? null
-      : next.areaCode
-        ? searchBounds
-        : (camera.current?.bounds ?? searchBounds)
+    const area = regions.data?.regions.find(
+      (item) => item.code === next.areaCode,
+    )
+    const reason: Reason = patch.areaCode
+      ? 'area'
+      : patch.keyword !== undefined
+        ? 'search'
+        : patch.category !== undefined
+          ? 'conditions'
+          : patch.sort
+            ? 'sort'
+            : 'conditions'
+    const nextBounds = area?.cameraBounds ?? camera.current?.bounds ?? bounds
+    const prior = lastSuccessRef.current?.pages.at(-1)
+    // A session belongs to one successful query, not merely the latest UI chips.
+    const reuseSession =
+      reason === 'sort' &&
+      prior &&
+      query.data &&
+      !query.isFetching &&
+      !query.isError &&
+      validTime(prior.expiresAt) &&
+      nextBounds !== null &&
+      nextBounds.south === prior.query.south &&
+      nextBounds.north === prior.query.north &&
+      nextBounds.west === prior.query.west &&
+      nextBounds.east === prior.query.east &&
+      (prior.query.keyword ?? '') === next.keyword.trim() &&
+      (prior.query.placeType ?? 'all') === next.category &&
+      (prior.query.mapRegionId ? String(prior.query.mapRegionId) : null) ===
+        next.areaCode
     setIsExploring(
       patch.areaCode
         ? true
@@ -160,88 +389,79 @@ export const useMapPageState = (
     )
     submit(
       next,
-      bounds,
-      patch.areaCode
-        ? 'area'
-        : patch.sort
-          ? 'sort'
-          : patch.keyword !== undefined
-            ? 'search'
-            : 'conditions',
+      nextBounds,
+      reason,
+      reuseSession ? prior.querySessionId : undefined,
     )
   }
   const handleReset = () => {
-    generation.current++
     camera.current = null
     setCameraSnapshot(null)
-    setCameraRequest(null)
     setDraft('')
     setIsExploring(false)
-    setResetVersion((version) => version + 1)
-    submit(INITIAL_CONDITIONS, null, 'initial')
+    setLastSuccess(undefined)
+    lastSuccessRef.current = undefined
+    setResetVersion((value) => value + 1)
+    submit(INITIAL_CONDITIONS, regions.data?.initialBounds ?? null, 'initial')
   }
-  const loadNext = () => {
-    if (!nextCursor || nextPending.current || status !== 'success') return
-    nextPending.current = true
-    setLoadingNext(true)
-    setNextError(false)
-    const id = generation.current
-    void source({
-      conditions: request.conditions,
-      bounds: request.bounds,
-      cursor: nextCursor,
-    })
-      .then((result) => {
-        if (generation.current !== id) return
-        setRestaurants((current) => [
-          ...new Map(
-            [...current, ...result.restaurants].map((item) => [item.id, item]),
-          ).values(),
-        ])
-        setNextCursor(result.nextCursor)
-      })
-      .catch(() => {
-        if (generation.current === id) setNextError(true)
-      })
-      .finally(() => {
-        if (generation.current === id) {
-          nextPending.current = false
-          setLoadingNext(false)
-        }
-      })
+  const retryDisabled = retryAt > clock && retryAt > Date.now()
+  const retry = () => {
+    if (retryDisabled || inputError) return
+    if (query.isFetchNextPageError)
+      void query.fetchNextPage({ cancelRefetch: false })
+    else void query.refetch()
   }
   return {
     draft,
     setDraft,
     conditions,
     restaurants,
-    areas: AREA_MARKERS,
-    selectedRestaurant: restaurants.find(({ id }) => id === selectedId) ?? null,
+    areas: regions.data?.regions ?? [],
+    regions: regions.data,
+    regionsStatus: regions.isError
+      ? ('error' as const)
+      : regions.data
+        ? ('success' as const)
+        : ('loading' as const),
+    retryRegions: () => {
+      void regions.refetch()
+    },
+    selectedRestaurant:
+      restaurants.find((item) => item.id === selectedId) ?? null,
+    selectionFailed,
     setSelectedId,
     handleConditionsChange,
     handleReset,
-    searchBounds,
+    searchBounds: request.isFiltered ? bounds : null,
     resetVersion,
     isExploring,
     status,
     emptyKind,
     emptyEvent,
-    nextCursor,
-    nextError,
-    loadingNext,
-    loadNext,
-    retry: () => {
-      setStatus('loading')
-      setRequest((current) => ({ ...current }))
+    notice,
+    errorMessage: inputError ?? undefined,
+    queryData:
+      status === 'success' && !preservePrevious ? query.data : undefined,
+    nextCursor: currentLast?.nextCursor,
+    nextError: query.isFetchNextPageError || preservePrevious,
+    loadingNext: query.isFetchingNextPage,
+    retryDisabled,
+    loadNext: () => {
+      if (retryDisabled) return
+      if (preservePrevious) {
+        retry()
+        return
+      }
+      if (query.hasNextPage && !query.isFetching)
+        void query.fetchNextPage({ cancelRefetch: false })
     },
+    retry,
     cameraRequest,
     searchPositions,
     cameraSnapshot,
     restoreCamera: (value: MapCameraSnapshot | null, wasExploring: boolean) => {
       setCameraRequest(value ? { ...value } : null)
       setIsExploring(wasExploring)
-      // A selection made before the SDK's first idle has no saved camera.
-      // Refit the initial areas without clearing the query or list state.
       if (!value) setResetVersion((current) => current + 1)
     },
     handleCameraChange: (value: MapCameraSnapshot) => {
@@ -252,19 +472,18 @@ export const useMapPageState = (
       if (conditions.areaCode)
         setConditions((current) => ({ ...current, areaCode: null }))
     },
-    handleSearchArea: (bounds: MapBounds) =>
-      submit({ ...conditions, areaCode: null }, bounds, 'viewport'),
+    handleSearchArea: (nextBounds: MapBounds) =>
+      submit({ ...conditions, areaCode: null }, nextBounds, 'viewport'),
     handleExplore: () => setIsExploring(true),
     handleOverview: () => {
       if (conditions.keyword || selectedId) return
       setIsExploring(false)
-      if (conditions.category !== 'all') {
+      if (conditions.category !== 'all')
         submit(
           { ...conditions, category: 'all', areaCode: null },
-          camera.current?.bounds ?? searchBounds,
+          camera.current?.bounds ?? bounds,
           'viewport',
         )
-      }
     },
     handleSelectRestaurant: (id: string) => {
       setIsExploring(true)

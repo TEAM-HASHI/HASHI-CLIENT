@@ -2,7 +2,7 @@ import type { NavigateFunction } from 'react-router-dom'
 
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
 
-export type RestaurantMenuDetailSource = 'today' | 'detail'
+export type RestaurantMenuDetailSource = 'today' | 'detail' | 'map'
 
 export interface RestaurantDetailLocationState {
   activeTab?: RestaurantDetailTab
@@ -38,7 +38,9 @@ export const getRestaurantMenuDetailSourceState = (
 
   const source = (state as RestaurantMenuDetailLocationState).source
 
-  return source === 'today' || source === 'detail' ? { source } : {}
+  return source === 'today' || source === 'detail' || source === 'map'
+    ? { source }
+    : {}
 }
 
 export const navigateBackOrReplace = (

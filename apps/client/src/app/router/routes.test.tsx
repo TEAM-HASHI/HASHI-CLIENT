@@ -14,6 +14,62 @@ import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
 import { clearAuthSession } from '@/shared/auth/authSession'
 import { createQueryClient } from '@/shared/lib/queryClient'
 import { clearMapSession } from '@/pages/map/utils/mapSession'
+import {
+  createMapLocationFixture,
+  createMapPageFixture,
+  createMapStoreFixture,
+  createMapSummaryFixture,
+  mapRegionsFixture,
+} from '@/pages/map/__tests__/mapApiFixtures'
+import type { MapPageRequest } from '@/pages/map/api/mapApiTypes'
+
+vi.mock('@/pages/map/api/getMapRegions', () => ({
+  getMapRegions: vi.fn(async () => mapRegionsFixture),
+}))
+vi.mock('@/pages/map/api/getMapRestaurants', () => ({
+  getMapRestaurants: vi.fn(async (request: MapPageRequest) =>
+    createMapPageFixture(request),
+  ),
+}))
+vi.mock('@/pages/map/api/getMapRestaurantLocation', () => ({
+  getMapRestaurantLocation: vi.fn(async (id: string) =>
+    createMapLocationFixture(id),
+  ),
+}))
+vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
+  getRestaurantSummary: vi.fn(async (id: number) =>
+    createMapSummaryFixture(id),
+  ),
+}))
+vi.mock(
+  '@/features/restaurantDetail/api/getRestaurantStoreInformation',
+  () => ({
+    getRestaurantStoreInformation: vi.fn(async (id: number) =>
+      createMapStoreFixture(id),
+    ),
+  }),
+)
+vi.mock('@/features/restaurantDetail/api/getRestaurantMenus', () => ({
+  getRestaurantMenus: vi.fn(async () => ({ menus: [], hasNext: false })),
+}))
+vi.mock('@/features/restaurantDetail/api/getRestaurantReviews', () => ({
+  getRestaurantReviews: vi.fn(async () => ({
+    averageRating: 4.5,
+    reviewCount: 0,
+    reviews: [],
+    hasNext: false,
+  })),
+}))
+vi.mock('@/features/restaurantDetail/api/getRestaurantMain', () => ({
+  getRestaurantMain: vi.fn(),
+}))
+vi.mock('@/features/restaurantDetail/api/getRestaurantMenu', () => ({
+  getRestaurantMenu: vi.fn(),
+}))
+vi.mock(
+  '@/features/restaurantDetail/api/getRandomRestaurantRecommendation',
+  () => ({ getRandomRestaurantRecommendation: vi.fn() }),
+)
 
 vi.mock('@vis.gl/react-google-maps', () => ({
   APIProvider: ({ children }: PropsWithChildren) => children,
@@ -66,7 +122,7 @@ describe('appRoutes', () => {
     document.body.style.overflow = ''
   })
 
-  it('renders the public map preview and bottom navigation on direct entry', async () => {
+  it('renders the public API-backed map and bottom navigation on direct entry', async () => {
     renderRoute(ROUTES.map)
 
     expect(
@@ -110,3 +166,7 @@ describe('appRoutes', () => {
     }
   })
 })
+vi.mock('@/pages/map/api/getMapRestaurantSaves', () => ({
+  getMapRestaurantSaveCounts: vi.fn(async () => ({})),
+  getMyMapRestaurantSaves: vi.fn(async () => ({})),
+}))

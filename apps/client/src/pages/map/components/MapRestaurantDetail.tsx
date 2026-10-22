@@ -1,18 +1,19 @@
-import { CancelIcon, SaveBlankIcon } from '@hashi/hds-icons'
-import {
-  Button,
-  Dialog,
-  DragPanel,
-  IconButton,
-  ImageFallback,
-  Tabs,
-} from '@hashi/hds-ui'
+import { CancelIcon, SaveBlankIcon, SaveIcon } from '@hashi/hds-icons'
+import { Button, Dialog, DragPanel, IconButton, Tabs } from '@hashi/hds-ui'
 import { useLayoutEffect, useRef, useState } from 'react'
 
+import { RestaurantInfoSection } from '@/features/restaurantDetail/components/RestaurantInfoSection'
+import { RestaurantMenuListSection } from '@/features/restaurantDetail/components/RestaurantMenuListSection'
+import { RestaurantPhotoSection } from '@/features/restaurantDetail/components/RestaurantPhotoSection'
+import { RestaurantReviewSection } from '@/features/restaurantDetail/components/RestaurantReviewSection'
+import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
+import { MapPhotoViewer } from '@/pages/map/components/MapPhotoViewer'
 import { MapRestaurantImages } from '@/pages/map/components/MapRestaurantImages'
 import { MapRestaurantMeta } from '@/pages/map/components/MapRestaurantMeta'
 import { MapSaveAction } from '@/pages/map/components/MapSaveAction'
+import { MapStatusView } from '@/pages/map/components/MapStatusView'
 import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
+import { useMapRestaurantDetail } from '@/pages/map/hooks/useMapRestaurantDetail'
 import type { MapPanelStage, MapRestaurant } from '@/pages/map/types'
 import { cn } from '@/shared/utils'
 
@@ -21,19 +22,31 @@ interface MapRestaurantDetailProps {
   stage: MapPanelStage
   onStageChange: (stage: MapPanelStage) => void
   onClose: () => void
-  onPhotoSelect: (index: number) => void
+  onPhotoSelect?: (index: number) => void
   onUnavailable: () => void
+  onLoadError?: () => void
+  onPressMenuItem: (menuId: string) => void
+  initialTab?: RestaurantDetailTab
+  onTabChange?: (tab: RestaurantDetailTab) => void
 }
 
-const TABS = [
+const TABS: { value: RestaurantDetailTab; label: string }[] = [
   { value: 'info', label: '매장 정보' },
   { value: 'menu', label: '메뉴' },
   { value: 'photo', label: '사진' },
   { value: 'review', label: '리뷰' },
 ]
 
-export const MapRestaurantDetail = ({ ...props }: MapRestaurantDetailProps) => {
-  const [activeTab, setActiveTab] = useState('info')
+export const MapRestaurantDetail = (props: MapRestaurantDetailProps) => (
+  <SelectedRestaurantDetail key={props.restaurant.id} {...props} />
+)
+
+const SelectedRestaurantDetail = (props: MapRestaurantDetailProps) => {
+  const [photoViewer, setPhotoViewer] = useState<{
+    images: string[]
+    index: number
+  } | null>(null)
+  const model = useMapRestaurantDetail(props)
   const summaryRef = useRef<HTMLDivElement>(null)
   const previousStage = useRef(props.stage)
   useLayoutEffect(() => {
@@ -52,22 +65,43 @@ export const MapRestaurantDetail = ({ ...props }: MapRestaurantDetailProps) => {
   const panel = (
     <MapDetailPanel
       {...props}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
+      restaurant={model.displayRestaurant}
+      model={model}
+      activeTab={model.activeTab}
+      onTabChange={model.onTabChange}
+      onPhotoSelect={(index) =>
+        setPhotoViewer({ images: model.displayRestaurant.images, index })
+      }
+      onReviewPhotoSelect={(reviewId, index) => {
+        const images = model.detail?.reviews.find(
+          ({ id }) => id === reviewId,
+        )?.images
+        if (images?.length) setPhotoViewer({ images, index })
+      }}
+    />
+  )
+  const viewer = photoViewer && (
+    <MapPhotoViewer
+      images={photoViewer.images}
+      initialIndex={photoViewer.index}
+      onClose={() => setPhotoViewer(null)}
     />
   )
 
   if (props.stage !== 'expanded')
     return (
-      <div
-        ref={summaryRef}
-        role="region"
-        aria-label="선택한 식당 요약"
-        tabIndex={-1}
-        className="pointer-events-none absolute inset-0"
-      >
-        {panel}
-      </div>
+      <>
+        <div
+          ref={summaryRef}
+          role="region"
+          aria-label="선택한 식당 요약"
+          tabIndex={-1}
+          className="pointer-events-none absolute inset-0"
+        >
+          {panel}
+        </div>
+        {viewer}
+      </>
     )
 
   return (
@@ -78,10 +112,11 @@ export const MapRestaurantDetail = ({ ...props }: MapRestaurantDetailProps) => {
       }}
     >
       <Dialog.Content
-        aria-label={`${props.restaurant.name} 전체 상세`}
+        aria-label={`${model.displayRestaurant.name} 전체 상세`}
         className="fixed inset-0 mx-auto h-dvh w-full max-w-[var(--app-mobile-max-width,430px)] rounded-none p-0 pt-[var(--safe-area-top,0px)]"
       >
         {panel}
+        {viewer}
       </Dialog.Content>
     </Dialog.Root>
   )
@@ -94,13 +129,20 @@ const MapDetailPanel = ({
   onClose,
   onPhotoSelect,
   onUnavailable,
+  onPressMenuItem,
   activeTab,
   onTabChange,
+  onReviewPhotoSelect,
+  model,
 }: MapRestaurantDetailProps & {
-  activeTab: string
-  onTabChange: (tab: string) => void
+  activeTab: RestaurantDetailTab
+  onTabChange: (tab: RestaurantDetailTab) => void
+  onPhotoSelect: (index: number) => void
+  onReviewPhotoSelect: (reviewId: string, index: number) => void
+  model: ReturnType<typeof useMapRestaurantDetail>
 }) => {
   const { containerRef, availableHeight } = useMapPanelLayout()
+  const tabPanelRef = useRef<HTMLDivElement>(null)
   const isExpanded = stage === 'expanded'
   const maximum = Math.max(30, availableHeight)
   const normal = Math.min(294, maximum)
@@ -127,14 +169,19 @@ const MapDetailPanel = ({
           )
         }
         footer={
-          isExpanded ? (
+          isExpanded && !model.isSummaryLoading ? (
             <div className="flex items-center gap-4 bg-white px-5 pt-4 pb-[calc(24px+var(--safe-area-bottom,0px))]">
               <IconButton
                 aria-label={`${restaurant.name} 저장`}
+                aria-pressed={restaurant.saved ?? false}
                 onClick={onUnavailable}
                 className="text-warm-gray-100"
               >
-                <SaveBlankIcon className="size-6" />
+                {restaurant.saved ? (
+                  <SaveIcon className="text-primary-200 size-6" />
+                ) : (
+                  <SaveBlankIcon className="size-6" />
+                )}
               </IconButton>
               <Button width="full" onClick={onUnavailable}>
                 예약하기
@@ -144,133 +191,159 @@ const MapDetailPanel = ({
         }
       >
         <div className="relative min-h-full">
-          {isExpanded ? (
-            <header className="sticky top-0 z-20 flex h-12.5 items-center gap-2 bg-white px-5">
-              <h2
-                className="typo-header-2 text-primary-200 min-w-0 flex-1 truncate"
-                title={restaurant.name}
-              >
-                {restaurant.name}
-              </h2>
-              <IconButton
-                aria-label="식당 상세 닫기"
-                size="xs"
-                onClick={onClose}
-              >
-                <CancelIcon className="size-6" />
-              </IconButton>
-            </header>
-          ) : null}
-          <div className={cn('px-5 pb-6', !isExpanded && 'pt-2.75')}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                {!isExpanded && (
+          {model.isSummaryLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center pt-6">
+              <MapStatusView loading message="식당 정보를 불러오고 있어요." />
+            </div>
+          ) : (
+            <>
+              {isExpanded ? (
+                <header className="sticky top-0 z-20 flex h-12.5 items-center gap-2 bg-white px-5">
                   <h2
-                    className="typo-header-2 text-primary-200 mb-2 truncate"
+                    className="typo-header-2 text-primary-200 min-w-0 flex-1 truncate"
                     title={restaurant.name}
                   >
                     {restaurant.name}
                   </h2>
-                )}
-                <MapRestaurantMeta restaurant={restaurant} />
-              </div>
-              {!isExpanded && (
-                <MapSaveAction restaurant={restaurant} onSave={onUnavailable} />
-              )}
-            </div>
-            <div className="mt-3">
-              <MapRestaurantImages
-                restaurant={restaurant}
-                onPhotoSelect={onPhotoSelect}
-              />
-            </div>
-          </div>
-          {isExpanded && (
-            <>
-              <div className="sticky top-12.5 z-10 bg-white px-5">
-                <Tabs
-                  aria-label="식당 상세 정보"
-                  items={TABS.map((tab) => ({
-                    ...tab,
-                    count:
-                      tab.value === 'photo'
-                        ? restaurant.images.length
-                        : tab.value === 'review'
-                          ? restaurant.reviewCount
-                          : undefined,
-                  }))}
-                  value={activeTab}
-                  onChange={onTabChange}
-                />
-              </div>
-              <div
-                role="tabpanel"
-                aria-label={
-                  TABS.find(({ value }) => value === activeTab)?.label
-                }
-                className="min-h-80 px-6 py-9"
-              >
-                {activeTab === 'info' && (
-                  <div className="text-primary-200 flex flex-col gap-9">
-                    <section>
-                      <h3 className="typo-sub-header-2">가게 상세</h3>
-                      <p className="typo-long-body-1 mt-3 break-keep">
-                        {restaurant.description}
-                      </p>
-                    </section>
-                    <section>
-                      <h3 className="typo-sub-header-2">영업 시간</h3>
-                      <p className="typo-body-5 mt-3">
-                        샘플 영업시간 · 실제 정보 미연동
-                      </p>
-                      <dl className="typo-body-5 mt-2 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1">
-                        {['월', '화', '수', '목', '금', '토', '일'].map(
-                          (day) => (
-                            <div key={day} className="contents">
-                              <dt>{day}</dt>
-                              <dd>11:00 ~ 22:00</dd>
-                            </div>
-                          ),
-                        )}
-                      </dl>
-                    </section>
-                    <section>
-                      <h3 className="typo-sub-header-2">인당 가격대</h3>
-                      <p className="typo-body-5 mt-3">{restaurant.price}</p>
-                    </section>
-                    <section>
-                      <h3 className="typo-sub-header-2">위치</h3>
-                      <p className="typo-body-5 mt-3">{restaurant.address}</p>
-                      <ImageFallback
-                        role="img"
-                        aria-label="상세 위치 지도 연결 전"
-                        className="mt-3 h-36.25 w-full rounded-[5px]"
-                      />
-                    </section>
+                  <IconButton
+                    aria-label="식당 상세 닫기"
+                    size="xs"
+                    onClick={onClose}
+                  >
+                    <CancelIcon className="size-6" />
+                  </IconButton>
+                </header>
+              ) : null}
+              <div className={cn('px-5 pb-6', !isExpanded && 'pt-2.75')}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    {!isExpanded && (
+                      <h2
+                        className="typo-header-2 text-primary-200 mb-2 truncate"
+                        title={restaurant.name}
+                      >
+                        {restaurant.name}
+                      </h2>
+                    )}
+                    {model.hasLoadError ? (
+                      <div role="alert" className="py-4">
+                        <p className="typo-body-7">
+                          식당 정보를 불러오지 못했어요.
+                        </p>
+                        <Button size="sm" onClick={() => void model.onRetry()}>
+                          다시 시도
+                        </Button>
+                      </div>
+                    ) : (
+                      <MapRestaurantMeta restaurant={restaurant} />
+                    )}
                   </div>
-                )}
-                {activeTab === 'menu' && (
-                  <p className="typo-body-7 text-cool-gray-600">
-                    메뉴 정보는 API 연결 후 제공됩니다.
-                  </p>
-                )}
-                {activeTab === 'photo' && (
-                  <>
-                    <p className="typo-caption-1 text-cool-gray-600 mb-3">
-                      샘플 사진
-                    </p>
+                  {!isExpanded && (
+                    <MapSaveAction
+                      restaurant={restaurant}
+                      onSave={onUnavailable}
+                    />
+                  )}
+                </div>
+                {!model.hasLoadError && (
+                  <div className="mt-3">
                     <MapRestaurantImages
                       restaurant={restaurant}
                       onPhotoSelect={onPhotoSelect}
                     />
-                  </>
-                )}
-                {activeTab === 'review' && (
-                  <p className="typo-body-7 text-cool-gray-600">
-                    리뷰 정보는 API 연결 후 제공됩니다.
-                  </p>
+                  </div>
                 )}
               </div>
+              {isExpanded && model.detail && !model.hasLoadError && (
+                <>
+                  <div className="sticky top-12.5 z-10 bg-white px-5">
+                    <Tabs
+                      aria-label="식당 상세 정보"
+                      items={TABS.map((tab) => ({
+                        ...tab,
+                        count:
+                          tab.value === 'review'
+                            ? restaurant.reviewCount
+                            : tab.value === 'photo'
+                              ? model.photos.counts?.all
+                              : undefined,
+                      }))}
+                      value={activeTab}
+                      onChange={(value) => {
+                        const tab = TABS.find((item) => item.value === value)
+                        if (tab && tab.value !== activeTab) {
+                          onTabChange(tab.value)
+                          if (tab.value === 'review')
+                            tabPanelRef.current?.scrollIntoView?.({
+                              block: 'start',
+                            })
+                        }
+                      }}
+                    />
+                  </div>
+                  <div
+                    ref={tabPanelRef}
+                    role="tabpanel"
+                    aria-label={
+                      TABS.find(({ value }) => value === activeTab)?.label
+                    }
+                    className="min-h-80 scroll-mt-25"
+                  >
+                    {activeTab === 'info' &&
+                      (model.isStoreInformationLoading ? (
+                        <div className="flex min-h-68 items-center justify-center">
+                          <MapStatusView
+                            loading
+                            message="매장 정보를 불러오고 있어요."
+                          />
+                        </div>
+                      ) : (
+                        <RestaurantInfoSection restaurant={model.detail} />
+                      ))}
+                    {activeTab === 'menu' && (
+                      <RestaurantMenuListSection
+                        menus={model.detail.menus}
+                        hasMoreMenus={model.hasMoreMenus}
+                        isMenuListError={model.isMenuListError}
+                        isLoading={model.isMenuListPending}
+                        isNextPageError={model.isMenuNextPageError}
+                        loadMoreRef={model.menuLoadMoreRef}
+                        onPressMenuItem={onPressMenuItem}
+                        onRetryMenuList={model.onRetryMenuList}
+                      />
+                    )}
+                    {activeTab === 'photo' && (
+                      <RestaurantPhotoSection
+                        model={model.photos}
+                        onResetScroll={() =>
+                          tabPanelRef.current?.scrollIntoView({
+                            block: 'start',
+                          })
+                        }
+                      />
+                    )}
+                    {activeTab === 'review' && (
+                      <RestaurantReviewSection
+                        rating={model.detail.rating}
+                        restaurantName={restaurant.name}
+                        reviewCount={model.detail.reviewCount}
+                        ratingDistribution={model.detail.ratingDistribution}
+                        reviews={model.detail.reviews}
+                        hasMoreReviews={model.hasMoreReviews}
+                        isReviewListError={model.isReviewListError}
+                        isNextPageError={model.isReviewNextPageError}
+                        isReviewListLoading={model.isReviewListLoading}
+                        loadMoreRef={model.reviewLoadMoreRef}
+                        selectedSort={model.selectedReviewSort}
+                        onPressReviewImage={onReviewPhotoSelect}
+                        onPressWriteReview={onUnavailable}
+                        onRetryReviewList={model.onRetryReviewList}
+                        onSelectSort={model.onSelectReviewSort}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>

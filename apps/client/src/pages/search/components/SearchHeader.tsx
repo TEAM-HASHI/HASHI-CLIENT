@@ -6,6 +6,7 @@ import type { SyntheticEvent } from 'react'
 interface SearchHeaderProps {
   inputRef: Ref<HTMLInputElement>
   keyword: string
+  maxLength?: number
   onBackClick: () => void
   onKeywordChange: (keyword: string) => void
   onKeywordClear: () => void
@@ -15,6 +16,7 @@ interface SearchHeaderProps {
 export const SearchHeader = ({
   inputRef,
   keyword,
+  maxLength,
   onBackClick,
   onKeywordChange,
   onKeywordClear,
@@ -49,6 +51,7 @@ export const SearchHeader = ({
         onClear={onKeywordClear}
         placeholder="식당 혹은 메뉴를 검색해보세요"
         value={keyword}
+        maxLength={maxLength}
       />
     </form>
   )

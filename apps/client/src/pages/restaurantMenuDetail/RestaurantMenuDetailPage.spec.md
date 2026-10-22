@@ -45,13 +45,14 @@
 - [ ] 로그인 사용자가 저장하기를 누르면 준비중 모달을 표시합니다. 저장 chooser/쓰기 UI는 후속 작업입니다.
 - [ ] `location.state.source`가 `today`이면 탭/뒤로가기 fallback은 `/restaurants/today`로 이동합니다.
 - [ ] `location.state.source`가 없거나 `detail`이면 탭/뒤로가기 fallback은 `/restaurants/:restaurantId`로 이동합니다.
+- [x] `location.state.source`가 `map`이면 뒤로가기는 지도 상세의 메뉴 탭, 매장 정보/사진/리뷰 탭 클릭은 지도 상세의 해당 탭으로 복귀합니다. `mapRestaurantId`와 `activeTab`을 한 번 사용하는 route state로 전달하며, 지도 쪽 세션에 해당 선택 식당이 있을 때 적용합니다. 다른 메뉴 카드는 replace 이동하여 메뉴 history가 누적되지 않습니다.
 - [ ] 매장 정보/사진/리뷰 탭 이동 시 destination route state에 `activeTab`을 넘깁니다.
 - [ ] 서버/API 연동 기준으로 식당 요약, 메뉴 상세, 메뉴 목록 데이터를 조회합니다.
 
 ## Data Dependencies
 
 - 사진 개수는 기존 `useRestaurantPhotos(restaurantId, false)`의 counts query를 재사용합니다. 메뉴 상세에서는 사진 목록 infinite query를 실행하지 않습니다.
-- 통합 사진 목록/필터/count API 계약은 미확정입니다. DEV 전용 목데이터만 사용하며 운영에서는 미확인 개수를 표시하지 않습니다.
+- 공개 `GET /api/v1/restaurants/{restaurantId}/photos`의 counts를 공유 사진 query로 사용합니다. 오류·미확인 개수를 목데이터 또는 0으로 대체하지 않습니다.
 
 - query: restaurant summary
 - endpoint: `GET /api/v1/restaurants/{restaurantId}/summary`

@@ -31,7 +31,7 @@ const { mockParams } = vi.hoisted(() => ({
 }))
 const { mockLocationStore } = vi.hoisted(() => ({
   mockLocationStore: {
-    state: undefined as { source?: 'today' | 'detail' } | undefined,
+    state: undefined as { source?: 'today' | 'detail' | 'map' } | undefined,
   },
 }))
 const { mockAuthStore } = vi.hoisted(() => ({
@@ -165,7 +165,14 @@ const renderPage = () => {
 
 describe('RestaurantMenuDetailPage', () => {
   beforeEach(() => {
-    vi.mocked(getRestaurantPhotoDataSource).mockReturnValue(null)
+    vi.mocked(getRestaurantPhotoDataSource).mockReturnValue({
+      key: 'test',
+      source: {
+        getPage: vi
+          .fn()
+          .mockRejectedValue(new Error('Photo count unavailable')),
+      },
+    })
     mockParams.menuId = '100'
     mockParams.restaurantId = '10'
     mockedGetRestaurantSummary.mockResolvedValue(restaurantSummary)
@@ -230,7 +237,7 @@ describe('RestaurantMenuDetailPage', () => {
     expect(getPage).toHaveBeenCalledTimes(1)
   })
 
-  it('does not invent a photo count when the source is unavailable', async () => {
+  it('does not invent a photo count when its API request fails', async () => {
     renderPage()
 
     expect(await screen.findByRole('tab', { name: '사진' })).toBeInTheDocument()
@@ -374,6 +381,31 @@ describe('RestaurantMenuDetailPage', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/restaurants/10/menus/101', {
       state: { source: 'today' },
+    })
+  })
+
+  it('replaces another menu in the map flow so back returns to the map menu list', async () => {
+    mockLocationStore.state = { source: 'map' }
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: /쇼유라멘/ }))
+    expect(mockNavigate).toHaveBeenCalledWith('/restaurants/10/menus/101', {
+      replace: true,
+      state: { source: 'map' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+    expect(mockNavigate).toHaveBeenLastCalledWith('/map', {
+      replace: true,
+      state: { mapRestaurantId: '10', activeTab: 'menu' },
+    })
+  })
+
+  it('returns to the selected map restaurant tab instead of the standalone detail', async () => {
+    mockLocationStore.state = { source: 'map' }
+    renderPage()
+    fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
+    expect(mockNavigate).toHaveBeenCalledWith('/map', {
+      replace: true,
+      state: { mapRestaurantId: '10', activeTab: 'review' },
     })
   })
 

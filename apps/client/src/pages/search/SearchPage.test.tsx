@@ -9,6 +9,13 @@ import { ROUTES } from '@/app/router/path'
 import { SearchPage } from '@/pages/search/SearchPage'
 import type { SearchRestaurant } from '@/pages/search/types'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
+import { RECENT_SEARCH_KEYWORDS_STORAGE_KEY } from '@/pages/search/constants/searchFilters'
+import { toastQueue } from '@hashi/hds-ui'
+
+afterEach(() => {
+  cleanup()
+  toastQueue.clear()
+})
 
 const { mockGetRestaurants, mockGetSearchKeywordRecommendations } = vi.hoisted(
   () => ({
@@ -106,6 +113,62 @@ const LocationState = () => {
 
   return <div data-testid="location-state">{location.search}</div>
 }
+
+it.each(['#', '#두 개', '   '])(
+  'does not leave map search or store an invalid keyword: %s',
+  async (keyword) => {
+    mockGetRestaurants.mockClear()
+    mockGetSearchKeywordRecommendations.mockResolvedValue([])
+    localStorage.removeItem(RECENT_SEARCH_KEYWORDS_STORAGE_KEY)
+    const user = userEvent.setup()
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter
+          initialEntries={[
+            { pathname: ROUTES.search, state: { source: 'map', keyword: '' } },
+          ]}
+        >
+          <Routes>
+            <Route path={ROUTES.search} element={<SearchPage />} />
+            <Route path={ROUTES.map} element={<p>지도 복귀</p>} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    await user.type(screen.getByRole('searchbox'), `${keyword}{Enter}`)
+    expect(screen.queryByText('지도 복귀')).not.toBeInTheDocument()
+    expect(localStorage.getItem(RECENT_SEARCH_KEYWORDS_STORAGE_KEY)).toBeNull()
+    expect(mockGetRestaurants).not.toHaveBeenCalled()
+    cleanup()
+    client.clear()
+  },
+)
+
+it('limits map search input to 30 characters', async () => {
+  mockGetSearchKeywordRecommendations.mockResolvedValue([])
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  const user = userEvent.setup()
+  render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter
+        initialEntries={[
+          { pathname: ROUTES.search, state: { source: 'map', keyword: '' } },
+        ]}
+      >
+        <SearchPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+  await user.type(screen.getByRole('searchbox'), '가'.repeat(31))
+  expect(screen.getByRole('searchbox')).toHaveValue('가'.repeat(30))
+  cleanup()
+  client.clear()
+})
 
 it('returns a map search without fetching ordinary results and clears the draft with X', async () => {
   mockGetRestaurants.mockClear()

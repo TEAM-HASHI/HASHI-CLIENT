@@ -128,6 +128,13 @@ export const useRestaurantMenuDetailPage = () => {
   }
 
   const handlePressBack = () => {
+    if (sourceState.source === 'map') {
+      navigate(ROUTES.map, {
+        replace: true,
+        state: { mapRestaurantId: currentRestaurantId, activeTab: 'menu' },
+      })
+      return
+    }
     navigateBackOrReplace(navigate, getReturnPath())
   }
 
@@ -161,12 +168,21 @@ export const useRestaurantMenuDetailPage = () => {
     }
 
     navigate(nextPath, {
+      ...(sourceState.source === 'map' ? { replace: true } : {}),
       state: { source: sourceState.source },
     })
   }
 
   const handleTabChange = (tab: RestaurantDetailTab) => {
     if (tab === 'menu') {
+      return
+    }
+
+    if (sourceState.source === 'map') {
+      navigate(ROUTES.map, {
+        replace: true,
+        state: { mapRestaurantId: currentRestaurantId, activeTab: tab },
+      })
       return
     }
 
