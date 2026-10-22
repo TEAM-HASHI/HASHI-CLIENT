@@ -42,9 +42,7 @@ export const MapPage = () => {
   const [previousStatus, setPreviousStatus] = useState(state.status)
   const [comingSoon, setComingSoon] = useState(false)
   const [savedCollectionsOpen, setSavedCollectionsOpen] = useState(false)
-  const [savingRestaurantId, setSavingRestaurantId] = useState<number | null>(
-    null,
-  )
+  const [savingRestaurantId, setSavingRestaurantId] = useState<number | null>(null)
   const openRestaurantSave = (restaurantId: string) => {
     if (!isAuthenticated) {
       navigate(ROUTES.loginRequired)
