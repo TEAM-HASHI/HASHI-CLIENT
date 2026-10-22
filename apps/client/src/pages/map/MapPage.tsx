@@ -252,8 +252,13 @@ export const MapPage = () => {
     showToast({ children: '식당 정보를 불러오지 못했어요. 다시 선택해주세요.' })
   }
   useEffect(() => {
-    if (state.selectionFailed) handleDetailFailure()
-  })
+    if (state.selectionFailed) {
+      setTimeout(() => {
+        handleDetailFailure()
+      }, 0)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.selectionFailed])
 
   return (
     <main
@@ -425,7 +430,9 @@ export const MapPage = () => {
           onClose={() => {
             setSavingRestaurantId(null)
             void queryClient.invalidateQueries({ queryKey: ['map', 'saved'] })
-            void queryClient.invalidateQueries({ queryKey: ['map', 'saveCounts'] })
+            void queryClient.invalidateQueries({
+              queryKey: ['map', 'saveCounts'],
+            })
           }}
         />
       )}
