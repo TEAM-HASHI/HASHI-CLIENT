@@ -33,7 +33,7 @@ describe('getAuthMe', () => {
     })
   })
 
-  it('requests cookie-based auth status without an Authorization header', async () => {
+  it('overrides cached bearer credentials when checking cookie-based auth', async () => {
     mockedRequest.mockResolvedValue({
       role: 'ONBOARDING',
     })
@@ -42,6 +42,7 @@ describe('getAuthMe', () => {
       role: 'ONBOARDING',
     })
     expect(mockedRequest).toHaveBeenCalledWith('api/v1/auth/me', {
+      headers: { Authorization: '' },
       credentials: 'include',
     })
   })

@@ -1,6 +1,36 @@
 import { lazy } from 'react'
 
 export const lazyPages = {
+  MapRegionsPage: lazy(() =>
+    import('@/pages/mapRegions/MapRegionsPage').then(({ MapRegionsPage }) => ({
+      default: MapRegionsPage,
+    })),
+  ),
+  RestaurantLocationsPage: lazy(() =>
+    import('@/pages/restaurantLocations/RestaurantLocationsPage').then(
+      ({ RestaurantLocationsPage }) => ({ default: RestaurantLocationsPage }),
+    ),
+  ),
+  TermsPage: lazy(() =>
+    import('@/pages/terms/TermsPage').then(({ TermsPage }) => ({
+      default: TermsPage,
+    })),
+  ),
+  TermsEditorPage: lazy(() =>
+    import('@/pages/terms/TermsEditorPage').then(({ TermsEditorPage }) => ({
+      default: TermsEditorPage,
+    })),
+  ),
+  NoticesPage: lazy(() =>
+    import('@/pages/notices/NoticesPage').then(({ NoticesPage }) => ({
+      default: NoticesPage,
+    })),
+  ),
+  NoticeEditorPage: lazy(() =>
+    import('@/pages/notices/NoticeEditorPage').then(({ NoticeEditorPage }) => ({
+      default: NoticeEditorPage,
+    })),
+  ),
   LoginPage: lazy(() =>
     import('@/pages/login/LoginPage').then(({ LoginPage }) => ({
       default: LoginPage,

@@ -35,6 +35,11 @@ import { Drawer } from '@/shared/components/Drawer'
 import type { AdminImageUploadStatus } from '@/shared/hooks/useAdminImageUpload'
 import { RestaurantFormStepper } from '@/pages/restaurants/components/RestaurantFormStepper'
 import { RestaurantReplacementSection } from '@/pages/restaurants/components/RestaurantReplacementSection'
+import { RestaurantLocationPanel } from '@/features/restaurantLocation/components/RestaurantLocationPanel'
+import { PlaceCandidates } from '@/features/restaurantLocation/components/PlaceCandidates'
+import { useLocationPreview } from '@/features/restaurantLocation/useLocationPreview'
+import { AdminApiRequestError } from '@/shared/api/request'
+import { RestaurantRegionAssignment } from '@/features/mapRegion/components/RestaurantRegionAssignment'
 
 const emptyReplacements: RestaurantReplacementFlags = {
   images: false,
@@ -85,6 +90,7 @@ export const RestaurantFormDrawer = ({
   const [errors, setErrors] = useState<Record<string, string>>({})
   const createMutation = useCreateRestaurantMutation()
   const updateMutation = useUpdateRestaurantMutation()
+  const preview = useLocationPreview()
   const prefillQuery = useRestaurantPrefillQuery(
     open && mode === 'update' && loadPrefill ? restaurantId : null,
     listItem,
@@ -92,6 +98,7 @@ export const RestaurantFormDrawer = ({
 
   /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- drawer props and asynchronous prefill data define the editing session state. */
   useEffect(() => {
+    preview.clear()
     if (!open) return
     setStep(0)
     setDirtyFields(new Set())
@@ -128,6 +135,8 @@ export const RestaurantFormDrawer = ({
     key: TKey,
     value: RestaurantScalarFields[TKey],
   ) => {
+    if (['name', 'localName', 'address'].includes(key) && form[key] !== value)
+      preview.clear()
     setForm((current) => ({ ...current, [key]: value }))
     setDirtyFields((current) => new Set(current).add(key))
   }
@@ -150,6 +159,17 @@ export const RestaurantFormDrawer = ({
 
     // 식당명·주소 중복(409)은 입력한 기본 정보 단계로 돌려보내 해당 칸을 표시한다
     const onError = (error: Error) => {
+      if (
+        mode === 'create' &&
+        error instanceof AdminApiRequestError &&
+        ['RESTAURANT-027', 'RESTAURANT-028'].includes(
+          error.responseBody?.code ?? '',
+        )
+      ) {
+        preview.clear()
+        setStep(0)
+        return
+      }
       const field = getDuplicateRestaurantField(error)
       if (!field) return
       activeMutation.reset()
@@ -158,10 +178,19 @@ export const RestaurantFormDrawer = ({
     }
 
     if (mode === 'create') {
-      createMutation.mutate(toCreateRestaurantBody(form), {
-        onSuccess: onClose,
-        onError,
-      })
+      try {
+        const token = preview.getToken()
+        createMutation.mutate(
+          {
+            ...toCreateRestaurantBody(form),
+            ...(token ? { locationSelectionToken: token } : {}),
+          },
+          { onSuccess: onClose, onError },
+        )
+      } catch (error) {
+        setErrors({ submit: getErrorMessage(error) })
+        setStep(0)
+      }
       return
     }
     if (restaurantId == null) return
@@ -282,7 +311,86 @@ export const RestaurantFormDrawer = ({
             </p>
           ) : null}
           {step === 0 ? (
-            <BasicStep form={form} errors={errors} setScalar={setScalar} />
+            <>
+              <BasicStep form={form} errors={errors} setScalar={setScalar} />
+              {mode === 'create' && (
+                <section
+                  className="border-cool-gray-100 mt-6 space-y-4 border-t pt-5"
+                  aria-label="등록 전 위치 미리보기"
+                >
+                  <h3 className="text-cool-gray-900 text-sm font-bold">
+                    등록 전 위치 확인
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="neutral"
+                      loading={preview.busy}
+                      disabled={activeMutation.isPending || preview.busy}
+                      onClick={() =>
+                        void preview.search({
+                          name: form.name.trim(),
+                          localName: form.localName.trim(),
+                          address: form.address.trim(),
+                        })
+                      }
+                    >
+                      위치 미리보기
+                    </Button>
+                    {preview.selected && (
+                      <Button
+                        size="sm"
+                        variant="neutral"
+                        onClick={preview.clear}
+                      >
+                        선택 해제
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-cool-gray-500 text-xs leading-5">
+                    장소를 선택하지 않아도 등록할 수 있습니다. 선택한 위치는
+                    등록 후 검증이 완료되면 지도에 표시됩니다.
+                  </p>
+                  {preview.error && (
+                    <p role="alert" className="text-error text-sm">
+                      {preview.error}
+                    </p>
+                  )}
+                  {preview.selected && (
+                    <p role="status" className="text-cool-gray-900 text-sm">
+                      선택한 장소: {preview.selected.displayName} —{' '}
+                      {preview.selected.address}
+                    </p>
+                  )}
+                  {preview.candidates && (
+                    <PlaceCandidates
+                      candidates={preview.candidates}
+                      disabled={preview.busy || activeMutation.isPending}
+                      onSelect={preview.select}
+                    />
+                  )}
+                </section>
+              )}
+              {mode === 'update' && restaurantId != null && (
+                <div className="border-cool-gray-100 mt-6 border-t pt-5">
+                  <RestaurantLocationPanel
+                    key={restaurantId}
+                    restaurantId={restaurantId}
+                    disabled={
+                      activeMutation.isPending ||
+                      ['name', 'localName', 'address'].some((field) =>
+                        dirtyFields.has(field as keyof RestaurantScalarFields),
+                      )
+                    }
+                  />
+                  <RestaurantRegionAssignment
+                    key={`region-${restaurantId}`}
+                    restaurantId={restaurantId}
+                    disabled={activeMutation.isPending}
+                  />
+                </div>
+              )}
+            </>
           ) : null}
           {step === 1 ? (
             <MediaStep

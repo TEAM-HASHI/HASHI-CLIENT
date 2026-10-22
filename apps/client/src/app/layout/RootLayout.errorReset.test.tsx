@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest'
+import type { ReactNode } from 'react'
 
 import { act, cleanup, render, screen } from '@testing-library/react'
 import {
@@ -9,6 +10,10 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RootLayout } from '@/app/layout/RootLayout'
+
+vi.mock('@/app/providers/AuthSessionRestoreGate', () => ({
+  AuthSessionRestoreGate: ({ children }: { children: ReactNode }) => children,
+}))
 
 const { mockCaptureError, mockTrackPageView, mockScrollTo } = vi.hoisted(
   () => ({

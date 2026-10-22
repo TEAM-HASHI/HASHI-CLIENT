@@ -129,8 +129,9 @@ Jira: HASHI-120
   - 이메일이 이메일 형식
   - 제출 중이 아님
 - success handling:
+  - 요청을 시작한 세션 버전이 유지되고 페이지가 활성 상태일 때만 성공·실패 응답을 반영한다. 이미지 업로드 중 세션이 바뀌거나 페이지를 떠나면 가입 API 호출을 중단한다.
   - `USER-201` 성공 응답의 `data.userId`가 number인지 검증한다.
-  - response `Authorization` header의 bearer token을 추출해 `setAccessToken()`으로 인증 세션을 전환한다.
+  - response `Authorization` header의 bearer token을 추출해 `startAuthenticatedSession()`으로 새 인증 세션을 시작한다.
   - `redirectTo` search param이 허용된 내부 경로이면 해당 경로로 이동한다.
   - 허용된 `redirectTo`에 query string 또는 hash가 포함되어 있으면 `pathname`만 allowlist 기준으로 검증하고, 실제 이동 시에는 query string과 hash를 보존한다.
   - `redirectTo`가 없으면 `ROUTES.home`으로 이동한다.

@@ -74,7 +74,7 @@ export const mypageMenuSections: MypageMenuSection[] = [
         id: 'logout',
         label: '로그아웃',
         action: {
-          type: 'comingSoon',
+          type: 'logout',
         },
       },
       {

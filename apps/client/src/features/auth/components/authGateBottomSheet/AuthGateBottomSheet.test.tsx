@@ -1,13 +1,25 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet/AuthGateBottomSheet'
 import loginImage from '@/shared/assets/images/login.webp'
+import {
+  clearAuthSession,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
 
 describe('AuthGateBottomSheet', () => {
   afterEach(() => {
     cleanup()
+    clearAuthSession()
     document.body.style.overflow = ''
   })
 
@@ -50,6 +62,32 @@ describe('AuthGateBottomSheet', () => {
     expect(kakaoButton).toHaveClass('enabled:active:bg-point-200')
     expect(kakaoButton).toHaveClass('enabled:active:opacity-80')
     expect(kakaoButton).not.toHaveClass('enabled:active:bg-cool-gray-300')
+  })
+
+  it('hides a restored login prompt when the session becomes authenticated without losing the draft', async () => {
+    render(
+      <>
+        <input aria-label="draft" defaultValue="unsaved" />
+        <AuthGateBottomSheet
+          open
+          onKakaoPress={vi.fn()}
+          onOpenChange={vi.fn()}
+        />
+      </>,
+    )
+    const input = screen.getByRole('textbox', { name: 'draft' })
+    expect(
+      screen.getByRole('dialog', { name: '로그인 안내' }),
+    ).toBeInTheDocument()
+    act(() => startAuthenticatedSession('restored-cookie-token'))
+    fireEvent.animationEnd(screen.getByRole('dialog', { name: '로그인 안내' }))
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: '로그인 안내' }),
+      ).not.toBeInTheDocument(),
+    )
+    expect(screen.getByRole('textbox', { name: 'draft' })).toBe(input)
+    expect(input).toHaveValue('unsaved')
   })
 
   it('calls onKakaoPress when kakao button is pressed', () => {
