@@ -17,6 +17,8 @@ export const ReviewEditPage = () => {
     isNotFound,
     isPending,
     isSaveDisabled,
+    isSaveError,
+    isSaving,
     maxReviewTextLength,
     photoFiles,
     photoUrls,
@@ -27,12 +29,12 @@ export const ReviewEditPage = () => {
     handleBackClick,
     handleInvalidReviewIdBackClick,
     handlePhotoFilesChange,
+    handlePhotoUrlDelete,
     handleRatingChange,
     handleRetryClick,
     handleReviewTextChange,
     handleSaveClick,
     handleSelectedKeywordIdsChange,
-    setPhotoUrls,
   } = useReviewEditPage()
 
   const renderStatus = (
@@ -109,6 +111,7 @@ export const ReviewEditPage = () => {
               onValueChange={handleRatingChange}
             />
             <InputReviewKeyword
+              keywordOptions={reviewEdit.keywordOptions}
               selectedKeywordIds={selectedKeywordIds}
               onSelectedKeywordIdsChange={handleSelectedKeywordIdsChange}
             />
@@ -118,13 +121,23 @@ export const ReviewEditPage = () => {
               photoUrls={photoUrls}
               value={reviewText}
               onPhotoFilesChange={handlePhotoFilesChange}
-              onPhotoUrlsChange={setPhotoUrls}
+              onPhotoUrlDelete={handlePhotoUrlDelete}
               onValueChange={handleReviewTextChange}
             />
           </div>
+          {isSaveError ? (
+            <p
+              aria-label="리뷰 수정 실패"
+              className="typo-body-7 text-error px-5 pt-3 text-center"
+              role="alert"
+            >
+              리뷰를 수정하지 못했습니다. 다시 시도해주세요.
+            </p>
+          ) : null}
           <ReviewSubmitBar
             className="shrink-0 bg-white pb-12"
             disabled={isSaveDisabled}
+            loading={isSaving}
             type="button"
             onSubmit={handleSaveClick}
           />

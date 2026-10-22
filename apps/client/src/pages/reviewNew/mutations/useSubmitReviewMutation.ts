@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
+import { uploadReviewImages } from '@/features/review/api/uploadReviewImages'
 import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
 import { restaurantPhotoQueryKeys } from '@/features/restaurantDetail/queries/restaurantPhotoQueryOptions'
 import { myReviewQueryKeys } from '@/features/review/queries/myReviewQueryKeys'
@@ -9,7 +10,6 @@ import {
   createReview,
   type CreateReviewBody,
 } from '@/pages/reviewNew/api/createReview'
-import { uploadReviewImages } from '@/pages/reviewNew/api/uploadReviewImages'
 import { reviewNewQueryKeys } from '@/pages/reviewNew/queries/reviewNewQueryKeys'
 
 export interface SubmitReviewVariables extends Omit<

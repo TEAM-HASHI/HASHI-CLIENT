@@ -27,7 +27,7 @@ vi.mock('@/pages/reviewNew/api/createReview', () => ({
   createReview: createReviewMock,
 }))
 
-vi.mock('@/pages/reviewNew/api/uploadReviewImages', () => ({
+vi.mock('@/features/review/api/uploadReviewImages', () => ({
   uploadReviewImages: uploadReviewImagesMock,
 }))
 

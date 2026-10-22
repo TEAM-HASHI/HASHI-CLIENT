@@ -53,6 +53,7 @@
 - [x] file input이 변경되면 JPEG, PNG, WEBP이면서 장당 5MB 이하인 파일만 기존 `photoFiles` 뒤에 이어 `onPhotoFilesChange`에 전달합니다.
 - [x] `photoUrls`가 있으면 기존 리뷰 사진 미리보기로 표시하고, URL을 `File`로 변환하거나 업로드하지 않습니다.
 - [x] 기존 리뷰 사진 삭제 버튼을 누르면 해당 URL을 제외한 배열을 `onPhotoUrlsChange`에 전달합니다.
+- [x] 기존 사진의 별도 식별자를 관리하는 화면은 `onPhotoUrlDelete(index)`를 넘길 수 있고, 이 경우 삭제한 인덱스를 전달합니다.
 - [x] 지원하지 않는 MIME 타입은 `photoFiles`에 추가하지 않고 `JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.`를 표시합니다.
 - [x] 장당 5MB를 초과한 파일은 `photoFiles`에 추가하지 않고 `용량이 초과되었어요.`를 표시합니다.
 - [x] 기존 사진 URL과 새 파일의 합계가 10장이 되면 사진 추가 버튼과 숨겨진 file input을 비활성화합니다.
@@ -131,6 +132,12 @@ InputReviewMain
 - required: `false`
 - description: 기존 사진 삭제 시 남은 URL 배열을 호출부에 전달합니다. 서버 저장이나 이미지 삭제 API는 호출하지 않습니다.
 
+### `onPhotoUrlDelete`
+
+- type: `(index: number) => void`
+- required: `false`
+- description: 기존 사진을 URL과 별도 식별자로 함께 관리할 때 삭제할 기존 사진의 인덱스를 전달합니다. 제공되면 `onPhotoUrlsChange` 대신 호출합니다.
+
 ### `maxLength`
 
 - type: `number`
@@ -172,7 +179,7 @@ InputReviewMain
 6. 남은 사진 슬롯보다 많은 파일을 선택하면 초과 파일은 거절하고 `사진은 최대 10장까지 첨부할 수 있어요.`를 표시합니다.
 7. 기존 사진 URL과 새 파일의 합계가 10장이면 사진 추가 버튼과 file input은 비활성화됩니다.
 8. 선택된 `photoFiles` 또는 `photoUrls`가 있으면 사진 추가 버튼과 이미지 미리보기를 `overflow-x-auto` 가로 스크롤 목록으로 표시합니다.
-9. 이미지 미리보기의 삭제 버튼을 누르면 사진 오류 메시지를 초기화하고, 기존 사진이면 해당 URL을 제외한 `photoUrls` 배열을 `onPhotoUrlsChange`에, 새 파일이면 해당 file index를 제외한 `photoFiles` 배열을 `onPhotoFilesChange`에 전달합니다.
+9. 이미지 미리보기의 삭제 버튼을 누르면 사진 오류 메시지를 초기화합니다. 기존 사진이면 `onPhotoUrlDelete`가 있을 때 해당 index를 전달하고, 없으면 해당 URL을 제외한 `photoUrls` 배열을 `onPhotoUrlsChange`에 전달합니다. 새 파일이면 해당 file index를 제외한 `photoFiles` 배열을 `onPhotoFilesChange`에 전달합니다.
 10. 사용자가 textarea를 변경하면 최대 글자 수까지만 `onValueChange?.(nextValue)`로 전달합니다.
 11. 입력하지 않은 빈 상태에서는 helper text를 `10자 이상`으로 표시합니다.
 12. textarea가 blur되었거나 본문이 입력된 뒤 `value.length < 10`이면 helper text는 `10자 이상 작성해주세요.`입니다.

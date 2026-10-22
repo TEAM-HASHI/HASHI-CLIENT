@@ -16,6 +16,7 @@ type UseReviewPhotoUploaderParams = {
   photoUrls: string[]
   onPhotoFilesChange?: (files: File[]) => void
   onPhotoUrlsChange?: (urls: string[]) => void
+  onPhotoUrlDelete?: (index: number) => void
 }
 
 type PhotoPreviewItem = {
@@ -31,6 +32,7 @@ export const useReviewPhotoUploader = ({
   photoUrls,
   onPhotoFilesChange,
   onPhotoUrlsChange,
+  onPhotoUrlDelete,
 }: UseReviewPhotoUploaderParams) => {
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [photoErrorMessage, setPhotoErrorMessage] = useState('')
@@ -106,9 +108,13 @@ export const useReviewPhotoUploader = ({
   const handlePhotoDeleteClick = (deleteIndex: number) => {
     setPhotoErrorMessage('')
     if (deleteIndex < photoUrls.length) {
-      onPhotoUrlsChange?.(
-        photoUrls.filter((_, photoUrlIndex) => photoUrlIndex !== deleteIndex),
-      )
+      if (onPhotoUrlDelete) {
+        onPhotoUrlDelete(deleteIndex)
+      } else {
+        onPhotoUrlsChange?.(
+          photoUrls.filter((_, photoUrlIndex) => photoUrlIndex !== deleteIndex),
+        )
+      }
 
       return
     }

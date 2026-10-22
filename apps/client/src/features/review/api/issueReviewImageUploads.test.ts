@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { issueReviewImageUploads } from '@/pages/reviewNew/api/issueReviewImageUploads'
+import { issueReviewImageUploads } from '@/features/review/api/issueReviewImageUploads'
 
 const { requestMock } = vi.hoisted(() => ({
   requestMock: vi.fn(),
