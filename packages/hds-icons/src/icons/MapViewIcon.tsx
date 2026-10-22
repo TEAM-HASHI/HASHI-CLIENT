@@ -1,4 +1,5 @@
 import type { SVGProps } from 'react'
+
 const MapViewIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="1em"
@@ -21,4 +22,5 @@ const MapViewIcon = (props: SVGProps<SVGSVGElement>) => (
     />
   </svg>
 )
+
 export default MapViewIcon

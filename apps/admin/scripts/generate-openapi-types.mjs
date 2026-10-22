@@ -115,6 +115,60 @@ try {
   }
 
   if (!isRemoteSchema || existsSync(schemaInput)) {
+    if (args.get('--scope') === 'notices') {
+      const admin = JSON.parse(readFileSync(schemaInput, 'utf8'))
+      const userSchemaUrl =
+        process.env.USER_OPENAPI_SCHEMA_URL ||
+        readSchemaUrlFromLocalEnv('USER_OPENAPI_SCHEMA_URL')
+      if (!userSchemaUrl)
+        throw new Error('USER_OPENAPI_SCHEMA_URL이 필요합니다.')
+      const userResponse = await fetch(userSchemaUrl)
+      if (!userResponse.ok)
+        throw new Error(`User schema 요청 실패: ${userResponse.status}`)
+      const user = await userResponse.json()
+      const paths = Object.fromEntries([
+        ...Object.entries(admin.paths).filter(([path]) =>
+          path.startsWith('/api/v1/admin/notices'),
+        ),
+        ...Object.entries(user.paths).filter(([path]) =>
+          ['/api/v1/media/assets', '/api/v1/media/assets/complete'].includes(
+            path,
+          ),
+        ),
+      ])
+      const available = {
+        ...user.components.schemas,
+        ...admin.components.schemas,
+      }
+      const schemas = {}
+      const includeReferences = (value) => {
+        if (!value || typeof value !== 'object') return
+        if (value.$ref?.startsWith('#/components/schemas/')) {
+          const name = value.$ref.split('/').at(-1)
+          if (!(name in schemas)) {
+            if (!available[name]) throw new Error(`Schema가 없습니다: ${name}`)
+            schemas[name] = available[name]
+            includeReferences(available[name])
+          }
+        }
+        Object.values(value).forEach(includeReferences)
+      }
+      includeReferences(paths)
+      tempDir ??= mkdtempSync(resolve(tmpdir(), 'hashi-admin-openapi-'))
+      schemaInput = resolve(tempDir, 'notice-schema.json')
+      writeFileSync(
+        schemaInput,
+        JSON.stringify({
+          openapi: admin.openapi,
+          info: admin.info,
+          paths,
+          components: {
+            schemas,
+            securitySchemes: admin.components.securitySchemes,
+          },
+        }),
+      )
+    }
     const result = spawnSync(
       'openapi-typescript',
       [schemaInput, '-o', outputPath],

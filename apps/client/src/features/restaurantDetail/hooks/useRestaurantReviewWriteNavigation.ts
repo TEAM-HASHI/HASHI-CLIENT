@@ -6,8 +6,10 @@ import { useNavigate } from 'react-router-dom'
 import { getRestaurantReviewNewPath } from '@/app/router/routePaths'
 import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
 import { checkIsAuthRequiredError } from '@/shared/api'
-import { checkIsCurrentSessionExpiredError } from '@/shared/api/request'
-import { getAuthSessionVersion } from '@/shared/auth/authSession'
+import {
+  getAuthSessionVersion,
+  wasAuthSessionExpired,
+} from '@/shared/auth/authSession'
 import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
 
 interface UseRestaurantReviewWriteNavigationParams {
@@ -85,7 +87,11 @@ export const useRestaurantReviewWriteNavigation = ({
     } catch (caughtError) {
       if (
         pending.current !== attempt ||
-        (!isCurrent() && !checkIsCurrentSessionExpiredError(caughtError))
+        (!isCurrent() &&
+          !(
+            checkIsAuthRequiredError(caughtError) &&
+            wasAuthSessionExpired(session)
+          ))
       )
         return
       if (checkIsAuthRequiredError(caughtError)) {

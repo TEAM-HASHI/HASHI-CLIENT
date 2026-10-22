@@ -36,3 +36,12 @@ export const getNoticeDetailPath = (noticeId: string) =>
   generatePath(ROUTES.noticeDetail, { noticeId })
 export const getTermsDetailPath = (policyId: string) =>
   generatePath(ROUTES.termsDetail, { policyId })
+
+export const getCollectionDetailPath = (collectionId: string) =>
+  generatePath(ROUTES.collectionDetail, { collectionId })
+
+export const getCollectionEditPath = (collectionId: string) =>
+  generatePath(ROUTES.collectionEdit, { collectionId })
+
+export const getCollectionRestaurantEditPath = (collectionId: string) =>
+  generatePath(ROUTES.collectionRestaurantEdit, { collectionId })

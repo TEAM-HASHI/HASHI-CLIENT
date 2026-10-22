@@ -121,7 +121,7 @@ describe('KakaoOAuthCallbackPage', () => {
     render(<KakaoOAuthCallbackPage />)
 
     await waitFor(() => {
-      expect(mockedSetAccessToken).toHaveBeenCalledWith('access-token')
+      expect(mockedSetAccessToken).toHaveBeenCalledWith('access-token', 1)
     })
     expect(mockedRequestKakaoLogin).toHaveBeenCalledWith('kakao-code')
     expect(mockedGetAuthMe).toHaveBeenCalledWith('access-token')
@@ -194,7 +194,7 @@ describe('KakaoOAuthCallbackPage', () => {
     )
 
     await waitFor(() => {
-      expect(mockedSetAccessToken).toHaveBeenCalledWith('access-token')
+      expect(mockedSetAccessToken).toHaveBeenCalledWith('access-token', 1)
     })
     expect(mockedRequestKakaoLogin).toHaveBeenCalledTimes(1)
   })

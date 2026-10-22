@@ -117,14 +117,21 @@ export const appRoutes: RouteObject[] = [
             path: ROUTES.reviewEdit,
             element: lazyPages.reviewEdit(),
           },
+          { path: ROUTES.collectionNew, element: lazyPages.collectionForm() },
+          {
+            path: ROUTES.collectionRestaurantEdit,
+            element: lazyPages.collectionEditor(),
+          },
+          { path: ROUTES.collectionEdit, element: lazyPages.collectionForm() },
           {
             path: ROUTES.saved,
             element: createElement(BottomNavigationLayout),
             children: [
               {
                 index: true,
-                element: lazyPages.comingSoon(),
+                element: lazyPages.saved(),
               },
+              { path: ROUTES.collectionDetail, element: lazyPages.saved() },
             ],
           },
           {

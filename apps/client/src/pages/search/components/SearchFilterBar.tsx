@@ -15,12 +15,12 @@ interface SearchFilterTriggerProps {
 const SearchFilterTrigger = ({ label, onClick }: SearchFilterTriggerProps) => {
   return (
     <button
-      className="typo-sub-header-3 text-primary-200 flex items-center gap-3"
+      className="typo-body-6 text-cool-gray-600 flex items-center"
       onClick={onClick}
       type="button"
     >
       <span>{label}</span>
-      <TapDownIcon aria-hidden="true" className="size-4 text-black" />
+      <TapDownIcon aria-hidden="true" className="size-5" />
     </button>
   )
 }
@@ -32,7 +32,7 @@ export const SearchFilterBar = ({
   sortLabel,
 }: SearchFilterBarProps) => {
   return (
-    <div className="flex items-center gap-3 px-5 py-[9px]">
+    <div className="flex h-12 items-center gap-5 px-[23px]">
       <SearchFilterTrigger label={sortLabel} onClick={onSortClick} />
       <SearchFilterTrigger label={categoryLabel} onClick={onCategoryClick} />
     </div>

@@ -144,6 +144,36 @@ describe('ReviewNewPage', () => {
     expect(getReviewContextMock).not.toHaveBeenCalled()
   })
 
+  it('renders the solo dining icon and submits its API code unchanged', async () => {
+    getReviewContextMock.mockResolvedValue({
+      ...reviewContextResponse,
+      reviewKeywordOptions: [
+        { code: 'GOOD_FOR_SOLO_DINING', label: '혼밥하기 좋아요' },
+      ],
+    })
+    renderReviewNewPage()
+    await findReviewContext()
+    const keyword = screen.getByRole('button', { name: '혼밥하기 좋아요' })
+
+    expect(keyword.querySelector('svg')).not.toBeNull()
+    fireEvent.click(keyword)
+    fireEvent.click(screen.getByRole('radio', { name: '4점' }))
+    fireEvent.change(screen.getByLabelText('리뷰 내용'), {
+      target: { value: '혼자 방문해도 편하게 식사했습니다.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '저장하기' }))
+
+    await waitFor(() =>
+      expect(createReviewMock).toHaveBeenCalledWith({
+        reservationId: 23,
+        rating: 4,
+        keywordCodes: ['GOOD_FOR_SOLO_DINING'],
+        content: '혼자 방문해도 편하게 식사했습니다.',
+        imageFileKeys: [],
+      }),
+    )
+  })
+
   it('shows an error state when context loading fails', async () => {
     getReviewContextMock.mockRejectedValue(new Error('context failed'))
 

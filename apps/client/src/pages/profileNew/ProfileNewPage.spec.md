@@ -5,7 +5,7 @@ Jira: HASHI-120
 ## Purpose
 
 - 카카오 간편 로그인 후 추가 정보가 필요한 신규 회원이 프로필 정보를 입력하고 온보딩을 완료할 수 있게 한다.
-- 이번 범위는 프로필 생성 화면 UI, page-local form 상태, 입력값 formatting, field validation, `POST /api/v1/users/onboarding` API 연동, CTA 활성/비활성, 제출 후 다음 화면 이동까지 포함한다.
+- 이번 범위는 프로필 생성 화면 UI, page-local form 상태, 입력값 formatting, field validation, 중복 사전 검사와 `POST /api/v1/users/onboarding` API 연동, CTA 활성/비활성, 제출 후 다음 화면 이동까지 포함한다.
 - 연락처 인증은 MVP 범위에서 제외하고, 연락처 값 입력과 숫자 normalization만 처리한다.
 - 카카오 OAuth 신규 회원 응답으로 내려온 `signup_token`은 HttpOnly cookie로만 전달되며, 프론트는 직접 읽거나 저장하지 않는다.
 
@@ -82,6 +82,7 @@ Jira: HASHI-120
 - [ ] 첫 S3 PUT이 실패하면 새 presigned URL을 발급받아 해당 파일만 1회 재시도하고, 최종 실패 시 온보딩 API를 호출하지 않는다.
 - [ ] S3 업로드 성공 후 온보딩 validation이 실패하면 선택한 `File`이 바뀌지 않은 재제출에서 성공한 `fileKey`를 재사용한다.
 - [ ] 제출 중에는 CTA와 모든 입력 필드, 프로필 이미지 수정·삭제 액션을 비활성화해 중복 submit과 요청 snapshot 변경을 막는다.
+- [ ] 렌더링 상태가 바뀌기 전 같은 주기의 연속 제출도 mutation 진입점의 동기 잠금으로 차단한다. 성공·실패와 관계없이 요청 종료 후 잠금을 해제하며 입력값은 초기화하지 않는다.
 - [ ] 제출 성공 시 온보딩 이후 화면으로 이동한다.
 - [ ] 제출 성공 응답의 `Authorization` 헤더에서 정식 access token을 추출하고 인증 세션을 `authenticated`로 전환한 뒤 이동한다.
 - [ ] field error로 매핑 가능한 제출 실패는 해당 input 아래에 표시한다.
@@ -93,8 +94,14 @@ Jira: HASHI-120
 
 ### Query
 
-- 현재는 별도 중복 확인 API가 연결되지 않아 온보딩 mutation 응답의 중복 오류를 표시한다.
-- 후속 연동: 형식 검증 통과 후 500ms 추가 입력이 없거나 blur 시 중복 검사한다. 검사 중 및 값 변경 후 재검사 전에는 제출을 차단한다.
+- `POST /api/v1/users/availability`로 닉네임, 연락처, 이메일을 필드별로 사전 검사한다. POST 요청이지만 입력값별 검사 상태와 응답 경합을 Query로 관리한다.
+- 생성과 수정은 `features/profile/api/checkProfileAvailability.ts`와 `features/profile/hooks/useProfileAvailability.ts`를 공유한다. 오류와 blur 연결도 공통 훅의 `bindFields`에서 처리한다.
+- 형식 검증 통과 후 500ms 추가 입력이 없거나 blur 시 검사한다. 검사 중 및 값 변경 후 재검사 전에는 버튼과 submit 핸들러 모두 제출을 차단한다.
+- 생성은 기존 프로필 값이 없으므로 모든 유효한 대상 필드를 검사한다. 수정은 초기값과 달라진 필드만 검사한다.
+- 검사 결과는 필드, 값, 세션별로 분리한다. 이전 값의 지연 응답은 현재 입력에 반영하지 않는다.
+- 사용 불가는 서버 문구를 해당 필드에 표시한다. 네트워크 오류나 잘못된 응답에서도 제출을 차단하고 입력값을 유지하며, blur 시 같은 값을 다시 검사할 수 있다.
+- 사전 검사 이후 저장 시점에 발생한 중복 오류도 기존 온보딩 응답 처리로 표시한다. 프론트에서 익명 닉네임 예약어 목록을 관리하지 않는다.
+- 검사 요청은 `credentials: include`로 signup_token 쿠키를 전달하며 프론트에서 쿠키를 읽지 않는다.
 
 ### Mutation
 
@@ -127,9 +134,10 @@ Jira: HASHI-120
   - 생년월일이 숫자 8자리 실제 날짜
   - 연락처가 지원하는 전화번호 길이와 숫자 형식
   - 이메일이 이메일 형식
+  - 닉네임, 연락처, 이메일의 현재 값에 대한 중복 검사가 모두 통과했고 검사 중이 아님
   - 제출 중이 아님
 - success handling:
-  - 요청을 시작한 세션 버전이 유지되고 페이지가 활성 상태일 때만 성공·실패 응답을 반영한다. 이미지 업로드 중 세션이 바뀌거나 페이지를 떠나면 가입 API 호출을 중단한다.
+  - 제출 진입점에서 세션 버전을 동기적으로 고정하고 이미지 업로드 전, 가입 요청 전, 응답 처리 시 같은 버전을 확인한다. 요청 전 세션 변경 시 업로드와 가입 요청을 모두 시작하지 않는다. 이미지 업로드 중 세션이 바뀌거나 페이지를 떠나면 후속 가입 API를 호출하지 않는다.
   - `USER-201` 성공 응답의 `data.userId`가 number인지 검증한다.
   - response `Authorization` header의 bearer token을 추출해 `startAuthenticatedSession()`으로 새 인증 세션을 시작한다.
   - `redirectTo` search param이 허용된 내부 경로이면 해당 경로로 이동한다.
@@ -378,7 +386,7 @@ ProfileNewPage
 - submitting 상태는 `useProfileNewPage`가 mutation의 `isPending`으로 관리하며 CTA와 입력 잠금 상태에 반영한다.
 - `useProfileNewMutation`은 TanStack Query mutation, profile image key 확보, onboarding request body 생성, 성공 시 access token 저장과 redirect, auth failure redirect, handled/unhandled error 분기를 소유한다.
 - `useUploadedProfileImageKey`는 같은 `File` 객체로 재제출할 때 성공한 profile image `fileKey`를 재사용하는 정책을 소유한다.
-- `profileNewOnboardingError`는 onboarding API error code와 field error를 profile form의 field/form error로 반영하는 정책을 소유한다.
+- `features/profile/utils/profileApiError`는 생성과 수정의 API error code와 field error를 profile form의 field/form error로 반영하는 정책을 소유한다.
 - `profileNewRedirect`는 `redirectTo` query param을 허용된 내부 route로 제한하고, 허용된 path의 query string/hash를 보존하는 정책을 소유한다.
 - `requestOnboarding`과 `uploadProfileImage`는 React, route, UI state를 알지 않는다.
 - `signup_token`은 HttpOnly cookie이므로 프론트 코드에서 읽거나 저장하지 않는다.
@@ -409,12 +417,16 @@ ProfileNewPage
 - [ ] 뒤로가기 버튼 동작 확인
 - [ ] 기본 프로필 이미지, 이미지 선택, 이미지 수정, 이미지 삭제 상태 확인
 - [ ] 닉네임 중복 오류 표시 확인
+- [ ] 중복 사전 검사 대기, 중복 및 검사 실패 시 가입 요청 차단과 기존 입력 유지 확인
+- [ ] 사용 가능한 값으로 변경하거나 실패한 검사를 재시도하면 완료 버튼 활성화 확인
 - [ ] 생년월일 formatting과 오류 표시 확인
 - [ ] 연락처 formatting과 오류 표시 확인
 - [ ] 영문 이름 최대 20자 제한과 `nameEng` field error 표시 확인
 - [ ] 이메일 오류 표시 확인
 - [ ] CTA disabled / enabled / submitting 상태 확인
 - [ ] submitting 중 모든 입력 및 프로필 이미지 수정·삭제 비활성화 확인
+- [ ] 같은 렌더 주기에서 연속 제출해도 가입 요청 1회만 전송되는지 확인
+- [ ] 요청 전 세션 변경 시 사진 선택 여부와 관계없이 업로드·가입 요청을 보내지 않고 새 세션을 유지하는지 확인
 - [ ] submit 성공 후 `redirectTo` 또는 `ROUTES.home` 이동 확인
 - [ ] presigned URL 발급 후 S3 업로드, `profileImageKey` 전송 확인
 - [ ] S3 PUT 실패 시 새 presigned URL로 1회 재시도 확인

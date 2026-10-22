@@ -51,7 +51,10 @@ const getBottomNavigationValue = (
     return 'myReservations'
   }
 
-  if (targetPathname === ROUTES.saved) {
+  if (
+    targetPathname === ROUTES.saved ||
+    matchPath(ROUTES.collectionDetail, targetPathname)
+  ) {
     return 'save'
   }
 

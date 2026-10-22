@@ -9,9 +9,9 @@ export interface MagazineDetailRestaurant {
   priceRange: string
 }
 
-export interface MagazineDetailPreview {
+export interface MagazineDetail {
   title: string
-  coverImageUrls: string[]
+  coverImageUrls: Array<string | null>
   content: string
   hashtag: string
   publishedAt: string

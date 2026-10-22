@@ -1,6 +1,10 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import * as restaurantForm from '@/pages/restaurants/restaurantForm'
+import { restaurantLocationApi } from '@/features/restaurantLocation/api/restaurantLocationApi'
+import { AdminApiRequestError } from '@/shared/api/request'
+import { MemoryRouter } from 'react-router-dom'
 import { RestaurantsPage } from '@/pages/restaurants/RestaurantsPage'
 import {
   useCreateRestaurantMutation,
@@ -23,6 +27,18 @@ vi.mock('@/pages/restaurants/mutations/useRestaurantMutations', () => ({
 }))
 
 const deleteMock = vi.fn()
+vi.mock('@/features/mapRegion/components/RestaurantRegionAssignment', () => ({
+  RestaurantRegionAssignment: () => null,
+}))
+vi.mock('@/features/restaurantLocation/api/restaurantLocationApi', () => ({
+  restaurantLocationApi: { preview: vi.fn() },
+}))
+vi.mock(
+  '@/features/restaurantLocation/components/RestaurantLocationPanel',
+  () => ({
+    RestaurantLocationPanel: () => <div>지도 위치 확인</div>,
+  }),
+)
 const mutation = (mutate = vi.fn()) => ({
   mutate,
   reset: vi.fn(),
@@ -52,6 +68,7 @@ const restaurantPrefill = {
 }
 
 describe('RestaurantsPage', () => {
+  afterEach(() => vi.restoreAllMocks())
   beforeEach(() => {
     deleteMock.mockReset()
     vi.mocked(useRestaurantCatalogQuery).mockReturnValue({
@@ -98,7 +115,11 @@ describe('RestaurantsPage', () => {
 
   it('renders the published list and opens the four-step create drawer', async () => {
     const user = userEvent.setup()
-    render(<RestaurantsPage />)
+    render(
+      <MemoryRouter>
+        <RestaurantsPage />
+      </MemoryRouter>,
+    )
 
     expect(screen.getByText('현재 공개 중인 식당')).toBeVisible()
     expect(screen.getByText('하시 스시')).toBeVisible()
@@ -132,7 +153,11 @@ describe('RestaurantsPage', () => {
       data: restaurantPrefill,
     } as unknown as ReturnType<typeof useRestaurantPrefillQuery>)
 
-    render(<RestaurantsPage />)
+    render(
+      <MemoryRouter>
+        <RestaurantsPage />
+      </MemoryRouter>,
+    )
 
     await user.click(screen.getByRole('button', { name: '수정' }))
     await user.click(screen.getByRole('button', { name: '다음' }))
@@ -151,7 +176,11 @@ describe('RestaurantsPage', () => {
 
   it('supports soft delete by direct numeric ID', async () => {
     const user = userEvent.setup()
-    render(<RestaurantsPage />)
+    render(
+      <MemoryRouter>
+        <RestaurantsPage />
+      </MemoryRouter>,
+    )
 
     await user.type(screen.getByLabelText('식당 ID'), '91')
     await user.click(screen.getByRole('button', { name: 'ID로 비공개 처리' }))
@@ -163,5 +192,93 @@ describe('RestaurantsPage', () => {
     )
 
     expect(deleteMock).toHaveBeenCalledWith(91, expect.any(Object))
+  })
+
+  it('submits the preview token with identical normalized inputs and preserves the form after a token conflict', async () => {
+    vi.spyOn(restaurantForm, 'validateRestaurantForm').mockReturnValue({})
+    vi.mocked(restaurantLocationApi.preview)
+      .mockReset()
+      .mockResolvedValue({
+        candidates: [
+          {
+            displayName: '확인한 매장',
+            address: '東京都',
+            latitude: 35.68,
+            longitude: 139.76,
+            selectionToken: 'creation-token',
+            selectionExpiresAt: new Date(Date.now() + 600_000).toISOString(),
+          },
+        ],
+      })
+    const create = vi.fn()
+    vi.mocked(useCreateRestaurantMutation).mockReturnValue(
+      mutation(create) as unknown as ReturnType<
+        typeof useCreateRestaurantMutation
+      >,
+    )
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <RestaurantsPage />
+      </MemoryRouter>,
+    )
+    await user.click(screen.getByRole('button', { name: '식당 등록' }))
+    await user.type(screen.getByRole('textbox', { name: '식당명' }), ' 하시 ')
+    await user.type(screen.getByRole('textbox', { name: '현지명' }), ' ハシ ')
+    await user.type(
+      screen.getByRole('textbox', { name: '주소' }),
+      ' 東京都 1F ',
+    )
+    expect(restaurantLocationApi.preview).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: '위치 미리보기' }))
+    await user.click(
+      await screen.findByRole('button', { name: '이 장소 선택' }),
+    )
+    expect(restaurantLocationApi.preview).toHaveBeenCalledWith(
+      { name: '하시', localName: 'ハシ', address: '東京都 1F' },
+      expect.any(AbortSignal),
+    )
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    await user.type(
+      screen.getByRole('spinbutton', { name: '최소 가격' }),
+      '100',
+    )
+    await user.type(
+      screen.getByRole('spinbutton', { name: '최대 가격' }),
+      '200',
+    )
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    await user.click(screen.getByRole('button', { name: '식당 등록 완료' }))
+    expect(create.mock.calls[0][0]).toMatchObject({
+      name: '하시',
+      localName: 'ハシ',
+      address: '東京都 1F',
+      locationSelectionToken: 'creation-token',
+    })
+    await act(async () =>
+      create.mock.calls[0][1].onError(
+        new AdminApiRequestError(409, {
+          success: false,
+          code: 'RESTAURANT-028',
+          message: '위치 선택 충돌',
+          data: null,
+          path: '',
+          timestamp: '',
+        }),
+      ),
+    )
+    expect(screen.getByRole('textbox', { name: '주소' })).toHaveValue(
+      ' 東京都 1F ',
+    )
+    expect(screen.queryByText(/선택한 장소:/)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    expect(screen.getByRole('spinbutton', { name: '최소 가격' })).toHaveValue(
+      100,
+    )
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    await user.click(screen.getByRole('button', { name: '식당 등록 완료' }))
+    expect(create.mock.calls[1][0]).not.toHaveProperty('locationSelectionToken')
   })
 })

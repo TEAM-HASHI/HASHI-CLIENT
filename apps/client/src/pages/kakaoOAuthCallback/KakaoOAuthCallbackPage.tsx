@@ -83,7 +83,10 @@ export const KakaoOAuthCallbackPage = () => {
           throw new Error('Invalid user session.')
         }
 
-        startAuthenticatedSession(loginResult.accessToken)
+        startAuthenticatedSession(
+          loginResult.accessToken,
+          authMe.subjectId ?? undefined,
+        )
         navigate(oauthState.redirectTo ?? ROUTES.home, { replace: true })
       } catch {
         if (!isCurrentCallback()) return

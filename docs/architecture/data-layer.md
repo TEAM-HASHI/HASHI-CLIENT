@@ -72,14 +72,15 @@ apps/admin/src/shared/api/
 - client access token은 `apps/client/src/shared/auth/authSession.ts`의 메모리 상태에서 조회하고, 로컬 개발의 일반 API 요청에서만 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있습니다. 인증 endpoint와 앱 시작 시 세션 복원에는 개발용 토큰을 사용하지 않습니다.
 - `requestTokenReissue`는 공통 request의 인증 복구에 필요한 기반 endpoint로 `apps/client/src/shared/api`가 소유합니다.
 - 공통 request는 인증 필요 오류에서 token 재발급을 한 번 수행하고 원 요청을 한 번 재시도합니다. 앱 시작 시 복원과 동시 인증 오류는 동일 세션의 재발급 요청을 공유합니다. 재발급이 401로 실패할 때만 해당 세션을 초기화하고, 네트워크·5xx 오류에서는 세션을 유지합니다.
-- 재발급 실패로 만료된 요청 오류는 `checkIsCurrentSessionExpiredError`로 구분합니다. 같은 재발급을 기다린 요청들도 만료 결과를 공유하며, 이후 직접 로그아웃·새 로그인이 발생하면 이전 만료 표시는 무효화됩니다. 화면은 이 구분과 자신의 요청 수명을 함께 확인해 로그인 안내 여부를 결정합니다.
 - 브라우저가 BFCache에서 이전 문서를 복원하면(`pageshow.persisted`) 화면을 재마운트하거나 새로고침하지 않고 쿠키 기반 인증을 재확인합니다. 일반 SPA 뒤로가기에는 추가 요청을 하지 않으며, 같은 세션의 중복 확인 요청은 공유합니다. 확인 중 새 로그인·로그아웃·토큰 갱신이 발생하면 이전 응답을 무시합니다.
+- 로그인·가입·복원 시 사용자 ID를 메모리 세션에 기록합니다. BFCache 복원 결과가 기존 사용자와 다르거나 기존 사용자 ID를 확인할 수 없으면 새 세션 버전을 시작하고 비활성 Query와 Mutation 캐시를 제거합니다. 활성 Query는 이전 조회를 취소하고 초기화한 뒤 새 토큰으로 재조회해 표시 데이터도 갱신합니다. 화면은 재마운트하지 않으며, 같은 사용자의 재발급은 캐시와 세션 버전을 유지합니다.
 - BFCache 재확인 중에는 입력 화면을 유지하며, 네트워크·5xx 오류도 화면을 제거하지 않고 공통 토스트로 안내합니다. 인증 만료는 비로그인으로 반영하고, 인증이 복구되면 기존 로그인 안내 바텀시트를 숨깁니다. 보호 페이지의 인증 만료 등 라우트 정책에 따른 이동은 별개입니다.
 - Web Locks 지원 브라우저에서는 같은 출처의 탭들이 `hashi:user-token-reissue` 잠금으로 재발급 요청을 순차 실행합니다. 앞 요청의 응답 처리가 끝난 뒤 다음 요청이 갱신된 refresh 쿠키를 사용하며, 잠금 대기 중 세션이 변경된 요청은 전송하지 않습니다. 토큰을 저장소에 기록하거나 탭 간 전달하지 않습니다. Web Locks가 없는 환경에서는 기존 단일 탭 Promise 공유만 적용되며, 다른 출처·브라우저의 동시 재발급은 이 잠금의 보호 범위가 아닙니다.
 - 앱 시작 시 refresh 쿠키로 access token을 복원하고 USER 권한을 확인합니다. refresh 인증이 없으면 가입용 쿠키의 ONBOARDING 세션을 확인합니다. 일시적 복원 실패는 오류 경계에서 재시도하며, 복원 중 완료된 새 로그인이나 로그아웃을 이전 응답으로 덮어쓰지 않습니다.
 - 카카오 로그인·가입 완료는 `startAuthenticatedSession`으로 새 세션 버전을 시작합니다. 온보딩 세션 진입과 로그아웃도 버전을 변경하지만, 같은 세션의 access token 갱신은 `setAccessToken`으로 버전을 유지합니다. 콜백 응답은 현재 페이지와 세션 버전이 유지될 때만 반영합니다.
 - endpoint 함수는 `request` 같은 low-level helper를 사용합니다.
 - endpoint 함수는 React, TanStack Query, route, UI state를 알면 안 됩니다.
+- `clearAuthSession('expired')`는 재발급 또는 인증 재확인 실패로 종료한 기존 로그인 세션 버전을 기록합니다. `wasAuthSessionExpired(version)`은 해당 종료 직후의 미인증 상태만 허용하므로, 늦은 응답 처리 시 직접 로그아웃이나 다른 세션 전환과 구분할 수 있습니다. 초기 비로그인과 권한 전환은 만료로 기록하지 않습니다.
 - 인증, refresh, retry 정책은 실제 요구사항 없이 미리 복잡하게 만들지 않습니다.
 
 ## Error Handling Policy

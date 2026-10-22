@@ -233,4 +233,86 @@ describe('RestaurantReviewSection', () => {
 
     expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
   })
+
+  it('renders icons for every supported review keyword', () => {
+    const apiReviewKeywordLabels = [
+      '음식이 맛있어요',
+      '향신료가 강하지 않아요',
+      '직원분이 친절해요',
+      '혼밥하기 좋아요',
+      '매장이 넓어요',
+      '매장이 청결해요',
+      '음식이 빨리 나와요',
+      '사진이 잘 나와요',
+      '가성비가 좋아요',
+      '대화하기 좋아요',
+    ]
+    const { container } = renderReviewSection({
+      reviews: [
+        {
+          ...createReviews(1)[0],
+          keywords: apiReviewKeywordLabels,
+        },
+      ],
+    })
+
+    const keywordList = screen.getByText(apiReviewKeywordLabels[0])
+      .parentElement?.parentElement
+
+    expect(keywordList?.querySelectorAll('svg')).toHaveLength(
+      apiReviewKeywordLabels.length,
+    )
+    expect(container).toBeTruthy()
+  })
+
+  it('styles compact review ratings from the app layer', () => {
+    renderReviewSection()
+
+    expect(screen.getAllByRole('img', { name: '평점 3.8점' })[0]).toHaveClass(
+      '[&&]:gap-0',
+      '[&_[data-state=filled]_svg]:text-primary-400',
+      '[&_[data-state=half]_span_svg]:text-primary-400',
+    )
+  })
+
+  it('styles the review write icon from the app layer', () => {
+    renderReviewSection()
+
+    expect(
+      screen
+        .getByRole('button', { name: '리뷰 작성하기' })
+        .querySelector('svg'),
+    ).toHaveClass(
+      'size-6',
+      '[&_path:first-child]:fill-primary-100',
+      '[&_path:last-child]:stroke-primary-100',
+    )
+  })
+
+  it('uses cool gray 600 for the write-review CTA background', () => {
+    renderReviewSection()
+
+    expect(screen.getByRole('button', { name: '리뷰 작성하기' })).toHaveClass(
+      'bg-cool-gray-600',
+    )
+  })
+
+  it('keeps the review list 16px below the write-review CTA', () => {
+    renderReviewSection()
+
+    const reviewListWrapper = screen.getByRole('heading', {
+      name: '리뷰 10',
+    }).parentElement?.parentElement
+
+    expect(reviewListWrapper).toHaveClass('pt-4')
+  })
+
+  it('keeps the write-review button inset 16px from the CTA sides', () => {
+    renderReviewSection()
+
+    const reviewButtonContent = screen.getByText('리뷰 작성하기').parentElement
+    const reviewCta = reviewButtonContent?.parentElement?.parentElement
+
+    expect(reviewCta).toHaveClass('px-4')
+  })
 })

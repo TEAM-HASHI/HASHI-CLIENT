@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { NoteIcon } from '@hashi/hds-icons'
 import { showToast } from '@hashi/hds-ui'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { parseMapSearchContext } from '@/features/mapSearch/utils/parseMapSearchContext'
@@ -10,6 +11,10 @@ import { SearchFilterBar } from '@/pages/search/components/SearchFilterBar'
 import { SearchHeader } from '@/pages/search/components/SearchHeader'
 import { SearchIdlePanel } from '@/pages/search/components/SearchIdlePanel'
 import { SearchResultSkeleton } from '@/pages/search/components/SearchResultSkeleton'
+import {
+  getSearchKeywordError,
+  MAX_SEARCH_KEYWORD_LENGTH,
+} from '@/pages/search/utils/searchKeyword'
 import {
   DEFAULT_FOOD_CATEGORY_VALUE,
   DEFAULT_SORT_VALUE,
@@ -45,12 +50,18 @@ export const SearchPage = () => {
     updateSearchUrlState,
   } = useSearchUrlState()
   const appliedKeyword = mapContext?.keyword ?? urlKeyword
+  const inputKeyword = mapContext
+    ? appliedKeyword.slice(0, MAX_SEARCH_KEYWORD_LENGTH)
+    : appliedKeyword
   const [keywordDraft, setKeywordDraft] = useState({
     appliedKeyword,
-    value: appliedKeyword,
+    value: inputKeyword,
   })
-  const { recentSearchKeywords, saveRecentSearchKeyword } =
-    useRecentSearchKeywords()
+  const {
+    recentSearchKeywords,
+    saveRecentSearchKeyword,
+    clearRecentSearchKeywords,
+  } = useRecentSearchKeywords()
   const searchKeywordRecommendationsQuery =
     useSearchKeywordRecommendationsQuery({ enabled: searchParams === null })
   const {
@@ -86,7 +97,7 @@ export const SearchPage = () => {
   if (keywordDraft.appliedKeyword !== appliedKeyword) {
     setKeywordDraft({
       appliedKeyword,
-      value: appliedKeyword,
+      value: inputKeyword,
     })
   }
 
@@ -101,24 +112,13 @@ export const SearchPage = () => {
 
   const submitSearch = (nextKeyword = keyword) => {
     const normalizedKeyword = nextKeyword.trim()
+    const error = getSearchKeywordError(normalizedKeyword)
+    if (error) {
+      showToast({ children: error, icon: <NoteIcon className="size-6.5" /> })
+      return
+    }
 
     if (mapContext) {
-      if (!normalizedKeyword || normalizedKeyword === '#') {
-        if (!normalizedKeyword) setKeyword('')
-        showToast({ children: '검색어를 입력해주세요.' })
-        return
-      }
-      if (
-        normalizedKeyword.startsWith('#') &&
-        /\s/.test(normalizedKeyword.slice(1))
-      ) {
-        showToast({ children: '해시태그 검색에는 공백을 사용할 수 없어요.' })
-        return
-      }
-      if (normalizedKeyword.length > 30) {
-        setKeyword(normalizedKeyword.slice(0, 30))
-        return
-      }
       saveRecentSearchKeyword(normalizedKeyword)
       navigate(ROUTES.map, {
         replace: true,
@@ -127,15 +127,14 @@ export const SearchPage = () => {
       return
     }
 
-    if (!normalizedKeyword) {
-      setKeyword('')
-      updateSearchUrlState({ keyword: '' })
-      return
-    }
-
     setKeyword(normalizedKeyword)
-    updateSearchUrlState({ keyword: normalizedKeyword })
+    updateSearchUrlState({
+      keyword: normalizedKeyword,
+      sort: DEFAULT_SORT_VALUE,
+      category: DEFAULT_FOOD_CATEGORY_VALUE,
+    })
     saveRecentSearchKeyword(normalizedKeyword)
+    searchInputRef.current?.blur()
   }
 
   const handleBackClick = () => {
@@ -167,7 +166,6 @@ export const SearchPage = () => {
         <SearchHeader
           inputRef={searchInputRef}
           keyword={keyword}
-          maxLength={mapContext ? 30 : undefined}
           onBackClick={handleBackClick}
           onKeywordChange={setKeyword}
           onKeywordClear={handleKeywordClear}
@@ -191,7 +189,7 @@ export const SearchPage = () => {
       <div
         className={cn(
           'flex flex-1 flex-col',
-          isSearchIdle ? 'pt-[83px]' : 'pt-[122px]',
+          isSearchIdle ? 'pt-[79px]' : 'pt-[127px]',
         )}
       >
         {isSearchIdle ? (
@@ -199,16 +197,20 @@ export const SearchPage = () => {
             recentSearchKeywords={recentSearchKeywords}
             recommendedSearchKeywords={recommendedSearchKeywords}
             onKeywordSelect={submitSearch}
+            onRecentKeywordsClear={clearRecentSearchKeywords}
           />
         ) : (
           <>
             {searchRestaurantsQuery.isLoading ? (
               <SearchResultSkeleton />
-            ) : searchRestaurantsQuery.isError ? (
+            ) : searchRestaurantsQuery.isError && restaurants.length === 0 ? (
               <SearchErrorState onRetry={retrySearchRestaurants} />
             ) : restaurants.length > 0 ? (
               <>
                 <RestaurantResultList restaurants={restaurants} />
+                {searchRestaurantsQuery.isError && (
+                  <SearchErrorState onRetry={retrySearchRestaurants} />
+                )}
                 <div ref={loadMoreRef} aria-hidden="true" />
                 {searchRestaurantsQuery.isFetchingNextPage && (
                   <SearchResultSkeleton />
@@ -216,15 +218,23 @@ export const SearchPage = () => {
               </>
             ) : (
               <ListEmptyState
-                className="min-h-0 flex-1 pb-[122px]"
+                className="min-h-0 flex-1 pb-[127px]"
                 description="검색된 식당이 없습니다."
               />
             )}
           </>
         )}
       </div>
-      <FilterBottomSheet {...sortSheet} title="정렬 순서" />
-      <FilterBottomSheet {...foodCategorySheet} title="음식 장르 선택" />
+      <FilterBottomSheet
+        {...sortSheet}
+        layout="restaurant-list"
+        title="정렬순"
+      />
+      <FilterBottomSheet
+        {...foodCategorySheet}
+        layout="restaurant-list"
+        title="음식 장르"
+      />
     </div>
   )
 }

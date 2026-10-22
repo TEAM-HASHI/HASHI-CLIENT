@@ -1,22 +1,19 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { BackIcon } from '@hashi/hds-icons'
 import { Header, IconButton } from '@hashi/hds-ui'
 
-import { ROUTES } from '@/app/router/path'
 import { WithdrawalBottomBar } from '@/pages/withdrawal/components/WithdrawalBottomBar'
 import { WithdrawalConfirmation } from '@/pages/withdrawal/components/WithdrawalConfirmation'
 import { WithdrawalNoticeSection } from '@/pages/withdrawal/components/WithdrawalNoticeSection'
-import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
+import { useWithdrawalPage } from '@/pages/withdrawal/hooks/useWithdrawalPage'
 
 export const WithdrawalPage = () => {
-  const navigate = useNavigate()
-  const [isConfirmed, setIsConfirmed] = useState(false)
-  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
-
-  const handleReturnToMypage = () => {
-    navigate(ROUTES.mypage)
-  }
+  const {
+    isConfirmed,
+    isPending,
+    setIsConfirmed,
+    handleReturn,
+    handleWithdraw,
+  } = useWithdrawalPage()
 
   return (
     <div className="min-h-dvh bg-white">
@@ -25,7 +22,8 @@ export const WithdrawalPage = () => {
           leftAction={
             <IconButton
               aria-label="뒤로가기"
-              onClick={handleReturnToMypage}
+              onClick={handleReturn}
+              disabled={isPending}
               size="xs"
             >
               <BackIcon className="size-6" />
@@ -35,25 +33,20 @@ export const WithdrawalPage = () => {
         />
       </div>
 
-      <div className="flex min-h-dvh flex-col px-7.5 pt-23.75 pb-[calc(134px+var(--safe-area-bottom,0px))]">
+      <div className="flex min-h-dvh flex-col gap-7 px-7.5 pt-23.75 pb-[calc(134px+var(--safe-area-bottom,0px))]">
         <WithdrawalNoticeSection />
         <WithdrawalConfirmation
           checked={isConfirmed}
+          disabled={isPending}
           onCheckedChange={setIsConfirmed}
         />
       </div>
 
       <WithdrawalBottomBar
-        canWithdraw={isConfirmed}
-        onReturn={handleReturnToMypage}
-        onWithdraw={() => {
-          setIsComingSoonOpen(true)
-        }}
-      />
-
-      <ComingSoonDialog
-        open={isComingSoonOpen}
-        onOpenChange={setIsComingSoonOpen}
+        canWithdraw={isConfirmed && !isPending}
+        isPending={isPending}
+        onReturn={handleReturn}
+        onWithdraw={handleWithdraw}
       />
     </div>
   )
