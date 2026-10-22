@@ -6,7 +6,7 @@ import {
 } from '@/pages/search/api/getSearchKeywordRecommendations'
 import { searchRestaurantQueryKeys } from '@/pages/search/queries/searchRestaurantQueryKeys'
 
-const DEFAULT_RECOMMENDATION_SIZE = 8
+const DEFAULT_RECOMMENDATION_SIZE = 10
 
 interface UseSearchKeywordRecommendationsQueryParams {
   enabled?: boolean
