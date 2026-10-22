@@ -8,6 +8,12 @@ import { SavedPage } from '@/pages/saved/SavedPage'
 import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import type { CollectionData } from '@/pages/saved/types'
+import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
+import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
+import {
+  mapCollectionSummary,
+  mapSavedRestaurant,
+} from '@/pages/saved/utils/collectionReadAdapters'
 
 const setup = (
   data: CollectionData = collectionMocks,
@@ -41,6 +47,46 @@ const setup = (
 }
 
 afterEach(cleanup)
+
+describe('서버 응답 목록 표시', () => {
+  it('없는 공개 여부와 저장 수를 비공개·0개로 표시하지 않는다', () => {
+    const collection = mapCollectionSummary({ collectionId: 1, name: '여행' })
+    render(
+      <ul>
+        <CollectionListRow
+          collection={collection}
+          restaurantCount={collection.savedCount}
+          onSelect={vi.fn()}
+        />
+      </ul>,
+    )
+    expect(
+      screen.getByRole('button', { name: '여행 컬렉션 열기' }),
+    ).toBeVisible()
+    expect(screen.queryByText('비공개')).not.toBeInTheDocument()
+    expect(screen.queryByText('0')).not.toBeInTheDocument()
+  })
+
+  it('누락된 평점을 생성하지 않고 식당 ID로 상세 선택을 전달한다', async () => {
+    const select = vi.fn()
+    render(
+      <ul>
+        <SavedRestaurantRow
+          restaurant={mapSavedRestaurant({
+            restaurantId: 8,
+            name: '스시',
+            area: '도쿄',
+          })}
+          onSelect={select}
+        />
+      </ul>,
+    )
+    expect(screen.queryByText('0.0')).not.toBeInTheDocument()
+    expect(screen.getByText('도쿄')).toHaveTextContent(/^도쿄$/)
+    await userEvent.click(screen.getByRole('button', { name: '스시 도쿄' }))
+    expect(select).toHaveBeenCalledExactlyOnceWith('8')
+  })
+})
 
 describe('SavedPage', () => {
   it('외부 식당 선택 콜백을 유지하고 더보기 클릭은 상세 선택으로 전달하지 않는다', async () => {

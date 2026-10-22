@@ -2,12 +2,15 @@ import { MenuIcon, SaveIcon } from '@hashi/hds-icons'
 import { cn } from '@/shared/utils'
 import type { ReactNode } from 'react'
 
-import type { SavedCollection } from '@/pages/saved/types'
+import type { CollectionSummaryReadModelTypes } from '@/pages/saved/types/collectionReadModels'
 import { CollectionCover } from '@/pages/saved/components/CollectionCover'
 
 type CollectionListRowProps = {
-  collection: SavedCollection
-  restaurantCount: number
+  collection: Pick<
+    CollectionSummaryReadModelTypes,
+    'name' | 'color' | 'coverImages' | 'isPublic'
+  >
+  restaurantCount: number | undefined
   onSelect: () => void
   moreAction?: ReactNode
   compact?: boolean
@@ -51,17 +54,19 @@ export const CollectionListRow = ({
             compact ? 'typo-body-7' : 'typo-body-3',
           )}
         >
-          <span className="flex items-center">
-            <SaveIcon
-              aria-hidden="true"
-              className={cn(
-                'text-warm-gray-100',
-                compact ? 'size-4' : 'size-6',
-              )}
-            />
-            {restaurantCount}
-          </span>
-          {!compact && (
+          {restaurantCount !== undefined && (
+            <span className="flex items-center">
+              <SaveIcon
+                aria-hidden="true"
+                className={cn(
+                  'text-warm-gray-100',
+                  compact ? 'size-4' : 'size-6',
+                )}
+              />
+              {restaurantCount}
+            </span>
+          )}
+          {!compact && collection.isPublic !== undefined && (
             <span className="border-warm-gray-50 border-l px-2">
               {collection.isPublic ? '공개' : '비공개'}
             </span>
