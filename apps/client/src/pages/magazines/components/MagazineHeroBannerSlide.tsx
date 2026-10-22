@@ -13,12 +13,6 @@ export const MagazineHeroBannerSlide = ({ banner }: Props) => {
     <Link
       aria-label={banner.title}
       className="bg-cool-gray-100 relative block size-full overflow-hidden"
-      state={{
-        magazinePreview: {
-          imageUrl: banner.imageUrl,
-          title: banner.title,
-        },
-      }}
       to={getMagazineDetailPath(banner.id)}
     >
       <Banner imageAlt="" imageSrc={banner.imageUrl} />
