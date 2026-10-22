@@ -165,8 +165,9 @@ const renderRoute = async (initialEntry: string) => {
   await act(async () => {
     await vi.dynamicImportSettled()
   })
-  return { router }
+    return { router }
 }
+
 describe('appRoutes', () => {
   beforeEach(() => {
     clearAuthSession()
@@ -194,8 +195,13 @@ describe('appRoutes', () => {
     })
     vi.mocked(getCollections).mockReset().mockResolvedValue({
       collections: [
-        { collectionId: 8, name: 'API 여행', savedCount: 1, visibility: 'private' },
-      ],
+  {
+    collectionId: 8,
+    name: 'API 여행',
+    savedCount: 1,
+    visibility: 'private',
+  },
+],
       totalCount: 1,
       hasNext: false,
     })
@@ -252,10 +258,11 @@ describe('appRoutes', () => {
       expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
       await user.keyboard('{Escape}')
       expect(screen.getByRole('navigation')).toBeVisible()
-    } finally {
+        } finally {
       rect.mockRestore()
     }
   })
+
   it('컬렉션의 실제 서버 식당 ID로 상세 경로에 연결한다', async () => {
     setAccessToken('test-session')
     const { router } = await renderRoute('/saved/collections/8')
