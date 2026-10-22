@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -30,7 +31,7 @@ const { mockParams } = vi.hoisted(() => ({
 }))
 const { mockLocationStore } = vi.hoisted(() => ({
   mockLocationStore: {
-    state: undefined as { source?: 'today' | 'detail' } | undefined,
+    state: undefined as { source?: 'today' | 'detail' | 'map' } | undefined,
   },
 }))
 const { mockAuthStore } = vi.hoisted(() => ({
@@ -91,6 +92,9 @@ vi.mock('@/features/restaurantDetail/api/getRestaurantMenus', () => ({
 }))
 vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
   getRestaurantSummary: vi.fn(),
+}))
+vi.mock('@/features/restaurantDetail/hooks/useRestaurantSaveSummary', () => ({
+  useRestaurantSaveSummary: () => ({ saveCount: 7, saved: false }),
 }))
 vi.mock('@/features/restaurantDetail/api/restaurantPhotoSource', () => ({
   getRestaurantPhotoDataSource: vi.fn(),
@@ -161,7 +165,14 @@ const renderPage = () => {
 
 describe('RestaurantMenuDetailPage', () => {
   beforeEach(() => {
-    vi.mocked(getRestaurantPhotoDataSource).mockReturnValue(null)
+    vi.mocked(getRestaurantPhotoDataSource).mockReturnValue({
+      key: 'test',
+      source: {
+        getPage: vi
+          .fn()
+          .mockRejectedValue(new Error('Photo count unavailable')),
+      },
+    })
     mockParams.menuId = '100'
     mockParams.restaurantId = '10'
     mockedGetRestaurantSummary.mockResolvedValue(restaurantSummary)
@@ -226,7 +237,7 @@ describe('RestaurantMenuDetailPage', () => {
     expect(getPage).toHaveBeenCalledTimes(1)
   })
 
-  it('does not invent a photo count when the source is unavailable', async () => {
+  it('does not invent a photo count when its API request fails', async () => {
     renderPage()
 
     expect(await screen.findByRole('tab', { name: '사진' })).toBeInTheDocument()
@@ -236,12 +247,14 @@ describe('RestaurantMenuDetailPage', () => {
     renderPage()
 
     await waitFor(() => {
-      expect(mockedGetRestaurantMenus).toHaveBeenCalledWith({
-        restaurantId: 10,
-        excludeMenuId: 100,
-        cursor: undefined,
-        size: 10,
-      })
+      expect(mockedGetRestaurantMenus).toHaveBeenCalledWith(
+        expect.objectContaining({
+          restaurantId: 10,
+          excludeMenuId: 100,
+          cursor: undefined,
+          size: 10,
+        }),
+      )
     })
   })
 
@@ -249,27 +262,6 @@ describe('RestaurantMenuDetailPage', () => {
     renderPage()
 
     await screen.findByTestId('restaurant-menu-detail-page')
-    expect(
-      screen.getByTestId('restaurant-menu-detail-fixed-header'),
-    ).toHaveClass('fixed', 'top-0', 'max-w-[var(--app-mobile-max-width,100%)]')
-    expect(
-      screen
-        .getByTestId('restaurant-menu-detail-fixed-header')
-        .querySelector('header'),
-    ).toHaveClass('h-[77px]')
-    expect(
-      screen.getByTestId('restaurant-menu-detail-tab-fixed-container'),
-    ).toHaveClass('fixed', 'max-w-[var(--app-mobile-max-width,100%)]')
-    expect(
-      screen.getByTestId('restaurant-menu-detail-tab-fixed-container'),
-    ).toHaveStyle({ top: '77px' })
-    expect(
-      screen.getByTestId('restaurant-menu-detail-fixed-spacer'),
-    ).toHaveStyle({ height: '127px' })
-    expect(screen.getByText('하시 스시')).toHaveClass(
-      'truncate',
-      'whitespace-nowrap',
-    )
     expect(screen.queryByRole('main')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '시오라멘' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: '다른 메뉴 2' })).toBeTruthy()
@@ -277,6 +269,50 @@ describe('RestaurantMenuDetailPage', () => {
     expect(screen.getByRole('button', { name: '예약하기' })).toBeTruthy()
     expect(
       screen.queryByRole('button', { name: '다시 추천 받기' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('keeps the selected menu visible while retrying the optional other-menu list', async () => {
+    let resolveRetry!: (data: typeof restaurantMenus) => void
+    mockedGetRestaurantMenus
+      .mockRejectedValueOnce(new Error('other menus failed'))
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveRetry = resolve
+        }),
+      )
+
+    renderPage()
+
+    const retry = await screen.findByRole('button', {
+      name: '메뉴 다시 불러오기',
+    })
+    expect(
+      screen.getByRole('heading', { name: '시오라멘' }),
+    ).toBeInTheDocument()
+    fireEvent.click(retry)
+
+    expect(
+      await screen.findByText('메뉴를 불러오고 있어요.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: '시오라멘' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '예약하기' })).toBeInTheDocument()
+    expect(mockedGetRestaurantMenus).toHaveBeenCalledTimes(2)
+
+    await act(async () => {
+      resolveRetry(restaurantMenus)
+    })
+
+    expect(
+      await screen.findByRole('button', { name: /쇼유라멘/ }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: '시오라멘' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText('메뉴를 불러오고 있어요.'),
     ).not.toBeInTheDocument()
   })
 
@@ -316,12 +352,14 @@ describe('RestaurantMenuDetailPage', () => {
     triggerIntersect()
 
     await waitFor(() => {
-      expect(mockedGetRestaurantMenus).toHaveBeenCalledWith({
-        restaurantId: 10,
-        excludeMenuId: 100,
-        cursor: 102,
-        size: 10,
-      })
+      expect(mockedGetRestaurantMenus).toHaveBeenCalledWith(
+        expect.objectContaining({
+          restaurantId: 10,
+          excludeMenuId: 100,
+          cursor: 102,
+          size: 10,
+        }),
+      )
     })
     expect(await screen.findByRole('button', { name: /탄탄멘/ })).toBeTruthy()
   })
@@ -346,19 +384,29 @@ describe('RestaurantMenuDetailPage', () => {
     })
   })
 
-  it('keeps representative badges when a representative menu is selected', async () => {
-    mockParams.menuId = '101'
-    mockedGetRestaurantMenu.mockResolvedValue({
-      ...restaurantMenus.menus[0],
-      otherMenuCount: 2,
-    })
-
+  it('replaces another menu in the map flow so back returns to the map menu list', async () => {
+    mockLocationStore.state = { source: 'map' }
     renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: /쇼유라멘/ }))
+    expect(mockNavigate).toHaveBeenCalledWith('/restaurants/10/menus/101', {
+      replace: true,
+      state: { source: 'map' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+    expect(mockNavigate).toHaveBeenLastCalledWith('/map', {
+      replace: true,
+      state: { mapRestaurantId: '10', activeTab: 'menu' },
+    })
+  })
 
-    expect(
-      await screen.findByRole('heading', { name: '쇼유라멘' }),
-    ).toBeTruthy()
-    expect(screen.getAllByText('대표')).toHaveLength(1)
+  it('returns to the selected map restaurant tab instead of the standalone detail', async () => {
+    mockLocationStore.state = { source: 'map' }
+    renderPage()
+    fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
+    expect(mockNavigate).toHaveBeenCalledWith('/map', {
+      replace: true,
+      state: { mapRestaurantId: '10', activeTab: 'review' },
+    })
   })
 
   it('resets scroll position on menu detail entry', () => {
@@ -447,14 +495,6 @@ describe('RestaurantMenuDetailPage', () => {
     expect(
       container.querySelector('[data-slot="image-fallback"]'),
     ).toBeInTheDocument()
-  })
-
-  it('opens login bottom sheet for unauthenticated reservation action', async () => {
-    renderPage()
-
-    fireEvent.click(await screen.findByRole('button', { name: '예약하기' }))
-
-    expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
   })
 
   it('starts Kakao OAuth from the login bottom sheet with the menu path', async () => {

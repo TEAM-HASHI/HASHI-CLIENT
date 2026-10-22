@@ -42,12 +42,16 @@ export const restaurantSummaryQueryOptions = (restaurantId: number) =>
   queryOptions({
     queryFn: () => getRestaurantSummary(restaurantId),
     queryKey: restaurantDetailQueryKeys.summary(restaurantId),
+    retry: false,
+    throwOnError: false,
   })
 
 export const restaurantStoreInformationQueryOptions = (restaurantId: number) =>
   queryOptions({
     queryFn: () => getRestaurantStoreInformation(restaurantId),
     queryKey: restaurantDetailQueryKeys.storeInformation(restaurantId),
+    retry: false,
+    throwOnError: false,
   })
 
 export const restaurantMenuQueryOptions = (
@@ -71,12 +75,14 @@ export const restaurantMenusInfiniteQueryOptions = (
     ReturnType<typeof restaurantDetailQueryKeys.menus>,
     number | undefined
   >({
-    queryFn: ({ pageParam }) =>
+    throwOnError: false,
+    queryFn: ({ pageParam, signal }) =>
       getRestaurantMenus({
         restaurantId,
         cursor: pageParam,
         excludeMenuId,
         size,
+        signal,
       }),
     queryKey: restaurantDetailQueryKeys.menus(
       restaurantId,
@@ -104,8 +110,15 @@ export const restaurantReviewsInfiniteQueryOptions = ({
     ReturnType<typeof restaurantDetailQueryKeys.reviews>,
     number | undefined
   >({
-    queryFn: ({ pageParam }) =>
-      getRestaurantReviews({ restaurantId, cursor: pageParam, size, sort }),
+    throwOnError: false,
+    queryFn: ({ pageParam, signal }) =>
+      getRestaurantReviews({
+        restaurantId,
+        cursor: pageParam,
+        size,
+        sort,
+        signal,
+      }),
     queryKey: restaurantDetailQueryKeys.reviews(restaurantId, size, sort),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) =>

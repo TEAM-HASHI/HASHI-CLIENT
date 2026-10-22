@@ -41,6 +41,8 @@ interface MapViewportProps {
   onUserMove?: () => void
   cameraRequest?: MapCameraSnapshot | null
   searchPositions?: MapPosition[] | null
+  initialBounds?: MapBounds
+  initialFitEnabled?: boolean
   onResetArea: () => void
   onSaved: () => void
   onCloseDetail?: () => void
@@ -62,6 +64,64 @@ const MapFailure = ({ configuration = false }: { configuration?: boolean }) => (
   </div>
 )
 
+const getAttributionHref = (uri: string) => {
+  try {
+    const url = new URL(uri)
+    return url.protocol === 'https:' || url.protocol === 'http:'
+      ? url.href
+      : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const MapCoordinateAttributions = ({
+  restaurants,
+}: Pick<MapViewportProps, 'restaurants'>) => {
+  const attributions = Array.from(
+    new Map(
+      restaurants.flatMap(({ attributions }) =>
+        (attributions ?? []).map(
+          (attribution) =>
+            [
+              JSON.stringify([attribution.displayName, attribution.uri]),
+              attribution,
+            ] as const,
+        ),
+      ),
+    ),
+  )
+  if (!attributions.length) return null
+  return (
+    <aside
+      aria-label="지도 좌표 출처"
+      className="typo-caption-2 text-cool-gray-800 absolute inset-x-5 bottom-20 max-h-16 overflow-y-auto rounded bg-white/95 px-2 py-1"
+    >
+      <span>좌표 출처: </span>
+      {attributions.map(([key, { displayName, uri }], index) => {
+        const href = getAttributionHref(uri)
+        return (
+          <span key={key}>
+            {index > 0 && ' · '}
+            {href ? (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                {displayName}
+              </a>
+            ) : (
+              displayName
+            )}
+          </span>
+        )
+      })}
+    </aside>
+  )
+}
+
 const GoogleMapSurface = ({
   restaurants,
   areas,
@@ -79,6 +139,8 @@ const GoogleMapSurface = ({
   onUserMove,
   cameraRequest,
   searchPositions,
+  initialBounds,
+  initialFitEnabled = true,
   loadingRestaurants = false,
   onMapFailureChange,
 }: MapViewportProps) => {
@@ -90,6 +152,7 @@ const GoogleMapSurface = ({
   const firstIdleZoom = useRef<number | null>(null)
   const [timedOut, setTimedOut] = useState(false)
   const [authFailed, setAuthFailed] = useState(false)
+  const suppressDragClick = useRef(false)
   useEffect(() => {
     const authWindow = window as Window & { gm_authFailure?: () => void }
     const previous = authWindow.gm_authFailure
@@ -106,10 +169,10 @@ const GoogleMapSurface = ({
   }, [])
   const ready = status === APILoadingStatus.LOADED && currentBounds !== null
   useEffect(() => {
-    if (ready) return
+    if (ready || !initialFitEnabled) return
     const timeout = window.setTimeout(() => setTimedOut(true), 15000)
     return () => window.clearTimeout(timeout)
-  }, [ready])
+  }, [ready, initialFitEnabled])
   const {
     userMoved: userMovedRef,
     programmaticMove: programmaticMoveRef,
@@ -121,6 +184,9 @@ const GoogleMapSurface = ({
     resetVersion,
     cameraRequest,
     searchPositions,
+    initialBounds,
+    areas.find(({ code }) => code === areaCode)?.cameraBounds,
+    initialFitEnabled,
   )
   const failed =
     authFailed ||
@@ -144,167 +210,195 @@ const GoogleMapSurface = ({
     onUserMove?.()
   }
   return (
-    <div
-      className="h-full w-full"
-      onWheelCapture={markUserMove}
-      onDoubleClickCapture={markUserMove}
-      onTouchMoveCapture={(event) => {
-        if (event.touches.length > 1) markUserMove()
-      }}
-      onKeyDownCapture={(event) => {
-        if (
-          [
-            'ArrowUp',
-            'ArrowDown',
-            'ArrowLeft',
-            'ArrowRight',
-            '+',
-            '-',
-            '=',
-          ].includes(event.key)
-        ) {
-          markUserMove()
-        }
-      }}
-    >
-      {!failed && (
-        <GoogleMap
-          mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim()}
-          defaultCenter={{ lat: 35.685, lng: 139.75 }}
-          defaultZoom={11}
-          isFractionalZoomEnabled
-          gestureHandling="greedy"
-          disableDefaultUI
-          clickableIcons={false}
-          maxZoom={20}
-          onDragstart={markUserMove}
-          onIdle={({ map }) => {
-            const bounds = map.getBounds()?.toJSON()
-            if (!bounds) return
-            const nextZoom = map.getZoom() ?? 11
-            // The camera hook's first idle listener may run after this one.
-            // Keep the fitted scale in the very first published snapshot too.
-            firstIdleZoom.current ??= cameraRequest?.minZoom ?? nextZoom
-            const overviewZoom =
-              minimumZoom.current ?? firstIdleZoom.current ?? nextZoom
-            const center = map.getCenter()?.toJSON()
-            if (center)
-              onCameraChange?.({
-                center,
-                zoom: nextZoom,
-                bounds,
-                minZoom: overviewZoom,
-              })
-            if (!programmaticMoveRef.current && userMovedRef.current) {
-              const mode = getMapDisplayMode({
-                zoom: nextZoom,
-                overviewZoom,
-                previous: zoomed ? 'restaurants' : 'areas',
-                hasConditions,
-              })
-              if (mode === 'restaurants' && !zoomed) onExplore()
-              if (mode === 'areas' && zoomed && !selectedId && nextZoom < zoom)
-                onOverview?.()
-            }
-            setCurrentBounds(bounds)
-            if (
-              programmaticMoveRef.current ||
-              (!userMovedRef.current && !hasUserMoved)
-            ) {
-              setSearchedBounds(bounds)
-            }
-            if (programmaticMoveRef.current) {
-              setHasUserMoved(false)
-            } else if (userMovedRef.current) {
-              setHasUserMoved(
-                !!searchedBounds &&
-                  (['north', 'south', 'east', 'west'] as const).some(
-                    (key) =>
-                      Math.abs(bounds[key] - searchedBounds[key]) > 0.00001,
-                  ),
-              )
-            }
-            userMovedRef.current = false
-            programmaticMoveRef.current = false
-            setZoom(nextZoom)
-          }}
-          className="relative h-full w-full"
-        >
-          {zoomed
-            ? restaurants.map((restaurant) => (
-                <AdvancedMarker
-                  key={restaurant.id}
-                  position={restaurant.position}
-                  anchorLeft="-50%"
-                  anchorTop="-50%"
-                  zIndex={restaurant.id === selectedId ? 2 : 1}
-                >
-                  <div className="pointer-events-auto max-w-[min(60vw,258px)]">
-                    <MapRestaurantMarker
-                      restaurant={restaurant}
-                      isSelected={restaurant.id === selectedId}
-                      onSelect={onSelectRestaurant}
-                    />
-                  </div>
-                </AdvancedMarker>
-              ))
-            : areas.map((area) => (
-                <AdvancedMarker key={area.code} position={area.position}>
-                  <div
-                    className="pointer-events-auto relative"
-                    style={{
-                      transform: `translateY(${offsets[area.code] ?? 0}px)`,
-                    }}
-                  >
-                    {!!offsets[area.code] && (
-                      <span
-                        aria-hidden="true"
-                        className="bg-cool-gray-600 pointer-events-none absolute left-1/2 w-px"
-                        style={{
-                          height: Math.max(0, offsets[area.code] - 44),
-                          bottom: '100%',
-                        }}
-                      />
-                    )}
-                    <MapAreaMarker
-                      area={area}
-                      onSelect={onSelectArea}
-                      belowAnchor={!!offsets[area.code]}
-                    />
-                  </div>
-                </AdvancedMarker>
-              ))}
-        </GoogleMap>
-      )}
-      {(!ready || loadingRestaurants) && !failed && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <MapStatusView
-            loading
-            message={
-              ready ? '식당 목록을 불러오고 있어요.' : '지도를 불러오고 있어요.'
-            }
-          />
-        </div>
-      )}
-      {failed && <MapFailure />}
-      {ready &&
-        !failed &&
-        !loadingRestaurants &&
-        hasUserMoved &&
-        boundsChanged &&
-        currentBounds && (
-          <div className="absolute inset-x-0 bottom-8 text-center">
-            <MapSearchAreaButton
-              onClick={() => {
-                userMovedRef.current = false
+    <>
+      <div
+        className="h-full w-full"
+        onPointerDownCapture={() => {
+          suppressDragClick.current = false
+        }}
+        onClickCapture={(event) => {
+          // Resizing the map as the sheet collapses can put a marker under
+          // pointer-up. Do not treat that drag-ending click as a selection.
+          if (suppressDragClick.current && event.detail > 0) {
+            event.preventDefault()
+            event.stopPropagation()
+          }
+          suppressDragClick.current = false
+        }}
+        onWheelCapture={markUserMove}
+        onDoubleClickCapture={markUserMove}
+        onTouchMoveCapture={(event) => {
+          if (event.touches.length > 1) markUserMove()
+        }}
+        onKeyDownCapture={(event) => {
+          if (
+            [
+              'ArrowUp',
+              'ArrowDown',
+              'ArrowLeft',
+              'ArrowRight',
+              '+',
+              '-',
+              '=',
+            ].includes(event.key)
+          ) {
+            markUserMove()
+          }
+        }}
+      >
+        {!failed && (
+          <GoogleMap
+            mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim()}
+            defaultCenter={{ lat: 35.685, lng: 139.75 }}
+            defaultZoom={11}
+            isFractionalZoomEnabled
+            gestureHandling="greedy"
+            disableDefaultUI
+            clickableIcons={false}
+            maxZoom={20}
+            onDragstart={() => {
+              suppressDragClick.current = true
+              markUserMove()
+            }}
+            onIdle={({ map }) => {
+              if (!initialFitEnabled && minimumZoom.current === null) return
+              const bounds = map.getBounds()?.toJSON()
+              if (!bounds) return
+              const nextZoom = map.getZoom() ?? 11
+              // The camera hook's first idle listener may run after this one.
+              // Keep the fitted scale in the very first published snapshot too.
+              firstIdleZoom.current ??= cameraRequest?.minZoom ?? nextZoom
+              const overviewZoom =
+                minimumZoom.current ?? firstIdleZoom.current ?? nextZoom
+              const center = map.getCenter()?.toJSON()
+              if (center)
+                onCameraChange?.({
+                  center,
+                  zoom: nextZoom,
+                  bounds,
+                  minZoom: overviewZoom,
+                })
+              if (!programmaticMoveRef.current && userMovedRef.current) {
+                const mode = getMapDisplayMode({
+                  zoom: nextZoom,
+                  overviewZoom,
+                  previous: zoomed ? 'restaurants' : 'areas',
+                  hasConditions,
+                })
+                if (mode === 'restaurants' && !zoomed) onExplore()
+                if (
+                  mode === 'areas' &&
+                  zoomed &&
+                  !selectedId &&
+                  nextZoom < zoom
+                )
+                  onOverview?.()
+              }
+              setCurrentBounds(bounds)
+              if (
+                programmaticMoveRef.current ||
+                (!userMovedRef.current && !hasUserMoved)
+              ) {
+                setSearchedBounds(bounds)
+              }
+              if (programmaticMoveRef.current) {
                 setHasUserMoved(false)
-                setSearchedBounds(currentBounds)
-                onSearchArea(currentBounds)
-              }}
+              } else if (userMovedRef.current) {
+                setHasUserMoved(
+                  !!searchedBounds &&
+                    (['north', 'south', 'east', 'west'] as const).some(
+                      (key) =>
+                        Math.abs(bounds[key] - searchedBounds[key]) > 0.00001,
+                    ),
+                )
+              }
+              userMovedRef.current = false
+              programmaticMoveRef.current = false
+              setZoom(nextZoom)
+            }}
+            className="relative h-full w-full"
+          >
+            {zoomed
+              ? restaurants.map((restaurant) => (
+                  <AdvancedMarker
+                    key={restaurant.id}
+                    position={restaurant.position}
+                    anchorLeft="-50%"
+                    anchorTop="-50%"
+                    zIndex={restaurant.id === selectedId ? 2 : 1}
+                  >
+                    <div className="pointer-events-auto max-w-[min(60vw,258px)]">
+                      <MapRestaurantMarker
+                        restaurant={restaurant}
+                        isSelected={restaurant.id === selectedId}
+                        onSelect={onSelectRestaurant}
+                      />
+                    </div>
+                  </AdvancedMarker>
+                ))
+              : areas.map((area) => (
+                  <AdvancedMarker key={area.code} position={area.position}>
+                    <div
+                      className="pointer-events-auto relative"
+                      style={{
+                        transform: `translateY(${offsets[area.code] ?? 0}px)`,
+                      }}
+                    >
+                      {!!offsets[area.code] && (
+                        <span
+                          aria-hidden="true"
+                          className="bg-cool-gray-600 pointer-events-none absolute left-1/2 w-px"
+                          style={{
+                            height: Math.max(0, offsets[area.code] - 44),
+                            bottom: '100%',
+                          }}
+                        />
+                      )}
+                      <MapAreaMarker
+                        area={area}
+                        onSelect={onSelectArea}
+                        belowAnchor={!!offsets[area.code]}
+                      />
+                    </div>
+                  </AdvancedMarker>
+                ))}
+          </GoogleMap>
+        )}
+        {(!ready || loadingRestaurants) && !failed && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <MapStatusView
+              loading
+              message={
+                ready
+                  ? '식당 목록을 불러오고 있어요.'
+                  : '지도를 불러오고 있어요.'
+              }
             />
           </div>
         )}
-    </div>
+        {failed && <MapFailure />}
+        {ready &&
+          !failed &&
+          !loadingRestaurants &&
+          hasUserMoved &&
+          boundsChanged &&
+          currentBounds && (
+            <div className="absolute inset-x-0 bottom-8 text-center">
+              <MapSearchAreaButton
+                onClick={() => {
+                  userMovedRef.current = false
+                  setHasUserMoved(false)
+                  setSearchedBounds(currentBounds)
+                  onSearchArea(currentBounds)
+                }}
+              />
+            </div>
+          )}
+      </div>
+      {ready && !failed && zoomed && (
+        <MapCoordinateAttributions restaurants={restaurants} />
+      )}
+    </>
   )
 }
 

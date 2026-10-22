@@ -1,10 +1,251 @@
 import { expect, test } from '@playwright/test'
 
+const initialBounds = { north: 35.73, south: 35.64, west: 139.68, east: 139.81 }
+const regionFixtures = [
+  { mapRegionId: 1, name: '신주쿠', lat: 35.6938, lng: 139.7034 },
+  { mapRegionId: 2, name: '시부야', lat: 35.6595, lng: 139.7005 },
+  { mapRegionId: 3, name: '긴자', lat: 35.6717, lng: 139.765 },
+  { mapRegionId: 4, name: '우에노', lat: 35.7142, lng: 139.7774 },
+  { mapRegionId: 5, name: '아사쿠사', lat: 35.7148, lng: 139.7967 },
+]
+const photoPaths = [1, 2, 3].map(
+  (index) => `/src/shared/assets/images/map/preview/tonkatsu-${index}.webp`,
+)
+const restaurantFixtures = [
+  {
+    restaurantId: 1,
+    name: '코코네 돈카츠 신도심점',
+    mapRegionId: 1,
+    placeType: 'restaurant',
+    rating: 4.8,
+    lat: 35.694,
+    lng: 139.703,
+  },
+  {
+    restaurantId: 2,
+    name: '야키니쿠 리키마루',
+    mapRegionId: 2,
+    placeType: 'restaurant',
+    rating: 4.8,
+    lat: 35.6605,
+    lng: 139.7015,
+  },
+  {
+    restaurantId: 3,
+    name: '카츠카츠',
+    mapRegionId: 4,
+    placeType: 'restaurant',
+    rating: 4.6,
+    lat: 35.715,
+    lng: 139.778,
+  },
+  {
+    restaurantId: 4,
+    name: '히마와리 스시 신도심점',
+    mapRegionId: 3,
+    placeType: 'restaurant',
+    rating: 4.9,
+    lat: 35.672,
+    lng: 139.765,
+  },
+  {
+    restaurantId: 5,
+    name: '도쿄 카페 미리보기',
+    mapRegionId: 2,
+    placeType: 'cafe',
+    rating: 4.5,
+    lat: 35.6585,
+    lng: 139.6995,
+  },
+  {
+    restaurantId: 6,
+    name: '아사쿠사 주점 미리보기',
+    mapRegionId: 5,
+    placeType: 'bar',
+    rating: 4.7,
+    lat: 35.7145,
+    lng: 139.7965,
+  },
+  {
+    restaurantId: 7,
+    name: '도쿄 야키니쿠',
+    mapRegionId: 1,
+    placeType: 'restaurant',
+    rating: 4.3,
+    lat: 35.6955,
+    lng: 139.705,
+  },
+].map(({ lat, lng, ...restaurant }) => ({
+  ...restaurant,
+  reviewCount: 124,
+  genre: 'japanese',
+  imageUrls: photoPaths,
+  location: {
+    latitude: lat,
+    longitude: lng,
+    validUntil: '2099-01-01T00:00:00Z',
+    attributions: [
+      { displayName: '좌표 제공자', uri: 'https://example.com/credits' },
+    ],
+  },
+}))
+
 test.beforeEach(async ({ page }) => {
-  // Public sample publishing must not require a live backend or auth session.
-  await page.route('**/api/v1/**', (route) =>
-    route.fulfill({ status: 401, contentType: 'application/json', body: '{}' }),
-  )
+  // The Google SDK stays real; deterministic server JSON exercises the API boundary.
+  let lastQuery: Record<string, string | number> = {
+    ...initialBounds,
+    sort: 'recommend',
+  }
+  await page.route('**/api/v1/**', async (route) => {
+    const url = new URL(route.request().url())
+    const fulfill = (data: unknown) =>
+      route.fulfill({
+        status: 200,
+        json: { success: true, code: 'SUCCESS', message: 'ok', data },
+      })
+    if (url.pathname.endsWith('/restaurants/save-counts'))
+      return fulfill({
+        restaurants: (url.searchParams.get('restaurantIds') ?? '')
+          .split(',')
+          .filter(Boolean)
+          .map((id) => ({ restaurantId: Number(id), saveCount: 3 })),
+      })
+    if (url.pathname.endsWith('/users/me/restaurant-saves'))
+      return fulfill({ restaurants: [] })
+    if (url.pathname.endsWith('/restaurants/map/regions'))
+      return fulfill({
+        initialBounds,
+        queryLimits: {
+          supportedBounds: { north: 40, south: 30, west: 130, east: 150 },
+          maxLatitudeSpan: 2,
+          maxLongitudeSpan: 2,
+        },
+        regions: regionFixtures.map(({ lat, lng, ...region }) => ({
+          ...region,
+          restaurantCount: restaurantFixtures.filter(
+            ({ mapRegionId }) => mapRegionId === region.mapRegionId,
+          ).length,
+          clusterPosition: { latitude: lat, longitude: lng },
+          cameraBounds: {
+            north: lat + 0.01,
+            south: lat - 0.01,
+            west: lng - 0.01,
+            east: lng + 0.01,
+          },
+          displayOrder: region.mapRegionId,
+        })),
+      })
+    if (url.pathname.endsWith('/restaurants/map')) {
+      const params = Object.fromEntries(url.searchParams)
+      const query: Record<string, string | number> = params.querySessionId
+        ? { ...lastQuery, sort: params.sort }
+        : {
+            ...params,
+            ...(params.mapRegionId
+              ? { mapRegionId: Number(params.mapRegionId) }
+              : {}),
+            south: Number(params.south),
+            north: Number(params.north),
+            west: Number(params.west),
+            east: Number(params.east),
+          }
+      lastQuery = query
+      const content = restaurantFixtures
+        .filter(
+          (restaurant) =>
+            (!query.mapRegionId ||
+              restaurant.mapRegionId === query.mapRegionId) &&
+            (!query.placeType ||
+              query.placeType === 'all' ||
+              restaurant.placeType === query.placeType) &&
+            (!query.keyword || restaurant.name.includes(String(query.keyword))),
+        )
+        .sort((left, right) =>
+          query.sort === 'rating'
+            ? right.rating - left.rating
+            : left.restaurantId - right.restaurantId,
+        )
+      return fulfill({
+        content,
+        hasNext: false,
+        querySessionId: '123e4567-e89b-12d3-a456-426614174000',
+        expiresAt: '2099-01-01T00:00:00Z',
+        rankingAsOf: '2026-10-19T00:00:00Z',
+        query,
+        ...(query.keyword
+          ? {
+              searchResult: {
+                totalCount: content.length,
+                bounds: content.length
+                  ? {
+                      north: Math.max(
+                        ...content.map(({ location }) => location.latitude),
+                      ),
+                      south: Math.min(
+                        ...content.map(({ location }) => location.latitude),
+                      ),
+                      west: Math.min(
+                        ...content.map(({ location }) => location.longitude),
+                      ),
+                      east: Math.max(
+                        ...content.map(({ location }) => location.longitude),
+                      ),
+                    }
+                  : null,
+              },
+            }
+          : {}),
+      })
+    }
+    const match = url.pathname.match(
+      /\/restaurants\/(\d+)\/(map-location|summary|store-information|menus|reviews|photos)$/,
+    )
+    if (match) {
+      const restaurantId = Number(match[1])
+      const restaurant = restaurantFixtures.find(
+        (item) => item.restaurantId === restaurantId,
+      )
+      if (!restaurant) return route.fulfill({ status: 404, json: {} })
+      if (match[2] === 'map-location')
+        return fulfill({ restaurantId, location: restaurant.location })
+      if (match[2] === 'summary')
+        return fulfill({ ...restaurant, address: '도쿄', reservationFee: 0 })
+      if (match[2] === 'photos') {
+        const filter = url.searchParams.get('filter') ?? 'ALL'
+        const isEmpty = filter === 'MENU'
+        return fulfill({
+          restaurantId,
+          filter,
+          counts: { all: 3, representative: 3, menu: 0, review: 0 },
+          totalCount: isEmpty ? 0 : 3,
+          photos: isEmpty
+            ? []
+            : photoPaths.map((imageUrl, index) => ({
+                photoId: `REPRESENTATIVE:${index + 1}`,
+                type: 'REPRESENTATIVE',
+                imageUrl,
+                image: null,
+              })),
+          hasNext: false,
+          nextCursor: null,
+        })
+      }
+      if (match[2] === 'store-information')
+        return fulfill({
+          restaurantId,
+          description: '도쿄에서 즐기는 식당입니다. '.repeat(40),
+          businessHours: [],
+        })
+      return fulfill({
+        restaurantId,
+        content: [],
+        hasNext: false,
+        averageRating: restaurant.rating,
+        reviewCount: 0,
+      })
+    }
+    return route.fulfill({ status: 401, json: {} })
+  })
   await page.setViewportSize({ width: 393, height: 852 })
   await page.goto('/map')
   await expect(
@@ -28,15 +269,22 @@ test('exposed map, category and search receive real pointer clicks', async ({
   await expect(page).toHaveURL(/\/search$/)
   await page.getByRole('searchbox').fill('없는 식당')
   await page.getByRole('searchbox').press('Enter')
+  await expect(page.getByRole('alert')).toContainText(
+    '조건에 맞는 맛집이 없어요.',
+  )
   await expect(
     page.getByRole('region', { name: '지도 식당 목록' }).getByRole('status'),
-  ).toHaveText('조건에 맞는 맛집이 없어요.')
+  ).toHaveCount(0)
   await expect(
     page.getByRole('button', { name: '검색 조건 초기화' }),
   ).toHaveCount(0)
-  await expect(
-    page.getByRole('slider', { name: '식당 목록 높이 조절' }),
-  ).not.toHaveAttribute('aria-valuenow', '30')
+  const handle = page.getByRole('slider', { name: '식당 목록 높이 조절' })
+  await expect(handle).toHaveAttribute('aria-valuenow', '30')
+  await handle.press('End')
+  await expect(handle).toHaveAttribute('aria-valuenow', '30')
+  await page.screenshot({
+    path: test.info().outputPath('figma-empty-toast-handle.png'),
+  })
   await page.getByRole('button', { name: '지도 검색어 지우기' }).click()
   await page.getByRole('button', { name: '전체', exact: true }).click()
   await expect(
@@ -134,11 +382,35 @@ test('unfiltered map movement offers explicit viewport search without auto-query
   await expect(page.getByText('지도를 불러오고 있어요.')).toBeHidden()
   const search = page.getByRole('button', { name: '현재 위치에서 검색' })
   await expect(search).toHaveCount(0)
-  await page.mouse.move(195, 270)
+  // Server initialBounds can place a region button at the old fixed drag point.
+  // Start on uncovered map tiles, not a clickable label that selects a region.
+  const point = await page
+    .getByRole('region', { name: '도쿄 맛집 지도', exact: true })
+    .evaluate((element) => {
+      const rect = element.getBoundingClientRect()
+      for (const y of [240, 300, 360]) {
+        for (const x of [60, 140, 260, 330]) {
+          const target = document.elementFromPoint(rect.left + x, rect.top + y)
+          if (
+            target &&
+            element.contains(target) &&
+            !target.closest('button, [role="button"], a, aside')
+          )
+            return { x: rect.left + x, y: rect.top + y }
+        }
+      }
+      throw new Error('No unobstructed map drag point')
+    })
+  let queries = 0
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/v1/restaurants/map') queries++
+  })
+  await page.mouse.move(point.x, point.y)
   await page.mouse.down()
-  await page.mouse.move(235, 310, { steps: 12 })
+  await page.mouse.move(point.x + 40, point.y + 40, { steps: 12 })
   await page.mouse.up()
   await expect(search).toBeVisible()
+  expect(queries).toBe(0)
   await page.screenshot({
     path: test.info().outputPath('unfiltered-viewport-search.png'),
   })
@@ -146,6 +418,7 @@ test('unfiltered map movement offers explicit viewport search without auto-query
     page.getByRole('slider', { name: '식당 목록 높이 조절' }),
   ).toHaveAttribute('aria-valuenow', '30')
   await search.click()
+  await expect.poll(() => queries).toBe(1)
   await expect(search).toHaveCount(0)
   await expect(
     page.getByRole('button', { name: '전체', exact: true }),
@@ -209,6 +482,234 @@ test('SDK failure exposes a keyboard-operable retry', async ({ page }) => {
   await expect(
     page.getByRole('button', { name: '신주쿠 식당 보기' }),
   ).toBeVisible()
+})
+
+test('initial list loading matches the Figma spinner-only panel geometry', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 393, height: 807 })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  let release!: () => void
+  const pending = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route('**/api/v1/restaurants/map?*', async (route) => {
+    await pending
+    await route.fallback()
+  })
+  await page.reload()
+  try {
+    const panel = page.getByRole('region', {
+      name: '지도 식당 목록',
+      exact: true,
+    })
+    await expect(panel.getByRole('status')).toHaveText(
+      '식당 목록을 불러오고 있어요.',
+    )
+    await expect(panel.getByRole('heading')).toHaveCount(0)
+    await expect(panel.getByRole('button', { name: /정렬/ })).toHaveCount(0)
+    const box = await panel.boundingBox()
+    const spinner = await panel.locator('[role="status"] img').boundingBox()
+    expect(box).not.toBeNull()
+    expect(spinner).not.toBeNull()
+    expect(spinner!.width).toBe(80)
+    expect(spinner!.height).toBe(80)
+    expect(spinner!.x - box!.x).toBeCloseTo(156.5, 0)
+    expect(spinner!.y - box!.y).toBeCloseTo(143, 0)
+    const spinnerImage = panel.locator('[role="status"] img')
+    await expect(spinnerImage).toHaveJSProperty('complete', true)
+    const pixels = await spinnerImage.evaluate((element: HTMLImageElement) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = canvas.height = 80
+      const context = canvas.getContext('2d')!
+      context.drawImage(element, 0, 0)
+      return {
+        cornerAlpha: context.getImageData(0, 0, 1, 1).data[3],
+        centerAlpha: context.getImageData(40, 40, 1, 1).data[3],
+        arcAlpha: context.getImageData(40, 18, 1, 1).data[3],
+      }
+    })
+    expect(pixels).toEqual({ cornerAlpha: 0, centerAlpha: 0, arcAlpha: 255 })
+    await page.screenshot({
+      path: test.info().outputPath('figma-loading-panel.png'),
+    })
+  } finally {
+    release()
+  }
+  await expect(page.getByRole('list', { name: '식당 검색 결과' })).toBeVisible()
+})
+
+test('selected restaurant loading uses the spinner, and moving the map collapses detail without losing selection', async ({
+  page,
+}) => {
+  let release!: () => void
+  const pending = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route('**/api/v1/restaurants/1/summary', async (route) => {
+    await pending
+    await route.fallback()
+  })
+  await page
+    .getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' })
+    .click()
+  const panel = page.getByRole('region', { name: '선택한 식당', exact: true })
+  try {
+    await expect(panel.getByRole('status')).toHaveText(
+      '식당 정보를 불러오고 있어요.',
+    )
+    await expect(panel.getByRole('heading')).toHaveCount(0)
+    const spinner = panel.locator('[role="status"] img')
+    await expect(spinner).toHaveCSS('width', '80px')
+    await expect(spinner).toHaveCSS('height', '80px')
+    await page.screenshot({
+      path: test.info().outputPath('figma-selected-loading.png'),
+    })
+  } finally {
+    release()
+  }
+  await expect(
+    panel.getByRole('heading', { name: '코코네 돈카츠 신도심점' }),
+  ).toBeVisible()
+  await expect(page.getByText('지도를 불러오고 있어요.')).toBeHidden()
+  const map = page.getByRole('region', { name: '도쿄 맛집 지도', exact: true })
+  const point = await map.evaluate((element) => {
+    const rect = element.getBoundingClientRect()
+    for (const y of [240, 300, 360])
+      for (const x of [60, 140, 260, 330]) {
+        const target = document.elementFromPoint(rect.left + x, rect.top + y)
+        if (
+          target &&
+          element.contains(target) &&
+          !target.closest('button, [role="button"], a, aside')
+        )
+          return { x: rect.left + x, y: rect.top + y }
+      }
+    throw new Error('No unobstructed map drag point')
+  })
+  await page.mouse.move(point.x, point.y)
+  await page.mouse.down()
+  await page.mouse.move(point.x + 40, point.y + 40, { steps: 12 })
+  await page.mouse.up()
+  await expect(
+    page.getByRole('slider', { name: '식당 상세 높이 조절' }),
+  ).toHaveAttribute('aria-valuenow', '30')
+  await expect(
+    page.getByRole('button', { name: '선택한 식당 닫기' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '코코네 돈카츠 신도심점 지도 마커' }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(
+    page.getByRole('button', { name: '현재 위치에서 검색' }),
+  ).toBeVisible()
+})
+
+test('next-page loading keeps loaded restaurants and centers the spinner in the list footer', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  let release!: () => void
+  const pending = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route('**/api/v1/restaurants/map?*', async (route) => {
+    const url = new URL(route.request().url())
+    const isNext = url.searchParams.has('cursor')
+    if (isNext) await pending
+    await route.fulfill({
+      status: 200,
+      json: {
+        success: true,
+        code: 'SUCCESS',
+        message: 'ok',
+        data: {
+          content: [restaurantFixtures[isNext ? 1 : 0]],
+          hasNext: !isNext,
+          nextCursor: isNext ? null : 'next-page',
+          querySessionId: '123e4567-e89b-12d3-a456-426614174000',
+          expiresAt: '2099-01-01T00:00:00Z',
+          rankingAsOf: '2026-10-19T00:00:00Z',
+          query: { ...initialBounds, sort: 'recommend' },
+        },
+      },
+    })
+  })
+  await page.reload()
+  const panel = page.getByRole('region', {
+    name: '지도 식당 목록',
+    exact: true,
+  })
+  try {
+    await expect(panel.getByRole('listitem')).toHaveCount(1)
+    await page.getByRole('slider', { name: '식당 목록 높이 조절' }).press('End')
+    const loading = panel.getByRole('status')
+    await expect(loading).toHaveText('식당 목록을 불러오고 있어요.')
+    await expect(
+      panel.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
+    ).toBeVisible()
+    const box = await loading.locator('..').boundingBox()
+    const spinner = await loading.locator('img').boundingBox()
+    expect(box!.height).toBe(272)
+    expect(spinner!.width).toBe(80)
+    expect(spinner!.y - box!.y).toBe(96)
+    await page.screenshot({
+      path: test.info().outputPath('figma-next-page-loading.png'),
+    })
+  } finally {
+    release()
+  }
+  await expect(panel.getByRole('listitem')).toHaveCount(2)
+  await expect(panel.getByRole('status')).toHaveCount(0)
+})
+
+test('regions configuration failure never falls back to sample pins or restaurant results', async ({
+  page,
+}) => {
+  await page.route('**/api/v1/restaurants/map/regions', (route) =>
+    route.fulfill({
+      status: 503,
+      json: {
+        success: false,
+        code: 'RESTAURANT-017',
+        message: '지도 설정이 준비되지 않았습니다.',
+        data: null,
+        timestamp: '2026-10-19T00:00:00Z',
+        path: '/api/v1/restaurants/map/regions',
+      },
+    }),
+  )
+  await page.reload()
+  await expect(page.getByRole('alert')).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '신주쿠 식당 보기' }),
+  ).toHaveCount(0)
+  await expect(page.getByRole('list', { name: '식당 검색 결과' })).toHaveCount(
+    0,
+  )
+  await expect(
+    page.getByRole('button', { name: '다시 시도하기' }),
+  ).toBeVisible()
+})
+
+test('coordinate credits stay above floating controls on a narrow viewport', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 640 })
+  await page.getByRole('button', { name: '카페', exact: true }).click()
+  const credits = page.getByRole('complementary', { name: '지도 좌표 출처' })
+  await expect(credits).toBeVisible()
+  await expect(
+    credits.getByRole('link', { name: '좌표 제공자' }),
+  ).toHaveAttribute('href', 'https://example.com/credits')
+  const creditBox = await credits.boundingBox()
+  const savedBox = await page
+    .getByRole('button', { name: '저장 목록 보기' })
+    .boundingBox()
+  expect(creditBox).not.toBeNull()
+  expect(savedBox).not.toBeNull()
+  expect(creditBox!.y + creditBox!.height).toBeLessThanOrEqual(savedBox!.y)
+  expect(creditBox!.x + creditBox!.width).toBeLessThanOrEqual(320)
 })
 
 test('dragging the handle expands the sheet and body scroll survives collapse', async ({
@@ -299,6 +800,46 @@ test('expanded detail contains focus, has sticky headings and restores the photo
   ).toBeInViewport()
   await page.getByRole('button', { name: '식당 상세 닫기' }).click()
   await expect(page.getByRole('button', { name: '정렬: 추천순' })).toBeFocused()
+})
+
+test('API photo gallery keeps the expanded sheet open after closing its viewer and resets filters', async ({
+  page,
+}) => {
+  await page
+    .getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' })
+    .click()
+  await page.getByRole('slider', { name: '식당 상세 높이 조절' }).press('End')
+  const detail = page.getByRole('dialog', {
+    name: '코코네 돈카츠 신도심점 전체 상세',
+  })
+  await detail.getByRole('tab', { name: /^사진/ }).click()
+  const panel = detail.getByRole('tabpanel', { name: '사진' })
+  const photo = panel.getByRole('button', { name: '2번째 사진 보기' })
+  await photo.click()
+  const viewer = page.getByRole('dialog', { name: '식당 사진 상세보기' })
+  await expect(viewer).toBeVisible()
+  await expect(
+    viewer.getByRole('button', { name: '사진 상세보기 닫기' }),
+  ).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(viewer).toHaveCount(0)
+  await expect(detail).toBeVisible()
+  await expect(photo).toBeFocused()
+  const menuRequest = page.waitForRequest((request) =>
+    request.url().includes('/photos?filter=MENU'),
+  )
+  await panel.getByRole('button', { name: /메뉴사진/ }).click()
+  expect(new URL((await menuRequest).url()).searchParams.has('cursor')).toBe(
+    false,
+  )
+  await expect(panel.getByText('등록된 사진이 없어요.')).toBeVisible()
+  await panel.getByRole('button', { name: /^전체/ }).click()
+  await expect(
+    panel.getByRole('button', { name: /번째 사진 보기/ }),
+  ).toHaveCount(3)
+  await expect(
+    panel.getByRole('button', { name: '1번째 사진 보기' }),
+  ).toBeInViewport()
 })
 
 test('a touch gesture on the handle collapses the list', async ({ page }) => {

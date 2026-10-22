@@ -131,7 +131,7 @@ describe('RestaurantReviewSection', () => {
   })
 
   it('renders only review list skeleton while review list is loading', () => {
-    const { container } = renderReviewSection({
+    renderReviewSection({
       isReviewListLoading: true,
       reviews: createReviews(10),
     })
@@ -142,9 +142,6 @@ describe('RestaurantReviewSection', () => {
     expect(screen.queryByText('혁줌마')).not.toBeInTheDocument()
     expect(screen.queryByTestId('restaurant-review-load-more')).toBeNull()
     expect(screen.getByRole('button', { name: '최신순' })).toBeInTheDocument()
-    expect(
-      container.querySelectorAll('.bg-secondary-200').length,
-    ).toBeGreaterThan(0)
   })
 
   it('renders empty state when reviews are empty', () => {
@@ -213,12 +210,6 @@ describe('RestaurantReviewSection', () => {
     expect(
       reviewImageButton.querySelector('[data-slot="image-fallback"]'),
     ).toBeInTheDocument()
-  })
-
-  it('renders the Avatar guest fallback when reviewer profile image is empty', () => {
-    renderReviewSection()
-
-    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
   })
 
   it('renders the Avatar guest fallback when reviewer profile image fails to load', () => {

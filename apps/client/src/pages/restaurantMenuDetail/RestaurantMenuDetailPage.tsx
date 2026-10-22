@@ -25,8 +25,14 @@ export const RestaurantMenuDetailPage = () => {
     isLoading,
     isNotFound,
     hasMoreOtherMenus,
+    isOtherMenusError,
+    isOtherMenusLoading,
+    isOtherMenusNextPageError,
+    onRetryOtherMenus,
+    saveCount,
+    saved,
     otherMenuLoadMoreRef,
-    otherMenusForDisplay,
+    otherMenus,
     otherMenuTotalCount,
     photoCount,
     restaurant,
@@ -117,14 +123,21 @@ export const RestaurantMenuDetailPage = () => {
 
       <RestaurantOtherMenuSection
         hasMoreMenus={hasMoreOtherMenus}
+        isError={isOtherMenusError}
+        isLoading={isOtherMenusLoading}
+        isNextPageError={isOtherMenusNextPageError}
+        onRetry={onRetryOtherMenus}
         loadMoreRef={otherMenuLoadMoreRef}
-        menus={otherMenusForDisplay}
+        menus={otherMenus}
         onPressMenuItem={onPressMenuItem}
         totalCount={otherMenuTotalCount}
       />
 
       <RestaurantBottomBar
-        likeCount={restaurant.likeCount}
+        likeCount={
+          saveCount === undefined ? '' : saveCount.toLocaleString('ko-KR')
+        }
+        saved={saved}
         onPressLike={onPressLike}
         onPressReservation={onPressReservation}
         variant="detail"

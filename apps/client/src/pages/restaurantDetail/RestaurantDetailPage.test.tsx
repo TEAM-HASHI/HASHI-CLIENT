@@ -114,6 +114,9 @@ vi.mock('@hashi/hds-ui', async (importOriginal) => {
 vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
   getRestaurantSummary: vi.fn(),
 }))
+vi.mock('@/features/restaurantDetail/hooks/useRestaurantSaveSummary', () => ({
+  useRestaurantSaveSummary: () => ({ saveCount: 7, saved: false }),
+}))
 vi.mock(
   '@/features/restaurantDetail/api/getRestaurantStoreInformation',
   () => ({
@@ -344,7 +347,7 @@ describe('RestaurantDetailPage', () => {
 
     fireEvent.click(await screen.findByRole('tab', { name: '메뉴' }))
 
-    const menuButton = screen.getByRole('button', { name: /시오라멘/ })
+    const menuButton = await screen.findByRole('button', { name: /시오라멘/ })
 
     expect(menuButton.querySelector('[data-slot="image-fallback"]')).toBeNull()
 
@@ -368,7 +371,7 @@ describe('RestaurantDetailPage', () => {
     fireEvent.click(screen.getByRole('tab', { name: '메뉴' }))
 
     expect(
-      screen.getByText('메뉴 정보를 불러오지 못했어요.'),
+      await screen.findByText('메뉴 정보를 불러오지 못했어요.'),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: '메뉴 다시 불러오기' }),
@@ -380,7 +383,7 @@ describe('RestaurantDetailPage', () => {
 
     fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
 
-    expect(screen.getByText('하시유저')).toBeInTheDocument()
+    expect(await screen.findByText('하시유저')).toBeInTheDocument()
     expect(screen.getByText('정말 맛있습니다.')).toBeInTheDocument()
     expect(screen.getByLabelText('5점 리뷰 1개')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '리뷰 이미지 1' })).toBeTruthy()
@@ -459,14 +462,15 @@ describe('RestaurantDetailPage', () => {
     renderPage()
 
     await screen.findByRole('main')
+    expect(mockedGetRestaurantReviews).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('tab', { name: /리뷰/ }))
+    await screen.findByText('하시유저')
     expect(mockedGetRestaurantReviews).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sort: 'latest',
-      }),
+      expect.objectContaining({ sort: 'latest' }),
     )
 
     mockedGetRestaurantReviews.mockClear()
-    fireEvent.click(screen.getByRole('tab', { name: /리뷰/ }))
     fireEvent.click(screen.getByRole('button', { name: '높은 평점 순' }))
 
     await waitFor(() => {
@@ -493,7 +497,7 @@ describe('RestaurantDetailPage', () => {
     renderPage()
 
     fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
-    expect(screen.getByText('하시유저')).toBeInTheDocument()
+    expect(await screen.findByText('하시유저')).toBeInTheDocument()
 
     mockedGetRestaurantReviews.mockReturnValue(
       new Promise<typeof restaurantReviews>(() => {
@@ -523,7 +527,7 @@ describe('RestaurantDetailPage', () => {
     renderPage()
 
     fireEvent.click(await screen.findByRole('tab', { name: '메뉴' }))
-    fireEvent.click(screen.getByRole('button', { name: /시오라멘/ }))
+    fireEvent.click(await screen.findByRole('button', { name: /시오라멘/ }))
 
     expect(mockNavigate).toHaveBeenCalledWith('/restaurants/10/menus/100', {
       state: { source: 'detail' },
@@ -675,7 +679,7 @@ describe('RestaurantDetailPage', () => {
     })
   })
 
-  it('opens review unavailable modal when no writable visited reservation exists', async () => {
+  it('opens and closes review unavailable modal when no writable visited reservation exists', async () => {
     mockAuthStore.isAuthenticated = true
 
     renderPage()
@@ -688,6 +692,12 @@ describe('RestaurantDetailPage', () => {
         name: '실제 방문자만 작성할 수 있어요',
       }),
     ).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: '확인' }))
+
+    expect(
+      screen.queryByRole('heading', { name: '실제 방문자만 작성할 수 있어요' }),
+    ).not.toBeInTheDocument()
   })
 
   it('does not navigate to review writing page when writable reservation ids are invalid', async () => {

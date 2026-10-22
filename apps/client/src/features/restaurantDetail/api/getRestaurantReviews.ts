@@ -9,11 +9,8 @@ export type RatingDistributionResponse =
   components['schemas']['RatingDistributionResponse']
 export type ReviewSummaryResponse =
   components['schemas']['ReviewSummaryResponse'] & {
-    imageCount?: number
-    previewImageUrls?: string[]
     profileImageUrl?: string
     writerNickname?: string
-    writerProfileImageUrl?: string
   }
 
 export interface RestaurantReviewListData {
@@ -31,6 +28,7 @@ interface GetRestaurantReviewsParams {
   cursor?: number
   size: number
   sort: ReviewSortValue
+  signal?: AbortSignal
 }
 
 const createRestaurantReviewsSearchParams = ({
@@ -55,6 +53,7 @@ export const getRestaurantReviews = async ({
   cursor,
   size,
   sort,
+  signal,
 }: GetRestaurantReviewsParams): Promise<RestaurantReviewListData> => {
   const searchParams = createRestaurantReviewsSearchParams({
     cursor,
@@ -63,15 +62,28 @@ export const getRestaurantReviews = async ({
   })
   const response = await request<RestaurantReviewResponse>(
     `/api/v1/restaurants/${restaurantId}/reviews?${searchParams}`,
+    ...(signal ? [{ signal }] : []),
   )
 
+  if (
+    !response ||
+    !Array.isArray(response.content) ||
+    typeof response.hasNext !== 'boolean' ||
+    (response.hasNext &&
+      (!Number.isSafeInteger(response.nextCursor) ||
+        (response.nextCursor ?? 0) <= 0 ||
+        response.nextCursor === cursor))
+  ) {
+    throw new Error('Invalid restaurant review list response')
+  }
+
   return {
-    restaurantId: response?.restaurantId,
-    averageRating: response?.averageRating ?? 0,
-    reviewCount: response?.reviewCount ?? 0,
-    ratingDistribution: response?.ratingDistribution,
-    reviews: response?.content ?? [],
-    nextCursor: response?.nextCursor,
-    hasNext: response?.hasNext === true,
+    restaurantId: response.restaurantId,
+    averageRating: response.averageRating ?? 0,
+    reviewCount: response.reviewCount ?? 0,
+    ratingDistribution: response.ratingDistribution,
+    reviews: response.content,
+    nextCursor: response.nextCursor,
+    hasNext: response.hasNext,
   }
 }

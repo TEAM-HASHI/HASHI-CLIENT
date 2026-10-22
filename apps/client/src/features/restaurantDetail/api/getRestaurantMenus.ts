@@ -17,6 +17,7 @@ interface GetRestaurantMenusParams {
   excludeMenuId?: number
   cursor?: number
   size: number
+  signal?: AbortSignal
 }
 
 const createRestaurantMenusSearchParams = ({
@@ -42,6 +43,7 @@ export const getRestaurantMenus = async ({
   cursor,
   excludeMenuId,
   size,
+  signal,
 }: GetRestaurantMenusParams): Promise<RestaurantMenuListData> => {
   const searchParams = createRestaurantMenusSearchParams({
     cursor,
@@ -50,11 +52,24 @@ export const getRestaurantMenus = async ({
   })
   const response = await request<RestaurantMenuListResponse>(
     `/api/v1/restaurants/${restaurantId}/menus?${searchParams}`,
+    ...(signal ? [{ signal }] : []),
   )
 
+  if (
+    !response ||
+    !Array.isArray(response.content) ||
+    typeof response.hasNext !== 'boolean' ||
+    (response.hasNext &&
+      (!Number.isSafeInteger(response.nextCursor) ||
+        (response.nextCursor ?? 0) <= 0 ||
+        response.nextCursor === cursor))
+  ) {
+    throw new Error('Invalid restaurant menu list response')
+  }
+
   return {
-    menus: response?.content ?? [],
-    nextCursor: response?.nextCursor,
-    hasNext: response?.hasNext === true,
+    menus: response.content,
+    nextCursor: response.nextCursor,
+    hasNext: response.hasNext,
   }
 }

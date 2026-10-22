@@ -3,7 +3,26 @@ import type { PropsWithChildren } from 'react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { MapViewport } from '@/pages/map/components/MapViewport'
 
-const sdk = vi.hoisted(() => ({ status: 'LOADED', zoom: 12, initialZoom: 11 }))
+const sdk = vi.hoisted(() => ({
+  status: 'LOADED',
+  zoom: 12,
+  initialZoom: 11,
+  withCamera: false,
+  idle: () => {},
+  dragStart: () => {},
+  map: {
+    fitBounds: vi.fn(),
+    moveCamera: vi.fn(),
+    panTo: vi.fn(),
+    setZoom: vi.fn(),
+    getZoom: () => sdk.initialZoom,
+    setOptions: vi.fn(),
+    addListener: vi.fn((_name: string, callback: () => void) => {
+      sdk.idle = callback
+      return { remove: vi.fn() }
+    }),
+  },
+}))
 vi.mock('@vis.gl/react-google-maps', () => ({
   APIProvider: ({ children }: PropsWithChildren) => children,
   APILoadingStatus: {
@@ -12,51 +31,70 @@ vi.mock('@vis.gl/react-google-maps', () => ({
     AUTH_FAILURE: 'AUTH_FAILURE',
   },
   useApiLoadingStatus: () => sdk.status,
-  useMap: () => null,
+  useMap: () => (sdk.withCamera ? sdk.map : null),
   AdvancedMarker: ({ children }: PropsWithChildren) => children,
   Map: ({
     children,
     onIdle,
     onZoomChanged,
+    onDragstart,
   }: PropsWithChildren<{
     onIdle: (event: unknown) => void
     onZoomChanged?: () => void
-  }>) => (
-    <div onWheel={onZoomChanged}>
-      <button onClick={onZoomChanged}>자동 zoom</button>
-      <button
-        onClick={() =>
-          onIdle({
-            map: {
-              getZoom: () => sdk.initialZoom,
-              getCenter: () => ({ toJSON: () => ({ lat: 35.5, lng: 139.5 }) }),
-              getBounds: () => ({
-                toJSON: () => ({ north: 36, south: 35, west: 139, east: 140 }),
-              }),
-            },
-          })
-        }
-      >
-        초기 idle
-      </button>
-      <button
-        onClick={() =>
-          onIdle({
-            map: {
-              getZoom: () => sdk.zoom,
-              getCenter: () => ({ toJSON: () => ({ lat: 36.5, lng: 140.5 }) }),
-              getBounds: () => ({
-                toJSON: () => ({ north: 37, south: 36, west: 140, east: 141 }),
-              }),
-            },
-          })
-        }
-      >
-        이동 idle
-      </button>
-      {children}
-    </div>
-  ),
+    onDragstart: () => void
+  }>) => {
+    sdk.dragStart = onDragstart
+    return (
+      <div onWheel={onZoomChanged}>
+        <button onClick={onZoomChanged}>자동 zoom</button>
+        <button
+          onClick={() =>
+            onIdle({
+              map: {
+                getZoom: () => sdk.initialZoom,
+                getCenter: () => ({
+                  toJSON: () => ({ lat: 35.5, lng: 139.5 }),
+                }),
+                getBounds: () => ({
+                  toJSON: () => ({
+                    north: 36,
+                    south: 35,
+                    west: 139,
+                    east: 140,
+                  }),
+                }),
+              },
+            })
+          }
+        >
+          초기 idle
+        </button>
+        <button
+          onClick={() =>
+            onIdle({
+              map: {
+                getZoom: () => sdk.zoom,
+                getCenter: () => ({
+                  toJSON: () => ({ lat: 36.5, lng: 140.5 }),
+                }),
+                getBounds: () => ({
+                  toJSON: () => ({
+                    north: 37,
+                    south: 36,
+                    west: 140,
+                    east: 141,
+                  }),
+                }),
+              },
+            })
+          }
+        >
+          이동 idle
+        </button>
+        {children}
+      </div>
+    )
+  },
 }))
 
 const props = {
@@ -75,12 +113,192 @@ const props = {
   onExplore: vi.fn(),
   onOverview: vi.fn(),
 }
+const restaurant = {
+  id: 'restaurant-1',
+  name: '출처 확인 식당',
+  areaCode: 'area-1',
+  category: 'restaurant' as const,
+  cuisine: '일식',
+  rating: 4.2,
+  reviewCount: 12,
+  saveCount: 4,
+  recommendationRank: 1,
+  menuKeywords: [],
+  images: [],
+  hours: '',
+  price: '',
+  description: '',
+  address: '',
+  position: { lat: 35.7, lng: 139.7 },
+}
 beforeEach(() => {
   vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
   vi.stubEnv('VITE_GOOGLE_MAPS_MAP_ID', 'DEMO_MAP_ID')
   sdk.status = 'LOADED'
   sdk.zoom = 12
   sdk.initialZoom = 11
+  sdk.withCamera = false
+})
+
+it('fits the server overview and then the selected region bounds without offering manual search', () => {
+  sdk.withCamera = true
+  const initialBounds = { north: 35.9, south: 35.5, east: 139.95, west: 139.4 }
+  const cameraBounds = { north: 35.74, south: 35.68, east: 139.8, west: 139.72 }
+  render(
+    <MapViewport
+      {...props}
+      initialBounds={initialBounds}
+      areaCode="area-1"
+      zoomed
+      areas={[
+        {
+          code: 'area-1',
+          name: '지역',
+          position: { lat: 35.71, lng: 139.76 },
+          cameraBounds,
+          restaurantCount: 1,
+        },
+      ]}
+    />,
+  )
+  expect(sdk.map.fitBounds).toHaveBeenCalledWith(
+    initialBounds,
+    expect.anything(),
+  )
+  fireEvent.click(screen.getByText('초기 idle'))
+  act(() => sdk.idle())
+  expect(sdk.map.fitBounds).toHaveBeenLastCalledWith(
+    cameraBounds,
+    expect.anything(),
+  )
+  fireEvent.click(screen.getByText('이동 idle'))
+  expect(props.onSearchArea).not.toHaveBeenCalled()
+  expect(
+    screen.queryByRole('button', { name: '현재 위치에서 검색' }),
+  ).not.toBeInTheDocument()
+  expect(sdk.map.setOptions).toHaveBeenCalledExactlyOnceWith({ minZoom: 11 })
+})
+
+it('shows each visible coordinate source once and removes them in region mode', () => {
+  const attribution = {
+    displayName: '좌표 제공자',
+    uri: 'https://example.com/credits',
+  }
+  const restaurants = [
+    { ...restaurant, attributions: [attribution] },
+    { ...restaurant, id: 'restaurant-2', attributions: [attribution] },
+  ]
+  const view = render(
+    <MapViewport {...props} restaurants={restaurants} zoomed />,
+  )
+  fireEvent.click(screen.getByText('초기 idle'))
+  expect(
+    screen.getByRole('complementary', { name: '지도 좌표 출처' }),
+  ).toBeVisible()
+  expect(screen.getAllByRole('link', { name: '좌표 제공자' })).toHaveLength(1)
+  expect(screen.getByRole('link', { name: '좌표 제공자' })).toHaveAttribute(
+    'href',
+    'https://example.com/credits',
+  )
+  view.rerender(<MapViewport {...props} restaurants={restaurants} />)
+  expect(
+    screen.queryByRole('complementary', { name: '지도 좌표 출처' }),
+  ).not.toBeInTheDocument()
+})
+
+it.each([
+  'javascript:alert(1)',
+  'data:text/html,unsafe',
+  '//example.com/credits',
+  'not a URL',
+])('keeps the attribution name without an unsafe link for %s', (uri) => {
+  render(
+    <MapViewport
+      {...props}
+      zoomed
+      restaurants={[
+        { ...restaurant, attributions: [{ displayName: '좌표 제공자', uri }] },
+      ]}
+    />,
+  )
+  fireEvent.click(screen.getByText('초기 idle'))
+  expect(screen.getByText('좌표 제공자')).toBeVisible()
+  expect(
+    screen.queryByRole('link', { name: '좌표 제공자' }),
+  ).not.toBeInTheDocument()
+})
+
+it('supports HTTP attribution links and hides attribution after SDK failure', () => {
+  render(
+    <MapViewport
+      {...props}
+      zoomed
+      restaurants={[
+        {
+          ...restaurant,
+          attributions: [
+            { displayName: '좌표 제공자', uri: 'http://example.com/credits' },
+          ],
+        },
+      ]}
+    />,
+  )
+  fireEvent.click(screen.getByText('초기 idle'))
+  expect(screen.getByRole('link', { name: '좌표 제공자' })).toHaveAttribute(
+    'href',
+    'http://example.com/credits',
+  )
+  act(() =>
+    (window as Window & { gm_authFailure?: () => void }).gm_authFailure?.(),
+  )
+  expect(
+    screen.queryByRole('complementary', { name: '지도 좌표 출처' }),
+  ).not.toBeInTheDocument()
+})
+
+it('does not treat scrolling the coordinate credits as a map gesture', () => {
+  const onUserMove = vi.fn()
+  render(
+    <MapViewport
+      {...props}
+      zoomed
+      onUserMove={onUserMove}
+      restaurants={[
+        {
+          ...restaurant,
+          attributions: [
+            { displayName: '좌표 제공자', uri: 'https://example.com' },
+          ],
+        },
+      ]}
+    />,
+  )
+  fireEvent.click(screen.getByText('초기 idle'))
+  fireEvent.wheel(screen.getByRole('complementary', { name: '지도 좌표 출처' }))
+  expect(onUserMove).not.toHaveBeenCalled()
+})
+
+it('ignores marker clicks generated by map dragging but accepts the next intentional click', () => {
+  const onSelectRestaurant = vi.fn()
+  render(
+    <MapViewport
+      {...props}
+      restaurants={[restaurant]}
+      zoomed
+      selectedId={restaurant.id}
+      onSelectRestaurant={onSelectRestaurant}
+    />,
+  )
+  fireEvent.click(screen.getByText('초기 idle'))
+  const marker = screen.getByRole('button', {
+    name: '출처 확인 식당 지도 마커',
+  })
+  act(() => sdk.dragStart())
+  fireEvent.click(marker, { detail: 1 })
+  expect(onSelectRestaurant).not.toHaveBeenCalled()
+  fireEvent.pointerDown(marker)
+  fireEvent.click(marker, { detail: 1 })
+  expect(onSelectRestaurant).toHaveBeenCalledExactlyOnceWith(restaurant.id)
 })
 
 it('shows map loading while restaurant results refresh after the SDK is ready', () => {

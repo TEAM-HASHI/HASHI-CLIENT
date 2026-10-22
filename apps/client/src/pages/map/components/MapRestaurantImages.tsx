@@ -30,7 +30,7 @@ export const MapRestaurantImages = ({
         </button>
       ))
     ) : (
-      <Thumbnail size="lg" alt="등록된 샘플 사진 없음" />
+      <Thumbnail size="lg" alt="등록된 사진 없음" />
     )}
   </div>
 )

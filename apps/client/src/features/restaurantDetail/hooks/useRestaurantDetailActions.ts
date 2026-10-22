@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
+import { useRestaurantReviewWriteNavigation } from '@/features/restaurantDetail/hooks/useRestaurantReviewWriteNavigation'
 import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import {
   getRestaurantMenuDetailPath,
@@ -13,11 +14,13 @@ import { useAuthStatus } from '@/shared/hooks'
 interface UseRestaurantDetailActionsParams {
   menuDetailSource: RestaurantMenuDetailSource
   restaurantId: string
+  onReviewUnavailable: () => void
 }
 
 export const useRestaurantDetailActions = ({
   menuDetailSource,
   restaurantId,
+  onReviewUnavailable,
 }: UseRestaurantDetailActionsParams) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -25,6 +28,12 @@ export const useRestaurantDetailActions = ({
   const { startKakaoOAuth } = useKakaoOAuthStart()
   const [isAuthGateOpen, setIsAuthGateOpen] = useState(false)
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
+  const { onPressWriteReview } = useRestaurantReviewWriteNavigation({
+    isAuthenticated,
+    onAuthRequired: () => setIsAuthGateOpen(true),
+    onReviewUnavailable,
+    restaurantId: Number(restaurantId),
+  })
 
   const handlePressLike = () => {
     if (!isAuthenticated) {
@@ -63,5 +72,6 @@ export const useRestaurantDetailActions = ({
     onPressLike: handlePressLike,
     onPressMenuItem: handlePressMenuItem,
     onPressReservation: handlePressReservation,
+    onPressWriteReview,
   }
 }
