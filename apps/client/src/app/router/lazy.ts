@@ -11,6 +11,7 @@ const lazyRoute = <T extends LazyRouteModule>(importPage: () => Promise<T>) => {
 }
 
 const SearchPage = lazyRoute(() => import('@/pages/search'))
+const MapPage = lazyRoute(() => import('@/pages/map'))
 const CollectionFormPage = lazyRoute(() =>
   import('@/pages/saved/CollectionFormPage').then((module) => ({
     default: module.CollectionFormPage,
@@ -76,6 +77,7 @@ const lazyPage = (Page: ReturnType<typeof lazy>) => {
 }
 
 export const lazyPages = {
+  map: () => lazyPage(MapPage),
   saved: () => lazyPage(SavedPage),
   collectionForm: () => lazyPage(CollectionFormPage),
   collectionEditor: () => lazyPage(CollectionEditorPage),

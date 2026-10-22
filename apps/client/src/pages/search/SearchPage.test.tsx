@@ -107,6 +107,56 @@ const LocationState = () => {
   return <div data-testid="location-state">{location.search}</div>
 }
 
+afterEach(() => {
+  cleanup()
+  vi.clearAllMocks()
+  window.localStorage.clear()
+  document.body.style.overflow = ''
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.width = ''
+  document.documentElement.style.overflow = ''
+  vi.unstubAllGlobals()
+})
+
+it('returns a map search without fetching ordinary results and clears the draft with X', async () => {
+  mockGetRestaurants.mockClear()
+  mockGetSearchKeywordRecommendations.mockResolvedValue([])
+  const user = userEvent.setup()
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  const MapReturn = () => <output>{JSON.stringify(useLocation().state)}</output>
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: ROUTES.search,
+            state: { source: 'map', keyword: '초밥' },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path={ROUTES.search} element={<SearchPage />} />
+          <Route path={ROUTES.map} element={<MapReturn />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+  expect(screen.getByRole('searchbox')).toHaveValue('초밥')
+  await user.click(screen.getByRole('button', { name: '검색어 지우기' }))
+  expect(screen.getByRole('searchbox')).toHaveValue('')
+  await user.type(screen.getByRole('searchbox'), '#{Enter}')
+  expect(screen.getByRole('searchbox')).toHaveValue('#')
+  expect(mockGetRestaurants).not.toHaveBeenCalled()
+  await user.clear(screen.getByRole('searchbox'))
+  await user.type(screen.getByRole('searchbox'), '카페{Enter}')
+  expect(screen.getByRole('status')).toHaveTextContent('카페')
+  expect(mockGetRestaurants).not.toHaveBeenCalled()
+  cleanup()
+})
+
 const renderSearchPageWithRoutes = (initialEntry: string = ROUTES.search) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -157,18 +207,6 @@ const renderSearchPageWithHistory = (
 }
 
 describe('SearchPage', () => {
-  afterEach(() => {
-    cleanup()
-    vi.clearAllMocks()
-    window.localStorage.clear()
-    document.body.style.overflow = ''
-    document.body.style.position = ''
-    document.body.style.top = ''
-    document.body.style.width = ''
-    document.documentElement.style.overflow = ''
-    vi.unstubAllGlobals()
-  })
-
   beforeEach(() => {
     mockGetSearchKeywordRecommendations.mockResolvedValue(['아끼소바'])
     mockGetRestaurants.mockReset()
