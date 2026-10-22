@@ -31,7 +31,13 @@ const getTouchPosition = (touches: TouchEvent['touches']) => {
   }
 }
 
-export const NoticeZoomImage = ({ alt, src }: { alt: string; src: string }) => {
+export const NoticeZoomImage = ({
+  alt,
+  src,
+}: {
+  alt: string
+  src: string | null
+}) => {
   const [transform, setTransform] = useState(INITIAL_TRANSFORM)
   const transformRef = useRef(INITIAL_TRANSFORM)
   const gestureRef = useRef<Gesture | null>(null)
