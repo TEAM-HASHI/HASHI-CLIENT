@@ -1,4 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { useEffect, useRef } from 'react'
+import {
+  saveRecentRestaurant,
+  removeRecentRestaurants,
+} from '@/features/recentRestaurants/recentRestaurants'
+import { checkIsNotFoundError } from '@/shared/api'
 
 import type { RestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import { useRestaurantDetailListQueries } from '@/features/restaurantDetail/hooks/useRestaurantDetailListQueries'
@@ -41,6 +47,31 @@ export const useRestaurantDetailContent = ({
   })
 
   const storeInformation = storeInformationQuery.data
+  const recordedId = useRef<number | null>(null)
+  useEffect(() => {
+    if (checkIsNotFoundError(storeInformationQuery.error)) {
+      removeRecentRestaurants([restaurantId])
+      return
+    }
+    if (
+      enabled &&
+      summary?.restaurantId === restaurantId &&
+      storeInformation &&
+      !storeInformationQuery.error &&
+      !infiniteLists.isMenuListPending &&
+      recordedId.current !== restaurantId
+    ) {
+      saveRecentRestaurant({ id: restaurantId, name: summary.name })
+      recordedId.current = restaurantId
+    }
+  }, [
+    enabled,
+    summary,
+    storeInformation,
+    storeInformationQuery.error,
+    infiniteLists.isMenuListPending,
+    restaurantId,
+  ])
   const restaurant =
     summary && storeInformation
       ? createRestaurantDetailViewModel({

@@ -8,13 +8,16 @@ export const useSearchRestaurantResults = (
 ) => {
   const query = useSearchRestaurantsInfiniteQuery(searchParams)
   const loadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
-    enabled: Boolean(query.hasNextPage),
-    isLoading: query.isFetchingNextPage,
+    enabled:
+      searchParams !== null && Boolean(query.hasNextPage) && !query.isError,
+    isLoading: query.isFetching,
     onIntersect: query.fetchNextPage,
   })
 
   const retry = () => {
-    void query.refetch()
+    if (query.isFetching) return
+    if (query.isFetchNextPageError) void query.fetchNextPage()
+    else void query.refetch()
   }
 
   return {

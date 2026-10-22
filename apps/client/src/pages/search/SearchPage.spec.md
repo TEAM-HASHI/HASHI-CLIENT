@@ -498,6 +498,7 @@ SearchPage
 
 ## Error Handling
 
+- 추가 조회 실패 시 기존 결과를 유지하고 목록 하단에 오류와 재시도를 표시합니다. 자동 추가 조회는 중단하고, 재시도는 실패한 cursor만 요청합니다. 진행 중인 조회가 있으면 중복 요청하지 않습니다.
 - API error:
   - 검색/필터 상태는 유지하고 결과 영역에 에러 안내와 재시도 액션을 표시합니다.
   - 검색 결과 query는 local error UI가 필요하므로 `throwOnError: false`를 명시합니다.
@@ -516,7 +517,7 @@ SearchPage
   - empty: `검색된 식당이 없습니다.`
   - API error: `검색 결과를 불러오지 못했습니다.`
 - retry or fallback:
-  - API error state에서 재시도 버튼 또는 검색 재제출로 refetch합니다.
+  - 최초 조회 오류는 재시도 버튼으로 refetch하고, 추가 조회 오류는 실패한 cursor를 다시 요청합니다. 검색 재제출은 기존 검색 조건 갱신 흐름을 따릅니다.
   - 추천 검색어 API error는 검색 전 영역에서 빈 목록 fallback으로 처리합니다.
 
 ## Navigation
