@@ -3,6 +3,7 @@ export type MypageSummary = {
   profileImageUrl?: string | null
   availablePoint: number
   myReviewCount: number
+  savedRestaurantCount: number
 }
 
 export type MypageMenuAction =

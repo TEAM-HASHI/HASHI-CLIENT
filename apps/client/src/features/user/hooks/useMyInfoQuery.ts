@@ -8,5 +8,6 @@ export const useMyInfoQuery = () => {
   return useQuery({
     queryFn: getMyInfo,
     queryKey: MY_INFO_QUERY_KEY,
+    throwOnError: false,
   })
 }
