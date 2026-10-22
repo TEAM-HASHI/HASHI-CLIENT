@@ -1,4 +1,4 @@
-export { SavedPage as default, SavedPage } from './SavedPage'
+export { SavedApiPage as default, SavedApiPage } from './SavedApiPage'
 export { CollectionDragPanelContent } from './components/CollectionDragPanelContent'
 export { CollectionSaveDialog } from './components/CollectionSaveDialog'
 export { CollectionDataProvider } from './data/CollectionDataProvider'
