@@ -6,6 +6,7 @@ export type AuthSessionStatus =
 let currentAccessToken: string | undefined
 let currentSubjectId: number | undefined
 let authSessionVersion = 0
+let expiredSessionVersion: number | undefined
 let currentAuthSessionStatus: AuthSessionStatus = 'unauthenticated'
 const authSessionListeners = new Set<() => void>()
 
@@ -52,7 +53,8 @@ export const getAuthSessionStatus = () => {
 
 export const getAuthSubjectId = () => currentSubjectId
 
-export const clearAuthSession = () => {
+export const clearAuthSession = (reason?: 'expired') => {
+  expiredSessionVersion = reason === 'expired' ? authSessionVersion : undefined
   authSessionVersion += 1
   currentAccessToken = undefined
   currentSubjectId = undefined
@@ -61,6 +63,11 @@ export const clearAuthSession = () => {
 }
 
 export const getAuthSessionVersion = () => authSessionVersion
+
+export const wasAuthSessionExpired = (version: number) =>
+  expiredSessionVersion === version &&
+  authSessionVersion === version + 1 &&
+  currentAuthSessionStatus === 'unauthenticated'
 
 export const subscribeAuthSession = (listener: () => void) => {
   authSessionListeners.add(listener)

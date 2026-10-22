@@ -80,6 +80,7 @@ apps/admin/src/shared/api/
 - 카카오 로그인·가입 완료는 `startAuthenticatedSession`으로 새 세션 버전을 시작합니다. 온보딩 세션 진입과 로그아웃도 버전을 변경하지만, 같은 세션의 access token 갱신은 `setAccessToken`으로 버전을 유지합니다. 콜백 응답은 현재 페이지와 세션 버전이 유지될 때만 반영합니다.
 - endpoint 함수는 `request` 같은 low-level helper를 사용합니다.
 - endpoint 함수는 React, TanStack Query, route, UI state를 알면 안 됩니다.
+- `clearAuthSession('expired')`는 재발급 또는 인증 재확인 실패로 종료한 기존 로그인 세션 버전을 기록합니다. `wasAuthSessionExpired(version)`은 해당 종료 직후의 미인증 상태만 허용하므로, 늦은 응답 처리 시 직접 로그아웃이나 다른 세션 전환과 구분할 수 있습니다. 초기 비로그인과 권한 전환은 만료로 기록하지 않습니다.
 - 인증, refresh, retry 정책은 실제 요구사항 없이 미리 복잡하게 만들지 않습니다.
 
 ## Error Handling Policy
