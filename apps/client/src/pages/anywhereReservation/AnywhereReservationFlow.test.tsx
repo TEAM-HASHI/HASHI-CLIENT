@@ -54,10 +54,10 @@ describe('anywhere reservation history', () => {
     )
 
     fireEvent.change(screen.getByLabelText('식당명'), {
-      target: { value: '키츠라멘' },
+      target: { value: '가'.repeat(100) },
     })
     fireEvent.change(screen.getByLabelText('식당 주소'), {
-      target: { value: '도쿄 본점' },
+      target: { value: '나'.repeat(255) },
     })
     fireEvent.change(screen.getByLabelText('예약자명'), {
       target: { value: '김하시' },
@@ -73,8 +73,8 @@ describe('anywhere reservation history', () => {
       await screen.findByRole('button', { name: '예약 요청' }),
     ).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
-    expect(await screen.findByLabelText('식당명')).toHaveValue('키츠라멘')
-    expect(screen.getByLabelText('식당 주소')).toHaveValue('도쿄 본점')
+    expect(await screen.findByLabelText('식당명')).toHaveValue('가'.repeat(100))
+    expect(screen.getByLabelText('식당 주소')).toHaveValue('나'.repeat(255))
     expect(screen.getByLabelText('예약자명')).toHaveValue('김하시')
     expect(screen.getByLabelText('요청사항 (선택)')).toHaveValue(
       '창가 부탁드립니다',
