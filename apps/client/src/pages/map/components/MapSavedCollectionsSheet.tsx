@@ -30,9 +30,11 @@ export const MapSavedCollectionsSheet = ({
       title="내 컬렉션"
     >
       <div className="max-h-[60dvh] overflow-y-auto pb-6">
-        {query.isPending && <p role="status" className="py-4">
+        {query.isPending && (
+          <p role="status" className="py-4">
             불러오는 중…
-          </p>}
+          </p>
+        )}
         {query.error && (
           <div className="flex flex-col gap-3 py-4">
             <p role="alert">{getErrorPresentation(query.error).message}</p>
@@ -56,7 +58,9 @@ export const MapSavedCollectionsSheet = ({
                 }}
               >
                 <span className="truncate">{collection.name}</span>
-                <span className="shrink-0 text-sm">{collection.savedCount}개</span>
+                <span className="shrink-0 text-sm">
+                  {collection.savedCount}개
+                </span>
               </button>
             </li>
           ))}
