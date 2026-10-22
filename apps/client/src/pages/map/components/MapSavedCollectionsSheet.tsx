@@ -30,11 +30,15 @@ export const MapSavedCollectionsSheet = ({
       title="내 컬렉션"
     >
       <div className="max-h-[60dvh] overflow-y-auto pb-6">
-        {query.isPending && <p role="status" className="py-4">불러오는 중…</p>}
+        {query.isPending && <p role="status" className="py-4">
+            불러오는 중…
+          </p>}
         {query.error && (
           <div className="flex flex-col gap-3 py-4">
             <p role="alert">{getErrorPresentation(query.error).message}</p>
-            <Button size="sm" onClick={() => void query.refetch()}>다시 시도</Button>
+            <Button size="sm" onClick={() => void query.refetch()}>
+              다시 시도
+            </Button>
           </div>
         )}
         {query.isSuccess && collections.length === 0 && (
