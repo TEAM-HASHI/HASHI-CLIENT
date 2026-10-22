@@ -12,6 +12,16 @@ import { useMagazineCatalogQuery } from '@/pages/magazines/queries/useMagazineCa
 vi.mock('@/pages/magazines/queries/useMagazineCatalogQuery', () => ({
   useMagazineCatalogQuery: vi.fn(),
 }))
+vi.mock('@/pages/magazines/queries/useMagazineDetailQuery', () => ({
+  useMagazineDetailQuery: () => ({ data: undefined }),
+}))
+vi.mock('@/pages/restaurants/queries/useRestaurantCatalogQuery', () => ({
+  useRestaurantCatalogQuery: () => ({
+    data: undefined,
+    isPending: false,
+    isError: false,
+  }),
+}))
 vi.mock('@/pages/magazines/mutations/useMagazineMutations', () => ({
   useCreateMagazineMutation: vi.fn(),
   useUpdateMagazineMutation: vi.fn(),

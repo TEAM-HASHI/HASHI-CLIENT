@@ -23,6 +23,16 @@ vi.mock('@/shared/api/requestTokenReissue', () => ({
 const mockedApiClient = vi.mocked(apiClient)
 const mockedRequestTokenReissue = vi.mocked(requestTokenReissue)
 
+const createDeferred = <T>() => {
+  let resolve!: (value: T) => void
+  let reject!: (reason: unknown) => void
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+  return { promise, resolve, reject }
+}
+
 const createHttpResponse = ({
   ok,
   status,
@@ -661,4 +671,48 @@ describe('request', () => {
     expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1)
     expect(mockedApiClient).toHaveBeenCalledTimes(4)
   })
+
+  it('does not start recovery for a 401 delivered after the originating session ended', async () => {
+    setAccessToken('account-a')
+    const response = createDeferred<Awaited<ReturnType<typeof apiClient>>>()
+    mockedApiClient.mockReturnValueOnce(response.promise as never)
+    mockedRequestTokenReissue.mockResolvedValue({ accessToken: 'stale-token' })
+    const pending = request('users/me').catch((error: unknown) => error)
+
+    clearAuthSession()
+    setAccessToken('account-b')
+    response.resolve(createHttpResponse({ ok: false, status: 401 }) as never)
+    const error = await pending
+
+    expect(mockedRequestTokenReissue).not.toHaveBeenCalled()
+    expect(mockedApiClient).toHaveBeenCalledTimes(1)
+    expect(getAccessToken()).toBe('account-b')
+    expect(error).toMatchObject({ status: 401 })
+  })
+
+  it.each(['success', 'failure'])(
+    'does not mutate a newer session or replay an old request after late refresh %s',
+    async (outcome) => {
+      setAccessToken('account-a')
+      const refresh = createDeferred<{ accessToken: string }>()
+      mockedRequestTokenReissue.mockReturnValueOnce(refresh.promise)
+      mockedApiClient.mockResolvedValue(
+        createHttpResponse({ ok: false, status: 401 }) as never,
+      )
+      const pending = request('users/me').catch((error: unknown) => error)
+      await vi.waitFor(() =>
+        expect(mockedRequestTokenReissue).toHaveBeenCalledTimes(1),
+      )
+
+      clearAuthSession()
+      setAccessToken('account-b')
+      if (outcome === 'success') refresh.resolve({ accessToken: 'stale-token' })
+      else refresh.reject(new Error('old refresh failed'))
+      const error = await pending
+
+      expect(getAccessToken()).toBe('account-b')
+      expect(mockedApiClient).toHaveBeenCalledTimes(1)
+      expect(error).toMatchObject({ status: 401 })
+    },
+  )
 })

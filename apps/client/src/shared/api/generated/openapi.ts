@@ -467,6 +467,30 @@ export interface paths {
         patch: operations["update"];
         trace?: never;
     };
+    "/api/v1/users/me/saved-restaurants/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 마이페이지 저장 식당 수 조회
+         * @description USER 토큰으로 내 컬렉션 전체에 저장한 식당 수를 조회합니다. 마이 화면의 `내가 찜한 식당` 항목에 표시합니다.
+         *     같은 식당을 여러 컬렉션에 저장해도 한 번만 세고, 삭제된 식당은 컬렉션별 저장 식당 수와 같은 기준으로 제외합니다.
+         *     따라서 컬렉션 목록의 컬렉션별 저장 식당 수 합계보다 작을 수 있습니다.
+         *     비로그인은 COMMON-401, ADMIN·ONBOARDING 토큰은 COMMON-403을 반환합니다.
+         *     응답은 no-store입니다.
+         */
+        get: operations["getMySavedRestaurantCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me/restaurant-saves": {
         parameters: {
             query?: never;
@@ -475,14 +499,16 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 지도 카드용 내 저장 여부 조회
-         * @description USER 토큰으로 지도 카드 여러 개가 내 컬렉션 중 하나 이상에 저장됐는지 한 번에 조회합니다.
+         * 지도·식당 상세의 내 저장 여부 조회
+         * @description USER 토큰으로 지도 카드 또는 식당 상세의 식당이 내 컬렉션 중 하나 이상에 저장됐는지 조회합니다.
+         *     식당 상세에서는 restaurantIds에 해당 식당 ID 하나를 보내고, 모든 탭에서 같은 저장 상태를 사용합니다.
          *     이 API는 저장 여부만 읽습니다. 카드의 저장 동작은 POST /api/v1/collections/{collectionId}/restaurants를 사용합니다.
          *     비로그인은 COMMON-401, ADMIN·ONBOARDING 토큰은 COMMON-403을 반환합니다.
          *     restaurantIds는 중복 없는 양의 ID 1~100개이며, 삭제·미존재 식당은 응답에서 제외됩니다.
          *     공개·비공개 컬렉션을 모두 확인하며 하나라도 저장돼 있으면 saved=true입니다.
          *     응답은 요청 순서를 유지하지만 일부 ID가 빠질 수 있으므로 배열 위치가 아닌 restaurantId로 카드와 결합하세요.
-         *     응답은 no-store입니다.
+         *     저장·해제 성공 후 두 조회 API를 다시 호출해 저장 수와 내 저장 여부를 함께 갱신하세요.
+         *     이 API는 마이페이지의 내가 저장한 서로 다른 식당 총수를 반환하는 API가 아닙니다. 응답은 no-store입니다.
          */
         get: operations["getMySaves"];
         put?: never;
@@ -673,8 +699,20 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 식당 목록 조회 — 키워드·장르·정렬·유형 필터(커서 페이지네이션).
-         * @description 식당 목록 조회 — 키워드·장르·정렬·유형 필터(커서 페이지네이션).
+         * 식당 목록 및 일반 검색
+         * @description keyword가 있으면 식당명·메뉴명·해시태그를 대소문자 구분 없이 부분 검색합니다.
+         *     여러 단어는 OR 조건이며, 중복 단어는 한 번만 계산합니다. 예: 스시 라멘.
+         *     #스시는 해시태그만 검색합니다. URL에서는 #을 %23으로 인코딩하세요.
+         *     검색어 앞뒤 공백을 제거하며 최대 30자(Unicode 코드 포인트 기준)입니다. #만 있거나 태그 안에 공백이 있으면 400입니다.
+         *     keyword 생략·공백은 기존 전체 목록 조회입니다. 초기 검색 화면에서는 클라이언트가 검색 요청을 생략합니다.
+         *     검색 basic: 일치 단어 수 → 식당명 일치 수 → 메뉴명 일치 수 → 해시태그 일치 수 → ID 내림차순.
+         *     popular: 리뷰 수 → 별점 → ID 내림차순. 검색 rating: 별점 → 리뷰 수 → ID 내림차순.
+         *     keyword 없는 기존 목록의 basic(ID), rating(별점·ID) 순서는 유지합니다.
+         *     기본 10개, 최대 50개입니다. hasNext=true일 때 nextCursor를 그대로 보내세요.
+         *     검색어·장르·유형·정렬 변경 시 cursor를 빼고 첫 페이지부터 요청하세요. 조건이 다른 검색 커서는 400입니다.
+         *     이전 버전의 검색 커서도 400이므로 배포 후 첫 페이지를 다시 조회하세요.
+         *     추가 조회 중 식당 정보·별점·리뷰 수가 바뀌면 순서가 달라질 수 있습니다. 고정된 검색 스냅샷은 아닙니다.
+         *     결과 없음은 200과 빈 content, hasNext=false이며 조회 오류와 구분됩니다.
          */
         get: operations["getRestaurants"];
         put?: never;
@@ -733,6 +771,43 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getRestaurantReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/restaurants/{restaurantId}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 식당 사진 탭 조회
+         * @description 비회원도 조회할 수 있습니다. 최초 진입은 filter=ALL이고 cursor를 생략하며 항상 최대 20장을 반환합니다.
+         *     다음 조회는 응답의 nextCursor를 cursor로 보내며 hasNext=false이면 중단합니다. size는 지정하지 않습니다.
+         *     예: /api/v1/restaurants/123/photos?filter=REVIEW&cursor={nextCursor}
+         *     ALL=전체, REPRESENTATIVE=대표사진, MENU=메뉴사진, REVIEW=리뷰사진입니다. 동영상은 포함하지 않습니다.
+         *     대표사진은 등록 표시 순서, 메뉴사진은 등록 ID 순서, 리뷰사진은 최신 리뷰·사진 표시 순서입니다.
+         *     ALL은 동일 원본 참조(asset ID 또는 원본 파일 키)를 한 번만 노출하며 대표사진 1장·리뷰사진 3장을 반복합니다.
+         *     한 출처가 끝나면 나머지를 이어서 표시하고, 마지막에 메뉴사진을 표시합니다. 이미지 내용의 유사도 비교는 하지 않습니다.
+         *     counts는 모든 필터 칩의 개수, totalCount는 선택한 필터의 개수입니다. ALL은 중복 제거 후 개수입니다.
+         *     빈 목록도 200이며 photos=[], hasNext=false, nextCursor=null입니다. 없는/삭제된 식당은 RESTAURANT-004입니다.
+         *     필터 변경·리뷰 작성 후 복귀 시 cursor를 생략하고 새로 조회하세요. 페이지 간 데이터 스냅샷은 고정하지 않습니다.
+         *     커서는 식당·필터에 종속되며 변경한 조건에 재사용하거나 형식이 잘못되면 400입니다.
+         *     마지막 정렬 키 이후부터 조회합니다. 삭제로 앞 페이지가 줄어도 건너뛰지 않습니다.
+         *     사진 순서 수정·동일 원본의 출처 변경 중에는 목록이 달라질 수 있습니다. 서버가 캐시하지 않으며 매 요청 현재 삭제 상태를 반영합니다.
+         *     asset 이미지는 원본 비율의 PHOTO_DETAIL 파생본을 사용합니다. 처리 중·실패·구규격 미지원이면
+         *     image.status(PROCESSING/FAILED/UNAVAILABLE)와 imageUrl=null을 보고 기본 이미지를 표시합니다.
+         *     UNAVAILABLE은 재처리 전까지 사용할 파생본이 없다는 뜻이며 자동으로 준비 중이라는 뜻은 아닙니다.
+         *     legacy 사진은 image=null이고 imageUrl을 사용합니다. 상세보기는 같은 필터의 목록과 다음 페이지를 재사용합니다.
+         *     하단 저장 수는 GET /api/v1/restaurants/save-counts, 내 저장 여부는 GET /api/v1/users/me/restaurant-saves를 사용합니다.
+         */
+        get: operations["getPhotos"];
         put?: never;
         post?: never;
         delete?: never;
@@ -850,14 +925,16 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 지도 카드용 식당 저장 수 조회
-         * @description 로그인 없이 지도 카드 여러 개의 저장 수를 한 번에 조회합니다.
+         * 지도·식당 상세의 저장 회원 수 조회
+         * @description 로그인 없이 지도 카드 또는 식당 상세의 저장 회원 수를 조회합니다.
+         *     식당 상세에서는 restaurantIds에 해당 식당 ID 하나를 보내고, 매장 정보·메뉴·사진·리뷰 탭의 공통 하단에서 사용합니다.
          *     이 API는 카드 표시용 읽기 API이며 저장을 만들지 않습니다. USER가 카드에서 식당을 저장할 때는
          *     POST /api/v1/collections/{collectionId}/restaurants에 해당 restaurantId를 보내세요.
          *     restaurantIds는 중복 없는 양의 ID 1~100개이며, 삭제·미존재 식당은 응답에서 제외됩니다.
          *     같은 회원이 여러 공개·비공개 컬렉션에 저장해도 saveCount는 한 명으로 계산합니다.
          *     응답은 요청한 식당 순서를 유지하지만 일부 ID가 빠질 수 있으므로 배열 위치가 아닌 restaurantId로 카드와 결합하세요.
-         *     응답은 no-store입니다.
+         *     저장·해제 성공 후 두 조회 API를 다시 호출해 저장 수와 내 저장 여부를 함께 갱신하세요.
+         *     이 API는 마이페이지의 내가 저장한 서로 다른 식당 총수를 반환하는 API가 아닙니다. 응답은 no-store입니다.
          */
         get: operations["getSaveCounts"];
         put?: never;
@@ -1443,9 +1520,9 @@ export interface components {
             /** Format: uuid */
             assetId?: string;
             /** @enum {string} */
-            role?: "PROFILE_AVATAR" | "RESTAURANT_THUMBNAIL" | "RESTAURANT_CARD" | "RESTAURANT_HERO" | "MENU_LIST" | "MENU_DETAIL" | "REVIEW_PREVIEW" | "REVIEW_DETAIL" | "MAGAZINE_BANNER" | "MAGAZINE_THUMBNAIL" | "MAGAZINE_CARD_NEWS" | "NOTICE_DETAIL";
+            role?: "PROFILE_AVATAR" | "RESTAURANT_THUMBNAIL" | "RESTAURANT_CARD" | "RESTAURANT_HERO" | "MENU_LIST" | "MENU_DETAIL" | "REVIEW_PREVIEW" | "REVIEW_DETAIL" | "MAGAZINE_BANNER" | "MAGAZINE_THUMBNAIL" | "MAGAZINE_CARD_NEWS" | "NOTICE_DETAIL" | "PHOTO_DETAIL";
             /** @enum {string} */
-            status?: "PROCESSING" | "READY" | "FAILED";
+            status?: "PROCESSING" | "READY" | "FAILED" | "UNAVAILABLE";
             defaultSource?: components["schemas"]["Source"];
             sourceSets?: components["schemas"]["SourceSet"][];
         };
@@ -1686,8 +1763,8 @@ export interface components {
              */
             color: string;
             /**
-             * @description 설명(선택). 입력값은 공백을 포함해 최대 100자이며 앞뒤 공백은 제거하고 중간 공백은 유지합니다. 생략·null·빈 문자열·공백만 입력하면 설명 없이 저장합니다.
-             * @example 여행 가기 전에 저장해둔 맛집들 중에서 꼭 가보고 싶은 곳
+             * @description 설명(선택). 입력값은 공백을 포함해 최대 30자이며 앞뒤 공백은 제거하고 중간 공백은 유지합니다. 줄바꿈 문자는 입력할 수 없습니다. 생략·null·빈 문자열·공백만 입력하면 설명 없이 저장합니다.
+             * @example 여행 전 꼭 가보고 싶은 맛집 모음
              */
             description?: string;
             /**
@@ -1832,7 +1909,7 @@ export interface components {
         };
         /**
          * @description 내 정보 부분 수정(PATCH) 요청 — null 필드는 변경하지 않는다(식당·매거진·컬렉션과 동일 정책).
-         *      영문 이름은 수정 화면 범위 밖이라 받지 않고(MYP-002), 사진 제거는 별도 DELETE로 한다.
+         *      영문 이름은 온보딩과 같은 규칙(선택, 20자 이내)으로 받고(#257), 사진 제거는 별도 DELETE로 한다.
          *      profileImageAssetId는 media에 업로드를 마친 PROFILE asset이며 보내면 기존 사진을 교체한다.
          */
         UpdateMyInfoRequest: {
@@ -1841,6 +1918,11 @@ export interface components {
              * @example 김하람
              */
             nickname?: string;
+            /**
+             * @description 영문 이름(선택, 20자 이내)
+             * @example Haram Kim
+             */
+            nameEng?: string;
             /**
              * Format: date
              * @description 생년월일(선택)
@@ -1933,7 +2015,7 @@ export interface components {
              */
             color?: string;
             /**
-             * @description 설명(선택). 생략·null이면 유지하고 빈 문자열·공백만 입력하면 삭제합니다. 입력값은 공백을 포함해 최대 100자이며 앞뒤 공백은 제거하고 중간 공백은 유지합니다.
+             * @description 설명(선택). 생략·null이면 유지하고 빈 문자열·공백만 입력하면 삭제합니다. 입력값은 공백을 포함해 최대 30자이며 앞뒤 공백은 제거하고 중간 공백은 유지합니다. 줄바꿈 문자는 입력할 수 없습니다.
              * @example 도쿄여행 야호
              */
             description?: string;
@@ -1942,6 +2024,22 @@ export interface components {
              * @example private
              */
             visibility?: string;
+        };
+        /** @description 현재 USER가 컬렉션에 저장한 식당 수. 여러 컬렉션에 저장한 식당은 한 번만 세고 삭제된 식당은 제외 */
+        MySavedRestaurantCountResponse: {
+            /**
+             * Format: int64
+             * @description 내 컬렉션 전체에서 중복을 제외한 저장 식당 수
+             * @example 12
+             */
+            savedRestaurantCount?: number;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseMySavedRestaurantCountResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["MySavedRestaurantCountResponse"];
         };
         MyRestaurantSave: {
             /**
@@ -2269,6 +2367,8 @@ export interface components {
             rating?: number;
             /** Format: int64 */
             reviewCount?: number;
+            /** Format: int64 */
+            saveCount?: number;
             summary?: string;
             foodCategory?: string;
             address?: string;
@@ -2362,6 +2462,53 @@ export interface components {
             code?: string;
             message?: string;
             data?: components["schemas"]["RestaurantReviewResponse"];
+        };
+        Counts: {
+            /** Format: int64 */
+            all?: number;
+            /** Format: int64 */
+            representative?: number;
+            /** Format: int64 */
+            menu?: number;
+            /** Format: int64 */
+            review?: number;
+        };
+        Photo: {
+            /**
+             * @description 목록 항목 식별자. 출처와 association ID 조합
+             * @example REVIEW:123
+             */
+            photoId?: string;
+            /** @enum {string} */
+            type?: "ALL" | "REPRESENTATIVE" | "MENU" | "REVIEW";
+            /** @description 표시 URL. 처리 중·실패한 asset은 null이며 기본 이미지를 표시합니다 */
+            imageUrl?: string;
+            /** @description asset 이미지의 상태·파생 이미지 크기·반응형 후보. legacy 사진은 null */
+            image?: components["schemas"]["MediaImage"];
+        };
+        RestaurantPhotosResponse: {
+            /** Format: int64 */
+            restaurantId?: number;
+            /** @enum {string} */
+            filter?: "ALL" | "REPRESENTATIVE" | "MENU" | "REVIEW";
+            /** @description 필터 칩용 개수. ALL은 같은 원본 참조를 중복 제거하므로 다른 세 값의 합과 다를 수 있습니다 */
+            counts?: components["schemas"]["Counts"];
+            /**
+             * Format: int64
+             * @description 현재 선택한 필터의 전체 사진 수
+             */
+            totalCount?: number;
+            photos?: components["schemas"]["Photo"][];
+            /** @description 다음 요청에 그대로 보낼 cursor. 마지막은 null */
+            nextCursor?: string;
+            hasNext?: boolean;
+        };
+        /** @description 성공 응답 봉투. <code>data</code>는 <code>null</code>이어도 항상 노출한다(클래스 단위 NON_NULL 미적용). */
+        SuccessResponseRestaurantPhotosResponse: {
+            success?: boolean;
+            code?: string;
+            message?: string;
+            data?: components["schemas"]["RestaurantPhotosResponse"];
         };
         RestaurantMenuListResponse: {
             content?: components["schemas"]["RestaurantMenuResponse"][];
@@ -3036,6 +3183,8 @@ export interface components {
          */
         SavedRestaurantListResponse: {
             content?: components["schemas"]["SavedRestaurantResponse"][];
+            /** Format: int64 */
+            totalCount?: number;
             nextCursor?: string;
             hasNext?: boolean;
         };
@@ -4850,6 +4999,45 @@ export interface operations {
             };
         };
     };
+    getMySavedRestaurantCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseMySavedRestaurantCountResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     getMySaves: {
         parameters: {
             query: {
@@ -5275,9 +5463,13 @@ export interface operations {
     getRestaurants: {
         parameters: {
             query?: {
+                /** @description 일반 검색어 또는 #태그. 예: 스시 라멘 / #가성비 */
                 keyword?: string;
+                /** @description 전체 all(기본), sushi, noodle, rice-bowl, nabe, fried, grill, etc */
                 genre?: string;
+                /** @description basic(기본·검색 정확도순), popular(인기순), rating(별점순) */
                 sort?: string;
+                /** @description all(기본), sns-hot, popular, hashi-pick */
                 type?: string;
                 cursor?: string;
                 size?: number;
@@ -5413,6 +5605,52 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SuccessResponseRestaurantReviewResponse"];
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description 에러 응답 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    getPhotos: {
+        parameters: {
+            query?: {
+                /** @description 대문자 필터 코드. 생략하면 ALL */
+                filter?: "ALL" | "REPRESENTATIVE" | "MENU" | "REVIEW";
+                /** @description 첫 요청은 생략. 이후 응답의 nextCursor를 그대로 전달하며 식당·필터가 바뀌면 생략 */
+                cursor?: string;
+            };
+            header?: never;
+            path: {
+                restaurantId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 요청에 성공했습니다 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuccessResponseRestaurantPhotosResponse"];
                     "application/json": unknown;
                 };
             };

@@ -46,7 +46,7 @@
 | 메뉴 상세 페이지      | `/restaurants/:restaurantId/menus/:menuId` | 식당 메뉴 카드에서 진입하는 메뉴 상세 화면입니다.                                  |
 | hashi 픽 페이지       | `/restaurants/hashi-pick`                  |                                                                                    |
 | 인기 맛집 페이지      | `/restaurants/popular`                     |                                                                                    |
-| 지도 페이지           | `/map`                                     | 준비중 페이지를 렌더링합니다.                                                      |
+| 지도 페이지           | `/map`                                     | Google Maps SDK 연동. 식당 데이터는 샘플이며 식당 API는 미연동입니다.              |
 | 매거진 리스트 페이지  | `/magazines`                               | 유지 여부 논의 중입니다.                                                           |
 | 매거진 상세 페이지    | `/magazines/:magazineId`                   | 유지 여부 논의 중입니다.                                                           |
 | 카카오 OAuth callback | `/oauth/callback/kakao`                    | 카카오 인가 code/state 처리 후 기존/신규 회원 흐름으로 분기합니다.                 |
@@ -57,22 +57,26 @@
 
 ## Auth Only Routes
 
-| Page                  | Path                                          | Notes                                                                                                                                                     |
-| --------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 리뷰 작성 페이지      | `/restaurants/:restaurantId/reviews/new`      |                                                                                                                                                           |
-| 마이 리뷰 페이지      | `/my-reviews`                                 | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                                                                 |
-| 리뷰 상세 페이지      | `/reviews/:reviewId`                          |                                                                                                                                                           |
-| 리뷰 수정 페이지      | `/reviews/:reviewId/edit`                     |                                                                                                                                                           |
-| 저장 페이지           | `/saved`                                      | 준비중 페이지를 렌더링합니다.                                                                                                                             |
-| 마이 페이지           | `/mypage`                                     |                                                                                                                                                           |
-| 프로필 생성 페이지    | `/profile/new`                                | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                                                              |
-| 탈퇴 페이지           | `/withdrawal`                                 | 유지 여부 논의 중입니다.                                                                                                                                  |
-| 예약 페이지           | `/restaurants/:restaurantId/reservations/new` |                                                                                                                                                           |
-| 어디든 예약 페이지    | `/reservations/anywhere`                      |                                                                                                                                                           |
-| 예약 요청 페이지      | `/reservations/request`                       |                                                                                                                                                           |
-| 예약 정보 페이지      | `/my-reservations`                            | 진행 중, 방문 예정, 방문 완료, 예약 취소 chip 상태에 따라 카드 디자인과 데이터가 달라지는 단일 페이지입니다.                                              |
-| 예약 상세 페이지      | `/reservations/:reservationId`                |                                                                                                                                                           |
-| 예약 요청 완료 페이지 | `/reservations/:reservationId/complete`       | 예약 생성 성공 직후 replace 진입하며, `확인 완료`·브라우저 뒤로가기는 홈으로 replace 이동합니다. 생성 응답이 없는 직접 진입·새로고침도 홈으로 이동합니다. |
+| Page                  | Path                                                | Notes                                                                                                                                                     |
+| --------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 리뷰 작성 페이지      | `/restaurants/:restaurantId/reviews/new`            |                                                                                                                                                           |
+| 마이 리뷰 페이지      | `/my-reviews`                                       | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                                                                 |
+| 리뷰 상세 페이지      | `/reviews/:reviewId`                                |                                                                                                                                                           |
+| 리뷰 수정 페이지      | `/reviews/:reviewId/edit`                           |                                                                                                                                                           |
+| 저장 페이지           | `/saved`                                            | 목 데이터 기반 컬렉션 목록입니다.                                                                                                                         |
+| 컬렉션 생성           | `/saved/collections/new`                            | 독립 폼 페이지이며 하단 내비게이션을 표시하지 않습니다.                                                                                                   |
+| 컬렉션 상세           | `/saved/collections/:collectionId`                  | 목 상세와 URL 정렬·분류를 표시합니다. 없는 ID는 `/saved`로 복귀합니다.                                                                                    |
+| 컬렉션 수정           | `/saved/collections/:collectionId/edit`             | 독립 폼 페이지이며 변경이 있는 뒤로가기에 폐기 확인을 표시합니다.                                                                                         |
+| 컬렉션 식당 편집      | `/saved/collections/:collectionId/restaurants/edit` | 독립 편집 페이지이며 하단 내비게이션 없이 선택·이동·삭제를 제공합니다. 없는 ID는 `/saved`로 복귀합니다.                                                   |
+| 마이 페이지           | `/mypage`                                           |                                                                                                                                                           |
+| 프로필 생성 페이지    | `/profile/new`                                      | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                                                              |
+| 탈퇴 페이지           | `/withdrawal`                                       | 유지 여부 논의 중입니다.                                                                                                                                  |
+| 예약 페이지           | `/restaurants/:restaurantId/reservations/new`       |                                                                                                                                                           |
+| 어디든 예약 페이지    | `/reservations/anywhere`                            |                                                                                                                                                           |
+| 예약 요청 페이지      | `/reservations/request`                             |                                                                                                                                                           |
+| 예약 정보 페이지      | `/my-reservations`                                  | 진행 중, 방문 예정, 방문 완료, 예약 취소 chip 상태에 따라 카드 디자인과 데이터가 달라지는 단일 페이지입니다.                                              |
+| 예약 상세 페이지      | `/reservations/:reservationId`                      |                                                                                                                                                           |
+| 예약 요청 완료 페이지 | `/reservations/:reservationId/complete`             | 예약 생성 성공 직후 replace 진입하며, `확인 완료`·브라우저 뒤로가기는 홈으로 replace 이동합니다. 생성 응답이 없는 직접 진입·새로고침도 홈으로 이동합니다. |
 
 ## Auth Gate Policy
 
@@ -93,11 +97,9 @@
 
 아직 실제 화면이 구현되지 않았지만, 하단 네비게이션 진입점으로 URL이 필요한 페이지는 임시로 준비중 페이지를 렌더링합니다.
 
-| Page          | Path           | Access     | Render           | Notes                                         |
-| ------------- | -------------- | ---------- | ---------------- | --------------------------------------------- |
-| 준비중 페이지 | `/coming-soon` | `public`   | 준비중 안내 화면 | 직접 접근 가능한 공통 준비중 페이지입니다.    |
-| 저장 페이지   | `/saved`       | `authOnly` | 준비중 안내 화면 | 실제 저장 목록 화면 구현 전 임시 route입니다. |
-| 지도 페이지   | `/map`         | `public`   | 준비중 안내 화면 | 실제 지도 화면 구현 전 임시 route입니다.      |
+| Page          | Path           | Access   | Render           | Notes                                      |
+| ------------- | -------------- | -------- | ---------------- | ------------------------------------------ |
+| 준비중 페이지 | `/coming-soon` | `public` | 준비중 안내 화면 | 직접 접근 가능한 공통 준비중 페이지입니다. |
 
 ## Not Found Route
 
@@ -119,15 +121,19 @@
 
 현재 하단 네비게이션바가 고정적으로 들어가는 페이지는 아래와 같습니다.
 
-| Page             | Path               |
-| ---------------- | ------------------ |
-| 홈 페이지        | `/`                |
-| 저장 페이지      | `/saved`           |
-| 지도 페이지      | `/map`             |
-| 예약 정보 페이지 | `/my-reservations` |
-| 마이 페이지      | `/mypage`          |
+| Page             | Path                               |
+| ---------------- | ---------------------------------- |
+| 홈 페이지        | `/`                                |
+| 저장 페이지      | `/saved`                           |
+| 컬렉션 상세      | `/saved/collections/:collectionId` |
+| 지도 페이지      | `/map`                             |
+| 예약 정보 페이지 | `/my-reservations`                 |
+| 마이 페이지      | `/mypage`                          |
 
 하단 네비게이션바가 필요한 page는 `BottomNavigationLayout`에서 렌더링합니다.
 
-저장(`/saved`)과 지도(`/map`)는 하단 네비게이션 URL을 먼저 고정하기 위한 임시 route입니다.
-실제 화면이 구현되기 전까지는 준비중 페이지를 렌더링합니다.
+저장 목록·컬렉션 상세는 목 데이터 퍼블리싱 화면이며 BottomNavigationLayout을 사용합니다.
+컬렉션 생성·수정·식당 편집은 하단 내비게이션 없는 독립 페이지입니다.
+지도(`/map`)는 샘플 지도·검색·필터·목록·상세·사진 보기 화면을 제공합니다.
+지도 SDK는 Google Maps를 사용합니다. 식당 데이터와 좌표는 샘플임을 표시하며 실제 식당 검색·저장/예약 API는 연결하지 않습니다.
+지도 검색은 `/search`에 검증된 map context를 전달하고 replace navigation으로 복귀합니다. 지도 상태는 메모리에서 이탈 후 5분 미만 복원하며, 활성 지도 탭 재선택은 reset route state를 전달해 즉시 초기화합니다. 일반 검색 URL과 접근 정책은 변경하지 않습니다.

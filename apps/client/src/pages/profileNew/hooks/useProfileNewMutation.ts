@@ -11,9 +11,9 @@ import { requestOnboarding } from '@/pages/profileNew/api/requestOnboarding'
 import type { ProfileDraft } from '@/features/profile/hooks/useProfileForm'
 import { createOnboardingRequestBody } from '@/pages/profileNew/utils/profileNewForm'
 import {
-  applyProfileNewOnboardingError,
-  type ProfileNewOnboardingErrorHandlers,
-} from '@/pages/profileNew/utils/profileNewOnboardingError'
+  applyProfileApiError,
+  type ProfileApiErrorHandlers,
+} from '@/features/profile/utils/profileApiError'
 import { checkHasHttpStatus } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 
@@ -21,8 +21,8 @@ interface UseProfileNewMutationOptions {
   getRedirectPath: () => string
   getUploadedProfileImageKey: (file: File) => Promise<string>
   navigateTo: (to: string, options?: { replace?: boolean }) => void
-  setFieldError: ProfileNewOnboardingErrorHandlers['setFieldError']
-  setFormError: ProfileNewOnboardingErrorHandlers['setFormError']
+  setFieldError: ProfileApiErrorHandlers['setFieldError']
+  setFormError: ProfileApiErrorHandlers['setFormError']
 }
 
 export const useProfileNewMutation = ({
@@ -33,19 +33,28 @@ export const useProfileNewMutation = ({
   setFormError,
 }: UseProfileNewMutationOptions) => {
   const isMountedRef = useRef(false)
+  const isSubmissionPending = useRef(false)
   useEffect(() => {
     isMountedRef.current = true
     return () => {
       isMountedRef.current = false
     }
   }, [])
-  const canApplyResponse = (sessionVersion: number | undefined) =>
+  const canApplyResponse = (sessionVersion: number) =>
     isMountedRef.current && getAuthSessionVersion() === sessionVersion
 
-  return useMutation({
-    onMutate: () => getAuthSessionVersion(),
-    mutationFn: async (profileDraft: ProfileDraft) => {
-      const sessionVersion = getAuthSessionVersion()
+  const mutation = useMutation({
+    retry: false,
+    mutationFn: async ({
+      profileDraft,
+      sessionVersion,
+    }: {
+      profileDraft: ProfileDraft
+      sessionVersion: number
+    }) => {
+      if (!canApplyResponse(sessionVersion)) {
+        throw new Error('Onboarding session changed before submission')
+      }
       const profileImageFile =
         profileDraft.profileImageChange.type === 'replace'
           ? profileDraft.profileImageChange.file
@@ -61,12 +70,12 @@ export const useProfileNewMutation = ({
         createOnboardingRequestBody(profileDraft, profileImageKey),
       )
     },
-    onSuccess: ({ accessToken }, _variables, sessionVersion) => {
+    onSuccess: ({ accessToken, userId }, { sessionVersion }) => {
       if (!canApplyResponse(sessionVersion)) return
-      startAuthenticatedSession(accessToken)
+      startAuthenticatedSession(accessToken, userId)
       navigateTo(getRedirectPath())
     },
-    onError: (error, _variables, sessionVersion) => {
+    onError: (error, { sessionVersion }) => {
       if (!canApplyResponse(sessionVersion)) return
       if (
         checkHasHttpStatus(error) &&
@@ -78,7 +87,7 @@ export const useProfileNewMutation = ({
       }
 
       if (
-        !applyProfileNewOnboardingError(error, {
+        !applyProfileApiError(error, {
           setFieldError,
           setFormError,
         })
@@ -87,4 +96,18 @@ export const useProfileNewMutation = ({
       }
     },
   })
+
+  return {
+    isPending: mutation.isPending,
+    mutateAsync: async (profileDraft: ProfileDraft) => {
+      if (isSubmissionPending.current) return
+      isSubmissionPending.current = true
+      const sessionVersion = getAuthSessionVersion()
+      try {
+        return await mutation.mutateAsync({ profileDraft, sessionVersion })
+      } finally {
+        isSubmissionPending.current = false
+      }
+    },
+  }
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import type { UploadedImage, UploadUsage } from '@/shared/api/uploadApi'
 import {
@@ -18,6 +18,8 @@ interface AdminImageUploaderProps {
   /** 앱에서 실제로 잘려 보이는 비율. 첫 번째는 크게, 나머지는 작은 썸네일로 보여준다. */
   previewFrames: readonly [ImagePreviewFrame, ...ImagePreviewFrame[]]
   multiple?: boolean
+  preserveOrder?: boolean
+  maxFiles?: number
   representativeLabel?: boolean
   onChange: (value: UploadedImage[]) => void
   onStatusChange?: (status: AdminImageUploadStatus) => void
@@ -29,24 +31,36 @@ export const AdminImageUploader = ({
   value,
   previewFrames,
   multiple = false,
+  preserveOrder = false,
+  maxFiles = Infinity,
   representativeLabel = false,
   onChange,
   onStatusChange,
 }: AdminImageUploaderProps) => {
   const [primaryFrame, ...secondaryFrames] = previewFrames
   const valueRef = useRef(value)
+  const uploadOrders = useRef(new Map<string, number>())
+  const [limitError, setLimitError] = useState('')
 
   useEffect(() => {
     valueRef.current = value
   }, [value])
 
   const handleUploaded = useCallback(
-    (uploaded: UploadedImage) => {
-      const nextValue = multiple ? [...valueRef.current, uploaded] : [uploaded]
+    (uploaded: UploadedImage, order: number) => {
+      const nextValue = multiple ? [...valueRef.current] : []
+      const index = preserveOrder
+        ? nextValue.findIndex(
+            (image) =>
+              (uploadOrders.current.get(image.fileKey) ?? -Infinity) > order,
+          )
+        : -1
+      nextValue.splice(index < 0 ? nextValue.length : index, 0, uploaded)
+      if (preserveOrder) uploadOrders.current.set(uploaded.fileKey, order)
       valueRef.current = nextValue
       onChange(nextValue)
     },
-    [multiple, onChange],
+    [multiple, onChange, preserveOrder],
   )
   const { items, status, addFiles, retry, remove } = useAdminImageUpload({
     usage,
@@ -59,8 +73,17 @@ export const AdminImageUploader = ({
 
   const handleFiles = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
-    if (files.length > 0) void addFiles(multiple ? files : files.slice(0, 1))
     event.target.value = ''
+    setLimitError('')
+    const selected = multiple ? files : files.slice(0, 1)
+    if (
+      multiple &&
+      valueRef.current.length + items.length + selected.length > maxFiles
+    ) {
+      setLimitError(`이미지는 최대 ${maxFiles}장까지 선택할 수 있습니다.`)
+      return
+    }
+    if (selected.length > 0) void addFiles(selected)
   }
 
   const move = (index: number, offset: -1 | 1) => {
@@ -91,6 +114,12 @@ export const AdminImageUploader = ({
           JPEG, PNG, WebP · 파일당 최대 5MB
         </p>
       </div>
+
+      {limitError ? (
+        <p role="alert" className="text-sm text-red-600">
+          {limitError}
+        </p>
+      ) : null}
 
       {value.length > 0 ? (
         <ul className="grid gap-3 sm:grid-cols-2">
@@ -158,9 +187,10 @@ export const AdminImageUploader = ({
                   </SmallButton>
                   <SmallButton
                     label={`${image.fileName} 삭제`}
-                    onClick={() =>
+                    onClick={() => {
+                      setLimitError('')
                       onChange(value.filter((_, i) => i !== index))
-                    }
+                    }}
                   >
                     삭제
                   </SmallButton>
@@ -205,7 +235,10 @@ export const AdminImageUploader = ({
               ) : null}
               <SmallButton
                 label={`${item.file.name} 항목 삭제`}
-                onClick={() => remove(item.id)}
+                onClick={() => {
+                  setLimitError('')
+                  remove(item.id)
+                }}
               >
                 제거
               </SmallButton>

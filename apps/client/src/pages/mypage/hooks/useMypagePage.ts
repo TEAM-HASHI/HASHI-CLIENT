@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useState, useSyncExternalStore } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -6,11 +7,16 @@ import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { useMyPointBalanceQuery } from '@/features/point'
 import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
 import { useMyProfileSummaryQuery } from '@/features/user'
+import { getMySavedRestaurantCount } from '@/pages/mypage/api/getMySavedRestaurantCount'
 import {
   createMypagePrimaryMenuItems,
   mypageMenuSections,
 } from '@/pages/mypage/constants/mypageMenu'
 import type { MypageMenuAction, MypageSummary } from '@/pages/mypage/types'
+import {
+  getAuthSessionVersion,
+  subscribeAuthSession,
+} from '@/shared/auth/authSession'
 
 export const useMypagePage = () => {
   const navigate = useNavigate()
@@ -21,10 +27,22 @@ export const useMypagePage = () => {
   const myReviewCountQuery = useMyReviewCountQuery()
   const pointBalanceQuery = useMyPointBalanceQuery()
   const profileSummaryQuery = useMyProfileSummaryQuery()
+  const sessionVersion = useSyncExternalStore(
+    subscribeAuthSession,
+    getAuthSessionVersion,
+    getAuthSessionVersion,
+  )
+  const savedRestaurantCountQuery = useQuery({
+    queryKey: ['user', 'mySavedRestaurantCount', sessionVersion],
+    queryFn: ({ signal }) => getMySavedRestaurantCount(signal),
+    staleTime: 0,
+    throwOnError: false,
+  })
   const queryError =
     profileSummaryQuery.error ??
     pointBalanceQuery.error ??
-    myReviewCountQuery.error
+    myReviewCountQuery.error ??
+    savedRestaurantCountQuery.error
 
   if (queryError) {
     throw queryError
@@ -33,16 +51,19 @@ export const useMypagePage = () => {
   const isLoading =
     profileSummaryQuery.isPending ||
     pointBalanceQuery.isPending ||
-    myReviewCountQuery.isPending
+    myReviewCountQuery.isPending ||
+    savedRestaurantCountQuery.isPending
 
   const summary: MypageSummary = {
     nickname: profileSummaryQuery.data?.nickname ?? '하시',
     profileImageUrl: profileSummaryQuery.data?.profileImageUrl ?? null,
     availablePoint: pointBalanceQuery.data?.availablePoint ?? 0,
     myReviewCount: myReviewCountQuery.data?.myReviewCount ?? 0,
+    savedRestaurantCount: savedRestaurantCountQuery.data ?? 0,
   }
   const primaryMenuItems = createMypagePrimaryMenuItems({
     myReviewCount: summary.myReviewCount,
+    savedRestaurantCount: summary.savedRestaurantCount,
   })
 
   const handleProfileEdit = () => {
