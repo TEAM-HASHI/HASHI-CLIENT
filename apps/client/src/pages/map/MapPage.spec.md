@@ -274,8 +274,8 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 
 ## Verification
 
-- 2026-10-22 재검토: `env -u VITE_API_BASE_URL pnpm --filter @hashi/client test --maxWorkers=2 --reporter=dot` 181개 파일 / 1,067개 테스트 통과. Client `lint`, `typecheck`, `build`, 변경 TS/TSX Prettier 검사 및 `git diff --check` 통과.
-- localhost:5173 Chromium 지도 E2E 19개 통과(1 worker, 실제 Google SDK + 식당 API 응답 대역). 로딩 패널의 80px 스피너와 상단 143px 위치, SDK 실패 후 재시도, 상세 포커스, 모바일 드래그, 검색·카테고리 왕복을 포함한다. 실제 개발 서버의 식당 → 메뉴 상세 → 지도 리뷰 복귀 → 메뉴 재진입 → 브라우저 뒤로가기의 메뉴 탭 복원도 별도로 확인했다.
+- 2026-10-22 재검토: `env -u VITE_API_BASE_URL pnpm --filter @hashi/client test --maxWorkers=2 --reporter=dot` 181개 파일 / 1,072개 테스트 통과. Client `lint`, `typecheck`, `build`, 변경 TS/TSX Prettier 검사 및 `git diff --check` 통과.
+- localhost:5173 Chromium 지도 E2E 21개 통과(1 worker, 실제 Google SDK + 식당 API 응답 대역). 로딩 패널의 80px 스피너와 상단 143px 위치, 선택 식당·추가 조회 스피너, 빈 결과 핸들 유지, SDK 실패 후 재시도, 상세 포커스, 모바일 드래그, 검색·카테고리 왕복을 포함한다. 실제 개발 서버의 식당 → 메뉴 상세 → 지도 리뷰 복귀 → 메뉴 재진입 → 브라우저 뒤로가기의 메뉴 탭 복원도 별도로 확인했다.
 - HASHI-232: API boundary/query-policy, controller session/sort/cursor/retry/expiry, detail lazy queries and batch saves are covered by deterministic request mocks. Updated route/page tests must not import real API clients or require API env values. Final command results are recorded in the implementation handoff; prior HASHI-215 counts below are historical, not proof of the API integration.
 - Regression coverage includes successful re-selection after cached detail errors, successive session expirations after a successful recovery, and stopping failed recovery loops. A recovered request that successfully settled may recover again on a later 410.
 - Live GET probes on 2026-10-21 confirmed regions, restaurant list, selected location, summary, store information, menus, reviews and photos. Live browser entry at localhost:5173 subsequently displayed Google Maps and real region/restaurant data after the referrer update. Mock-backed browser tests verify interaction/error paths, not backend failure behavior or real-device behavior.
