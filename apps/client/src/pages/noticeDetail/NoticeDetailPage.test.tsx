@@ -234,7 +234,7 @@ describe('NoticeDetailPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/notices', { replace: true })
   })
 
-  it.each(['PROCESSING', 'FAILED'] as const)(
+  it.each(['PROCESSING', 'FAILED', null] as const)(
     'keeps a placeholder slot for a %s attachment without a source',
     async (status) => {
       mockedGetNoticeDetail.mockResolvedValue({
@@ -242,13 +242,16 @@ describe('NoticeDetailPage', () => {
         images: [
           {
             assetId: 'image-1',
-            image: {
-              assetId: 'image-1',
-              role: 'NOTICE_DETAIL',
-              status,
-              defaultSource: null,
-              sourceSets: [],
-            },
+            image:
+              status === null
+                ? null
+                : {
+                    assetId: 'image-1',
+                    role: 'NOTICE_DETAIL',
+                    status,
+                    defaultSource: null,
+                    sourceSets: [],
+                  },
           },
           noticeDetailFixture.images[1]!,
         ],
@@ -257,6 +260,8 @@ describe('NoticeDetailPage', () => {
       const first = await screen.findByRole('button', {
         name: '첨부 이미지 1 크게 보기',
       })
+      expect(screen.getByText('시스템')).toBeInTheDocument()
+      expect(screen.getByText('점검')).toBeInTheDocument()
       expect(first.querySelector('[data-slot="image-fallback"]')).not.toBeNull()
       expect(first.querySelector('img')).toBeNull()
       expect(

@@ -11,9 +11,11 @@ export type NoticeBlock = Required<Omit<Schema['NoticeBlock'], 'items'>> & {
   items: NoticeSpan[][]
 }
 type NoticeAttachment = Required<Omit<Schema['Attachment'], 'image'>> & {
-  image: Required<Omit<Schema['MediaImage'], 'defaultSource'>> & {
-    defaultSource: Required<Schema['Source']> | null
-  }
+  image:
+    | (Required<Omit<Schema['MediaImage'], 'defaultSource'>> & {
+        defaultSource: Required<Schema['Source']> | null
+      })
+    | null
 }
 export type NoticeListData = Required<
   Omit<Schema['NoticeListResponse'], 'notices' | 'nextCursor'>

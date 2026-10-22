@@ -47,7 +47,7 @@ export const NoticeDetailPage = () => {
   const notice = noticeQuery.data
   const images =
     notice?.images.map(({ image }) => {
-      const source = image.status === 'READY' ? image.defaultSource : null
+      const source = image?.status === 'READY' ? image.defaultSource : null
       return {
         url: source?.url ?? null,
         width: source?.width ?? 1,
@@ -77,7 +77,7 @@ export const NoticeDetailPage = () => {
       {notice ? (
         <article className="px-5 pb-10">
           <div className="flex min-h-25 flex-col justify-center gap-2 py-6">
-            <h1 className="typo-sub-header-2 leading-[1.27] tracking-[-0.01em] break-keep text-black">
+            <h1 className="typo-sub-header-2 leading-[1.27] break-keep text-black">
               {notice.title}
             </h1>
             <p className="typo-body-6 text-primary-200 leading-[1.38]">
