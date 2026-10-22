@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { uploadReviewImages } from '@/pages/reviewNew/api/uploadReviewImages'
+import { uploadReviewImages } from '@/features/review/api/uploadReviewImages'
 
 const { issueReviewImageUploadsMock, uploadFileToPresignedUrlMock } =
   vi.hoisted(() => ({
@@ -8,7 +8,7 @@ const { issueReviewImageUploadsMock, uploadFileToPresignedUrlMock } =
     uploadFileToPresignedUrlMock: vi.fn(),
   }))
 
-vi.mock('@/pages/reviewNew/api/issueReviewImageUploads', () => ({
+vi.mock('@/features/review/api/issueReviewImageUploads', () => ({
   issueReviewImageUploads: issueReviewImageUploadsMock,
 }))
 
