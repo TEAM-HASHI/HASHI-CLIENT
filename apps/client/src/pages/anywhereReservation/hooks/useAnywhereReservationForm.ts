@@ -1,3 +1,8 @@
+import {
+  ANYWHERE_RESTAURANT_NAME_MAX_LENGTH,
+  ANYWHERE_RESTAURANT_ADDRESS_MAX_LENGTH,
+} from '@/features/reservation/constants/anywhereReservation'
+
 import { useLocation } from 'react-router-dom'
 import { useCallback, useState } from 'react'
 
@@ -61,10 +66,11 @@ export const useAnywhereReservationForm = () => {
     values,
   } = formControls
   const isRestaurantNameValid =
-    restaurantName.trim().length > 0 && restaurantName.trim().length <= 200
+    restaurantName.trim().length > 0 &&
+    restaurantName.trim().length <= ANYWHERE_RESTAURANT_NAME_MAX_LENGTH
   const isRestaurantAddressValid =
     restaurantAddress.trim().length > 0 &&
-    restaurantAddress.trim().length <= 200
+    restaurantAddress.trim().length <= ANYWHERE_RESTAURANT_ADDRESS_MAX_LENGTH
   const canSubmit =
     isRestaurantNameValid &&
     isRestaurantAddressValid &&

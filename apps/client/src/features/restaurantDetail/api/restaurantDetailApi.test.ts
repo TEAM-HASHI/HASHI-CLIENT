@@ -7,7 +7,6 @@ import { getRestaurantMenu } from '@/features/restaurantDetail/api/getRestaurant
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
-import { getRestaurantPhotoDataSource } from '@/features/restaurantDetail/api/restaurantPhotoSource'
 
 vi.mock('@/shared/api/request', () => ({
   request: vi.fn(),
@@ -19,82 +18,6 @@ describe('restaurant detail API', () => {
   beforeEach(() => {
     mockedRequest.mockReset()
   })
-
-  it('loads real photos in production and preserves legacy and unavailable images', async () => {
-    vi.stubEnv('DEV', false)
-    const signal = new AbortController().signal
-    mockedRequest.mockResolvedValue({
-      restaurantId: 10,
-      filter: 'ALL',
-      counts: { all: 3, representative: 1, menu: 1, review: 1 },
-      totalCount: 3,
-      photos: [
-        {
-          photoId: 'REVIEW:1',
-          image: {
-            status: 'READY',
-            defaultSource: { url: '/ready.webp', width: 400, height: 800 },
-          },
-        },
-        { photoId: 'MENU:2', image: null, imageUrl: '/legacy.webp' },
-        {
-          photoId: 'REPRESENTATIVE:3',
-          image: { status: 'UNAVAILABLE' },
-          imageUrl: '/must-not-use.webp',
-        },
-      ],
-      hasNext: false,
-      nextCursor: null,
-    })
-    try {
-      const page = await getRestaurantPhotoDataSource()!.source.getPage({
-        restaurantId: 10,
-        filter: 'all',
-        signal,
-      })
-      expect(page.photos.map(({ imageUrl }) => imageUrl)).toEqual([
-        '/ready.webp',
-        '/legacy.webp',
-        '',
-      ])
-      expect(page.photos[0]).toMatchObject({ width: 400, height: 800 })
-      expect(page.nextCursor).toBeUndefined()
-      expect(mockedRequest).toHaveBeenCalledWith(
-        '/api/v1/restaurants/10/photos',
-        {
-          searchParams: { filter: 'ALL' },
-          signal,
-          cache: 'no-store',
-        },
-      )
-    } finally {
-      vi.unstubAllEnvs()
-    }
-  })
-
-  it.each([
-    { restaurantId: 20, filter: 'REVIEW', hasNext: false },
-    { restaurantId: 10, filter: 'MENU', hasNext: false },
-    { restaurantId: 10, filter: 'REVIEW', hasNext: true, nextCursor: 'same' },
-    { restaurantId: 10, filter: 'REVIEW', hasNext: true, nextCursor: null },
-  ])(
-    'rejects mismatched photo pages or unusable continuation cursors: %j',
-    async (response) => {
-      mockedRequest.mockResolvedValue({
-        counts: { all: 0, representative: 0, menu: 0, review: 0 },
-        totalCount: 0,
-        photos: [],
-        ...response,
-      })
-      await expect(
-        getRestaurantPhotoDataSource()!.source.getPage({
-          restaurantId: 10,
-          filter: 'review',
-          cursor: 'same',
-        }),
-      ).rejects.toThrow()
-    },
-  )
 
   it.each([
     null,

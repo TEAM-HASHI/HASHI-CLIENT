@@ -51,6 +51,9 @@ export const useRestaurantMenuDetailPage = () => {
   const parsedRestaurantId = parsePositiveIntegerParam(restaurantId)
   const parsedMenuId = parsePositiveIntegerParam(menuId)
   const hasValidParams = parsedRestaurantId !== null && parsedMenuId !== null
+  const saves = useRestaurantSaveSummary(
+    hasValidParams ? parsedRestaurantId : 0,
+  )
   const photos = useRestaurantPhotos(
     hasValidParams ? parsedRestaurantId : 0,
     false,
@@ -62,10 +65,6 @@ export const useRestaurantMenuDetailPage = () => {
     ...restaurantSummaryQueryOptions(parsedRestaurantId ?? 0),
     enabled: hasValidParams,
   })
-  const saves = useRestaurantSaveSummary(
-    hasValidParams ? parsedRestaurantId : 0,
-    summaryQuery.data?.saveCount,
-  )
   const menuQuery = useQuery({
     ...restaurantMenuQueryOptions(parsedRestaurantId ?? 0, parsedMenuId ?? 0),
     enabled: hasValidParams,
@@ -129,6 +128,13 @@ export const useRestaurantMenuDetailPage = () => {
   }
 
   const handlePressBack = () => {
+    if (sourceState.source === 'map') {
+      navigate(ROUTES.map, {
+        replace: true,
+        state: { mapRestaurantId: currentRestaurantId, activeTab: 'menu' },
+      })
+      return
+    }
     navigateBackOrReplace(navigate, getReturnPath())
   }
 
@@ -162,6 +168,7 @@ export const useRestaurantMenuDetailPage = () => {
     }
 
     navigate(nextPath, {
+      ...(sourceState.source === 'map' ? { replace: true } : {}),
       state: { source: sourceState.source },
     })
   }
@@ -171,12 +178,17 @@ export const useRestaurantMenuDetailPage = () => {
       return
     }
 
+    if (sourceState.source === 'map') {
+      navigate(ROUTES.map, {
+        replace: true,
+        state: { mapRestaurantId: currentRestaurantId, activeTab: tab },
+      })
+      return
+    }
+
     navigate(getReturnPath(), {
       state: {
         activeTab: tab,
-        ...(sourceState.source === 'today'
-          ? { restaurantId: parsedRestaurantId }
-          : {}),
       },
     })
   }

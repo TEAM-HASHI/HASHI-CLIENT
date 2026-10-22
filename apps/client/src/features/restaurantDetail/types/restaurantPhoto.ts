@@ -6,8 +6,8 @@ export interface RestaurantPhoto {
   id: string
   thumbnailUrl: string
   imageUrl: string
-  width: number
-  height: number
+  width?: number
+  height?: number
 }
 
 export type RestaurantPhotoCounts = Record<RestaurantPhotoFilter, number>

@@ -33,7 +33,7 @@
 - [ ] 랜덤 추천 응답을 식당 요약으로 사용하고 매장 정보를 조회합니다. 메뉴/리뷰는 해당 탭이 active일 때만 조회하며 초기 페이지 표시를 막지 않습니다.
 - [ ] 매장 정보, 메뉴, 사진, 리뷰 탭을 같은 페이지 상태로 전환합니다.
 - [ ] 사진 탭은 같은 상세 템플릿 안에서 전환하며, 일반 식당과 오늘의 식당 모두 아래 Photo Policy의 공통 기준을 따릅니다.
-- [ ] 사진 UI와 count는 실제 사진 조회 API를 사용하며, 운영 빌드에서도 같은 계약으로 동작합니다. 저장·해제는 컬렉션 API 연동 후속 작업으로 남깁니다.
+- [ ] 사진 UI와 count는 공개 사진 API를 사용합니다. 일반 상세·오늘의 식당·지도 상세가 공통 adapter/query/UI를 재사용하며 목데이터를 런타임에 연결하지 않습니다.
 - [ ] 사진 필터 칩에는 각 분류의 공개 사진 수를 표시하고, 상단 `사진 N`은 선택한 필터와 무관한 해당 식당의 전체 공개 사진 수를 표시합니다.
 - [ ] 매장 정보 탭의 `오시는 길`은 제목과 주소만 표시합니다. 실제 지도 연동 전까지 회색 placeholder 및 해당 영역의 공간은 노출하지 않습니다.
 - `GET /api/v1/restaurants/{restaurantId}/map-location`은 확인된 서버 endpoint이며 지도 preview 연동만 후속 작업입니다.
@@ -66,28 +66,25 @@
 - 기준: 기획팀 확인 및 HASHI-PLAN `db27b1e4595b1d1976cedb17f840a7a0e207e5f6`.
 - 공통 원문: [RESTAURANT_PHOTO](https://github.com/TEAM-HASHI/HASHI-PLAN/blob/db27b1e4595b1d1976cedb17f840a7a0e207e5f6/02_PRODUCT_SPEC/RESTAURANT/RESTAURANT_PHOTO/RESTAURANT_PHOTO.md).
 - 오늘의 식당 원문: [RES_TODAY_RESTAURANT_PHOTOS](https://github.com/TEAM-HASHI/HASHI-PLAN/blob/db27b1e4595b1d1976cedb17f840a7a0e207e5f6/02_PRODUCT_SPEC/RESTAURANT/RES_TODAY_RESTAURANT_PHOTOS/RES_TODAY_RESTAURANT_PHOTOS.md).
-- 현재 구현: `GET /api/v1/restaurants/{restaurantId}/photos`를 연결하며 개발·운영 모두 실제 응답을 사용합니다. 기존 필터, 2열 목록, 추가 조회, 상태 처리와 사진 전용 뷰어를 유지합니다.
+- 현재 구현: `RestaurantPhotoSection`에 실제 사진 API 기반 필터, 2열 목록, 커서 추가 조회, 상태 처리와 사진 전용 뷰어를 연결합니다. 뷰어는 같은 필터의 목록을 재사용하며 HDS Dialog로 중첩 상세 시트와 포커스/닫기 동작을 조정합니다.
 - 디자인 기준: [사진 목록 및 뷰어](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=7573-79532). 사진 목록은 좌우 20px, 열 사이 21px, 세로 간격 20px, 모서리 5px을 적용합니다. Figma의 구 필터명 대신 확정된 기획 필터와 개수 정책을 적용합니다.
-- 런타임에서 개발용 목 사진을 불러오지 않습니다. 사진 순서와 중복 제거, 필터별 집계는 서버 결과를 사용합니다.
-- READY asset은 `image.defaultSource`의 URL과 크기를 사용합니다. 처리 중·실패·UNAVAILABLE은 기본 이미지를 표시하고, legacy 사진은 `imageUrl`과 이미지의 원본 비율을 사용합니다.
+- 기존 예시 목데이터는 테스트 fixture로만 남기고 데이터 공급은 개발·운영 모두 `getRestaurantPhotos`로 연결합니다.
+- READY asset의 `defaultSource.url/width/height`를 사용합니다. asset이 없는 legacy 사진만 `imageUrl`을 사용하고, 크기 정보가 없으면 이미지 자연 비율로 표시합니다. 처리 중/실패 asset은 legacy URL로 되돌리지 않고 공통 fallback으로 표시합니다.
 - 필터 영역은 75px, 상단 여백 20px, 칩 높이 36px입니다. 데이터 공급 선택은 `api/restaurantPhotoSource.ts`에서 담당하고 화면 훅은 공급자의 활성 여부와 조회 인터페이스만 사용합니다.
 - 미확정: 현재 확대 2배/최대 4배, 로딩 스켈레톤, 오류 문구/배치, 뷰어 추가 조회 실패의 재시도 버튼은 기획/디자인 확인 전 임시 구현입니다. 확정 규격으로 간주하지 않습니다.
 - 기본 필터는 `전체`이며, `전체 / 대표사진 / 메뉴사진 / 리뷰사진` 칩과 각 분류의 공개 사진 수를 한 줄 가로 스크롤로 표시합니다. 동영상은 이번 스프린트에서 제외합니다.
 - 대표사진과 메뉴사진은 식당 등록 순서, 공개 리뷰의 첨부 사진은 최신 리뷰 순서로 표시합니다.
-- 전체 목록은 같은 원본을 중복 표시하지 않고 대표사진 1장과 리뷰사진 3장을 반복해 섞습니다. 대표사진과 리뷰사진이 모두 끝나면 메뉴사진을 표시하며, 한 출처가 없으면 남은 출처를 사용합니다.
+- 전체 목록의 원본 중복 제거와 대표사진/리뷰사진 교차 정렬은 서버가 수행합니다. 클라이언트는 서버 순서를 유지하고, 페이지 사이에 재등장한 `photoId`만 중복 제거합니다. `counts.all`은 분류별 수를 더해 만들지 않습니다.
 - 사진은 원본 비율을 유지하는 2열 masonry로 표시하고 최초 및 추가 조회는 각각 20장씩 수행합니다.
 - 필터 변경 시 이전 목록과 스크롤을 초기화하고 첫 20장을 조회합니다. 리뷰 작성 후 돌아오면 목록을 갱신합니다.
 - 사진 선택 시 해당 사진부터 전체 화면으로 열고 현재 필터의 사진을 좌우 스와이프로 탐색합니다. 두 번 탭 또는 핀치로 확대하며 원래 크기로 돌아오면 사진 전환을 재개합니다.
 - 뷰어에는 사진, 닫기 아이콘, 인디케이터만 표시합니다. 1~5장은 실제 개수의 점, 6장 이상은 전체 사진을 6구간으로 나눈 점 6개를 표시합니다. 닫으면 선택 전 목록 위치를 복원합니다.
 - 로딩, 빈 결과, 최초 조회 실패, 추가 조회 실패를 구분합니다. 빈 결과와 오류에서도 필터를 유지하고, 빈 상태의 시각 디자인은 디자인 기준을 확인해 적용합니다.
-- 최초 및 추가 조회 실패 시 자동으로 한 번 재시도합니다. 이후 최초 조회 실패는 사진 영역에 오류와 재시도 버튼을, 추가 조회 실패는 기존 목록을 유지한 채 하단에 오류와 재시도 버튼을 표시합니다.
+- 네트워크·타임아웃·5xx는 자동으로 한 번 재시도하고 4xx는 반복하지 않습니다. 최초 조회 실패는 사진 영역에 오류와 재시도 버튼을, 추가 조회 실패는 기존 목록을 유지한 채 하단에 오류와 재시도 버튼을 표시합니다.
 - 개별 이미지 로드 실패는 공통 기본 이미지로 대체합니다. 삭제되거나 숨겨진 리뷰 사진은 제외하고 대표사진 및 메뉴사진 변경은 다음 조회에 반영합니다.
 - 오늘의 식당 전용 차이는 하단 `다시 추천 받기`입니다. 사진 탭에서 재추천 성공 시 사진 탭을 유지하고 전체 필터, 첫 페이지, 뷰어 닫힘 상태로 초기화합니다. 요청 중 중복 선택을 막고 실패 시 현재 식당, 목록, 필터, 스크롤을 유지합니다.
 
 ## Data Dependencies
-
-- 메뉴 상세 진입 시 현재 식당 ID를 이력에 보관합니다. 뒤로가기 또는 탭 이동으로 복귀하면 같은 식당을 표시합니다.
-- 저장 수는 추천 응답의 `saveCount`를 재사용하며 별도 summary 조회를 추가하지 않습니다.
 
 ### Query
 
@@ -151,17 +148,20 @@
   - next page trigger: 공통 `useInfiniteScrollTrigger` sentinel intersect
 
 - query: restaurant photos
-- endpoint: `GET /api/v1/restaurants/{restaurantId}/photos`
-- status: 실제 API 연동. filter는 ALL / REPRESENTATIVE / MENU / REVIEW이며 최초 cursor는 생략합니다.
-- data source: `api/restaurantPhotoSource.ts`에서 generated 응답을 기존 `RestaurantPhotoSource` 인터페이스로 변환합니다. 요청 취소와 no-store를 적용합니다.
-- pagination: 최초 및 추가 조회 각각 20장, 필터 변경 시 목록과 스크롤 초기화
-- loading/empty/error: 개발 UI에서 Photo Policy 기준으로 구분합니다. 공통 빈 상태·버튼·이미지 fallback을 사용하며 상태별 최종 시각 디자인 확인은 별도입니다.
-- count: 칩별 개수는 `counts`, 상단 전체 개수는 `counts.all`을 사용합니다. `hasNext`가 true일 때만 `nextCursor`로 추가 조회하며 누락·반복 커서는 오류로 처리합니다.
+- endpoint: 공개 `GET /api/v1/restaurants/{restaurantId}/photos`
+- request: `filter=ALL|REPRESENTATIVE|MENU|REVIEW`, optional opaque `cursor`; 서버가 20장씩 반환하므로 `size`는 전송하지 않음
+- response: `photos`, `counts`, `totalCount`, `hasNext`, `nextCursor`; 유효한 ID/filter/count/cursor 계약 검사 후 view model로 변환
+- enabled: 유효한 식당 ID이면 count query, 사진 탭 active이면 infinite query 실행
+- data source: `RestaurantPhotoSource` 내부 인터페이스를 `getRestaurantPhotos` 실제 API adapter로 구현
+- query keys: source/restaurant ID를 공유하고 finite counts와 infinite filter/revision을 분리; 필터 변경은 새 revision으로 첫 페이지부터 시작, AbortSignal 전달
+- pagination: 최초 및 추가 조회 각각 20장, `hasNext`이면 opaque `nextCursor`, 필터 변경 시 목록과 스크롤 초기화
+- loading/empty/error: Photo Policy 기준으로 구분하며 공통 빈 상태·버튼·이미지 fallback 재사용
+- count: `counts.all/representative/menu/review` 서버 값 유지; 상단 사진 N은 필터와 무관하게 all 사용
 
 - query: restaurant save summary (`useRestaurantSaveSummary`)
-- endpoints: 저장 수는 공개 summary의 `saveCount`를 사용합니다. 로그인 전용 저장 여부는 `GET /api/v1/users/me/restaurant-saves?restaurantIds=...`로 조회합니다.
+- endpoints: 공개 `GET /api/v1/restaurants/save-counts`, 로그인 전용 `GET /api/v1/users/me/restaurant-saves`; query `restaurantIds`
 - enabled condition: 유효한 추천 식당 ID; saved-state query는 로그인 시에만 실행
-- cache: 저장 수는 기존 식당 summary 캐시를 공유해 별도 save-counts 요청을 보내지 않습니다. saved는 식당 ID + `sessionVersion`으로 분리합니다.
+- cache: count는 식당 ID, saved는 식당 ID + `sessionVersion`으로 분리하며 로그아웃/세션 전환 시 이전 saved 응답을 재사용하지 않음
 - fallback: count 미확인/실패 시 숫자를 숨기고 saved는 false; 임의의 `0`을 만들지 않음
 
 ### Mutation
@@ -190,7 +190,7 @@
   - restaurant store information
   - restaurant menus infinite pages
   - restaurant reviews infinite pages
-  - restaurant photos: 첫 페이지 응답의 개수와 목록을 공유하고, 사진 탭 재진입 시 첫 페이지만 다시 조회
+  - restaurant photos: 실제 공개 사진 목록 infinite pages 및 count query
 - derived state:
   - bottom bar variant from page variant
   - `RestaurantMainResponse` + `RestaurantStoreInformationResponse` + menu/review pages to `RestaurantDetail`

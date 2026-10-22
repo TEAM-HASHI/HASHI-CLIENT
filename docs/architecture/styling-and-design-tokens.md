@@ -60,13 +60,15 @@ Tailwind CSS를 사용하는 경우:
 
 현재 제공하는 utility namespace는 다음과 같습니다.
 
-- Colors: `primary`, `secondary`, `cool-gray`, `warm-gray`, `palette-*-soft/strong`, semantic colors
+- Colors: `black`, `primary`, `secondary`, `cool-gray`, `warm-gray`, `palette-*-soft/strong`, semantic colors
 - Gradients: `gradient-01`, `background-image-gradient-01`
 - Shadows: `shadow-header`
 - Motion: `animate-bottom-sheet-overlay-in`, `animate-bottom-sheet-overlay-out`, `animate-bottom-sheet-panel-in`, `animate-bottom-sheet-panel-out`, `animate-toast-enter`, `animate-toast-with-timeout`
 - Typography: `typo-header-*`, `typo-sub-header-*`, `typo-body-*`, `typo-caption-*`, `typo-long-body-1`
 - Font family: `font-sans` maps to `Pretendard` first, then system fallback
 - Z-index: `z-base`, `z-raised`, `z-fixed`, `z-overlay`, `z-modal`, `z-toast`
+
+공통 Black은 `--color-black: #101010`으로 정의하며 Tailwind 기본 Black(`#000000`)을 대체합니다. `text-black`, `bg-black` 및 Black을 사용하는 border/fill/stroke 등의 utility와 불투명도 변형에 공통 적용됩니다. 화면마다 동일한 색상을 하드코딩하지 않습니다. SVG 내부에 고정된 색상이나 별도 색상 토큰은 이 변경의 대상이 아닙니다.
 
 ### Chromatic Palette
 

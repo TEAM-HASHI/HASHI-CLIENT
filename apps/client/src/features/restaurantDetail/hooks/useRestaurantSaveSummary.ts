@@ -1,7 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useSyncExternalStore } from 'react'
 
-import { restaurantSavedQueryOptions } from '@/features/restaurantDetail/queries/restaurantSaveQueryOptions'
+import {
+  restaurantSaveCountQueryOptions,
+  restaurantSavedQueryOptions,
+} from '@/features/restaurantDetail/queries/restaurantSaveQueryOptions'
 import {
   getAuthSessionVersion,
   subscribeAuthSession,
@@ -10,7 +13,6 @@ import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 
 export const useRestaurantSaveSummary = (
   restaurantId: number,
-  count?: number,
 ): { saveCount: number | undefined; saved: boolean } => {
   const version = useSyncExternalStore(
     subscribeAuthSession,
@@ -19,16 +21,17 @@ export const useRestaurantSaveSummary = (
   )
   const { isAuthenticated } = useAuthStatus()
   const isValidId = Number.isSafeInteger(restaurantId) && restaurantId > 0
+  const countQuery = useQuery({
+    ...restaurantSaveCountQueryOptions(restaurantId),
+    enabled: isValidId,
+  })
   const savedQuery = useQuery({
     ...restaurantSavedQueryOptions(restaurantId, version),
     enabled: isValidId && isAuthenticated,
   })
 
   return {
-    saveCount:
-      typeof count === 'number' && Number.isSafeInteger(count) && count >= 0
-        ? count
-        : undefined,
+    saveCount: countQuery.data?.saveCount,
     saved: isAuthenticated && (savedQuery.data ?? false),
   }
 }

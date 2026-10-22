@@ -23,6 +23,7 @@ import {
   getAuthSessionVersion,
   setAccessToken,
   startAuthenticatedSession,
+  wasAuthSessionExpired,
 } from '@/shared/auth/authSession'
 import { getApiAccessToken } from '@/shared/api/accessToken'
 import { HttpStatusError } from '@/shared/api/apiError'
@@ -99,6 +100,7 @@ describe('AuthSessionRestoreGate', () => {
   })
 
   it('renders children as unauthenticated when token restore fails', async () => {
+    const previousVersion = getAuthSessionVersion()
     mockedRequestTokenReissue.mockRejectedValue(new HttpStatusError(401))
     mockedGetAuthMe.mockRejectedValue(new HttpStatusError(401))
 
@@ -112,6 +114,7 @@ describe('AuthSessionRestoreGate', () => {
       expect(screen.getByText('앱 화면')).toBeInTheDocument()
     })
     expect(getAccessToken()).toBeUndefined()
+    expect(wasAuthSessionExpired(previousVersion)).toBe(false)
   })
 
   it('restores onboarding session from the signup cookie', async () => {
@@ -428,6 +431,7 @@ describe('AuthSessionRestoreGate', () => {
     'handles a %s BFCache recheck without unmounting the draft',
     async (status) => {
       setAccessToken('cached-token')
+      const previousVersion = getAuthSessionVersion()
       mockedRequestTokenReissue.mockRejectedValue(new HttpStatusError(status))
       mockedGetAuthMe.mockRejectedValue(new HttpStatusError(401))
       render(
@@ -443,6 +447,7 @@ describe('AuthSessionRestoreGate', () => {
         )
       })
       expect(getAccessToken()).toBe(status === 401 ? undefined : 'cached-token')
+      expect(wasAuthSessionExpired(previousVersion)).toBe(status === 401)
       expect(screen.getByRole('textbox', { name: 'draft' })).toBe(input)
       expect(input).toHaveValue('unsaved')
     },

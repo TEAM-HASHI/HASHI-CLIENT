@@ -31,7 +31,7 @@ const { mockParams } = vi.hoisted(() => ({
 }))
 const { mockLocationStore } = vi.hoisted(() => ({
   mockLocationStore: {
-    state: undefined as { source?: 'today' | 'detail' } | undefined,
+    state: undefined as { source?: 'today' | 'detail' | 'map' } | undefined,
   },
 }))
 const { mockAuthStore } = vi.hoisted(() => ({
@@ -168,7 +168,9 @@ describe('RestaurantMenuDetailPage', () => {
     vi.mocked(getRestaurantPhotoDataSource).mockReturnValue({
       key: 'test',
       source: {
-        getPage: vi.fn().mockRejectedValue(new Error('photos unavailable')),
+        getPage: vi
+          .fn()
+          .mockRejectedValue(new Error('Photo count unavailable')),
       },
     })
     mockParams.menuId = '100'
@@ -235,7 +237,7 @@ describe('RestaurantMenuDetailPage', () => {
     expect(getPage).toHaveBeenCalledTimes(1)
   })
 
-  it('does not invent a photo count when the photo request fails', async () => {
+  it('does not invent a photo count when its API request fails', async () => {
     renderPage()
 
     expect(await screen.findByRole('tab', { name: '사진' })).toBeInTheDocument()
@@ -382,6 +384,31 @@ describe('RestaurantMenuDetailPage', () => {
     })
   })
 
+  it('replaces another menu in the map flow so back returns to the map menu list', async () => {
+    mockLocationStore.state = { source: 'map' }
+    renderPage()
+    fireEvent.click(await screen.findByRole('button', { name: /쇼유라멘/ }))
+    expect(mockNavigate).toHaveBeenCalledWith('/restaurants/10/menus/101', {
+      replace: true,
+      state: { source: 'map' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+    expect(mockNavigate).toHaveBeenLastCalledWith('/map', {
+      replace: true,
+      state: { mapRestaurantId: '10', activeTab: 'menu' },
+    })
+  })
+
+  it('returns to the selected map restaurant tab instead of the standalone detail', async () => {
+    mockLocationStore.state = { source: 'map' }
+    renderPage()
+    fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
+    expect(mockNavigate).toHaveBeenCalledWith('/map', {
+      replace: true,
+      state: { mapRestaurantId: '10', activeTab: 'review' },
+    })
+  })
+
   it('resets scroll position on menu detail entry', () => {
     renderPage()
 
@@ -438,7 +465,7 @@ describe('RestaurantMenuDetailPage', () => {
     fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
 
     expect(mockNavigate).toHaveBeenCalledWith('/restaurants/today', {
-      state: { activeTab: 'review', restaurantId: 10 },
+      state: { activeTab: 'review' },
     })
   })
 
@@ -450,7 +477,7 @@ describe('RestaurantMenuDetailPage', () => {
     fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
 
     expect(mockNavigate).toHaveBeenCalledWith('/restaurants/today', {
-      state: { activeTab: 'photo', restaurantId: 10 },
+      state: { activeTab: 'photo' },
     })
   })
 

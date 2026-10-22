@@ -7,8 +7,15 @@ import { ProfileImageSection } from '@/features/profile/components/ProfileImageS
 import { useProfileNewPage } from '@/pages/profileNew/hooks/useProfileNewPage'
 
 export const ProfileNewPage = () => {
-  const { form, formId, handleBackClick, handleSubmit, isSubmitting } =
-    useProfileNewPage()
+  const {
+    form,
+    fields,
+    canSubmit,
+    formId,
+    handleBackClick,
+    handleSubmit,
+    isSubmitting,
+  } = useProfileNewPage()
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
@@ -37,7 +44,7 @@ export const ProfileNewPage = () => {
           previewUrl={form.profileImage.previewUrl}
         />
 
-        <ProfileFields disabled={isSubmitting} fields={form.fields} />
+        <ProfileFields disabled={isSubmitting} fields={fields} />
 
         {form.formError ? (
           <p className="typo-body-7 text-error mt-4" role="alert">
@@ -47,7 +54,7 @@ export const ProfileNewPage = () => {
       </form>
 
       <ProfileFormBottomBar
-        disabled={!form.submit.canSubmit || isSubmitting}
+        disabled={!canSubmit}
         formId={formId}
         label="완료"
         loading={isSubmitting}

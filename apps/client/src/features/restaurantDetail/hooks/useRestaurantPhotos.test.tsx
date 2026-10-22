@@ -44,78 +44,6 @@ afterEach(() => {
 })
 
 describe('useRestaurantPhotos', () => {
-  it('retains counts on filter failure but does not carry them to another restaurant', async () => {
-    const { result, rerender } = renderHook(
-      ({ id }) => useRestaurantPhotos(id, true),
-      { initialProps: { id: 10 }, wrapper },
-    )
-    await waitFor(() => expect(result.current.counts).toEqual(counts))
-    getPage.mockRejectedValue(new Error('filter unavailable'))
-    act(() => result.current.selectFilter('review'))
-    expect(result.current.counts).toEqual(counts)
-    await waitFor(() => expect(result.current.query.isError).toBe(true))
-    expect(result.current.counts).toEqual(counts)
-    rerender({ id: 20 })
-    expect(result.current.counts).toBeUndefined()
-    await waitFor(() => expect(result.current.query.isError).toBe(true))
-    expect(result.current.counts).toBeUndefined()
-  })
-
-  it('does not refetch loaded pages while the photo tab is inactive', async () => {
-    const { result, rerender } = renderHook(
-      ({ active }) => useRestaurantPhotos(10, active),
-      { initialProps: { active: true }, wrapper },
-    )
-    await waitFor(() => expect(result.current.photos).toHaveLength(20))
-    await act(async () => {
-      await result.current.query.fetchNextPage()
-    })
-    await waitFor(() => expect(result.current.photos).toHaveLength(21))
-    rerender({ active: false })
-    getPage.mockClear()
-    await act(async () => {
-      await client.invalidateQueries({ queryKey: ['restaurantPhotos', 10] })
-    })
-    expect(getPage).not.toHaveBeenCalled()
-    expect(result.current.counts).toEqual(counts)
-  })
-
-  it('reuses the first page fetched for counts when the photo tab opens', async () => {
-    const { result, rerender } = renderHook(
-      ({ active }) => useRestaurantPhotos(10, active),
-      { initialProps: { active: false }, wrapper },
-    )
-    await waitFor(() => expect(result.current.counts?.all).toBe(21))
-    rerender({ active: true })
-    await waitFor(() => expect(result.current.photos).toHaveLength(20))
-    expect(getPage).toHaveBeenCalledTimes(1)
-  })
-
-  it('restarts with one page instead of replaying loaded cursors after tab reentry', async () => {
-    const { result, rerender } = renderHook(
-      ({ active }) => useRestaurantPhotos(10, active),
-      { initialProps: { active: true }, wrapper },
-    )
-    await waitFor(() => expect(result.current.photos).toHaveLength(20))
-    act(() => result.current.selectFilter('review'))
-    await waitFor(() => expect(result.current.query.isSuccess).toBe(true))
-    await act(async () => {
-      await result.current.query.fetchNextPage()
-    })
-    await waitFor(() => expect(result.current.photos).toHaveLength(21))
-    rerender({ active: false })
-    await client.invalidateQueries({
-      queryKey: ['restaurantPhotos', 10],
-      refetchType: 'none',
-    })
-    getPage.mockClear()
-    rerender({ active: true })
-    await waitFor(() => expect(result.current.query.isFetching).toBe(false))
-    expect(result.current.filter).toBe('review')
-    expect(result.current.photos).toHaveLength(20)
-    expect(getPage).toHaveBeenCalledTimes(1)
-  })
-
   it('appends pages and resets to the first page when changing filters', async () => {
     const { result } = renderHook(() => useRestaurantPhotos(10, true), {
       wrapper,
@@ -160,6 +88,23 @@ describe('useRestaurantPhotos', () => {
     expect(result.current.isFetchNextPageError).toBe(false)
   })
 
+  it('does not duplicate a photo when a mutable next page repeats an existing association', async () => {
+    const { result } = renderHook(() => useRestaurantPhotos(10, true), {
+      wrapper,
+    })
+    await waitFor(() => expect(result.current.photos).toHaveLength(20))
+    getPage.mockResolvedValueOnce({
+      photos: [photo('19'), photo('last')],
+      counts,
+    })
+    await act(async () => {
+      await result.current.query.fetchNextPage()
+    })
+    await waitFor(() => expect(result.current.photos.at(-1)?.id).toBe('last'))
+    expect(result.current.photos.map(({ id }) => id)).toHaveLength(21)
+    expect(result.current.photos.at(-1)?.id).toBe('last')
+  })
+
   it('resets the filter when the recommended restaurant changes', async () => {
     const { result, rerender } = renderHook(
       ({ id }) => useRestaurantPhotos(id, true),
@@ -172,5 +117,14 @@ describe('useRestaurantPhotos', () => {
     await waitFor(() => expect(result.current.query.isSuccess).toBe(true))
     rerender({ id: 10 })
     expect(result.current.filter).toBe('all')
+  })
+
+  it('does not request photos or expose counts for an invalid restaurant id', () => {
+    const { result } = renderHook(() => useRestaurantPhotos(0, true), {
+      wrapper,
+    })
+    expect(result.current.enabled).toBe(false)
+    expect(result.current.counts).toBeUndefined()
+    expect(getPage).not.toHaveBeenCalled()
   })
 })

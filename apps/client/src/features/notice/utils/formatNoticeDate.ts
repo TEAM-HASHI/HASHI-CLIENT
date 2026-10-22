@@ -7,7 +7,5 @@ export const formatNoticeDate = (value: string) => {
 }
 
 export const formatNoticeLastUpdatedDate = ({
-  publishedAt,
-  updatedAt,
-}: Pick<NoticeSummary, 'publishedAt' | 'updatedAt'>) =>
-  formatNoticeDate(updatedAt ?? publishedAt)
+  lastModifiedAt,
+}: Pick<NoticeSummary, 'lastModifiedAt'>) => formatNoticeDate(lastModifiedAt)

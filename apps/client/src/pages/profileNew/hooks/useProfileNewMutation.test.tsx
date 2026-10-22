@@ -65,6 +65,43 @@ afterEach(() => {
 })
 
 describe('useProfileNewMutation session conflicts', () => {
+  it.each(['keep', 'replace'] as const)(
+    'does not upload or submit a %s draft when the session changes before dispatch',
+    async (imageChange) => {
+      const {
+        result,
+        getUploadedProfileImageKey,
+        navigateTo,
+        setFieldError,
+        setFormError,
+      } = setup()
+      getUploadedProfileImageKey.mockResolvedValue('uploaded-key')
+      vi.mocked(requestOnboarding).mockResolvedValue({
+        userId: 1,
+        accessToken: 'old-token',
+      })
+      await act(async () => {
+        const completion = result.current
+          .mutateAsync({
+            ...draft,
+            profileImageChange:
+              imageChange === 'replace'
+                ? { type: 'replace', file: new File(['image'], 'profile.png') }
+                : { type: 'keep' },
+          })
+          .catch(() => undefined)
+        startAuthenticatedSession('new-session')
+        await completion
+      })
+      expect(requestOnboarding).not.toHaveBeenCalled()
+      expect(getUploadedProfileImageKey).not.toHaveBeenCalled()
+      expect(getAccessToken()).toBe('new-session')
+      expect(navigateTo).not.toHaveBeenCalled()
+      expect(setFieldError).not.toHaveBeenCalled()
+      expect(setFormError).not.toHaveBeenCalled()
+    },
+  )
+
   it.each([
     ['new-login', 'success'],
     ['new-login', 401],

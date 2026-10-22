@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ReviewNewPage } from '@/pages/reviewNew'
 import { createReview } from '@/pages/reviewNew/api/createReview'
 import { getReviewContext } from '@/pages/reviewNew/api/getReviewContext'
-import { uploadReviewImages } from '@/pages/reviewNew/api/uploadReviewImages'
+import { uploadReviewImages } from '@/features/review/api/uploadReviewImages'
 import { createQueryClient } from '@/shared/lib/queryClient'
 
 const { navigateMock, routeState } = vi.hoisted(() => ({
@@ -59,7 +59,7 @@ vi.mock('@/pages/reviewNew/api/getReviewContext', () => ({
   getReviewContext: vi.fn(),
 }))
 
-vi.mock('@/pages/reviewNew/api/uploadReviewImages', () => ({
+vi.mock('@/features/review/api/uploadReviewImages', () => ({
   uploadReviewImages: vi.fn(),
 }))
 

@@ -18,6 +18,7 @@ interface UseRestaurantDetailListQueriesParams {
   activeTab: RestaurantDetailTab
   enabled: boolean
   menuPageSize: number
+  reviewPageSize?: number
   restaurantId: number
   selectedReviewSort: ReviewSortValue
 }
@@ -26,6 +27,7 @@ export const useRestaurantDetailListQueries = ({
   activeTab,
   enabled,
   menuPageSize,
+  reviewPageSize = REVIEW_PAGE_SIZE,
   restaurantId,
   selectedReviewSort,
 }: UseRestaurantDetailListQueriesParams) => {
@@ -36,7 +38,7 @@ export const useRestaurantDetailListQueries = ({
   const reviewsQuery = useInfiniteQuery({
     ...restaurantReviewsInfiniteQueryOptions({
       restaurantId,
-      size: REVIEW_PAGE_SIZE,
+      size: reviewPageSize,
       sort: selectedReviewSort,
     }),
     enabled: enabled && activeTab === 'review',

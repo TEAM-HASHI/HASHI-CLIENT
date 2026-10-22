@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { showToast } from '@hashi/hds-ui'
-import { useNavigate, useParams } from 'react-router-dom'
+import { generatePath, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { REVIEW_PHOTO_MAX_COUNT } from '@/features/review/constants'
 import { useReviewForm } from '@/features/review/hooks'
-import { useMyReviewDetailQuery } from '@/features/review/queries/useMyReviewDetailQuery'
-import { toReviewEditViewModel } from '@/pages/reviewEdit/utils/reviewEditViewModel'
+import { useUpdateReviewMutation } from '@/pages/reviewEdit/mutations/useUpdateReviewMutation'
+import { useReviewEditContextQuery } from '@/pages/reviewEdit/queries/useReviewEditContextQuery'
+import {
+  toReviewEditViewModel,
+  type ExistingReviewImage,
+} from '@/pages/reviewEdit/utils/reviewEditViewModel'
 import { checkIsNotFoundError } from '@/shared/api/apiError'
 
 const POSITIVE_INTEGER_PATTERN = /^[1-9]\d*$/
@@ -29,7 +33,8 @@ export const useReviewEditPage = () => {
   const navigate = useNavigate()
   const { reviewId } = useParams()
   const validReviewId = parseReviewId(reviewId)
-  const reviewDetailQuery = useMyReviewDetailQuery(validReviewId)
+  const reviewEditContextQuery = useReviewEditContextQuery(validReviewId)
+  const updateReviewMutation = useUpdateReviewMutation()
   const {
     canSubmitReview,
     handlePhotoFilesChange,
@@ -42,20 +47,32 @@ export const useReviewEditPage = () => {
     reviewText,
     selectedKeywordIds,
   } = useReviewForm()
-  const [photoUrls, setPhotoUrls] = useState<string[]>([])
+  const [existingImages, setExistingImages] = useState<ExistingReviewImage[]>(
+    [],
+  )
+  const photoUrls = useMemo(
+    () => existingImages.map(({ imageUrl }) => imageUrl),
+    [existingImages],
+  )
+  const [initializedReviewId, setInitializedReviewId] = useState<number | null>(
+    null,
+  )
   const initializedReviewIdRef = useRef<number | null>(null)
   const reviewEdit = useMemo(
     () =>
-      reviewDetailQuery.data
-        ? toReviewEditViewModel(reviewDetailQuery.data)
+      reviewEditContextQuery.data
+        ? toReviewEditViewModel(reviewEditContextQuery.data)
         : undefined,
-    [reviewDetailQuery.data],
+    [reviewEditContextQuery.data],
   )
 
   useEffect(() => {
     if (
       validReviewId === null ||
       !reviewEdit ||
+      reviewEditContextQuery.isFetching ||
+      reviewEditContextQuery.isPaused ||
+      reviewEditContextQuery.isError ||
       initializedReviewIdRef.current === validReviewId
     ) {
       return
@@ -65,13 +82,18 @@ export const useReviewEditPage = () => {
     handleSelectedKeywordIdsChange(reviewEdit.selectedKeywordIds)
     handleReviewTextChange(reviewEdit.reviewText)
     handlePhotoFilesChange([])
-    setPhotoUrls(reviewEdit.photoUrls)
+    setExistingImages(reviewEdit.images)
     initializedReviewIdRef.current = validReviewId
+    setInitializedReviewId(validReviewId)
   }, [
+    handlePhotoFilesChange,
     handleRatingChange,
     handleReviewTextChange,
     handleSelectedKeywordIdsChange,
     reviewEdit,
+    reviewEditContextQuery.isError,
+    reviewEditContextQuery.isFetching,
+    reviewEditContextQuery.isPaused,
     validReviewId,
   ])
 
@@ -84,19 +106,65 @@ export const useReviewEditPage = () => {
   }
 
   const handleRetryClick = () => {
-    void reviewDetailQuery.refetch()
+    void reviewEditContextQuery.refetch()
   }
 
   const handleSaveClick = () => {
-    showToast({ children: '리뷰 수정 저장 기능을 준비 중입니다.' })
+    if (
+      validReviewId === null ||
+      !reviewEdit ||
+      !canSubmitReview ||
+      existingImages.length + photoFiles.length > REVIEW_PHOTO_MAX_COUNT ||
+      updateReviewMutation.isPending
+    ) {
+      return
+    }
+
+    updateReviewMutation.mutate(
+      {
+        reviewId: validReviewId,
+        restaurantId: reviewEdit.restaurantId,
+        rating,
+        keywordCodes: selectedKeywordIds,
+        content: reviewText,
+        existingImageFileKeys: existingImages.map(({ fileKey }) => fileKey),
+        photoFiles,
+      },
+      {
+        onSuccess: () => {
+          navigate(
+            generatePath(ROUTES.reviewDetail, {
+              reviewId: String(validReviewId),
+            }),
+          )
+        },
+      },
+    )
+  }
+
+  const handlePhotoUrlDelete = (index: number) => {
+    setExistingImages((images) =>
+      images.filter((_, imageIndex) => imageIndex !== index),
+    )
   }
 
   return {
-    isError: validReviewId === null || reviewDetailQuery.isError || !reviewEdit,
+    isError:
+      validReviewId === null || reviewEditContextQuery.isError || !reviewEdit,
     isInvalidReviewId: validReviewId === null,
-    isNotFound: checkIsNotFoundError(reviewDetailQuery.error),
-    isPending: validReviewId !== null && reviewDetailQuery.isPending,
-    isSaveDisabled: !canSubmitReview,
+    isNotFound: checkIsNotFoundError(reviewEditContextQuery.error),
+    isPending:
+      validReviewId !== null &&
+      (reviewEditContextQuery.isPending ||
+        (!reviewEditContextQuery.isError &&
+          !!reviewEdit &&
+          initializedReviewId !== validReviewId)),
+    isSaveDisabled:
+      !canSubmitReview ||
+      existingImages.length + photoFiles.length > REVIEW_PHOTO_MAX_COUNT ||
+      updateReviewMutation.isPending,
+    isSaving: updateReviewMutation.isPending,
+    isSaveError: updateReviewMutation.isError,
     maxReviewTextLength,
     photoFiles,
     photoUrls,
@@ -107,11 +175,11 @@ export const useReviewEditPage = () => {
     handleBackClick,
     handleInvalidReviewIdBackClick,
     handlePhotoFilesChange,
+    handlePhotoUrlDelete,
     handleRatingChange,
     handleRetryClick,
     handleReviewTextChange,
     handleSaveClick,
     handleSelectedKeywordIdsChange,
-    setPhotoUrls,
   }
 }

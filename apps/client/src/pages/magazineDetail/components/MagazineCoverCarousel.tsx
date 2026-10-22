@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { MagazineImage } from '@/pages/magazineDetail/components/MagazineImage'
 
 interface MagazineCoverCarouselProps {
-  imageUrls: string[]
+  imageUrls: Array<string | null>
   title: string
 }
 

@@ -22,6 +22,7 @@ export interface InputReviewMainProps extends Omit<
   onValueChange?: (value: string) => void
   onPhotoFilesChange?: (files: File[]) => void
   onPhotoUrlsChange?: (urls: string[]) => void
+  onPhotoUrlDelete?: (index: number) => void
   maxLength?: number
   disabled?: boolean
 }
@@ -36,6 +37,7 @@ export const InputReviewMain = ({
   onValueChange,
   onPhotoFilesChange,
   onPhotoUrlsChange,
+  onPhotoUrlDelete,
   maxLength = REVIEW_TEXT_MAX_LENGTH,
   disabled = false,
   className,
@@ -58,6 +60,7 @@ export const InputReviewMain = ({
     disabled,
     onPhotoFilesChange,
     onPhotoUrlsChange,
+    onPhotoUrlDelete,
     photoFiles,
     photoUrls,
   })

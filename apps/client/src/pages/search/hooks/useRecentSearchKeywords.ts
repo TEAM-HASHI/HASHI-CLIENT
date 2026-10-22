@@ -81,5 +81,9 @@ export const useRecentSearchKeywords = () => {
   return {
     recentSearchKeywords,
     saveRecentSearchKeyword,
+    clearRecentSearchKeywords: () => {
+      setStoredRecentSearchKeywords([])
+      setRecentSearchKeywords([])
+    },
   }
 }

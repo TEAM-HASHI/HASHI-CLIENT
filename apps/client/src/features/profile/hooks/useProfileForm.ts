@@ -39,12 +39,7 @@ interface UseProfileFormOptions {
   requireChanges?: boolean
 }
 
-type ProfileFieldName =
-  | 'nickname'
-  | 'birthDate'
-  | 'phoneNumber'
-  | 'englishName'
-  | 'email'
+export type ProfileFieldName = Exclude<keyof ProfileDraft, 'profileImageChange'>
 
 const PROFILE_IMAGE_INVALID_FILE_TYPE_ERROR_MESSAGE =
   '이미지 파일만 등록해주세요.'
@@ -55,7 +50,6 @@ export const useProfileForm = ({
   initialValues = {},
   requireChanges = false,
 }: UseProfileFormOptions = {}) => {
-  // 재조회된 응답은 작성 중인 입력과 변경 비교 기준을 덮어쓰지 않습니다.
   const [initialProfile] = useState(() => ({ ...initialValues }))
   const [profileImageChange, setProfileImageChange] =
     useState<ProfileImageChange>({ type: 'keep' })
@@ -108,7 +102,6 @@ export const useProfileForm = ({
   const hasServerFieldError = Object.keys(serverFieldErrors).length > 0
   const canSubmit =
     isValid && !hasServerFieldError && (!requireChanges || hasChanges)
-  // TODO: 중복 확인 API 연동 시 500ms debounce·blur 검사 상태를 포함하고, 수정 전 값은 검사에서 제외합니다.
 
   const checkShouldShowError = (fieldName: string) => {
     return hasSubmitAttempted || touchedFields.has(fieldName)
