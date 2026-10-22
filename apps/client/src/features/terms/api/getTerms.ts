@@ -1,14 +1,5 @@
-import type { components } from '@/shared/api/generated/openapi'
+import type { TermsDetail, TermsSummary } from '@/features/terms/types'
 import { request } from '@/shared/api/request'
-
-export type TermsSummary = Required<
-  components['schemas']['TermsSummaryResponse']
->
-export type TermsDetail = Required<
-  Omit<components['schemas']['TermsResponse'], 'clauses'>
-> & {
-  clauses: Required<components['schemas']['TermsClause']>[]
-}
 
 export const getTerms = async () => {
   const data = await request<TermsSummary[]>('/api/v1/terms')

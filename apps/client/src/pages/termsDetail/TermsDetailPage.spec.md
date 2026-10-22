@@ -127,7 +127,7 @@ TermsDetailPage
 ## Verification
 
 - 단순 표시·이동 및 공통 Accordion 동작을 반복 검증하는 페이지 테스트는 유지하지 않는다.
-- 약관 데이터 테스트는 전체 조항의 번호 연속성과 본문 블록 누락을 검사한다.
+- 약관 테스트는 서버 응답과 잘못된 ID·404·빈 결과·실패 후 재시도 등 예외 처리를 검증한다. 미사용 정적 원문과 전용 렌더러·타입·테스트는 유지하지 않는다.
 
 - [x] `pnpm --filter @hashi/client lint`
 - [x] `pnpm --filter @hashi/client typecheck`
