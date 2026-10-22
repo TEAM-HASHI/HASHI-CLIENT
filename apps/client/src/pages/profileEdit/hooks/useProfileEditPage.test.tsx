@@ -9,11 +9,12 @@ import {
   MY_PROFILE_SUMMARY_QUERY_KEY,
 } from '@/features/user'
 import { useProfileEditPage } from '@/pages/profileEdit/hooks/useProfileEditPage'
-import { ApiError } from '@/shared/api/apiError'
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import { request } from '@/shared/api/request'
 import {
   clearAuthSession,
   getAccessToken,
+  getAuthSessionVersion,
   startAuthenticatedSession,
 } from '@/shared/auth/authSession'
 
@@ -182,4 +183,64 @@ it('does not delete the image or mutate a new session when the account changes d
   expect(client.getQueryState(MY_INFO_QUERY_KEY)?.isInvalidated).toBe(false)
   expect(getPath()).toBe('/profile/edit')
   expect(result.current.form.formError).toBe('')
+})
+
+it.each([
+  new HttpStatusError(401),
+  failure('USER-005', '이미 탈퇴한 회원입니다.'),
+])(
+  'ignores a late auth error after a different account logs out',
+  async (error) => {
+    let rejectSave!: (error: Error) => void
+    vi.mocked(request).mockImplementationOnce(
+      () =>
+        new Promise((_, reject) => {
+          rejectSave = reject
+        }) as never,
+    )
+    const { result, client, getPath } = setup()
+    act(() => result.current.fields.englishName.onValueChange('NEW NAME'))
+    act(() => result.current.handleSubmit(submitEvent))
+    await waitFor(() => expect(request).toHaveBeenCalledOnce())
+    act(() => {
+      startAuthenticatedSession('new-token')
+      clearAuthSession()
+      client.setQueryData(MY_INFO_QUERY_KEY, { nickname: '새 사용자' })
+    })
+    const version = getAuthSessionVersion()
+    await act(async () => rejectSave(error))
+    await waitFor(() =>
+      expect(client.getMutationCache().getAll()[0]?.state.status).toBe('error'),
+    )
+    expect(client.getQueryData(MY_INFO_QUERY_KEY)).toEqual({
+      nickname: '새 사용자',
+    })
+    expect(getAuthSessionVersion()).toBe(version)
+    expect(getAccessToken()).toBeUndefined()
+    expect(getPath()).toBe('/profile/edit')
+    expect(result.current.form.formError).toBe('')
+  },
+)
+
+it('releases back navigation before an old save request settles after session change', async () => {
+  let resolveSave!: () => void
+  vi.mocked(request).mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        resolveSave = resolve
+      }) as never,
+  )
+  const { result, getPath } = setup()
+  act(() => result.current.fields.englishName.onValueChange('NEW NAME'))
+  act(() => result.current.handleSubmit(submitEvent))
+  await waitFor(() => expect(request).toHaveBeenCalledOnce())
+  expect(result.current.isSubmitting).toBe(true)
+  act(() => startAuthenticatedSession('new-token'))
+  expect(result.current.isSubmitting).toBe(false)
+  expect(result.current.canSubmit).toBe(false)
+  expect(result.current.fields.englishName.value).toBe('NEW NAME')
+  act(() => result.current.handleBack())
+  expect(getPath()).toBe('/mypage')
+  await act(async () => resolveSave())
+  expect(getPath()).toBe('/mypage')
 })

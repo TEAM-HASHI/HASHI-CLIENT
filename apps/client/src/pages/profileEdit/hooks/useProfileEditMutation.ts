@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import { useBlocker, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -23,9 +29,9 @@ import { checkIsAuthRequiredError, isApiError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import {
   clearAuthSession,
-  getAuthSessionStatus,
   getAuthSessionVersion,
   subscribeAuthSession,
+  wasAuthSessionExpired,
 } from '@/shared/auth/authSession'
 import { captureError } from '@/shared/lib/sentry'
 
@@ -36,6 +42,11 @@ export const useProfileEditMutation = (
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [ownerVersion] = useState(getAuthSessionVersion)
+  const currentVersion = useSyncExternalStore(
+    subscribeAuthSession,
+    getAuthSessionVersion,
+    getAuthSessionVersion,
+  )
   const savedProfile = useRef(initial)
   const pending = useRef<{
     version: number
@@ -139,7 +150,7 @@ export const useProfileEditMutation = (
         (isApiError(error) && error.code === 'USER-005')
       if (
         getAuthSessionVersion() !== version &&
-        !(isAuthError && getAuthSessionStatus() === 'unauthenticated')
+        !(isAuthError && wasAuthSessionExpired(version))
       )
         return
       if (isAuthError) {
@@ -175,10 +186,10 @@ export const useProfileEditMutation = (
   }, [blocker])
 
   return {
-    isPending: mutation.isPending,
-    isCurrentSession: ownerVersion === getAuthSessionVersion(),
+    isPending: mutation.isPending && ownerVersion === currentVersion,
+    isCurrentSession: ownerVersion === currentVersion,
     handleBack: () => {
-      if (!pending.current) navigate(ROUTES.mypage)
+      if (!shouldBlock()) navigate(ROUTES.mypage)
     },
     submit: (draft: ProfileDraft) => {
       if (pending.current || ownerVersion !== getAuthSessionVersion()) return
