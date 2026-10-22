@@ -44,7 +44,8 @@ const apiSort = (sort: MapConditions['sort']) =>
   sort === 'recommended' ? 'recommend' : sort
 const hasStatus = (error: unknown, status: number) =>
   checkHasHttpStatus(error) && error.status === status
-const validTime = (value?: string) => !!value && Date.parse(value) > Date.now()
+const validTime = (value: string | undefined, now: number) =>
+  !!value && Date.parse(value) > now
 
 export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
   const regions = useQuery(mapRegionsQueryOptions())
@@ -84,7 +85,7 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
   })
   const [restored] = useState(() => {
     const data = initial?.queryData
-    return data?.pages.length && validTime(data.pages.at(-1)?.expiresAt)
+    return data?.pages.length && validTime(data.pages.at(-1)?.expiresAt, clock)
       ? data
       : undefined
   })
@@ -154,7 +155,11 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
   const settled = useRef(restored ? 0 : -1)
   useEffect(() => {
     if (!query.data || !currentFirst || query.isFetchNextPageError) return
-    setLastSuccess(query.data)
+    // Query 결과가 실패하면 마지막 성공 목록을 503 복구 화면에 유지한다.
+    let active = true
+    queueMicrotask(() => {
+      if (active) setLastSuccess(query.data)
+    })
     lastSuccessRef.current = query.data
     if (settled.current === request.version) return
     settled.current = request.version
@@ -181,6 +186,9 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
                 { lat: b.north, lng: b.east },
               ],
       )
+    }
+    return () => {
+      active = false
     }
   }, [query.data, query.isFetchNextPageError, currentFirst, request, emptyKind])
 
@@ -289,7 +297,7 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
           item.id === selectedId && location.data ? location.data : item
         if (
           !coordinate.validUntil ||
-          Date.parse(coordinate.validUntil) <= Date.now()
+          Date.parse(coordinate.validUntil) <= clock
         )
           return []
         return [
@@ -367,7 +375,7 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
       query.data &&
       !query.isFetching &&
       !query.isError &&
-      validTime(prior.expiresAt) &&
+      validTime(prior.expiresAt, Date.now()) &&
       nextBounds !== null &&
       nextBounds.south === prior.query.south &&
       nextBounds.north === prior.query.north &&
@@ -404,7 +412,7 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
     setResetVersion((value) => value + 1)
     submit(INITIAL_CONDITIONS, regions.data?.initialBounds ?? null, 'initial')
   }
-  const retryDisabled = retryAt > clock && retryAt > Date.now()
+  const retryDisabled = retryAt > clock
   const retry = () => {
     if (retryDisabled || inputError) return
     if (query.isFetchNextPageError)

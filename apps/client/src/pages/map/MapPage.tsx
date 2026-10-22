@@ -1,6 +1,12 @@
 import { DragPanel, showToast } from '@hashi/hds-ui'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import {
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
 import { getRestaurantMenuDetailPath } from '@/app/router/routePaths'
@@ -253,13 +259,17 @@ export const MapPage = () => {
     handleCloseDetail()
     showToast({ children: '식당 정보를 불러오지 못했어요. 다시 선택해주세요.' })
   }
+  const handleSelectionFailure = useEffectEvent(() => {
+    handleDetailFailure()
+  })
   useEffect(() => {
-    if (state.selectionFailed) {
-      setTimeout(() => {
-        handleDetailFailure()
-      }, 0)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!state.selectionFailed) return
+
+    const timeoutId = window.setTimeout(() => {
+      handleSelectionFailure()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [state.selectionFailed])
 
   return (
