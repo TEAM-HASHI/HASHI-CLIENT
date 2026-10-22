@@ -18,6 +18,8 @@ import { MapStatusView } from '@/pages/map/components/MapStatusView'
 import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
 import { useMapPageState } from '@/pages/map/hooks/useMapPageState'
 import { useMapRestaurantSaves } from '@/pages/map/hooks/useMapRestaurantSaves'
+import { MapSavedCollectionsSheet } from '@/pages/map/components/MapSavedCollectionsSheet'
+import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 import type { MapConditions, MapPanelStage } from '@/pages/map/types'
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
@@ -25,6 +27,7 @@ import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
 export const MapPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuthStatus()
   const [initial] = useState(() => readMapSession())
   const state = useMapPageState(initial)
   const restaurants = useMapRestaurantSaves(state.restaurants)
@@ -35,6 +38,14 @@ export const MapPage = () => {
   const [stage, setStage] = useState<MapPanelStage>(initial?.stage ?? 'normal')
   const [previousStatus, setPreviousStatus] = useState(state.status)
   const [comingSoon, setComingSoon] = useState(false)
+  const [savedCollectionsOpen, setSavedCollectionsOpen] = useState(false)
+  const openSavedCollections = () => {
+    if (!isAuthenticated) {
+      navigate(ROUTES.loginRequired)
+      return
+    }
+    setSavedCollectionsOpen(true)
+  }
   const [mapUnavailable, setMapUnavailable] = useState(false)
   const [detailStage, setDetailStage] = useState<MapPanelStage>(
     initial?.detailStage ?? 'normal',
@@ -287,7 +298,7 @@ export const MapPage = () => {
               state.handleReset()
               setStage('normal')
             }}
-            onSaved={() => setComingSoon(true)}
+            onSaved={openSavedCollections}
             onCloseDetail={handleCloseDetail}
           />
         ) : (
@@ -394,6 +405,10 @@ export const MapPage = () => {
           }
         />
       )}
+      <MapSavedCollectionsSheet
+        open={savedCollectionsOpen && isAuthenticated}
+        onClose={() => setSavedCollectionsOpen(false)}
+      />
       <ComingSoonDialog open={comingSoon} onOpenChange={setComingSoon} />
     </main>
   )
