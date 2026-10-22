@@ -3,6 +3,7 @@ import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSe
 
 import { LinkIcon } from '@hashi/hds-icons'
 import { Button, showToast, toastQueue } from '@hashi/hds-ui'
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 
@@ -20,7 +21,10 @@ import {
 } from '@/pages/saved/components/CollectionDropdown'
 import { CollectionConfirmDialog } from '@/pages/saved/components/CollectionConfirmDialog'
 import { useUpdateCollectionMutation } from '@/pages/saved/mutations/useCollectionFormMutations'
-import { useCollectionQuery } from '@/pages/saved/queries/useCollectionQuery'
+import {
+  collectionQueryOptions,
+  useCollectionQuery,
+} from '@/pages/saved/queries/useCollectionQuery'
 import { HttpStatusError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { captureError } from '@/shared/lib/sentry'
@@ -47,18 +51,19 @@ import {
 export const SavedApiPage = () => {
   const location = useLocation()
   const sessionVersion = useCollectionSessionVersion()
-  const initialSessionVersion = useRef(sessionVersion)
+  const [initialSessionVersion] = useState(sessionVersion)
   return (
     <SavedApiScreen
       key={`${location.pathname}:${sessionVersion}`}
       restoreState={
-        initialSessionVersion.current === sessionVersion ? location.state : null
+        initialSessionVersion === sessionVersion ? location.state : null
       }
     />
   )
 }
 
 const SavedApiScreen = ({ restoreState }: { restoreState: unknown }) => {
+  const queryClient = useQueryClient()
   const sessionVersion = useCollectionSessionVersion()
   const { isAuthenticated } = useAuthStatus()
   const location = useLocation()
@@ -86,6 +91,7 @@ const SavedApiScreen = ({ restoreState }: { restoreState: unknown }) => {
       : null)
   const mounted = useRef(true)
   const copying = useRef(false)
+  const sharing = useRef(false)
   useEffect(() => {
     mounted.current = true
     return () => {
@@ -112,11 +118,29 @@ const SavedApiScreen = ({ restoreState }: { restoreState: unknown }) => {
         : '링크를 복사하지 못했습니다. 다시 시도해주세요.',
     })
   }
-  const share = (collection: CollectionSummaryReadModelTypes) => {
-    if (!isAuthenticated || copying.current) return
-    if (collection.isPublic === true) void copyCollectionLink(collection.id)
-    else if (collection.isPublic === false)
-      setManagement({ collectionId: collection.id, type: 'share' })
+  const share = async (collection: CollectionSummaryReadModelTypes) => {
+    if (!isAuthenticated || copying.current || sharing.current) return
+    sharing.current = true
+    try {
+      const detail = await queryClient.fetchQuery({
+        ...collectionQueryOptions(Number(collection.id), false, sessionVersion),
+        staleTime: 0,
+      })
+      if (!mounted.current || sessionVersion !== getAuthSessionVersion()) return
+      if (detail.owner !== true) throw new HttpStatusError(403)
+      if (detail.visibility === 'public')
+        await copyCollectionLink(collection.id)
+      else if (detail.visibility === 'private')
+        setManagement({ collectionId: collection.id, type: 'share' })
+      else throw new Error('Invalid collection visibility')
+    } catch (error) {
+      if (!mounted.current || sessionVersion !== getAuthSessionVersion()) return
+      captureError(error)
+      toastQueue.clear()
+      showToast({ children: getErrorPresentation(error).message })
+    } finally {
+      sharing.current = false
+    }
   }
   const restoredView = isCollectionMapState(restoreState)
     ? restoreState
@@ -173,11 +197,7 @@ const SavedApiScreen = ({ restoreState }: { restoreState: unknown }) => {
         renderCollectionActions={(collection) => (
           <CollectionEditMenu
             name={collection.name ?? ''}
-            onShare={
-              collection.isPublic === undefined
-                ? undefined
-                : () => share(collection)
-            }
+            onShare={() => share(collection)}
             onEdit={() =>
               navigate(getCollectionEditPath(collection.id), {
                 state: getCollectionFormState(location),
@@ -191,11 +211,7 @@ const SavedApiScreen = ({ restoreState }: { restoreState: unknown }) => {
         renderDetailActions={(collection) => (
           <CollectionActionMenu
             label="컬렉션 더보기"
-            onShare={
-              collection.isPublic === undefined
-                ? undefined
-                : () => share(collection)
-            }
+            onShare={() => share(collection)}
             onManage={() =>
               navigate(
                 `${getCollectionRestaurantEditPath(collection.id)}?${new URLSearchParams({ sort, category })}`,

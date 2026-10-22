@@ -23,6 +23,7 @@ import {
   startAuthenticatedSession,
 } from '@/shared/auth/authSession'
 import { createQueryClient } from '@/shared/lib/queryClient'
+import { HttpStatusError } from '@/shared/api/apiError'
 
 vi.mock('@/shared/utils/clipboard', () => ({ copyUrlToClipboard: vi.fn() }))
 vi.mock('@hashi/hds-ui', async (importOriginal) => ({
@@ -197,6 +198,77 @@ describe('appRoutes', () => {
       expect.objectContaining({ children: '컬렉션 링크가 복사되었어요.' }),
     )
     expect(router.state.location.search).toBe('?sort=rating&category=cafe')
+  })
+
+  it.each([
+    ['public', 'private'],
+    ['private', 'public'],
+  ] as const)(
+    '공유 직전 %s → %s 변경은 최신 상세로 확인한다',
+    async (previous, latest) => {
+      setAccessToken('test-session')
+      vi.mocked(getCollection).mockResolvedValue({
+        collectionId: 8,
+        name: 'API 여행',
+        visibility: previous,
+        owner: true,
+      })
+      await renderRoute('/saved/collections/8')
+      const user = userEvent.setup()
+      await user.click(
+        await screen.findByRole('button', { name: '컬렉션 더보기' }),
+      )
+      const callsBeforeShare = vi.mocked(getCollection).mock.calls.length
+      vi.mocked(getCollection).mockResolvedValue({
+        collectionId: 8,
+        name: 'API 여행',
+        visibility: latest,
+        owner: true,
+      })
+      await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
+      if (latest === 'private') {
+        expect(
+          await screen.findByRole('button', { name: '공개 후 공유' }),
+        ).toBeVisible()
+        expect(copyUrlToClipboard).not.toHaveBeenCalled()
+      } else {
+        await waitFor(() =>
+          expect(copyUrlToClipboard).toHaveBeenCalledWith(
+            '/saved/collections/8',
+          ),
+        )
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+      }
+      expect(vi.mocked(getCollection).mock.calls.length).toBeGreaterThan(
+        callsBeforeShare,
+      )
+      expect(updateCollection).not.toHaveBeenCalled()
+    },
+  )
+
+  it('공유 직전 상세 조회 실패 시 복사·공개 전환 없이 오류를 안내하고 재시도한다', async () => {
+    setAccessToken('test-session')
+    await renderRoute('/saved')
+    const user = userEvent.setup()
+    vi.mocked(getCollection).mockRejectedValue(new HttpStatusError(404))
+    await user.click(
+      await screen.findByRole('button', { name: 'API 여행 더보기' }),
+    )
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
+    await waitFor(() => expect(showToast).toHaveBeenCalled())
+    expect(copyUrlToClipboard).not.toHaveBeenCalled()
+    expect(updateCollection).not.toHaveBeenCalled()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    vi.mocked(getCollection).mockResolvedValue({
+      collectionId: 8,
+      visibility: 'public',
+      owner: true,
+    })
+    await user.click(screen.getByRole('button', { name: 'API 여행 더보기' }))
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
+    await waitFor(() =>
+      expect(copyUrlToClipboard).toHaveBeenCalledWith('/saved/collections/8'),
+    )
   })
 
   it('복사 대기 중 중복 요청을 막고 화면 이탈 후에는 토스트를 띄우지 않는다', async () => {
