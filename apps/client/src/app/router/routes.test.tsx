@@ -165,15 +165,13 @@ const renderRoute = async (initialEntry: string) => {
   await act(async () => {
     await vi.dynamicImportSettled()
   })
-    return { router }
+  return { router }
 }
 
 describe('appRoutes', () => {
   beforeEach(() => {
     clearAuthSession()
-    vi.mocked(requestTokenReissue).mockRejectedValue(
-      new HttpStatusError(401),
-    )
+    vi.mocked(requestTokenReissue).mockRejectedValue(new HttpStatusError(401))
     vi.mocked(getAuthMe).mockRejectedValue(new HttpStatusError(401))
     clearMapSession()
     vi.stubEnv('VITE_GOOGLE_MAPS_API_KEY', 'test-key')
@@ -193,22 +191,26 @@ describe('appRoutes', () => {
       owner: true,
       savedCount: 1,
     })
-    vi.mocked(getCollections).mockReset().mockResolvedValue({
-      collections: [
-  {
-    collectionId: 8,
-    name: 'API 여행',
-    savedCount: 1,
-    visibility: 'private',
-  },
-],
-      totalCount: 1,
-      hasNext: false,
-    })
-    vi.mocked(getSavedRestaurants).mockReset().mockResolvedValue({
-      content: [{ restaurantId: 55, name: '서버 식당', rating: 4.8 }],
-      hasNext: false,
-    })
+    vi.mocked(getCollections)
+      .mockReset()
+      .mockResolvedValue({
+        collections: [
+          {
+            collectionId: 8,
+            name: 'API 여행',
+            savedCount: 1,
+            visibility: 'private',
+          },
+        ],
+        totalCount: 1,
+        hasNext: false,
+      })
+    vi.mocked(getSavedRestaurants)
+      .mockReset()
+      .mockResolvedValue({
+        content: [{ restaurantId: 55, name: '서버 식당', rating: 4.8 }],
+        hasNext: false,
+      })
   })
 
   afterEach(() => {
@@ -258,7 +260,7 @@ describe('appRoutes', () => {
       expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
       await user.keyboard('{Escape}')
       expect(screen.getByRole('navigation')).toBeVisible()
-        } finally {
+    } finally {
       rect.mockRestore()
     }
   })
