@@ -54,6 +54,9 @@ export const useReviewEditPage = () => {
     () => existingImages.map(({ imageUrl }) => imageUrl),
     [existingImages],
   )
+  const [initializedReviewId, setInitializedReviewId] = useState<number | null>(
+    null,
+  )
   const initializedReviewIdRef = useRef<number | null>(null)
   const reviewEdit = useMemo(
     () =>
@@ -81,7 +84,9 @@ export const useReviewEditPage = () => {
     handlePhotoFilesChange([])
     setExistingImages(reviewEdit.images)
     initializedReviewIdRef.current = validReviewId
+    setInitializedReviewId(validReviewId)
   }, [
+    handlePhotoFilesChange,
     handleRatingChange,
     handleReviewTextChange,
     handleSelectedKeywordIdsChange,
@@ -153,8 +158,7 @@ export const useReviewEditPage = () => {
       (reviewEditContextQuery.isPending ||
         (!reviewEditContextQuery.isError &&
           !!reviewEdit &&
-          // eslint-disable-next-line react-hooks/refs
-          initializedReviewIdRef.current !== validReviewId)),
+          initializedReviewId !== validReviewId)),
     isSaveDisabled:
       !canSubmitReview ||
       existingImages.length + photoFiles.length > REVIEW_PHOTO_MAX_COUNT ||
