@@ -71,6 +71,7 @@ vi.mock('@/shared/lib/analytics', () => ({
 vi.mock('react-router-dom', () => ({
   Outlet: () => <div data-testid="route-outlet" />,
   useLocation: () => mockLocationStore,
+  useNavigate: () => vi.fn(),
   useNavigationType: () => mockNavigationType.value,
 }))
 
