@@ -3,11 +3,47 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getCollection } from '@/pages/saved/api/getCollection'
 import { getCollections } from '@/pages/saved/api/getCollections'
 import { getSavedRestaurants } from '@/pages/saved/api/getSavedRestaurants'
+import { getCollectionMapMarkers } from '@/pages/saved/api/getCollectionMapMarkers'
 
 const { mockRequest } = vi.hoisted(() => ({ mockRequest: vi.fn() }))
 vi.mock('@/shared/api/request', () => ({ request: mockRequest }))
 
 describe('collection read API contracts', () => {
+  it('전체 지도 핀을 페이지·필터 없이 요청하고 좌표와 출처를 보존한다', async () => {
+    mockRequest.mockResolvedValue({
+      collectionId: 8,
+      content: [
+        {
+          restaurantId: 55,
+          name: '카페',
+          placeType: 'cafe',
+          location: {
+            latitude: 35,
+            longitude: 139,
+            validUntil: '2030-01-01T00:00:00Z',
+            attributions: [{ displayName: '출처', uri: 'https://example.com' }],
+          },
+        },
+      ],
+    })
+    const signal = new AbortController().signal
+    expect(await getCollectionMapMarkers(8, signal)).toEqual([
+      {
+        id: '55',
+        name: '카페',
+        category: 'cafe',
+        position: { lat: 35, lng: 139 },
+        validUntil: '2030-01-01T00:00:00Z',
+        attributions: [{ displayName: '출처', uri: 'https://example.com' }],
+      },
+    ])
+    expect(mockRequest).toHaveBeenCalledWith(
+      '/api/v1/collections/8/map-markers',
+      { signal, cache: 'no-store' },
+    )
+    mockRequest.mockResolvedValue({ collectionId: 9, content: [] })
+    await expect(getCollectionMapMarkers(8)).rejects.toThrow()
+  })
   beforeEach(() => {
     mockRequest.mockReset()
   })

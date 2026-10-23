@@ -856,7 +856,7 @@ describe('MapPage API integration', () => {
     await waitFor(() => expect(thumbnail).toHaveFocus())
   })
 
-  it('does not pretend saving or reserving an unsupported restaurant action succeeded', async () => {
+  it('keeps unsupported reservation actions behind the coming-soon dialog', async () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
@@ -864,13 +864,6 @@ describe('MapPage API integration', () => {
       </MemoryRouter>,
     )
     await screen.findByRole('list', { name: '식당 검색 결과' })
-    await user.click(
-      screen.getByRole('button', { name: '코코네 돈카츠 신도심점 저장' }),
-    )
-    expect(screen.getByRole('dialog')).toHaveTextContent(
-      '서비스를 준비하고 있어요.',
-    )
-    await user.click(screen.getByRole('button', { name: '확인' }))
     await user.click(
       screen.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
     )

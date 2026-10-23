@@ -1,6 +1,12 @@
 import { CheckIcon, PlusIcon, SaveIcon } from '@hashi/hds-icons'
 import { Button, Dialog } from '@hashi/hds-ui'
-import { useState } from 'react'
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from 'react'
 import { CollectionCover } from '@/pages/saved/components/CollectionCover'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
@@ -18,10 +24,35 @@ import {
 } from '@/pages/saved/utils/collectionSelectors'
 import { cn } from '@/shared/utils'
 import type { CollectionData } from '@/pages/saved/types'
+import type { CollectionSummaryReadModelTypes } from '@/pages/saved/types/collectionReadModels'
+import { getErrorPresentation } from '@/shared/api/errorPresentation'
 
 // Figma 8317:38858 / 8317:38956: 너비 327, 최대 높이 490, 행 80.
-export const CollectionTargetDialog = ({
-  data,
+type CollectionTargetDialogViewProps = {
+  createState?: unknown
+  collections: readonly Pick<
+    CollectionSummaryReadModelTypes,
+    'id' | 'name' | 'color' | 'coverImages' | 'savedCount'
+  >[]
+  selectedId: string | null
+  onSelect: (id: string) => void
+  onClose: () => void
+  title: string
+  excludeId?: string
+  isDisabled?: (id: string) => boolean
+  onConfirm: (id: string) => void | Promise<void>
+  confirmLabel: (id: string | null) => string
+  feedback?: (id: string) => string
+  confirmDisabled?: boolean
+  onListMount?: (node: HTMLDivElement | null) => void
+  listStatus?: ReactNode
+  notice?: ReactNode
+}
+
+export const CollectionTargetDialogView = ({
+  collections,
+  selectedId,
+  onSelect,
   onClose,
   title,
   excludeId,
@@ -30,25 +61,35 @@ export const CollectionTargetDialog = ({
   confirmLabel,
   feedback,
   createState,
-}: {
-  createState?: unknown
-  data: CollectionData
-  onClose: () => void
-  title: string
-  excludeId?: string
-  isDisabled?: (id: string) => boolean
-  onConfirm: (id: string) => void
-  confirmLabel: (id: string | null) => string
-  feedback?: (id: string) => string
-}) => {
+  onListMount,
+  listStatus,
+  notice,
+  confirmDisabled = false,
+}: CollectionTargetDialogViewProps) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const [selectedId, setSelectedId] = useState(() =>
-    getCollectionSaveSelectedId(location.state),
+  const submitting = useRef(false)
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<unknown>(null)
+  const close = () => {
+    if (!submitting.current) onClose()
+  }
+  const setListRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      onListMount?.(
+        node?.parentElement instanceof HTMLDivElement
+          ? node.parentElement
+          : null,
+      )
+    },
+    [onListMount],
   )
-  const selected = data.collections.find((item) => item.id === selectedId)
+  const selected = collections.find((item) => item.id === selectedId)
   const canSave = Boolean(
-    selected && selected.id !== excludeId && !isDisabled(selected.id),
+    selected &&
+    selected.id !== excludeId &&
+    !isDisabled(selected.id) &&
+    !confirmDisabled,
   )
 
   return (
@@ -56,7 +97,7 @@ export const CollectionTargetDialog = ({
       <Dialog.Root
         open
         onOpenChange={(open) => {
-          if (!open) onClose()
+          if (!open) close()
         }}
       >
         <Dialog.Content
@@ -67,6 +108,7 @@ export const CollectionTargetDialog = ({
             <Dialog.Title>{title}</Dialog.Title>
           </Dialog.Header>
           <button
+            disabled={pending}
             type="button"
             onClick={() => {
               const restored = createState ?? location.state
@@ -97,6 +139,7 @@ export const CollectionTargetDialog = ({
           </button>
           <Dialog.Body className="max-h-65 min-h-0 w-[calc(100%+16px)] self-start overflow-y-auto overscroll-contain pr-4">
             <div
+              ref={setListRef}
               role="radiogroup"
               aria-label={`${title} 대상`}
               onKeyDown={(event) => {
@@ -136,7 +179,7 @@ export const CollectionTargetDialog = ({
                 items[next].click()
               }}
             >
-              {selectCollections(data.collections)
+              {collections
                 .filter((c) => c.id !== excludeId)
                 .map((collection) => {
                   const saved = isDisabled(collection.id)
@@ -147,9 +190,12 @@ export const CollectionTargetDialog = ({
                       type="button"
                       role="radio"
                       aria-checked={selected}
-                      disabled={saved}
+                      disabled={saved || pending}
                       aria-label={`${collection.name}${saved ? ' (저장됨)' : ''}`}
-                      onClick={() => setSelectedId(collection.id)}
+                      onClick={() => {
+                        setError(null)
+                        onSelect(collection.id)
+                      }}
                       className="border-warm-gray-50 flex min-h-20 w-full items-center gap-3 border-b py-3 text-left focus-visible:outline-2 disabled:cursor-default"
                     >
                       <CollectionCover collection={collection} compact />
@@ -157,13 +203,12 @@ export const CollectionTargetDialog = ({
                         <span className="typo-sub-header-2 text-primary-200 [overflow-wrap:anywhere] break-words">
                           {collection.name}
                         </span>
-                        <span className="typo-body-7 text-cool-gray-600 flex items-center">
-                          <SaveIcon className="text-warm-gray-100 size-4" />
-                          {
-                            selectRestaurants(collection, data.restaurants)
-                              .length
-                          }
-                        </span>
+                        {collection.savedCount !== undefined && (
+                          <span className="typo-body-7 text-cool-gray-600 flex items-center">
+                            <SaveIcon className="text-warm-gray-100 size-4" />
+                            {collection.savedCount}
+                          </span>
+                        )}
                       </span>
                       <span
                         aria-hidden="true"
@@ -180,6 +225,7 @@ export const CollectionTargetDialog = ({
                   )
                 })}
             </div>
+            {listStatus}
           </Dialog.Body>
           {selectedId && feedback?.(selectedId) && (
             <p
@@ -189,16 +235,37 @@ export const CollectionTargetDialog = ({
               {feedback(selectedId)}
             </p>
           )}
+          {notice}
+          {error !== null && (
+            <p role="alert" className="typo-body-7 text-primary-400 mt-3">
+              {getErrorPresentation(error).message}
+            </p>
+          )}
           <Dialog.Footer className="shrink-0">
-            <Button size="md" variant="neutral" onClick={onClose}>
+            <Button
+              size="md"
+              variant="neutral"
+              onClick={close}
+              disabled={pending}
+            >
               취소
             </Button>
             <Button
               size="md"
-              disabled={!canSave}
-              onClick={() => {
-                if (!canSave || !selectedId) return
-                onConfirm(selectedId)
+              disabled={!canSave || pending}
+              onClick={async () => {
+                if (!canSave || !selectedId || submitting.current) return
+                submitting.current = true
+                setPending(true)
+                setError(null)
+                try {
+                  await onConfirm(selectedId)
+                } catch (cause) {
+                  setError(cause)
+                } finally {
+                  submitting.current = false
+                  setPending(false)
+                }
               }}
             >
               {confirmLabel(selectedId)}
@@ -207,6 +274,31 @@ export const CollectionTargetDialog = ({
         </Dialog.Content>
       </Dialog.Root>
     </>
+  )
+}
+
+export const CollectionTargetDialog = ({
+  data,
+  ...props
+}: Omit<
+  ComponentProps<typeof CollectionTargetDialogView>,
+  'collections' | 'selectedId' | 'onSelect'
+> & { data: CollectionData }) => {
+  const location = useLocation()
+  const [selectedId, setSelectedId] = useState(() =>
+    getCollectionSaveSelectedId(location.state),
+  )
+  const collections = selectCollections(data.collections).map((collection) => ({
+    ...collection,
+    savedCount: selectRestaurants(collection, data.restaurants).length,
+  }))
+  return (
+    <CollectionTargetDialogView
+      {...props}
+      collections={collections}
+      selectedId={selectedId}
+      onSelect={setSelectedId}
+    />
   )
 }
 

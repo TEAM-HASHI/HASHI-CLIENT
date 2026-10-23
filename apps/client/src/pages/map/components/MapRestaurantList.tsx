@@ -14,7 +14,7 @@ interface MapRestaurantListProps {
   sortTriggerRef: RefObject<HTMLButtonElement | null>
   onSortChange: (sort: MapSort) => void
   onSelect: (id: string) => void
-  onSave: () => void
+  onSave: (restaurantId: string) => void
   status?: 'loading' | 'success' | 'error'
   onRetry?: () => void
   retryDisabled?: boolean
@@ -98,7 +98,7 @@ export const MapRestaurantList = ({
                 restaurant={restaurant}
                 rank={filtered ? undefined : index + 1}
                 onSelect={() => onSelect(restaurant.id)}
-                onSave={onSave}
+                onSave={() => onSave(restaurant.id)}
               />
             </li>
           ))}

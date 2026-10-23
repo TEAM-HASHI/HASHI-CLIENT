@@ -36,6 +36,19 @@ export const collectionQueryKeys = {
       'restaurants',
       collectionId,
     ] as const,
+  movePlan: (
+    targetCollectionId: number | null,
+    restaurantIds: readonly number[],
+    sessionVersion = getAuthSessionVersion(),
+  ) =>
+    [
+      ...collectionQueryKeys.restaurantLists(
+        targetCollectionId,
+        sessionVersion,
+      ),
+      'move-plan',
+      restaurantIds,
+    ] as const,
   restaurants: (
     collectionId: number | null,
     params: SavedRestaurantsFiltersTypes | null,
@@ -47,5 +60,15 @@ export const collectionQueryKeys = {
       'infinite',
       params,
       ...(publicView ? ['public'] : []),
+    ] as const,
+  mapMarkers: (
+    id: number,
+    version = getAuthSessionVersion(),
+    publicView = false,
+  ) =>
+    [
+      ...collectionQueryKeys.restaurantLists(id, version),
+      'map-markers',
+      publicView,
     ] as const,
 }

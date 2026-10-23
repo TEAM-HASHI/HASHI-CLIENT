@@ -1,5 +1,13 @@
 import type { MapPageRequest } from '@/pages/map/api/mapApiTypes'
 
+export const mapSaveQueryKeys = {
+  allCounts: () => ['map', 'saveCounts'] as const,
+  allSaved: () => ['map', 'saved'] as const,
+  counts: (ids: number[]) => ['map', 'saveCounts', ids] as const,
+  saved: (ids: number[], version: number) =>
+    ['map', 'saved', version, ids] as const,
+}
+
 export const mapQueryKeys = {
   all: ['map'] as const,
   regions: () => [...mapQueryKeys.all, 'regions'] as const,

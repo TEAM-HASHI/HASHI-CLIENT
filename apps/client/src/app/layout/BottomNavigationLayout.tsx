@@ -9,6 +9,7 @@ import { BottomNavigation, type BottomNavigationItem } from '@hashi/hds-ui'
 import { matchPath, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
 
 const bottomNavigationItems = [
   { value: 'home', label: '홈', icon: <HomeIcon /> },
@@ -107,7 +108,10 @@ export const BottomNavigationLayout = () => {
           }
         }}
         value={getBottomNavigationValue(
-          location.pathname,
+          location.pathname === ROUTES.map &&
+            isCollectionMapState(location.state)
+            ? ROUTES.saved
+            : location.pathname,
           loginRequiredState?.from?.pathname,
         )}
       />

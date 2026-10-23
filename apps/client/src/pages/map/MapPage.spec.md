@@ -1,5 +1,11 @@
 # MapPage
 
+## 컬렉션 연결 (2026-10-23)
+
+- 컬렉션 지도 진입은 `CollectionMapQueryPage`가 기존 `MapViewport`와 컬렉션 API 화면을 조립한다. 일반 지도 조회·카메라·SDK 구현은 재사용한다.
+- 지도 목록·상세의 저장 버튼은 기존 컬렉션 선택창을 열며, 저장 후 식당별 저장 여부·개수를 갱신한다.
+- 전체 핀 조회·인증 세션·정렬/필터 복귀 계약은 `saved/CollectionApi.spec.md`를 따른다.
+
 Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps SDK and public map/detail/photo queries connected. Live Google Maps and backend restaurant results were verified at localhost:5173 after the web-key referrer restriction was updated on 2026-10-22.
 
 ## 추가 유즈케이스 설계 (2026-10-17 갱신)

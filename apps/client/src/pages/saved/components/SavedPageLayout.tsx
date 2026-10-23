@@ -5,6 +5,7 @@ import type { ReactNode, Ref } from 'react'
 type SavedPageLayoutProps = {
   detail: boolean
   title?: string
+  description?: string
   count?: number
   headerActions?: ReactNode
   filters?: ReactNode
@@ -13,12 +14,14 @@ type SavedPageLayoutProps = {
   scrollRef?: Ref<HTMLDivElement>
   scrollKey: string
   children: ReactNode
+  embedded?: boolean
 }
 
 /** 조회와 fixture에서 동일한 고정 헤더·내부 스크롤 영역을 사용한다. */
 export const SavedPageLayout = ({
   detail,
   title,
+  description,
   count,
   headerActions,
   filters,
@@ -27,8 +30,15 @@ export const SavedPageLayout = ({
   scrollRef,
   scrollKey,
   children,
+  embedded = false,
 }: SavedPageLayoutProps) => (
-  <div className="flex h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] flex-col overflow-hidden bg-white pt-[var(--safe-area-top,0px)]">
+  <div
+    className={
+      embedded
+        ? 'flex h-full flex-col overflow-hidden bg-white'
+        : 'flex h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] flex-col overflow-hidden bg-white pt-[var(--safe-area-top,0px)]'
+    }
+  >
     <div
       data-testid="saved-fixed-header"
       className="relative z-10 shrink-0 bg-white"
@@ -62,6 +72,11 @@ export const SavedPageLayout = ({
           </div>
         )}
       </div>
+      {detail && description && (
+        <p className="typo-body-6 text-cool-gray-400 px-5 pt-2 leading-[1.36] [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+          {description}
+        </p>
+      )}
       <div className="flex h-11.5 items-center justify-between gap-2 px-5">
         <p className="typo-body-5 text-primary-200 shrink-0">
           {count !== undefined && (

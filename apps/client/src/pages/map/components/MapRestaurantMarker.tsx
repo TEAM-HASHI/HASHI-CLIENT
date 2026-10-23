@@ -31,7 +31,9 @@ const ICON_LAYOUT = {
 }
 
 interface MapRestaurantMarkerProps {
-  restaurant: Pick<MapRestaurant, 'id' | 'name' | 'category' | 'rating'>
+  restaurant: Pick<MapRestaurant, 'id' | 'name' | 'category'> & {
+    rating?: number
+  }
   isSelected: boolean
   onSelect: (id: string) => void
 }
@@ -78,13 +80,15 @@ export const MapRestaurantMarker = ({
           <span className="typo-caption-1 text-primary-200 block truncate font-medium">
             {restaurant.name}
           </span>
-          <span className="typo-caption-2 text-cool-gray-600 flex items-center leading-[1.5]">
-            <StarFillIcon
-              aria-hidden="true"
-              className="text-cool-gray-300 size-3"
-            />
-            {restaurant.rating.toFixed(1)}
-          </span>
+          {restaurant.rating !== undefined && (
+            <span className="typo-caption-2 text-cool-gray-600 flex items-center leading-[1.5]">
+              <StarFillIcon
+                aria-hidden="true"
+                className="text-cool-gray-300 size-3"
+              />
+              {restaurant.rating.toFixed(1)}
+            </span>
+          )}
         </span>
       )}
     </button>
