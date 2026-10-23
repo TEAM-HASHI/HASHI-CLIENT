@@ -943,6 +943,7 @@ test('bookmark FAB matches the nonmodal collection panel and keeps create and na
               collectionId: index + 1,
               name: `2026 도쿄 ${season} 여행`,
               color: ['red', 'yellow', 'green', 'purple', 'blue'][index],
+              cover: { imageUrls: photoPaths },
               savedCount: 10,
               visibility: 'private',
             }),
@@ -990,6 +991,21 @@ test('bookmark FAB matches the nonmodal collection panel and keeps create and na
   await expect(
     page.getByRole('button', { name: '지도', exact: true }),
   ).toHaveAttribute('aria-current', 'page')
+  const coverPhotos = panel
+    .getByRole('button', { name: '2026 도쿄 여름 여행 컬렉션 열기' })
+    .locator('img[data-slot="thumbnail-image"]')
+  await expect(coverPhotos).toHaveCount(3)
+  for (const photo of await coverPhotos.all()) {
+    await expect
+      .poll(() =>
+        photo.evaluate((element) => {
+          const image = element.getBoundingClientRect()
+          const cell = element.parentElement!.getBoundingClientRect()
+          return [image.width, image.height, cell.width, cell.height]
+        }),
+      )
+      .toEqual([24, 24, 24, 24])
+  }
   const create = panel.getByRole('button', { name: '새 컬렉션 만들기' })
   const createBox = await create.boundingBox()
   const list = panel.getByRole('region', { name: '컬렉션 목록' })
