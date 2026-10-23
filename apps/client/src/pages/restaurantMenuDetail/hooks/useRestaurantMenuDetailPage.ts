@@ -28,6 +28,7 @@ import {
   navigateBackOrReplace,
 } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import { checkIsNotFoundError } from '@/shared/api'
+import { getCollectionSaveState } from '@/pages/saved/utils/collectionNavigation'
 import { useAuthStatus, useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const MENU_DETAIL_OTHER_MENU_PAGE_SIZE = 10
@@ -47,7 +48,6 @@ export const useRestaurantMenuDetailPage = () => {
   const { isAuthenticated } = useAuthStatus()
   const { startKakaoOAuth } = useKakaoOAuthStart()
   const [isAuthGateOpen, setIsAuthGateOpen] = useState(false)
-  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
   const parsedRestaurantId = parsePositiveIntegerParam(restaurantId)
   const parsedMenuId = parsePositiveIntegerParam(menuId)
   const hasValidParams = parsedRestaurantId !== null && parsedMenuId !== null
@@ -144,7 +144,13 @@ export const useRestaurantMenuDetailPage = () => {
       return
     }
 
-    setIsComingSoonOpen(true)
+    navigate(
+      { pathname: location.pathname, search: location.search },
+      {
+        replace: true,
+        state: getCollectionSaveState(location.state, currentRestaurantId),
+      },
+    )
   }
 
   const handlePressReservation = () => {
@@ -196,7 +202,6 @@ export const useRestaurantMenuDetailPage = () => {
   return {
     error: requestError,
     isAuthGateOpen,
-    isComingSoonOpen,
     isLoading,
     isNotFound,
     hasMoreOtherMenus: menusQuery.hasNextPage,
@@ -217,7 +222,6 @@ export const useRestaurantMenuDetailPage = () => {
     selectedMenu,
     shareUrl,
     onAuthGateOpenChange: setIsAuthGateOpen,
-    onComingSoonOpenChange: setIsComingSoonOpen,
     onPressBack: handlePressBack,
     onPressKakao: () => startKakaoOAuth(getPathFromLocation(location)),
     onPressLike: handlePressLike,

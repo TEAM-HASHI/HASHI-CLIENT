@@ -13,7 +13,6 @@ import { NotFoundPage } from '@/pages/notFound'
 import { RestaurantOtherMenuSection } from '@/pages/restaurantMenuDetail/components/RestaurantOtherMenuSection'
 import { RestaurantSelectedMenuSection } from '@/pages/restaurantMenuDetail/components/RestaurantSelectedMenuSection'
 import { useRestaurantMenuDetailPage } from '@/pages/restaurantMenuDetail/hooks/useRestaurantMenuDetailPage'
-import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { useShareLink } from '@/shared/components/shareIconButton'
 
@@ -21,7 +20,6 @@ export const RestaurantMenuDetailPage = () => {
   const {
     error,
     isAuthGateOpen,
-    isComingSoonOpen,
     isLoading,
     isNotFound,
     hasMoreOtherMenus,
@@ -39,7 +37,6 @@ export const RestaurantMenuDetailPage = () => {
     selectedMenu,
     shareUrl,
     onAuthGateOpenChange,
-    onComingSoonOpenChange,
     onPressBack,
     onPressKakao,
     onPressLike,
@@ -146,10 +143,6 @@ export const RestaurantMenuDetailPage = () => {
         onKakaoPress={onPressKakao}
         onOpenChange={onAuthGateOpenChange}
         open={isAuthGateOpen}
-      />
-      <ComingSoonDialog
-        onOpenChange={onComingSoonOpenChange}
-        open={isComingSoonOpen}
       />
     </div>
   )

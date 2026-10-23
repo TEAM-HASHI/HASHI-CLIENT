@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { removeRecentRestaurants } from '@/features/recentRestaurants/recentRestaurants'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
@@ -36,7 +36,9 @@ const RestaurantDetailContent = ({
 }: RestaurantDetailContentProps) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const initialTab = getRestaurantDetailTabState(location.state).activeTab
+  const [initialTab] = useState(
+    () => getRestaurantDetailTabState(location.state).activeTab,
+  )
 
   const summaryQuery = useQuery(restaurantSummaryQueryOptions(restaurantId))
   useEffect(() => {
@@ -52,6 +54,7 @@ const RestaurantDetailContent = ({
   const detailActions = useRestaurantDetailActions({
     menuDetailSource: 'detail',
     restaurantId: String(restaurantId),
+    activeTab: detailContent.activeTab,
     onReviewUnavailable: detailContent.onOpenReviewUnavailableModal,
   })
 

@@ -1,11 +1,14 @@
+import { RestaurantLocationMap } from '@/features/restaurantDetail/components/RestaurantLocationMap'
 import type { RestaurantDetail } from '@/features/restaurantDetail/types/restaurantDetail'
 
 interface RestaurantInfoSectionProps {
   restaurant: RestaurantDetail
+  showLocationMap?: boolean
 }
 
 export const RestaurantInfoSection = ({
   restaurant,
+  showLocationMap = false,
 }: RestaurantInfoSectionProps) => {
   return (
     <div className="px-6 pt-9 pb-9">
@@ -66,6 +69,12 @@ export const RestaurantInfoSection = ({
         <p className="typo-body-5 text-primary-200 mt-3">
           {restaurant.address}
         </p>
+        {showLocationMap && (
+          <RestaurantLocationMap
+            key={restaurant.id}
+            restaurantId={restaurant.id}
+          />
+        )}
       </section>
     </div>
   )
