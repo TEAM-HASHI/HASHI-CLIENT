@@ -33,7 +33,6 @@ type FormCollection = NonNullable<
   ComponentProps<typeof CollectionForm>['collection']
 >
 
-// 알 수 없는 이름·색상·공개 범위를 수정 초기값으로 대신 채우지 않는다.
 const getEditableCollection = (
   data: CollectionDetailData | undefined,
 ): FormCollection | undefined => {
@@ -75,7 +74,6 @@ const getChangedFields = (
   }
 }
 
-/** 제품 생성·수정 라우트에서 서버 데이터와 폼 제출을 연결한다. */
 export const CollectionFormQueryPage = () => {
   const sessionVersion = useCollectionSessionVersion()
   const [initialSessionVersion] = useState(sessionVersion)
@@ -154,13 +152,10 @@ const CollectionApiForm = ({
   collection?: FormCollection
 }) => {
   const sessionVersion = useCollectionSessionVersion()
-  // 백그라운드 상세 갱신이 입력 중인 폼과 PATCH 비교 기준을 바꾸지 않는다.
   const [collection] = useState(initialCollection)
   const navigate = useNavigate()
-  // 폼이 오류를 인라인으로 안내한다. 공통 토스트는 중복 표시하지 않고 진단 기록은 유지한다.
   const create = useCreateCollectionMutation(captureError)
   const update = useUpdateCollectionMutation(captureError)
-  const handleClose = onClose
   const names = useCollectionsInfiniteQuery({})
   const { hasNextPage, isFetching, isError, fetchNextPage } = names
   useEffect(() => {
@@ -203,10 +198,10 @@ const CollectionApiForm = ({
           </p>
         ) : null
       }
-      onClose={handleClose}
+      onClose={onClose}
       onDiscard={() => navigate(ROUTES.saved, { replace: true })}
       onSubmitSuccess={() => {
-        if (sessionVersion === getAuthSessionVersion()) handleClose()
+        if (sessionVersion === getAuthSessionVersion()) onClose()
       }}
       onSubmit={async (draft) => {
         if (collection) {

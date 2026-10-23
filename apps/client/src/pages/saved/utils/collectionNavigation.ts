@@ -20,16 +20,12 @@ export const getCollectionSaveState = (
 
 export const getCollectionFormState = (
   location: Pick<Location, 'pathname' | 'search' | 'state' | 'key'>,
-  restaurantId?: string,
-  selectedId: string | null = null,
 ) => ({
   collectionReturn: {
     key: location.key,
     pathname: location.pathname,
     search: location.search,
-    state: restaurantId
-      ? getCollectionSaveState(location.state, restaurantId, selectedId)
-      : (location.state as unknown),
+    state: location.state as unknown,
   },
 })
 

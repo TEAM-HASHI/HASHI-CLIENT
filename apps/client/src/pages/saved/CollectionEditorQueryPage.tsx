@@ -2,7 +2,7 @@ import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSe
 
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Checkbox, Header, IconButton } from '@hashi/hds-ui'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Navigate,
   useLocation,
@@ -40,7 +40,7 @@ const SELECTION_CLASS =
 
 export const CollectionEditorQueryPage = () => {
   const sessionVersion = useCollectionSessionVersion()
-  const initialSessionVersion = useRef(sessionVersion)
+  const [initialSessionVersion] = useState(sessionVersion)
   const { collectionId } = useParams<{ collectionId: string }>()
   const [params] = useSearchParams()
   const id =
@@ -58,7 +58,7 @@ export const CollectionEditorQueryPage = () => {
   return (
     <CollectionEditorQuery
       key={`${id}:${sort}:${category}:${sessionVersion}`}
-      restoreState={initialSessionVersion.current === sessionVersion}
+      restoreState={initialSessionVersion === sessionVersion}
       collectionId={id}
       sort={sort}
       category={category}
@@ -144,7 +144,7 @@ const CollectionEditorQuery = ({
         }),
       },
     )
-  }, [collectionId, location, navigate])
+  }, [collectionId, location, navigate, restoreState])
   const closeDialog = () => {
     setDialog(null)
     navigate(

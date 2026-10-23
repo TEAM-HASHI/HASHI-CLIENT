@@ -45,12 +45,12 @@ export const CollectionTargetQueryDialog = (
   props: CollectionTargetQueryDialogProps,
 ) => {
   const sessionVersion = useCollectionSessionVersion()
-  const initialSessionVersion = useRef(sessionVersion)
+  const [initialSessionVersion] = useState(sessionVersion)
   return (
     <CollectionTargetQueryDialogContent
       key={sessionVersion}
       {...props}
-      restoreSelection={initialSessionVersion.current === sessionVersion}
+      restoreSelection={initialSessionVersion === sessionVersion}
     />
   )
 }
