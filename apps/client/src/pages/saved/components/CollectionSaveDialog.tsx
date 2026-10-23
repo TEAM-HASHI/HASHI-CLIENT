@@ -16,8 +16,6 @@ import {
   getCollectionSaveRestaurantId,
   getCollectionSaveSelectedId,
 } from '@/pages/saved/utils/collectionNavigation'
-import { useCollectionData } from '@/pages/saved/data/useCollectionData'
-import { saveRestaurant } from '@/pages/saved/utils/collectionMutations'
 import {
   selectCollections,
   selectRestaurants,
@@ -27,7 +25,6 @@ import type { CollectionData } from '@/pages/saved/types'
 import type { CollectionSummaryReadModelTypes } from '@/pages/saved/types/collectionReadModels'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 
-// Figma 8317:38858 / 8317:38956: 너비 327, 최대 높이 490, 행 80.
 type CollectionTargetDialogViewProps = {
   createState?: unknown
   collections: readonly Pick<
@@ -91,6 +88,8 @@ export const CollectionTargetDialogView = ({
     !isDisabled(selected.id) &&
     !confirmDisabled,
   )
+
+  const feedbackMessage = selectedId ? feedback?.(selectedId) : undefined
 
   return (
     <>
@@ -227,12 +226,12 @@ export const CollectionTargetDialogView = ({
             </div>
             {listStatus}
           </Dialog.Body>
-          {selectedId && feedback?.(selectedId) && (
+          {feedbackMessage && (
             <p
               role="status"
               className="typo-body-6 text-primary-200 mt-3 w-full"
             >
-              {feedback(selectedId)}
+              {feedbackMessage}
             </p>
           )}
           {notice}
@@ -298,50 +297,6 @@ export const CollectionTargetDialog = ({
       collections={collections}
       selectedId={selectedId}
       onSelect={setSelectedId}
-    />
-  )
-}
-
-export const CollectionSaveDialog = ({
-  restaurantId,
-  onClose,
-}: {
-  restaurantId: string
-  onClose: () => void
-}) => {
-  const { data, setData } = useCollectionData()
-  const location = useLocation()
-  const navigate = useNavigate()
-  const handleClose = () => {
-    navigate(
-      { pathname: location.pathname, search: location.search },
-      { replace: true, state: getCollectionSaveState(location.state, null) },
-    )
-    onClose()
-  }
-  return (
-    <CollectionTargetDialog
-      data={data}
-      onClose={handleClose}
-      createState={getCollectionSaveState(location.state, restaurantId)}
-      title="컬렉션 저장"
-      confirmLabel={() => '저장'}
-      isDisabled={(id) =>
-        !data.restaurants.some(
-          (r) => r.id === restaurantId && r.visibility === 'visible',
-        ) ||
-        Boolean(
-          data.collections
-            .find((c) => c.id === id)
-            ?.restaurants.some((r) => r.restaurantId === restaurantId),
-        )
-      }
-      onConfirm={(id) => {
-        setData((current) =>
-          saveRestaurant(current, id, restaurantId, new Date().toISOString()),
-        )
-        handleClose()
-      }}
     />
   )
 }
