@@ -13,18 +13,11 @@ import { synchronizeCollectionHeader } from '@/pages/saved/mutations/synchronize
 import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
 import { assertCollectionSession } from '@/pages/saved/utils/collectionSession'
 import { restaurantSaveQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
-import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
 import { mapSaveQueryKeys } from '@/pages/map/queries/mapQueryKeys'
 
 const refreshSaveSummaries = (queryClient: QueryClient) =>
   Promise.all([
     queryClient.invalidateQueries({ queryKey: restaurantSaveQueryKeys.all() }),
-    queryClient.invalidateQueries({
-      queryKey: restaurantDetailQueryKeys.details(),
-    }),
-    queryClient.invalidateQueries({
-      queryKey: restaurantDetailQueryKeys.randomRecommendation().slice(0, 2),
-    }),
     queryClient.invalidateQueries({ queryKey: mapSaveQueryKeys.allCounts() }),
     queryClient.invalidateQueries({ queryKey: mapSaveQueryKeys.allSaved() }),
   ])

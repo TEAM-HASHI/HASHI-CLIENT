@@ -14,6 +14,10 @@ import { removeSavedRestaurants } from '@/pages/saved/api/removeSavedRestaurants
 import { saveRestaurant } from '@/pages/saved/api/saveRestaurant'
 import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
 import {
+  restaurantDetailQueryKeys,
+  restaurantSaveQueryKeys,
+} from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
+import {
   useDeleteCollectionMutation,
   useMoveSavedRestaurantsMutation,
   useRemoveSavedRestaurantsMutation,
@@ -29,7 +33,9 @@ vi.mock('@/pages/saved/api/moveSavedRestaurants', () => ({
 vi.mock('@/pages/saved/api/removeSavedRestaurants', () => ({
   removeSavedRestaurants: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/saveRestaurant', () => ({ saveRestaurant: vi.fn() }))
+vi.mock('@/pages/saved/api/saveRestaurant', () => ({
+  saveRestaurant: vi.fn(),
+}))
 
 const createWrapper = () => {
   const client = new QueryClient({
@@ -148,6 +154,13 @@ describe('collection management mutation cache synchronization', () => {
       })
       const other = collectionQueryKeys.restaurants(43, { sort: 'latest' })
       const targetList = collectionQueryKeys.infiniteList({ restaurantId: 5 })
+      const saveCount = restaurantSaveQueryKeys.count(5)
+      const saved = restaurantSaveQueryKeys.saved(5, 0)
+      const summary = restaurantDetailQueryKeys.summary(5)
+      const menus = restaurantDetailQueryKeys.menus(5, 10)
+      const recommendation = restaurantDetailQueryKeys.randomRecommendation()
+      for (const key of [saveCount, saved, summary, menus, recommendation])
+        client.setQueryData(key, { restaurantId: 5 })
       for (const key of [latest, cafes, other, targetList])
         client.setQueryData(key, { pages: [] })
       const updated = { collectionId: 42, savedCount: 2 }
@@ -178,6 +191,10 @@ describe('collection management mutation cache synchronization', () => {
       for (const key of [latest, cafes, targetList])
         expect(client.getQueryState(key)?.isInvalidated).toBe(true)
       expect(client.getQueryState(other)?.isInvalidated).toBe(false)
+      for (const key of [saveCount, saved])
+        expect(client.getQueryState(key)?.isInvalidated).toBe(true)
+      for (const key of [summary, menus, recommendation])
+        expect(client.getQueryState(key)?.isInvalidated).toBe(false)
     },
   )
 
