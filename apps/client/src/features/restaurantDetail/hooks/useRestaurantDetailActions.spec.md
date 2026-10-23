@@ -4,7 +4,7 @@
 
 `RestaurantDetailPage`와 `TodayRestaurantPage`가 공유하는 식당 상세 액션 흐름을 캡슐화한다.
 인증이 필요한 액션의 auth gate 상태, 카카오 로그인 시작, 예약 이동, 메뉴 상세 이동,
-현재 준비 중인 좋아요 액션의 coming soon 상태를 한 곳에서 관리한다.
+컬렉션 저장 모달 진입을 한 곳에서 관리한다.
 리뷰 작성 가능 여부 확인과 이동은 `useRestaurantReviewWriteNavigation`에 위임하고 로그인 안내를 연결한다.
 
 ## Hook Type
@@ -28,7 +28,7 @@
 - 이 hook을 사용하는 page가 직접 담당하지 않아도 되는 책임:
   - 좋아요/예약 클릭 시 인증 필요 여부 판단
   - auth gate bottom sheet open 상태 관리
-  - coming soon dialog open 상태 관리
+  - 기존 route state와 세션을 유지한 컬렉션 저장 모달 진입
   - 카카오 OAuth 시작 시 현재 location 기반 redirect path 전달
   - 식당 예약 생성 route 이동
   - 메뉴 상세 route 이동과 menu detail source state 전달
@@ -48,6 +48,12 @@
 - required: `true`
 - description: 메뉴 상세 화면이 이전 상세 화면 종류를 복원할 수 있도록 route state에 전달하는 source 값.
 
+### `activeTab`
+
+- type: `RestaurantDetailTab`
+- required: `true`
+- description: 컬렉션 생성 화면을 다녀올 때 복원할 현재 탭. 저장 진입 시 현재 식당 ID와 함께 route state에 보존한다.
+
 ## Return Shape
 
 `onReviewUnavailable: () => void`를 필수 입력으로 받아 작성 가능한 예약이 없을 때 content의 안내 모달을 연다.
@@ -55,9 +61,7 @@
 ```ts
 const {
   isAuthGateOpen,
-  isComingSoonOpen,
   onAuthGateOpenChange,
-  onComingSoonOpenChange,
   onPressKakao,
   onPressLike,
   onPressMenuItem,
@@ -66,6 +70,7 @@ const {
 } = useRestaurantDetailActions({
   menuDetailSource,
   restaurantId,
+  activeTab,
   onReviewUnavailable,
 })
 ```
@@ -73,15 +78,13 @@ const {
 ### `state`
 
 - `isAuthGateOpen`: 인증이 필요한 액션에서 로그인 유도 bottom sheet가 열려 있는지 나타낸다.
-- `isComingSoonOpen`: 현재 준비 중인 액션 안내 dialog가 열려 있는지 나타낸다.
 
 ### `action`
 
 - `onPressWriteReview`: 리뷰 작성 가능 여부를 확인한 뒤 로그인 안내, 작성 불가 안내 또는 리뷰 작성 이동으로 연결한다.
 - `onAuthGateOpenChange`: auth gate bottom sheet open 상태를 외부 UI와 동기화한다.
-- `onComingSoonOpenChange`: coming soon dialog open 상태를 외부 UI와 동기화한다.
 - `onPressKakao`: 현재 location을 redirect path로 보존한 뒤 Kakao OAuth를 시작한다.
-- `onPressLike`: 인증 전에는 auth gate를 열고, 인증 후에는 coming soon dialog를 연다.
+- `onPressLike`: 인증 전에는 auth gate를 열고, 인증 후에는 컬렉션 저장 모달 진입 상태를 현재 경로에 기록한다.
 - `onPressMenuItem`: 선택한 메뉴의 상세 route로 이동하고 source state를 전달한다.
 - `onPressReservation`: 인증 전에는 auth gate를 열고, 인증 후에는 식당 예약 생성 route로 이동한다.
 
@@ -90,7 +93,7 @@ const {
 1. hook 초기화 시 `useAuthStatus`, `useKakaoOAuthStart`, router navigate/location을 준비한다.
 2. 사용자가 좋아요를 누르면 인증 여부를 확인한다.
 3. 인증되지 않은 상태라면 auth gate bottom sheet를 연다.
-4. 인증된 상태라면 좋아요 기능이 아직 준비 중이므로 coming soon dialog를 연다.
+4. 인증된 상태라면 `getCollectionSaveState`로 현재 state와 세션을 보존하며 `RootLayout`의 컬렉션 저장 모달을 연다.
 5. 사용자가 예약하기를 누르면 인증되지 않은 상태에서는 auth gate를 열고, 인증된 상태에서는 예약 생성 route로 이동한다.
 6. 사용자가 메뉴를 누르면 인증 여부와 무관하게 메뉴 상세 route로 이동하고 `menuDetailSource`를 route state로 전달한다.
 7. 사용자가 auth gate에서 카카오 로그인을 선택하면 현재 location 기반 path를 OAuth redirect 대상으로 전달한다.
@@ -128,15 +131,13 @@ const {
 - 식당 상세 데이터 조회, 메뉴/리뷰 무한스크롤, 탭 상태 관리는 `useRestaurantDetailContent`가 소유한다.
 - 리뷰 작성 가능 여부와 리뷰 작성 route 이동은 `useRestaurantReviewWriteNavigation`이 소유한다.
 - 오늘의 식당 다시 추천받기 mutation과 상세 상태 reset은 `TodayRestaurantPage`가 소유한다.
-- 실제 좋아요 API mutation, optimistic update, cache invalidation, toast 처리는 현재 책임이 아니다.
-  좋아요 액션이 서버 상태 변경을 포함하게 되면 `useRestaurantLikeAction` 또는
-  `useRestaurantFavoriteAction` 같은 별도 hook 분리를 검토한다.
-- UI markup과 style은 `RestaurantDetailTemplate`, `AuthGateBottomSheet`, `ComingSoonDialog`가 소유한다.
+- 저장 요청과 조회 캐시 갱신은 기존 컬렉션 저장 모달과 mutation이 소유한다.
+- UI markup과 style은 `RestaurantDetailTemplate`, `AuthGateBottomSheet`, 컬렉션 저장 모달이 소유한다.
 
 ## Verification
 
 - [ ] 비인증 사용자가 좋아요를 누르면 auth gate가 열린다.
-- [ ] 인증 사용자가 좋아요를 누르면 coming soon dialog가 열린다.
+- [ ] 인증 사용자가 저장하기를 누르면 컬렉션 저장 모달이 열린다.
 - [ ] 비인증 사용자가 예약하기를 누르면 auth gate가 열린다.
 - [ ] 인증 사용자가 예약하기를 누르면 예약 생성 route로 이동한다.
 - [ ] 메뉴를 누르면 메뉴 상세 route로 이동하고 source state를 전달한다.

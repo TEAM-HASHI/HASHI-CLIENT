@@ -42,7 +42,7 @@
 - [ ] 하단 fixed bar에는 36px 북마크와 공개 저장 수, `예약하기`가 표시됩니다. 로그인 사용자의 `saved`에 따라 아이콘과 `aria-pressed`를 반영하며 접근성 이름은 `저장하기`입니다.
 - [ ] 비로그인 사용자가 예약하기 또는 저장하기를 누르면 로그인 유도 바텀시트를 표시합니다.
 - [ ] 로그인 사용자가 예약하기를 누르면 `ROUTES.restaurantReservationNew`로 이동합니다.
-- [ ] 로그인 사용자가 저장하기를 누르면 준비중 모달을 표시합니다. 저장 chooser/쓰기 UI는 후속 작업입니다.
+- [ ] 로그인 사용자가 저장하기를 누르면 기존 컬렉션 저장 모달을 표시합니다. 메뉴 진입 source를 유지합니다.
 - [ ] `location.state.source`가 `today`이면 탭/뒤로가기 fallback은 `/restaurants/today`로 이동합니다.
 - [ ] `location.state.source`가 없거나 `detail`이면 탭/뒤로가기 fallback은 `/restaurants/:restaurantId`로 이동합니다.
 - [x] `location.state.source`가 `map`이면 뒤로가기는 지도 상세의 메뉴 탭, 매장 정보/사진/리뷰 탭 클릭은 지도 상세의 해당 탭으로 복귀합니다. `mapRestaurantId`와 `activeTab`을 한 번 사용하는 route state로 전달하며, 지도 쪽 세션에 해당 선택 식당이 있을 때 적용합니다. 다른 메뉴 카드는 replace 이동하여 메뉴 history가 누적되지 않습니다.
@@ -102,7 +102,6 @@
 
 - local state: none
   - auth gate bottom sheet open/closed
-  - coming soon dialog open/closed
 - URL state:
   - `restaurantId`
   - `menuId`
@@ -129,7 +128,6 @@
 - app shared component:
   - `BottomActionBar`
   - `ShareIconButton`
-  - `ComingSoonDialog`
   - `LoadingScreen`
 - feature component:
   - `RestaurantDetailTabs`

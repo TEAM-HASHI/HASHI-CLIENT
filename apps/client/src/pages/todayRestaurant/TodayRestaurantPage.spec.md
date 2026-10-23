@@ -35,15 +35,15 @@
 - [ ] 사진 탭은 같은 상세 템플릿 안에서 전환하며, 일반 식당과 오늘의 식당 모두 아래 Photo Policy의 공통 기준을 따릅니다.
 - [ ] 사진 UI와 count는 공개 사진 API를 사용합니다. 일반 상세·오늘의 식당·지도 상세가 공통 adapter/query/UI를 재사용하며 목데이터를 런타임에 연결하지 않습니다.
 - [ ] 사진 필터 칩에는 각 분류의 공개 사진 수를 표시하고, 상단 `사진 N`은 선택한 필터와 무관한 해당 식당의 전체 공개 사진 수를 표시합니다.
-- [ ] 매장 정보 탭의 `오시는 길`은 제목과 주소만 표시합니다. 실제 지도 연동 전까지 회색 placeholder 및 해당 영역의 공간은 노출하지 않습니다.
-- `GET /api/v1/restaurants/{restaurantId}/map-location`은 확인된 서버 endpoint이며 지도 preview 연동만 후속 작업입니다.
-- 추후 지도 연동 시 참고 규격: 주소 아래 간격 12px, 높이 145px, 너비는 부모 영역 전체, 모서리 반경 5px. 현재 화면에는 적용하지 않습니다.
+- [ ] 매장 정보 탭의 `오시는 길`에서 주소 아래 12px 간격, 높이 145px, 전체 너비와 반경 5px의 Google 지도를 표시합니다.
+- `GET /api/v1/restaurants/{restaurantId}/map-location`의 좌표와 출처를 사용합니다. 좌표가 없거나 만료되면 지도 영역에서만 재시도를 안내하고 주소와 나머지 상세는 유지합니다.
+- 지도 SDK 재시도 후에는 새 랜덤 추천 대신 재시도 당시 식당 ID로 상세를 복원하고 스크롤 위치를 유지합니다.
 - [ ] 탭바는 Header 아래에 sticky로 고정됩니다.
 - [ ] 메뉴/사진/리뷰 탭 선택 시 탭바가 Header 바로 아래에 붙은 위치로 부드럽게 스크롤되어 해당 탭 콘텐츠를 초기 화면처럼 보여줍니다.
 - [ ] 매장 정보 탭 선택 시 페이지 최상단으로 부드럽게 스크롤됩니다.
 - [ ] 탭 선택 시 active underline은 선택된 탭으로 부드럽게 이동합니다.
 - [ ] 하단 fixed bar에는 36px 북마크와 공개 저장 수, `다시 추천 받기`, `예약하기`가 표시됩니다. 로그인 사용자의 `saved`에 따라 아이콘과 `aria-pressed`를 반영하며 접근성 이름은 `저장하기`입니다.
-- [ ] 저장 chooser/쓰기 UI는 후속 작업입니다. 로그인 사용자가 저장하기를 누르면 준비중 모달을 표시합니다.
+- [ ] 로그인 사용자가 저장하기를 누르면 컬렉션 저장 모달을 표시합니다. 컬렉션 선택 후 기존 저장 mutation으로 저장하고 저장 여부와 저장 수를 갱신합니다.
 - [ ] 메뉴 카드 클릭 시 `ROUTES.restaurantMenuDetail`로 이동합니다.
 - [ ] 공유 클릭 시 오늘의 식당 대표 링크 `/restaurants/today`를 현재 origin 기준 absolute URL로 클립보드에 복사하고 복사 성공 Toast를 표시합니다.
 - [ ] 식당명 복사 클릭 시 현재 표시 중인 한국어 식당명을 클립보드에 복사하고, 복사 아이콘과 `식당명이 복사되었어요` Toast를 표시합니다.
@@ -98,7 +98,7 @@
 - empty state: 필수 추천 요약이 없으면 API adapter에서 조회 실패 처리
 - refetch condition: page remount 또는 다시 추천 받기
 
-- summary source: 랜덤 추천 응답의 `RestaurantMainResponse`를 사용하며 `/summary`를 중복 조회하지 않음
+- summary source: 최초 진입은 랜덤 추천 응답을 사용한다. 컬렉션 생성·메뉴 상세에서 돌아와 기존 식당 ID가 있으면 해당 `/summary`를 조회하며 랜덤 추천은 호출하지 않는다.
 - response data: `restaurantId`, `name`, `localName`, `rating`, `reviewCount`, `summary`, `address`, `imageUrls`, `heroImages`, `reservationFee`
 
 - query: restaurant store information
@@ -171,14 +171,13 @@
 - submit enabled condition: 요청 중 중복 실행 방지
 - success handling: 추천 요약 교체 및 상세 상태 초기화; 사진 탭에서는 Photo Policy 적용
 - failure handling: 사진 탭에서는 기존 상태 유지; 나머지는 page error 처리
-- 저장 chooser/쓰기 mutation은 미연결
+- 저장 mutation은 기존 컬렉션 저장 모달에서 처리
 
 ## State
 
 - local state:
   - active tab
   - auth gate bottom sheet open/closed
-  - coming soon dialog open/closed
   - review image viewer open/closed
   - review image viewer image urls and initial index
   - review unavailable modal open/closed
@@ -210,7 +209,7 @@ TodayRestaurantPage
     Sticky Tabs
     Active Tab Section
       RestaurantInfoSection
-        Address (map preview deferred)
+        Address + RestaurantLocationMap
       RestaurantMenuListSection
       RestaurantPhotoSection
         RestaurantPhotoViewer
@@ -220,7 +219,6 @@ TodayRestaurantPage
     ReviewUnavailableModal
     RestaurantBottomBar
     AuthGateBottomSheet
-    ComingSoonDialog
 ```
 
 ## Component Mapping
@@ -240,7 +238,6 @@ TodayRestaurantPage
 - app shared component:
   - `BottomActionBar`
   - `ShareIconButton`
-  - `ComingSoonDialog`
   - `ListEmptyState`
 - feature component:
   - `RestaurantDetailTemplate`
@@ -288,7 +285,7 @@ TodayRestaurantPage
 - `TodayRestaurantPage`와 `RestaurantDetailPage`는 같은 상세 템플릿을 사용하므로 API 함수, query hook, 응답-to-UI mapper는 `features/restaurantDetail`에 둡니다.
 - 오늘의 식당 페이지는 URL에 `restaurantId`가 없으므로 예약하기/메뉴 상세 이동에는 조회된 오늘의 식당 `restaurantId`를 사용합니다.
 - 오늘의 식당 진입 시 `excludeRestaurantId` 없이 랜덤 추천 API를 호출하고, 다시 추천 받기 시 현재 식당 `restaurantId`를 `excludeRestaurantId`로 전달합니다.
-- 저장 수/저장 여부는 읽기 API를 사용하며 저장 chooser/쓰기 UI는 연결하지 않습니다.
+- 저장 수와 저장 여부는 읽기 API를 사용하며 컬렉션 저장 성공 후 기존 mutation에서 조회 캐시를 갱신합니다.
 - 메뉴 `listImage`/`detailImage`, 리뷰 `reviewerProfileImage`는 READY `defaultSource.url`만 사용합니다. asset이 없을 때만 기존 URL을 사용하고 처리 중/실패 asset은 fallback 표시합니다.
 - 서버에 last-order 필드가 없으므로 `lastOrderTime`은 optional이며 `closeTime`으로 생성하지 않습니다. 현재 UI는 이 필드를 소비하지 않습니다.
 
