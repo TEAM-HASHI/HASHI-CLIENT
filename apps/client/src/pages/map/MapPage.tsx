@@ -31,8 +31,28 @@ import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 import type { MapConditions, MapPanelStage } from '@/pages/map/types'
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
+import { CollectionMapQueryPage } from '@/pages/saved/CollectionMapQueryPage'
+import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
+import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+import {
+  getCollectionSaveRestaurantId,
+  getCollectionSaveState,
+} from '@/pages/saved/utils/collectionNavigation'
 
 export const MapPage = () => {
+  const location = useLocation()
+  const version = useCollectionSessionVersion()
+  return isCollectionMapState(location.state) ? (
+    <CollectionMapQueryPage
+      key={`${location.state.collectionId}:${version}`}
+      view={location.state}
+    />
+  ) : (
+    <MapMainPage key={version} />
+  )
+}
+
+const MapMainPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -49,7 +69,10 @@ export const MapPage = () => {
   const [comingSoon, setComingSoon] = useState(false)
   const [savedCollectionsOpen, setSavedCollectionsOpen] = useState(false)
   const [savingRestaurantId, setSavingRestaurantId] = useState<number | null>(
-    null,
+    () => {
+      const id = Number(getCollectionSaveRestaurantId(location.state))
+      return Number.isSafeInteger(id) && id > 0 ? id : null
+    },
   )
   const openRestaurantSave = (restaurantId: string) => {
     if (!isAuthenticated) {
@@ -425,6 +448,7 @@ export const MapPage = () => {
           onClose={handleCloseDetail}
           onLoadError={handleDetailFailure}
           onUnavailable={() => setComingSoon(true)}
+          onSave={() => openRestaurantSave(selectedRestaurant.id)}
           initialTab={detailTab}
           onTabChange={setDetailTab}
           onPressMenuItem={(menuId) =>
@@ -441,6 +465,14 @@ export const MapPage = () => {
           restaurantId={savingRestaurantId}
           onClose={() => {
             setSavingRestaurantId(null)
+            if (getCollectionSaveRestaurantId(location.state))
+              navigate(
+                { pathname: location.pathname, search: location.search },
+                {
+                  replace: true,
+                  state: getCollectionSaveState(location.state, null),
+                },
+              )
             void queryClient.invalidateQueries({ queryKey: ['map', 'saved'] })
             void queryClient.invalidateQueries({
               queryKey: ['map', 'saveCounts'],

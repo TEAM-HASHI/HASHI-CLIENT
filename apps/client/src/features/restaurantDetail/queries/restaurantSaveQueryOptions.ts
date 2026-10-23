@@ -5,12 +5,8 @@ import {
   getRestaurantSaveCount,
 } from '@/features/restaurantDetail/api/getRestaurantSaveSummary'
 
-export const restaurantSaveQueryKeys = {
-  count: (restaurantId: number) =>
-    ['restaurantSaveSummary', 'count', restaurantId] as const,
-  saved: (restaurantId: number, sessionVersion: number) =>
-    ['restaurantSaveSummary', 'saved', restaurantId, sessionVersion] as const,
-}
+import { restaurantSaveQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
+export { restaurantSaveQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
 
 export const restaurantSaveCountQueryOptions = (restaurantId: number) =>
   queryOptions({

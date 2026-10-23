@@ -10,8 +10,9 @@ import {
   startAuthenticatedSession,
 } from '@/shared/auth/authSession'
 
-const { mockRequest } = vi.hoisted(() => ({
+const { mockRequest, mockNavigate } = vi.hoisted(() => ({
   mockRequest: vi.fn(),
+  mockNavigate: vi.fn(),
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -20,7 +21,7 @@ vi.mock('react-router-dom', async () => {
 
   return {
     ...actual,
-    useNavigate: () => vi.fn(),
+    useNavigate: () => mockNavigate,
   }
 })
 
@@ -48,6 +49,17 @@ const renderMypagePage = () => {
 }
 
 describe('MypagePage', () => {
+  it('내가 찜한 식당에서 실제 컬렉션 목록을 연다', async () => {
+    renderMypagePage()
+    const user = (await import('@testing-library/user-event')).default.setup()
+    await user.click(
+      await screen.findByRole('button', { name: /내가 찜한 식당/ }),
+    )
+    expect(mockNavigate).toHaveBeenCalledWith('/saved')
+    expect(
+      screen.queryByText('서비스를 준비하고 있어요.'),
+    ).not.toBeInTheDocument()
+  })
   beforeEach(() => {
     mockRequest.mockImplementation((path: string) => {
       if (path === '/api/v1/users/me/profile-summary') {

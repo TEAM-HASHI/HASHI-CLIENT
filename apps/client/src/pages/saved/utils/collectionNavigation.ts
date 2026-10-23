@@ -2,6 +2,7 @@ import type { CollectionManagementAction } from '@/pages/saved/components/Collec
 import type { Location } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { getAuthSessionVersion } from '@/shared/auth/authSession'
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
@@ -14,6 +15,7 @@ export const getCollectionSaveState = (
   ...(isRecord(state) ? state : {}),
   collectionSaveRestaurantId: restaurantId,
   collectionSaveSelectedId: selectedId,
+  collectionSaveSessionVersion: getAuthSessionVersion(),
 })
 
 export const getCollectionFormState = (
@@ -50,7 +52,10 @@ export const getCollectionReturn = (state: unknown) => {
 }
 
 export const getCollectionSaveRestaurantId = (state: unknown) =>
-  isRecord(state) && typeof state.collectionSaveRestaurantId === 'string'
+  isRecord(state) &&
+  (state.collectionSaveSessionVersion === undefined ||
+    state.collectionSaveSessionVersion === getAuthSessionVersion()) &&
+  typeof state.collectionSaveRestaurantId === 'string'
     ? state.collectionSaveRestaurantId
     : null
 

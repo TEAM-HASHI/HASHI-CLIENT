@@ -1,5 +1,12 @@
 import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 
+export const restaurantSaveQueryKeys = {
+  all: () => ['restaurantSaveSummary'] as const,
+  count: (id: number) => ['restaurantSaveSummary', 'count', id] as const,
+  saved: (id: number, version: number) =>
+    ['restaurantSaveSummary', 'saved', id, version] as const,
+}
+
 export const restaurantDetailQueryKeys = {
   all: ['restaurants'] as const,
   randomRecommendation: (excludeRestaurantId?: number) =>

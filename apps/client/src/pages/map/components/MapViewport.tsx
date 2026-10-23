@@ -24,7 +24,10 @@ import type {
 } from '@/pages/map/types'
 
 interface MapViewportProps {
-  restaurants: MapRestaurant[]
+  restaurants: (Pick<
+    MapRestaurant,
+    'id' | 'name' | 'category' | 'position' | 'attributions'
+  > & { rating?: number })[]
   areas: MapAreaMarkerData[]
   selectedId: string | null
   areaCode: string | null

@@ -24,6 +24,7 @@ interface MapRestaurantDetailProps {
   onClose: () => void
   onPhotoSelect?: (index: number) => void
   onUnavailable: () => void
+  onSave?: () => void
   onLoadError?: () => void
   onPressMenuItem: (menuId: string) => void
   initialTab?: RestaurantDetailTab
@@ -129,6 +130,7 @@ const MapDetailPanel = ({
   onClose,
   onPhotoSelect,
   onUnavailable,
+  onSave = onUnavailable,
   onPressMenuItem,
   activeTab,
   onTabChange,
@@ -174,7 +176,7 @@ const MapDetailPanel = ({
               <IconButton
                 aria-label={`${restaurant.name} 저장`}
                 aria-pressed={restaurant.saved ?? false}
-                onClick={onUnavailable}
+                onClick={onSave}
                 className="text-warm-gray-100"
               >
                 {restaurant.saved ? (
@@ -239,10 +241,7 @@ const MapDetailPanel = ({
                     )}
                   </div>
                   {!isExpanded && (
-                    <MapSaveAction
-                      restaurant={restaurant}
-                      onSave={onUnavailable}
-                    />
+                    <MapSaveAction restaurant={restaurant} onSave={onSave} />
                   )}
                 </div>
                 {!model.hasLoadError && (

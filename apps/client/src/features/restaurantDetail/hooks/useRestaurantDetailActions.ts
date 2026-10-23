@@ -10,6 +10,7 @@ import {
 } from '@/app/router/routePaths'
 import type { RestaurantMenuDetailSource } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import { useAuthStatus } from '@/shared/hooks'
+import { getAuthSessionVersion } from '@/shared/auth/authSession'
 
 interface UseRestaurantDetailActionsParams {
   menuDetailSource: RestaurantMenuDetailSource
@@ -41,7 +42,17 @@ export const useRestaurantDetailActions = ({
       return
     }
 
-    setIsComingSoonOpen(true)
+    navigate(
+      { pathname: location.pathname, search: location.search },
+      {
+        replace: true,
+        state: {
+          ...location.state,
+          collectionSaveRestaurantId: restaurantId,
+          collectionSaveSessionVersion: getAuthSessionVersion(),
+        },
+      },
+    )
   }
 
   const handlePressReservation = () => {

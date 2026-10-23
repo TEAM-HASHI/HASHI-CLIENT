@@ -12,6 +12,22 @@ import { collectionMutationOptions } from '@/pages/saved/mutations/collectionMut
 import { synchronizeCollectionHeader } from '@/pages/saved/mutations/synchronizeCollectionHeader'
 import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
 import { assertCollectionSession } from '@/pages/saved/utils/collectionSession'
+import { restaurantSaveQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
+import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
+import { mapSaveQueryKeys } from '@/pages/map/queries/mapQueryKeys'
+
+const refreshSaveSummaries = (queryClient: QueryClient) =>
+  Promise.all([
+    queryClient.invalidateQueries({ queryKey: restaurantSaveQueryKeys.all() }),
+    queryClient.invalidateQueries({
+      queryKey: restaurantDetailQueryKeys.details(),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: restaurantDetailQueryKeys.randomRecommendation().slice(0, 2),
+    }),
+    queryClient.invalidateQueries({ queryKey: mapSaveQueryKeys.allCounts() }),
+    queryClient.invalidateQueries({ queryKey: mapSaveQueryKeys.allSaved() }),
+  ])
 
 const synchronizeSavedCollections = async (
   queryClient: QueryClient,
@@ -25,6 +41,7 @@ const synchronizeSavedCollections = async (
   )
   assertCollectionSession(sessionVersion)
   await Promise.all([
+    refreshSaveSummaries(queryClient),
     queryClient.invalidateQueries({
       queryKey: collectionQueryKeys.lists(sessionVersion),
     }),
@@ -129,6 +146,7 @@ export const useDeleteCollectionMutation = (
         await queryClient.invalidateQueries({
           queryKey: collectionQueryKeys.lists(version),
         })
+        await refreshSaveSummaries(queryClient)
       },
       onError,
     ),

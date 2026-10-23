@@ -13,6 +13,7 @@ import { deleteCollection } from '@/pages/saved/api/deleteCollection'
 import { getCollection } from '@/pages/saved/api/getCollection'
 import { getCollections } from '@/pages/saved/api/getCollections'
 import { getSavedRestaurants } from '@/pages/saved/api/getSavedRestaurants'
+import { getCollectionMapMarkers } from '@/pages/saved/api/getCollectionMapMarkers'
 
 import { appRoutes } from '@/app/router/routes'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
@@ -68,6 +69,9 @@ vi.mock('@/pages/saved/api/getCollection', () => ({ getCollection: vi.fn() }))
 vi.mock('@/pages/saved/api/getCollections', () => ({ getCollections: vi.fn() }))
 vi.mock('@/pages/saved/api/getSavedRestaurants', () => ({
   getSavedRestaurants: vi.fn(),
+}))
+vi.mock('@/pages/saved/api/getCollectionMapMarkers', () => ({
+  getCollectionMapMarkers: vi.fn(),
 }))
 vi.mock('@/pages/saved/api/createCollection', () => ({
   createCollection: vi.fn(),
@@ -169,6 +173,77 @@ const renderRoute = async (initialEntry: string) => {
 }
 
 describe('appRoutes', () => {
+  it('컬렉션 상세에서 지도로 이동해 API 패널과 전체 핀을 표시하고 필터를 유지해 복귀한다', async () => {
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue(new DOMRect(0, 0, 393, 768))
+    try {
+      setAccessToken('test-session')
+      const description = '가'.repeat(30)
+      vi.mocked(getCollection).mockResolvedValue({
+        collectionId: 8,
+        name: 'API 여행',
+        description,
+        visibility: 'private',
+        owner: true,
+      })
+      vi.mocked(getCollectionMapMarkers).mockResolvedValue([
+        {
+          id: '999',
+          name: '다음 페이지 식당',
+          category: 'cafe',
+          position: { lat: 35.6, lng: 139.7 },
+          validUntil: '2030-01-01T00:00:00Z',
+          attributions: [],
+        },
+      ])
+      const { router } = await renderRoute(
+        '/saved/collections/8?sort=rating&category=cafe',
+      )
+      const user = userEvent.setup()
+      expect(await screen.findByText(description)).toBeVisible()
+      await user.click(
+        await screen.findByRole('button', { name: '지도로 보기' }),
+      )
+      await act(async () => {
+        await vi.dynamicImportSettled()
+      })
+      expect(router.state.location.pathname).toBe('/map')
+      expect(
+        await screen.findByRole('heading', { name: 'API 여행' }),
+      ).toBeVisible()
+      expect(screen.getByText(description)).toBeVisible()
+      expect(
+        await screen.findByRole('button', {
+          name: '다음 페이지 식당 지도 마커',
+        }),
+      ).toBeVisible()
+      expect(screen.getByRole('button', { name: '저장' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      )
+      await user.click(screen.getByRole('button', { name: '컬렉션 지도 닫기' }))
+      expect(
+        router.state.location.pathname + router.state.location.search,
+      ).toBe('/saved/collections/8?sort=rating&category=cafe')
+    } finally {
+      rect.mockRestore()
+    }
+  })
+
+  it('식당 상세의 컬렉션 저장 진입 상태를 기존 API 선택창에 연결한다', async () => {
+    setAccessToken('test-session')
+    const { router } = await renderRoute('/restaurants/55')
+    await act(async () => {
+      await router.navigate('/restaurants/55', {
+        replace: true,
+        state: { collectionSaveRestaurantId: '55' },
+      })
+    })
+    expect(
+      await screen.findByRole('dialog', { name: '컬렉션 저장' }),
+    ).toBeVisible()
+  })
   beforeEach(() => {
     clearAuthSession()
     vi.mocked(requestTokenReissue).mockRejectedValue(new HttpStatusError(401))

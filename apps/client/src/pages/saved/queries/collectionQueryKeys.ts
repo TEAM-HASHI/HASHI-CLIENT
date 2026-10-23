@@ -61,4 +61,14 @@ export const collectionQueryKeys = {
       params,
       ...(publicView ? ['public'] : []),
     ] as const,
+  mapMarkers: (
+    id: number,
+    version = getAuthSessionVersion(),
+    publicView = false,
+  ) =>
+    [
+      ...collectionQueryKeys.restaurantLists(id, version),
+      'map-markers',
+      publicView,
+    ] as const,
 }
