@@ -179,6 +179,163 @@ const renderRoute = async (initialEntry: string) => {
 }
 
 describe('appRoutes', () => {
+  it('지도 북마크는 모달 대신 생성·커버·저장 수·메뉴가 있는 컬렉션 패널을 연다', async () => {
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue(new DOMRect(0, 0, 393, 887))
+    try {
+      setAccessToken('test-session')
+      const { router } = await renderRoute('/map')
+      const user = userEvent.setup()
+      await user.click(
+        await screen.findByRole('button', { name: '저장 목록 보기' }),
+      )
+      expect(
+        await screen.findByRole('region', { name: '지도 저장 컬렉션' }),
+      ).toBeVisible()
+      expect(
+        screen.queryByRole('dialog', { name: '내 컬렉션' }),
+      ).not.toBeInTheDocument()
+      expect(screen.queryByText('컬렉션 전체 보기')).not.toBeInTheDocument()
+      expect(screen.getByText('컬렉션 1개')).toBeVisible()
+      expect(
+        screen.getByRole('button', { name: 'API 여행 컬렉션 열기' }),
+      ).toBeVisible()
+      expect(
+        screen.getByRole('button', { name: 'API 여행 더보기' }),
+      ).toBeVisible()
+      expect(screen.getByRole('button', { name: '지도' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      )
+      expect(
+        screen.getByRole('button', { name: '저장 목록 보기' }),
+      ).toHaveAttribute('aria-pressed', 'true')
+      await user.click(screen.getByRole('button', { name: '새 컬렉션 만들기' }))
+      expect(router.state.location.pathname).toBe('/saved/collections/new')
+      await user.click(await screen.findByRole('button', { name: '뒤로가기' }))
+      expect(router.state.location.pathname).toBe('/map')
+      expect(
+        await screen.findByRole('region', { name: '지도 저장 컬렉션' }),
+      ).toBeVisible()
+      await user.click(screen.getByRole('button', { name: '저장 목록 보기' }))
+      expect(
+        screen.queryByRole('region', { name: '지도 저장 컬렉션' }),
+      ).not.toBeInTheDocument()
+      await user.click(screen.getByRole('button', { name: '저장 목록 보기' }))
+      act(() => startAuthenticatedSession('other-account', 2))
+      expect(
+        screen.queryByRole('region', { name: '지도 저장 컬렉션' }),
+      ).not.toBeInTheDocument()
+    } finally {
+      rect.mockRestore()
+    }
+  })
+  it('지도 목록에서 컬렉션을 선택하면 지도 탭의 패널 상세를 열고 닫으면 목록으로 돌아간다', async () => {
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue(new DOMRect(0, 0, 393, 768))
+    try {
+      setAccessToken('test-session')
+      const { router } = await renderRoute('/map')
+      const user = userEvent.setup()
+      await user.click(
+        await screen.findByRole('button', { name: '저장 목록 보기' }),
+      )
+      await user.click(
+        await screen.findByRole('button', { name: 'API 여행 컬렉션 열기' }),
+      )
+      expect(router.state.location.pathname).toBe('/map')
+      expect(
+        await screen.findByRole('region', { name: '저장 컬렉션 패널' }),
+      ).toBeVisible()
+      expect(
+        await screen.findByRole('heading', { name: 'API 여행', level: 2 }),
+      ).toBeVisible()
+      expect(screen.getByText('설명')).toBeVisible()
+      expect(screen.queryByText('저장한 장소')).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: '전체 지역 보기' }),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: '저장 목록 보기' }),
+      ).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '지도' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      )
+      await user.click(screen.getByRole('button', { name: '정렬 선택' }))
+      await user.click(screen.getByRole('menuitemradio', { name: '별점순' }))
+      await user.click(screen.getByRole('button', { name: '분류 선택' }))
+      await user.click(screen.getByRole('menuitemradio', { name: '카페' }))
+      expect(
+        router.state.location.pathname + router.state.location.search,
+      ).toBe('/map?sort=rating&category=cafe')
+      await user.click(screen.getByRole('button', { name: '컬렉션 지도 닫기' }))
+      expect(router.state.location.pathname).toBe('/map')
+      expect(
+        await screen.findByRole('region', { name: '지도 저장 컬렉션' }),
+      ).toBeVisible()
+    } finally {
+      rect.mockRestore()
+    }
+  })
+  it.each(['list', 'detail'])(
+    '지도 %s에서 컬렉션을 삭제해도 토스트와 지도 목록 패널을 유지한다',
+    async (entry) => {
+      const rect = vi
+        .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+        .mockReturnValue(new DOMRect(0, 0, 393, 768))
+      try {
+        setAccessToken('test-session')
+        vi.mocked(deleteCollection).mockImplementation(async () => {
+          vi.mocked(getCollections).mockResolvedValue({
+            collections: [],
+            totalCount: 0,
+            hasNext: false,
+          })
+        })
+        const { router } = await renderRoute('/map')
+        const user = userEvent.setup()
+        await user.click(
+          await screen.findByRole('button', { name: '저장 목록 보기' }),
+        )
+        if (entry === 'detail') {
+          await user.click(
+            await screen.findByRole('button', { name: 'API 여행 컬렉션 열기' }),
+          )
+          await user.click(
+            await screen.findByRole('button', { name: '컬렉션 더보기' }),
+          )
+        } else {
+          await user.click(
+            await screen.findByRole('button', { name: 'API 여행 더보기' }),
+          )
+        }
+        await user.click(screen.getByRole('menuitem', { name: '삭제하기' }))
+        const confirm = await screen.findByRole('button', { name: '삭제하기' })
+        await waitFor(() => expect(confirm).toBeEnabled())
+        await user.click(confirm)
+        await waitFor(() =>
+          expect(showToast).toHaveBeenCalledWith(
+            expect.objectContaining({ children: '컬렉션이 삭제되었어요.' }),
+          ),
+        )
+        expect(router.state.location.pathname).toBe('/map')
+        expect(
+          await screen.findByRole('region', { name: '지도 저장 컬렉션' }),
+        ).toBeVisible()
+        expect(await screen.findByText('컬렉션 0개')).toBeVisible()
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+        expect(screen.getByRole('button', { name: '지도' })).toHaveAttribute(
+          'aria-current',
+          'page',
+        )
+      } finally {
+        rect.mockRestore()
+      }
+    },
+  )
   it('컬렉션 상세에서 지도로 이동해 API 패널과 전체 핀을 표시하고 필터를 유지해 복귀한다', async () => {
     const rect = vi
       .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
@@ -263,6 +420,7 @@ describe('appRoutes', () => {
     vi.mocked(updateCollection).mockReset()
     vi.mocked(copyUrlToClipboard).mockReset().mockResolvedValue(true)
     vi.mocked(showToast).mockClear()
+    vi.mocked(getCollectionMapMarkers).mockReset().mockResolvedValue([])
     vi.mocked(getCollection).mockReset().mockResolvedValue({
       collectionId: 8,
       name: 'API 여행',

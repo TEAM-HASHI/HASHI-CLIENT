@@ -909,3 +909,140 @@ test('leaving expanded detail restores a keyboard entry into the summary', async
     page.getByRole('slider', { name: '식당 상세 높이 조절' }),
   ).toBeFocused()
 })
+
+test('bookmark FAB matches the nonmodal collection panel and keeps create and navigation fixed', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 393, height: 971 })
+  await page.route('**/api/v1/auth/**', async (route) => {
+    const reissue = new URL(route.request().url()).pathname.endsWith('/reissue')
+    await route.fulfill({
+      headers: reissue
+        ? {
+            Authorization: 'Bearer browser-test-session',
+            'Access-Control-Expose-Headers': 'Authorization',
+          }
+        : {},
+      json: {
+        success: true,
+        code: 'SUCCESS',
+        message: 'ok',
+        data: reissue ? null : { role: 'USER', subjectId: 1 },
+      },
+    })
+  })
+  await page.route('**/api/v1/collections*', (route) =>
+    route.fulfill({
+      json: {
+        success: true,
+        code: 'SUCCESS',
+        message: 'ok',
+        data: {
+          collections: ['여름', '겨울', '가을', '봄', '다음'].map(
+            (season, index) => ({
+              collectionId: index + 1,
+              name: `2026 도쿄 ${season} 여행`,
+              color: ['red', 'yellow', 'green', 'purple', 'blue'][index],
+              savedCount: 10,
+              visibility: 'private',
+            }),
+          ),
+          totalCount: 5,
+          hasNext: false,
+        },
+      },
+    }),
+  )
+  await page.route('**/api/v1/collections/1**', (route) => {
+    const path = new URL(route.request().url()).pathname
+    const data = path.endsWith('/map-markers')
+      ? { collectionId: 1, content: restaurantFixtures.slice(0, 2) }
+      : path.endsWith('/restaurants')
+        ? {
+            content: restaurantFixtures.slice(0, 2),
+            totalCount: 80,
+            hasNext: false,
+          }
+        : {
+            collectionId: 1,
+            name: '2026 도쿄 여름 여행',
+            description:
+              '여행 가기 전에 저장해둔 맛집들 중에서 꼭 가보고 싶은 곳',
+            color: 'red',
+            visibility: 'private',
+            owner: true,
+            savedCount: 80,
+          }
+    return route.fulfill({
+      json: { success: true, code: 'SUCCESS', message: 'ok', data },
+    })
+  })
+  await page.goto('http://localhost:5173/map')
+  const bookmark = page.getByRole('button', { name: '저장 목록 보기' })
+  await bookmark.click()
+  const panel = page.getByRole('region', { name: '지도 저장 컬렉션' })
+  await expect(panel).toBeVisible()
+  await panel.evaluate((element) =>
+    Promise.all(element.getAnimations().map((animation) => animation.finished)),
+  )
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(panel.getByText('컬렉션 5개')).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: '지도', exact: true }),
+  ).toHaveAttribute('aria-current', 'page')
+  const create = panel.getByRole('button', { name: '새 컬렉션 만들기' })
+  const createBox = await create.boundingBox()
+  const list = panel.getByRole('region', { name: '컬렉션 목록' })
+  await list.evaluate((element) => {
+    element.scrollTop = element.scrollHeight
+  })
+  await expect(
+    panel.getByRole('button', { name: '2026 도쿄 다음 여행 컬렉션 열기' }),
+  ).toBeVisible()
+  expect((await create.boundingBox())?.y).toBe(createBox?.y)
+  await list.evaluate((element) => {
+    element.scrollTop = 0
+  })
+  const image = await page.screenshot({
+    path: testInfo.outputPath('bookmark-collections.png'),
+  })
+  await testInfo.attach('bookmark-collections', {
+    body: image,
+    contentType: 'image/png',
+  })
+  await panel
+    .getByRole('button', { name: '2026 도쿄 여름 여행 컬렉션 열기' })
+    .click()
+  await expect(page).toHaveURL(/\/map$/)
+  const detail = page.getByRole('region', { name: '저장 컬렉션 패널' })
+  await expect(
+    detail.getByRole('heading', { name: '2026 도쿄 여름 여행' }),
+  ).toBeVisible()
+  await expect(
+    detail.getByText('여행 가기 전에 저장해둔 맛집들 중에서 꼭 가보고 싶은 곳'),
+  ).toBeVisible()
+  await expect(page.getByText('저장한 장소')).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: '지도', exact: true }),
+  ).toHaveAttribute('aria-current', 'page')
+  await page.setViewportSize({ width: 393, height: 852 })
+  await detail.evaluate((element) =>
+    Promise.all(element.getAnimations().map((animation) => animation.finished)),
+  )
+  await detail.getByRole('button', { name: '정렬 선택' }).click()
+  await page.screenshot({
+    path: testInfo.outputPath('collection-detail-sort.png'),
+  })
+  await page.getByRole('menuitemradio', { name: '별점순' }).click()
+  await detail.getByRole('button', { name: '분류 선택' }).click()
+  await page.screenshot({
+    path: testInfo.outputPath('collection-detail-category.png'),
+  })
+  await page.getByRole('menuitemradio', { name: '카페' }).click()
+  await expect(page).toHaveURL(/\/map\?sort=rating&category=cafe$/)
+  await page.getByRole('button', { name: '컬렉션 지도 닫기' }).click()
+  await expect(panel).toBeVisible()
+  await panel.getByRole('slider', { name: '컬렉션 목록 높이 조절' }).focus()
+  await page.keyboard.press('Escape')
+  await expect(panel).toHaveCount(0)
+})

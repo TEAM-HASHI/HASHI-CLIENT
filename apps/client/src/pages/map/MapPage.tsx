@@ -54,6 +54,7 @@ export const MapPage = () => {
 
 const MapMainPage = () => {
   const location = useLocation()
+  const sessionVersion = useCollectionSessionVersion()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { isAuthenticated } = useAuthStatus()
@@ -67,7 +68,26 @@ const MapMainPage = () => {
   const [stage, setStage] = useState<MapPanelStage>(initial?.stage ?? 'normal')
   const [previousStatus, setPreviousStatus] = useState(state.status)
   const [comingSoon, setComingSoon] = useState(false)
-  const [savedCollectionsOpen, setSavedCollectionsOpen] = useState(false)
+  const [savedCollectionsOpen, setSavedCollectionsOpen] = useState(
+    location.state?.mapSavedCollectionsOpen === true &&
+      location.state?.mapSavedCollectionsSession === sessionVersion,
+  )
+  const [savedCollectionsHeight, setSavedCollectionsHeight] = useState(497)
+  const setSavedCollectionsVisible = (open: boolean) => {
+    setSavedCollectionsOpen(open)
+    if (open) setSavedCollectionsHeight(497)
+    navigate(
+      { pathname: location.pathname, search: location.search },
+      {
+        replace: true,
+        state: {
+          ...location.state,
+          mapSavedCollectionsOpen: open,
+          mapSavedCollectionsSession: sessionVersion,
+        },
+      },
+    )
+  }
   const [savingRestaurantId, setSavingRestaurantId] = useState<number | null>(
     () => {
       const id = Number(getCollectionSaveRestaurantId(location.state))
@@ -88,7 +108,7 @@ const MapMainPage = () => {
       navigate(ROUTES.loginRequired)
       return
     }
-    setSavedCollectionsOpen(true)
+    setSavedCollectionsVisible(!savedCollectionsOpen)
   }
   const [mapUnavailable, setMapUnavailable] = useState(false)
   const [detailStage, setDetailStage] = useState<MapPanelStage>(
@@ -337,13 +357,15 @@ const MapMainPage = () => {
             }}
             hasConditions={!!state.conditions.keyword}
             panelHeight={
-              mapUnavailable
-                ? 0
-                : state.selectedRestaurant
-                  ? detailStage === 'collapsed'
-                    ? 30
-                    : 294
-                  : height
+              savedCollectionsOpen
+                ? Math.min(savedCollectionsHeight, availableHeight)
+                : mapUnavailable
+                  ? 0
+                  : state.selectedRestaurant
+                    ? detailStage === 'collapsed'
+                      ? 30
+                      : 294
+                    : height
             }
             onSelectRestaurant={handleSelect}
             onSelectArea={(areaCode) => handleConditionsChange({ areaCode })}
@@ -352,6 +374,7 @@ const MapMainPage = () => {
               setStage('normal')
             }}
             onSaved={openSavedCollections}
+            savedOpen={savedCollectionsOpen}
             onCloseDetail={handleCloseDetail}
           />
         ) : (
@@ -385,7 +408,10 @@ const MapMainPage = () => {
         />
         <div
           hidden={
-            !!state.selectedRestaurant || mapUnavailable || !state.regions
+            savedCollectionsOpen ||
+            !!state.selectedRestaurant ||
+            mapUnavailable ||
+            !state.regions
           }
           className="pointer-events-none absolute inset-0"
         >
@@ -482,7 +508,9 @@ const MapMainPage = () => {
       )}
       <MapSavedCollectionsSheet
         open={savedCollectionsOpen && isAuthenticated}
-        onClose={() => setSavedCollectionsOpen(false)}
+        height={savedCollectionsHeight}
+        onHeightChange={setSavedCollectionsHeight}
+        onClose={() => setSavedCollectionsVisible(false)}
       />
       <ComingSoonDialog open={comingSoon} onOpenChange={setComingSoon} />
     </main>

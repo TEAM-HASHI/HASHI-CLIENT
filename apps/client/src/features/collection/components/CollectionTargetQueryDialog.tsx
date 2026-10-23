@@ -184,13 +184,7 @@ const CollectionTargetQueryDialogContent = (
         (moving &&
           (!sourceOwned || !planReady || !planQuery.data?.movableIds.length))
       }
-      confirmLabel={() =>
-        moving
-          ? planReady
-            ? `이동 ${planQuery.data.movableIds.length}`
-            : '이동'
-          : '저장'
-      }
+      confirmLabel={() => (moving ? '이동' : '저장')}
       feedback={feedback}
       notice={
         feedbackError && (

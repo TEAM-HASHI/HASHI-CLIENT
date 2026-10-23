@@ -7,14 +7,13 @@ import {
   COLLECTION_CATEGORY_OPTIONS,
   COLLECTION_SORT_OPTIONS,
 } from '@/features/collection/types'
-import type { SavedCollection } from '@/pages/saved/types'
 import type { CollectionViewState } from '@/features/collection/types'
 import { cn } from '@/shared/utils'
 import { normalizeCollectionDescription } from '@/pages/saved/utils/collectionMutations'
 
 type CollectionPanelHeaderProps = {
-  collection: SavedCollection
-  restaurantCount: number
+  collection: { name?: string; description?: string }
+  restaurantCount?: number
   isFullscreen: boolean
   onCollapse?: () => void
   view: CollectionViewState
