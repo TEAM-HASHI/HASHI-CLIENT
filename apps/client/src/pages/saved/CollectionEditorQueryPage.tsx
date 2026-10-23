@@ -1,8 +1,8 @@
-import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+import { useCollectionSessionVersion } from '@/features/collection/hooks/useCollectionSessionVersion'
 
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Checkbox, Header, IconButton } from '@hashi/hds-ui'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Navigate,
   useLocation,
@@ -13,23 +13,23 @@ import {
 
 import { ROUTES } from '@/app/router/path'
 import { getCollectionDetailPath } from '@/app/router/routePaths'
-import { isValidCollectionId } from '@/pages/saved/api/collectionReadContracts'
+import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import { CollectionDeleteQueryDialog } from '@/pages/saved/components/CollectionDeleteQueryDialog'
-import { CollectionTargetQueryDialog } from '@/pages/saved/components/CollectionTargetQueryDialog'
+import { CollectionTargetQueryDialog } from '@/features/collection/components/CollectionTargetQueryDialog'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
-import { useCollectionQuery } from '@/pages/saved/queries/useCollectionQuery'
-import { useSavedRestaurantsInfiniteQuery } from '@/pages/saved/queries/useSavedRestaurantsInfiniteQuery'
+import { useCollectionQuery } from '@/features/collection/queries/useCollectionQuery'
+import { useSavedRestaurantsInfiniteQuery } from '@/features/collection/queries/useSavedRestaurantsInfiniteQuery'
 import {
   COLLECTION_CATEGORY_OPTIONS,
   COLLECTION_SORT_OPTIONS,
-} from '@/pages/saved/types'
-import { mapSavedRestaurant } from '@/pages/saved/utils/collectionReadAdapters'
+} from '@/features/collection/types'
+import { mapSavedRestaurant } from '@/features/collection/utils/collectionReadAdapters'
 import {
   getCollectionEditorReturnKey,
   getCollectionManagementAction,
   getCollectionManagementState,
   getCollectionSaveState,
-} from '@/pages/saved/utils/collectionNavigation'
+} from '@/features/collection/utils/collectionNavigation'
 import { HttpStatusError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { BottomActionBar } from '@/shared/components/bottomActionBar/BottomActionBar'
@@ -40,7 +40,7 @@ const SELECTION_CLASS =
 
 export const CollectionEditorQueryPage = () => {
   const sessionVersion = useCollectionSessionVersion()
-  const initialSessionVersion = useRef(sessionVersion)
+  const [initialSessionVersion] = useState(sessionVersion)
   const { collectionId } = useParams<{ collectionId: string }>()
   const [params] = useSearchParams()
   const id =
@@ -58,7 +58,7 @@ export const CollectionEditorQueryPage = () => {
   return (
     <CollectionEditorQuery
       key={`${id}:${sort}:${category}:${sessionVersion}`}
-      restoreState={initialSessionVersion.current === sessionVersion}
+      restoreState={initialSessionVersion === sessionVersion}
       collectionId={id}
       sort={sort}
       category={category}
@@ -144,7 +144,7 @@ const CollectionEditorQuery = ({
         }),
       },
     )
-  }, [collectionId, location, navigate])
+  }, [collectionId, location, navigate, restoreState])
   const closeDialog = () => {
     setDialog(null)
     navigate(

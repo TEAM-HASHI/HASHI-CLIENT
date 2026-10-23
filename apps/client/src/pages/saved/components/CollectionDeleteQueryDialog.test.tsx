@@ -12,11 +12,11 @@ import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getCollection } from '@/pages/saved/api/getCollection'
-import { deleteCollection } from '@/pages/saved/api/deleteCollection'
-import { removeSavedRestaurants } from '@/pages/saved/api/removeSavedRestaurants'
+import { getCollection } from '@/features/collection/api/getCollection'
+import { deleteCollection } from '@/features/collection/api/deleteCollection'
+import { removeSavedRestaurants } from '@/features/collection/api/removeSavedRestaurants'
 import { CollectionDeleteQueryDialog } from '@/pages/saved/components/CollectionDeleteQueryDialog'
-import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
+import { collectionQueryKeys } from '@/features/collection/queries/collectionQueryKeys'
 import {
   clearAuthSession,
   setAccessToken,
@@ -28,15 +28,19 @@ vi.mock('@hashi/hds-ui', async (importOriginal) => ({
   showToast: vi.fn(),
 }))
 
-vi.mock('@/pages/saved/api/getCollection', () => ({ getCollection: vi.fn() }))
-vi.mock('@/pages/saved/api/deleteCollection', () => ({
+vi.mock('@/features/collection/api/getCollection', () => ({
+  getCollection: vi.fn(),
+}))
+vi.mock('@/features/collection/api/deleteCollection', () => ({
   deleteCollection: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/removeSavedRestaurants', () => ({
+vi.mock('@/features/collection/api/removeSavedRestaurants', () => ({
   removeSavedRestaurants: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/saveRestaurant', () => ({ saveRestaurant: vi.fn() }))
-vi.mock('@/pages/saved/api/moveSavedRestaurants', () => ({
+vi.mock('@/features/collection/api/saveRestaurant', () => ({
+  saveRestaurant: vi.fn(),
+}))
+vi.mock('@/features/collection/api/moveSavedRestaurants', () => ({
   moveSavedRestaurants: vi.fn(),
 }))
 vi.mock('@/shared/lib/sentry', () => ({ captureError: vi.fn() }))

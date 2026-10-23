@@ -7,12 +7,12 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createCollection } from '@/pages/saved/api/createCollection'
-import { updateCollection } from '@/pages/saved/api/updateCollection'
-import { deleteCollection } from '@/pages/saved/api/deleteCollection'
-import { getCollection } from '@/pages/saved/api/getCollection'
-import { getCollections } from '@/pages/saved/api/getCollections'
-import { getSavedRestaurants } from '@/pages/saved/api/getSavedRestaurants'
+import { createCollection } from '@/features/collection/api/createCollection'
+import { updateCollection } from '@/features/collection/api/updateCollection'
+import { deleteCollection } from '@/features/collection/api/deleteCollection'
+import { getCollection } from '@/features/collection/api/getCollection'
+import { getCollections } from '@/features/collection/api/getCollections'
+import { getSavedRestaurants } from '@/features/collection/api/getSavedRestaurants'
 import { getCollectionMapMarkers } from '@/pages/saved/api/getCollectionMapMarkers'
 
 import { appRoutes } from '@/app/router/routes'
@@ -65,30 +65,36 @@ vi.mock('@/features/restaurantList/api/getRestaurants', () => ({
   })),
 }))
 
-vi.mock('@/pages/saved/api/getCollection', () => ({ getCollection: vi.fn() }))
-vi.mock('@/pages/saved/api/getCollections', () => ({ getCollections: vi.fn() }))
-vi.mock('@/pages/saved/api/getSavedRestaurants', () => ({
+vi.mock('@/features/collection/api/getCollection', () => ({
+  getCollection: vi.fn(),
+}))
+vi.mock('@/features/collection/api/getCollections', () => ({
+  getCollections: vi.fn(),
+}))
+vi.mock('@/features/collection/api/getSavedRestaurants', () => ({
   getSavedRestaurants: vi.fn(),
 }))
 vi.mock('@/pages/saved/api/getCollectionMapMarkers', () => ({
   getCollectionMapMarkers: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/createCollection', () => ({
+vi.mock('@/features/collection/api/createCollection', () => ({
   createCollection: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/updateCollection', () => ({
+vi.mock('@/features/collection/api/updateCollection', () => ({
   updateCollection: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/deleteCollection', () => ({
+vi.mock('@/features/collection/api/deleteCollection', () => ({
   deleteCollection: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/removeSavedRestaurants', () => ({
+vi.mock('@/features/collection/api/removeSavedRestaurants', () => ({
   removeSavedRestaurants: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/moveSavedRestaurants', () => ({
+vi.mock('@/features/collection/api/moveSavedRestaurants', () => ({
   moveSavedRestaurants: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/saveRestaurant', () => ({ saveRestaurant: vi.fn() }))
+vi.mock('@/features/collection/api/saveRestaurant', () => ({
+  saveRestaurant: vi.fn(),
+}))
 vi.mock('@/pages/map/api/getMapRestaurantSaves', () => ({
   getMapRestaurantSaveCounts: vi.fn(async () => ({})),
   getMyMapRestaurantSaves: vi.fn(async () => ({})),

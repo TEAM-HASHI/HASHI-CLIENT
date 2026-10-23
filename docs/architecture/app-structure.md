@@ -96,6 +96,13 @@ features/{featureName}/
 - 기능 이름 없이 공통 UI처럼 보이는 코드는 `shared/components` 또는 `packages/hds-ui` 후보인지 먼저 판단합니다.
 - 서버 통신, 권한, route, analytics에 강하게 묶이면 앱 내부에 둡니다.
 
+### 컬렉션 기능 경계
+
+- `features/collection`은 저장 화면·지도·식당 상세에서 함께 사용하는 컬렉션 API, Query/Mutation, 인증 세션 보호, 공용 조회 모델, 저장/이동 대상 선택창과 커버를 소유합니다.
+- `pages/saved`는 목록·상세·생성·편집 라우트 화면과 페이지 전용 배치, 퍼블리싱 fixture·목 Provider를 소유합니다. 기존 지도 컴포넌트를 조립하는 컬렉션 지도 화면과 전용 핀 adapter도 페이지 계층에 유지합니다.
+- 공용 선택창은 실제 API 흐름에서 사용하고, 목 데이터용 wrapper는 `pages/saved`에 남깁니다. `features/collection`의 제품 코드는 `pages/**`를 import하지 않습니다.
+- 지도와 상세의 저장 요약 캐시를 무효화할 때도 기존 key 값을 유지하며, 지도에서 공유하는 저장 요약 key factory는 `features/collection/queries/collectionQueryKeys.ts`를 사용합니다.
+
 ## Shared Structure
 
 `shared/`는 `apps/client` 내부에서만 공유되는 코드입니다.

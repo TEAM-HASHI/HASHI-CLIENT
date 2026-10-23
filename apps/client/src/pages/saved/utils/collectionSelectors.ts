@@ -1,9 +1,8 @@
+import type { SavedCollection, SavedRestaurant } from '@/pages/saved/types'
 import type {
   CollectionCategory,
   CollectionSort,
-  SavedCollection,
-  SavedRestaurant,
-} from '@/pages/saved/types'
+} from '@/features/collection/types'
 
 export const selectCollections = (collections: readonly SavedCollection[]) =>
   [...collections].sort(

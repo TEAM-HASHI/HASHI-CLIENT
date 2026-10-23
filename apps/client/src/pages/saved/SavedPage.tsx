@@ -21,7 +21,7 @@ import {
   getCollectionManagementAction,
   getCollectionManagementState,
   getCollectionSaveState,
-} from '@/pages/saved/utils/collectionNavigation'
+} from '@/features/collection/utils/collectionNavigation'
 
 import {
   CollectionDropdown,
@@ -36,20 +36,20 @@ import {
   COLLECTION_CATEGORY_OPTIONS,
   COLLECTION_SORT_OPTIONS,
   INITIAL_COLLECTION_VIEW,
-} from '@/pages/saved/types'
+} from '@/features/collection/types'
 import type {
   CollectionMapState,
   CollectionViewState,
-} from '@/pages/saved/types'
+} from '@/features/collection/types'
 import {
   selectCollections,
   selectRestaurants,
 } from '@/pages/saved/utils/collectionSelectors'
-import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
+import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
 import { createListReturnStore, useListReturnRestoration } from '@/shared/hooks'
 
 import { CollectionEditor } from '@/pages/saved/components/CollectionEditor'
-import type { CollectionManagementAction } from '@/pages/saved/components/CollectionEditor'
+import type { CollectionManagementAction } from '@/features/collection/types'
 
 const restaurantDetailReturnStore = createListReturnStore<null>()
 

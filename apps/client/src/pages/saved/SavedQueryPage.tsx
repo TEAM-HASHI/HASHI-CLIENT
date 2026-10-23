@@ -14,31 +14,31 @@ import {
   getCollectionDetailPath,
   getRestaurantDetailPath,
 } from '@/app/router/routePaths'
-import { isValidCollectionId } from '@/pages/saved/api/collectionReadContracts'
+import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import { CollectionDropdown } from '@/pages/saved/components/CollectionDropdown'
 import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
 import { SavedPageLayout } from '@/pages/saved/components/SavedPageLayout'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
-import { useCollectionQuery } from '@/pages/saved/queries/useCollectionQuery'
-import { useCollectionsInfiniteQuery } from '@/pages/saved/queries/useCollectionsInfiniteQuery'
-import { useSavedRestaurantsInfiniteQuery } from '@/pages/saved/queries/useSavedRestaurantsInfiniteQuery'
+import { useCollectionQuery } from '@/features/collection/queries/useCollectionQuery'
+import { useCollectionsInfiniteQuery } from '@/features/collection/queries/useCollectionsInfiniteQuery'
+import { useSavedRestaurantsInfiniteQuery } from '@/features/collection/queries/useSavedRestaurantsInfiniteQuery'
 import {
   COLLECTION_CATEGORY_OPTIONS,
   COLLECTION_SORT_OPTIONS,
   INITIAL_COLLECTION_VIEW,
   type CollectionMapState,
-} from '@/pages/saved/types'
+} from '@/features/collection/types'
 import type {
   CollectionDetailReadModelTypes,
   CollectionSummaryReadModelTypes,
   SavedRestaurantReadModelTypes,
-} from '@/pages/saved/types/collectionReadModels'
-import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
+} from '@/features/collection/types/collectionReadModels'
+import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
 import {
   mapCollectionDetail,
   mapCollectionSummary,
   mapSavedRestaurant,
-} from '@/pages/saved/utils/collectionReadAdapters'
+} from '@/features/collection/utils/collectionReadAdapters'
 import { checkIsNotFoundError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import {

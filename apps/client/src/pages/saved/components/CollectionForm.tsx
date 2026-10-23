@@ -10,9 +10,10 @@ import {
 } from '@hashi/hds-ui'
 import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useBlocker } from 'react-router-dom'
-import { CollectionCover } from '@/pages/saved/components/CollectionCover'
-import { COLLECTION_COVER_COLORS } from '@/pages/saved/data/collectionPalette'
-import type { CollectionColor, SavedCollection } from '@/pages/saved/types'
+import { CollectionCover } from '@/features/collection/components/CollectionCover'
+import { COLLECTION_COVER_COLORS } from '@/features/collection/constants/collectionPalette'
+import type { SavedCollection } from '@/pages/saved/types'
+import type { CollectionColor } from '@/features/collection/types'
 import {
   COLLECTION_NAME_LIMIT,
   COLLECTION_DESCRIPTION_LIMIT,
@@ -23,7 +24,7 @@ import {
 } from '@/pages/saved/utils/collectionMutations'
 import type { CollectionDraft } from '@/pages/saved/utils/collectionMutations'
 import { BottomActionBar } from '@/shared/components/bottomActionBar/BottomActionBar'
-import { getCollectionHistoryIndex } from '@/pages/saved/utils/collectionNavigation'
+import { getCollectionHistoryIndex } from '@/features/collection/utils/collectionNavigation'
 import { ApiError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { cn } from '@/shared/utils'

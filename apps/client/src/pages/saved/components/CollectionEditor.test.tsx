@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as HDS from '@hashi/hds-ui'
 import { CollectionEditor } from '@/pages/saved/components/CollectionEditor'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
-import { INITIAL_COLLECTION_VIEW } from '@/pages/saved/types'
+import { INITIAL_COLLECTION_VIEW } from '@/features/collection/types'
 
 afterEach(() => {
   cleanup()

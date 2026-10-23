@@ -26,18 +26,18 @@ import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
 import { useMapPageState } from '@/pages/map/hooks/useMapPageState'
 import { useMapRestaurantSaves } from '@/pages/map/hooks/useMapRestaurantSaves'
 import { MapSavedCollectionsSheet } from '@/pages/map/components/MapSavedCollectionsSheet'
-import { CollectionTargetQueryDialog } from '@/pages/saved/components/CollectionTargetQueryDialog'
+import { CollectionTargetQueryDialog } from '@/features/collection/components/CollectionTargetQueryDialog'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 import type { MapConditions, MapPanelStage } from '@/pages/map/types'
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
 import { CollectionMapQueryPage } from '@/pages/saved/CollectionMapQueryPage'
-import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
-import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
+import { useCollectionSessionVersion } from '@/features/collection/hooks/useCollectionSessionVersion'
 import {
   getCollectionSaveRestaurantId,
   getCollectionSaveState,
-} from '@/pages/saved/utils/collectionNavigation'
+} from '@/features/collection/utils/collectionNavigation'
 
 export const MapPage = () => {
   const location = useLocation()

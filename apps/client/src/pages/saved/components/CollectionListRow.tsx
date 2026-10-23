@@ -2,8 +2,8 @@ import { MenuIcon, SaveIcon } from '@hashi/hds-icons'
 import { cn } from '@/shared/utils'
 import type { ReactNode } from 'react'
 
-import type { CollectionSummaryReadModelTypes } from '@/pages/saved/types/collectionReadModels'
-import { CollectionCover } from '@/pages/saved/components/CollectionCover'
+import type { CollectionSummaryReadModelTypes } from '@/features/collection/types/collectionReadModels'
+import { CollectionCover } from '@/features/collection/components/CollectionCover'
 
 type CollectionListRowProps = {
   collection: Pick<

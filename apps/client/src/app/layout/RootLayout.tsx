@@ -11,13 +11,13 @@ import { ROUTES } from '@/app/router/path'
 import AsyncBoundary from '@/app/providers/AsyncBoundary'
 import { AuthSessionRestoreGate } from '@/app/providers/AuthSessionRestoreGate'
 import { trackPageView } from '@/shared/lib/analytics'
-import { CollectionTargetQueryDialog } from '@/pages/saved/components/CollectionTargetQueryDialog'
+import { CollectionTargetQueryDialog } from '@/features/collection/components/CollectionTargetQueryDialog'
 import {
   getCollectionSaveRestaurantId,
   getCollectionSaveState,
-} from '@/pages/saved/utils/collectionNavigation'
-import { isValidCollectionId } from '@/pages/saved/api/collectionReadContracts'
-import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+} from '@/features/collection/utils/collectionNavigation'
+import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
+import { useCollectionSessionVersion } from '@/features/collection/hooks/useCollectionSessionVersion'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 
 const RestaurantCollectionSave = () => {

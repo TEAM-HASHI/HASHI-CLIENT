@@ -2,6 +2,8 @@
 
 HASHI 앱의 데이터 레이어는 앱 내부에서 먼저 조립하고, 실제 재사용 근거가 생긴 뒤 공통 패키지로 승격합니다.
 
+컬렉션은 저장 화면·지도·식당 상세의 실제 재사용에 따라 `apps/client/src/features/collection`이 공용 endpoint·Query·Mutation·세션 보호를 소유합니다. 페이지별 화면 조립과 지도 전용 핀 adapter는 `pages/saved`에 유지합니다. 생성된 OpenAPI 타입과 공통 request의 소유권, API 계약 및 기존 query key 값은 바꾸지 않습니다.
+
 ## Current State
 
 현재 `apps/client`에는 다음 데이터 레이어가 설정되어 있습니다.

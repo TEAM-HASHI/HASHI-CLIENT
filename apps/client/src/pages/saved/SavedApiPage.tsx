@@ -1,5 +1,5 @@
 import { getAuthSessionVersion } from '@/shared/auth/authSession'
-import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+import { useCollectionSessionVersion } from '@/features/collection/hooks/useCollectionSessionVersion'
 
 import { LinkIcon } from '@hashi/hds-icons'
 import { Button, showToast, toastQueue } from '@hashi/hds-ui'
@@ -14,39 +14,39 @@ import {
   getCollectionRestaurantEditPath,
 } from '@/app/router/routePaths'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
-import { isValidCollectionId } from '@/pages/saved/api/collectionReadContracts'
+import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import {
   CollectionActionMenu,
   CollectionEditMenu,
 } from '@/pages/saved/components/CollectionDropdown'
 import { CollectionConfirmDialog } from '@/pages/saved/components/CollectionConfirmDialog'
-import { useUpdateCollectionMutation } from '@/pages/saved/mutations/useCollectionFormMutations'
+import { useUpdateCollectionMutation } from '@/features/collection/mutations/useCollectionFormMutations'
 import {
   collectionQueryOptions,
   useCollectionQuery,
-} from '@/pages/saved/queries/useCollectionQuery'
+} from '@/features/collection/queries/useCollectionQuery'
 import { HttpStatusError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { captureError } from '@/shared/lib/sentry'
 import { copyUrlToClipboard } from '@/shared/utils/clipboard'
-import type { CollectionSummaryReadModelTypes } from '@/pages/saved/types/collectionReadModels'
+import type { CollectionSummaryReadModelTypes } from '@/features/collection/types/collectionReadModels'
 import { CollectionDeleteQueryDialog } from '@/pages/saved/components/CollectionDeleteQueryDialog'
-import { CollectionTargetQueryDialog } from '@/pages/saved/components/CollectionTargetQueryDialog'
-import type { CollectionManagementAction } from '@/pages/saved/components/CollectionEditor'
+import { CollectionTargetQueryDialog } from '@/features/collection/components/CollectionTargetQueryDialog'
+import type { CollectionManagementAction } from '@/features/collection/types'
 import { SavedQueryPage } from '@/pages/saved/SavedQueryPage'
 import {
   COLLECTION_CATEGORY_OPTIONS,
   COLLECTION_SORT_OPTIONS,
   INITIAL_COLLECTION_VIEW,
-} from '@/pages/saved/types'
-import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
+} from '@/features/collection/types'
+import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
 import {
   getCollectionFormState,
   getCollectionManagementAction,
   getCollectionManagementState,
   getCollectionSaveRestaurantId,
   getCollectionSaveState,
-} from '@/pages/saved/utils/collectionNavigation'
+} from '@/features/collection/utils/collectionNavigation'
 
 export const SavedApiPage = () => {
   const location = useLocation()

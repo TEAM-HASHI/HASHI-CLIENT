@@ -1,5 +1,5 @@
 import { getAuthSessionVersion } from '@/shared/auth/authSession'
-import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+import { useCollectionSessionVersion } from '@/features/collection/hooks/useCollectionSessionVersion'
 
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
@@ -7,23 +7,23 @@ import { useEffect, useState, type ComponentProps } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
-import type { CollectionDetailData } from '@/pages/saved/api/collectionApiTypes'
-import { isValidCollectionId } from '@/pages/saved/api/collectionReadContracts'
-import type { UpdateCollectionBody } from '@/pages/saved/api/updateCollection'
+import type { CollectionDetailData } from '@/features/collection/api/collectionApiTypes'
+import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
+import type { UpdateCollectionBody } from '@/features/collection/api/updateCollection'
 import { CollectionForm } from '@/pages/saved/components/CollectionForm'
-import { COLLECTION_COVER_COLORS } from '@/pages/saved/data/collectionPalette'
+import { COLLECTION_COVER_COLORS } from '@/features/collection/constants/collectionPalette'
 import {
   useCreateCollectionMutation,
   useUpdateCollectionMutation,
-} from '@/pages/saved/mutations/useCollectionFormMutations'
-import { useCollectionsInfiniteQuery } from '@/pages/saved/queries/useCollectionsInfiniteQuery'
-import { useCollectionQuery } from '@/pages/saved/queries/useCollectionQuery'
-import { mapCollectionDetail } from '@/pages/saved/utils/collectionReadAdapters'
+} from '@/features/collection/mutations/useCollectionFormMutations'
+import { useCollectionsInfiniteQuery } from '@/features/collection/queries/useCollectionsInfiniteQuery'
+import { useCollectionQuery } from '@/features/collection/queries/useCollectionQuery'
+import { mapCollectionDetail } from '@/features/collection/utils/collectionReadAdapters'
 import {
   normalizeCollectionDraft,
   type CollectionDraft,
 } from '@/pages/saved/utils/collectionMutations'
-import { getCollectionReturn } from '@/pages/saved/utils/collectionNavigation'
+import { getCollectionReturn } from '@/features/collection/utils/collectionNavigation'
 import { HttpStatusError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { useAuthStatus } from '@/shared/hooks'

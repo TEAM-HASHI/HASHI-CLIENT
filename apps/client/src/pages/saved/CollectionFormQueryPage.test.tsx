@@ -16,11 +16,11 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CollectionFormQueryPage } from '@/pages/saved/CollectionFormQueryPage'
-import { createCollection } from '@/pages/saved/api/createCollection'
-import { updateCollection } from '@/pages/saved/api/updateCollection'
-import { getCollection } from '@/pages/saved/api/getCollection'
-import { getCollections } from '@/pages/saved/api/getCollections'
-import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
+import { createCollection } from '@/features/collection/api/createCollection'
+import { updateCollection } from '@/features/collection/api/updateCollection'
+import { getCollection } from '@/features/collection/api/getCollection'
+import { getCollections } from '@/features/collection/api/getCollections'
+import { collectionQueryKeys } from '@/features/collection/queries/collectionQueryKeys'
 import { ApiError } from '@/shared/api/apiError'
 import { captureError } from '@/shared/lib/sentry'
 import {
@@ -29,14 +29,18 @@ import {
   startAuthenticatedSession,
 } from '@/shared/auth/authSession'
 
-vi.mock('@/pages/saved/api/createCollection', () => ({
+vi.mock('@/features/collection/api/createCollection', () => ({
   createCollection: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/updateCollection', () => ({
+vi.mock('@/features/collection/api/updateCollection', () => ({
   updateCollection: vi.fn(),
 }))
-vi.mock('@/pages/saved/api/getCollection', () => ({ getCollection: vi.fn() }))
-vi.mock('@/pages/saved/api/getCollections', () => ({ getCollections: vi.fn() }))
+vi.mock('@/features/collection/api/getCollection', () => ({
+  getCollection: vi.fn(),
+}))
+vi.mock('@/features/collection/api/getCollections', () => ({
+  getCollections: vi.fn(),
+}))
 vi.mock('@/shared/lib/sentry', () => ({ captureError: vi.fn() }))
 
 const detail = {
