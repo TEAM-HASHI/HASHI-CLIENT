@@ -11,7 +11,7 @@ import {
 import type { RestaurantMenuDetailSource } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
 import { useAuthStatus } from '@/shared/hooks'
-import { getCollectionSaveState } from '@/pages/saved/utils/collectionNavigation'
+import { getCollectionSaveState } from '@/features/collection/utils/collectionNavigation'
 
 interface UseRestaurantDetailActionsParams {
   menuDetailSource: RestaurantMenuDetailSource

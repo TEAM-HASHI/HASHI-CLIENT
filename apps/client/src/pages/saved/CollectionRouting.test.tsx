@@ -21,7 +21,7 @@ import { CollectionEditorPage } from '@/pages/saved/CollectionEditorPage'
 import { CollectionFormPage } from '@/pages/saved/CollectionFormPage'
 import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
-import { getCollectionReturn } from '@/pages/saved/utils/collectionNavigation'
+import { getCollectionReturn } from '@/features/collection/utils/collectionNavigation'
 import type { CollectionData } from '@/pages/saved/types'
 
 const MapHost = () => {

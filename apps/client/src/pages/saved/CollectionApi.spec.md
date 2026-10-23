@@ -1,5 +1,13 @@
 # 컬렉션 API 연동 (HASHI-224 / HASHI-238 / HASHI-239)
 
+## 공용 기능 승격
+
+- `features/collection`은 여러 화면에서 사용하는 컬렉션 endpoint·Query·Mutation·세션 처리·조회 모델·선택창과 커버를 소유한다.
+- `pages/saved`에는 목록·상세·생성·편집의 라우트 화면, 화면 전용 배치 및 퍼블리싱 fixture·목 Provider를 남긴다. 지도 전체 핀 adapter는 지도 화면 모델에 의존하므로 페이지 조립부에 유지한다.
+- 공용 선택창의 표시 UI와 목 데이터 wrapper를 분리하며 feature는 page 코드를 import하지 않는다. 다른 페이지는 공용 기능을 `features/collection`에서 직접 가져온다.
+- 구현 순서: 공용 계약·데이터 레이어 이동 → 선택창·사용처 import 변경 → 역방향 의존성·기존 회귀 테스트·타입·포맷·빌드 검증.
+- API 계약·query key 값·세션 보호·기능·디자인은 유지한다. 이동한 파일의 기존 테스트도 함께 이동한다. 커밋·푸시는 별도 승인 후 진행한다.
+
 ## 범위와 PR 구조
 
 - 기반은 #226 OpenAPI 타입과 컬렉션 UI·인증 PR #221이 병합된 최신 `develop`이다.

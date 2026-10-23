@@ -13,7 +13,7 @@ import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import {
   mapCollectionSummary,
   mapSavedRestaurant,
-} from '@/pages/saved/utils/collectionReadAdapters'
+} from '@/features/collection/utils/collectionReadAdapters'
 
 const setup = (
   data: CollectionData = collectionMocks,

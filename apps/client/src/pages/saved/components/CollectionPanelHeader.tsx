@@ -6,8 +6,9 @@ import { CollectionDropdown } from '@/pages/saved/components/CollectionDropdown'
 import {
   COLLECTION_CATEGORY_OPTIONS,
   COLLECTION_SORT_OPTIONS,
-} from '@/pages/saved/types'
-import type { CollectionViewState, SavedCollection } from '@/pages/saved/types'
+} from '@/features/collection/types'
+import type { SavedCollection } from '@/pages/saved/types'
+import type { CollectionViewState } from '@/features/collection/types'
 import { cn } from '@/shared/utils'
 import { normalizeCollectionDescription } from '@/pages/saved/utils/collectionMutations'
 

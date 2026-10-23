@@ -3,7 +3,7 @@ import { request } from '@/shared/api/request'
 import {
   isValidCollectionId,
   requireCollectionId,
-} from '@/pages/saved/api/collectionReadContracts'
+} from '@/features/collection/api/collectionReadContracts'
 import { normalizeMapLocation } from '@/pages/map/api/mapApiAdapters'
 
 export const getCollectionMapMarkers = async (

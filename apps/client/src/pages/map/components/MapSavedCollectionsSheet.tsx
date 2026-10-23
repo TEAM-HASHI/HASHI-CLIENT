@@ -2,8 +2,8 @@ import { BottomSheet, Button } from '@hashi/hds-ui'
 import { useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
 import { getCollectionDetailPath } from '@/app/router/routePaths'
-import { useCollectionsInfiniteQuery } from '@/pages/saved/queries/useCollectionsInfiniteQuery'
-import { mapCollectionSummary } from '@/pages/saved/utils/collectionReadAdapters'
+import { useCollectionsInfiniteQuery } from '@/features/collection/queries/useCollectionsInfiniteQuery'
+import { mapCollectionSummary } from '@/features/collection/utils/collectionReadAdapters'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 
 type MapSavedCollectionsSheetProps = {

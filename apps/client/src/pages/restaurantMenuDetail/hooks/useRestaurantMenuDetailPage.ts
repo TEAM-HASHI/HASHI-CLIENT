@@ -28,7 +28,7 @@ import {
   navigateBackOrReplace,
 } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import { checkIsNotFoundError } from '@/shared/api'
-import { getCollectionSaveState } from '@/pages/saved/utils/collectionNavigation'
+import { getCollectionSaveState } from '@/features/collection/utils/collectionNavigation'
 import { useAuthStatus, useInfiniteScrollTrigger } from '@/shared/hooks'
 
 const MENU_DETAIL_OTHER_MENU_PAGE_SIZE = 10

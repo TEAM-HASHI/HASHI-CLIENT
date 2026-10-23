@@ -13,12 +13,12 @@ import { useCollectionData } from '@/pages/saved/data/useCollectionData'
 import {
   COLLECTION_SORT_OPTIONS,
   COLLECTION_CATEGORY_OPTIONS,
-} from '@/pages/saved/types'
+} from '@/features/collection/types'
 import {
   getCollectionEditorReturnKey,
   getCollectionManagementAction,
   getCollectionManagementState,
-} from '@/pages/saved/utils/collectionNavigation'
+} from '@/features/collection/utils/collectionNavigation'
 
 export const CollectionEditorPage = () => {
   const { collectionId } = useParams<{ collectionId: string }>()

@@ -1,17 +1,17 @@
 import { getAuthSessionVersion } from '@/shared/auth/authSession'
-import { useCollectionSessionVersion } from '@/pages/saved/hooks/useCollectionSessionVersion'
+import { useCollectionSessionVersion } from '@/features/collection/hooks/useCollectionSessionVersion'
 
 import { CheckIcon } from '@hashi/hds-icons'
 import { Button, showToast, toastQueue } from '@hashi/hds-ui'
 import { useEffect, useRef } from 'react'
 
-import { isValidCollectionId } from '@/pages/saved/api/collectionReadContracts'
+import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import { CollectionConfirmDialog } from '@/pages/saved/components/CollectionConfirmDialog'
 import {
   useDeleteCollectionMutation,
   useRemoveSavedRestaurantsMutation,
-} from '@/pages/saved/mutations/useCollectionManagementMutations'
-import { useCollectionQuery } from '@/pages/saved/queries/useCollectionQuery'
+} from '@/features/collection/mutations/useCollectionManagementMutations'
+import { useCollectionQuery } from '@/features/collection/queries/useCollectionQuery'
 import { HttpStatusError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { useAuthStatus } from '@/shared/hooks'

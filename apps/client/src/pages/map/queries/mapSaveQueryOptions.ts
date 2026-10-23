@@ -5,8 +5,8 @@ import {
 } from '@/pages/map/api/getMapRestaurantSaves'
 import { mapQueryPolicy } from '@/pages/map/queries/mapQueryOptions'
 
-import { mapSaveQueryKeys } from '@/pages/map/queries/mapQueryKeys'
-export { mapSaveQueryKeys } from '@/pages/map/queries/mapQueryKeys'
+import { mapSaveQueryKeys } from '@/features/collection/queries/collectionQueryKeys'
+export { mapSaveQueryKeys } from '@/features/collection/queries/collectionQueryKeys'
 export const mapSaveCountsQueryOptions = (ids: number[]) =>
   queryOptions({
     ...mapQueryPolicy,

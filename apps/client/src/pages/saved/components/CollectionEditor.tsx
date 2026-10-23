@@ -1,3 +1,4 @@
+import type { CollectionManagementAction } from '@/features/collection/types'
 import { BackIcon, CheckIcon, LinkIcon } from '@hashi/hds-icons'
 import { Button, Checkbox, Header, IconButton, showToast } from '@hashi/hds-ui'
 import { useEffect, useRef, useState } from 'react'
@@ -5,8 +6,9 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import {
   getCollectionManagementState,
   getCollectionSaveState,
-} from '@/pages/saved/utils/collectionNavigation'
-import type { CollectionData, CollectionViewState } from '@/pages/saved/types'
+} from '@/features/collection/utils/collectionNavigation'
+import type { CollectionData } from '@/pages/saved/types'
+import type { CollectionViewState } from '@/features/collection/types'
 import { BottomActionBar } from '@/shared/components/bottomActionBar/BottomActionBar'
 import { CollectionConfirmDialog } from '@/pages/saved/components/CollectionConfirmDialog'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
@@ -18,13 +20,6 @@ import {
   moveRestaurants,
   removeRestaurants,
 } from '@/pages/saved/utils/collectionManagement'
-
-export type CollectionManagementAction = {
-  collectionId: string
-  type: 'edit' | 'move' | 'remove' | 'delete' | 'share'
-  dialog?: 'move' | 'remove'
-  restaurantIds?: readonly string[]
-}
 
 const SELECTION_CLASS =
   'shrink-0 [&>span:first-of-type]:size-6 [&>span:first-of-type]:rounded-full [&>span:first-of-type]:border [&>span:first-of-type]:border-warm-gray-100 [&>span:first-of-type]:bg-white [&>span:first-of-type]:text-warm-gray-100 [&>span:first-of-type>svg]:size-5 [&>input:checked+span]:bg-cool-gray-900 [&>input:checked+span]:border-cool-gray-900 [&>input:checked+span]:text-white'
