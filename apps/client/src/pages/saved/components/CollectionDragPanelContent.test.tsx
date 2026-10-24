@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CollectionDragPanelContent } from '@/pages/saved/components/CollectionDragPanelContent'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
-import type { CollectionViewState } from '@/pages/saved/types'
+import type { CollectionViewState } from '@/features/collection/types'
 
 const onClose = vi.fn()
 const onRestaurantSelect = vi.fn()

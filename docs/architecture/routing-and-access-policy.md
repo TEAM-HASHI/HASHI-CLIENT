@@ -55,6 +55,11 @@
 | 이용약관 페이지       | `/terms`                                   | 마이페이지에서 진입하며 하단 네비게이션(`마이`)을 포함합니다.                        |
 | 이용약관 상세 페이지  | `/terms/:policyId`                         | 정적 약관 콘텐츠의 조항을 Accordion으로 보여줍니다.                                  |
 
+컬렉션 상세 `/saved/collections/:collectionId`는 공개 route다. 서버가 공개 범위를 판정하며,
+공개 컬렉션은 비로그인도 조회하고 비공개·삭제·미존재 컬렉션은 404 안내를 표시한다.
+비로그인 조회는 회원 조회 캐시와 분리하고, 내 목록·생성·수정·편집은 계속 인증으로 보호한다.
+상세의 관리 동작은 인증된 소유자에게만 표시한다. 이 경로를 공유 URL로 확정한 것은 아니다.
+
 ## Auth Only Routes
 
 | Page                  | Path                                                | Notes                                                                                                                                                     |
@@ -63,11 +68,10 @@
 | 마이 리뷰 페이지      | `/my-reviews`                                       | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                                                                 |
 | 리뷰 상세 페이지      | `/reviews/:reviewId`                                |                                                                                                                                                           |
 | 리뷰 수정 페이지      | `/reviews/:reviewId/edit`                           |                                                                                                                                                           |
-| 저장 페이지           | `/saved`                                            | 목 데이터 기반 컬렉션 목록입니다.                                                                                                                         |
+| 저장 페이지           | `/saved`                                            | API 기반 컬렉션 목록과 추가 조회를 제공합니다.                                                                                                            |
 | 컬렉션 생성           | `/saved/collections/new`                            | 독립 폼 페이지이며 하단 내비게이션을 표시하지 않습니다.                                                                                                   |
-| 컬렉션 상세           | `/saved/collections/:collectionId`                  | 목 상세와 URL 정렬·분류를 표시합니다. 없는 ID는 `/saved`로 복귀합니다.                                                                                    |
 | 컬렉션 수정           | `/saved/collections/:collectionId/edit`             | 독립 폼 페이지이며 변경이 있는 뒤로가기에 폐기 확인을 표시합니다.                                                                                         |
-| 컬렉션 식당 편집      | `/saved/collections/:collectionId/restaurants/edit` | 독립 편집 페이지이며 하단 내비게이션 없이 선택·이동·삭제를 제공합니다. 없는 ID는 `/saved`로 복귀합니다.                                                   |
+| 컬렉션 식당 편집      | `/saved/collections/:collectionId/restaurants/edit` | 소유자만 사용하는 독립 API 편집 페이지이며 하단 내비게이션 없이 개별 선택·이동·삭제를 제공합니다. 잘못된 형식의 ID는 `/saved`로 복귀합니다.               |
 | 마이 페이지           | `/mypage`                                           |                                                                                                                                                           |
 | 프로필 생성 페이지    | `/profile/new`                                      | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                                                              |
 | 탈퇴 페이지           | `/withdrawal`                                       | 유지 여부 논의 중입니다.                                                                                                                                  |
@@ -100,6 +104,7 @@
 | Page          | Path           | Access   | Render           | Notes                                      |
 | ------------- | -------------- | -------- | ---------------- | ------------------------------------------ |
 | 준비중 페이지 | `/coming-soon` | `public` | 준비중 안내 화면 | 직접 접근 가능한 공통 준비중 페이지입니다. |
+| 지도 페이지   | `/map`         | `public` | 준비중 안내 화면 | 실제 지도 화면 구현 전 임시 route입니다.   |
 
 ## Not Found Route
 
@@ -132,7 +137,9 @@
 
 하단 네비게이션바가 필요한 page는 `BottomNavigationLayout`에서 렌더링합니다.
 
-저장 목록·컬렉션 상세는 목 데이터 퍼블리싱 화면이며 BottomNavigationLayout을 사용합니다.
+저장 목록·컬렉션 상세는 API 기반 화면이며 BottomNavigationLayout을 사용합니다.
+제품 라우트는 `SavedApiPage`·`CollectionFormQueryPage`·`CollectionEditorQueryPage`로 lazy load합니다.
+목 데이터 Provider는 제품 RootLayout에서 사용하지 않으며 지도/퍼블리싱 fixture에서만 명시적으로 제공합니다.
 컬렉션 생성·수정·식당 편집은 하단 내비게이션 없는 독립 페이지입니다.
 지도(`/map`)는 공개 지역·식당 조회를 사용하는 지도·검색·필터·목록·상세 화면을 제공합니다.
 지도 SDK는 Google Maps를 사용합니다. 지역 설정 실패 시 샘플 데이터로 대체하지 않습니다. 요약·매장 정보·메뉴·사진·리뷰 및 저장 수/로그인 사용자 저장 여부는 조회 API로 연결하며, 저장/예약 mutation은 연결하지 않습니다. 사진 탭은 공통 상세 feature의 공개 사진 API, 필터와 커서 페이지네이션을 재사용하며 요약 이미지를 전체 사진 목록으로 간주하지 않습니다.

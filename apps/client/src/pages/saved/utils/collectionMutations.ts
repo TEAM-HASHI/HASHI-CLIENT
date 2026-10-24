@@ -1,8 +1,5 @@
-import type {
-  CollectionColor,
-  CollectionData,
-  SavedCollection,
-} from '@/pages/saved/types'
+import type { CollectionData, SavedCollection } from '@/pages/saved/types'
+import type { CollectionColor } from '@/features/collection/types'
 
 // 컬렉션 입력 제한. 설명은 2026-10-18 기획 답변으로 100자에서 30자로 변경.
 export const COLLECTION_NAME_LIMIT = 20

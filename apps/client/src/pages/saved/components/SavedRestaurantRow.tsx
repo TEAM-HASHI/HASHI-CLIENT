@@ -2,7 +2,7 @@ import { MenuIcon, StarFillIcon } from '@hashi/hds-icons'
 import { Thumbnail } from '@hashi/hds-ui'
 import type { ReactNode } from 'react'
 
-import type { SavedRestaurantReadModelTypes } from '@/pages/saved/types/collectionReadModels'
+import type { SavedRestaurantReadModelTypes } from '@/features/collection/types/collectionReadModels'
 
 type SavedRestaurantRowProps = {
   restaurant: Pick<

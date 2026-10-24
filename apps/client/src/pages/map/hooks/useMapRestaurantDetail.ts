@@ -61,15 +61,22 @@ export const useMapRestaurantDetail = ({
     if (isReviewEntryReady) return
     // Menu-detail returns mount directly into this tab. Clear old pages before
     // enabling its query, just as an in-place review-tab click does.
-    void client.resetQueries({
-      queryKey: restaurantDetailQueryKeys.reviews(
-        restaurantId,
-        MAP_REVIEW_PAGE_SIZE,
-        'latest',
-      ),
-      exact: true,
-    })
-    setIsReviewEntryReady(true)
+    let active = true
+    void client
+      .resetQueries({
+        queryKey: restaurantDetailQueryKeys.reviews(
+          restaurantId,
+          MAP_REVIEW_PAGE_SIZE,
+          'latest',
+        ),
+        exact: true,
+      })
+      .finally(() => {
+        if (active) setIsReviewEntryReady(true)
+      })
+    return () => {
+      active = false
+    }
   }, [client, restaurantId, isReviewEntryReady])
   useEffect(
     () => () => {

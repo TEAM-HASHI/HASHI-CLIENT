@@ -5,17 +5,21 @@ import type { ComponentProps } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getCollection } from '@/pages/saved/api/getCollection'
-import { getCollections } from '@/pages/saved/api/getCollections'
-import { getSavedRestaurants } from '@/pages/saved/api/getSavedRestaurants'
+import { getCollection } from '@/features/collection/api/getCollection'
+import { getCollections } from '@/features/collection/api/getCollections'
+import { getSavedRestaurants } from '@/features/collection/api/getSavedRestaurants'
 import { SavedQueryPage } from '@/pages/saved/SavedQueryPage'
 import { HttpStatusError } from '@/shared/api/apiError'
-import { collectionQueryKeys } from '@/pages/saved/queries/collectionQueryKeys'
+import { collectionQueryKeys } from '@/features/collection/queries/collectionQueryKeys'
 import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
 
-vi.mock('@/pages/saved/api/getCollection', () => ({ getCollection: vi.fn() }))
-vi.mock('@/pages/saved/api/getCollections', () => ({ getCollections: vi.fn() }))
-vi.mock('@/pages/saved/api/getSavedRestaurants', () => ({
+vi.mock('@/features/collection/api/getCollection', () => ({
+  getCollection: vi.fn(),
+}))
+vi.mock('@/features/collection/api/getCollections', () => ({
+  getCollections: vi.fn(),
+}))
+vi.mock('@/features/collection/api/getSavedRestaurants', () => ({
   getSavedRestaurants: vi.fn(),
 }))
 

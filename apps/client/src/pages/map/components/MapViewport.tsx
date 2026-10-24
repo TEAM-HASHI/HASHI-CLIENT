@@ -24,7 +24,10 @@ import type {
 } from '@/pages/map/types'
 
 interface MapViewportProps {
-  restaurants: MapRestaurant[]
+  restaurants: (Pick<
+    MapRestaurant,
+    'id' | 'name' | 'category' | 'position' | 'attributions'
+  > & { rating?: number })[]
   areas: MapAreaMarkerData[]
   selectedId: string | null
   areaCode: string | null
@@ -45,7 +48,9 @@ interface MapViewportProps {
   initialFitEnabled?: boolean
   onResetArea: () => void
   onSaved: () => void
+  savedOpen?: boolean
   onCloseDetail?: () => void
+  onCloseCollection?: () => void
   loadingRestaurants?: boolean
   mapUnavailable?: boolean
   onMapFailureChange?: (failed: boolean) => void
@@ -431,7 +436,7 @@ export const MapViewport = (props: MapViewportProps) => {
           <MapFailure configuration />
         )}
       </div>
-      {props.zoomed && !props.mapUnavailable && (
+      {props.zoomed && !props.mapUnavailable && !props.onCloseCollection && (
         <IconButton
           aria-label="전체 지역 보기"
           variant="soft"
@@ -442,18 +447,34 @@ export const MapViewport = (props: MapViewportProps) => {
           <BackIcon className="size-5" />
         </IconButton>
       )}
-      {!props.mapUnavailable && (
+      {(!props.mapUnavailable || props.onCloseCollection) && (
         <IconButton
-          aria-label={props.selectedId ? '선택한 식당 닫기' : '저장 목록 보기'}
+          aria-label={
+            props.onCloseCollection
+              ? '컬렉션 지도 닫기'
+              : props.selectedId
+                ? '선택한 식당 닫기'
+                : '저장 목록 보기'
+          }
+          aria-pressed={
+            props.selectedId || props.onCloseCollection
+              ? undefined
+              : !!props.savedOpen
+          }
           variant="soft"
-          className="absolute left-5 size-11 shadow-[0_0_4px_rgba(0,0,0,0.2)]"
+          className={`absolute left-5 size-11 shadow-[0_0_4px_rgba(0,0,0,0.2)] ${props.savedOpen ? 'bg-cool-gray-900 text-white' : ''}`}
           style={{ bottom: props.panelHeight + 20 }}
-          onClick={props.selectedId ? props.onCloseDetail : props.onSaved}
+          onClick={
+            props.onCloseCollection ??
+            (props.selectedId ? props.onCloseDetail : props.onSaved)
+          }
         >
-          {props.selectedId ? (
+          {props.onCloseCollection || props.selectedId ? (
             <CancelIcon className="size-6" />
           ) : (
-            <SaveIcon className="text-warm-gray-300 size-6" />
+            <SaveIcon
+              className={`size-6 ${props.savedOpen ? 'text-white' : 'text-warm-gray-300'}`}
+            />
           )}
         </IconButton>
       )}

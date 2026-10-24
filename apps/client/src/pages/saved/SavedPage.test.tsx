@@ -13,7 +13,7 @@ import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import {
   mapCollectionSummary,
   mapSavedRestaurant,
-} from '@/pages/saved/utils/collectionReadAdapters'
+} from '@/features/collection/utils/collectionReadAdapters'
 
 const setup = (
   data: CollectionData = collectionMocks,
@@ -227,7 +227,7 @@ describe('SavedPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('hands collection state to the existing map and activates the map tab', async () => {
+  it('hands collection state to the existing map and keeps the saved tab active', async () => {
     const { user, router } = setup()
     await user.click(
       screen.getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' }),
@@ -241,7 +241,7 @@ describe('SavedPage', () => {
       sort: 'reviews',
       category: 'all',
     })
-    expect(screen.getByRole('button', { name: '지도' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: '저장' })).toHaveAttribute(
       'aria-current',
       'page',
     )

@@ -1,5 +1,13 @@
 # 저장 컬렉션 퍼블리싱
 
+## 제품 API 연결 현황 (2026-10-20, HASHI-224 / HASHI-238 / HASHI-239)
+
+제품 라우트는 목 화면 대신 `SavedApiPage`, `CollectionFormQueryPage`, `CollectionEditorQueryPage`를 사용한다.
+현재 API 계약·오류·캐시·보류 사항은 [CollectionApi.spec.md](./CollectionApi.spec.md)를 따른다.
+아래 퍼블리싱의 목 Provider·전체 선택·공유 항목은 기존 fixture 계약과 변경 이력을 설명한다.
+제품의 필터별 개수와 #221 인증 세션 연결은 별도 보류 상태다. 실제 공유는 CollectionApi.spec.md의 승인된 기존 상세 주소로 연결한다. 전체 선택은 CollectionApi.spec.md의 2026-10-21 확정 정책을 따른다.
+2026-10-20 재대조 후 공개 상세의 비로그인 읽기는 연결했다. 아래 퍼블리싱 이력보다 CollectionApi.spec.md의 현재 계약을 우선한다.
+
 ## PR #218 리뷰 반영 기준 (2026-10-18)
 
 - 기준 PR head: `be1a1613b5aa837df63358c9933b18e01abc5521`. base는 변경하지 않는다.
@@ -519,3 +527,10 @@ Figma 파일은 `UHaom01PvoRx2wRCYa1kS1`이다.
 - 원본 작업 폴더의 기존 Vite 7 의존성 파일이 macOS dataless 상태여서 테스트가 시작되지 않았다. 동일한 원격 HEAD `c8ea9ce`를 iCloud 밖 `/private/tmp`에 복제하고 기존 lockfile로 설치한 검증 환경을 사용했다. 변경 파일을 원본과 동일하게 유지하며 검증 환경에서 API 연동·새 브랜치 작업·커밋·push는 하지 않았다.
 
 - 최종 lint·E2E 타입·diff 검사와 client 프로덕션 빌드(TypeScript/PWA generateSW 포함)를 검증 복사본에서 통과했다. 변경된 7개 파일의 바이트 동일성을 원본과 비교한다. 검증 당시 원본의 `.git/HEAD`도 dataless 상태로 Git 조회가 지연되었다. 후속 점검에서 Git 내부 오프라인 파일을 다운로드하여 원본의 status·diff·diff --check 및 객체 연결성 검사를 통과했다. Git 객체 삭제·교체나 이력 변경은 하지 않았다.
+
+### 2026-10-21 확정된 입력·선택 정책
+
+최신 HASHI-PLAN f11be8f와 사용자 회신으로 전체 선택은 이미 불러온 식당만 포함한다.
+CollectionEditorQueryPage의 전체 선택을 활성화하고, 새 페이지 식당은 자동 선택하지 않는다.
+폼은 이름 20자·설명 30자 초과 입력을 막고 오류를 표시하며, 조합 확정 전에만 IME 원문을 유지한다.
+기존 초과 입력 보존에 관한 위 이력은 이 정책으로 대체한다. 서버에서 받아온 기존 긴 설명은 진입 시 잘라내지 않는다.

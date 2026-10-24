@@ -8,7 +8,7 @@ import {
   CollectionEditMenu,
 } from '@/pages/saved/components/CollectionDropdown'
 import { CollectionEditor } from '@/pages/saved/components/CollectionEditor'
-import type { CollectionManagementAction } from '@/pages/saved/components/CollectionEditor'
+import type { CollectionManagementAction } from '@/features/collection/types'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
 import {
@@ -20,9 +20,10 @@ import {
   getCollectionManagementAction,
   getCollectionManagementState,
   getCollectionSaveState,
-} from '@/pages/saved/utils/collectionNavigation'
-import { INITIAL_COLLECTION_VIEW } from '@/pages/saved/types'
-import type { CollectionData, CollectionViewState } from '@/pages/saved/types'
+} from '@/features/collection/utils/collectionNavigation'
+import { INITIAL_COLLECTION_VIEW } from '@/features/collection/types'
+import type { CollectionData } from '@/pages/saved/types'
+import type { CollectionViewState } from '@/features/collection/types'
 import { selectRestaurants } from '@/pages/saved/utils/collectionSelectors'
 import { CollectionPanelHeader } from '@/pages/saved/components/CollectionPanelHeader'
 import { CollectionPanelList } from '@/pages/saved/components/CollectionPanelList'

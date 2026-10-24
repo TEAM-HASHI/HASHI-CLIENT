@@ -626,16 +626,23 @@ describe('RestaurantDetailPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('opens coming soon dialog for authenticated like action', async () => {
+  it('opens collection save flow for authenticated like action', async () => {
     mockAuthStore.isAuthenticated = true
 
     renderPage()
 
     fireEvent.click(await screen.findByRole('button', { name: '저장하기' }))
 
+    expect(mockNavigate).toHaveBeenCalledWith(
+      { pathname: '/restaurants/default', search: '' },
+      {
+        replace: true,
+        state: expect.objectContaining({ collectionSaveRestaurantId: '10' }),
+      },
+    )
     expect(
-      screen.getByRole('heading', { name: '서비스를 준비하고 있어요.' }),
-    ).toBeTruthy()
+      screen.queryByRole('heading', { name: '서비스를 준비하고 있어요.' }),
+    ).not.toBeInTheDocument()
   })
 
   it('opens login bottom sheet for unauthenticated review write action', async () => {

@@ -14,31 +14,32 @@ import {
   getCollectionDetailPath,
   getRestaurantDetailPath,
 } from '@/app/router/routePaths'
-import { isValidCollectionId } from '@/pages/saved/api/collectionReadContracts'
+import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import { CollectionDropdown } from '@/pages/saved/components/CollectionDropdown'
+import { CollectionPanelHeader } from '@/pages/saved/components/CollectionPanelHeader'
 import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
 import { SavedPageLayout } from '@/pages/saved/components/SavedPageLayout'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
-import { useCollectionQuery } from '@/pages/saved/queries/useCollectionQuery'
-import { useCollectionsInfiniteQuery } from '@/pages/saved/queries/useCollectionsInfiniteQuery'
-import { useSavedRestaurantsInfiniteQuery } from '@/pages/saved/queries/useSavedRestaurantsInfiniteQuery'
+import { useCollectionQuery } from '@/features/collection/queries/useCollectionQuery'
+import { useCollectionsInfiniteQuery } from '@/features/collection/queries/useCollectionsInfiniteQuery'
+import { useSavedRestaurantsInfiniteQuery } from '@/features/collection/queries/useSavedRestaurantsInfiniteQuery'
 import {
   COLLECTION_CATEGORY_OPTIONS,
   COLLECTION_SORT_OPTIONS,
   INITIAL_COLLECTION_VIEW,
   type CollectionMapState,
-} from '@/pages/saved/types'
+} from '@/features/collection/types'
 import type {
   CollectionDetailReadModelTypes,
   CollectionSummaryReadModelTypes,
   SavedRestaurantReadModelTypes,
-} from '@/pages/saved/types/collectionReadModels'
-import { isCollectionMapState } from '@/pages/saved/utils/collectionMapState'
+} from '@/features/collection/types/collectionReadModels'
+import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
 import {
   mapCollectionDetail,
   mapCollectionSummary,
   mapSavedRestaurant,
-} from '@/pages/saved/utils/collectionReadAdapters'
+} from '@/features/collection/utils/collectionReadAdapters'
 import { checkIsNotFoundError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import {
@@ -51,6 +52,7 @@ import {
 const restaurantDetailReturnStore = createListReturnStore<null>()
 
 type SavedQueryPageProps = {
+  embedded?: boolean
   onRestaurantSelect?: (id: string) => void
   onCreate?: () => void
   renderCollectionActions?: (
@@ -65,8 +67,9 @@ type SavedQueryPageProps = {
   ) => ReactNode
 }
 
-/** Mutation 연결까지 검증한 뒤 제품 라우트에서 사용한다. 목 데이터에는 접근하지 않는다. */
+/** 제품 컬렉션 조회 화면. 목 데이터에는 접근하지 않는다. */
 export const SavedQueryPage = ({
+  embedded = false,
   onRestaurantSelect,
   onCreate,
   renderCollectionActions,
@@ -75,7 +78,12 @@ export const SavedQueryPage = ({
 }: SavedQueryPageProps) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { collectionId: routeId } = useParams<{ collectionId: string }>()
+  const { collectionId: paramId } = useParams<{ collectionId: string }>()
+  const mapState =
+    location.pathname === ROUTES.map && isCollectionMapState(location.state)
+      ? location.state
+      : null
+  const routeId = paramId ?? mapState?.collectionId
   const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuthStatus()
   const detail = routeId !== undefined
@@ -192,9 +200,37 @@ export const SavedQueryPage = ({
 
   return (
     <SavedPageLayout
+      embedded={embedded || mapState !== null}
       detail={detail}
       title={collection?.name}
+      description={collection?.description}
       count={hasContent ? count : undefined}
+      panelHeader={
+        mapState && (
+          <CollectionPanelHeader
+            collection={{
+              name: collection?.name,
+              description: collection?.description,
+            }}
+            restaurantCount={hasContent ? count : undefined}
+            isFullscreen={false}
+            view={{ ...mapState, sort, category }}
+            onViewChange={(view) =>
+              setSearchParams(
+                { sort: view.sort, category: view.category },
+                { replace: true, state: location.state },
+              )
+            }
+            menu={menu}
+            onMenuChange={setMenu}
+            actions={
+              isAuthenticated && collection?.owner === true
+                ? renderDetailActions?.(collection)
+                : undefined
+            }
+          />
+        )
+      }
       onBack={() => {
         navigate(ROUTES.saved)
         setMenu(null)
@@ -215,7 +251,10 @@ export const SavedQueryPage = ({
               open={menu === 'sort'}
               onOpenChange={(open) => setMenu(open ? 'sort' : null)}
               onChange={(value) =>
-                setSearchParams({ sort: value, category }, { replace: true })
+                setSearchParams(
+                  { sort: value, category },
+                  { replace: true, state: location.state },
+                )
               }
             />
             <CollectionDropdown
@@ -225,7 +264,10 @@ export const SavedQueryPage = ({
               open={menu === 'category'}
               onOpenChange={(open) => setMenu(open ? 'category' : null)}
               onChange={(value) =>
-                setSearchParams({ sort, category: value }, { replace: true })
+                setSearchParams(
+                  { sort, category: value },
+                  { replace: true, state: location.state },
+                )
               }
             />
           </div>
@@ -260,13 +302,30 @@ export const SavedQueryPage = ({
             </ul>
           ) : (
             <div className="px-5">
-              <ul aria-label="저장 컬렉션" className="flex flex-col gap-4 py-4">
+              <ul
+                aria-label="저장 컬렉션"
+                className={
+                  embedded ? 'flex flex-col' : 'flex flex-col gap-4 py-4'
+                }
+              >
                 {collections.map((item) => (
                   <CollectionListRow
+                    compact={embedded}
                     key={item.id}
                     collection={item}
                     restaurantCount={item.savedCount}
-                    onSelect={() => navigate(getCollectionDetailPath(item.id))}
+                    onSelect={() => {
+                      if (embedded && location.pathname === ROUTES.map) {
+                        const state: CollectionMapState = {
+                          ...location.state,
+                          collectionId: item.id,
+                          sort: 'latest',
+                          category: 'all',
+                          origin: 'map',
+                        }
+                        navigate(ROUTES.map, { state })
+                      } else navigate(getCollectionDetailPath(item.id))
+                    }}
                     moreAction={renderCollectionActions?.(item) ?? false}
                   />
                 ))}
@@ -280,7 +339,7 @@ export const SavedQueryPage = ({
               불러오는 중…
             </p>
           )}
-          {collection && (
+          {collection && !mapState && (
             <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">
               <Button
                 size="md"

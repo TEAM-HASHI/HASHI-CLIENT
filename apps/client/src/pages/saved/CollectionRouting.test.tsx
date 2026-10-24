@@ -27,7 +27,7 @@ import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import {
   getCollectionReturn,
   getCollectionSaveRestaurantId,
-} from '@/pages/saved/utils/collectionNavigation'
+} from '@/features/collection/utils/collectionNavigation'
 import type { CollectionData } from '@/pages/saved/types'
 
 const SavedHost = () => {

@@ -7,7 +7,7 @@ import {
   createCollection,
   updateCollection,
 } from '@/pages/saved/utils/collectionMutations'
-import { getCollectionReturn } from '@/pages/saved/utils/collectionNavigation'
+import { getCollectionReturn } from '@/features/collection/utils/collectionNavigation'
 
 export const CollectionFormPage = () => {
   const { collectionId } = useParams<{ collectionId: string }>()

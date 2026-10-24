@@ -15,7 +15,8 @@ export const createMypagePrimaryMenuItems = ({
     count: savedRestaurantCount,
     highlighted: true,
     action: {
-      type: 'comingSoon',
+      type: 'navigate',
+      path: ROUTES.saved,
     },
   },
   {
