@@ -95,9 +95,9 @@ vi.mock('@/features/collection/api/moveSavedRestaurants', () => ({
 vi.mock('@/features/collection/api/saveRestaurant', () => ({
   saveRestaurant: vi.fn(),
 }))
-vi.mock('@/pages/map/api/getMapRestaurantSaves', () => ({
-  getMapRestaurantSaveCounts: vi.fn(async () => ({})),
-  getMyMapRestaurantSaves: vi.fn(async () => ({})),
+vi.mock('@/features/collection/api/getRestaurantSaves', () => ({
+  getRestaurantSaveCounts: vi.fn(async () => ({})),
+  getMyRestaurantSaves: vi.fn(async () => ({})),
 }))
 
 vi.mock('@/pages/map/api/getMapRegions', () => ({
