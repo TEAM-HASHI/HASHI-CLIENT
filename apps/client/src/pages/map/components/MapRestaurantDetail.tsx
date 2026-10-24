@@ -1,12 +1,18 @@
-import { CancelIcon, SaveBlankIcon, SaveIcon } from '@hashi/hds-icons'
-import { Button, Dialog, DragPanel, IconButton, Tabs } from '@hashi/hds-ui'
+import { CancelIcon } from '@hashi/hds-icons'
+import {
+  Button,
+  Dialog,
+  DragPanel,
+  DRAG_PANEL_HEIGHTS,
+  IconButton,
+} from '@hashi/hds-ui'
 import { useLayoutEffect, useRef, useState } from 'react'
 
-import { RestaurantInfoSection } from '@/features/restaurantDetail/components/RestaurantInfoSection'
-import { RestaurantMenuListSection } from '@/features/restaurantDetail/components/RestaurantMenuListSection'
-import { RestaurantPhotoSection } from '@/features/restaurantDetail/components/RestaurantPhotoSection'
-import { RestaurantReviewSection } from '@/features/restaurantDetail/components/RestaurantReviewSection'
+import { RestaurantDetailBody } from '@/features/restaurantDetail/components/RestaurantDetailBody'
+import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
+import { ReviewImageViewer } from '@/features/restaurantDetail/components/ReviewImageViewer'
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
+import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 import { MapPhotoViewer } from '@/pages/map/components/MapPhotoViewer'
 import { MapRestaurantImages } from '@/pages/map/components/MapRestaurantImages'
 import { MapRestaurantMeta } from '@/pages/map/components/MapRestaurantMeta'
@@ -23,20 +29,18 @@ interface MapRestaurantDetailProps {
   onStageChange: (stage: MapPanelStage) => void
   onClose: () => void
   onPhotoSelect?: (index: number) => void
-  onUnavailable: () => void
-  onSave?: () => void
+  onPressReservation: () => void
+  onPressWriteReview: () => void
+  onSave: () => void
   onLoadError?: () => void
   onPressMenuItem: (menuId: string) => void
   initialTab?: RestaurantDetailTab
   onTabChange?: (tab: RestaurantDetailTab) => void
+  initialScrollTop?: number
+  onScrollTopChange?: (top: number) => void
+  initialReviewSort?: ReviewSortValue
+  onReviewSortChange?: (sort: ReviewSortValue) => void
 }
-
-const TABS: { value: RestaurantDetailTab; label: string }[] = [
-  { value: 'info', label: '매장 정보' },
-  { value: 'menu', label: '메뉴' },
-  { value: 'photo', label: '사진' },
-  { value: 'review', label: '리뷰' },
-]
 
 export const MapRestaurantDetail = (props: MapRestaurantDetailProps) => (
   <SelectedRestaurantDetail key={props.restaurant.id} {...props} />
@@ -46,6 +50,7 @@ const SelectedRestaurantDetail = (props: MapRestaurantDetailProps) => {
   const [photoViewer, setPhotoViewer] = useState<{
     images: string[]
     index: number
+    review?: boolean
   } | null>(null)
   const model = useMapRestaurantDetail(props)
   const summaryRef = useRef<HTMLDivElement>(null)
@@ -77,17 +82,26 @@ const SelectedRestaurantDetail = (props: MapRestaurantDetailProps) => {
         const images = model.detail?.reviews.find(
           ({ id }) => id === reviewId,
         )?.images
-        if (images?.length) setPhotoViewer({ images, index })
+        if (images?.length) setPhotoViewer({ images, index, review: true })
       }}
     />
   )
-  const viewer = photoViewer && (
-    <MapPhotoViewer
-      images={photoViewer.images}
-      initialIndex={photoViewer.index}
-      onClose={() => setPhotoViewer(null)}
-    />
-  )
+  const viewer =
+    photoViewer &&
+    (photoViewer.review ? (
+      <ReviewImageViewer
+        imageUrls={photoViewer.images}
+        initialIndex={photoViewer.index}
+        open
+        onClose={() => setPhotoViewer(null)}
+      />
+    ) : (
+      <MapPhotoViewer
+        images={photoViewer.images}
+        initialIndex={photoViewer.index}
+        onClose={() => setPhotoViewer(null)}
+      />
+    ))
 
   if (props.stage !== 'expanded')
     return (
@@ -129,13 +143,16 @@ const MapDetailPanel = ({
   onStageChange,
   onClose,
   onPhotoSelect,
-  onUnavailable,
-  onSave = onUnavailable,
+  onPressReservation,
+  onPressWriteReview,
+  onSave,
   onPressMenuItem,
   activeTab,
   onTabChange,
   onReviewPhotoSelect,
   model,
+  initialScrollTop = 0,
+  onScrollTopChange,
 }: MapRestaurantDetailProps & {
   activeTab: RestaurantDetailTab
   onTabChange: (tab: RestaurantDetailTab) => void
@@ -145,15 +162,34 @@ const MapDetailPanel = ({
 }) => {
   const { containerRef, availableHeight } = useMapPanelLayout()
   const tabPanelRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const restoredScroll = useRef(false)
   const isExpanded = stage === 'expanded'
+  const contentPending =
+    model.isSummaryLoading ||
+    (activeTab === 'info' && model.isStoreInformationLoading) ||
+    (activeTab === 'menu' && model.isMenuListLoading) ||
+    (activeTab === 'review' && model.isReviewListLoading) ||
+    (activeTab === 'photo' && model.photos.query.isPending)
+  useLayoutEffect(() => {
+    if (!isExpanded || contentPending || restoredScroll.current) return
+    const scrollRoot = contentRef.current?.parentElement
+    if (!scrollRoot) return
+    scrollRoot.scrollTop = initialScrollTop
+    restoredScroll.current = true
+  }, [isExpanded, contentPending, initialScrollTop])
   const maximum = Math.max(30, availableHeight)
-  const normal = Math.min(294, maximum)
+  const normal = Math.min(DRAG_PANEL_HEIGHTS.normal, maximum)
   const height = isExpanded ? maximum : stage === 'collapsed' ? 30 : normal
 
   return (
     <section
       ref={containerRef}
       aria-label={`${restaurant.name} 상세 패널`}
+      onScrollCapture={(event) => {
+        if (event.target === contentRef.current?.parentElement && isExpanded)
+          onScrollTopChange?.((event.target as HTMLElement).scrollTop)
+      }}
       className={cn(
         'pointer-events-none',
         isExpanded ? 'relative h-full w-full' : 'absolute inset-0',
@@ -163,36 +199,26 @@ const MapDetailPanel = ({
         aria-label="선택한 식당"
         handleLabel="식당 상세 높이 조절"
         height={height}
-        normalHeight={normal}
-        maxHeight={maximum}
-        onHeightChange={(next) =>
-          onStageChange(
-            next <= 30 ? 'collapsed' : next >= maximum ? 'expanded' : 'normal',
-          )
+        stage={isExpanded ? 'maximum' : stage}
+        maxHeight="fullscreen"
+        onStageCommit={({ stage }) =>
+          onStageChange(stage === 'maximum' ? 'expanded' : stage)
         }
         footer={
           isExpanded && !model.isSummaryLoading ? (
-            <div className="flex items-center gap-4 bg-white px-5 pt-4 pb-[calc(24px+var(--safe-area-bottom,0px))]">
-              <IconButton
-                aria-label={`${restaurant.name} 저장`}
-                aria-pressed={restaurant.saved ?? false}
-                onClick={onSave}
-                className="text-warm-gray-100"
-              >
-                {restaurant.saved ? (
-                  <SaveIcon className="text-primary-200 size-6" />
-                ) : (
-                  <SaveBlankIcon className="size-6" />
-                )}
-              </IconButton>
-              <Button width="full" onClick={onUnavailable}>
-                예약하기
-              </Button>
+            <div className="min-h-[calc(var(--app-mobile-bottom-action-compact-height)+var(--safe-area-bottom,0px))]">
+              <RestaurantBottomBar
+                variant="detail"
+                saved={restaurant.saved}
+                likeCount={restaurant.saveCount?.toLocaleString('ko-KR') ?? ''}
+                onPressLike={onSave}
+                onPressReservation={onPressReservation}
+              />
             </div>
           ) : undefined
         }
       >
-        <div className="relative min-h-full">
+        <div ref={contentRef} className="relative min-h-full">
           {model.isSummaryLoading ? (
             <div className="absolute inset-0 flex items-center justify-center pt-6">
               <MapStatusView loading message="식당 정보를 불러오고 있어요." />
@@ -254,94 +280,34 @@ const MapDetailPanel = ({
                 )}
               </div>
               {isExpanded && model.detail && !model.hasLoadError && (
-                <>
-                  <div className="sticky top-12.5 z-10 bg-white px-5">
-                    <Tabs
-                      aria-label="식당 상세 정보"
-                      items={TABS.map((tab) => ({
-                        ...tab,
-                        count:
-                          tab.value === 'review'
-                            ? restaurant.reviewCount
-                            : tab.value === 'photo'
-                              ? model.photos.counts?.all
-                              : undefined,
-                      }))}
-                      value={activeTab}
-                      onChange={(value) => {
-                        const tab = TABS.find((item) => item.value === value)
-                        if (tab && tab.value !== activeTab) {
-                          onTabChange(tab.value)
-                          if (tab.value === 'review')
-                            tabPanelRef.current?.scrollIntoView?.({
-                              block: 'start',
-                            })
-                        }
-                      }}
-                    />
-                  </div>
-                  <div
-                    ref={tabPanelRef}
-                    role="tabpanel"
-                    aria-label={
-                      TABS.find(({ value }) => value === activeTab)?.label
-                    }
-                    className="min-h-80 scroll-mt-25"
-                  >
-                    {activeTab === 'info' &&
-                      (model.isStoreInformationLoading ? (
-                        <div className="flex min-h-68 items-center justify-center">
-                          <MapStatusView
-                            loading
-                            message="매장 정보를 불러오고 있어요."
-                          />
-                        </div>
-                      ) : (
-                        <RestaurantInfoSection restaurant={model.detail} />
-                      ))}
-                    {activeTab === 'menu' && (
-                      <RestaurantMenuListSection
-                        menus={model.detail.menus}
-                        hasMoreMenus={model.hasMoreMenus}
-                        isMenuListError={model.isMenuListError}
-                        isLoading={model.isMenuListPending}
-                        isNextPageError={model.isMenuNextPageError}
-                        loadMoreRef={model.menuLoadMoreRef}
-                        onPressMenuItem={onPressMenuItem}
-                        onRetryMenuList={model.onRetryMenuList}
-                      />
-                    )}
-                    {activeTab === 'photo' && (
-                      <RestaurantPhotoSection
-                        model={model.photos}
-                        onResetScroll={() =>
-                          tabPanelRef.current?.scrollIntoView({
-                            block: 'start',
-                          })
-                        }
-                      />
-                    )}
-                    {activeTab === 'review' && (
-                      <RestaurantReviewSection
-                        rating={model.detail.rating}
-                        restaurantName={restaurant.name}
-                        reviewCount={model.detail.reviewCount}
-                        ratingDistribution={model.detail.ratingDistribution}
-                        reviews={model.detail.reviews}
-                        hasMoreReviews={model.hasMoreReviews}
-                        isReviewListError={model.isReviewListError}
-                        isNextPageError={model.isReviewNextPageError}
-                        isReviewListLoading={model.isReviewListLoading}
-                        loadMoreRef={model.reviewLoadMoreRef}
-                        selectedSort={model.selectedReviewSort}
-                        onPressReviewImage={onReviewPhotoSelect}
-                        onPressWriteReview={onUnavailable}
-                        onRetryReviewList={model.onRetryReviewList}
-                        onSelectSort={model.onSelectReviewSort}
-                      />
-                    )}
-                  </div>
-                </>
+                <RestaurantDetailBody
+                  content={{
+                    ...model,
+                    restaurant: model.detail,
+                    onPressReviewImage: onReviewPhotoSelect,
+                    onTabChange: (tab) => {
+                      if (tab === activeTab) return
+                      onTabChange(tab)
+                      if (tab === 'info') {
+                        const root = contentRef.current?.parentElement
+                        root?.scrollTo({ top: 0, behavior: 'instant' })
+                      } else
+                        tabPanelRef.current?.scrollIntoView?.({
+                          block: 'start',
+                        })
+                    },
+                  }}
+                  photos={model.photos}
+                  onPressMenuItem={onPressMenuItem}
+                  onPressWriteReview={onPressWriteReview}
+                  onResetPhotoScroll={() =>
+                    tabPanelRef.current?.scrollIntoView({ block: 'start' })
+                  }
+                  isInfoLoading={model.isStoreInformationLoading}
+                  tabBarPosition="sticky"
+                  headerHeight={50}
+                  panelRef={tabPanelRef}
+                />
               )}
             </>
           )}

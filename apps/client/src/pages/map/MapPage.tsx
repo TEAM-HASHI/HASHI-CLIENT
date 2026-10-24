@@ -1,4 +1,4 @@
-import { DragPanel, showToast } from '@hashi/hds-ui'
+import { DragPanel, DRAG_PANEL_HEIGHTS, showToast } from '@hashi/hds-ui'
 import {
   useEffect,
   useEffectEvent,
@@ -8,9 +8,11 @@ import {
 } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
-import { getRestaurantMenuDetailPath } from '@/app/router/routePaths'
+import { useRestaurantDetailActions } from '@/features/restaurantDetail/hooks/useRestaurantDetailActions'
+import { ReviewUnavailableModal } from '@/features/restaurantDetail/components/ReviewUnavailableModal'
 import { getRestaurantDetailTabState } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
+import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 import { parseMapSearchContext } from '@/features/mapSearch/utils/parseMapSearchContext'
 import { useMapSession } from '@/pages/map/hooks/useMapSession'
 import { clearMapSession, readMapSession } from '@/pages/map/utils/mapSession'
@@ -27,8 +29,8 @@ import { useMapRestaurantSaves } from '@/pages/map/hooks/useMapRestaurantSaves'
 import { MapSavedCollectionsSheet } from '@/pages/map/components/MapSavedCollectionsSheet'
 import { CollectionTargetQueryDialog } from '@/features/collection/components/CollectionTargetQueryDialog'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
+import { wasAuthSessionExpired } from '@/shared/auth/authSession'
 import type { MapConditions, MapPanelStage } from '@/pages/map/types'
-import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
 import { CollectionMapQueryPage } from '@/pages/saved/CollectionMapQueryPage'
 import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
@@ -47,7 +49,9 @@ export const MapPage = () => {
       view={location.state}
     />
   ) : (
-    <MapMainPage key={version} />
+    <MapMainPage
+      key={wasAuthSessionExpired(version - 1) ? version - 1 : version}
+    />
   )
 }
 
@@ -57,6 +61,7 @@ const MapMainPage = () => {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStatus()
   const [initial] = useState(() => readMapSession())
+  const [restoreDetail] = useState(location.state?.restoreMapDetail === true)
   const state = useMapPageState(initial)
   const restaurants = useMapRestaurantSaves(state.restaurants)
   const selectedRestaurant = restaurants.find(
@@ -65,15 +70,18 @@ const MapMainPage = () => {
   const { containerRef, availableHeight } = useMapPanelLayout()
   const [stage, setStage] = useState<MapPanelStage>(initial?.stage ?? 'normal')
   const [previousStatus, setPreviousStatus] = useState(state.status)
-  const [comingSoon, setComingSoon] = useState(false)
-  const [savedCollectionsOpen, setSavedCollectionsOpen] = useState(
+  const [reviewUnavailable, setReviewUnavailable] = useState(false)
+  const [savedCollectionsRequested, setSavedCollectionsRequested] = useState(
     location.state?.mapSavedCollectionsOpen === true &&
       location.state?.mapSavedCollectionsSession === sessionVersion,
   )
-  const [savedCollectionsHeight, setSavedCollectionsHeight] = useState(497)
+  const savedCollectionsOpen = savedCollectionsRequested && isAuthenticated
+  const [savedCollectionsHeight, setSavedCollectionsHeight] = useState<number>(
+    DRAG_PANEL_HEIGHTS.normal,
+  )
   const setSavedCollectionsVisible = (open: boolean) => {
-    setSavedCollectionsOpen(open)
-    if (open) setSavedCollectionsHeight(497)
+    setSavedCollectionsRequested(open)
+    if (open) setSavedCollectionsHeight(DRAG_PANEL_HEIGHTS.normal)
     navigate(
       { pathname: location.pathname, search: location.search },
       {
@@ -94,7 +102,7 @@ const MapMainPage = () => {
   )
   const openRestaurantSave = (restaurantId: string) => {
     if (!isAuthenticated) {
-      navigate(ROUTES.loginRequired)
+      navigate(ROUTES.loginRequired, { state: { from: location } })
       return
     }
     const id = Number(restaurantId)
@@ -103,7 +111,7 @@ const MapMainPage = () => {
   }
   const openSavedCollections = () => {
     if (!isAuthenticated) {
-      navigate(ROUTES.loginRequired)
+      navigate(ROUTES.loginRequired, { state: { from: location } })
       return
     }
     setSavedCollectionsVisible(!savedCollectionsOpen)
@@ -118,6 +126,23 @@ const MapMainPage = () => {
         ? getRestaurantDetailTabState(location.state).activeTab
         : undefined
     return returnTab ?? initial?.detailTab ?? 'info'
+  })
+  const [detailScrollTop, setDetailScrollTop] = useState(
+    initial?.detailScrollTop ?? 0,
+  )
+  const [detailReviewSort, setDetailReviewSort] = useState<ReviewSortValue>(
+    initial?.detailReviewSort ?? 'latest',
+  )
+  const actions = useRestaurantDetailActions({
+    restaurantId: selectedRestaurant?.id ?? '',
+    activeTab: detailTab,
+    menuDetailSource: 'map',
+    onAuthRequired: () =>
+      navigate(ROUTES.loginRequired, { state: { from: location } }),
+    onReviewUnavailable: () => setReviewUnavailable(true),
+    onSave: () => {
+      if (selectedRestaurant) openRestaurantSave(selectedRestaurant.id)
+    },
   })
   const [selectionCamera, setSelectionCamera] = useState(
     initial?.selectionCamera ?? null,
@@ -141,6 +166,8 @@ const MapMainPage = () => {
     setStage('normal')
     setDetailStage('normal')
     setDetailTab('info')
+    setDetailScrollTop(0)
+    setDetailReviewSort('latest')
   }
   useMapSession(
     {
@@ -156,6 +183,8 @@ const MapMainPage = () => {
       stage,
       detailStage,
       detailTab,
+      detailScrollTop,
+      detailReviewSort,
       selectionCamera,
       selectionIsExploring,
       selectionStage,
@@ -167,8 +196,13 @@ const MapMainPage = () => {
   useEffect(() => {
     // A return tab is a one-shot instruction, not persistent history state.
     // Later browser-back restores the tab saved in the map session instead.
-    if (typeof location.state?.mapRestaurantId !== 'string') return
-    navigate(ROUTES.map, { replace: true, state: null })
+    if (typeof location.state?.mapRestaurantId === 'string') {
+      navigate(ROUTES.map, { replace: true, state: null })
+    } else if (location.state?.restoreMapDetail === true) {
+      const nextState = { ...location.state }
+      delete nextState.restoreMapDetail
+      navigate(ROUTES.map, { replace: true, state: nextState })
+    }
   }, [location.state, navigate])
   useEffect(() => {
     const result = parseMapSearchContext(location.state)
@@ -250,15 +284,8 @@ const MapMainPage = () => {
     state.status === 'success' && state.restaurants.length === 0
   const maxHeight = isEmptyResult
     ? 30
-    : Math.max(30, availableHeight - (filtered ? 125 : 12))
-  // Keep regional labels and Google attribution visible on shorter phones.
-  const normalHeight = Math.min(
-    filtered ? 304 : 312,
-    maxHeight,
-    state.status === 'error'
-      ? maxHeight
-      : Math.max(state.isExploring ? 156 : 30, availableHeight - 400),
-  )
+    : Math.min(DRAG_PANEL_HEIGHTS.maximum, Math.max(30, availableHeight))
+  const normalHeight = Math.min(DRAG_PANEL_HEIGHTS.normal, maxHeight)
   const height = isEmptyResult
     ? 30
     : stage === 'expanded'
@@ -270,15 +297,8 @@ const MapMainPage = () => {
     state.handleConditionsChange(patch)
     setStage('normal')
   }
-  const handleHeightChange = (next: number) =>
-    setStage(
-      isEmptyResult || next <= 30
-        ? 'collapsed'
-        : next >= maxHeight
-          ? 'expanded'
-          : 'normal',
-    )
   const handleSelect = (id: string) => {
+    if (savedCollectionsOpen) setSavedCollectionsVisible(false)
     if (!state.selectedRestaurant) {
       setSelectionCamera(state.cameraSnapshot)
       setSelectionIsExploring(state.isExploring)
@@ -288,6 +308,8 @@ const MapMainPage = () => {
     state.handleSelectRestaurant(id)
     setDetailStage('normal')
     setDetailTab('info')
+    setDetailScrollTop(0)
+    setDetailReviewSort('latest')
   }
   const handleCloseDetail = () => {
     restoreSelectionFocus.current = true
@@ -323,13 +345,16 @@ const MapMainPage = () => {
         inert={
           !!state.selectedRestaurant &&
           detailStage === 'expanded' &&
+          !savedCollectionsOpen &&
           !mapUnavailable
         }
       >
         {state.regions ? (
           <MapViewport
             initialBounds={state.regions.initialBounds}
-            initialFitEnabled={height <= 312 || !!state.selectedRestaurant}
+            initialFitEnabled={
+              height <= DRAG_PANEL_HEIGHTS.normal || !!state.selectedRestaurant
+            }
             loadingRestaurants={state.status === 'loading'}
             mapUnavailable={mapUnavailable}
             onMapFailureChange={setMapUnavailable}
@@ -362,7 +387,7 @@ const MapMainPage = () => {
                   : state.selectedRestaurant
                     ? detailStage === 'collapsed'
                       ? 30
-                      : 294
+                      : Math.min(DRAG_PANEL_HEIGHTS.normal, availableHeight)
                     : height
             }
             onSelectRestaurant={handleSelect}
@@ -422,9 +447,23 @@ const MapMainPage = () => {
             aria-label="지도 식당 목록"
             handleLabel="식당 목록 높이 조절"
             height={height}
-            normalHeight={normalHeight}
-            maxHeight={maxHeight}
-            onHeightChange={handleHeightChange}
+            stage={
+              isEmptyResult
+                ? 'collapsed'
+                : stage === 'expanded'
+                  ? 'maximum'
+                  : stage
+            }
+            maxHeight={isEmptyResult ? 30 : undefined}
+            onStageCommit={({ stage }) =>
+              setStage(
+                isEmptyResult
+                  ? 'collapsed'
+                  : stage === 'maximum'
+                    ? 'expanded'
+                    : stage,
+              )
+            }
             footer={
               <div
                 hidden={stage !== 'expanded' || isEmptyResult}
@@ -463,7 +502,7 @@ const MapMainPage = () => {
           </DragPanel>
         </div>
       </div>
-      {selectedRestaurant && !mapUnavailable && (
+      {selectedRestaurant && !savedCollectionsOpen && !mapUnavailable && (
         <MapRestaurantDetail
           key={selectedRestaurant.id}
           restaurant={selectedRestaurant}
@@ -471,16 +510,16 @@ const MapMainPage = () => {
           onStageChange={setDetailStage}
           onClose={handleCloseDetail}
           onLoadError={handleDetailFailure}
-          onUnavailable={() => setComingSoon(true)}
-          onSave={() => openRestaurantSave(selectedRestaurant.id)}
+          onPressReservation={actions.onPressReservation}
+          onPressWriteReview={actions.onPressWriteReview}
+          onSave={actions.onPressLike}
           initialTab={detailTab}
+          initialScrollTop={restoreDetail ? detailScrollTop : 0}
+          onScrollTopChange={setDetailScrollTop}
+          initialReviewSort={restoreDetail ? detailReviewSort : undefined}
+          onReviewSortChange={setDetailReviewSort}
           onTabChange={setDetailTab}
-          onPressMenuItem={(menuId) =>
-            navigate(
-              getRestaurantMenuDetailPath(selectedRestaurant.id, menuId),
-              { state: { source: 'map' } },
-            )
-          }
+          onPressMenuItem={actions.onPressMenuItem}
         />
       )}
       {isAuthenticated && savingRestaurantId !== null && (
@@ -501,12 +540,15 @@ const MapMainPage = () => {
         />
       )}
       <MapSavedCollectionsSheet
-        open={savedCollectionsOpen && isAuthenticated}
+        open={savedCollectionsOpen}
         height={savedCollectionsHeight}
         onHeightChange={setSavedCollectionsHeight}
         onClose={() => setSavedCollectionsVisible(false)}
       />
-      <ComingSoonDialog open={comingSoon} onOpenChange={setComingSoon} />
+      <ReviewUnavailableModal
+        open={reviewUnavailable}
+        onClose={() => setReviewUnavailable(false)}
+      />
     </main>
   )
 }
