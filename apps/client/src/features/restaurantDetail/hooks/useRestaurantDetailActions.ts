@@ -9,18 +9,21 @@ import {
   getRestaurantReservationNewPath,
 } from '@/app/router/routePaths'
 import type { RestaurantMenuDetailSource } from '@/features/restaurantDetail/utils/restaurantDetailRoutes'
+import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
 import { useAuthStatus } from '@/shared/hooks'
-import { getAuthSessionVersion } from '@/shared/auth/authSession'
+import { getCollectionSaveState } from '@/features/collection/utils/collectionNavigation'
 
 interface UseRestaurantDetailActionsParams {
   menuDetailSource: RestaurantMenuDetailSource
   restaurantId: string
+  activeTab: RestaurantDetailTab
   onReviewUnavailable: () => void
 }
 
 export const useRestaurantDetailActions = ({
   menuDetailSource,
   restaurantId,
+  activeTab,
   onReviewUnavailable,
 }: UseRestaurantDetailActionsParams) => {
   const navigate = useNavigate()
@@ -28,7 +31,6 @@ export const useRestaurantDetailActions = ({
   const { isAuthenticated } = useAuthStatus()
   const { startKakaoOAuth } = useKakaoOAuthStart()
   const [isAuthGateOpen, setIsAuthGateOpen] = useState(false)
-  const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
   const { onPressWriteReview } = useRestaurantReviewWriteNavigation({
     isAuthenticated,
     onAuthRequired: () => setIsAuthGateOpen(true),
@@ -46,11 +48,10 @@ export const useRestaurantDetailActions = ({
       { pathname: location.pathname, search: location.search },
       {
         replace: true,
-        state: {
-          ...location.state,
-          collectionSaveRestaurantId: restaurantId,
-          collectionSaveSessionVersion: getAuthSessionVersion(),
-        },
+        state: getCollectionSaveState(
+          { ...location.state, restaurantId: Number(restaurantId), activeTab },
+          restaurantId,
+        ),
       },
     )
   }
@@ -65,6 +66,12 @@ export const useRestaurantDetailActions = ({
   }
 
   const handlePressMenuItem = (menuId: string) => {
+    if (menuDetailSource === 'today') {
+      navigate(getPathFromLocation(location), {
+        replace: true,
+        state: { ...location.state, restaurantId: Number(restaurantId) },
+      })
+    }
     navigate(getRestaurantMenuDetailPath(restaurantId, menuId), {
       state: { source: menuDetailSource },
     })
@@ -76,9 +83,7 @@ export const useRestaurantDetailActions = ({
 
   return {
     isAuthGateOpen,
-    isComingSoonOpen,
     onAuthGateOpenChange: setIsAuthGateOpen,
-    onComingSoonOpenChange: setIsComingSoonOpen,
     onPressKakao: handlePressKakao,
     onPressLike: handlePressLike,
     onPressMenuItem: handlePressMenuItem,

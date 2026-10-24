@@ -36,7 +36,7 @@ export const RestaurantBottomBar = ({
             size="sm"
           >
             {saved ? (
-              <SaveIcon className="text-warm-gray-100 size-9" />
+              <SaveIcon className="size-9 text-black" />
             ) : (
               <SaveBlankIcon className="text-warm-gray-100 size-9" />
             )}

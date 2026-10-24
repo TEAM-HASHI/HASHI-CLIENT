@@ -1,16 +1,18 @@
 import { ImageFallback, type ImageFallbackMarkSize } from '@hashi/hds-ui'
-import { useState } from 'react'
+import { useState, type ReactEventHandler } from 'react'
 
 interface RestaurantImageProps {
   className: string
   markSize: ImageFallbackMarkSize
   src?: string
+  onLoad?: ReactEventHandler<HTMLImageElement>
 }
 
 const RestaurantImageContent = ({
   className,
   markSize,
   src,
+  onLoad,
 }: RestaurantImageProps) => {
   const [hasError, setHasError] = useState(false)
 
@@ -21,6 +23,7 @@ const RestaurantImageContent = ({
         aria-hidden="true"
         className={className}
         onError={() => setHasError(true)}
+        onLoad={onLoad}
         src={src}
       />
     )

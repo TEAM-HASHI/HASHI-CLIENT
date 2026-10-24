@@ -1,5 +1,4 @@
 import { DragPanel, showToast } from '@hashi/hds-ui'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   useEffect,
   useEffectEvent,
@@ -56,7 +55,6 @@ const MapMainPage = () => {
   const location = useLocation()
   const sessionVersion = useCollectionSessionVersion()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { isAuthenticated } = useAuthStatus()
   const [initial] = useState(() => readMapSession())
   const state = useMapPageState(initial)
@@ -499,10 +497,6 @@ const MapMainPage = () => {
                   state: getCollectionSaveState(location.state, null),
                 },
               )
-            void queryClient.invalidateQueries({ queryKey: ['map', 'saved'] })
-            void queryClient.invalidateQueries({
-              queryKey: ['map', 'saveCounts'],
-            })
           }}
         />
       )}

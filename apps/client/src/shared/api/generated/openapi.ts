@@ -1007,7 +1007,11 @@ export interface paths {
         /**
          * 지도 관광 지역 조회
          * @description 최초 카메라 범위, 서버가 허용하는 조회 범위와 크기, 활성 관광 지역의 클러스터 위치와
-         *     카메라 범위를 반환한다. 식당 수가 0인 활성 지역도 포함하며 응답은 캐시하지 않는다.
+         *     카메라 범위를 반환한다. 식당 수는 수동 지정된 지역 소속 중 지원 영역의 유효 위치만 센다.
+         *     기본 화면 밖 식당도 집계하며 카메라 범위는 기본 화면과 집계 대상 식당을 포함하도록 확장한다.
+         *     확장 범위가 queryLimits의 제한을 넘으면 검증된 기본 화면을 반환한다.
+         *     이때 식당 수는 전체 소속 기준을 유지하므로 첫 화면의 목록 수보다 클 수 있다.
+         *     식당 수가 0인 활성 지역은 기본 화면 범위로 포함하며 응답은 캐시하지 않는다.
          */
         get: operations["getRegions"];
         put?: never;
@@ -2876,13 +2880,13 @@ export interface components {
             name?: string;
             /**
              * Format: int64
-             * @description 지역 ID와 cameraBounds를 모두 만족하는 현재 표시 가능 식당 수
+             * @description 수동 지정된 지역 소속 중 지원 영역 안의 현재 표시 가능 식당 수
              * @example 24
              */
             restaurantCount?: number;
             /** @description 관광 지역 클러스터 표시 위치 */
             clusterPosition?: components["schemas"]["PositionResponse"];
-            /** @description 관광 지역 선택 뒤 카메라를 맞출 범위 */
+            /** @description 조회 한도 안에서 기본 화면과 집계 대상 식당을 포함한 범위. 확장 범위가 한도를 넘으면 기본 화면을 반환하므로 전체 식당이 한 화면에 보이지 않을 수 있음 */
             cameraBounds?: components["schemas"]["BoundsResponse"];
             /**
              * Format: int32
@@ -5977,7 +5981,7 @@ export interface operations {
                 west?: number;
                 /** @description 새 조회 필수. 현재 viewport의 동쪽 경도 */
                 east?: number;
-                /** @description 새 조회 선택. 활성 관광 지역 ID */
+                /** @description 새 조회 선택. 수동 배정된 활성 관광 지역 ID. 요청 viewport 조건도 함께 적용하며 지역 기본 화면으로 추가 제한하지 않음 */
                 mapRegionId?: number;
                 /** @description 새 조회 선택, 최대 30자. 일반 검색은 공백 구분 OR 토큰으로 식당명·메뉴명·해시태그를 찾는다. #단일태그는 해시태그에서만 리터럴 부분 검색하며 # 뒤가 비거나 공백을 포함하면 400 */
                 keyword?: string;

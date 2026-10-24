@@ -62,6 +62,7 @@ describe('collection read API contracts', () => {
     ).resolves.toEqual(page)
     expect(mockRequest).toHaveBeenCalledWith('/api/v1/collections', {
       method: 'get',
+      cache: 'no-store',
       searchParams: { restaurantId: 5, cursor: 12, size: 10 },
       signal,
     })

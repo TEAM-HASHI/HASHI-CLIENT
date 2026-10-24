@@ -11,43 +11,19 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   createMemoryRouter,
   RouterProvider,
-  useLocation,
   useNavigate,
   useParams,
 } from 'react-router-dom'
-import { useState } from 'react'
 
 import { BottomNavigationLayout } from '@/app/layout/BottomNavigationLayout'
 import { SavedPage } from '@/pages/saved/SavedPage'
 import { CollectionEditorPage } from '@/pages/saved/CollectionEditorPage'
 import { CollectionFormPage } from '@/pages/saved/CollectionFormPage'
-import { CollectionSaveDialog } from '@/pages/saved/components/CollectionSaveDialog'
 import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvider'
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
-import {
-  getCollectionReturn,
-  getCollectionSaveRestaurantId,
-} from '@/features/collection/utils/collectionNavigation'
+import { getCollectionReturn } from '@/features/collection/utils/collectionNavigation'
 import type { CollectionData } from '@/pages/saved/types'
 
-const SavedHost = () => {
-  const location = useLocation()
-  const [restaurantId, setRestaurantId] = useState(() =>
-    getCollectionSaveRestaurantId(location.state),
-  )
-  return (
-    <>
-      <SavedPage />
-      <button onClick={() => setRestaurantId('sushi')}>식당 저장 열기</button>
-      {restaurantId && (
-        <CollectionSaveDialog
-          restaurantId={restaurantId}
-          onClose={() => setRestaurantId(null)}
-        />
-      )}
-    </>
-  )
-}
 const MapHost = () => {
   const navigate = useNavigate()
   return <button onClick={() => navigate(-1)}>컬렉션 지도 보기 종료</button>
@@ -66,15 +42,14 @@ const setup = (
   path = '/saved',
   data: CollectionData = collectionMocks,
   previous?: string,
-  saving = false,
 ) => {
   const router = createMemoryRouter(
     [
       {
         element: <BottomNavigationLayout />,
         children: [
-          { path: '/saved', element: <SavedHost /> },
-          { path: '/saved/collections/:collectionId', element: <SavedHost /> },
+          { path: '/saved', element: <SavedPage /> },
+          { path: '/saved/collections/:collectionId', element: <SavedPage /> },
           { path: '/map', element: <MapHost /> },
         ],
       },
@@ -98,7 +73,7 @@ const setup = (
         {
           pathname: path.split('?')[0],
           search: path.includes('?') ? `?${path.split('?')[1]}` : '',
-          state: saving ? { collectionSaveRestaurantId: 'sushi' } : null,
+          state: null,
         },
       ],
     },
@@ -383,66 +358,6 @@ describe('컬렉션 독립 라우트와 복귀', () => {
     expect(screen.getByLabelText('컬렉션명')).toHaveValue('새 여행')
     expect(screen.getByLabelText('설명')).toHaveValue('설명')
     expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
-  })
-
-  it('저장 모달에서 생성 후 원래 식당으로 돌아와 직접 선택한 대상에만 저장한다', async () => {
-    const { user, router } = setup('/saved', collectionMocks, undefined, true)
-    await user.click(screen.getByRole('radio', { name: /가을/ }))
-    await user.click(
-      within(screen.getByRole('dialog')).getByRole('button', {
-        name: '새 컬렉션 만들기',
-      }),
-    )
-    await user.type(screen.getByLabelText('컬렉션명'), '저장 대상')
-    await user.click(screen.getByRole('radio', { name: '파랑' }))
-    await user.click(screen.getByRole('button', { name: '만들기' }))
-    expect(router.state.location.pathname).toBe('/saved')
-    const dialog = screen.getByRole('dialog', { name: '컬렉션 저장' })
-    expect(within(dialog).getByRole('radio', { name: /가을/ })).toBeChecked()
-    expect(
-      within(dialog).getByRole('radio', { name: '저장 대상' }),
-    ).not.toBeChecked()
-    expect(within(dialog).getAllByRole('radio')[0]).toHaveAccessibleName(
-      '저장 대상',
-    )
-    expect(
-      within(dialog).getByRole('radio', { name: /봄 여행.*저장됨/ }),
-    ).toBeDisabled()
-    await user.click(within(dialog).getByRole('radio', { name: '저장 대상' }))
-    await user.click(within(dialog).getByRole('button', { name: '저장' }))
-    await user.click(
-      screen.getByRole('button', { name: '저장 대상 컬렉션 열기' }),
-    )
-    expect(screen.getByText('총 1곳')).toBeVisible()
-    expect(
-      screen
-        .getByRole('list', { name: '저장 식당' })
-        .querySelector('[data-restaurant-id="sushi"]'),
-    ).toBeInTheDocument()
-  })
-
-  it('로컬 상태로 연 저장 모달은 생성 페이지에서 브라우저 뒤로가기로 돌아와도 식당과 선택을 복원한다', async () => {
-    const { user, router } = setup()
-    expect(router.state.location.state).toBeNull()
-    await user.click(screen.getByRole('button', { name: '식당 저장 열기' }))
-    await user.click(screen.getByRole('radio', { name: /가을/ }))
-    await user.click(
-      within(screen.getByRole('dialog')).getByRole('button', {
-        name: '새 컬렉션 만들기',
-      }),
-    )
-    await act(async () => {
-      await router.navigate(-1)
-    })
-    const dialog = screen.getByRole('dialog', { name: '컬렉션 저장' })
-    expect(
-      within(dialog).getByRole('radio', { name: /봄 여행.*저장됨/ }),
-    ).toBeDisabled()
-    expect(within(dialog).getByRole('radio', { name: /가을/ })).toBeChecked()
-    await user.click(within(dialog).getByRole('button', { name: '취소' }))
-    expect(
-      getCollectionSaveRestaurantId(router.state.location.state),
-    ).toBeNull()
   })
 
   it('색상 수정 후 정규화한 이름과 설명으로 다시 열고 저장을 비활성화한다', async () => {

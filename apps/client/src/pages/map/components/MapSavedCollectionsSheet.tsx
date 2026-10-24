@@ -8,7 +8,6 @@ type MapSavedCollectionsSheetProps = {
   onClose: () => void
 }
 
-/** Figma 8317:39104: 내비게이션을 제외한 497px, 배경을 가리지 않는 컬렉션 패널. */
 export const MapSavedCollectionsSheet = ({
   open,
   height,

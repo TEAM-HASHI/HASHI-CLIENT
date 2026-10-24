@@ -1,9 +1,9 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 
 import {
-  getMapRestaurantSaveCounts,
-  getMyMapRestaurantSaves,
-} from '@/pages/map/api/getMapRestaurantSaves'
+  getRestaurantSaveCounts,
+  getMyRestaurantSaves,
+} from '@/features/collection/api/getRestaurantSaves'
 import { request } from '@/shared/api/request'
 
 vi.mock('@/shared/api/request', () => ({ request: vi.fn() }))
@@ -27,7 +27,7 @@ it('deduplicates and batches up to 100 IDs with no-store and one abort signal', 
       })),
     }
   })
-  const counts = await getMapRestaurantSaveCounts(
+  const counts = await getRestaurantSaveCounts(
     [...Array.from({ length: 201 }, (_, index) => index + 1), 1, 101],
     signal,
   )
@@ -57,7 +57,7 @@ it('joins shuffled rows by ID and leaves omitted public counts unknown', async (
       { restaurantId: 10, saveCount: 8 },
     ],
   })
-  await expect(getMapRestaurantSaveCounts([10, 20, 30])).resolves.toEqual({
+  await expect(getRestaurantSaveCounts([10, 20, 30])).resolves.toEqual({
     10: 8,
     30: 0,
   })
@@ -67,7 +67,7 @@ it('joins shuffled rows by ID and leaves omitted public counts unknown', async (
       { restaurantId: 10, saved: true },
     ],
   })
-  await expect(getMyMapRestaurantSaves([10, 20, 30])).resolves.toEqual({
+  await expect(getMyRestaurantSaves([10, 20, 30])).resolves.toEqual({
     10: true,
     30: false,
   })
@@ -82,15 +82,15 @@ it('joins shuffled rows by ID and leaves omitted public counts unknown', async (
 })
 
 it('does not request an empty ID batch', async () => {
-  await expect(getMapRestaurantSaveCounts([])).resolves.toEqual({})
-  await expect(getMyMapRestaurantSaves([])).resolves.toEqual({})
+  await expect(getRestaurantSaveCounts([])).resolves.toEqual({})
+  await expect(getMyRestaurantSaves([])).resolves.toEqual({})
   expect(mockedRequest).not.toHaveBeenCalled()
 })
 
 it.each([0, -1, 1.5, NaN, Number.MAX_SAFE_INTEGER + 1])(
   'rejects unsafe ID %j before any requests',
   async (id) => {
-    await expect(getMapRestaurantSaveCounts([10, id])).rejects.toThrow()
+    await expect(getRestaurantSaveCounts([10, id])).rejects.toThrow()
     expect(mockedRequest).not.toHaveBeenCalled()
   },
 )
@@ -103,6 +103,9 @@ it.each([
   { restaurants: [{ restaurantId: 999, saveCount: 1 }] },
   { restaurants: [{ restaurantId: 10, saveCount: -1 }] },
   { restaurants: [{ restaurantId: 10, saveCount: 1.5 }] },
+  ...[Infinity, Number.MAX_SAFE_INTEGER + 1, '3', null].map((saveCount) => ({
+    restaurants: [{ restaurantId: 10, saveCount }],
+  })),
   { restaurants: [{ restaurantId: 10 }] },
   {
     restaurants: [
@@ -112,21 +115,51 @@ it.each([
   },
 ])('rejects malformed count rows %j', async (response) => {
   mockedRequest.mockResolvedValueOnce(response)
-  await expect(getMapRestaurantSaveCounts([10])).rejects.toThrow()
+  await expect(getRestaurantSaveCounts([10])).rejects.toThrow()
 })
 
-it('rejects a nonboolean saved state', async () => {
-  mockedRequest.mockResolvedValueOnce({
-    restaurants: [{ restaurantId: 10, saved: 'true' }],
-  })
-  await expect(getMyMapRestaurantSaves([10])).rejects.toThrow()
-})
+it.each([undefined, null, 0, 'true'])(
+  'rejects nonboolean saved: %j',
+  async (saved) => {
+    mockedRequest.mockResolvedValueOnce({
+      restaurants: [{ restaurantId: 10, saved }],
+    })
+    await expect(getMyRestaurantSaves([10])).rejects.toThrow()
+  },
+)
 
 it('propagates cancellation instead of returning fabricated empty results', async () => {
   const controller = new AbortController()
   controller.abort()
   mockedRequest.mockRejectedValueOnce(new DOMException('Aborted', 'AbortError'))
   await expect(
-    getMapRestaurantSaveCounts([10], controller.signal),
+    getRestaurantSaveCounts([10], controller.signal),
   ).rejects.toMatchObject({ name: 'AbortError' })
 })
+
+it.each([getRestaurantSaveCounts, getMyRestaurantSaves])(
+  'propagates a later batch failure without requesting remaining batches: %s',
+  async (read) => {
+    const error = new Error('Service unavailable')
+    mockedRequest.mockResolvedValueOnce({ restaurants: [] })
+    mockedRequest.mockRejectedValueOnce(error)
+    await expect(
+      read(Array.from({ length: 201 }, (_, index) => index + 1)),
+    ).rejects.toBe(error)
+    expect(mockedRequest).toHaveBeenCalledTimes(2)
+  },
+)
+
+it.each([getRestaurantSaveCounts, getMyRestaurantSaves])(
+  'rejects rows belonging to another batch: %s',
+  async (read) => {
+    mockedRequest.mockResolvedValueOnce({ restaurants: [] })
+    mockedRequest.mockResolvedValueOnce({
+      restaurants: [{ restaurantId: 1, saveCount: 3, saved: true }],
+    })
+    await expect(
+      read(Array.from({ length: 101 }, (_, index) => index + 1)),
+    ).rejects.toThrow()
+    expect(mockedRequest).toHaveBeenCalledTimes(2)
+  },
+)

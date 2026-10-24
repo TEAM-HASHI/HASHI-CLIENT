@@ -9,19 +9,28 @@ import {
 } from '@/shared/auth/authSession'
 
 import { deleteCollection } from '@/features/collection/api/deleteCollection'
+import { getCollections } from '@/features/collection/api/getCollections'
+import { ApiError } from '@/shared/api/apiError'
 import { moveSavedRestaurants } from '@/features/collection/api/moveSavedRestaurants'
 import { removeSavedRestaurants } from '@/features/collection/api/removeSavedRestaurants'
 import { saveRestaurant } from '@/features/collection/api/saveRestaurant'
-import { collectionQueryKeys } from '@/features/collection/queries/collectionQueryKeys'
+import {
+  collectionQueryKeys,
+  restaurantSaveQueryKeys,
+} from '@/features/collection/queries/collectionQueryKeys'
+import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
 import {
   useDeleteCollectionMutation,
   useMoveSavedRestaurantsMutation,
   useRemoveSavedRestaurantsMutation,
-  useSaveRestaurantMutation,
+  useUpdateRestaurantCollectionsMutation,
 } from '@/features/collection/mutations/useCollectionManagementMutations'
 
 vi.mock('@/features/collection/api/deleteCollection', () => ({
   deleteCollection: vi.fn(),
+}))
+vi.mock('@/features/collection/api/getCollections', () => ({
+  getCollections: vi.fn(),
 }))
 vi.mock('@/features/collection/api/moveSavedRestaurants', () => ({
   moveSavedRestaurants: vi.fn(),
@@ -52,6 +61,103 @@ describe('collection management mutation cache synchronization', () => {
     clearAuthSession()
   })
 
+  it.each([true, false])(
+    'skips an already-applied saved=%s change and refreshes once for the batch',
+    async (saved) => {
+      startAuthenticatedSession('account-a', 1)
+      vi.mocked(getCollections).mockResolvedValue({
+        collections: [
+          { collectionId: 42, saved },
+          { collectionId: 43, saved: false },
+          { collectionId: 44, saved: false },
+        ],
+        hasNext: false,
+      })
+      vi.mocked(saveRestaurant).mockImplementation(async (collectionId) => ({
+        collectionId,
+      }))
+      const { client, wrapper } = createWrapper()
+      const invalidate = vi.spyOn(client, 'invalidateQueries')
+      const { result } = renderHook(
+        () => useUpdateRestaurantCollectionsMutation(),
+        { wrapper },
+      )
+      await act(async () => {
+        const outcome = await result.current.mutateAsync({
+          restaurantId: 5,
+          changes: { 42: saved, 43: true, 44: true },
+        })
+        expect(outcome.completedIds).toEqual(['42', '43', '44'])
+        expect(outcome.error).toBeNull()
+      })
+      expect(vi.mocked(saveRestaurant).mock.calls.map(([id]) => id)).toEqual([
+        43, 44,
+      ])
+      expect(removeSavedRestaurants).not.toHaveBeenCalled()
+      expect(
+        invalidate.mock.calls.filter(
+          ([options]) =>
+            JSON.stringify(options?.queryKey) ===
+            JSON.stringify(collectionQueryKeys.lists()),
+        ),
+      ).toHaveLength(1)
+      expect(
+        invalidate.mock.calls.filter(
+          ([options]) =>
+            JSON.stringify(options?.queryKey) ===
+            JSON.stringify(restaurantSaveQueryKeys.all()),
+        ),
+      ).toHaveLength(1)
+      client.clear()
+    },
+  )
+
+  it.each([true, false])(
+    'reconciles a concurrent saved=%s change after the initial read',
+    async (saved) => {
+      startAuthenticatedSession('account-a', 1)
+      vi.mocked(getCollections)
+        .mockResolvedValueOnce({
+          collections: [{ collectionId: 42, saved: !saved }],
+          hasNext: false,
+        })
+        .mockResolvedValue({
+          collections: [{ collectionId: 42, saved }],
+          hasNext: false,
+        })
+      const error = new ApiError(
+        {
+          success: false,
+          code: saved ? 'USER-012' : 'USER-013',
+          message: '이미 변경됨',
+          data: null,
+          timestamp: '2026-10-24T00:00:00Z',
+          path: '/api/v1/collections/42/restaurants',
+        },
+        saved ? 409 : 404,
+      )
+      vi.mocked(saveRestaurant).mockRejectedValue(error)
+      vi.mocked(removeSavedRestaurants).mockRejectedValue(error)
+      const { client, wrapper } = createWrapper()
+      const { result } = renderHook(
+        () => useUpdateRestaurantCollectionsMutation(),
+        { wrapper },
+      )
+      await act(async () => {
+        const outcome = await result.current.mutateAsync({
+          restaurantId: 5,
+          changes: { 42: saved },
+        })
+        expect(outcome.completedIds).toEqual(['42'])
+        expect(outcome.error).toBeNull()
+      })
+      expect(
+        saved ? saveRestaurant : removeSavedRestaurants,
+      ).toHaveBeenCalledOnce()
+      client.clear()
+    },
+  )
+
   it.each(['save', 'remove', 'move', 'delete'] as const)(
     'does not update the next account after late %s success',
     async (action) => {
@@ -61,6 +167,13 @@ describe('collection management mutation cache synchronization', () => {
         complete = resolve
       })
       const detail = { collectionId: 42, savedCount: 2 }
+      vi.mocked(getCollections).mockResolvedValue({
+        collections: [
+          { collectionId: 42, saved: false },
+          { collectionId: 43, saved: false },
+        ],
+        hasNext: false,
+      })
       vi.mocked(saveRestaurant).mockImplementation(async () => {
         await request
         return detail
@@ -83,7 +196,7 @@ describe('collection management mutation cache synchronization', () => {
       const { client, wrapper } = createWrapper()
       const { result } = renderHook(
         () => ({
-          save: useSaveRestaurantMutation(onError),
+          save: useUpdateRestaurantCollectionsMutation(onError),
           remove: useRemoveSavedRestaurantsMutation(onError),
           move: useMoveSavedRestaurantsMutation(onError),
           delete: useDeleteCollectionMutation(onError),
@@ -95,8 +208,8 @@ describe('collection management mutation cache synchronization', () => {
         pending = (
           action === 'save'
             ? result.current.save.mutateAsync({
-                collectionId: 42,
-                body: { restaurantId: 5 },
+                restaurantId: 5,
+                changes: { 42: true, 43: true },
               })
             : action === 'remove'
               ? result.current.remove.mutateAsync({
@@ -150,14 +263,25 @@ describe('collection management mutation cache synchronization', () => {
       })
       const other = collectionQueryKeys.restaurants(43, { sort: 'latest' })
       const targetList = collectionQueryKeys.infiniteList({ restaurantId: 5 })
+      const saveCount = restaurantSaveQueryKeys.count(5)
+      const saved = restaurantSaveQueryKeys.saved(5, 0)
+      const summary = restaurantDetailQueryKeys.summary(5)
+      const menus = restaurantDetailQueryKeys.menus(5, 10)
+      const recommendation = restaurantDetailQueryKeys.randomRecommendation()
+      for (const key of [saveCount, saved, summary, menus, recommendation])
+        client.setQueryData(key, { restaurantId: 5 })
       for (const key of [latest, cafes, other, targetList])
         client.setQueryData(key, { pages: [] })
       const updated = { collectionId: 42, savedCount: 2 }
       vi.mocked(saveRestaurant).mockResolvedValue(updated)
       vi.mocked(removeSavedRestaurants).mockResolvedValue(updated)
+      vi.mocked(getCollections).mockResolvedValue({
+        collections: [{ collectionId: 42, saved: false }],
+        hasNext: false,
+      })
       const { result } = renderHook(
         () => ({
-          save: useSaveRestaurantMutation(),
+          save: useUpdateRestaurantCollectionsMutation(),
           remove: useRemoveSavedRestaurantsMutation(),
         }),
         { wrapper },
@@ -165,8 +289,8 @@ describe('collection management mutation cache synchronization', () => {
       await act(async () => {
         if (action === 'save')
           await result.current.save.mutateAsync({
-            collectionId: 42,
-            body: { restaurantId: 5 },
+            restaurantId: 5,
+            changes: { 42: true },
           })
         else
           await result.current.remove.mutateAsync({
@@ -180,6 +304,10 @@ describe('collection management mutation cache synchronization', () => {
       for (const key of [latest, cafes, targetList])
         expect(client.getQueryState(key)?.isInvalidated).toBe(true)
       expect(client.getQueryState(other)?.isInvalidated).toBe(false)
+      for (const key of [saveCount, saved])
+        expect(client.getQueryState(key)?.isInvalidated).toBe(true)
+      for (const key of [summary, menus, recommendation])
+        expect(client.getQueryState(key)?.isInvalidated).toBe(false)
     },
   )
 

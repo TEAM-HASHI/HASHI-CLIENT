@@ -32,6 +32,7 @@ export interface RestaurantRatingDistribution {
 }
 
 export interface RestaurantDetail {
+  saveCount?: number
   id: string
   name: string
   localName: string

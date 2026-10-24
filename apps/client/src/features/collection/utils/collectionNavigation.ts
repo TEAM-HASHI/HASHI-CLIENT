@@ -2,6 +2,7 @@ import type { CollectionManagementAction } from '@/features/collection/types'
 import type { Location } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import { getAuthSessionVersion } from '@/shared/auth/authSession'
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -20,16 +21,12 @@ export const getCollectionSaveState = (
 
 export const getCollectionFormState = (
   location: Pick<Location, 'pathname' | 'search' | 'state' | 'key'>,
-  restaurantId?: string,
-  selectedId: string | null = null,
 ) => ({
   collectionReturn: {
     key: location.key,
     pathname: location.pathname,
     search: location.search,
-    state: restaurantId
-      ? getCollectionSaveState(location.state, restaurantId, selectedId)
-      : (location.state as unknown),
+    state: location.state as unknown,
   },
 })
 
@@ -63,6 +60,20 @@ export const getCollectionSaveSelectedId = (state: unknown) =>
   isRecord(state) && typeof state.collectionSaveSelectedId === 'string'
     ? state.collectionSaveSelectedId
     : null
+
+export const getCollectionSaveChanges = (state: unknown) => {
+  const restored =
+    isRecord(state) && getCollectionSaveSelectedId(state)
+      ? state.collectionSaveChanges
+      : null
+  const changes: Record<string, boolean> = {}
+  if (!isRecord(restored)) return changes
+  for (const [id, saved] of Object.entries(restored)) {
+    if (isValidCollectionId(Number(id)) && typeof saved === 'boolean')
+      changes[id] = saved
+  }
+  return changes
+}
 
 // React Router가 관리하는 history index. 메모리 라우터에는 없어 POP으로 대체한다.
 export const getCollectionHistoryIndex = () => {

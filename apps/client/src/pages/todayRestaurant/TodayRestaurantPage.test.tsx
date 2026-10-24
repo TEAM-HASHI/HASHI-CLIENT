@@ -17,6 +17,7 @@ vi.mock('@/features/restaurantDetail/api/restaurantPhotoSource', () => ({
 }))
 
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
+import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
 import { getRestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
@@ -31,7 +32,9 @@ const { mockStartKakaoOAuth } = vi.hoisted(() => ({
 }))
 const { mockLocationStore } = vi.hoisted(() => ({
   mockLocationStore: {
-    state: undefined as { activeTab?: string } | undefined,
+    state: undefined as
+      | { activeTab?: string; restaurantId?: number }
+      | undefined,
   },
 }))
 const { mockAuthStore } = vi.hoisted(() => ({
@@ -113,6 +116,9 @@ vi.mock(
 )
 vi.mock('@/features/restaurantDetail/api/getRestaurantMenus', () => ({
   getRestaurantMenus: vi.fn(),
+}))
+vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
+  getRestaurantSummary: vi.fn(),
 }))
 vi.mock('@/features/restaurantDetail/hooks/useRestaurantSaveSummary', () => ({
   useRestaurantSaveSummary: () => ({ saveCount: 7, saved: false }),
@@ -248,6 +254,7 @@ describe('TodayRestaurantPage', () => {
     mockedGetRandomRestaurantRecommendation.mockResolvedValue(
       todayRestaurantSummary,
     )
+    vi.mocked(getRestaurantSummary).mockReset()
     mockedGetRestaurantStoreInformation.mockResolvedValue(
       restaurantStoreInformation,
     )
@@ -436,6 +443,42 @@ describe('TodayRestaurantPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith(
       '/restaurants/10/reservations/new',
     )
+  })
+
+  it('restores the reselected restaurant and tab after leaving for collection creation', async () => {
+    mockAuthStore.isAuthenticated = true
+    mockedGetRandomRestaurantRecommendation
+      .mockResolvedValueOnce(todayRestaurantSummary)
+      .mockResolvedValueOnce(nextRestaurantSummary)
+    const view = renderTodayRestaurantPage()
+    fireEvent.click(
+      await screen.findByRole('button', { name: '다시 추천 받기' }),
+    )
+    await screen.findByText('하시 라멘')
+    fireEvent.click(screen.getByRole('tab', { name: /리뷰/ }))
+    fireEvent.click(screen.getByRole('button', { name: '저장하기' }))
+    const [, options] = mockNavigate.mock.calls.at(-1)!
+    expect(options.state).toEqual(
+      expect.objectContaining({
+        restaurantId: 11,
+        activeTab: 'review',
+        collectionSaveRestaurantId: '11',
+      }),
+    )
+    view.unmount()
+    mockLocationStore.state = options.state
+    vi.mocked(getRestaurantSummary).mockResolvedValue(nextRestaurantSummary)
+    mockedGetRandomRestaurantRecommendation.mockClear()
+    renderTodayRestaurantPage()
+    expect(
+      await screen.findByRole('heading', { name: '하시 라멘' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /리뷰/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(getRestaurantSummary).toHaveBeenCalledWith(11)
+    expect(mockedGetRandomRestaurantRecommendation).not.toHaveBeenCalled()
   })
 
   it('gets another random recommendation excluding current restaurant when recommend again is pressed', async () => {

@@ -39,9 +39,9 @@ import {
 import { clearMapSession, writeMapSession } from '@/pages/map/utils/mapSession'
 
 vi.mock('@/pages/map/api/getMapRegions', () => ({ getMapRegions: vi.fn() }))
-vi.mock('@/pages/map/api/getMapRestaurantSaves', () => ({
-  getMapRestaurantSaveCounts: vi.fn(async () => ({})),
-  getMyMapRestaurantSaves: vi.fn(async () => ({})),
+vi.mock('@/features/collection/api/getRestaurantSaves', () => ({
+  getRestaurantSaveCounts: vi.fn(async () => ({})),
+  getMyRestaurantSaves: vi.fn(async () => ({})),
 }))
 vi.mock('@/pages/map/api/getMapRestaurants', () => ({
   getMapRestaurants: vi.fn(),

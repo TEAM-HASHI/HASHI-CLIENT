@@ -531,15 +531,23 @@ describe('RestaurantMenuDetailPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('opens coming soon dialog for authenticated like action', async () => {
+  it('opens collection save entry without losing the menu return source', async () => {
     mockAuthStore.isAuthenticated = true
+    mockLocationStore.state = { source: 'today' }
 
     renderPage()
 
     fireEvent.click(await screen.findByRole('button', { name: '저장하기' }))
 
-    expect(
-      screen.getByRole('heading', { name: '서비스를 준비하고 있어요.' }),
-    ).toBeTruthy()
+    expect(mockNavigate).toHaveBeenCalledWith(
+      { pathname: '/restaurants/10/menus/100', search: '' },
+      {
+        replace: true,
+        state: expect.objectContaining({
+          source: 'today',
+          collectionSaveRestaurantId: '10',
+        }),
+      },
+    )
   })
 })

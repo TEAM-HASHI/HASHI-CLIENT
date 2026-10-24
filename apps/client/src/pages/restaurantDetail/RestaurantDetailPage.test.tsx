@@ -234,7 +234,15 @@ const renderPage = () => {
 
 describe('RestaurantDetailPage', () => {
   beforeEach(() => {
-    mockPhotoDataSource.mockReturnValue(null)
+    mockPhotoDataSource.mockReturnValue({
+      key: 'test',
+      source: {
+        getPage: vi.fn().mockResolvedValue({
+          photos: [],
+          counts: { all: 0, representative: 0, menu: 0, review: 0 },
+        }),
+      },
+    })
     mockedGetRestaurantSummary.mockResolvedValue(restaurantSummary)
     mockedGetRestaurantStoreInformation.mockResolvedValue(
       restaurantStoreInformation,
@@ -443,21 +451,6 @@ describe('RestaurantDetailPage', () => {
     expect(screen.getByRole('tab', { name: /사진\s*1/ })).toBeInTheDocument()
   })
 
-  it('renders the photo tab empty state without a photo count when the data source is unavailable', async () => {
-    renderPage()
-
-    fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
-
-    expect(screen.getByRole('tab', { name: '사진' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    )
-    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
-    expect(
-      screen.queryByRole('tab', { name: /사진 \d+/ }),
-    ).not.toBeInTheDocument()
-  })
-
   it('refetches reviews with selected sort option', async () => {
     renderPage()
 
@@ -550,11 +543,11 @@ describe('RestaurantDetailPage', () => {
 
     renderPage()
 
-    expect(await screen.findByRole('tab', { name: '사진' })).toHaveAttribute(
+    expect(await screen.findByRole('tab', { name: /사진/ })).toHaveAttribute(
       'aria-selected',
       'true',
     )
-    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('등록된 사진이 없어요.')).toBeInTheDocument()
   })
 
   it('smoothly scrolls to the tab position when entering with an initial menu, photo, or review tab', async () => {
@@ -562,7 +555,7 @@ describe('RestaurantDetailPage', () => {
 
     renderPage()
 
-    await screen.findByRole('tab', { name: '사진' })
+    await screen.findByRole('tab', { name: /사진/ })
 
     expect(mockScrollTo).toHaveBeenCalledWith({
       top: expect.any(Number),
@@ -739,7 +732,7 @@ describe('RestaurantDetailPage', () => {
     renderPage()
 
     fireEvent.click(await screen.findByRole('tab', { name: '메뉴' }))
-    fireEvent.click(screen.getByRole('tab', { name: '사진' }))
+    fireEvent.click(screen.getByRole('tab', { name: /사진/ }))
     fireEvent.click(screen.getByRole('tab', { name: /리뷰/ }))
     fireEvent.click(screen.getByRole('tab', { name: '매장 정보' }))
 

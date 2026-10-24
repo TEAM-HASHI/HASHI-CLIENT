@@ -8,7 +8,10 @@ import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/a
 import type { RestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import { useRestaurantDetailActions } from '@/features/restaurantDetail/hooks/useRestaurantDetailActions'
 import { useRestaurantDetailContent } from '@/features/restaurantDetail/hooks/useRestaurantDetailContent'
-import { randomRestaurantRecommendationQueryOptions } from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
+import {
+  randomRestaurantRecommendationQueryOptions,
+  restaurantSummaryQueryOptions,
+} from '@/features/restaurantDetail/queries/restaurantDetailQueryOptions'
 import {
   getRestaurantDetailTabState,
   navigateBackOrReplace,
@@ -22,14 +25,25 @@ const TODAY_RESTAURANT_MENU_PAGE_SIZE = 10
 export const TodayRestaurantPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const initialTab = getRestaurantDetailTabState(location.state).activeTab
+  const [restoredState] = useState(() =>
+    getRestaurantDetailTabState(location.state),
+  )
+  const initialTab = restoredState.activeTab
   const [recommendedSummary, setRecommendedSummary] =
     useState<RestaurantSummary | null>(null)
 
-  const randomRecommendationQuery = useQuery(
-    randomRestaurantRecommendationQueryOptions(),
-  )
-  const summary = recommendedSummary ?? randomRecommendationQuery.data
+  const randomRecommendationQuery = useQuery({
+    ...randomRestaurantRecommendationQueryOptions(),
+    enabled: !restoredState.restaurantId,
+  })
+  const restoredSummaryQuery = useQuery({
+    ...restaurantSummaryQueryOptions(restoredState.restaurantId ?? 0),
+    enabled: !!restoredState.restaurantId,
+  })
+  const initialSummaryQuery = restoredState.restaurantId
+    ? restoredSummaryQuery
+    : randomRecommendationQuery
+  const summary = recommendedSummary ?? initialSummaryQuery.data
   const restaurantId = summary?.restaurantId ?? 0
   const hasRestaurantId = restaurantId > 0
   const detailContent = useRestaurantDetailContent({
@@ -42,6 +56,7 @@ export const TodayRestaurantPage = () => {
   const detailActions = useRestaurantDetailActions({
     menuDetailSource: 'today',
     restaurantId: String(restaurantId),
+    activeTab: detailContent.activeTab,
     onReviewUnavailable: detailContent.onOpenReviewUnavailableModal,
   })
   const recommendAgainMutation = useMutation({
@@ -62,7 +77,7 @@ export const TodayRestaurantPage = () => {
     },
   })
   const requestError =
-    randomRecommendationQuery.error ??
+    initialSummaryQuery.error ??
     (recommendAgainMutation.variables?.fromPhotoTab
       ? null
       : recommendAgainMutation.error) ??
@@ -77,7 +92,7 @@ export const TodayRestaurantPage = () => {
   }
 
   if (
-    randomRecommendationQuery.isPending ||
+    initialSummaryQuery.isPending ||
     !summary ||
     detailContent.isLoading ||
     !detailContent.restaurant

@@ -34,7 +34,6 @@ import type {
   RestaurantDetailTab,
   RestaurantDetailVariant,
 } from '@/features/restaurantDetail/types/restaurantDetail'
-import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import { useShareLink } from '@/shared/components/shareIconButton'
 import { cn, copyTextToClipboard } from '@/shared/utils'
 
@@ -157,7 +156,7 @@ export const RestaurantDetailTemplate = ({
 
   const activeTabSection =
     activeTab === 'info' ? (
-      <RestaurantInfoSection restaurant={restaurant} />
+      <RestaurantInfoSection restaurant={restaurant} showLocationMap />
     ) : activeTab === 'menu' ? (
       <RestaurantMenuListSection
         hasMoreMenus={hasMoreMenus}
@@ -345,10 +344,6 @@ export const RestaurantDetailTemplate = ({
         onKakaoPress={actions.onPressKakao}
         onOpenChange={actions.onAuthGateOpenChange}
         open={actions.isAuthGateOpen}
-      />
-      <ComingSoonDialog
-        onOpenChange={actions.onComingSoonOpenChange}
-        open={actions.isComingSoonOpen}
       />
     </main>
   )

@@ -13,7 +13,6 @@ import type { CollectionSummaryReadModelTypes } from '@/features/collection/type
 import { cn } from '@/shared/utils'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 
-// Figma 8317:38858 / 8317:38956: 너비 327, 최대 높이 490, 행 80.
 type CollectionTargetDialogViewProps = {
   createState?: unknown
   collections: readonly Pick<
@@ -26,6 +25,7 @@ type CollectionTargetDialogViewProps = {
   title: string
   excludeId?: string
   isDisabled?: (id: string) => boolean
+  isChecked?: (id: string) => boolean
   onConfirm: (id: string) => void | Promise<void>
   confirmLabel: (id: string | null) => string
   feedback?: (id: string) => string
@@ -43,6 +43,7 @@ export const CollectionTargetDialogView = ({
   title,
   excludeId,
   isDisabled = () => false,
+  isChecked,
   onConfirm,
   confirmLabel,
   feedback,
@@ -126,9 +127,10 @@ export const CollectionTargetDialogView = ({
           <Dialog.Body className="max-h-65 min-h-0 w-[calc(100%+16px)] self-start overflow-y-auto overscroll-contain pr-4">
             <div
               ref={setListRef}
-              role="radiogroup"
+              role={isChecked ? 'group' : 'radiogroup'}
               aria-label={`${title} 대상`}
               onKeyDown={(event) => {
+                if (isChecked) return
                 if (
                   ![
                     'ArrowUp',
@@ -168,15 +170,18 @@ export const CollectionTargetDialogView = ({
               {collections
                 .filter((c) => c.id !== excludeId)
                 .map((collection) => {
-                  const saved = isDisabled(collection.id)
-                  const selected = selectedId === collection.id
+                  const disabled = isDisabled(collection.id)
+                  const saved = !isChecked && disabled
+                  const selected = isChecked
+                    ? isChecked(collection.id)
+                    : selectedId === collection.id
                   return (
                     <button
                       key={collection.id}
                       type="button"
-                      role="radio"
+                      role={isChecked ? 'checkbox' : 'radio'}
                       aria-checked={selected}
-                      disabled={saved || pending}
+                      disabled={disabled || pending}
                       aria-label={`${collection.name}${saved ? ' (저장됨)' : ''}`}
                       onClick={() => {
                         setError(null)

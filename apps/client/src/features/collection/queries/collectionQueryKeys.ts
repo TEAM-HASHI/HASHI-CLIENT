@@ -73,6 +73,13 @@ export const collectionQueryKeys = {
     ] as const,
 }
 
+export const restaurantSaveQueryKeys = {
+  all: () => ['restaurantSaveSummary'] as const,
+  count: (id: number) => ['restaurantSaveSummary', 'count', id] as const,
+  saved: (id: number, version: number) =>
+    ['restaurantSaveSummary', 'saved', id, version] as const,
+}
+
 export const mapSaveQueryKeys = {
   allCounts: () => ['map', 'saveCounts'] as const,
   allSaved: () => ['map', 'saved'] as const,
