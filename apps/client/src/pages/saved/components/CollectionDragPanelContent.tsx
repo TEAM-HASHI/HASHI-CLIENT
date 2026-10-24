@@ -1,5 +1,10 @@
 import { CancelIcon, MapViewIcon, ShareIcon } from '@hashi/hds-icons'
-import { Button, DragPanel, IconButton } from '@hashi/hds-ui'
+import {
+  Button,
+  DragPanel,
+  DRAG_PANEL_HEIGHTS,
+  IconButton,
+} from '@hashi/hds-ui'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -30,10 +35,7 @@ import { CollectionPanelList } from '@/pages/saved/components/CollectionPanelLis
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import { cn } from '@/shared/utils'
 
-// Figma 8317:40578, 8317:40327. 손잡이 포함, 내비게이션 제외.
 const COLLECTION_PANEL_HEIGHT = {
-  list: 393,
-  detail: 393,
   closeGap: 20,
   closeSize: 44,
 } as const
@@ -87,9 +89,7 @@ export const CollectionDragPanelContent = ({
   const collection = data.collections.find(
     (item) => item.id === view.collectionId,
   )
-  const normalHeight = collection
-    ? COLLECTION_PANEL_HEIGHT.detail
-    : COLLECTION_PANEL_HEIGHT.list
+  const normalHeight = DRAG_PANEL_HEIGHTS.normal
   const [panel, setPanel] = useState<{
     collectionId: string | null
     height: number
@@ -217,8 +217,7 @@ export const CollectionDragPanelContent = ({
           aria-label="저장 컬렉션 패널"
           handleLabel="컬렉션 패널 높이"
           height={height}
-          normalHeight={normalHeight}
-          maxHeight={collection ? undefined : COLLECTION_PANEL_HEIGHT.list}
+          maxHeight={collection ? 'fullscreen' : undefined}
           onHeightChange={(next) => {
             setMenu(null)
             if (next <= 30 && height > next) {
