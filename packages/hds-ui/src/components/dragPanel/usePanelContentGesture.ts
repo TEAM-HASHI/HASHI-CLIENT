@@ -1,25 +1,31 @@
 import { useCallback, useLayoutEffect, useRef } from 'react'
 import type { RefObject } from 'react'
 
-type UsePullToCollapseOptions = {
+type UsePanelContentGestureOptions = {
   contentRef: RefObject<HTMLDivElement | null>
-  enabled: boolean
+  canExpand: boolean
+  canCollapse: boolean
+  height: number
   maximum: number
   normalHeight: number
   deadZone: number
   onDragHeightChange: (height: number | null) => void
   onCollapse: () => void
+  onExpand: () => void
 }
 
-export const usePullToCollapse = ({
+export const usePanelContentGesture = ({
   contentRef,
-  enabled,
+  canExpand,
+  canCollapse,
+  height,
   maximum,
   normalHeight,
   deadZone,
   onDragHeightChange,
   onCollapse,
-}: UsePullToCollapseOptions) => {
+  onExpand,
+}: UsePanelContentGestureOptions) => {
   const wheelDistance = useRef(0)
   const pull = useRef<{
     id: number
@@ -27,10 +33,11 @@ export const usePullToCollapse = ({
     y: number
     active: boolean
     distance: number
+    atTop: boolean
   } | null>(null)
-  const onCollapseRef = useRef(onCollapse)
+  const callbacks = useRef({ onCollapse, onExpand })
   useLayoutEffect(() => {
-    onCollapseRef.current = onCollapse
+    callbacks.current = { onCollapse, onExpand }
   })
 
   const resetPull = useCallback(() => {
@@ -41,19 +48,30 @@ export const usePullToCollapse = ({
 
   useLayoutEffect(() => {
     const content = contentRef.current
-    if (!content || !enabled) return
+    if (!content || (!canExpand && !canCollapse)) return
+
+    const isAtTop = (target: EventTarget | null) => {
+      let node = target instanceof Element ? target : null
+      while (node && content.contains(node)) {
+        if (node.scrollTop > 0) return false
+        if (node === content) break
+        node = node.parentElement
+      }
+      return content.scrollTop <= 0
+    }
 
     const start = (event: TouchEvent) => {
       onDragHeightChange(null)
       const touch = event.touches[0]
       pull.current =
-        event.touches.length === 1 && content.scrollTop <= 0
+        event.touches.length === 1
           ? {
               id: touch.identifier,
               x: touch.clientX,
               y: touch.clientY,
               active: false,
               distance: 0,
+              atTop: isAtTop(event.target),
             }
           : null
     }
@@ -72,16 +90,22 @@ export const usePullToCollapse = ({
       }
       const delta = touch.clientY - active.y
       if (!active.active) {
-        if (Math.abs(touch.clientX - active.x) > deadZone || delta < 0) {
+        if (Math.abs(touch.clientX - active.x) > deadZone) {
           pull.current = null
           return
         }
-        if (delta < deadZone) return
+        if (Math.abs(delta) < deadZone) return
+        if (delta < 0 ? !canExpand : !canCollapse || !active.atTop) {
+          pull.current = null
+          return
+        }
         active.active = true
       }
       event.preventDefault()
       active.distance = delta
-      onDragHeightChange(Math.max(normalHeight, maximum - Math.max(0, delta)))
+      onDragHeightChange(
+        Math.min(maximum, Math.max(normalHeight, height - delta)),
+      )
     }
     const finish = (event: TouchEvent) => {
       const active = pull.current
@@ -89,16 +113,20 @@ export const usePullToCollapse = ({
       onDragHeightChange(null)
       if (
         active?.active &&
-        active.distance >= deadZone &&
+        Math.abs(active.distance) >= deadZone &&
+        (active.distance < 0 ? canExpand : canCollapse && active.atTop) &&
         event.type === 'touchend'
       )
-        onCollapseRef.current()
+        (active.distance < 0
+          ? callbacks.current.onExpand
+          : callbacks.current.onCollapse)()
     }
     const wheel = (event: WheelEvent) => {
       if (
         event.ctrlKey ||
-        content.scrollTop > 0 ||
-        event.deltaY >= 0 ||
+        (event.deltaY > 0
+          ? !canExpand
+          : !canCollapse || !isAtTop(event.target)) ||
         Math.abs(event.deltaY) <= Math.abs(event.deltaX) ||
         !event.cancelable
       ) {
@@ -112,10 +140,13 @@ export const usePullToCollapse = ({
           : event.deltaMode === 2
             ? content.clientHeight
             : 1
-      wheelDistance.current -= event.deltaY * unit
-      if (wheelDistance.current >= deadZone) {
+      if (Math.sign(wheelDistance.current) !== Math.sign(event.deltaY))
         wheelDistance.current = 0
-        onCollapseRef.current()
+      wheelDistance.current += event.deltaY * unit
+      if (Math.abs(wheelDistance.current) >= deadZone) {
+        wheelDistance.current = 0
+        if (event.deltaY > 0) callbacks.current.onExpand()
+        else callbacks.current.onCollapse()
       }
     }
     content.addEventListener('touchstart', start, { passive: true })
@@ -130,7 +161,16 @@ export const usePullToCollapse = ({
       content.removeEventListener('touchcancel', finish)
       content.removeEventListener('wheel', wheel)
     }
-  }, [contentRef, enabled, maximum, normalHeight, deadZone, onDragHeightChange])
+  }, [
+    contentRef,
+    canExpand,
+    canCollapse,
+    height,
+    maximum,
+    normalHeight,
+    deadZone,
+    onDragHeightChange,
+  ])
 
   return resetPull
 }

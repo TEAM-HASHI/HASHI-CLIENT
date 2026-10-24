@@ -4,6 +4,12 @@ import type { ReactNode } from 'react'
 import { cn } from '../../utils'
 import { useDragPanel } from './useDragPanel'
 
+export const DRAG_PANEL_HEIGHTS = {
+  collapsed: 30,
+  normal: 321,
+  maximum: 710,
+} as const
+
 export type DragPanelStage = 'collapsed' | 'normal' | 'maximum'
 export type DragPanelStageCommit = {
   stage: DragPanelStage
@@ -19,9 +25,10 @@ type DragPanelSlot = ReactNode | ((state: DragPanelRenderState) => ReactNode)
 
 export type DragPanelProps = {
   height: number
-  normalHeight: number
-  maxHeight?: number
-  onHeightChange: (height: number) => void
+  stage?: DragPanelStage
+  normalHeight?: number
+  maxHeight?: number | 'fullscreen'
+  onHeightChange?: (height: number) => void
   onStageCommit?: (event: DragPanelStageCommit) => void
   children: DragPanelSlot
   header?: DragPanelSlot
@@ -34,8 +41,9 @@ export type DragPanelProps = {
 
 export const DragPanel = ({
   height,
-  normalHeight,
-  maxHeight,
+  stage,
+  normalHeight = DRAG_PANEL_HEIGHTS.normal,
+  maxHeight = DRAG_PANEL_HEIGHTS.maximum,
   onHeightChange,
   onStageCommit,
   children,
@@ -60,8 +68,9 @@ export const DragPanel = ({
     handleProps,
   } = useDragPanel({
     height,
+    stage,
     normalHeight,
-    maxHeight,
+    maxHeight: maxHeight === 'fullscreen' ? undefined : maxHeight,
     onHeightChange,
     onStageCommit,
   })
@@ -113,7 +122,6 @@ export const DragPanel = ({
           'animate-bottom-sheet-panel-in pointer-events-auto absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[20px] bg-white',
           !isDragging &&
             'transition-[height] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-          fullscreen && 'rounded-none',
           className,
         )}
         style={{ height: currentHeight, bottom: bottomInset }}

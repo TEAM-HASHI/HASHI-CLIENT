@@ -46,7 +46,7 @@ export { SearchBar, SearchField } from './searchBar'
 export type { SearchBarProps, SearchFieldProps } from './searchBar'
 export { BottomSheet } from './bottomSheet'
 export type { BottomSheetProps } from './bottomSheet'
-export { DragPanel } from './dragPanel'
+export { DragPanel, DRAG_PANEL_HEIGHTS } from './dragPanel'
 export type {
   DragPanelProps,
   DragPanelRenderState,
