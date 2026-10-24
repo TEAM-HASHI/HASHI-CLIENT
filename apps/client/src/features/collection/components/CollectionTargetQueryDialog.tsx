@@ -13,13 +13,14 @@ import { isValidCollectionId } from '@/features/collection/api/collectionReadCon
 import { CollectionTargetDialogView } from '@/features/collection/components/CollectionTargetDialogView'
 import {
   useMoveSavedRestaurantsMutation,
-  useSaveRestaurantMutation,
+  useUpdateRestaurantCollectionsMutation,
 } from '@/features/collection/mutations/useCollectionManagementMutations'
 import { collectionQueryKeys } from '@/features/collection/queries/collectionQueryKeys'
 import { useCollectionQuery } from '@/features/collection/queries/useCollectionQuery'
 import { useCollectionsInfiniteQuery } from '@/features/collection/queries/useCollectionsInfiniteQuery'
 import { mapCollectionSummary } from '@/features/collection/utils/collectionReadAdapters'
 import {
+  getCollectionSaveChanges,
   getCollectionSaveSelectedId,
   getCollectionSaveState,
 } from '@/features/collection/utils/collectionNavigation'
@@ -70,6 +71,9 @@ const CollectionTargetQueryDialogContent = (
   }, [])
   const [selectedId, setSelectedId] = useState(() =>
     getCollectionSaveSelectedId(props.restoreSelection ? location.state : null),
+  )
+  const [saveChanges, setSaveChanges] = useState(() =>
+    getCollectionSaveChanges(props.restoreSelection ? location.state : null),
   )
   const [listRoot, setListRoot] = useState<HTMLDivElement | null>(null)
   const moving = props.mode === 'move'
@@ -123,7 +127,7 @@ const CollectionTargetQueryDialogContent = (
   })
   const planReady =
     planQuery.isSuccess && !planQuery.isFetching && !planQuery.error
-  const save = useSaveRestaurantMutation(captureError)
+  const updateSaves = useUpdateRestaurantCollectionsMutation(captureError)
   const move = useMoveSavedRestaurantsMutation(captureError)
   const loadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     root: listRoot,
@@ -164,23 +168,43 @@ const CollectionTargetQueryDialogContent = (
       title={moving ? '컬렉션 이동' : '컬렉션 저장'}
       collections={collections}
       selectedId={selectedId}
-      onSelect={setSelectedId}
+      onSelect={(id) => {
+        setSelectedId(id)
+        if (moving) return
+        const saved = collections.find((item) => item.id === id)?.saved
+        if (saved === undefined) return
+        setSaveChanges((current) => {
+          const next = { ...current }
+          const checked = !(current[id] ?? saved)
+          if (checked === saved) delete next[id]
+          else next[id] = checked
+          return next
+        })
+      }}
       onClose={props.onClose}
       excludeId={moving ? String(sourceId) : undefined}
       createState={
-        props.createState ??
-        (props.mode === 'save'
-          ? getCollectionSaveState(location.state, String(props.restaurantId))
-          : location.state)
+        props.mode === 'save'
+          ? {
+              ...getCollectionSaveState(
+                props.createState ?? location.state,
+                String(props.restaurantId),
+              ),
+              collectionSaveChanges: saveChanges,
+            }
+          : (props.createState ?? location.state)
       }
       onListMount={setListRoot}
-      isDisabled={(id) =>
-        props.mode === 'save' &&
-        collections.find((item) => item.id === id)?.saved === true
+      isChecked={
+        moving
+          ? undefined
+          : (id) =>
+              saveChanges[id] ??
+              collections.find((item) => item.id === id)?.saved === true
       }
       confirmDisabled={
         !listQuery.data ||
-        (!moving && selected?.saved !== false) ||
+        (!moving && (!Object.keys(saveChanges).length || !!feedbackError)) ||
         (moving &&
           (!sourceOwned || !planReady || !planQuery.data?.movableIds.length))
       }
@@ -244,19 +268,22 @@ const CollectionTargetQueryDialogContent = (
         if (id !== selectedId || !selected || !isValidCollectionId(targetId))
           return
         if (props.mode === 'save') {
-          if (selected.saved !== false) return
-          try {
-            await save.mutateAsync({
-              collectionId: targetId,
-              body: { restaurantId: props.restaurantId },
-            })
-          } catch (cause) {
-            if (checkHasHttpStatus(cause) && cause.status === 409)
-              void listQuery.refetch()
-            throw cause
+          const result = await updateSaves.mutateAsync({
+            restaurantId: props.restaurantId,
+            changes: saveChanges,
+          })
+          if (!mounted.current || sessionVersion !== getAuthSessionVersion())
+            return
+          setSaveChanges((current) => {
+            const next = { ...current }
+            for (const id of result.completedIds) delete next[id]
+            return next
+          })
+          if (result.error) {
+            captureError(result.error)
+            throw result.error
           }
-          if (mounted.current && sessionVersion === getAuthSessionVersion())
-            props.onClose()
+          props.onClose()
         } else {
           if (!sourceOwned || !planReady || !planQuery.data.movableIds.length)
             return

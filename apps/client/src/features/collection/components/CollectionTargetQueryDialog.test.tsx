@@ -21,6 +21,7 @@ import { getCollections } from '@/features/collection/api/getCollections'
 import { getCollection } from '@/features/collection/api/getCollection'
 import { getSavedRestaurants } from '@/features/collection/api/getSavedRestaurants'
 import { saveRestaurant } from '@/features/collection/api/saveRestaurant'
+import { removeSavedRestaurants } from '@/features/collection/api/removeSavedRestaurants'
 import { moveSavedRestaurants } from '@/features/collection/api/moveSavedRestaurants'
 import { ApiError } from '@/shared/api/apiError'
 import { clearAuthSession, setAccessToken } from '@/shared/auth/authSession'
@@ -171,15 +172,14 @@ describe('컬렉션 API 대상 선택·이동', () => {
       .mockResolvedValueOnce({ collectionId: 9, savedCount: 11 })
     const { user, onClose } = setup('save')
     expect(
-      await screen.findByRole('radio', { name: '저장된 여행 (저장됨)' }),
-    ).toBeDisabled()
+      await screen.findByRole('checkbox', { name: '저장된 여행' }),
+    ).toBeChecked()
     await waitFor(() => expect(observers.size).toBeGreaterThan(0))
     expect(roots.at(-1)).toBe(
-      screen.getByRole('radiogroup', { name: '컬렉션 저장 대상' })
-        .parentElement,
+      screen.getByRole('group', { name: '컬렉션 저장 대상' }).parentElement,
     )
     await intersect()
-    await user.click(await screen.findByRole('radio', { name: '새 여행' }))
+    await user.click(await screen.findByRole('checkbox', { name: '새 여행' }))
     const confirm = screen.getByRole('button', { name: '저장' })
     fireEvent.click(confirm)
     fireEvent.click(confirm)
@@ -192,7 +192,7 @@ describe('컬렉션 API 대상 선택·이동', () => {
     expect(onClose).not.toHaveBeenCalled()
     await act(async () => reject(new Error('offline')))
     expect(await screen.findByRole('alert')).toBeVisible()
-    expect(screen.getByRole('radio', { name: '새 여행' })).toHaveAttribute(
+    expect(screen.getByRole('checkbox', { name: '새 여행' })).toHaveAttribute(
       'aria-checked',
       'true',
     )
@@ -203,6 +203,62 @@ describe('컬렉션 API 대상 선택·이동', () => {
       { restaurantId: 55, size: 20, cursor: 8 },
       expect.any(AbortSignal),
     )
+  })
+
+  it('추가 저장과 해제 예정 상태를 독립적으로 유지하고 성공한 요청은 재시도하지 않는다', async () => {
+    const saved = new Set([8, 9, 11])
+    vi.mocked(getCollections).mockImplementation(async () => ({
+      collections: [8, 9, 10, 11].map((collectionId) => ({
+        collectionId,
+        name: `컬렉션 ${collectionId}`,
+        saved: saved.has(collectionId),
+      })),
+      totalCount: 4,
+      hasNext: false,
+    }))
+    let failed = false
+    vi.mocked(removeSavedRestaurants).mockImplementation(async (id) => {
+      if (id === 9 && !failed) {
+        failed = true
+        throw new Error('offline')
+      }
+      saved.delete(id)
+      return { collectionId: id, savedCount: 0 }
+    })
+    vi.mocked(saveRestaurant).mockImplementation(async (id) => {
+      saved.add(id)
+      return { collectionId: id, savedCount: 1 }
+    })
+    const { user, onClose } = setup('save')
+    const first = await screen.findByRole('checkbox', { name: '컬렉션 8' })
+    const second = screen.getByRole('checkbox', { name: '컬렉션 9' })
+    const added = screen.getByRole('checkbox', { name: '컬렉션 10' })
+    const untouched = screen.getByRole('checkbox', { name: '컬렉션 11' })
+    await user.click(added)
+    await user.click(first)
+    await user.click(second)
+    expect(first).not.toBeChecked()
+    expect(second).not.toBeChecked()
+    expect(added).toBeChecked()
+    expect(untouched).toBeChecked()
+    expect(removeSavedRestaurants).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: '저장' }))
+    expect(await screen.findByRole('alert')).toBeVisible()
+    expect(first).not.toBeChecked()
+    expect(second).not.toBeChecked()
+    expect(added).toBeChecked()
+    expect(untouched).toBeChecked()
+    expect(onClose).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: '저장' }))
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
+    expect(vi.mocked(removeSavedRestaurants).mock.calls).toEqual([
+      [8, [55]],
+      [9, [55]],
+      [9, [55]],
+    ])
+    expect(saveRestaurant).toHaveBeenCalledExactlyOnceWith(10, {
+      restaurantId: 55,
+    })
   })
 
   it('대상의 뒤 페이지에 있는 중복을 제외하고 실제 이동 수와 보낸 ID를 일치시킨다', async () => {
@@ -298,27 +354,33 @@ describe('컬렉션 API 대상 선택·이동', () => {
       hasNext: false,
     })
     const { user } = setup('save')
-    await user.click(await screen.findByRole('radio', { name: '대상' }))
+    await user.click(await screen.findByRole('checkbox', { name: '대상' }))
     expect(await screen.findByRole('alert')).toBeVisible()
     expect(screen.getByRole('button', { name: '저장' })).toBeDisabled()
     expect(saveRestaurant).not.toHaveBeenCalled()
   })
 
-  it('대상 선택 후 생성 화면을 다녀와도 선택을 복원하고 자동 저장하지 않는다', async () => {
-    vi.mocked(getCollections).mockResolvedValue({
-      collections: [{ collectionId: 9, name: '대상', saved: false }],
-      totalCount: 1,
-      hasNext: false,
-    })
-    const { user, router } = setup('save')
-    await user.click(await screen.findByRole('radio', { name: '대상' }))
-    await user.click(screen.getByRole('button', { name: '새 컬렉션 만들기' }))
-    expect(router.state.location.pathname).toBe('/saved/collections/new')
-    await user.click(screen.getByRole('button', { name: '생성 취소 후 복귀' }))
-    expect(await screen.findByRole('radio', { name: '대상' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    )
-    expect(saveRestaurant).not.toHaveBeenCalled()
-  })
+  it.each([false, true])(
+    '생성 화면 복귀 후 변경 의도(saved=%s)를 복원하고 자동 요청하지 않는다',
+    async (saved) => {
+      vi.mocked(getCollections).mockResolvedValue({
+        collections: [{ collectionId: 9, name: '대상', saved }],
+        totalCount: 1,
+        hasNext: false,
+      })
+      const { user, router } = setup('save')
+      await user.click(await screen.findByRole('checkbox', { name: '대상' }))
+      await user.click(screen.getByRole('button', { name: '새 컬렉션 만들기' }))
+      expect(router.state.location.pathname).toBe('/saved/collections/new')
+      await user.click(
+        screen.getByRole('button', { name: '생성 취소 후 복귀' }),
+      )
+      expect(
+        await screen.findByRole('checkbox', { name: '대상' }),
+      ).toHaveAttribute('aria-checked', String(!saved))
+      expect(screen.getByRole('button', { name: '저장' })).toBeEnabled()
+      expect(saveRestaurant).not.toHaveBeenCalled()
+      expect(removeSavedRestaurants).not.toHaveBeenCalled()
+    },
+  )
 })
