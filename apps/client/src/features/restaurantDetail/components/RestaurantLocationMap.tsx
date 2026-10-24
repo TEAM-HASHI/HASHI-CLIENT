@@ -93,7 +93,10 @@ export const RestaurantLocationMap = ({
 }) => {
   const routeLocation = useLocation()
   const navigate = useNavigate()
-  const query = useQuery(mapRestaurantLocationQueryOptions(restaurantId))
+  const query = useQuery({
+    ...mapRestaurantLocationQueryOptions(restaurantId),
+    refetchOnMount: false,
+  })
   const [clock, setClock] = useState(Date.now)
   const location = query.data
   useEffect(() => {

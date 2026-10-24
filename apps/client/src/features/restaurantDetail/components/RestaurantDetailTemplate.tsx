@@ -13,17 +13,10 @@ import { useCallback, useEffect, useRef } from 'react'
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
 import { RestaurantDetailHero } from '@/features/restaurantDetail/components/RestaurantDetailHero'
-import { RestaurantDetailTabs } from '@/features/restaurantDetail/components/RestaurantDetailTabs'
-import { RestaurantInfoSection } from '@/features/restaurantDetail/components/RestaurantInfoSection'
-import { RestaurantMenuListSection } from '@/features/restaurantDetail/components/RestaurantMenuListSection'
-import { RestaurantPhotoSection } from '@/features/restaurantDetail/components/RestaurantPhotoSection'
-import { RestaurantReviewSection } from '@/features/restaurantDetail/components/RestaurantReviewSection'
+import { RestaurantDetailBody } from '@/features/restaurantDetail/components/RestaurantDetailBody'
 import { ReviewImageViewer } from '@/features/restaurantDetail/components/ReviewImageViewer'
 import { ReviewUnavailableModal } from '@/features/restaurantDetail/components/ReviewUnavailableModal'
-import {
-  RESTAURANT_DETAIL_HEADER_HEIGHT,
-  RESTAURANT_DETAIL_TAB_BAR_HEIGHT,
-} from '@/features/restaurantDetail/constants/restaurantDetailLayout'
+import { RESTAURANT_DETAIL_HEADER_HEIGHT } from '@/features/restaurantDetail/constants/restaurantDetailLayout'
 import { useRestaurantDetailTabBarFixed } from '@/features/restaurantDetail/hooks/useRestaurantDetailTabBarFixed'
 import type { useRestaurantDetailContent } from '@/features/restaurantDetail/hooks/useRestaurantDetailContent'
 import type { useRestaurantDetailActions } from '@/features/restaurantDetail/hooks/useRestaurantDetailActions'
@@ -35,7 +28,7 @@ import type {
   RestaurantDetailVariant,
 } from '@/features/restaurantDetail/types/restaurantDetail'
 import { useShareLink } from '@/shared/components/shareIconButton'
-import { cn, copyTextToClipboard } from '@/shared/utils'
+import { copyTextToClipboard } from '@/shared/utils'
 
 interface RestaurantDetailTemplateProps {
   content: ReturnType<typeof useRestaurantDetailContent> & {
@@ -67,21 +60,6 @@ export const RestaurantDetailTemplate = ({
     isReviewImageViewerOpen,
     isReviewUnavailableModalOpen,
     restaurant,
-    hasMoreMenus,
-    hasMoreReviews,
-    isMenuListError,
-    isMenuListLoading,
-    isMenuNextPageError,
-    isReviewNextPageError,
-    isReviewListError,
-    isReviewListLoading,
-    menuLoadMoreRef,
-    reviewLoadMoreRef,
-    selectedReviewSort,
-    onPressReviewImage,
-    onRetryMenuList,
-    onRetryReviewList,
-    onSelectReviewSort,
     onTabChange,
     onCloseReviewImageViewer,
     onCloseReviewUnavailableModal,
@@ -153,54 +131,6 @@ export const RestaurantDetailTemplate = ({
       children: '식당명이 복사되었어요',
     })
   }
-
-  const activeTabSection =
-    activeTab === 'info' ? (
-      <RestaurantInfoSection restaurant={restaurant} showLocationMap />
-    ) : activeTab === 'menu' ? (
-      <RestaurantMenuListSection
-        hasMoreMenus={hasMoreMenus}
-        isMenuListError={isMenuListError}
-        isLoading={isMenuListLoading}
-        isNextPageError={isMenuNextPageError}
-        loadMoreRef={menuLoadMoreRef}
-        menus={restaurant.menus}
-        onPressMenuItem={onPressMenuItem}
-        onRetryMenuList={onRetryMenuList}
-      />
-    ) : activeTab === 'photo' ? (
-      <RestaurantPhotoSection
-        key={restaurant.id}
-        model={photos}
-        onResetScroll={scrollToTabBarTop}
-      />
-    ) : (
-      <RestaurantReviewSection
-        hasMoreReviews={hasMoreReviews}
-        isReviewListError={isReviewListError}
-        isNextPageError={isReviewNextPageError}
-        isReviewListLoading={isReviewListLoading}
-        loadMoreRef={reviewLoadMoreRef}
-        onPressReviewImage={onPressReviewImage}
-        onRetryReviewList={onRetryReviewList}
-        onPressWriteReview={onPressWriteReview}
-        onSelectSort={onSelectReviewSort}
-        rating={restaurant.rating}
-        ratingDistribution={restaurant.ratingDistribution}
-        restaurantName={restaurant.name}
-        reviewCount={restaurant.reviewCount}
-        reviews={restaurant.reviews}
-        selectedSort={selectedReviewSort}
-      />
-    )
-  const activeTabSectionStyle =
-    activeTab === 'info'
-      ? undefined
-      : {
-          minHeight: `calc(100dvh - ${
-            RESTAURANT_DETAIL_HEADER_HEIGHT + RESTAURANT_DETAIL_TAB_BAR_HEIGHT
-          }px)`,
-        }
 
   const headerTitle = activeTab === 'info' ? title : restaurant.name
 
@@ -288,35 +218,15 @@ export const RestaurantDetailTemplate = ({
         </dl>
       </section>
 
-      <div aria-hidden="true" ref={markerRef} />
-      <div
-        className={cn(
-          'z-fixed bg-white',
-          isTabBarFixed
-            ? 'fixed inset-x-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)]'
-            : 'relative',
-        )}
-        data-fixed={isTabBarFixed}
-        data-testid="restaurant-detail-tab-sticky-container"
-        style={
-          isTabBarFixed ? { top: RESTAURANT_DETAIL_HEADER_HEIGHT } : undefined
-        }
-      >
-        <RestaurantDetailTabs
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          reviewCount={restaurant.reviewCount}
-          photoCount={photos.enabled ? photos.counts?.all : undefined}
-        />
-      </div>
-      {isTabBarFixed ? (
-        <div
-          aria-hidden="true"
-          style={{ height: RESTAURANT_DETAIL_TAB_BAR_HEIGHT }}
-        />
-      ) : null}
-
-      <div style={activeTabSectionStyle}>{activeTabSection}</div>
+      <RestaurantDetailBody
+        content={{ ...content, onTabChange: handleTabChange }}
+        photos={photos}
+        onPressMenuItem={onPressMenuItem}
+        onPressWriteReview={onPressWriteReview}
+        onResetPhotoScroll={scrollToTabBarTop}
+        tabBarPosition={isTabBarFixed ? 'fixed' : 'relative'}
+        markerRef={markerRef}
+      />
 
       <ReviewImageViewer
         imageUrls={reviewImageViewerImageUrls}

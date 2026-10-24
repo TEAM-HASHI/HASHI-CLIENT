@@ -197,6 +197,8 @@
 ## UI Structure
 
 페이지는 조회·오류·진입 경로를 담당하고 `content`와 `actions`를 공통 템플릿에 전달한다.
+
+일반 상세·오늘의 식당·지도 확장 상세는 `RestaurantDetailBody`의 탭 UI와 본문 표시를 공유한다. 컨테이너에 따른 고정 방식·헤더 높이·스크롤 대상만 호출부에서 연결하며, 탭 아래 별도 디자인 분기는 두지 않는다. 저장·예약 하단 영역과 리뷰 이미지 Dialog도 같은 feature 컴포넌트를 사용한다.
 탭·이미지 뷰어·작성 불가 모달 상태는 `useRestaurantDetailContent`가 관리하며, 인증 안내와 액션 연결은 `useRestaurantDetailActions` 및 템플릿이 공유한다.
 
 ```text
