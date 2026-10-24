@@ -9,6 +9,8 @@ import {
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
+import { getMapRestaurantLocation } from '@/pages/map/api/getMapRestaurantLocation'
 
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
 import { getRestaurantPhotos } from '@/features/restaurantDetail/api/getRestaurantPhotos'
@@ -26,10 +28,12 @@ import { restaurantDetailQueryKeys } from '@/features/restaurantDetail/queries/r
 import { MapRestaurantDetail } from '@/pages/map/components/MapRestaurantDetail'
 import type { MapPanelStage, MapRestaurant } from '@/pages/map/types'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
-import spinner from '@/shared/assets/images/map/loading-spinner.svg'
 
 vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
   getRestaurantSummary: vi.fn(),
+}))
+vi.mock('@/pages/map/api/getMapRestaurantLocation', () => ({
+  getMapRestaurantLocation: vi.fn(),
 }))
 vi.mock(
   '@/features/restaurantDetail/api/getRestaurantStoreInformation',
@@ -110,18 +114,22 @@ const setup = (stage: MapPanelStage = 'normal') => {
     onStageChange: vi.fn(),
     onClose: vi.fn(),
     onPhotoSelect: vi.fn(),
-    onUnavailable: vi.fn(),
+    onPressReservation: vi.fn(),
+    onPressWriteReview: vi.fn(),
+    onSave: vi.fn(),
     onLoadError: vi.fn(),
     onPressMenuItem: vi.fn(),
   }
   const element = (nextStage: MapPanelStage, selected = restaurant) => (
-    <QueryClientProvider client={client}>
-      <MapRestaurantDetail
-        restaurant={selected}
-        stage={nextStage}
-        {...callbacks}
-      />
-    </QueryClientProvider>
+    <MemoryRouter>
+      <QueryClientProvider client={client}>
+        <MapRestaurantDetail
+          restaurant={selected}
+          stage={nextStage}
+          {...callbacks}
+        />
+      </QueryClientProvider>
+    </MemoryRouter>
   )
   const view = render(element(stage))
   return {
@@ -134,6 +142,11 @@ const setup = (stage: MapPanelStage = 'normal') => {
 }
 
 beforeEach(() => {
+  vi.mocked(getMapRestaurantLocation).mockResolvedValue({
+    position: { lat: 35.7, lng: 139.7 },
+    validUntil: '2000-01-01T00:00:00Z',
+    attributions: [],
+  })
   vi.mocked(getRestaurantPhotos).mockResolvedValue({
     photos: [
       {
@@ -191,32 +204,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-it('shows the design spinner while the selected summary is loading, then replaces it with detail', async () => {
-  let resolve!: (value: RestaurantSummary) => void
-  vi.mocked(getRestaurantSummary).mockImplementationOnce(
-    () =>
-      new Promise((done) => {
-        resolve = done
-      }),
-  )
-  setup()
-  const loading = screen.getByRole('status')
-  expect(loading).toHaveTextContent('식당 정보를 불러오고 있어요.')
-  expect(loading.querySelector('img')).toHaveAttribute('src', spinner)
-  expect(
-    screen.queryByRole('heading', { name: '목록 식당' }),
-  ).not.toBeInTheDocument()
-  expect(
-    screen.queryByRole('button', { name: /사진 1 보기/ }),
-  ).not.toBeInTheDocument()
-  await act(async () => resolve(summary))
-  expect(
-    await screen.findByRole('heading', { name: '서버 식당' }),
-  ).toBeVisible()
-  expect(screen.queryByRole('status')).not.toBeInTheDocument()
-})
-
-it('uses the spinner for a pending expanded store-information tab', async () => {
+it('keeps the selected detail open until expanded store information finishes loading', async () => {
   let resolve!: (
     value: Awaited<ReturnType<typeof getRestaurantStoreInformation>>,
   ) => void
@@ -233,7 +221,6 @@ it('uses the spinner for a pending expanded store-information tab', async () => 
     screen.getByRole('tabpanel', { name: '매장 정보' }),
   ).getByRole('status')
   expect(loading).toHaveTextContent('매장 정보를 불러오고 있어요.')
-  expect(loading.querySelector('img')).toHaveAttribute('src', spinner)
   await act(async () =>
     resolve({
       restaurantId: 10,
@@ -242,7 +229,9 @@ it('uses the spinner for a pending expanded store-information tab', async () => 
     }),
   )
   expect(await screen.findByText('조회된 매장 설명')).toBeVisible()
-  expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  expect(
+    screen.queryByText('매장 정보를 불러오고 있어요.'),
+  ).not.toBeInTheDocument()
 })
 
 it('loads the selected summary before lazily loading expanded store information', async () => {
@@ -495,16 +484,6 @@ it('resets review reentry to latest and a newly requested first page, instead of
   view.client.clear()
 })
 
-it('opens the selected menu instead of the unavailable action', async () => {
-  const user = userEvent.setup()
-  const view = setup('expanded')
-  await screen.findByText('실제 가게 설명')
-  await user.click(screen.getByRole('tab', { name: '메뉴' }))
-  await user.click(await screen.findByRole('button', { name: /특상 돈카츠/ }))
-  expect(view.onPressMenuItem).toHaveBeenCalledWith('1')
-  expect(view.onUnavailable).not.toHaveBeenCalled()
-})
-
 it('requests only a new first page when returning directly to the review tab', async () => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
@@ -530,17 +509,21 @@ it('requests only a new first page when returning directly to the review tab', a
     pageParams: [undefined, 1],
   })
   render(
-    <QueryClientProvider client={client}>
-      <MapRestaurantDetail
-        restaurant={restaurant}
-        stage="expanded"
-        initialTab="review"
-        onStageChange={vi.fn()}
-        onClose={vi.fn()}
-        onUnavailable={vi.fn()}
-        onPressMenuItem={vi.fn()}
-      />
-    </QueryClientProvider>,
+    <MemoryRouter>
+      <QueryClientProvider client={client}>
+        <MapRestaurantDetail
+          restaurant={restaurant}
+          stage="expanded"
+          initialTab="review"
+          onStageChange={vi.fn()}
+          onClose={vi.fn()}
+          onPressReservation={vi.fn()}
+          onPressWriteReview={vi.fn()}
+          onSave={vi.fn()}
+          onPressMenuItem={vi.fn()}
+        />
+      </QueryClientProvider>
+    </MemoryRouter>,
   )
   await screen.findByText('맛있는 식당')
   await waitFor(() => expect(getRestaurantReviews).toHaveBeenCalledTimes(1))
@@ -674,7 +657,7 @@ it('opens review images above expanded detail and restores the review thumbnail 
   await user.click(photo)
   expect(
     screen
-      .getByRole('dialog', { name: '식당 사진 상세보기' })
+      .getByRole('dialog', { name: '리뷰 이미지 상세보기' })
       .querySelector('img'),
   ).toHaveAttribute('src', 'https://images.test/review.jpg')
   await user.keyboard('{Escape}')

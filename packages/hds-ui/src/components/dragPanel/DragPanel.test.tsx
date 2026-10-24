@@ -69,6 +69,87 @@ const renderPanel = (height = 318) =>
   )
 
 describe('DragPanel', () => {
+  it.each([
+    ['ArrowUp', '321'],
+    ['End', '710'],
+  ])(
+    'restores the stage selected with %s after a small viewport grows',
+    (key, expected) => {
+      let viewportHeight = 216
+      vi.spyOn(window, 'innerHeight', 'get').mockImplementation(
+        () => viewportHeight,
+      )
+      const rect = document.body.getBoundingClientRect()
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+        ...rect,
+        height: 900,
+        bottom: 900,
+      })
+      const onStageCommit = vi.fn()
+      const Preview = () => {
+        const [height, setHeight] = useState(321)
+        return (
+          <>
+            <output>{height}</output>
+            <DragPanel
+              height={height}
+              onHeightChange={setHeight}
+              onStageCommit={onStageCommit}
+              aria-label="Results"
+              handleLabel="Panel height"
+            >
+              <p>Row</p>
+            </DragPanel>
+          </>
+        )
+      }
+      render(<Preview />)
+      const handle = screen.getByRole('slider')
+      fireEvent.keyDown(handle, { key: 'Home' })
+      fireEvent.keyDown(handle, { key })
+      expect(handle).toHaveAttribute('aria-valuenow', '216')
+      const commits = onStageCommit.mock.calls.length
+      viewportHeight = 900
+      fireEvent.resize(window)
+      expect(handle).toHaveAttribute('aria-valuenow', expected)
+      expect(screen.getByRole('status')).toHaveTextContent(expected)
+      expect(onStageCommit).toHaveBeenCalledTimes(commits)
+    },
+  )
+
+  it('expands on an upward content swipe without requiring the nested list to reach its end', () => {
+    const Preview = () => {
+      const [height, setHeight] = useState(321)
+      return (
+        <DragPanel
+          height={height}
+          onHeightChange={setHeight}
+          aria-label="Results"
+          handleLabel="Panel height"
+        >
+          <div style={{ overflowY: 'auto' }}>Nested list</div>
+        </DragPanel>
+      )
+    }
+    render(<Preview />)
+    const list = screen.getByText('Nested list')
+    list.scrollTop = 100
+    fireEvent.touchStart(list, {
+      touches: [{ identifier: 1, clientX: 50, clientY: 160 }],
+    })
+    fireEvent.touchMove(list, {
+      touches: [{ identifier: 1, clientX: 50, clientY: 100 }],
+    })
+    fireEvent.touchEnd(list)
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '700')
+    expect(list.scrollTop).toBe(100)
+    fireEvent.wheel(list, { deltaY: -80 })
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '700')
+    list.scrollTop = 0
+    fireEvent.wheel(list, { deltaY: -80 })
+    expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '321')
+  })
+
   it.each([700, 180])(
     'keeps fullscreen and collapse controls when available height becomes %ipx',
     (availableHeight) => {
@@ -76,6 +157,7 @@ describe('DragPanel', () => {
       const onStageCommit = vi.fn()
       const props = {
         normalHeight: 240,
+        maxHeight: 'fullscreen' as const,
         onHeightChange,
         onStageCommit,
         'aria-label': 'Results',
@@ -108,6 +190,9 @@ describe('DragPanel', () => {
       expect(handle).not.toBeVisible()
       expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument()
       expect(onStageCommit).not.toHaveBeenCalled()
+      onHeightChange.mockClear()
+      fireEvent.wheel(screen.getByText('Row').parentElement!, { deltaY: 80 })
+      expect(onHeightChange).not.toHaveBeenCalled()
       fireEvent.wheel(screen.getByText('Row').parentElement!, { deltaY: -80 })
       expect(onHeightChange).toHaveBeenLastCalledWith(
         Math.min(240, availableHeight),
@@ -125,6 +210,7 @@ describe('DragPanel', () => {
       <DragPanel
         height={700}
         normalHeight={240}
+        maxHeight="fullscreen"
         onHeightChange={onHeightChange}
         aria-label="Results"
         handleLabel="Panel height"
@@ -156,6 +242,7 @@ describe('DragPanel', () => {
     const onHeightChange = vi.fn()
     const props = {
       normalHeight: 240,
+      maxHeight: 'fullscreen' as const,
       onHeightChange,
       'aria-label': 'Results',
       handleLabel: 'Panel height',
@@ -168,6 +255,7 @@ describe('DragPanel', () => {
     }
     const { rerender } = render(<DragPanel {...props} height={240} />)
     const input = screen.getByRole('textbox')
+    fireEvent.change(input, { target: { value: 'Preserved' } })
     const handle = screen.getByRole('slider')
     handle.focus()
     fireEvent.keyDown(handle, { key: 'End' })
@@ -189,6 +277,9 @@ describe('DragPanel', () => {
     rerender(<DragPanel {...props} height={30} />)
     expect(handle).toHaveFocus()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    rerender(<DragPanel {...props} height={240} />)
+    expect(screen.getByRole('textbox')).toBe(input)
+    expect(screen.getByRole('textbox')).toHaveValue('Preserved')
   })
 
   it('only collapses a fullscreen list on downward input starting at its top', () => {
@@ -197,6 +288,7 @@ describe('DragPanel', () => {
       <DragPanel
         height={700}
         normalHeight={240}
+        maxHeight="fullscreen"
         onHeightChange={onHeightChange}
         aria-label="Results"
         handleLabel="Panel height"
@@ -429,41 +521,6 @@ describe('DragPanel', () => {
 
     expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '30')
     expect(screen.getByText('Item').closest('[inert]')).toBeInTheDocument()
-  })
-
-  it('keeps the same content mounted across collapse and expansion', () => {
-    const props = {
-      normalHeight: 318,
-      maxHeight: 682,
-      onHeightChange: vi.fn(),
-      'aria-label': 'Results',
-      handleLabel: 'Panel height',
-    }
-
-    const { rerender } = render(
-      <DragPanel {...props} height={318}>
-        <input defaultValue="Draft" />
-      </DragPanel>,
-    )
-
-    const input = screen.getByRole('textbox')
-
-    fireEvent.change(input, { target: { value: 'Preserved' } })
-
-    rerender(
-      <DragPanel {...props} height={30}>
-        <input defaultValue="Draft" />
-      </DragPanel>,
-    )
-
-    rerender(
-      <DragPanel {...props} height={318}>
-        <input defaultValue="Draft" />
-      </DragPanel>,
-    )
-
-    expect(screen.getByRole('textbox')).toBe(input)
-    expect(input).toHaveValue('Preserved')
   })
 
   it.each([
