@@ -5,8 +5,8 @@ import {
   getRestaurantSaveCount,
 } from '@/features/restaurantDetail/api/getRestaurantSaveSummary'
 
-import { restaurantSaveQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
-export { restaurantSaveQueryKeys } from '@/features/restaurantDetail/queries/restaurantDetailQueryKeys'
+import { restaurantSaveQueryKeys } from '@/features/collection/queries/collectionQueryKeys'
+export { restaurantSaveQueryKeys } from '@/features/collection/queries/collectionQueryKeys'
 
 export const restaurantSaveCountQueryOptions = (restaurantId: number) =>
   queryOptions({

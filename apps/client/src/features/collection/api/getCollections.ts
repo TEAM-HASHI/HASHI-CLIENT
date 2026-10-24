@@ -11,6 +11,7 @@ export const getCollections = async (
 ) => {
   const data = await request<CollectionListData>('/api/v1/collections', {
     method: 'get',
+    cache: 'no-store',
     searchParams: params,
     signal,
   })
