@@ -15,7 +15,10 @@ export type CollectionViewState = {
   category: CollectionCategory
 }
 
-export type CollectionMapState = CollectionViewState & { collectionId: string }
+export type CollectionMapState = CollectionViewState & {
+  collectionId: string
+  origin?: 'map'
+}
 
 export const INITIAL_COLLECTION_VIEW: CollectionViewState = {
   collectionId: null,

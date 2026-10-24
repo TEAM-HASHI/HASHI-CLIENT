@@ -2,6 +2,8 @@
 
 ## 컬렉션 연결 (2026-10-23)
 
+- 북마크 FAB는 Figma `8317:39104`에 맞춘 비모달 컬렉션 목록 패널을 연다. 지도와 지도 탭 내비게이션은 유지하고, 기존 식당 목록 패널은 가린다. 생성·커버·저장 수·메뉴는 기존 컬렉션 API 화면을 재사용하며 세부 기준은 `saved/CollectionApi.spec.md`를 따른다.
+
 - 컬렉션 지도 진입은 `CollectionMapQueryPage`가 기존 `MapViewport`와 컬렉션 API 화면을 조립한다. 일반 지도 조회·카메라·SDK 구현은 재사용한다.
 - 지도 목록·상세의 저장 버튼은 기존 컬렉션 선택창을 열며, 저장 후 식당별 저장 여부·개수를 갱신한다.
 - 전체 핀 조회·인증 세션·정렬/필터 복귀 계약은 `saved/CollectionApi.spec.md`를 따른다.
@@ -297,3 +299,6 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - Client lint/typecheck/full tests/build; DragPanel regression tests; diff check.
 - Browser QA: 320/393/768px, 11 Figma states, long title, thumbnail fallback, background and handle interaction, list scroll preservation/reset, sticky title/tabs, focus and reduced viewport.
 - Unit tests isolate the external SDK and verify bounds filtering, state transitions and failure states. Live browser validation depends on API enablement/billing/referrer restrictions. Backend correctness and on-device keyboard behavior are not covered.
+
+- 지도 북마크 목록의 컬렉션 선택은 `/map`을 유지하며 동일 지도 안의 컬렉션 상세 패널로 전환한다. 지도 탭을 활성화하며, 왼쪽 X를 누르면 컬렉션 목록 패널로 복귀한다.
+- 상세 패널 기본 높이는 하단 내비게이션을 제외한 373px이며 Figma `8317:38586`, `8317:38697`의 왼쪽 정렬 제목·설명, 저장 아이콘·필터별 전체 개수, 정렬·분류 드롭다운을 기존 컴포넌트로 표시한다. 일반 지도의 검색·분류·북마크·지역 복귀 버튼은 상세 모드에 표시하지 않는다.

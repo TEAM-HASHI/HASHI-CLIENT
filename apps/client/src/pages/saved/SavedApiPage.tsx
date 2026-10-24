@@ -48,12 +48,13 @@ import {
   getCollectionSaveState,
 } from '@/features/collection/utils/collectionNavigation'
 
-export const SavedApiPage = () => {
+export const SavedApiPage = ({ embedded = false }: { embedded?: boolean }) => {
   const location = useLocation()
   const sessionVersion = useCollectionSessionVersion()
   const [initialSessionVersion] = useState(sessionVersion)
   return (
     <SavedApiScreen
+      embedded={embedded}
       key={`${location.pathname}:${sessionVersion}`}
       restoreState={
         initialSessionVersion === sessionVersion ? location.state : null
@@ -62,7 +63,13 @@ export const SavedApiPage = () => {
   )
 }
 
-const SavedApiScreen = ({ restoreState }: { restoreState: unknown }) => {
+const SavedApiScreen = ({
+  restoreState,
+  embedded,
+}: {
+  restoreState: unknown
+  embedded: boolean
+}) => {
   const queryClient = useQueryClient()
   const sessionVersion = useCollectionSessionVersion()
   const { isAuthenticated } = useAuthStatus()
@@ -189,6 +196,7 @@ const SavedApiScreen = ({ restoreState }: { restoreState: unknown }) => {
   return (
     <>
       <SavedQueryPage
+        embedded={embedded}
         onCreate={() =>
           navigate(ROUTES.collectionNew, {
             state: getCollectionFormState(location),
@@ -196,6 +204,7 @@ const SavedApiScreen = ({ restoreState }: { restoreState: unknown }) => {
         }
         renderCollectionActions={(collection) => (
           <CollectionEditMenu
+            context={embedded ? 'panel' : 'page'}
             name={collection.name ?? ''}
             onShare={() => share(collection)}
             onEdit={() =>
@@ -302,7 +311,19 @@ const SavedApiScreen = ({ restoreState }: { restoreState: unknown }) => {
             kind="collection"
             collectionId={collectionId}
             onClose={close}
-            onDeleted={() => navigate(ROUTES.saved, { replace: true })}
+            onDeleted={() => {
+              if (location.pathname !== ROUTES.map) {
+                navigate(ROUTES.saved, { replace: true })
+              } else if (isCollectionMapState(location.state)) {
+                navigate(ROUTES.map, {
+                  replace: true,
+                  state: {
+                    mapSavedCollectionsOpen: true,
+                    mapSavedCollectionsSession: sessionVersion,
+                  },
+                })
+              }
+            }}
           />
         )}
       {isAuthenticated &&

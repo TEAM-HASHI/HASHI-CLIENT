@@ -72,7 +72,7 @@ export const CollectionCover = ({
             src={src}
             className={cn(
               'size-12 rounded-none',
-              compact && 'origin-top-left scale-50',
+              compact && 'max-w-none origin-top-left scale-50',
             )}
           />
         </div>

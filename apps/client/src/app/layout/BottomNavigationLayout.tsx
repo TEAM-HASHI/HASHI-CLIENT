@@ -109,7 +109,8 @@ export const BottomNavigationLayout = () => {
         }}
         value={getBottomNavigationValue(
           location.pathname === ROUTES.map &&
-            isCollectionMapState(location.state)
+            isCollectionMapState(location.state) &&
+            location.state.origin !== 'map'
             ? ROUTES.saved
             : location.pathname,
           loginRequiredState?.from?.pathname,

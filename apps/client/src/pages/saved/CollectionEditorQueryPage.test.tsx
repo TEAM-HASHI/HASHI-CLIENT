@@ -202,7 +202,7 @@ it('대상 생성에서 돌아오면 선택과 이동창을 복원하고 중복�
   expect(
     screen.getByRole('checkbox', { name: '라떼 선택', hidden: true }),
   ).toBeChecked()
-  await user.click(await screen.findByRole('button', { name: '이동 1' }))
+  await user.click(await screen.findByRole('button', { name: '이동' }))
   await waitFor(() =>
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
   )

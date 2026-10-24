@@ -7,6 +7,7 @@ import {
   getCollectionDetailPath,
   getRestaurantDetailPath,
 } from '@/app/router/routePaths'
+import { ROUTES } from '@/app/router/path'
 import { MapViewport } from '@/pages/map/components/MapViewport'
 import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
 import { mapRegionsQueryOptions } from '@/pages/map/queries/mapQueryOptions'
@@ -44,7 +45,7 @@ export const CollectionMapQueryPage = ({
   })
   const regions = useQuery(mapRegionsQueryOptions())
   const { containerRef, availableHeight } = useMapPanelLayout()
-  const [height, setHeight] = useState(393)
+  const [height, setHeight] = useState(373)
   const [clock, setClock] = useState(Date.now)
   useEffect(() => {
     const update = () => setClock(Date.now())
@@ -75,11 +76,22 @@ export const CollectionMapQueryPage = ({
     [error, detail.data, markers.data, clock],
   )
   const positions = useMemo(() => pins.map((pin) => pin.position), [pins])
-  const close = () =>
+  const close = () => {
+    if (view.origin === 'map') {
+      navigate(ROUTES.map, {
+        replace: true,
+        state: {
+          mapSavedCollectionsOpen: true,
+          mapSavedCollectionsSession: version,
+        },
+      })
+      return
+    }
     navigate(
       `${getCollectionDetailPath(view.collectionId)}?${new URLSearchParams({ sort: params.get('sort') ?? view.sort, category: params.get('category') ?? view.category })}`,
       { replace: true },
     )
+  }
   return (
     <main
       ref={containerRef}
@@ -105,18 +117,21 @@ export const CollectionMapQueryPage = ({
           onExplore={() => {}}
           onResetArea={() => {}}
           onSaved={close}
+          onCloseCollection={close}
           onUserMove={() => setHeight(30)}
         />
       )}
-      <div className="absolute top-5 right-5 z-10">
+      {!regions.data && (
         <IconButton
           aria-label="컬렉션 지도 닫기"
+          variant="soft"
+          className="absolute left-5 size-11"
+          style={{ bottom: Math.min(height, availableHeight) + 20 }}
           onClick={close}
-          className="rounded-full bg-white"
         >
           <CancelIcon className="size-6" />
         </IconButton>
-      </div>
+      )}
       {error && (
         <div
           role="alert"
@@ -138,10 +153,10 @@ export const CollectionMapQueryPage = ({
         aria-label="저장 컬렉션 패널"
         handleLabel="컬렉션 패널 높이"
         height={Math.min(height, Math.max(30, availableHeight))}
-        normalHeight={Math.min(393, Math.max(30, availableHeight - 64))}
+        normalHeight={Math.min(373, Math.max(30, availableHeight - 64))}
         onHeightChange={setHeight}
       >
-        <SavedApiPage />
+        <SavedApiPage embedded />
       </DragPanel>
     </main>
   )

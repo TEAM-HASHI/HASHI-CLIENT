@@ -26,7 +26,9 @@ export const CollectionListRow = ({
   <li
     className={cn(
       'border-warm-gray-50 flex border-b',
-      compact ? 'items-center gap-3 py-4.5' : 'items-start gap-4 py-4',
+      compact
+        ? 'items-center gap-3 py-4.5 [&>div:last-child]:mt-1 [&>div:last-child]:self-start'
+        : 'items-start gap-4 py-4',
     )}
   >
     <button

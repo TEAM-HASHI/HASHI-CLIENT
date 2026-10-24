@@ -235,7 +235,7 @@ describe('컬렉션 API 대상 선택·이동', () => {
     expect(
       await screen.findByText('이미 저장된 1곳은 이동하지 않아요.'),
     ).toBeVisible()
-    await user.click(screen.getByRole('button', { name: '이동 1' }))
+    await user.click(screen.getByRole('button', { name: '이동' }))
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
     expect(getSavedRestaurants).toHaveBeenCalledWith(
       9,
@@ -277,7 +277,7 @@ describe('컬렉션 API 대상 선택·이동', () => {
     expect(screen.getByRole('button', { name: '이동' })).toBeDisabled()
     expect(moveSavedRestaurants).not.toHaveBeenCalled()
     await user.click(screen.getByRole('button', { name: '다시 시도' }))
-    await user.click(await screen.findByRole('button', { name: '이동 2' }))
+    await user.click(await screen.findByRole('button', { name: '이동' }))
     expect(await screen.findByRole('alert')).toBeVisible()
     expect(screen.getByRole('alert')).toHaveTextContent(
       '이미 컬렉션에 저장된 식당입니다',

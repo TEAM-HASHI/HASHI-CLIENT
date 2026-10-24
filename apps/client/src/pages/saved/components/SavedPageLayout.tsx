@@ -7,6 +7,7 @@ type SavedPageLayoutProps = {
   title?: string
   description?: string
   count?: number
+  panelHeader?: ReactNode
   headerActions?: ReactNode
   filters?: ReactNode
   onBack: () => void
@@ -23,6 +24,7 @@ export const SavedPageLayout = ({
   title,
   description,
   count,
+  panelHeader,
   headerActions,
   filters,
   onBack,
@@ -43,51 +45,66 @@ export const SavedPageLayout = ({
       data-testid="saved-fixed-header"
       className="relative z-10 shrink-0 bg-white"
     >
-      <div className="relative">
-        <Header
-          title={
-            <h1 className="max-w-full truncate" title={title}>
-              {detail ? title : '저장 컬렉션'}
-            </h1>
-          }
-          subtitle={detail ? '저장한 장소' : undefined}
-          leftAction={
-            detail ? (
-              <IconButton
-                size="xs"
-                aria-label="컬렉션 목록으로 돌아가기"
-                onClick={onBack}
-              >
-                <BackIcon className="size-6" />
-              </IconButton>
-            ) : undefined
-          }
-          contentClassName={
-            detail ? '[&>div:first-child]:typo-sub-header-2' : undefined
-          }
-        />
-        {headerActions && (
-          <div className="absolute top-7 right-5 flex items-center gap-1">
-            {headerActions}
-          </div>
-        )}
-      </div>
-      {detail && description && (
-        <p className="typo-body-6 text-cool-gray-400 px-5 pt-2 leading-[1.36] [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
-          {description}
-        </p>
-      )}
-      <div className="flex h-11.5 items-center justify-between gap-2 px-5">
-        <p className="typo-body-5 text-primary-200 shrink-0">
-          {count !== undefined && (
-            <>
-              총 {count}
-              {detail ? '곳' : '개'}
-            </>
+      {panelHeader ?? (
+        <>
+          {(!embedded || detail) && (
+            <div className="relative">
+              <Header
+                title={
+                  <h1 className="max-w-full truncate" title={title}>
+                    {detail ? title : '저장 컬렉션'}
+                  </h1>
+                }
+                subtitle={detail ? '저장한 장소' : undefined}
+                leftAction={
+                  detail ? (
+                    <IconButton
+                      size="xs"
+                      aria-label="컬렉션 목록으로 돌아가기"
+                      onClick={onBack}
+                    >
+                      <BackIcon className="size-6" />
+                    </IconButton>
+                  ) : undefined
+                }
+                contentClassName={
+                  detail ? '[&>div:first-child]:typo-sub-header-2' : undefined
+                }
+              />
+              {headerActions && (
+                <div className="absolute top-7 right-5 flex items-center gap-1">
+                  {headerActions}
+                </div>
+              )}
+            </div>
           )}
-        </p>
-        {filters}
-      </div>
+          {detail && description && (
+            <p className="typo-body-6 text-cool-gray-400 px-5 pt-2 leading-[1.36] [overflow-wrap:anywhere] break-words whitespace-pre-wrap">
+              {description}
+            </p>
+          )}
+          <div
+            className={
+              embedded && !detail
+                ? 'flex items-center justify-between gap-2 px-5 pt-2 pb-1'
+                : 'flex h-11.5 items-center justify-between gap-2 px-5'
+            }
+          >
+            <p
+              className={`${embedded && !detail ? 'typo-body-3' : 'typo-body-5'} text-primary-200 shrink-0`}
+            >
+              {count !== undefined && (
+                <>
+                  {embedded && !detail ? '컬렉션 ' : '총 '}
+                  {count}
+                  {detail ? '곳' : '개'}
+                </>
+              )}
+            </p>
+            {filters}
+          </div>
+        </>
+      )}
       {!detail && onCreate && (
         <div className="px-5">
           <button
