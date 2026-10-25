@@ -1,5 +1,10 @@
 import { CancelIcon } from '@hashi/hds-icons'
-import { Button, DragPanel, IconButton } from '@hashi/hds-ui'
+import {
+  Button,
+  DragPanel,
+  DRAG_PANEL_HEIGHTS,
+  IconButton,
+} from '@hashi/hds-ui'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -45,7 +50,12 @@ export const CollectionMapQueryPage = ({
   })
   const regions = useQuery(mapRegionsQueryOptions())
   const { containerRef, availableHeight } = useMapPanelLayout()
-  const [height, setHeight] = useState(373)
+  const [height, setHeight] = useState<number>(DRAG_PANEL_HEIGHTS.normal)
+  const panelHeight = Math.min(
+    height,
+    DRAG_PANEL_HEIGHTS.maximum,
+    Math.max(30, availableHeight),
+  )
   const [clock, setClock] = useState(Date.now)
   useEffect(() => {
     const update = () => setClock(Date.now())
@@ -105,7 +115,7 @@ export const CollectionMapQueryPage = ({
           areaCode={null}
           resetVersion={0}
           zoomed
-          panelHeight={Math.min(height, availableHeight)}
+          panelHeight={panelHeight}
           initialBounds={regions.data.initialBounds}
           searchPositions={positions}
           hasConditions
@@ -126,7 +136,7 @@ export const CollectionMapQueryPage = ({
           aria-label="컬렉션 지도 닫기"
           variant="soft"
           className="absolute left-5 size-11"
-          style={{ bottom: Math.min(height, availableHeight) + 20 }}
+          style={{ bottom: panelHeight + 20 }}
           onClick={close}
         >
           <CancelIcon className="size-6" />
@@ -152,8 +162,7 @@ export const CollectionMapQueryPage = ({
       <DragPanel
         aria-label="저장 컬렉션 패널"
         handleLabel="컬렉션 패널 높이"
-        height={Math.min(height, Math.max(30, availableHeight))}
-        normalHeight={Math.min(373, Math.max(30, availableHeight - 64))}
+        height={height}
         onHeightChange={setHeight}
       >
         <SavedApiPage embedded />

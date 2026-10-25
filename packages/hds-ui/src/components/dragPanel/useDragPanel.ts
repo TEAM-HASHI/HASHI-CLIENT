@@ -7,7 +7,7 @@ import type {
   DragPanelStageCommit,
 } from './DragPanel'
 import { usePanelViewport } from './usePanelViewport'
-import { usePullToCollapse } from './usePullToCollapse'
+import { usePanelContentGesture } from './usePanelContentGesture'
 
 const HANDLE_HEIGHT = 30
 const DRAG_DEAD_ZONE = 12
@@ -15,11 +15,12 @@ const STAGE_NAMES: DragPanelStage[] = ['collapsed', 'normal', 'maximum']
 
 type UseDragPanelOptions = Pick<
   DragPanelProps,
-  'height' | 'normalHeight' | 'maxHeight' | 'onHeightChange' | 'onStageCommit'
->
+  'height' | 'stage' | 'onHeightChange' | 'onStageCommit'
+> & { normalHeight: number; maxHeight?: number }
 
 export const useDragPanel = ({
   height,
+  stage,
   normalHeight,
   maxHeight,
   onHeightChange,
@@ -51,21 +52,21 @@ export const useDragPanel = ({
   const clampedNormalHeight = clamp(normalHeight)
 
   const semanticStages = [minimum, clampedNormalHeight, maximum]
-  const committed =
-    committedStage?.height === height &&
-    ((maxHeight === undefined && committedStage.index === 2) ||
-      semanticStages[committedStage.index] === committedStage.height)
-      ? committedStage
-      : null
+  const committed = committedStage?.height === height ? committedStage : null
+  const committedHeight = committed ? semanticStages[committed.index] : height
+  const explicitIndex =
+    stage === undefined ? committed?.index : STAGE_NAMES.indexOf(stage)
   const fullscreen =
     maxHeight === undefined &&
-    (committed
-      ? committed.index === 2
+    (explicitIndex !== undefined
+      ? explicitIndex === 2
       : maximum > clampedNormalHeight && clampedHeight === maximum)
-  const currentHeight = clamp(dragHeight ?? (fullscreen ? maximum : height))
+  const settledHeight =
+    explicitIndex !== undefined ? semanticStages[explicitIndex] : clampedHeight
+  const currentHeight = clamp(dragHeight ?? settledHeight)
 
   const getSemanticIndex = () => {
-    if (committed) return committed.index
+    if (explicitIndex !== undefined) return explicitIndex
     return semanticStages.reduce(
       (best, value, index) =>
         Math.abs(value - clampedHeight) <
@@ -79,33 +80,46 @@ export const useDragPanel = ({
   const commit = (index: number, input: DragPanelStageCommit['input']) => {
     const previous = getSemanticIndex()
     const next = semanticStages[index]
-    setCommittedStage((current) =>
-      current?.index === index && current.height === next
-        ? current
-        : { index, height: next },
-    )
-    onHeightChange(next)
+    if (stage === undefined)
+      setCommittedStage((current) =>
+        current?.index === index && current.height === next
+          ? current
+          : { index, height: next },
+      )
+    onHeightChange?.(next)
     if (index !== previous && maximum > minimum) {
       onStageCommit?.({ stage: STAGE_NAMES[index], height: next, input })
     }
   }
 
-  const resetPull = usePullToCollapse({
+  const resetPull = usePanelContentGesture({
     contentRef,
-    enabled: fullscreen,
+    canExpand: settledHeight > minimum && settledHeight < maximum,
+    canCollapse: getSemanticIndex() === 2,
+    height: settledHeight,
     maximum,
     normalHeight: clampedNormalHeight,
     deadZone: DRAG_DEAD_ZONE,
     onDragHeightChange: setDragHeight,
     onCollapse: () => commit(1, 'pointer'),
+    onExpand: () => commit(2, 'pointer'),
   })
 
   useLayoutEffect(() => {
-    if (committedStage && !committed) setCommittedStage(null)
+    if (
+      stage === undefined &&
+      committed &&
+      committedHeight !== height &&
+      onHeightChange
+    ) {
+      setCommittedStage({ ...committed, height: committedHeight })
+      onHeightChange(committedHeight)
+    } else if (committedStage && !committed) setCommittedStage(null)
     gesture.current = null
     resetPull()
   }, [
     height,
+    stage,
     normalHeight,
     minimum,
     maximum,
@@ -113,6 +127,8 @@ export const useDragPanel = ({
     maxHeight,
     committedStage,
     committed,
+    committedHeight,
+    onHeightChange,
     resetPull,
   ])
 

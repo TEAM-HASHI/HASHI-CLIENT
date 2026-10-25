@@ -3,6 +3,7 @@ import type {
   MapPageRequest,
 } from '@/pages/map/api/mapApiTypes'
 import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
+import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 
 export type MapCategory = 'restaurant' | 'bar' | 'cafe'
 export type MapSort = 'recommended' | 'rating' | 'reviews'
@@ -83,6 +84,8 @@ export interface MapSessionSnapshot {
   stage: MapPanelStage
   detailStage: MapPanelStage
   detailTab?: RestaurantDetailTab
+  detailScrollTop?: number
+  detailReviewSort?: ReviewSortValue
   selectionCamera?: MapCameraSnapshot | null
   selectionIsExploring?: boolean
   selectionStage?: MapPanelStage

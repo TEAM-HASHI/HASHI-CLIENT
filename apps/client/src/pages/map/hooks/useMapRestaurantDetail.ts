@@ -21,6 +21,8 @@ interface UseMapRestaurantDetailParams {
   onLoadError?: () => void
   initialTab?: RestaurantDetailTab
   onTabChange?: (tab: RestaurantDetailTab) => void
+  initialReviewSort?: ReviewSortValue
+  onReviewSortChange?: (sort: ReviewSortValue) => void
 }
 const MAP_REVIEW_PAGE_SIZE = 5
 
@@ -30,6 +32,8 @@ export const useMapRestaurantDetail = ({
   onLoadError,
   initialTab = 'info',
   onTabChange,
+  initialReviewSort,
+  onReviewSortChange,
 }: UseMapRestaurantDetailParams) => {
   const [activeTab, setActiveTab] = useState<RestaurantDetailTab>(initialTab)
   const restaurantId = Number(restaurant.id)
@@ -49,13 +53,14 @@ export const useMapRestaurantDetail = ({
     ...restaurantStoreInformationQueryOptions(restaurantId),
     enabled: isStoreInformationEnabled,
   })
-  const [selectedReviewSort, setSelectedReviewSort] =
-    useState<ReviewSortValue>('latest')
+  const [selectedReviewSort, setSelectedReviewSort] = useState<ReviewSortValue>(
+    initialReviewSort ?? 'latest',
+  )
   const [isSortPending, setIsSortPending] = useState(false)
   const sortRequest = useRef(0)
   const client = useQueryClient()
   const [isReviewEntryReady, setIsReviewEntryReady] = useState(
-    initialTab !== 'review',
+    initialTab !== 'review' || initialReviewSort !== undefined,
   )
   useEffect(() => {
     if (isReviewEntryReady) return
@@ -85,7 +90,7 @@ export const useMapRestaurantDetail = ({
     [restaurantId],
   )
 
-  const lists = useRestaurantDetailListQueries({
+  const { isMenuListPending, ...lists } = useRestaurantDetailListQueries({
     activeTab,
     enabled:
       hasValidId && isExpanded && !!summaryQuery.data && isReviewEntryReady,
@@ -156,7 +161,10 @@ export const useMapRestaurantDetail = ({
         staleTime: 0,
         pages: 1,
       })
-      if (request === sortRequest.current) setSelectedReviewSort(sort)
+      if (request === sortRequest.current) {
+        setSelectedReviewSort(sort)
+        onReviewSortChange?.(sort)
+      }
     } catch {
       if (request === sortRequest.current)
         showToast({ children: '리뷰를 불러오지 못했어요.' })
@@ -177,6 +185,7 @@ export const useMapRestaurantDetail = ({
       )
       void client.resetQueries({ queryKey, exact: true })
       setSelectedReviewSort('latest')
+      onReviewSortChange?.('latest')
     }
     setActiveTab(tab)
     onTabChange?.(tab)
@@ -184,6 +193,7 @@ export const useMapRestaurantDetail = ({
 
   return {
     ...lists,
+    isMenuListLoading: isMenuListPending,
     photos,
     activeTab,
     detail,

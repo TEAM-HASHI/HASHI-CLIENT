@@ -213,6 +213,9 @@ describe('appRoutes', () => {
       ).toHaveAttribute('aria-pressed', 'true')
       await user.click(screen.getByRole('button', { name: '새 컬렉션 만들기' }))
       expect(router.state.location.pathname).toBe('/saved/collections/new')
+      await act(async () => {
+        await vi.dynamicImportSettled()
+      })
       await user.click(await screen.findByRole('button', { name: '뒤로가기' }))
       expect(router.state.location.pathname).toBe('/map')
       expect(

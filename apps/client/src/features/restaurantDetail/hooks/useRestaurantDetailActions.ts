@@ -18,6 +18,8 @@ interface UseRestaurantDetailActionsParams {
   restaurantId: string
   activeTab: RestaurantDetailTab
   onReviewUnavailable: () => void
+  onAuthRequired?: () => void
+  onSave?: () => void
 }
 
 export const useRestaurantDetailActions = ({
@@ -25,22 +27,38 @@ export const useRestaurantDetailActions = ({
   restaurantId,
   activeTab,
   onReviewUnavailable,
+  onAuthRequired,
+  onSave,
 }: UseRestaurantDetailActionsParams) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated } = useAuthStatus()
   const { startKakaoOAuth } = useKakaoOAuthStart()
   const [isAuthGateOpen, setIsAuthGateOpen] = useState(false)
+  const requireAuth = onAuthRequired ?? (() => setIsAuthGateOpen(true))
+  const preserveMapDetail = () => {
+    if (menuDetailSource === 'map')
+      navigate(getPathFromLocation(location), {
+        replace: true,
+        state: { ...location.state, restoreMapDetail: true },
+      })
+  }
   const { onPressWriteReview } = useRestaurantReviewWriteNavigation({
     isAuthenticated,
-    onAuthRequired: () => setIsAuthGateOpen(true),
+    onAuthRequired: requireAuth,
     onReviewUnavailable,
     restaurantId: Number(restaurantId),
+    onBeforeNavigate: preserveMapDetail,
   })
 
   const handlePressLike = () => {
     if (!isAuthenticated) {
-      setIsAuthGateOpen(true)
+      requireAuth()
+      return
+    }
+
+    if (onSave) {
+      onSave()
       return
     }
 
@@ -58,10 +76,11 @@ export const useRestaurantDetailActions = ({
 
   const handlePressReservation = () => {
     if (!isAuthenticated) {
-      setIsAuthGateOpen(true)
+      requireAuth()
       return
     }
 
+    preserveMapDetail()
     navigate(getRestaurantReservationNewPath(restaurantId))
   }
 

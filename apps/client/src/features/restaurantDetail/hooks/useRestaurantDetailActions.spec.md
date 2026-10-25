@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`RestaurantDetailPage`와 `TodayRestaurantPage`가 공유하는 식당 상세 액션 흐름을 캡슐화한다.
+일반 상세, 오늘의 식당, 지도 상세가 공유하는 식당 상세 액션 흐름을 캡슐화한다.
 인증이 필요한 액션의 auth gate 상태, 카카오 로그인 시작, 예약 이동, 메뉴 상세 이동,
 컬렉션 저장 모달 진입을 한 곳에서 관리한다.
 리뷰 작성 가능 여부 확인과 이동은 `useRestaurantReviewWriteNavigation`에 위임하고 로그인 안내를 연결한다.
@@ -25,6 +25,7 @@
 - 사용 위치:
   - `apps/client/src/pages/restaurantDetail/RestaurantDetailPage.tsx`
   - `apps/client/src/pages/todayRestaurant/TodayRestaurantPage.tsx`
+  - `apps/client/src/pages/map/MapPage.tsx`
 - 이 hook을 사용하는 page가 직접 담당하지 않아도 되는 책임:
   - 좋아요/예약 클릭 시 인증 필요 여부 판단
   - auth gate bottom sheet open 상태 관리
@@ -53,6 +54,9 @@
 - type: `RestaurantDetailTab`
 - required: `true`
 - description: 컬렉션 생성 화면을 다녀올 때 복원할 현재 탭. 저장 진입 시 현재 식당 ID와 함께 route state에 보존한다.
+
+- `onAuthRequired?: () => void`: 생략 시 기존 로그인 바텀시트를 사용한다. 지도는 복귀 주소를 포함한 로그인 유도 화면 이동을 전달한다.
+- `onSave?: () => void`: 인증 확인 후 실행할 저장 진입 처리. 지도는 기존 로컬 컬렉션 모달을 열고, 생략 시 기존 route state 방식으로 연다.
 
 ## Return Shape
 
@@ -97,6 +101,7 @@ const {
 5. 사용자가 예약하기를 누르면 인증되지 않은 상태에서는 auth gate를 열고, 인증된 상태에서는 예약 생성 route로 이동한다.
 6. 사용자가 메뉴를 누르면 인증 여부와 무관하게 메뉴 상세 route로 이동하고 `menuDetailSource`를 route state로 전달한다.
 7. 사용자가 auth gate에서 카카오 로그인을 선택하면 현재 location 기반 path를 OAuth redirect 대상으로 전달한다.
+8. 지도에서 예약·리뷰 작성 화면으로 이동하기 전에 현재 지도 history에 일회성 복귀 표시를 남긴다. 상세 탭·스크롤·리뷰 정렬 복원은 지도 페이지의 책임이다.
 
 ## Side Effects
 

@@ -17,6 +17,7 @@ interface UseRestaurantReviewWriteNavigationParams {
   onAuthRequired: () => void
   onReviewUnavailable: () => void
   restaurantId: number
+  onBeforeNavigate?: () => void
 }
 
 export const useRestaurantReviewWriteNavigation = ({
@@ -24,6 +25,7 @@ export const useRestaurantReviewWriteNavigation = ({
   onAuthRequired,
   onReviewUnavailable,
   restaurantId,
+  onBeforeNavigate,
 }: UseRestaurantReviewWriteNavigationParams) => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -78,6 +80,7 @@ export const useRestaurantReviewWriteNavigation = ({
         return
       }
 
+      onBeforeNavigate?.()
       navigate(
         getRestaurantReviewNewPath(
           String(writableReservation.restaurantId),
@@ -108,6 +111,7 @@ export const useRestaurantReviewWriteNavigation = ({
     navigate,
     onAuthRequired,
     onReviewUnavailable,
+    onBeforeNavigate,
     queryClient,
     restaurantId,
   ])
