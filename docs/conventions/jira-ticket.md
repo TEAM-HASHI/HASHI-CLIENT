@@ -156,18 +156,20 @@ style/HASHI-55-input-component
 PR 제목은 다음 형식을 사용합니다.
 
 ```markdown
-Type(scope): 작업 내용
+Type(scope): HASHI-번호 작업 내용
 ```
 
 예시는 다음과 같습니다.
 
 ```markdown
-Init(project): Tailwind CSS 초기 세팅
-Feat(auth): 로그인 페이지 구현
-Fix(button): 버튼 클릭 이벤트 오류 수정
-Refactor(auth): 인증 로직 분리
-Style(input): Input 컴포넌트 스타일 수정
+Init(root): HASHI-17 Tailwind CSS 초기 세팅
+Feat(client): HASHI-24 로그인 페이지 구현
+Fix(hds-ui): HASHI-31 버튼 클릭 이벤트 오류 수정
+Refactor(client): HASHI-42 인증 로직 분리
+Style(admin): HASHI-55 입력 컴포넌트 스타일 수정
 ```
+
+PR 제목의 Type은 첫 글자를 대문자로 작성합니다. scope는 `client`, `admin`, `hds-ui` 등 변경 대상을 사용하며, 전체 기준은 [Git Convention](./git.md)의 PR 생성 기준을 따릅니다. 커밋은 이와 달리 소문자 type과 scope 없는 형식을 사용합니다.
 
 PR 설명에는 Jira 이슈 키 또는 링크를 포함합니다. 실제 template과 테스트·리뷰 운영 기준은 `docs/workflows/pr-checklist.md`를 따릅니다.
 
@@ -223,7 +225,7 @@ HASHI-18 프로젝트 초기 세팅
 init/HASHI-17-tailwind-setting
 
 PR 제목
-Init(project): Tailwind CSS 초기 세팅
+Init(root): HASHI-17 Tailwind CSS 초기 세팅
 
 PR 설명
 
@@ -309,7 +311,7 @@ Codex의 출력은 다음 형식으로 맞춥니다.
 - pnpm dev
 
 브랜치: init/HASHI-17-tailwind-setting
-PR 제목: Init(project): Tailwind CSS 초기 세팅
+PR 제목: Init(root): HASHI-17 Tailwind CSS 초기 세팅
 ```
 
 ## 작성 체크리스트
