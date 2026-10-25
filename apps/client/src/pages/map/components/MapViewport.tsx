@@ -418,7 +418,7 @@ export const MapViewport = (props: MapViewportProps) => {
     <>
       <div
         className="bg-secondary-200 absolute inset-x-0 top-0"
-        style={{ bottom: props.panelHeight }}
+        style={{ bottom: Math.max(0, props.panelHeight - 20) }}
         role="region"
         aria-label="도쿄 맛집 지도"
       >

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 
 import { Button } from '../button'
-import { DragPanel } from './DragPanel'
+import { DragPanel, DRAG_PANEL_HEIGHTS } from './DragPanel'
 import type { DragPanelProps } from './DragPanel'
 
 const Preview = (args: DragPanelProps) => {
@@ -52,9 +52,7 @@ const meta = {
     ),
   ],
   args: {
-    height: 240,
-    normalHeight: 240,
-    maxHeight: 520,
+    height: DRAG_PANEL_HEIGHTS.normal,
     'aria-label': 'Results',
     handleLabel: 'Panel height',
     onHeightChange: () => {},
@@ -87,7 +85,7 @@ export const Empty: Story = {
 }
 export const Fullscreen: Story = {
   args: {
-    maxHeight: undefined,
+    maxHeight: 'fullscreen',
     children: ({ isFullscreen }) => (
       <div className={isFullscreen ? 'pb-20' : undefined}>{rows}</div>
     ),

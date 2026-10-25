@@ -18,6 +18,7 @@ import { getMapRegions } from '@/pages/map/api/getMapRegions'
 import { getMapRestaurants } from '@/pages/map/api/getMapRestaurants'
 import { getMapRestaurantLocation } from '@/pages/map/api/getMapRestaurantLocation'
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
+import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
 import type { MapRestaurantPage } from '@/pages/map/api/mapApiTypes'
 import {
   createMapLocationFixture,
@@ -26,7 +27,7 @@ import {
   createMapSummaryFixture,
   mapRegionsFixture,
 } from '@/pages/map/__tests__/mapApiFixtures'
-import { ApiError } from '@/shared/api/apiError'
+import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
 import { ToastRegion, toastQueue } from '@hashi/hds-ui'
 import {
@@ -37,8 +38,19 @@ import {
   useNavigate,
 } from 'react-router-dom'
 import { clearMapSession, writeMapSession } from '@/pages/map/utils/mapSession'
+import {
+  clearAuthSession,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
+import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
 
 vi.mock('@/pages/map/api/getMapRegions', () => ({ getMapRegions: vi.fn() }))
+vi.mock('@/features/collection/api/getCollections', () => ({
+  getCollections: vi.fn(async () => ({ collections: [], hasNext: false })),
+}))
+vi.mock('@/features/review/api/getVisitedReservations', () => ({
+  getVisitedReservations: vi.fn(),
+}))
 vi.mock('@/features/collection/api/getRestaurantSaves', () => ({
   getRestaurantSaveCounts: vi.fn(async () => ({})),
   getMyRestaurantSaves: vi.fn(async () => ({})),
@@ -122,6 +134,14 @@ vi.mock('@vis.gl/react-google-maps', () => ({
 }))
 
 beforeEach(() => {
+  clearAuthSession()
+  vi.mocked(getVisitedReservations).mockReset()
+  vi.mocked(getRestaurantReviews).mockReset().mockResolvedValue({
+    averageRating: 4.5,
+    reviewCount: 0,
+    reviews: [],
+    hasNext: false,
+  })
   vi.mocked(getRestaurantMenus)
     .mockReset()
     .mockResolvedValue({ menus: [], hasNext: false })
@@ -159,6 +179,178 @@ afterEach(() => {
 })
 
 describe('MapPage API integration', () => {
+  it('returns a remounted fullscreen restaurant detail to normal on a tiny viewport', async () => {
+    const rect = document.body.getBoundingClientRect()
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      ...rect,
+      height: 300,
+      bottom: 300,
+    })
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(300)
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter>
+        <MapPage />
+      </MemoryRouter>,
+    )
+    await user.click(
+      await screen.findByRole('button', {
+        name: '코코네 돈카츠 신도심점 상세 보기',
+      }),
+    )
+    await user.click(
+      screen.getByRole('slider', { name: '식당 상세 높이 조절' }),
+    )
+    await user.keyboard('{End}')
+    const dialog = await screen.findByRole('dialog', {
+      name: '코코네 돈카츠 신도심점 전체 상세',
+    })
+    const handle = within(dialog).getByLabelText('식당 상세 높이 조절')
+    expect(handle).not.toBeVisible()
+    const body = within(dialog)
+      .getByRole('region', { name: '선택한 식당' })
+      .querySelector('.overflow-y-auto')!
+    fireEvent.wheel(body, { deltaY: -80 })
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    )
+    expect(
+      screen.getByRole('slider', { name: '식당 상세 높이 조절' }),
+    ).toHaveAttribute('aria-valuenow', '300')
+  })
+
+  it.each([
+    ['list', 'normal'],
+    ['list', 'maximum'],
+    ['detail', 'normal'],
+    ['detail', 'maximum'],
+  ] as const)(
+    'preserves the %s panel %s stage when small-screen heights coincide',
+    async (panel, stage) => {
+      let available = 316
+      const rect = document.body.getBoundingClientRect()
+      vi.spyOn(
+        HTMLElement.prototype,
+        'getBoundingClientRect',
+      ).mockImplementation(() => ({
+        ...rect,
+        height: available,
+        bottom: available,
+      }))
+      vi.spyOn(window, 'innerHeight', 'get').mockImplementation(() => available)
+      const user = userEvent.setup()
+      render(
+        <MemoryRouter>
+          <MapPage />
+        </MemoryRouter>,
+      )
+      await screen.findByRole('list', { name: '식당 검색 결과' })
+      if (panel === 'detail')
+        await user.click(
+          screen.getByRole('button', {
+            name: '코코네 돈카츠 신도심점 상세 보기',
+          }),
+        )
+      const label =
+        panel === 'detail' ? '식당 상세 높이 조절' : '식당 목록 높이 조절'
+      const handle = screen.getByRole('slider', { name: label })
+      handle.focus()
+      await user.keyboard('{Home}{ArrowUp}')
+      if (stage === 'normal')
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      else await user.keyboard('{ArrowUp}')
+      available = 768
+      fireEvent.resize(window)
+      const expectedHeight =
+        stage === 'normal' ? '321' : panel === 'list' ? '710' : '768'
+      await waitFor(() =>
+        expect(screen.getByLabelText(label)).toHaveAttribute(
+          'aria-valuenow',
+          expectedHeight,
+        ),
+      )
+      if (panel === 'detail' && stage === 'maximum')
+        expect(
+          screen.getByRole('dialog', {
+            name: '코코네 돈카츠 신도심점 전체 상세',
+          }),
+        ).toBeVisible()
+    },
+  )
+
+  it('reveals restaurant results when auth expiry closes the collection sheet', async () => {
+    startAuthenticatedSession('map-test-token', 1)
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <MapPage />
+      </MemoryRouter>,
+    )
+    await screen.findByRole('list', { name: '식당 검색 결과' })
+    await user.click(screen.getByRole('button', { name: '저장 목록 보기' }))
+    expect(
+      screen.getByRole('slider', { name: '컬렉션 목록 높이 조절' }),
+    ).toBeVisible()
+    act(() => clearAuthSession('expired'))
+    expect(
+      screen.queryByRole('slider', { name: '컬렉션 목록 높이 조절' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole('list', { name: '식당 검색 결과' })).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: '저장 목록 보기' }),
+    ).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('switches from saved collections to a selected map restaurant without stacking sheets', async () => {
+    startAuthenticatedSession('map-test-token', 1)
+    writeMapSession({
+      conditions: {
+        keyword: '',
+        category: 'all',
+        areaCode: null,
+        sort: 'recommended',
+      },
+      searchBounds: null,
+      camera: null,
+      selectedId: null,
+      stage: 'normal',
+      detailStage: 'normal',
+      isExploring: true,
+    })
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <MapPage />
+      </MemoryRouter>,
+    )
+    await screen.findByRole('list', { name: '식당 검색 결과' })
+    await user.click(screen.getByRole('button', { name: '저장 목록 보기' }))
+    expect(
+      screen.getByRole('slider', { name: '컬렉션 목록 높이 조절' }),
+    ).toBeVisible()
+    expect(
+      screen.queryByRole('slider', { name: '식당 목록 높이 조절' }),
+    ).not.toBeInTheDocument()
+    await user.click(
+      screen.getByRole('button', { name: '코코네 돈카츠 신도심점 지도 마커' }),
+    )
+    expect(
+      await screen.findByRole('slider', { name: '식당 상세 높이 조절' }),
+    ).toBeVisible()
+    expect(
+      screen.queryByRole('slider', { name: '컬렉션 목록 높이 조절' }),
+    ).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '선택한 식당 닫기' }))
+    expect(screen.getByRole('list', { name: '식당 검색 결과' })).toBeVisible()
+    await user.click(screen.getByRole('button', { name: '저장 목록 보기' }))
+    expect(
+      screen.getByRole('slider', { name: '컬렉션 목록 높이 조절' }),
+    ).toBeVisible()
+    expect(
+      screen.queryByRole('slider', { name: '식당 상세 높이 조절' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('opens menu detail with map context and restores the expanded menu tab on browser back', async () => {
     vi.mocked(getRestaurantMenus).mockResolvedValue({
       menus: [{ menuId: 11, name: '지도 메뉴', price: 1000, currency: 'JPY' }],
@@ -393,7 +585,7 @@ describe('MapPage API integration', () => {
     await user.keyboard('{Home}')
     expect(handle).toHaveAttribute('aria-valuenow', '30')
     await act(async () => resolve(existing))
-    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '304'))
+    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '321'))
   })
   it('keeps an empty region panel collapsed even when expanded by keyboard', async () => {
     const user = userEvent.setup()
@@ -614,7 +806,7 @@ describe('MapPage API integration', () => {
     await waitFor(() =>
       expect(
         screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
-      ).toHaveAttribute('aria-valuenow', '304'),
+      ).toHaveAttribute('aria-valuenow', '321'),
     )
     expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
       'aria-pressed',
@@ -690,31 +882,6 @@ describe('MapPage API integration', () => {
     ).toBeVisible()
   })
 
-  it('renders API results without a sample disclaimer and keeps the real panel keyboard-operable', async () => {
-    const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
-    await screen.findByRole('list', { name: '식당 검색 결과' })
-    expect(
-      screen.queryByText('샘플 식당 · 실제 매장 위치/예약 미연동'),
-    ).not.toBeInTheDocument()
-    const slider = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
-    slider.focus()
-    await user.keyboard('{Home}')
-    expect(slider).toHaveAttribute('aria-valuenow', '30')
-    expect(
-      screen.queryByRole('button', {
-        name: '코코네 돈카츠 신도심점 상세 보기',
-      }),
-    ).not.toBeInTheDocument()
-    await user.keyboard('{ArrowUp}')
-    expect(
-      screen.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
-    ).toBeVisible()
-  })
   it('filters categories, toggles back, and resets an empty submitted search', async () => {
     const user = userEvent.setup()
     render(
@@ -856,11 +1023,24 @@ describe('MapPage API integration', () => {
     await waitFor(() => expect(thumbnail).toHaveFocus())
   })
 
-  it('keeps unsupported reservation actions behind the coming-soon dialog', async () => {
+  it('returns to the selected expanded map detail after canceling a reservation', async () => {
+    startAuthenticatedSession('map-test-token', 1)
     const user = userEvent.setup()
+    const ReservationDestination = () => {
+      const navigate = useNavigate()
+      return (
+        <button onClick={() => navigate(-1)}>예약 취소 후 지도 복귀</button>
+      )
+    }
     render(
-      <MemoryRouter>
-        <MapPage />
+      <MemoryRouter initialEntries={['/map']}>
+        <Routes>
+          <Route path="/map" element={<MapPage />} />
+          <Route
+            path="/restaurants/:restaurantId/reservations/new"
+            element={<ReservationDestination />}
+          />
+        </Routes>
       </MemoryRouter>,
     )
     await screen.findByRole('list', { name: '식당 검색 결과' })
@@ -869,9 +1049,208 @@ describe('MapPage API integration', () => {
     )
     screen.getByRole('slider', { name: '식당 상세 높이 조절' }).focus()
     await user.keyboard('{End}')
+    const panel = screen.getByRole('tabpanel', { name: '매장 정보' })
+    await waitFor(() =>
+      expect(
+        within(panel).queryByText('매장 정보를 불러오고 있어요.'),
+      ).not.toBeInTheDocument(),
+    )
+    const scrollRoot = panel.closest('.overflow-y-auto') as HTMLElement
+    scrollRoot.scrollTop = 180
+    fireEvent.scroll(scrollRoot)
     await user.click(screen.getByRole('button', { name: '예약하기' }))
-    expect(screen.getByRole('dialog')).toHaveTextContent(
-      '서비스를 준비하고 있어요.',
+    await user.click(
+      await screen.findByRole('button', { name: '예약 취소 후 지도 복귀' }),
+    )
+    expect(
+      await screen.findByRole('dialog', {
+        name: '코코네 돈카츠 신도심점 전체 상세',
+      }),
+    ).toBeVisible()
+    expect(screen.getByRole('tab', { name: '매장 정보' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    await waitFor(() =>
+      expect(
+        screen
+          .getByRole('tabpanel', { name: '매장 정보' })
+          .closest('.overflow-y-auto'),
+      ).toHaveProperty('scrollTop', 180),
+    )
+  })
+
+  it('checks review eligibility from the map and opens the matching reservation review', async () => {
+    startAuthenticatedSession('map-test-token', 1)
+    vi.mocked(getRestaurantReviews).mockResolvedValue({
+      averageRating: 5,
+      reviewCount: 1,
+      reviews: [
+        {
+          reviewId: 1,
+          rating: 5,
+          content: '지도 리뷰',
+          keywords: [],
+          previewImageUrls: [],
+        },
+      ],
+      hasNext: false,
+    })
+    vi.mocked(getVisitedReservations).mockResolvedValue({
+      content: [{ restaurantId: 1, reservationId: 77, reviewable: true }],
+      hasNext: false,
+    })
+    const user = userEvent.setup()
+    const ReviewDestination = () => {
+      const location = useLocation()
+      const navigate = useNavigate()
+      return (
+        <>
+          <output>
+            {location.pathname}
+            {location.search}
+          </output>
+          <button onClick={() => navigate(-1)}>리뷰 취소 후 지도 복귀</button>
+        </>
+      )
+    }
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <Routes>
+          <Route path="/map" element={<MapPage />} />
+          <Route
+            path="/restaurants/:restaurantId/reviews/new"
+            element={<ReviewDestination />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    )
+    await user.click(
+      await screen.findByRole('button', {
+        name: '코코네 돈카츠 신도심점 상세 보기',
+      }),
+    )
+    screen.getByRole('slider', { name: '식당 상세 높이 조절' }).focus()
+    await user.keyboard('{End}')
+    await user.click(screen.getByRole('tab', { name: /리뷰/ }))
+    await user.click(
+      await screen.findByRole('button', { name: '높은 평점 순' }),
+    )
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: '높은 평점 순' }),
+      ).toHaveAttribute('aria-pressed', 'true'),
+    )
+    const scrollRoot = screen
+      .getByRole('tabpanel', { name: '리뷰' })
+      .closest('.overflow-y-auto') as HTMLElement
+    scrollRoot.scrollTop = 240
+    fireEvent.scroll(scrollRoot)
+    await user.click(
+      await screen.findByRole('button', { name: '리뷰 작성하기' }),
+    )
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      '/restaurants/1/reviews/new?reservationId=77',
+    )
+    expect(getVisitedReservations).toHaveBeenCalledWith({
+      restaurantId: 1,
+      reviewStatus: 'unreviewed',
+      size: 1,
+    })
+    await user.click(
+      screen.getByRole('button', { name: '리뷰 취소 후 지도 복귀' }),
+    )
+    expect(await screen.findByRole('tab', { name: /리뷰/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(
+      screen.getByRole('button', { name: '높은 평점 순' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await waitFor(() =>
+      expect(
+        screen
+          .getByRole('tabpanel', { name: '리뷰' })
+          .closest('.overflow-y-auto'),
+      ).toHaveProperty('scrollTop', 240),
+    )
+  })
+
+  it.each(['expired', 'logout', 'account-change'] as const)(
+    'handles a late review auth error after %s without affecting another session',
+    async (transition) => {
+      startAuthenticatedSession('map-test-token', 1)
+      let rejectRequest!: (reason: unknown) => void
+      vi.mocked(getVisitedReservations).mockImplementationOnce(
+        () => new Promise((_, reject) => (rejectRequest = reject)),
+      )
+      const user = userEvent.setup()
+      render(
+        <MemoryRouter initialEntries={['/map']}>
+          <Routes>
+            <Route path="/map" element={<MapPage />} />
+            <Route path="/login-required" element={<p>로그인 안내 화면</p>} />
+          </Routes>
+        </MemoryRouter>,
+      )
+      await user.click(
+        await screen.findByRole('button', {
+          name: '코코네 돈카츠 신도심점 상세 보기',
+        }),
+      )
+      screen.getByRole('slider', { name: '식당 상세 높이 조절' }).focus()
+      await user.keyboard('{End}')
+      await user.click(screen.getByRole('tab', { name: /리뷰/ }))
+      await user.click(
+        await screen.findByRole('button', { name: '리뷰 작성하기' }),
+      )
+      await waitFor(() =>
+        expect(getVisitedReservations).toHaveBeenCalledTimes(1),
+      )
+      act(() => {
+        if (transition === 'account-change')
+          startAuthenticatedSession('other-account-token', 2)
+        else clearAuthSession(transition === 'expired' ? 'expired' : undefined)
+      })
+      await act(async () => {
+        rejectRequest(new HttpStatusError(401))
+      })
+      if (transition === 'expired')
+        expect(await screen.findByText('로그인 안내 화면')).toBeVisible()
+      else {
+        expect(screen.queryByText('로그인 안내 화면')).not.toBeInTheDocument()
+        expect(
+          screen.getByRole('dialog', {
+            name: '코코네 돈카츠 신도심점 전체 상세',
+          }),
+        ).toBeVisible()
+      }
+    },
+  )
+
+  it('preserves the map return destination when a guest tries to save', async () => {
+    const user = userEvent.setup()
+    const LoginDestination = () => (
+      <output>{JSON.stringify(useLocation().state)}</output>
+    )
+    render(
+      <MemoryRouter initialEntries={['/map']}>
+        <Routes>
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/login-required" element={<LoginDestination />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    await user.click(
+      await screen.findByRole('button', {
+        name: '코코네 돈카츠 신도심점 상세 보기',
+      }),
+    )
+    await user.click(
+      screen.getByRole('button', { name: '코코네 돈카츠 신도심점 저장' }),
+    )
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      '"pathname":"/map"',
     )
   })
 })

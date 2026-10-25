@@ -29,8 +29,6 @@ export const MapSavedCollectionsSheet = ({
         aria-label="지도 저장 컬렉션"
         handleLabel="컬렉션 목록 높이 조절"
         height={height}
-        normalHeight={497}
-        maxHeight={497}
         onHeightChange={onHeightChange}
       >
         <SavedApiPage embedded />
