@@ -100,35 +100,37 @@ git rebase origin/develop
 
 ## Commit
 
+### 로컬 검증
+
+- `pre-commit`은 기존대로 스테이징된 파일에 `lint-staged`를 실행해 ESLint 및 Prettier를 자동 적용합니다.
+- `pre-push`는 `pnpm verify`로 포맷, 전체 린트, 타입 검사, 클라이언트·HDS 테스트, 전체 빌드를 순서대로 실행합니다. 하나라도 실패하면 푸시를 차단합니다.
+- 커밋 전에도 `pnpm verify`를 수동 실행할 수 있습니다. 푸시 훅은 자동 수정하지 않으며, 기존 Turbo 캐시를 사용합니다.
+- Node.js 22와 저장소에 지정된 pnpm을 사용합니다. 설치 후 훅이 연결되지 않으면 `pnpm exec husky`를 실행합니다.
+- 검증은 현재 작업 디렉터리 기준이므로 미커밋 변경 여부를 확인합니다. `--no-verify` 또는 `HUSKY=0`으로 검증을 우회하지 않습니다.
+- E2E, CI 보조 테스트, Lighthouse, Chromatic, 배포 검증은 별도입니다. 로컬 검증이 통과해도 푸시 후 원격 CI 결과를 확인합니다.
+
+세부 검증 기준은 `.agents/checklists/verification.md`를 따릅니다.
+
+### 메시지 형식
+
 커밋 메시지는 다음 형식을 사용합니다.
 
 ```text
-type(scope): HASHI-번호 작업 내용
+type: HASHI-번호 작업 내용
 ```
 
-`scope`는 변경된 workspace 또는 repo surface를 적습니다.
-
-| Scope                | 사용 기준                                                    |
-| -------------------- | ------------------------------------------------------------ |
-| `root`               | 루트 설정, package manager, Turborepo, repo-wide config 변경 |
-| `apps/client`        | 클라이언트 앱 변경                                           |
-| `packages/hds-ui`    | HDS UI 컴포넌트 패키지 변경                                  |
-| `packages/hds-icons` | HDS Icon 패키지 변경                                         |
-| `configs/tsconfig`   | 공통 TypeScript 설정 변경                                    |
-| `turbo`              | Turbo generator, Turborepo 설정 변경                         |
-| `docs`               | `docs/*` 문서 변경                                           |
-| `github`             | `.github/*` template, workflow 변경                          |
+커밋의 `type`은 소문자로 작성하고 `scope`는 붙이지 않습니다. PR 제목 규칙과 구분합니다.
 
 예시는 다음과 같습니다.
 
 ```text
-docs(docs): HASHI-30 컨벤션 문서 추가
-feat(apps/client): HASHI-12 로그인 페이지 구현
-fix(packages/hds-ui): HASHI-18 Button disabled 스타일 수정
-chore(root): HASHI-31 pnpm workspace 설정 수정
+docs: HASHI-30 컨벤션 문서 추가
+feat: HASHI-12 로그인 페이지 구현
+fix: HASHI-18 Button disabled 스타일 수정
+chore: HASHI-31 pnpm workspace 설정 수정
 ```
 
-여러 surface가 함께 바뀌는 경우 가장 중요한 변경 범위를 scope로 잡고, 나머지는 본문에 적습니다. 관련 없는 변경이면 커밋을 나눕니다.
+관련 없는 변경이면 커밋을 나눕니다.
 
 ## PR 생성 기준
 
@@ -137,17 +139,35 @@ chore(root): HASHI-31 pnpm workspace 설정 수정
 PR 제목은 다음 형식을 사용합니다.
 
 ```text
-Type(scope): 작업 내용
+Type(scope): HASHI-번호 작업 내용
 ```
+
+PR의 `Type`은 첫 글자만 대문자로 작성하고, `scope`와 Jira key를 반드시 포함합니다. `scope`는 기능명(`auth`, `button` 등)이나 파일 경로 대신 변경 대상의 짧은 이름을 사용합니다.
+
+| Scope        | 사용 기준                              |
+| ------------ | -------------------------------------- |
+| `client`     | 클라이언트 앱                          |
+| `admin`      | 어드민 앱                              |
+| `hds-ui`     | HDS UI 패키지                          |
+| `hds-icons`  | HDS 아이콘 패키지                      |
+| `hds-tokens` | HDS 토큰 패키지                        |
+| `root`       | 저장소 공통 설정, 패키지 관리, 검증 훅 |
+| `tsconfig`   | 공통 TypeScript 설정                   |
+| `turbo`      | Turbo 설정 및 generator                |
+| `docs`       | 문서                                   |
+| `github`     | GitHub workflow 및 template            |
+
+여러 영역을 변경하면 PR의 주요 목적에 맞는 scope를 선택하고, 나머지 범위는 본문에 설명합니다.
 
 예시는 다음과 같습니다.
 
 ```text
-Init(project): Tailwind CSS 초기 세팅
-Feat(auth): 로그인 페이지 구현
-Fix(button): 버튼 클릭 이벤트 오류 수정
-Refactor(auth): 인증 로직 분리
-Style(input): Input 컴포넌트 스타일 수정
+Init(root): HASHI-17 Tailwind CSS 초기 세팅
+Feat(client): HASHI-24 로그인 페이지 구현
+Fix(hds-ui): HASHI-31 버튼 클릭 이벤트 오류 수정
+Refactor(client): HASHI-42 인증 로직 분리
+Feat(admin): HASHI-233 공지사항 관리 API 연동
+Chore(root): HASHI-242 푸시 전 통합 검증 훅 추가 및 검증 절차 보완
 ```
 
 PR 본문은 `.github/pull_request_template.md`를 기준으로 작성하고, 관련 Jira 티켓 번호를 명시합니다. `apps/client/**` PR은 `docs/workflows/testing.md`의 테스트 근거와 `docs/workflows/code-review.md`의 리뷰어 1명 지정 기준을 함께 따릅니다.
