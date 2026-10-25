@@ -30,6 +30,7 @@
     "lint-staged": "lint-staged",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "typecheck": "turbo typecheck",
     "typecheck:client": "pnpm --filter @hashi/client typecheck",
     "typecheck:admin": "pnpm --filter @hashi/admin typecheck",
