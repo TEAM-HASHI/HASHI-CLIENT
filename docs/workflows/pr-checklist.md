@@ -6,7 +6,8 @@ PR을 열기 전 변경 범위, Jira 연결, 검증 결과를 명확히 남깁�
 
 - Jira 이슈가 `HASHI-*` 형식인지 확인합니다.
 - 브랜치 이름이 `type/HASHI-번호-작업-요약` 형식인지 확인합니다.
-- 커밋 메시지가 `type(scope): HASHI-번호 작업 내용` 형식인지 확인합니다.
+- 커밋 메시지가 소문자 type과 scope 없는 `type: HASHI-번호 작업 내용` 형식인지 확인합니다.
+- PR 제목이 `Type(scope): HASHI-번호 작업 내용` 형식인지 확인합니다. Type은 첫 글자만 대문자이며, scope는 `client`, `admin`, `hds-ui`, `root` 등 [Git Convention](../conventions/git.md)의 변경 대상 기준을 따릅니다.
 - PR 대상 브랜치가 `develop`인지 확인합니다.
 - 변경 범위가 하나의 Jira 이슈에 설명 가능한지 확인합니다.
 - unrelated 변경이 섞이지 않았는지 `git status`와 diff를 확인합니다.
