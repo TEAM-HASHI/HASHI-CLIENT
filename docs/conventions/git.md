@@ -100,6 +100,19 @@ git rebase origin/develop
 
 ## Commit
 
+### 로컬 검증
+
+- `pre-commit`은 기존대로 스테이징된 파일에 `lint-staged`를 실행해 ESLint 및 Prettier를 자동 적용합니다.
+- `pre-push`는 `pnpm verify`로 포맷, 전체 린트, 타입 검사, 클라이언트·HDS 테스트, 전체 빌드를 순서대로 실행합니다. 하나라도 실패하면 푸시를 차단합니다.
+- 커밋 전에도 `pnpm verify`를 수동 실행할 수 있습니다. 푸시 훅은 자동 수정하지 않으며, 기존 Turbo 캐시를 사용합니다.
+- Node.js 22와 저장소에 지정된 pnpm을 사용합니다. 설치 후 훅이 연결되지 않으면 `pnpm exec husky`를 실행합니다.
+- 검증은 현재 작업 디렉터리 기준이므로 미커밋 변경 여부를 확인합니다. `--no-verify` 또는 `HUSKY=0`으로 검증을 우회하지 않습니다.
+- E2E, CI 보조 테스트, Lighthouse, Chromatic, 배포 검증은 별도입니다. 로컬 검증이 통과해도 푸시 후 원격 CI 결과를 확인합니다.
+
+세부 검증 기준은 `.agents/checklists/verification.md`를 따릅니다.
+
+### 메시지 형식
+
 커밋 메시지는 다음 형식을 사용합니다.
 
 ```text
