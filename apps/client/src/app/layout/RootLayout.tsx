@@ -61,10 +61,11 @@ export const RootLayout = () => {
   useEffect(() => {
     const hasPathnameChanged = previousPathnameRef.current !== pathname
     previousPathnameRef.current = pathname
-    const shouldPreserveMagazineScroll =
-      navigationType === 'POP' && pathname === ROUTES.magazines
+    const shouldPreserveListScroll =
+      navigationType === 'POP' &&
+      (pathname === ROUTES.magazines || pathname === ROUTES.search)
 
-    if (!hasPathnameChanged || shouldPreserveMagazineScroll) {
+    if (!hasPathnameChanged || shouldPreserveListScroll) {
       return
     }
 

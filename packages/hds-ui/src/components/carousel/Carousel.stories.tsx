@@ -372,3 +372,15 @@ export const LongContentOverflow: Story = {
     </div>
   ),
 }
+
+export const NonzeroInitialIndex: Story = {
+  args: { defaultIndex: 2 },
+  render: (args) => (
+    <Carousel.Root {...args}>
+      <Carousel.Viewport className="aspect-[393/234]">
+        <BasicSlides />
+      </Carousel.Viewport>
+      <Carousel.Indicator />
+    </Carousel.Root>
+  ),
+}

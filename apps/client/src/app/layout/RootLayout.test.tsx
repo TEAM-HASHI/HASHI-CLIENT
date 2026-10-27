@@ -158,6 +158,16 @@ describe('RootLayout', () => {
     expect(mockScrollTo).not.toHaveBeenCalled()
   })
 
+  it('leaves search POP restoration to the result list', () => {
+    mockLocationStore.pathname = '/restaurants/10'
+    const { rerender } = render(<RootLayout />)
+    mockScrollTo.mockClear()
+    mockLocationStore.pathname = '/search'
+    mockNavigationType.value = 'POP'
+    rerender(<RootLayout />)
+    expect(mockScrollTo).not.toHaveBeenCalled()
+  })
+
   it('scrolls to the top on history navigation to another page', () => {
     const { rerender } = render(<RootLayout />)
 

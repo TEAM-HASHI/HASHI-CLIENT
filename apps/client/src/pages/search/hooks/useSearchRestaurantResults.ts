@@ -1,3 +1,4 @@
+import { useSearchListRestoration } from '@/pages/search/hooks/useSearchListRestoration'
 import { useSearchRestaurantsInfiniteQuery } from '@/pages/search/queries/useSearchRestaurantsInfiniteQuery'
 import type { SearchRestaurantsParams } from '@/pages/search/types'
 import { mapSearchRestaurantPages } from '@/pages/search/utils/mapSearchRestaurant'
@@ -7,9 +8,20 @@ export const useSearchRestaurantResults = (
   searchParams: SearchRestaurantsParams | null,
 ) => {
   const query = useSearchRestaurantsInfiniteQuery(searchParams)
+  const isRestoring = useSearchListRestoration({
+    enabled: searchParams !== null,
+    pageCount: query.data?.pages.length ?? 0,
+    hasNextPage: Boolean(query.hasNextPage),
+    isFetching: query.isFetching,
+    isError: query.isError,
+    fetchNextPage: query.fetchNextPage,
+  })
   const loadMoreRef = useInfiniteScrollTrigger<HTMLDivElement>({
     enabled:
-      searchParams !== null && Boolean(query.hasNextPage) && !query.isError,
+      searchParams !== null &&
+      !isRestoring &&
+      Boolean(query.hasNextPage) &&
+      !query.isError,
     isLoading: query.isFetching,
     onIntersect: query.fetchNextPage,
   })

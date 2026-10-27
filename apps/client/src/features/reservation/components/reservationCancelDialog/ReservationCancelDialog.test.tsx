@@ -21,7 +21,7 @@ describe('ReservationCancelDialog', () => {
     const buttons = within(dialog).getAllByRole('button')
 
     expect(buttons[0]).toHaveTextContent('닫기')
-    expect(buttons[1]).toHaveTextContent('취소하기')
+    expect(buttons[1]).toHaveTextContent('예약 취소하기')
 
     fireEvent.click(buttons[0])
     expect(onOpenChange).toHaveBeenCalledWith(false)

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { NoteIcon } from '@hashi/hds-icons'
 import { showToast } from '@hashi/hds-ui'
 import { useLocation, useNavigate } from 'react-router-dom'
 
@@ -26,6 +25,7 @@ import { useSearchFilterSheet } from '@/pages/search/hooks/useSearchFilterSheet'
 import { useSearchRestaurantResults } from '@/pages/search/hooks/useSearchRestaurantResults'
 import { useSearchUrlState } from '@/pages/search/hooks/useSearchUrlState'
 import { useSearchKeywordRecommendationsQuery } from '@/pages/search/queries/useSearchKeywordRecommendationsQuery'
+import searchToastWarningIcon from '@/shared/assets/icons/search-toast-warning.svg'
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { cn } from '@/shared/utils'
@@ -106,15 +106,21 @@ export const SearchPage = () => {
     setKeywordDraft({ appliedKeyword, value })
   }
 
+  const shouldFocusOnMount = useRef(searchParams === null)
   useEffect(() => {
-    searchInputRef.current?.focus()
+    // POP 복귀에서 검색창 focus가 저장 위치를 다시 끌어올리지 않게 합니다.
+    if (shouldFocusOnMount.current)
+      searchInputRef.current?.focus({ preventScroll: true })
   }, [])
 
   const submitSearch = (nextKeyword = keyword) => {
     const normalizedKeyword = nextKeyword.trim()
     const error = getSearchKeywordError(normalizedKeyword)
     if (error) {
-      showToast({ children: error, icon: <NoteIcon className="size-6.5" /> })
+      showToast({
+        children: error,
+        icon: <img src={searchToastWarningIcon} alt="" className="size-6.5" />,
+      })
       return
     }
 

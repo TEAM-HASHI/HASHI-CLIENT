@@ -162,6 +162,21 @@ describe('Carousel', () => {
     ).toHaveLength(1)
   })
 
+  it.each([{ defaultIndex: 2 }, { index: 2 }])(
+    'positions the selected initial slide immediately: %j',
+    (props) => {
+      mockCarouselLayout()
+      renderCarousel(props)
+      expect(document.querySelector('[data-hds-carousel-track]')).toHaveStyle({
+        transform: 'translate3d(-600px,0px,0px)',
+      })
+      expect(screen.getByRole('group', { name: '3 / 3' })).toHaveAttribute(
+        'data-current',
+        'true',
+      )
+    },
+  )
+
   it('renders the controlled active slide after index changes', () => {
     const { rerender } = renderCarousel({ index: 0 })
 

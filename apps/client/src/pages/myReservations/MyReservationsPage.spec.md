@@ -183,7 +183,7 @@ const reservationStatusLabels = {
 - description:
   - `예약을 취소하면 방문 예정 내역에서 삭제되며`
   - `동일한 예약은 다시 접수해야 합니다.`
-- cancel button: `취소하기`
+- cancel button: `예약 취소하기` (Figma `8317:36429`, 공용 ReservationCancelDialog)
 - close button: `닫기`
 
 취소 성공/실패 안내:
