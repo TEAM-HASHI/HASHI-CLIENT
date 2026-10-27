@@ -9,7 +9,7 @@ import {
   Map as GoogleMap,
   useApiLoadingStatus,
 } from '@vis.gl/react-google-maps'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { MapAreaMarker } from '@/pages/map/components/MapAreaMarker'
 import { MapRestaurantMarker } from '@/pages/map/components/MapRestaurantMarker'
 import { useGoogleMapCamera } from '@/pages/map/hooks/useGoogleMapCamera'
@@ -30,6 +30,9 @@ interface MapViewportProps {
   > & { rating?: number })[]
   areas: MapAreaMarkerData[]
   selectedId: string | null
+  renderRestaurantMarker?: (
+    restaurant: MapViewportProps['restaurants'][number],
+  ) => ReactNode
   areaCode: string | null
   resetVersion: number
   zoomed: boolean
@@ -131,6 +134,7 @@ const GoogleMapSurface = ({
   restaurants,
   areas,
   selectedId,
+  renderRestaurantMarker,
   areaCode,
   resetVersion,
   zoomed,
@@ -333,11 +337,15 @@ const GoogleMapSurface = ({
                     zIndex={restaurant.id === selectedId ? 2 : 1}
                   >
                     <div className="pointer-events-auto max-w-[min(60vw,258px)]">
-                      <MapRestaurantMarker
-                        restaurant={restaurant}
-                        isSelected={restaurant.id === selectedId}
-                        onSelect={onSelectRestaurant}
-                      />
+                      {renderRestaurantMarker ? (
+                        renderRestaurantMarker(restaurant)
+                      ) : (
+                        <MapRestaurantMarker
+                          restaurant={restaurant}
+                          isSelected={restaurant.id === selectedId}
+                          onSelect={onSelectRestaurant}
+                        />
+                      )}
                     </div>
                   </AdvancedMarker>
                 ))

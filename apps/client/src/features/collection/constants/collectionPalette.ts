@@ -24,3 +24,13 @@ export const COLLECTION_COVER_COLORS = {
     color: 'var(--color-palette-purple-strong)',
   },
 } as const
+
+// Figma collection_pin: 커버와 달리 주황·노랑·초록은 진한 팔레트를 사용한다.
+export const COLLECTION_PIN_COLORS = {
+  red: COLLECTION_COVER_COLORS.red.background,
+  orange: COLLECTION_COVER_COLORS.orange.color,
+  yellow: COLLECTION_COVER_COLORS.yellow.color,
+  green: COLLECTION_COVER_COLORS.green.color,
+  blue: COLLECTION_COVER_COLORS.blue.background,
+  purple: COLLECTION_COVER_COLORS.purple.background,
+} as const

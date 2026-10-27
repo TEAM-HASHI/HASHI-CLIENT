@@ -381,7 +381,7 @@ describe('appRoutes', () => {
       expect(screen.getByText(description)).toBeVisible()
       expect(
         await screen.findByRole('button', {
-          name: '다음 페이지 식당 지도 마커',
+          name: '다음 페이지 식당 컬렉션 지도 핀',
         }),
       ).toBeVisible()
       expect(screen.getByRole('button', { name: '저장' })).toHaveAttribute(

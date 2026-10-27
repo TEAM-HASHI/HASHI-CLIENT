@@ -21,6 +21,7 @@ import { useCollectionSessionVersion } from '@/features/collection/hooks/useColl
 import { collectionQueryKeys } from '@/features/collection/queries/collectionQueryKeys'
 import { useCollectionQuery } from '@/features/collection/queries/useCollectionQuery'
 import { SavedApiPage } from '@/pages/saved/SavedApiPage'
+import { CollectionMapMarker } from '@/pages/saved/components/CollectionMapMarker'
 import type { CollectionMapState } from '@/features/collection/types'
 import { runWithCollectionSession } from '@/features/collection/utils/collectionSession'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
@@ -110,6 +111,13 @@ export const CollectionMapQueryPage = ({
       {regions.data && (
         <MapViewport
           restaurants={pins}
+          renderRestaurantMarker={(restaurant) => (
+            <CollectionMapMarker
+              name={restaurant.name}
+              color={detail.data?.color}
+              onSelect={() => navigate(getRestaurantDetailPath(restaurant.id))}
+            />
+          )}
           areas={[]}
           selectedId={null}
           areaCode={null}
