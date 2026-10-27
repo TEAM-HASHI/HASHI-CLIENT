@@ -28,9 +28,23 @@ export const RestaurantMenuListSection = ({
 }: RestaurantMenuListSectionProps) => {
   if (isLoading)
     return (
-      <p role="status" className="px-5 py-9 text-center">
-        메뉴를 불러오고 있어요.
-      </p>
+      <section aria-label="메뉴 목록 로딩 중" role="status" className="px-5">
+        {Array.from({ length: 3 }, (_, index) => (
+          <div
+            key={index}
+            aria-hidden="true"
+            className="border-warm-gray-50 flex h-[140px] items-center border-b pt-4 pb-3 last:border-b-0"
+          >
+            <div className="flex min-w-0 flex-1 flex-col gap-2 pr-5">
+              <div className="bg-secondary-200 h-5 w-3/5 animate-pulse rounded motion-reduce:animate-none" />
+              <div className="bg-secondary-200 h-4 w-full animate-pulse rounded motion-reduce:animate-none" />
+              <div className="bg-secondary-200 h-4 w-4/5 animate-pulse rounded motion-reduce:animate-none" />
+              <div className="bg-secondary-200 mt-1 h-5 w-2/5 animate-pulse rounded motion-reduce:animate-none" />
+            </div>
+            <div className="bg-secondary-200 size-25 shrink-0 animate-pulse rounded-[5px] motion-reduce:animate-none" />
+          </div>
+        ))}
+      </section>
     )
   if (isMenuListError) {
     return (
