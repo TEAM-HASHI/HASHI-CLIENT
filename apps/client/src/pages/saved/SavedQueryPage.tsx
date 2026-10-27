@@ -18,6 +18,7 @@ import { isValidCollectionId } from '@/features/collection/api/collectionReadCon
 import { CollectionDropdown } from '@/pages/saved/components/CollectionDropdown'
 import { CollectionPanelHeader } from '@/pages/saved/components/CollectionPanelHeader'
 import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
+import { CollectionListSkeleton } from '@/pages/saved/components/CollectionListSkeleton'
 import { SavedPageLayout } from '@/pages/saved/components/SavedPageLayout'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import { useCollectionQuery } from '@/features/collection/queries/useCollectionQuery'
@@ -277,9 +278,7 @@ export const SavedQueryPage = ({
       scrollKey={`${routeId ?? 'list'}:${sort}:${category}`}
     >
       {isPending && !hasContent && (
-        <p role="status" className="typo-body-4 text-primary-200 px-5 py-8">
-          불러오는 중…
-        </p>
+        <CollectionListSkeleton detail={detail} compact={embedded} />
       )}
       {!hasContent && errorNotice}
       {hasContent && (
@@ -335,9 +334,11 @@ export const SavedQueryPage = ({
           {errorNotice}
           <div aria-hidden="true" className="h-px" ref={loadMoreRef} />
           {listQuery.isFetchingNextPage && (
-            <p role="status" className="typo-body-4 text-primary-200 px-5 py-4">
-              불러오는 중…
-            </p>
+            <CollectionListSkeleton
+              detail={detail}
+              compact={embedded}
+              count={1}
+            />
           )}
           {collection && !mapState && (
             <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">

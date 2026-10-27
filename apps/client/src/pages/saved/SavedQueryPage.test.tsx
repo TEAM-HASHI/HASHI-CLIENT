@@ -95,6 +95,19 @@ const intersect = async () => {
 }
 
 describe('컬렉션 서버 조회 화면', () => {
+  it.each([false, true])(
+    '목록 초기 조회 중 스켈레톤을 제공한다 (지도 패널: %s)',
+    (embedded) => {
+      vi.mocked(getCollections).mockReturnValue(new Promise(() => {}))
+      setup('/saved', { embedded })
+      expect(
+        screen.getByRole('status', { name: '컬렉션 목록 로딩 중' }),
+      ).toBeVisible()
+      expect(
+        screen.queryByRole('list', { name: '저장 컬렉션' }),
+      ).not.toBeInTheDocument()
+    },
+  )
   it('서버 전체 개수를 표시하고 추가 조회 실패에도 기존 목록을 보존해 재시도한다', async () => {
     vi.mocked(getCollections)
       .mockResolvedValueOnce({
@@ -164,7 +177,9 @@ describe('컬렉션 서버 조회 화면', () => {
       '/saved/collections/8?sort=reviews&category=cafe',
       { renderDetailActions: actions, renderRestaurantActions: actions },
     )
-    expect(screen.getByRole('status')).toBeVisible()
+    expect(
+      screen.getByRole('status', { name: '저장 식당 목록 로딩 중' }),
+    ).toBeVisible()
     expect(router.state.location.pathname).toBe('/saved/collections/8')
     await act(async () =>
       finish({ collectionId: 8, name: '여행', savedCount: 100, owner: false }),
