@@ -118,30 +118,28 @@ describe('SavedPage', () => {
       screen.getByRole('button', { name: '새 컬렉션 만들기' }),
     ).toBeEnabled()
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: /공유/ }),
-    ).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /컬렉션 공유/ })).toHaveLength(
+      4,
+    )
   })
 
-  it('keeps sharing in the more menus without a detail header share icon', async () => {
+  it('공유 버튼을 더보기와 분리해 목록과 상세에서 제공한다', async () => {
     const { user } = setup()
     await user.click(
       screen.getByRole('button', { name: '2026 도쿄 봄 여행 더보기' }),
     )
     expect(
       screen.getAllByRole('menuitem').map((item) => item.textContent),
-    ).toEqual(['수정하기', '공유하기', '삭제하기'])
+    ).toEqual(['수정하기', '삭제하기'])
     await user.keyboard('{Escape}')
     await user.click(
       screen.getByRole('button', { name: '2026 도쿄 봄 여행 컬렉션 열기' }),
     )
-    expect(
-      screen.queryByRole('button', { name: '컬렉션 공유' }),
-    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '컬렉션 공유' })).toBeVisible()
     await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
     expect(
       screen.getAllByRole('menuitem').map((item) => item.textContent),
-    ).toEqual(['편집하기', '공유하기', '삭제하기'])
+    ).toEqual(['편집하기', '삭제하기'])
   })
 
   it('상세를 독립 URL로 열고 브라우저 뒤로가기·앞으로가기로 복원한다', async () => {

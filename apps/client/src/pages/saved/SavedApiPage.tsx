@@ -204,7 +204,6 @@ const SavedApiScreen = ({
         }
         renderCollectionActions={(collection) => (
           <CollectionEditMenu
-            context={embedded ? 'panel' : 'page'}
             name={collection.name ?? ''}
             onShare={() => share(collection)}
             onEdit={() =>

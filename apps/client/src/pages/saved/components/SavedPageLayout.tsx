@@ -68,7 +68,9 @@ export const SavedPageLayout = ({
                   ) : undefined
                 }
                 contentClassName={
-                  detail ? '[&>div:first-child]:typo-sub-header-2' : undefined
+                  detail
+                    ? '[&>div:first-child]:typo-sub-header-2 left-12 right-24'
+                    : undefined
                 }
               />
               {headerActions && (

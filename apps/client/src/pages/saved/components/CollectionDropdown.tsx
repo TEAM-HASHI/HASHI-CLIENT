@@ -1,4 +1,4 @@
-import { MenuIcon, TapDownIcon } from '@hashi/hds-icons'
+import { MenuIcon, ShareIcon, TapDownIcon } from '@hashi/hds-icons'
 import { IconButton, OptionItem } from '@hashi/hds-ui'
 import {
   useCallback,
@@ -9,6 +9,7 @@ import {
   useState,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { cn } from '@/shared/utils'
 
 type CollectionDropdownProps<T extends string> = {
   label: string
@@ -18,6 +19,7 @@ type CollectionDropdownProps<T extends string> = {
   onOpenChange: (open: boolean) => void
   onChange: (value: T) => void
   action?: boolean
+  darkIcon?: boolean
 }
 
 // Figma 8317:38586 / 8317:38697: 너비 140px, 항목 높이 40px.
@@ -33,6 +35,7 @@ export const CollectionDropdown = <T extends string>({
   onOpenChange,
   onChange,
   action = false,
+  darkIcon = false,
 }: CollectionDropdownProps<T>) => {
   const id = useId()
   const triggerRef = useRef<HTMLDivElement>(null)
@@ -110,12 +113,12 @@ export const CollectionDropdown = <T extends string>({
       ref={setTriggerRef}
       className="typo-body-6 text-cool-gray-600 flex shrink-0 items-center leading-[1.36]"
     >
-      {!action && (
-        <span>{options.find((option) => option.value === value)?.label}</span>
-      )}
-      <IconButton
-        size="xs"
-        className={action ? undefined : 'size-5'}
+      <button
+        type="button"
+        className={cn(
+          'inline-flex shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2',
+          action && 'size-6',
+        )}
         aria-label={action ? label : `${label} 선택`}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -129,11 +132,23 @@ export const CollectionDropdown = <T extends string>({
         }}
       >
         {action ? (
-          <MenuIcon className="text-warm-gray-300 size-4.5" />
+          <MenuIcon
+            aria-hidden="true"
+            className={
+              darkIcon
+                ? 'text-cool-gray-900 size-4.5'
+                : 'text-warm-gray-300 size-4.5'
+            }
+          />
         ) : (
-          <TapDownIcon className="size-5" />
+          <>
+            <span>
+              {options.find((option) => option.value === value)?.label}
+            </span>
+            <TapDownIcon aria-hidden="true" className="size-5" />
+          </>
         )}
-      </IconButton>
+      </button>
       {open &&
         createPortal(
           <div
@@ -222,44 +237,40 @@ export const CollectionEditMenu = ({
   onEdit,
   onShare,
   onDelete,
-  context = 'page',
 }: {
   name: string
   onEdit: () => void
   onShare?: () => void
   onDelete?: () => void
-  context?: 'page' | 'panel'
 }) => {
   const [open, setOpen] = useState(false)
-  const shareOption = onShare
-    ? [
-        {
-          value: 'share',
-          label: context === 'panel' ? '링크 복사' : '공유하기',
-        },
-      ]
-    : []
   const deleteOption = onDelete
     ? [{ value: 'delete', label: '삭제하기', destructive: true }]
     : []
   return (
-    <CollectionDropdown
-      action
-      label={`${name} 더보기`}
-      options={
-        context === 'panel'
-          ? [...shareOption, ...EDIT_OPTION, ...deleteOption]
-          : [...EDIT_OPTION, ...shareOption, ...deleteOption]
-      }
-      value="edit"
-      open={open}
-      onOpenChange={setOpen}
-      onChange={(value) => {
-        if (value === 'share') onShare?.()
-        else if (value === 'delete') onDelete?.()
-        else onEdit()
-      }}
-    />
+    <div className="flex shrink-0 items-center gap-3">
+      {onShare && (
+        <IconButton
+          size="xs"
+          aria-label={`${name} 컬렉션 공유`}
+          onClick={onShare}
+        >
+          <ShareIcon className="text-cool-gray-900 size-6" />
+        </IconButton>
+      )}
+      <CollectionDropdown
+        action
+        label={`${name} 더보기`}
+        options={[...EDIT_OPTION, ...deleteOption]}
+        value="edit"
+        open={open}
+        onOpenChange={setOpen}
+        onChange={(value) => {
+          if (value === 'delete') onDelete?.()
+          else onEdit()
+        }}
+      />
+    </div>
   )
 }
 
@@ -278,24 +289,28 @@ export const CollectionActionMenu = ({
 }) => {
   const [open, setOpen] = useState(false)
   return (
-    <CollectionDropdown
-      action
-      label={label}
-      value="manage"
-      open={open}
-      onOpenChange={setOpen}
-      options={[
-        { value: 'manage', label: restaurant ? '이동하기' : '편집하기' },
-        ...(onShare && !restaurant
-          ? [{ value: 'share', label: '공유하기' }]
-          : []),
-        { value: 'delete', label: '삭제하기', destructive: true },
-      ]}
-      onChange={(value) => {
-        if (value === 'manage') onManage()
-        else if (value === 'share') onShare?.()
-        else onDelete()
-      }}
-    />
+    <div className="flex shrink-0 items-center gap-3">
+      {onShare && !restaurant && (
+        <IconButton size="xs" aria-label="컬렉션 공유" onClick={onShare}>
+          <ShareIcon className="text-cool-gray-900 size-6" />
+        </IconButton>
+      )}
+      <CollectionDropdown
+        action
+        darkIcon={!restaurant}
+        label={label}
+        value="manage"
+        open={open}
+        onOpenChange={setOpen}
+        options={[
+          { value: 'manage', label: restaurant ? '이동하기' : '편집하기' },
+          { value: 'delete', label: '삭제하기', destructive: true },
+        ]}
+        onChange={(value) => {
+          if (value === 'manage') onManage()
+          else onDelete()
+        }}
+      />
+    </div>
   )
 }
