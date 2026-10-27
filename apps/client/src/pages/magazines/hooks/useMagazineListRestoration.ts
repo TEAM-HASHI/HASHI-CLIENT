@@ -1,6 +1,11 @@
 import type { FetchNextPageOptions } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigationType } from 'react-router-dom'
+import {
+  getPageScrollTarget,
+  getPageScrollY,
+  scrollPageTo,
+} from '@/shared/utils/pageScroll'
 
 interface ListSnapshot {
   pageCount: number
@@ -54,7 +59,7 @@ export const useMagazineListRestoration = ({
   const [restored, setRestored] = useState(!target)
   const snapshotRef = useRef<ListSnapshot>({
     pageCount,
-    scrollY: target?.scrollY ?? window.scrollY,
+    scrollY: target?.scrollY ?? getPageScrollY(),
   })
 
   useEffect(() => {
@@ -69,7 +74,7 @@ export const useMagazineListRestoration = ({
     }
     // 목록과 배너가 반영된 뒤 복원해 전역 경로 변경 시의 상단 초기화와 충돌하지 않습니다.
     const frame = requestAnimationFrame(() => {
-      window.scrollTo({ top: target.scrollY, behavior: 'auto' })
+      scrollPageTo({ top: target.scrollY, behavior: 'auto' })
       setRestored(true)
     })
     return () => cancelAnimationFrame(frame)
@@ -93,12 +98,13 @@ export const useMagazineListRestoration = ({
       }
     }
     const handleScroll = () => {
-      snapshotRef.current.scrollY = window.scrollY
+      snapshotRef.current.scrollY = getPageScrollY()
     }
-    window.addEventListener('scroll', handleScroll, { passive: true })
+    const scrollTarget = getPageScrollTarget()
+    scrollTarget.addEventListener('scroll', handleScroll, { passive: true })
     window.addEventListener('pagehide', save)
     return () => {
-      window.removeEventListener('scroll', handleScroll)
+      scrollTarget.removeEventListener('scroll', handleScroll)
       window.removeEventListener('pagehide', save)
       save()
     }

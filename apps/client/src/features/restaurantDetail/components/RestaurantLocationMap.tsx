@@ -9,6 +9,7 @@ import {
 } from '@vis.gl/react-google-maps'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { getPageScrollY, scrollPageTo } from '@/shared/utils/pageScroll'
 
 import { mapRestaurantLocationQueryOptions } from '@/pages/map/queries/mapQueryOptions'
 import type { MapPosition } from '@/pages/map/types'
@@ -103,7 +104,7 @@ export const RestaurantLocationMap = ({
     const scrollY = routeLocation.state?.mapRetryScrollY
     if (typeof scrollY !== 'number' || !Number.isFinite(scrollY)) return
     const frame = requestAnimationFrame(() => {
-      window.scrollTo({ top: scrollY, behavior: 'instant' })
+      scrollPageTo({ top: scrollY, behavior: 'instant' })
       void navigate(routeLocation, {
         replace: true,
         state: { ...routeLocation.state, mapRetryScrollY: undefined },
@@ -119,7 +120,7 @@ export const RestaurantLocationMap = ({
         ...routeLocation.state,
         restaurantId: Number(restaurantId),
         activeTab: 'info',
-        mapRetryScrollY: window.scrollY,
+        mapRetryScrollY: getPageScrollY(),
       },
     })
     window.location.reload()

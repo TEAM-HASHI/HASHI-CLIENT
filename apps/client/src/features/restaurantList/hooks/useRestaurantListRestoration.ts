@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { useLocation, useNavigationType } from 'react-router-dom'
+import { getPageScrollY, scrollPageTo } from '@/shared/utils/pageScroll'
 
 import type { RestaurantsResult } from '@/features/restaurantList/api/getRestaurants'
 import type { RestaurantsInfiniteData } from '@/features/restaurantList/queries/useRestaurantsInfiniteQuery'
@@ -84,7 +85,7 @@ export const useRestaurantListRestoration = (
     if (!snapshot || didRestore.current) return
 
     const frame = requestAnimationFrame(() => {
-      window.scrollTo(
+      scrollPageTo(
         type === 'sns-hot'
           ? { top: snapshot.scrollTop, behavior: 'auto' }
           : { top: snapshot.scrollTop, left: 0, behavior: 'auto' },
@@ -104,7 +105,7 @@ export const useRestaurantListRestoration = (
       sort: value.sort,
       category: value.category,
       pageCount: value.data.pages.length,
-      scrollTop: window.scrollY,
+      scrollTop: getPageScrollY(),
     }
     try {
       try {

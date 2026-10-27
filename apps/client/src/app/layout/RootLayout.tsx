@@ -8,6 +8,8 @@ import {
 } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { usePageScrollLayout } from '@/app/layout/usePageScrollLayout'
+import { scrollPageTo } from '@/shared/utils/pageScroll'
 import AsyncBoundary from '@/app/providers/AsyncBoundary'
 import { AuthSessionRestoreGate } from '@/app/providers/AuthSessionRestoreGate'
 import { trackPageView } from '@/shared/lib/analytics'
@@ -52,6 +54,7 @@ const RestaurantCollectionSave = () => {
 }
 
 export const RootLayout = () => {
+  const frameRef = usePageScrollLayout()
   const { hash = '', pathname, search = '' } = useLocation()
   const navigationType = useNavigationType()
   const pagePath = `${pathname}${search}${hash}`
@@ -68,7 +71,7 @@ export const RootLayout = () => {
       return
     }
 
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    scrollPageTo({ top: 0, left: 0, behavior: 'auto' })
   }, [navigationType, pathname])
 
   useEffect(() => {
@@ -77,13 +80,21 @@ export const RootLayout = () => {
 
   return (
     <>
-      <main className="app-mobile-frame min-h-dvh bg-white">
-        <AsyncBoundary resetKeys={[routeResetKey]}>
-          <AuthSessionRestoreGate pathname={pathname}>
-            <Outlet />
-            <RestaurantCollectionSave key={pagePath} />
-          </AuthSessionRestoreGate>
-        </AsyncBoundary>
+      <main
+        ref={frameRef}
+        data-page-scroll
+        aria-label="페이지 콘텐츠"
+        tabIndex={0}
+        className="app-page-scroll bg-white"
+      >
+        <div className="app-page-scroll-content">
+          <AsyncBoundary resetKeys={[routeResetKey]}>
+            <AuthSessionRestoreGate pathname={pathname}>
+              <Outlet />
+              <RestaurantCollectionSave key={pagePath} />
+            </AuthSessionRestoreGate>
+          </AsyncBoundary>
+        </div>
       </main>
       <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
     </>

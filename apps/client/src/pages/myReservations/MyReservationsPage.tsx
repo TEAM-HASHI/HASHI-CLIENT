@@ -46,7 +46,7 @@ export const MyReservationsPage = () => {
         ref={listScrollRef}
         aria-label="예약 목록"
         role="region"
-        className="flex min-h-0 flex-1 [scrollbar-width:none] flex-col overflow-y-auto overscroll-contain px-5 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5"
       >
         <ReservationListSection
           reservations={reservations}

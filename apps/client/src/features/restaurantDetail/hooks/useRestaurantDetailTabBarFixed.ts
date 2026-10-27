@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { getPageScrollTarget } from '@/shared/utils/pageScroll'
 
 import { RESTAURANT_DETAIL_HEADER_HEIGHT } from '@/features/restaurantDetail/constants/restaurantDetailLayout'
 
@@ -20,11 +21,12 @@ export const useRestaurantDetailTabBarFixed = () => {
     }
 
     handleScroll()
-    window.addEventListener('scroll', handleScroll, { passive: true })
+    const scrollTarget = getPageScrollTarget()
+    scrollTarget.addEventListener('scroll', handleScroll, { passive: true })
     window.addEventListener('resize', handleScroll)
 
     return () => {
-      window.removeEventListener('scroll', handleScroll)
+      scrollTarget.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', handleScroll)
     }
   }, [])
