@@ -141,6 +141,7 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
         headerActions={
           collection && (
             <CollectionActionMenu
+              shareInMenu
               label="컬렉션 더보기"
               onManage={() =>
                 navigate(
@@ -251,6 +252,7 @@ export const SavedPage = ({ onRestaurantSelect }: SavedPageProps) => {
                   collection={item}
                   moreAction={
                     <CollectionEditMenu
+                      shareInMenu
                       name={item.name}
                       onShare={() =>
                         setManagement({

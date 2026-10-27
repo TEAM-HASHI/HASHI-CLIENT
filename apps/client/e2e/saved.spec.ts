@@ -175,6 +175,19 @@ test('컬렉션 목록·상세 스켈레톤과 공유·정렬을 좁은 화면�
     path: testInfo.outputPath('collection-list-loading.png'),
   })
   releaseCollections()
+  await expect(
+    page.getByRole('button', { name: '2026 도쿄 여름 여행 컬렉션 공유' }),
+  ).toHaveCount(0)
+  await page.getByRole('button', { name: '2026 도쿄 여름 여행 더보기' }).click()
+  await expect(page.getByRole('menuitem')).toHaveText([
+    '수정하기',
+    '공유하기',
+    '삭제하기',
+  ])
+  await page.screenshot({
+    path: testInfo.outputPath('collection-list-menu.png'),
+  })
+  await page.keyboard.press('Escape')
   await page
     .getByRole('button', { name: '2026 도쿄 여름 여행 컬렉션 열기' })
     .click()
@@ -185,7 +198,7 @@ test('컬렉션 목록·상세 스켈레톤과 공유·정렬을 좁은 화면�
     path: testInfo.outputPath('collection-detail-loading.png'),
   })
   releaseRestaurants()
-  await expect(page.getByRole('button', { name: '컬렉션 공유' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '컬렉션 공유' })).toHaveCount(0)
   for (const width of [393, 320]) {
     await page.setViewportSize({ width, height: 852 })
     await page.getByText('최신순', { exact: true }).click()
@@ -195,6 +208,7 @@ test('컬렉션 목록·상세 스켈레톤과 공유·정렬을 좁은 화면�
     await page.getByRole('button', { name: '컬렉션 더보기' }).click()
     await expect(page.getByRole('menuitem')).toHaveText([
       '편집하기',
+      '공유하기',
       '삭제하기',
     ])
     await page.screenshot({

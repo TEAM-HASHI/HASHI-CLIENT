@@ -69,7 +69,7 @@ export const SavedPageLayout = ({
                 }
                 contentClassName={
                   detail
-                    ? '[&>div:first-child]:typo-sub-header-2 left-12 right-24'
+                    ? '[&>div:first-child]:typo-sub-header-2 right-12 left-12'
                     : undefined
                 }
               />

@@ -570,9 +570,8 @@ describe('appRoutes', () => {
     )
     expect(
       screen.getAllByRole('menuitem').map((item) => item.textContent),
-    ).toEqual(['편집하기', '삭제하기'])
-    await user.keyboard('{Escape}')
-    await user.click(screen.getByRole('button', { name: '컬렉션 공유' }))
+    ).toEqual(['편집하기', '공유하기', '삭제하기'])
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
     await waitFor(() =>
       expect(copyUrlToClipboard).toHaveBeenCalledWith('/saved/collections/8'),
     )
@@ -598,7 +597,7 @@ describe('appRoutes', () => {
       })
       await renderRoute('/saved/collections/8')
       const user = userEvent.setup()
-      await screen.findByRole('button', { name: '컬렉션 공유' })
+      await screen.findByRole('button', { name: '컬렉션 더보기' })
       const callsBeforeShare = vi.mocked(getCollection).mock.calls.length
       vi.mocked(getCollection).mockResolvedValue({
         collectionId: 8,
@@ -606,7 +605,8 @@ describe('appRoutes', () => {
         visibility: latest,
         owner: true,
       })
-      await user.click(screen.getByRole('button', { name: '컬렉션 공유' }))
+      await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
+      await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
       if (latest === 'private') {
         expect(
           await screen.findByRole('button', { name: '공개 후 공유' }),
@@ -633,8 +633,9 @@ describe('appRoutes', () => {
     const user = userEvent.setup()
     vi.mocked(getCollection).mockRejectedValue(new HttpStatusError(404))
     await user.click(
-      await screen.findByRole('button', { name: 'API 여행 컬렉션 공유' }),
+      await screen.findByRole('button', { name: 'API 여행 더보기' }),
     )
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
     await waitFor(() => expect(showToast).toHaveBeenCalled())
     expect(copyUrlToClipboard).not.toHaveBeenCalled()
     expect(updateCollection).not.toHaveBeenCalled()
@@ -644,9 +645,8 @@ describe('appRoutes', () => {
       visibility: 'public',
       owner: true,
     })
-    await user.click(
-      screen.getByRole('button', { name: 'API 여행 컬렉션 공유' }),
-    )
+    await user.click(screen.getByRole('button', { name: 'API 여행 더보기' }))
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
     await waitFor(() =>
       expect(copyUrlToClipboard).toHaveBeenCalledWith('/saved/collections/8'),
     )
@@ -668,8 +668,12 @@ describe('appRoutes', () => {
     )
     const { router } = await renderRoute('/saved/collections/8')
     const user = userEvent.setup()
-    await user.click(await screen.findByRole('button', { name: '컬렉션 공유' }))
-    await user.click(screen.getByRole('button', { name: '컬렉션 공유' }))
+    await user.click(
+      await screen.findByRole('button', { name: '컬렉션 더보기' }),
+    )
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
+    await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
     expect(copyUrlToClipboard).toHaveBeenCalledTimes(1)
     await act(async () => {
       await router.navigate('/saved')
@@ -710,11 +714,8 @@ describe('appRoutes', () => {
       )
       expect(
         screen.getAllByRole('menuitem').map((item) => item.textContent),
-      ).toEqual(['수정하기', '삭제하기'])
-      await user.keyboard('{Escape}')
-      await user.click(
-        screen.getByRole('button', { name: 'API 여행 컬렉션 공유' }),
-      )
+      ).toEqual(['수정하기', '공유하기', '삭제하기'])
+      await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
     }
     await openShare()
     await user.click(await screen.findByRole('button', { name: '취소하기' }))
@@ -758,8 +759,9 @@ describe('appRoutes', () => {
     const { router } = await renderRoute('/saved')
     const user = userEvent.setup()
     await user.click(
-      await screen.findByRole('button', { name: 'API 여행 컬렉션 공유' }),
+      await screen.findByRole('button', { name: 'API 여행 더보기' }),
     )
+    await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
     await user.click(
       await screen.findByRole('button', { name: '공개 후 공유' }),
     )

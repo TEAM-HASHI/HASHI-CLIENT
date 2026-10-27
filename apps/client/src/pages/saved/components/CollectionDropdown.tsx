@@ -237,11 +237,13 @@ export const CollectionEditMenu = ({
   onEdit,
   onShare,
   onDelete,
+  shareInMenu = false,
 }: {
   name: string
   onEdit: () => void
   onShare?: () => void
   onDelete?: () => void
+  shareInMenu?: boolean
 }) => {
   const [open, setOpen] = useState(false)
   const deleteOption = onDelete
@@ -249,7 +251,7 @@ export const CollectionEditMenu = ({
     : []
   return (
     <div className="flex shrink-0 items-center gap-3">
-      {onShare && (
+      {onShare && !shareInMenu && (
         <IconButton
           size="xs"
           aria-label={`${name} 컬렉션 공유`}
@@ -261,12 +263,19 @@ export const CollectionEditMenu = ({
       <CollectionDropdown
         action
         label={`${name} 더보기`}
-        options={[...EDIT_OPTION, ...deleteOption]}
+        options={[
+          ...EDIT_OPTION,
+          ...(onShare && shareInMenu
+            ? [{ value: 'share', label: '공유하기' }]
+            : []),
+          ...deleteOption,
+        ]}
         value="edit"
         open={open}
         onOpenChange={setOpen}
         onChange={(value) => {
           if (value === 'delete') onDelete?.()
+          else if (value === 'share') onShare?.()
           else onEdit()
         }}
       />
@@ -280,34 +289,40 @@ export const CollectionActionMenu = ({
   onShare,
   onDelete,
   restaurant = false,
+  shareInMenu = false,
 }: {
   label: string
   onManage: () => void
   onShare?: () => void
   onDelete: () => void
   restaurant?: boolean
+  shareInMenu?: boolean
 }) => {
   const [open, setOpen] = useState(false)
   return (
     <div className="flex shrink-0 items-center gap-3">
-      {onShare && !restaurant && (
+      {onShare && !restaurant && !shareInMenu && (
         <IconButton size="xs" aria-label="컬렉션 공유" onClick={onShare}>
           <ShareIcon className="text-cool-gray-900 size-6" />
         </IconButton>
       )}
       <CollectionDropdown
         action
-        darkIcon={!restaurant}
+        darkIcon={!restaurant && !shareInMenu}
         label={label}
         value="manage"
         open={open}
         onOpenChange={setOpen}
         options={[
           { value: 'manage', label: restaurant ? '이동하기' : '편집하기' },
+          ...(onShare && shareInMenu && !restaurant
+            ? [{ value: 'share', label: '공유하기' }]
+            : []),
           { value: 'delete', label: '삭제하기', destructive: true },
         ]}
         onChange={(value) => {
           if (value === 'manage') onManage()
+          else if (value === 'share') onShare?.()
           else onDelete()
         }}
       />
