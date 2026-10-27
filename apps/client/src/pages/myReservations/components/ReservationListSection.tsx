@@ -52,6 +52,7 @@ export const ReservationListSection = ({
       <ReservationListSummary
         className={selectedStatus === 'IN_PROGRESS' ? 'mb-3.5' : undefined}
         totalCount={totalCount}
+        showLatestOrder={selectedStatus === 'CANCELED'}
       />
       {isLoading ? (
         <ReservationListSkeleton selectedStatus={selectedStatus} />
