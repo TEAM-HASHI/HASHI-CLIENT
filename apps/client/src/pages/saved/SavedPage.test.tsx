@@ -119,11 +119,11 @@ describe('SavedPage', () => {
     ).toBeEnabled()
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /공유/ }),
+      screen.queryByRole('button', { name: /컬렉션 공유/ }),
     ).not.toBeInTheDocument()
   })
 
-  it('keeps sharing in the more menus without a detail header share icon', async () => {
+  it('일반 목록과 상세는 더보기 메뉴에서 공유를 제공한다', async () => {
     const { user } = setup()
     await user.click(
       screen.getByRole('button', { name: '2026 도쿄 봄 여행 더보기' }),

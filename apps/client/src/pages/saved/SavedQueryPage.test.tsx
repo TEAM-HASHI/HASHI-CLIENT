@@ -164,7 +164,9 @@ describe('컬렉션 서버 조회 화면', () => {
       '/saved/collections/8?sort=reviews&category=cafe',
       { renderDetailActions: actions, renderRestaurantActions: actions },
     )
-    expect(screen.getByRole('status')).toBeVisible()
+    expect(
+      screen.getByRole('status', { name: '저장 식당 목록 로딩 중' }),
+    ).toBeVisible()
     expect(router.state.location.pathname).toBe('/saved/collections/8')
     await act(async () =>
       finish({ collectionId: 8, name: '여행', savedCount: 100, owner: false }),

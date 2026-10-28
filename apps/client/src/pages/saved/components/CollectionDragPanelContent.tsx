@@ -1,4 +1,4 @@
-import { CancelIcon, MapViewIcon, ShareIcon } from '@hashi/hds-icons'
+import { CancelIcon, MapViewIcon } from '@hashi/hds-icons'
 import {
   Button,
   DragPanel,
@@ -151,20 +151,6 @@ export const CollectionDragPanelContent = ({
         actions={
           onDataChange ? (
             <>
-              {!isFullscreen && (
-                <IconButton
-                  size="xs"
-                  aria-label="컬렉션 공유"
-                  onClick={() =>
-                    setManagement({
-                      collectionId: collection.id,
-                      type: 'share',
-                    })
-                  }
-                >
-                  <ShareIcon className="size-6" />
-                </IconButton>
-              )}
               <CollectionActionMenu
                 label="컬렉션 더보기"
                 onManage={() =>
@@ -172,14 +158,11 @@ export const CollectionDragPanelContent = ({
                     `${getCollectionRestaurantEditPath(collection.id)}?${new URLSearchParams({ sort: view.sort, category: view.category })}`,
                   )
                 }
-                onShare={
-                  isFullscreen
-                    ? () =>
-                        setManagement({
-                          collectionId: collection.id,
-                          type: 'share',
-                        })
-                    : undefined
+                onShare={() =>
+                  setManagement({
+                    collectionId: collection.id,
+                    type: 'share',
+                  })
                 }
                 onDelete={() =>
                   setManagement({ collectionId: collection.id, type: 'delete' })
@@ -320,7 +303,6 @@ export const CollectionDragPanelContent = ({
                       ? (item) => (
                           <CollectionEditMenu
                             name={item.name}
-                            context="panel"
                             onEdit={() =>
                               navigate(getCollectionEditPath(item.id), {
                                 state: getCollectionFormState(location),

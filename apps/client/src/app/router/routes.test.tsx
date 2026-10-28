@@ -381,7 +381,7 @@ describe('appRoutes', () => {
       expect(screen.getByText(description)).toBeVisible()
       expect(
         await screen.findByRole('button', {
-          name: '다음 페이지 식당 지도 마커',
+          name: '다음 페이지 식당 컬렉션 지도 핀',
         }),
       ).toBeVisible()
       expect(screen.getByRole('button', { name: '저장' })).toHaveAttribute(
@@ -565,9 +565,6 @@ describe('appRoutes', () => {
       '/saved/collections/8?sort=rating&category=cafe',
     )
     const user = userEvent.setup()
-    expect(
-      screen.queryByRole('button', { name: '컬렉션 공유' }),
-    ).not.toBeInTheDocument()
     await user.click(
       await screen.findByRole('button', { name: '컬렉션 더보기' }),
     )
@@ -600,9 +597,7 @@ describe('appRoutes', () => {
       })
       await renderRoute('/saved/collections/8')
       const user = userEvent.setup()
-      await user.click(
-        await screen.findByRole('button', { name: '컬렉션 더보기' }),
-      )
+      await screen.findByRole('button', { name: '컬렉션 더보기' })
       const callsBeforeShare = vi.mocked(getCollection).mock.calls.length
       vi.mocked(getCollection).mockResolvedValue({
         collectionId: 8,
@@ -610,6 +605,7 @@ describe('appRoutes', () => {
         visibility: latest,
         owner: true,
       })
+      await user.click(screen.getByRole('button', { name: '컬렉션 더보기' }))
       await user.click(screen.getByRole('menuitem', { name: '공유하기' }))
       if (latest === 'private') {
         expect(

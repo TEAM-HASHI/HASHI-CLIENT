@@ -161,6 +161,13 @@ const CollectionEditorQuery = ({
   const clearCompleted = (ids: readonly number[]) => {
     setSelected((current) => current.filter((id) => !ids.includes(Number(id))))
   }
+  const toggleRestaurant = (restaurantId: string) => {
+    setSelected((current) =>
+      current.includes(restaurantId)
+        ? current.filter((id) => id !== restaurantId)
+        : [...current, restaurantId],
+    )
+  }
   const close = () => {
     if (getCollectionEditorReturnKey(location.state)) navigate(-1)
     else
@@ -235,19 +242,14 @@ const CollectionEditorQuery = ({
                     key={restaurant.id}
                     restaurant={restaurant}
                     editing
+                    onSelect={canEdit ? toggleRestaurant : undefined}
                     selection={
                       <Checkbox
                         className={SELECTION_CLASS}
                         aria-label={`${restaurant.name} 선택`}
                         checked={selectedIds.includes(restaurant.id)}
                         disabled={!canEdit}
-                        onChange={() =>
-                          setSelected((current) =>
-                            current.includes(restaurant.id)
-                              ? current.filter((id) => id !== restaurant.id)
-                              : [...current, restaurant.id],
-                          )
-                        }
+                        onChange={() => toggleRestaurant(restaurant.id)}
                       />
                     }
                   />

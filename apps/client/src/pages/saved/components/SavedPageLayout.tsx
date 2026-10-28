@@ -35,6 +35,7 @@ export const SavedPageLayout = ({
   embedded = false,
 }: SavedPageLayoutProps) => (
   <div
+    data-dropdown-boundary
     className={
       embedded
         ? 'flex h-full flex-col overflow-hidden bg-white'
@@ -68,7 +69,9 @@ export const SavedPageLayout = ({
                   ) : undefined
                 }
                 contentClassName={
-                  detail ? '[&>div:first-child]:typo-sub-header-2' : undefined
+                  detail
+                    ? '[&>div:first-child]:typo-sub-header-2 right-12 left-12'
+                    : undefined
                 }
               />
               {headerActions && (

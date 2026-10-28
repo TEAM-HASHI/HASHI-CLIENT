@@ -204,7 +204,8 @@ const SavedApiScreen = ({
         }
         renderCollectionActions={(collection) => (
           <CollectionEditMenu
-            context={embedded ? 'panel' : 'page'}
+            shareInMenu
+            variant={embedded ? 'map-list' : 'default'}
             name={collection.name ?? ''}
             onShare={() => share(collection)}
             onEdit={() =>
@@ -219,6 +220,7 @@ const SavedApiScreen = ({
         )}
         renderDetailActions={(collection) => (
           <CollectionActionMenu
+            shareInMenu={!embedded}
             label="컬렉션 더보기"
             onShare={() => share(collection)}
             onManage={() =>

@@ -4,6 +4,7 @@ import { SavedApiPage } from '@/pages/saved/SavedApiPage'
 type MapSavedCollectionsSheetProps = {
   open: boolean
   height: number
+  targetHeight: number
   onHeightChange: (height: number) => void
   onClose: () => void
 }
@@ -11,6 +12,7 @@ type MapSavedCollectionsSheetProps = {
 export const MapSavedCollectionsSheet = ({
   open,
   height,
+  targetHeight,
   onHeightChange,
   onClose,
 }: MapSavedCollectionsSheetProps) => {
@@ -29,6 +31,8 @@ export const MapSavedCollectionsSheet = ({
         aria-label="지도 저장 컬렉션"
         handleLabel="컬렉션 목록 높이 조절"
         height={height}
+        normalHeight={targetHeight}
+        maxHeight={targetHeight}
         onHeightChange={onHeightChange}
       >
         <SavedApiPage embedded />

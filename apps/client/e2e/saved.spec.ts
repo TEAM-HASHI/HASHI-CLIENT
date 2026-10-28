@@ -75,7 +75,7 @@ test('제품 컬렉션 라우트에서 HTTP 기반 생성·편집·삭제와 실
   await page.goto('/saved')
   await page.getByRole('button', { name: '새 컬렉션 만들기' }).click()
   await page.getByLabel('컬렉션명', { exact: true }).fill('브라우저 여행')
-  await page.getByRole('radio', { name: '빨강' }).click()
+  await page.getByRole('radio', { name: '초록' }).click()
   await page.getByRole('button', { name: '만들기', exact: true }).click()
   await expect(
     page.getByRole('button', { name: '브라우저 여행 컬렉션 열기' }),
@@ -83,12 +83,24 @@ test('제품 컬렉션 라우트에서 HTTP 기반 생성·편집·삭제와 실
   await page.getByRole('button', { name: '브라우저 여행 더보기' }).click()
   await page.getByRole('menuitem', { name: '수정하기' }).click()
   await page.getByLabel('설명', { exact: true }).fill('설명 수정')
+  await page.getByLabel('컬렉션명', { exact: true }).fill('수정한 여행')
   await page.getByRole('button', { name: '저장하기', exact: true }).click()
   await expect(
-    page.getByRole('button', { name: '브라우저 여행 컬렉션 열기' }),
+    page.getByRole('button', { name: '수정한 여행 컬렉션 열기' }),
   ).toBeVisible()
   expect(collection).toMatchObject({ description: '설명 수정' })
-  await page.getByRole('button', { name: '브라우저 여행 더보기' }).click()
+  await page.reload()
+  await expect(
+    page.getByRole('button', { name: '수정한 여행 컬렉션 열기' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: '수정한 여행 더보기' }).click()
+  await page.getByRole('menuitem', { name: '수정하기' }).click()
+  await expect(page.getByLabel('설명', { exact: true })).toHaveValue(
+    '설명 수정',
+  )
+  await expect(page.getByRole('radio', { name: '초록' })).toBeChecked()
+  await page.getByRole('button', { name: '뒤로가기' }).click()
+  await page.getByRole('button', { name: '수정한 여행 더보기' }).click()
   await page.getByRole('menuitem', { name: '삭제하기' }).click()
   await page.getByRole('button', { name: '삭제하기', exact: true }).click()
   await expect(page.getByRole('alert')).toBeVisible()

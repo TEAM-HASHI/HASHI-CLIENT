@@ -1,4 +1,4 @@
-import { MenuIcon, TapDownIcon } from '@hashi/hds-icons'
+import { MenuIcon, ShareIcon, TapDownIcon } from '@hashi/hds-icons'
 import { IconButton, OptionItem } from '@hashi/hds-ui'
 import {
   useCallback,
@@ -9,6 +9,7 @@ import {
   useState,
 } from 'react'
 import { createPortal } from 'react-dom'
+import { cn } from '@/shared/utils'
 
 type CollectionDropdownProps<T extends string> = {
   label: string
@@ -18,6 +19,7 @@ type CollectionDropdownProps<T extends string> = {
   onOpenChange: (open: boolean) => void
   onChange: (value: T) => void
   action?: boolean
+  darkIcon?: boolean
 }
 
 // Figma 8317:38586 / 8317:38697: 너비 140px, 항목 높이 40px.
@@ -33,6 +35,7 @@ export const CollectionDropdown = <T extends string>({
   onOpenChange,
   onChange,
   action = false,
+  darkIcon = false,
 }: CollectionDropdownProps<T>) => {
   const id = useId()
   const triggerRef = useRef<HTMLDivElement>(null)
@@ -53,11 +56,26 @@ export const CollectionDropdown = <T extends string>({
       const viewport = window.visualViewport
       const viewportTop = viewport?.offsetTop ?? 0
       const viewportLeft = viewport?.offsetLeft ?? 0
-      const bottom = viewportTop + (viewport?.height ?? window.innerHeight)
-      const right = viewportLeft + (viewport?.width ?? window.innerWidth)
+      const viewportBottom =
+        viewportTop + (viewport?.height ?? window.innerHeight)
+      const viewportRight =
+        viewportLeft + (viewport?.width ?? window.innerWidth)
+      const boundaryRect = triggerRef.current
+        ?.closest<HTMLElement>('[data-dropdown-boundary]')
+        ?.getBoundingClientRect()
+      const top = Math.max(viewportTop, boundaryRect?.top ?? viewportTop)
+      const left = Math.max(viewportLeft, boundaryRect?.left ?? viewportLeft)
+      const bottom = Math.min(
+        viewportBottom,
+        boundaryRect?.bottom ?? viewportBottom,
+      )
+      const right = Math.min(
+        viewportRight,
+        boundaryRect?.right ?? viewportRight,
+      )
       const menuHeight = options.length * OPTION_HEIGHT
       const below = Math.max(0, bottom - rect.bottom - MENU_GAP)
-      const above = Math.max(0, rect.top - viewportTop - MENU_GAP)
+      const above = Math.max(0, rect.top - top - MENU_GAP)
       const placeBelow = below >= menuHeight || below >= above
       const maxHeight = placeBelow ? below : above
       setPosition({
@@ -65,7 +83,7 @@ export const CollectionDropdown = <T extends string>({
           ? rect.bottom + MENU_GAP
           : rect.top - Math.min(menuHeight, maxHeight) - MENU_GAP,
         left: Math.max(
-          viewportLeft,
+          left,
           Math.min(rect.right - MENU_WIDTH, right - MENU_WIDTH),
         ),
         maxHeight,
@@ -110,12 +128,12 @@ export const CollectionDropdown = <T extends string>({
       ref={setTriggerRef}
       className="typo-body-6 text-cool-gray-600 flex shrink-0 items-center leading-[1.36]"
     >
-      {!action && (
-        <span>{options.find((option) => option.value === value)?.label}</span>
-      )}
-      <IconButton
-        size="xs"
-        className={action ? undefined : 'size-5'}
+      <button
+        type="button"
+        className={cn(
+          'inline-flex shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2',
+          action && 'size-6',
+        )}
         aria-label={action ? label : `${label} 선택`}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -129,11 +147,23 @@ export const CollectionDropdown = <T extends string>({
         }}
       >
         {action ? (
-          <MenuIcon className="text-warm-gray-300 size-4.5" />
+          <MenuIcon
+            aria-hidden="true"
+            className={
+              darkIcon
+                ? 'text-cool-gray-900 size-4.5'
+                : 'text-warm-gray-300 size-4.5'
+            }
+          />
         ) : (
-          <TapDownIcon className="size-5" />
+          <>
+            <span>
+              {options.find((option) => option.value === value)?.label}
+            </span>
+            <TapDownIcon aria-hidden="true" className="size-5" />
+          </>
         )}
-      </IconButton>
+      </button>
       {open &&
         createPortal(
           <div
@@ -222,44 +252,55 @@ export const CollectionEditMenu = ({
   onEdit,
   onShare,
   onDelete,
-  context = 'page',
+  shareInMenu = false,
+  variant = 'default',
 }: {
   name: string
   onEdit: () => void
   onShare?: () => void
   onDelete?: () => void
-  context?: 'page' | 'panel'
+  shareInMenu?: boolean
+  variant?: 'default' | 'map-list'
 }) => {
   const [open, setOpen] = useState(false)
-  const shareOption = onShare
-    ? [
-        {
-          value: 'share',
-          label: context === 'panel' ? '링크 복사' : '공유하기',
-        },
-      ]
-    : []
+  const mapList = variant === 'map-list'
+  const showShareInMenu = shareInMenu || mapList
+  const shareOption =
+    onShare && showShareInMenu
+      ? [{ value: 'share', label: mapList ? '링크 복사' : '공유하기' }]
+      : []
   const deleteOption = onDelete
     ? [{ value: 'delete', label: '삭제하기', destructive: true }]
     : []
   return (
-    <CollectionDropdown
-      action
-      label={`${name} 더보기`}
-      options={
-        context === 'panel'
-          ? [...shareOption, ...EDIT_OPTION, ...deleteOption]
-          : [...EDIT_OPTION, ...shareOption, ...deleteOption]
-      }
-      value="edit"
-      open={open}
-      onOpenChange={setOpen}
-      onChange={(value) => {
-        if (value === 'share') onShare?.()
-        else if (value === 'delete') onDelete?.()
-        else onEdit()
-      }}
-    />
+    <div className="flex shrink-0 items-center gap-3">
+      {onShare && !showShareInMenu && (
+        <IconButton
+          size="xs"
+          aria-label={`${name} 컬렉션 공유`}
+          onClick={onShare}
+        >
+          <ShareIcon className="text-cool-gray-900 size-6" />
+        </IconButton>
+      )}
+      <CollectionDropdown
+        action
+        label={`${name} 더보기`}
+        options={
+          mapList
+            ? [...shareOption, ...EDIT_OPTION, ...deleteOption]
+            : [...EDIT_OPTION, ...shareOption, ...deleteOption]
+        }
+        value="edit"
+        open={open}
+        onOpenChange={setOpen}
+        onChange={(value) => {
+          if (value === 'delete') onDelete?.()
+          else if (value === 'share') onShare?.()
+          else onEdit()
+        }}
+      />
+    </div>
   )
 }
 
@@ -269,33 +310,43 @@ export const CollectionActionMenu = ({
   onShare,
   onDelete,
   restaurant = false,
+  shareInMenu = false,
 }: {
   label: string
   onManage: () => void
   onShare?: () => void
   onDelete: () => void
   restaurant?: boolean
+  shareInMenu?: boolean
 }) => {
   const [open, setOpen] = useState(false)
   return (
-    <CollectionDropdown
-      action
-      label={label}
-      value="manage"
-      open={open}
-      onOpenChange={setOpen}
-      options={[
-        { value: 'manage', label: restaurant ? '이동하기' : '편집하기' },
-        ...(onShare && !restaurant
-          ? [{ value: 'share', label: '공유하기' }]
-          : []),
-        { value: 'delete', label: '삭제하기', destructive: true },
-      ]}
-      onChange={(value) => {
-        if (value === 'manage') onManage()
-        else if (value === 'share') onShare?.()
-        else onDelete()
-      }}
-    />
+    <div className="flex shrink-0 items-center gap-3">
+      {onShare && !restaurant && !shareInMenu && (
+        <IconButton size="xs" aria-label="컬렉션 공유" onClick={onShare}>
+          <ShareIcon className="text-cool-gray-900 size-6" />
+        </IconButton>
+      )}
+      <CollectionDropdown
+        action
+        darkIcon={!restaurant && !shareInMenu}
+        label={label}
+        value="manage"
+        open={open}
+        onOpenChange={setOpen}
+        options={[
+          { value: 'manage', label: restaurant ? '이동하기' : '편집하기' },
+          ...(onShare && shareInMenu && !restaurant
+            ? [{ value: 'share', label: '공유하기' }]
+            : []),
+          { value: 'delete', label: '삭제하기', destructive: true },
+        ]}
+        onChange={(value) => {
+          if (value === 'manage') onManage()
+          else if (value === 'share') onShare?.()
+          else onDelete()
+        }}
+      />
+    </div>
   )
 }
