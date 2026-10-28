@@ -1,5 +1,5 @@
 import { BackIcon } from '@hashi/hds-icons'
-import { Button, Header, IconButton } from '@hashi/hds-ui'
+import { Button, Header, IconButton, showToast } from '@hashi/hds-ui'
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -20,6 +20,8 @@ import { useCreateReservationMutation } from '@/pages/reservationRequest/hooks/u
 import { useReservationPoint } from '@/pages/reservationRequest/hooks/useReservationPoint'
 import { useReservationRequestDraft } from '@/pages/reservationRequest/hooks/useReservationRequestDraft'
 import type { ReservationRequestDraft } from '@/pages/reservationRequest/hooks/useReservationRequestDraft'
+
+import { checkIsTodayOrBefore } from '@/shared/utils/date'
 
 const ANYWHERE_RESERVATION_FEE = 4_000
 
@@ -65,6 +67,16 @@ const ReservationRequestContent = ({
 
   const handleConfirmClick = () => {
     if (isRequestLockedRef.current || createReservationMutation.isPending) {
+      return
+    }
+
+    if (checkIsTodayOrBefore(new Date(`${reservationDraft.date}T00:00:00`))) {
+      setIsConfirmOpen(false)
+      showToast({
+        children: '내일부터 예약할 수 있어요. 날짜를 다시 선택해주세요.',
+      })
+      // 입력 화면이 저장한 draft와 기존 history entry를 그대로 복원합니다.
+      navigate(-1)
       return
     }
 

@@ -653,3 +653,13 @@ SearchPage
 - [ ] 5xx, network, timeout retry 정책이 `queryClient` 기본값 또는 query override와 일치하는지 확인
 - [ ] API `data: null`, `content` 누락, `keywords` 누락 시 화면이 깨지지 않는지 확인
 - [ ] bottom navigation이 표시되지 않는지 확인
+
+## QA 보완 (2026-10-27)
+
+- 검색 결과 목록에서 상세 화면으로 이동했다가 POP으로 돌아오면 동일 history entry와 검색 조건의 로드된 페이지 수 및 세로 스크롤 위치를 복원합니다.
+- sessionStorage의 `search-list:{location.key}:{location.search}`에 목록 snapshot을 저장합니다. 캐시가 없으면 저장된 페이지 수까지 cursor를 순차 조회한 뒤 스크롤을 복원합니다. 복원 중에는 일반 무한 스크롤 observer를 중지해 중복 요청을 막습니다.
+- 새 검색·필터 변경은 최상단부터 시작하며 idle/map 화면에는 목록 복원을 적용하지 않습니다. 잘못된 저장값이나 저장소 접근 실패는 검색을 막지 않습니다.
+- 결과 화면 복귀 시 검색창을 자동 focus하지 않습니다. 검색 전 idle 화면만 `preventScroll`로 focus합니다.
+- `RootLayout`은 `/search` POP에서 전역 최상단 이동을 생략하고 페이지의 목록 복원을 따릅니다.
+- 빈 검색어·유효하지 않은 해시태그 안내 토스트는 Figma `10578:32017`에 맞춘 26px 경고 아이콘(어두운 외곽선, 붉은 느낌표, 투명 내부)을 사용합니다. 공용 NoteIcon은 변경하지 않습니다.
+- 회귀 검증: 캐시 보존/페이지 재조회 후 복원, 검색 조건 변경, 오류·잘못된 저장값, 일반 PUSH와 idle/map 경계, RootLayout POP 예외를 확인합니다.

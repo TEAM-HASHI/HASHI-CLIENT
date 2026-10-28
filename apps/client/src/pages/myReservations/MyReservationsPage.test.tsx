@@ -512,7 +512,7 @@ describe('MyReservationsPage', () => {
     const dialog = screen.getByRole('alertdialog')
     fireEvent.click(
       within(dialog).getByRole('button', {
-        name: '취소하기',
+        name: '예약 취소하기',
       }),
     )
 
@@ -562,7 +562,9 @@ describe('MyReservationsPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: '취소하기' }))
     const dialog = screen.getByRole('alertdialog')
 
-    fireEvent.click(within(dialog).getByRole('button', { name: '취소하기' }))
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: '예약 취소하기' }),
+    )
     fireEvent.click(within(dialog).getByRole('button', { name: '닫기' }))
 
     expect(screen.getByRole('alertdialog')).toBeInTheDocument()

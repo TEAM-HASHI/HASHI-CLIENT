@@ -232,7 +232,9 @@ describe('ReservationDetailPage', () => {
     )
 
     const dialog = screen.getByRole('alertdialog')
-    fireEvent.click(within(dialog).getByRole('button', { name: '취소하기' }))
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: '예약 취소하기' }),
+    )
 
     await waitFor(() => {
       expect(mockedCancelReservation).toHaveBeenCalledWith(12)
@@ -262,7 +264,9 @@ describe('ReservationDetailPage', () => {
     )
 
     const dialog = screen.getByRole('alertdialog')
-    fireEvent.click(within(dialog).getByRole('button', { name: '취소하기' }))
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: '예약 취소하기' }),
+    )
 
     await waitFor(() => {
       expect(mockShowToast).toHaveBeenCalledWith({
@@ -294,7 +298,7 @@ describe('ReservationDetailPage', () => {
 
     const dialog = screen.getByRole('alertdialog')
     const confirmCancelButton = within(dialog).getByRole('button', {
-      name: '취소하기',
+      name: '예약 취소하기',
     })
     const closeButton = within(dialog).getByRole('button', { name: '닫기' })
 

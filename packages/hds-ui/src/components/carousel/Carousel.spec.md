@@ -52,7 +52,7 @@ HDS에서는 **Carousel의 compound slot 구조, Embla 기반 한 장씩 이동,
 | 컴포넌트 위치               | `packages/hds-ui` 공통 컴포넌트                               |
 | API 형태                    | compound API                                                  |
 | slide 이동 방식             | Embla Carousel (`align: 'start'`, `loop: false`)              |
-| 전환 속도                   | Embla 기본 이동을 사용하고 reduced motion에서는 즉시 이동     |
+| 전환 속도                   | 초기 index는 즉시 표시하고 이후 이동은 Embla 기본 전환 사용   |
 | 자동 재생                   | v1 제외                                                       |
 | 무한 루프                   | v1 제외                                                       |
 | 좌우 화살표                 | v1 제외                                                       |
@@ -245,7 +245,7 @@ Carousel.Root
 
 ## Behavior
 
-1. `Carousel.Root` initializes current index from `index` or `defaultIndex`.
+1. `Carousel.Root` initializes current index from `index` or `defaultIndex`. 최초 표시에서는 앞선 slide를 순회하는 전환 없이 해당 index에 즉시 정렬합니다. 이후 controlled index 변경은 기존 전환을 유지하며 reduced motion에서는 즉시 이동합니다.
 2. `Carousel.Viewport` renders the Embla overflow wrapper.
 3. `Carousel.Track` lays out items in a row.
 4. `Carousel.Item` occupies `100%` of the viewport width.
@@ -328,6 +328,7 @@ Figma example mapping:
 - [x] Text overlay banner with end-aligned indicator
 - [x] Swipe interaction with visually distinct slides and tactile drag / settle feedback
 - [x] Single item without indicator
+- [x] Nonzero initial index (세 번째 slide 직접 표시)
 - [x] Controlled index
 - [x] Interactive child content
 - [x] Custom indicator classes
@@ -377,6 +378,7 @@ Figma example mapping:
 - Embla `select` event로 indicator를 동기화합니다.
 - `defaultIndex`와 controlled `index`가 item 범위를 벗어나면 사용 가능한 범위로 보정합니다.
 - slide 개수가 동적으로 바뀌면 현재 index도 새 item 개수 안으로 보정합니다.
+- controlled index는 slide 개수가 일시적으로 줄어 표시 index가 보정되어도 부모 값에 변경 이벤트를 보내지 않으며, 항목이 다시 늘어나면 전달된 index를 사용합니다.
 
 ## Verification
 

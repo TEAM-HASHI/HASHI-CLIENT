@@ -96,12 +96,15 @@ const renderPage = () => {
 
 describe('ReservationRequestPage', () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 4, 31, 12))
     mockLocationState.current = reservationDraft
     mockedCreateReservation.mockReset()
     mockedCreateReservation.mockResolvedValue(completionResponse)
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     cleanup()
     mockLocationState.current = undefined
     mockNavigate.mockClear()
@@ -144,6 +147,45 @@ describe('ReservationRequestPage', () => {
       expect(mockedCreateReservation).not.toHaveBeenCalled()
     },
   )
+
+  it.each(['restaurant', 'anywhere'] as const)(
+    'blocks a %s reservation when midnight passes while confirmation is open',
+    (source) => {
+      const draft =
+        source === 'anywhere'
+          ? {
+              ...reservationDraft,
+              source,
+              restaurantId: null,
+              restaurantImageUrl: null,
+            }
+          : reservationDraft
+      mockLocationState.current = draft
+      vi.setSystemTime(new Date(2026, 4, 31, 23, 59))
+      renderPage()
+      fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
+      const dialog = screen.getByRole('alertdialog', {
+        name: '예약을 진행할까요?',
+      })
+      vi.setSystemTime(new Date(2026, 5, 1, 0, 0))
+      fireEvent.click(within(dialog).getByRole('button', { name: '예약' }))
+      expect(mockedCreateReservation).not.toHaveBeenCalled()
+      expect(mockNavigate).toHaveBeenCalledWith(-1)
+    },
+  )
+
+  it('blocks a draft that was already in the past before confirmation', () => {
+    vi.setSystemTime(new Date(2026, 5, 2, 12))
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', {
+        name: '예약',
+      }),
+    )
+    expect(mockedCreateReservation).not.toHaveBeenCalled()
+    expect(mockNavigate).toHaveBeenCalled()
+  })
 
   it('shows the default image when the restaurant image fails to load', () => {
     renderPage()
