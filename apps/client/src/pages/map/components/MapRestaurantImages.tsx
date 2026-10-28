@@ -10,7 +10,7 @@ export const MapRestaurantImages = ({
   onPhotoSelect: (index: number) => void
 }) => (
   <div
-    className="mt-2 -mr-5 flex gap-2 overflow-x-auto pr-5 pb-1"
+    className="scrollbar-hidden mt-2 -mr-5 flex gap-2 overflow-x-auto pr-5 pb-1"
     aria-label={`${restaurant.name} 사진`}
   >
     {restaurant.images.length ? (

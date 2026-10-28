@@ -1,9 +1,9 @@
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { createRef } from 'react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { MapRestaurantList } from '@/pages/map/components/MapRestaurantList'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
+import { mapFixtureRestaurants } from '@/pages/map/__tests__/mapApiFixtures'
 
 afterEach(() => {
   cleanup()
@@ -11,21 +11,35 @@ afterEach(() => {
 })
 const props = {
   restaurants: [],
-  sort: 'recommended' as const,
   filtered: true,
-  sortTriggerRef: createRef<HTMLButtonElement>(),
-  onSortChange: vi.fn(),
   onSelect: vi.fn(),
   onSave: vi.fn(),
-  onReset: vi.fn(),
 }
-it('shows only the loading indicator, without a title or sort controls during a fresh query', () => {
+it('shows restaurant card skeletons instead of a spinner during a fresh query', () => {
   render(<MapRestaurantList {...props} status="loading" />)
-  expect(screen.getByRole('status')).toHaveTextContent(
-    '식당 목록을 불러오고 있어요.',
-  )
+  const loading = screen.getByRole('status', { name: '식당 목록 로딩 중' })
+  expect(loading.querySelectorAll('article')).toHaveLength(3)
+  expect(loading.querySelector('img')).toBeNull()
   expect(screen.queryByRole('heading')).not.toBeInTheDocument()
   expect(screen.queryByRole('button')).not.toBeInTheDocument()
+})
+it('keeps loaded cards and adds a skeleton while the next page is pending', () => {
+  render(
+    <MapRestaurantList
+      {...props}
+      restaurants={[mapFixtureRestaurants[0]]}
+      nextCursor="next"
+      loadingNext
+    />,
+  )
+  expect(
+    screen.getByRole('button', {
+      name: `${mapFixtureRestaurants[0].name} 상세 보기`,
+    }),
+  ).toBeVisible()
+  const loading = screen.getByRole('status', { name: '식당 목록 로딩 중' })
+  expect(loading.querySelectorAll('article')).toHaveLength(1)
+  expect(within(loading).queryByRole('button')).not.toBeInTheDocument()
 })
 it('loads the next page at the visible list bottom, but stops on failure or exhaustion', () => {
   const observer = mockIntersectionObserver()

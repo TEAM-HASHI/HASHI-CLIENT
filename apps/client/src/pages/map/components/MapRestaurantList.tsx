@@ -1,18 +1,13 @@
-import type { RefObject } from 'react'
 import { useInfiniteScrollTrigger } from '@/shared/hooks/useInfiniteScrollTrigger'
 
 import { MapRestaurantCard } from '@/pages/map/components/MapRestaurantCard'
-import { MapSortMenu } from '@/pages/map/components/MapSortMenu'
+import { MapRestaurantListSkeleton } from '@/pages/map/components/MapRestaurantListSkeleton'
 import { MapStatusView } from '@/pages/map/components/MapStatusView'
-import type { MapRestaurant, MapSort } from '@/pages/map/types'
-import { cn } from '@/shared/utils'
+import type { MapRestaurant } from '@/pages/map/types'
 
 interface MapRestaurantListProps {
   restaurants: MapRestaurant[]
-  sort: MapSort
   filtered: boolean
-  sortTriggerRef: RefObject<HTMLButtonElement | null>
-  onSortChange: (sort: MapSort) => void
   onSelect: (id: string) => void
   onSave: (restaurantId: string) => void
   status?: 'loading' | 'success' | 'error'
@@ -28,10 +23,7 @@ interface MapRestaurantListProps {
 
 export const MapRestaurantList = ({
   restaurants,
-  sort,
   filtered,
-  sortTriggerRef,
-  onSortChange,
   onSelect,
   onSave,
   status = 'success',
@@ -57,36 +49,17 @@ export const MapRestaurantList = ({
   })
   return (
     <div
-      className={cn(
-        'px-5',
-        status === 'loading'
-          ? 'flex min-h-full items-center justify-center pt-6'
-          : 'pb-5',
-      )}
+      className="px-5 pb-5"
+      aria-busy={status === 'loading' || loadingNext || undefined}
       data-map-list=""
     >
-      {status === 'success' && restaurants.length > 0 && (
-        <div className="flex min-h-7 items-center justify-between gap-2 py-1">
-          <h2 className="typo-sub-header-3 text-cool-gray-600 min-w-0 truncate">
-            {filtered ? '검색한 맛집' : '지금 도쿄에서 제일 핫한 맛집'}
-          </h2>
-          <MapSortMenu
-            value={sort}
-            onChange={onSortChange}
-            triggerRef={sortTriggerRef}
-          />
-        </div>
-      )}
-      {status !== 'success' ? (
-        <div className={status === 'loading' ? undefined : 'py-[67px]'}>
+      {status === 'loading' ? (
+        <MapRestaurantListSkeleton />
+      ) : status === 'error' ? (
+        <div className="py-[67px]">
           <MapStatusView
-            loading={status === 'loading'}
-            message={
-              status === 'loading'
-                ? '식당 목록을 불러오고 있어요.'
-                : (errorMessage ?? '식당 목록을 불러오지 못했어요!')
-            }
-            onRetry={status === 'error' ? onRetry : undefined}
+            message={errorMessage ?? '식당 목록을 불러오지 못했어요!'}
+            onRetry={onRetry}
             retryDisabled={retryDisabled}
           />
         </div>
@@ -115,17 +88,8 @@ export const MapRestaurantList = ({
             />
           </div>
         ) : (
-          <div
-            ref={sentinelRef}
-            className={
-              loadingNext
-                ? 'flex min-h-68 items-center justify-center'
-                : 'min-h-px'
-            }
-          >
-            {loadingNext && (
-              <MapStatusView loading message="식당 목록을 불러오고 있어요." />
-            )}
+          <div ref={sentinelRef} className="min-h-px">
+            {loadingNext && <MapRestaurantListSkeleton count={1} />}
           </div>
         ))}
     </div>

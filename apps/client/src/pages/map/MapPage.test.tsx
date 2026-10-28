@@ -9,6 +9,7 @@ import {
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { PropsWithChildren, ReactElement } from 'react'
+import { Suspense } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { useMap } from '@vis.gl/react-google-maps'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -43,6 +44,8 @@ import {
   startAuthenticatedSession,
 } from '@/shared/auth/authSession'
 import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
+import { getRestaurantMain } from '@/features/restaurantDetail/api/getRestaurantMain'
+import { RestaurantReservationNewPage } from '@/pages/restaurantReservationNew/RestaurantReservationNewPage'
 
 vi.mock('@/pages/map/api/getMapRegions', () => ({ getMapRegions: vi.fn() }))
 vi.mock('@/features/collection/api/getCollections', () => ({
@@ -843,10 +846,13 @@ describe('MapPage API integration', () => {
       'true',
     )
     expect(
-      await screen.findByRole('button', { name: '지도로 보기' }),
-    ).toBeVisible()
+      await screen.findByRole('slider', { name: '식당 목록 높이 조절' }),
+    ).toHaveAttribute('aria-valuenow', '710')
+    expect(
+      screen.queryByRole('button', { name: '지도로 보기' }),
+    ).not.toBeInTheDocument()
   })
-  it('returns from an expanded list to the map without clearing filters or scroll', async () => {
+  it('collapses an expanded list with the handle without a map CTA and preserves filters and scroll', async () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
@@ -865,7 +871,11 @@ describe('MapPage API integration', () => {
       .getByRole('list', { name: '식당 검색 결과' })
       .closest('[data-map-list]')!.parentElement!
     fireEvent.scroll(scroller, { target: { scrollTop: 80 } })
-    await user.click(screen.getByRole('button', { name: '지도로 보기' }))
+    expect(
+      screen.queryByRole('button', { name: '지도로 보기' }),
+    ).not.toBeInTheDocument()
+    slider.focus()
+    await user.keyboard('{Home}')
     expect(slider).toHaveAttribute('aria-valuenow', '30')
     expect(slider).toHaveFocus()
     expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
@@ -1079,6 +1089,66 @@ describe('MapPage API integration', () => {
       ).toHaveProperty('scrollTop', 180),
     )
   })
+
+  it.each([false, true])(
+    'restores map conditions and detail after the real reservation form exits (edited: %s)',
+    async (edited) => {
+      startAuthenticatedSession('map-test-token', 1)
+      vi.mocked(getRestaurantMain).mockResolvedValue({
+        ...createMapSummaryFixture(1),
+        thumbnailUrl: 'https://images.test/restaurant.webp',
+      })
+      const user = userEvent.setup()
+      render(
+        <MemoryRouter initialEntries={['/map']}>
+          <Suspense fallback={<p>예약 화면 로딩 중</p>}>
+            <Routes>
+              <Route path="/map" element={<MapPage />} />
+              <Route
+                path="/restaurants/:restaurantId/reservations/new"
+                element={<RestaurantReservationNewPage />}
+              />
+            </Routes>
+          </Suspense>
+        </MemoryRouter>,
+      )
+      await screen.findByRole('list', { name: '식당 검색 결과' })
+      await user.click(screen.getByRole('button', { name: '음식점' }))
+      await user.click(
+        await screen.findByRole('button', {
+          name: '코코네 돈카츠 신도심점 상세 보기',
+        }),
+      )
+      screen.getByRole('slider', { name: '식당 상세 높이 조절' }).focus()
+      await user.keyboard('{End}')
+      await user.click(await screen.findByRole('button', { name: '예약하기' }))
+      const guestName = await screen.findByRole('textbox', { name: '예약자명' })
+      if (edited) await user.type(guestName, '테스트')
+      await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+      if (edited) {
+        expect(await screen.findByRole('alertdialog')).toBeVisible()
+        await user.click(screen.getByRole('button', { name: '계속 예약하기' }))
+        expect(guestName).toHaveValue('테스트')
+        await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+        await user.click(screen.getByRole('button', { name: '그만두기' }))
+      }
+      expect(
+        await screen.findByRole('dialog', {
+          name: '코코네 돈카츠 신도심점 전체 상세',
+        }),
+      ).toBeVisible()
+      await user.click(screen.getByRole('button', { name: '식당 상세 닫기' }))
+      expect(screen.getByRole('button', { name: '음식점' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      expect(
+        screen.getByRole('button', {
+          name: '코코네 돈카츠 신도심점 상세 보기',
+        }),
+      ).toBeVisible()
+    },
+  )
 
   it('checks review eligibility from the map and opens the matching reservation review', async () => {
     startAuthenticatedSession('map-test-token', 1)

@@ -319,19 +319,103 @@ test('direct zoom reveals pins and zoom-out restores regions without filters', a
   await expect(pins).toHaveCount(0)
 })
 
-test('map CTA collapses the expanded list and restores keyboard focus', async ({
+test('list header stays fixed while results scroll without a map CTA or visible scrollbar', async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   const handle = page.getByRole('slider', { name: '식당 목록 높이 조절' })
   await handle.press('End')
-  const button = page.getByRole('button', { name: '지도로 보기' })
-  await expect(button).toBeInViewport()
-  await button.click()
+  await expect(page.getByRole('button', { name: '지도로 보기' })).toHaveCount(0)
+  const panel = page.getByRole('region', {
+    name: '지도 식당 목록',
+    exact: true,
+  })
+  const heading = panel.getByRole('heading', {
+    name: '지금 도쿄에서 제일 핫한 맛집',
+  })
+  const sort = panel.getByRole('button', { name: '정렬: 추천순' })
+  const topBefore = await heading.boundingBox()
+  const sortBefore = await sort.boundingBox()
+  const scroller = panel.locator('.overflow-y-auto')
+  await scroller.evaluate((element) => {
+    element.scrollTop = 300
+  })
+  await expect
+    .poll(() => scroller.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(0)
+  await expect(heading).toBeInViewport()
+  expect((await heading.boundingBox())!.y).toBeCloseTo(topBefore!.y, 0)
+  expect((await sort.boundingBox())!.y).toBeCloseTo(sortBefore!.y, 0)
+  await expect(scroller).toHaveCSS('scrollbar-width', 'none')
+  await page.screenshot({
+    path: test.info().outputPath('hashi245-fixed-list-header.png'),
+  })
+  await sort.click()
+  await expect(
+    page.getByRole('menuitemradio', { name: '별점순' }),
+  ).toBeVisible()
+  await page.getByRole('menuitemradio', { name: '별점순' }).press('Escape')
+  await handle.press('Home')
   await expect(handle).toHaveAttribute('aria-valuenow', '30')
   await expect(handle).toBeFocused()
-  await expect(button).toBeHidden()
   await handle.press('ArrowUp')
   await expect(page.getByRole('list', { name: '식당 검색 결과' })).toBeVisible()
+})
+
+test('restaurant metadata and card whitespace open detail, while saving does not select the restaurant', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.getByRole('slider', { name: '식당 목록 높이 조절' }).press('End')
+  const card = page
+    .getByRole('list', { name: '식당 검색 결과' })
+    .getByRole('article')
+    .first()
+  const metadata = await card
+    .getByText('도쿄 · japanese', { exact: true })
+    .boundingBox()
+  expect(metadata).not.toBeNull()
+  await page.mouse.click(
+    metadata!.x + metadata!.width / 2,
+    metadata!.y + metadata!.height / 2,
+  )
+  await expect(
+    page.getByRole('region', { name: '선택한 식당 요약' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: '선택한 식당 닫기' }).click()
+  const box = await card.boundingBox()
+  await page.mouse.click(box!.x + 4, box!.y + 8)
+  await expect(
+    page.getByRole('region', { name: '선택한 식당 요약' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: '선택한 식당 닫기' }).click()
+  await card
+    .getByRole('button', { name: '코코네 돈카츠 신도심점 저장' })
+    .click()
+  await expect(page).toHaveURL(/\/login-required$/)
+})
+
+test('photo strips scroll horizontally when the gesture starts between thumbnails', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.getByRole('slider', { name: '식당 목록 높이 조절' }).press('End')
+  const strip = page.getByLabel('코코네 돈카츠 신도심점 사진', { exact: true })
+  const photo = await strip.getByRole('button').first().boundingBox()
+  expect(photo).not.toBeNull()
+  await page.mouse.move(photo!.x + photo!.width + 4, photo!.y + 10)
+  await page.mouse.wheel(120, 0)
+  await expect
+    .poll(() => strip.evaluate((element) => element.scrollLeft))
+    .toBeGreaterThan(0)
+  await expect(
+    page.getByRole('region', { name: '선택한 식당 요약' }),
+  ).toHaveCount(0)
+  await expect(strip).toHaveCSS('scrollbar-width', 'none')
+  await strip.getByRole('button').first().press('Enter')
+  await expect(
+    page.getByRole('region', { name: '선택한 식당 요약' }),
+  ).toBeVisible()
 })
 
 test('overview zoom clears category, restores regions and reloads the list', async ({
@@ -484,7 +568,7 @@ test('SDK failure exposes a keyboard-operable retry', async ({ page }) => {
   ).toBeVisible()
 })
 
-test('initial list loading matches the Figma spinner-only panel geometry', async ({
+test('initial list loading shows card skeletons without interactive controls', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 393, height: 807 })
@@ -503,33 +587,11 @@ test('initial list loading matches the Figma spinner-only panel geometry', async
       name: '지도 식당 목록',
       exact: true,
     })
-    await expect(panel.getByRole('status')).toHaveText(
-      '식당 목록을 불러오고 있어요.',
-    )
+    const loading = panel.getByRole('status', { name: '식당 목록 로딩 중' })
+    await expect(loading.locator('article')).toHaveCount(3)
     await expect(panel.getByRole('heading')).toHaveCount(0)
     await expect(panel.getByRole('button', { name: /정렬/ })).toHaveCount(0)
-    const box = await panel.boundingBox()
-    const spinner = await panel.locator('[role="status"] img').boundingBox()
-    expect(box).not.toBeNull()
-    expect(spinner).not.toBeNull()
-    expect(spinner!.width).toBe(80)
-    expect(spinner!.height).toBe(80)
-    expect(spinner!.x - box!.x).toBeCloseTo(156.5, 0)
-    expect(spinner!.y - box!.y).toBeCloseTo(143, 0)
-    const spinnerImage = panel.locator('[role="status"] img')
-    await expect(spinnerImage).toHaveJSProperty('complete', true)
-    const pixels = await spinnerImage.evaluate((element: HTMLImageElement) => {
-      const canvas = document.createElement('canvas')
-      canvas.width = canvas.height = 80
-      const context = canvas.getContext('2d')!
-      context.drawImage(element, 0, 0)
-      return {
-        cornerAlpha: context.getImageData(0, 0, 1, 1).data[3],
-        centerAlpha: context.getImageData(40, 40, 1, 1).data[3],
-        arcAlpha: context.getImageData(40, 18, 1, 1).data[3],
-      }
-    })
-    expect(pixels).toEqual({ cornerAlpha: 0, centerAlpha: 0, arcAlpha: 255 })
+    await expect(loading.locator('img')).toHaveCount(0)
     await page.screenshot({
       path: test.info().outputPath('figma-loading-panel.png'),
     })
@@ -605,7 +667,7 @@ test('selected restaurant loading uses the spinner, and moving the map collapses
   ).toBeVisible()
 })
 
-test('next-page loading keeps loaded restaurants and centers the spinner in the list footer', async ({
+test('next-page loading keeps loaded restaurants and appends a card skeleton', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -643,16 +705,12 @@ test('next-page loading keeps loaded restaurants and centers the spinner in the 
   try {
     await expect(panel.getByRole('listitem')).toHaveCount(1)
     await page.getByRole('slider', { name: '식당 목록 높이 조절' }).press('End')
-    const loading = panel.getByRole('status')
-    await expect(loading).toHaveText('식당 목록을 불러오고 있어요.')
+    const loading = panel.getByRole('status', { name: '식당 목록 로딩 중' })
+    await expect(loading.locator('article')).toHaveCount(1)
     await expect(
       panel.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
     ).toBeVisible()
-    const box = await loading.locator('..').boundingBox()
-    const spinner = await loading.locator('img').boundingBox()
-    expect(box!.height).toBe(272)
-    expect(spinner!.width).toBe(80)
-    expect(spinner!.y - box!.y).toBe(96)
+    await expect(loading.locator('img')).toHaveCount(0)
     await page.screenshot({
       path: test.info().outputPath('figma-next-page-loading.png'),
     })
@@ -695,6 +753,7 @@ test('regions configuration failure never falls back to sample pins or restauran
 test('coordinate credits stay above floating controls on a narrow viewport', async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.setViewportSize({ width: 320, height: 640 })
   await page.getByRole('button', { name: '카페', exact: true }).click()
   const credits = page.getByRole('complementary', { name: '지도 좌표 출처' })
@@ -723,7 +782,7 @@ test('dragging the handle expands the sheet and body scroll survives collapse', 
   await page.mouse.down()
   await page.mouse.move(box.x + box.width / 2, 40, { steps: 12 })
   await page.mouse.up()
-  await expect(handle).toHaveAttribute('aria-valuenow', '756')
+  await expect(handle).toHaveAttribute('aria-valuenow', '710')
   const list = page.getByRole('list', { name: '식당 검색 결과' })
   const scroller = list.locator('..').locator('..')
   await scroller.evaluate((element) => {

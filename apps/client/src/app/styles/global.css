@@ -79,6 +79,14 @@
   margin-inline: auto;
 }
 
+@utility scrollbar-hidden {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @utility app-mobile-fixed-top {
   position: fixed;
   top: 0;
