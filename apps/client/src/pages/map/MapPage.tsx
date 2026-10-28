@@ -15,7 +15,12 @@ import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/rest
 import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 import { parseMapSearchContext } from '@/features/mapSearch/utils/parseMapSearchContext'
 import { useMapSession } from '@/pages/map/hooks/useMapSession'
-import { clearMapSession, readMapSession } from '@/pages/map/utils/mapSession'
+import {
+  clearMapSession,
+  readMapSession,
+  restoreMapSessionAfterOAuth,
+  discardMapOAuthResume,
+} from '@/pages/map/utils/mapSession'
 
 import { MapViewport } from '@/pages/map/components/MapViewport'
 import { MapToolbar } from '@/pages/map/components/MapToolbar'
@@ -60,8 +65,15 @@ const MapMainPage = () => {
   const sessionVersion = useCollectionSessionVersion()
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStatus()
-  const [initial] = useState(() => readMapSession())
-  const [restoreDetail] = useState(location.state?.restoreMapDetail === true)
+  const [initial] = useState(() => {
+    if (isAuthenticated) return restoreMapSessionAfterOAuth()
+    discardMapOAuthResume()
+    return readMapSession()
+  })
+  const [restoreDetail] = useState(
+    location.state?.restoreMapDetail === true ||
+      initial?.restoreAfterOAuth === true,
+  )
   const state = useMapPageState(initial)
   const restaurants = useMapRestaurantSaves(state.restaurants)
   const selectedRestaurant = restaurants.find(

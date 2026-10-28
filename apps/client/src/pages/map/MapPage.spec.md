@@ -2,6 +2,9 @@
 
 ## HASHI-245 1차 QA 반영 (2026-10-28)
 
+- 외부 카카오 로그인 복귀는 예외적으로 `sessionStorage['hashi:map:oauth-resume:v1']`의 일회용 체크포인트를 사용한다. 지도에서 `/login-required`로 이동한 뒤 카카오 버튼을 누를 때만 저장하며, 인증된 지도 진입 시 검증·소비한다. 앱 메모리가 초기화돼도 조건·카메라·이미 조회한 페이지·선택 식당·상세 높이·탭·스크롤을 복원한다. 원래 이탈 시점부터 5분의 만료는 연장하지 않는다. 일반 새로고침 영속화나 새 탭 공유로 확대하지 않는다.
+- 체크포인트에는 토큰·저장 모달 의도·저장 요청을 넣지 않으며, 로그인 후 자동 저장이나 저장 모달 재개는 하지 않는다. 버전·시간·스냅샷 구조를 검증하고 만료/손상/저장소 오류는 무시한다. 지도 초기화·비로그인 지도 재진입·다른 출처 로그인 시작 시 체크포인트도 제거해 취소된 로그인의 이전 상태가 최신 지도를 덮지 않도록 한다.
+- 정렬 메뉴는 Figma `10043:174204` 기준 140×120px, 10px 모서리, 행 높이 40px, 16px semibold 및 Primary_100 구분선을 사용한다. 선택 글자는 Primary_200, 비선택 글자는 Warm_Gray_300이며 비선택 옵션도 활성 상태다. 선택 행 배경/그림자는 사용하지 않는다. 기존 키보드 선택·Escape·포커스 복원은 유지한다.
 - 지도 식당 상세의 예약하기는 기존 식당 예약 입력 route를 사용한다. 뒤로가기 및 입력 후 `그만두기`로 복귀하면 지도 조건·선택 식당·상세 높이·탭·스크롤을 기존 메모리 세션에서 복원한다. 비로그인 사용자는 기존 로그인 유도로 연결한다.
 - 목록 카드의 제목·메타 정보·여백·사진을 선택하면 동일한 식당 요약 패널을 연다. 저장 버튼은 독립적인 액션이며 식당 선택을 발생시키지 않는다. 키보드로 접근 가능한 상세 보기 버튼을 유지한다.
 - 식당 목록의 최초/조건 변경/재검색은 카드 형태 스켈레톤 3개, 추가 조회는 기존 결과 아래 스켈레톤 1개를 표시한다. 스켈레톤은 비상호작용·접근 가능한 상태 안내를 제공하며 reduced-motion에서는 애니메이션을 중단한다. 지도 SDK 및 선택 식당 요약의 스피너는 유지한다.
@@ -103,7 +106,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - 예약·리뷰 작성에서 취소·복귀하면 기존 지도 세션의 선택 식당·탭·상세 스크롤·시트 높이를 복원한다. 이 복귀에서는 리뷰 정렬·캐시 페이지를 유지하며, 메뉴 상세 복귀나 일반 리뷰 탭 재진입의 최신순·첫 페이지 초기화 정책은 유지한다.
 - 탭 이탈 또는 백그라운드 전환 시각부터 5분 미만이면 카메라·조건·로드된 결과·선택·시트 상태를 복원한다. 정확히 5분 이상이면 만료로 처리한다.
 - 이탈 시점은 중복 이벤트로 연장하지 않는다. 복귀하면 만료 여부를 판정하고 다음 이탈을 새로 기록한다. 복원 중 진행 중이던 요청은 성공 결과처럼 저장하지 않는다.
-- 세션은 앱 메모리에 보관한다. 새로고침·새 브라우저 탭 간 지속 보존은 이번 범위가 아니다. 토큰·개인정보를 새 저장소에 넣지 않는다.
+- 일반 세션은 앱 메모리에 보관한다. 외부 로그인 왕복만 위 일회용 체크포인트를 사용하며 일반 새로고침·새 브라우저 탭 간 지속 보존은 범위가 아니다. 토큰·개인정보를 새 저장소에 넣지 않는다.
 - 활성 지도 탭 재선택은 즉시 조건·결과·선택·세션을 초기화하고 최초 지역 묶음으로 돌아간다. 다른 탭에서 지도 진입은 일반 복원 정책을 따른다.
 
 ### 책임과 예정 파일
@@ -147,7 +150,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 
 - 카테고리 순서 `전체 → 음식점 → 주점 → 카페`, 지역 묶음 줌 13 이하/개별 핀 14 이상, 소수 구간은 직전 모드 유지.
 - 최초 fit 최소 줌 보존, Google 로고·저작권 비가림, 공통 DragPanel 재사용.
-- 세션 만료 `300_000ms` 이상. 메모리만 사용하며 새 의존성을 설치하지 않는다.
+- 세션 만료 `300_000ms` 이상. 일반 세션은 메모리, 외부 로그인 왕복은 일회용 sessionStorage를 사용하며 새 의존성을 설치하지 않는다.
 - 조회 원인에 따른 빈 결과 분기와 기획 문구를 그대로 사용한다.
 - 컬렉션·예약 신규 기능 제외. 확인되지 않은 API와 좌표를 추측하지 않는다.
 
@@ -245,7 +248,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - Area click fits server cameraBounds and queries that region. Reset fits server initialBounds. Category and submitted keyword apply together. Sort uses server recommend/rating/reviews order, with no client re-ranking.
 - Search draft is separate from submitted keyword; empty results retain the search clear action and category chips, without an additional reset CTA. Filter changes clear selected restaurant. Same selected category toggles to all.
 - The toolbar opens `/search` with validated map route state. Search returns using replace navigation, retains category, and fits nonempty keyword results. Clearing keyword retains the camera. Ordinary search URL policy is unchanged.
-- A memory session retains camera, conditions, loaded results, selection and panel stages for less than five minutes after route/background departure. Pending requests are not saved as successful data. Active map-tab reselection resets; reload persistence is not provided.
+- A memory session retains camera, conditions, loaded results, selection and panel stages for less than five minutes after route/background departure. A single-use sessionStorage checkpoint bridges map-origin external login only, retaining the original deadline. Pending requests are not saved as successful data. Active map-tab reselection resets; ordinary reload persistence is not provided.
 - List collapse/expand preserves scroll. Condition changes reset scroll. Closing details restores preselection camera/stage and resets list scroll; focus falls back to the sort trigger if the original card remounts. Floating bookmark becomes close while selected.
 - The list has no `지도로 보기` footer. Handle/keyboard/map-gesture collapse retains conditions and list scroll. The title/sort controls use the fixed DragPanel header slot, outside the vertical result scroller.
 - SDK failure hides the restaurant panels and floating map controls while retaining search/category controls and retry. Restaurant refetch displays a spinner on the map and card skeletons in the list; list failure hides the list heading/sort control.

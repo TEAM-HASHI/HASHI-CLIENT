@@ -38,7 +38,11 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom'
-import { clearMapSession, writeMapSession } from '@/pages/map/utils/mapSession'
+import {
+  clearMapSession,
+  writeMapSession,
+  persistMapSessionForOAuth,
+} from '@/pages/map/utils/mapSession'
 import {
   clearAuthSession,
   startAuthenticatedSession,
@@ -1322,5 +1326,31 @@ describe('MapPage API integration', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(
       '"pathname":"/map"',
     )
+  })
+
+  it('discards an abandoned login checkpoint when a guest returns to the map', async () => {
+    writeMapSession({
+      conditions: {
+        keyword: '',
+        category: 'restaurant',
+        sort: 'recommended',
+        areaCode: null,
+      },
+      searchBounds: null,
+      camera: null,
+      selectedId: null,
+      stage: 'normal',
+      detailStage: 'normal',
+      isExploring: true,
+    })
+    persistMapSessionForOAuth()
+    expect(sessionStorage.getItem('hashi:map:oauth-resume:v1')).not.toBeNull()
+    render(
+      <MemoryRouter>
+        <MapPage />
+      </MemoryRouter>,
+    )
+    await screen.findByRole('list', { name: '식당 검색 결과' })
+    expect(sessionStorage.getItem('hashi:map:oauth-resume:v1')).toBeNull()
   })
 })

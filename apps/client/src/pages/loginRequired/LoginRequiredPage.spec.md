@@ -37,6 +37,7 @@ Jira: HASHI-112
 - [x] `client_id` 또는 `redirect_uri`가 비어 있으면 `undefined` URL로 이동하지 않는다.
 - [x] `AuthOnlyRoute`가 전달한 `location.state.from`이 있으면 OAuth state의 `redirectTo`로 저장한다.
 - [x] 임의 `/signup` route를 만들지 않는다.
+- [x] `/map`에서 진입한 경우에만 카카오 버튼 클릭 직전에 지도 모듈의 일회용 복원 체크포인트를 저장한다. 일반 로그인 및 타 route는 지도 상태를 저장하지 않는다. 저장 실패는 로그인 시작을 막지 않는다. 인증된 지도 복귀가 체크포인트를 소비하며 저장 모달/요청은 자동 재개하지 않는다.
 
 ## Environment
 

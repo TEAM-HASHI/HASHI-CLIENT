@@ -2,6 +2,7 @@ import { TapDownIcon } from '@hashi/hds-icons'
 import { type RefObject, useEffect, useRef, useState } from 'react'
 
 import type { MapSort } from '@/pages/map/types'
+import { cn } from '@/shared/utils'
 
 const OPTIONS = [
   { value: 'recommended', label: '추천순' },
@@ -60,7 +61,7 @@ export const MapSortMenu = ({
         <div
           role="menu"
           aria-label="식당 정렬"
-          className="border-warm-gray-100 absolute top-full right-0 z-20 w-30 rounded-[5px] border bg-white py-1 shadow-sm"
+          className="ring-warm-gray-100 absolute top-full right-0 z-20 w-35 rounded-[10px] bg-white px-2.5 ring-1 ring-inset"
           onKeyDown={(event) => {
             if (event.key === 'Escape') {
               event.preventDefault()
@@ -88,7 +89,12 @@ export const MapSortMenu = ({
               role="menuitemradio"
               aria-checked={value === option.value}
               tabIndex={-1}
-              className="typo-body-7 hover:bg-primary-100 focus:bg-primary-100 block min-h-9 w-full px-3"
+              className={cn(
+                'typo-sub-header-2 border-primary-100 block h-10 w-full not-last:border-b focus-visible:outline-2 focus-visible:-outline-offset-2',
+                value === option.value
+                  ? 'text-primary-200'
+                  : 'text-warm-gray-300',
+              )}
               onClick={() => {
                 onChange(option.value)
                 setOpen(false)

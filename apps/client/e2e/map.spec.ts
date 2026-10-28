@@ -354,6 +354,9 @@ test('list header stays fixed while results scroll without a map CTA or visible 
   await expect(
     page.getByRole('menuitemradio', { name: '별점순' }),
   ).toBeVisible()
+  await page
+    .getByRole('menu', { name: '식당 정렬' })
+    .screenshot({ path: test.info().outputPath('hashi245-sort-menu.png') })
   await page.getByRole('menuitemradio', { name: '별점순' }).press('Escape')
   await handle.press('Home')
   await expect(handle).toHaveAttribute('aria-valuenow', '30')
@@ -967,6 +970,69 @@ test('leaving expanded detail restores a keyboard entry into the summary', async
   await expect(
     page.getByRole('slider', { name: '식당 상세 높이 조절' }),
   ).toBeFocused()
+})
+
+test('external login restores map filters and expanded detail after a fresh document without replaying save', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.getByRole('button', { name: '음식점', exact: true }).click()
+  await page
+    .getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' })
+    .click()
+  await page.getByRole('slider', { name: '식당 상세 높이 조절' }).press('End')
+  await page.getByRole('tab', { name: '메뉴', exact: true }).click()
+  await page.getByRole('button', { name: '저장하기', exact: true }).click()
+  await expect(page).toHaveURL(/\/login-required$/)
+  await page.route('https://kauth.kakao.com/**', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<p>외부 로그인 페이지</p>',
+    }),
+  )
+  await page.getByRole('button', { name: '카카오로 로그인하기' }).click()
+  await expect(page).toHaveURL(/kauth\.kakao\.com/)
+  await page.route('**/api/v1/auth/**', async (route) => {
+    const reissue = new URL(route.request().url()).pathname.endsWith('/reissue')
+    await route.fulfill({
+      headers: reissue
+        ? {
+            Authorization: 'Bearer browser-test-session',
+            'Access-Control-Expose-Headers': 'Authorization',
+          }
+        : {},
+      json: {
+        success: true,
+        code: 'SUCCESS',
+        message: 'ok',
+        data: reissue ? null : { role: 'USER', subjectId: 1 },
+      },
+    })
+  })
+  const writes: string[] = []
+  page.on('request', (request) => {
+    if (request.method() !== 'GET' && request.url().includes('/collections'))
+      writes.push(request.url())
+  })
+  // New navigation creates a new JS realm: no in-memory map/auth/query state survives.
+  await page.goto('/map')
+  await expect(
+    page.getByRole('dialog', { name: '코코네 돈카츠 신도심점 전체 상세' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('tab', { name: '메뉴', exact: true }),
+  ).toHaveAttribute('aria-selected', 'true')
+  await expect(page.getByRole('dialog')).toHaveCount(1)
+  expect(writes).toEqual([])
+  await page.getByRole('button', { name: '식당 상세 닫기' }).click()
+  await expect(
+    page.getByRole('button', { name: '음식점', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  expect(
+    await page.evaluate(() =>
+      sessionStorage.getItem('hashi:map:oauth-resume:v1'),
+    ),
+  ).toBeNull()
 })
 
 test('bookmark FAB matches the nonmodal collection panel and keeps create and navigation fixed', async ({

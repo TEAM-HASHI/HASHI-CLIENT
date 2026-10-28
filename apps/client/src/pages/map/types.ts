@@ -69,6 +69,7 @@ export interface MapConditions {
 }
 
 export interface MapSessionSnapshot {
+  restoreAfterOAuth?: boolean
   conditions: MapConditions
   searchBounds: MapBounds | null
   camera: MapCameraSnapshot | null
