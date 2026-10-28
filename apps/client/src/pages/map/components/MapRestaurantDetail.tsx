@@ -196,6 +196,7 @@ const MapDetailPanel = ({
       )}
     >
       <DragPanel
+        className="[&_.overflow-y-auto]:scrollbar-hidden"
         aria-label="선택한 식당"
         handleLabel="식당 상세 높이 조절"
         height={height}

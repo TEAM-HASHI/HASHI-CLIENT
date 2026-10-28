@@ -1,5 +1,19 @@
 # MapPage
 
+## HASHI-245 1차 QA 반영 (2026-10-28)
+
+- 외부 카카오 로그인 복귀는 예외적으로 `sessionStorage['hashi:map:oauth-resume:v1']`의 일회용 체크포인트를 사용한다. 지도에서 `/login-required`로 이동한 뒤 카카오 버튼을 누를 때만 저장하며, 인증된 지도 진입 시 검증·소비한다. 앱 메모리가 초기화돼도 조건·카메라·이미 조회한 페이지·선택 식당·상세 높이·탭·스크롤을 복원한다. 원래 이탈 시점부터 5분의 만료는 연장하지 않는다. 일반 새로고침 영속화나 새 탭 공유로 확대하지 않는다.
+- 체크포인트에는 토큰·저장 모달 의도·저장 요청을 넣지 않으며, 로그인 후 자동 저장이나 저장 모달 재개는 하지 않는다. 버전·시간·스냅샷 구조를 검증하고 만료/손상/저장소 오류는 무시한다. 지도 초기화·비로그인 지도 재진입·다른 출처 로그인 시작 시 체크포인트도 제거해 취소된 로그인의 이전 상태가 최신 지도를 덮지 않도록 한다.
+- 정렬 메뉴는 Figma `10043:174204` 기준 140×120px, 10px 모서리, 행 높이 40px, 16px semibold 및 Primary_100 구분선을 사용한다. 선택 글자는 Primary_200, 비선택 글자는 Warm_Gray_300이며 비선택 옵션도 활성 상태다. 선택 행 배경/그림자는 사용하지 않는다. 기존 키보드 선택·Escape·포커스 복원은 유지한다.
+- 지도 식당 상세의 예약하기는 기존 식당 예약 입력 route를 사용한다. 뒤로가기 및 입력 후 `그만두기`로 복귀하면 지도 조건·선택 식당·상세 높이·탭·스크롤을 기존 메모리 세션에서 복원한다. 비로그인 사용자는 기존 로그인 유도로 연결한다.
+- 목록 카드의 제목·메타 정보·여백·사진을 선택하면 동일한 식당 요약 패널을 연다. 저장 버튼은 독립적인 액션이며 식당 선택을 발생시키지 않는다. 키보드로 접근 가능한 상세 보기 버튼을 유지한다.
+- 식당 목록의 최초/조건 변경/재검색은 카드 형태 스켈레톤 3개, 추가 조회는 기존 결과 아래 스켈레톤 1개를 표시한다. 스켈레톤은 비상호작용·접근 가능한 상태 안내를 제공하며 reduced-motion에서는 애니메이션을 중단한다. 지도 SDK 및 선택 식당 요약의 스피너는 유지한다.
+- 목록 제목과 정렬은 DragPanel의 `header` slot에 배치해 목록 스크롤과 분리한다. 성공한 비어 있지 않은 목록에만 표시하며 오류·빈 상태의 기존 정책은 유지한다.
+- 일반 지도 식당 목록의 `지도로 보기` footer 버튼을 제거한다. 공통 DragPanel의 핸들·키보드·지도 조작을 통한 축소와 목록 스크롤 보존은 유지한다. 저장 페이지의 컬렉션 지도 진입 버튼은 변경하지 않는다.
+- 일반 지도 목록·식당 상세 및 사진 가로 목록에서 스크롤바만 숨기고 스크롤 기능은 유지한다. 공통 HDS DragPanel 구현과 공개 API는 변경하지 않는다.
+- 좁은 화면에서 지도 좌표 출처와 북마크 버튼이 4px 겹치던 간격을 보정한다. 지도 출처 표시를 숨기거나 삭제하지 않는다.
+- 새 문서 파일 없이 이 spec을 갱신한다. 아래 과거 스피너/목록 footer 기록과 충돌하면 이 QA 기준을 우선한다.
+
 ## 컬렉션 연결 (2026-10-23)
 
 - 북마크 FAB는 Figma `8317:39104`에 맞춘 비모달 컬렉션 목록 패널을 연다. 지도와 지도 탭 내비게이션은 유지하고, 기존 식당 목록 패널은 가린다. 생성·커버·저장 수·메뉴는 기존 컬렉션 API 화면을 재사용하며 세부 기준은 `saved/CollectionApi.spec.md`를 따른다.
@@ -19,7 +33,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - HASHI-PLAN 원격 main `f11be8f`의 MAP_MAIN, MAP_FILTERED, MAP_RESTAURANT_DETAIL 및 위임된 RESTAURANT_REVIEW를 기준으로 재검토했다. DEC-001도 최신 지역 묶음 복원 정책으로 정리되었다.
 - 사용자 확정: 빈 결과는 그림에 남은 핀이 아니라 기획 문서의 핀 제거 규칙을 따른다.
 - 사용자 확정(2026-10-22): Figma `10218:91473` 기준으로 검색·카테고리 결과 0건도 토스트만 표시하고 시트는 30px 핸들만 남긴다. 빈 결과 시트를 확장하지 않으며 기존 기획의 일반 높이 빈 상태 시트보다 이 결정을 우선한다.
-- 로딩 디자인: [적용 화면 모음](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10577-100033). 지도/목록 최초·재조회, 선택 식당 요약, 목록 추가 조회에 기존 80px Figma 스피너를 재사용한다. 상세 탭 내부는 일반 식당 상세의 공통 표시를 따른다.
+- 로딩 디자인: [적용 화면 모음](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10577-100033). 지도 및 선택 식당 요약은 기존 80px Figma 스피너를 재사용한다. HASHI-245 QA에 따라 식당 목록 최초·재조회·추가 조회는 카드 스켈레톤으로 표시한다. 상세 탭 내부는 일반 식당 상세의 공통 표시를 따른다.
 - 사용자 확정: 카테고리 순서는 현재 코드의 `전체 → 음식점 → 주점 → 카페`를 유지한다.
 - Figma 추가 유즈케이스: [재검색](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10043-182001), [스피너](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10057-135279), [오류](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=9984-85562), [토스트](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=10043-183098), [검색 X](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=9984-55671), [상세 닫기](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=9965-71086).
 - 지도와 검색의 프론트 동작, 화면 상태, 복원 흐름을 구현한다. 컬렉션 자체 및 예약 기능의 신규 구현은 제외한다.
@@ -73,8 +87,8 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - 토스트는 렌더링마다 반복하지 않고 최신 요청의 결과 이벤트마다 1회 표시한다. 오래된 응답은 토스트도 표시하지 않는다.
 - 빈 결과 토스트는 Figma `10218:91472`의 경고 SVG(26×26, 투명 배경·밝은 삼각형 테두리·빨간 느낌표)를 사용한다. 공통 Toast의 높이 60px, 아이콘과 문구 간격 11px을 유지한다.
 - 공통 토스트·버튼·아이콘을 재사용한다. 문구와 요청 재시도 책임은 페이지에 둔다. 스피너는 reduced-motion과 보조기기 안내를 고려한다.
-- 목록 로딩은 Figma `10577:100348`처럼 제목·정렬 없이 80px 스피너만 표시한다. 일반 312px 패널에서 스피너의 상단은 패널 상단으로부터 143px이며, 짧거나 확장된 패널에서는 본문 영역 내 중앙 정렬한다.
-- 선택 식당 요약을 조회하는 동안은 모든 바텀시트 로딩 디자인에 따라 시트 본문의 제목·메타·사진 대신 스피너를 표시한다. 다음 페이지 로딩은 `10577:100901`의 272px 영역 중앙에 80px 스피너를 놓되 기존 식당 목록은 유지한다. 완료/실패 시 스피너를 제거하고 각각 결과/기존 오류 처리로 전환한다.
+- 목록 최초·재조회 로딩은 제목·정렬 없이 카드 스켈레톤 3개를 표시한다. 다음 페이지 로딩은 기존 목록을 유지하고 아래에 카드 스켈레톤 1개를 표시하며 완료/실패 시 각각 결과/기존 오류 처리로 전환한다.
+- 선택 식당 요약을 조회하는 동안은 시트 본문의 제목·메타·사진 대신 기존 스피너를 표시한다.
 
 ### 상세·복원 정책
 
@@ -92,7 +106,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - 예약·리뷰 작성에서 취소·복귀하면 기존 지도 세션의 선택 식당·탭·상세 스크롤·시트 높이를 복원한다. 이 복귀에서는 리뷰 정렬·캐시 페이지를 유지하며, 메뉴 상세 복귀나 일반 리뷰 탭 재진입의 최신순·첫 페이지 초기화 정책은 유지한다.
 - 탭 이탈 또는 백그라운드 전환 시각부터 5분 미만이면 카메라·조건·로드된 결과·선택·시트 상태를 복원한다. 정확히 5분 이상이면 만료로 처리한다.
 - 이탈 시점은 중복 이벤트로 연장하지 않는다. 복귀하면 만료 여부를 판정하고 다음 이탈을 새로 기록한다. 복원 중 진행 중이던 요청은 성공 결과처럼 저장하지 않는다.
-- 세션은 앱 메모리에 보관한다. 새로고침·새 브라우저 탭 간 지속 보존은 이번 범위가 아니다. 토큰·개인정보를 새 저장소에 넣지 않는다.
+- 일반 세션은 앱 메모리에 보관한다. 외부 로그인 왕복만 위 일회용 체크포인트를 사용하며 일반 새로고침·새 브라우저 탭 간 지속 보존은 범위가 아니다. 토큰·개인정보를 새 저장소에 넣지 않는다.
 - 활성 지도 탭 재선택은 즉시 조건·결과·선택·세션을 초기화하고 최초 지역 묶음으로 돌아간다. 다른 탭에서 지도 진입은 일반 복원 정책을 따른다.
 
 ### 책임과 예정 파일
@@ -136,7 +150,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 
 - 카테고리 순서 `전체 → 음식점 → 주점 → 카페`, 지역 묶음 줌 13 이하/개별 핀 14 이상, 소수 구간은 직전 모드 유지.
 - 최초 fit 최소 줌 보존, Google 로고·저작권 비가림, 공통 DragPanel 재사용.
-- 세션 만료 `300_000ms` 이상. 메모리만 사용하며 새 의존성을 설치하지 않는다.
+- 세션 만료 `300_000ms` 이상. 일반 세션은 메모리, 외부 로그인 왕복은 일회용 sessionStorage를 사용하며 새 의존성을 설치하지 않는다.
 - 조회 원인에 따른 빈 결과 분기와 기획 문구를 그대로 사용한다.
 - 컬렉션·예약 신규 기능 제외. 확인되지 않은 API와 좌표를 추측하지 않는다.
 
@@ -221,7 +235,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - HASHI-228 summary/store/menu/review API functions, query keys and view models are reused. Summary loads on selection; expanded information/menu/review load on demand. Hero images are capped at 10. Card photos have no three-photo truncation.
 - Public `GET /api/v1/restaurants/{id}/photos` supplies `ALL/REPRESENTATIVE/MENU/REVIEW`, server-owned 20-item pages, opaque `cursor`, `counts`, `totalCount`, `photos`, `hasNext` and `nextCursor`. No `size` is sent. Reuse `features/restaurantDetail`'s adapter, count/finite key and filter/revision/infinite key, `useRestaurantPhotos` and photo UI. Count reads start for a valid selection; gallery reads require the expanded photo tab. Summary photos are not used as the full gallery.
 - Photo filter changes clear the prior pages/cursor and reset panel scroll. Preserve server ordering/counts and deduplicate repeated `photoId` associations across mutable pages. READY assets use derivative URL/dimensions; legacy URL is allowed only without an asset, unknown dimensions use the image's natural ratio, unavailable assets use fallback slots. Network/5xx retries once; 4xx does not auto-retry. Initial failures show a gallery retry; next-page failures keep existing photos. The viewer uses the same filtered pages and HDS Dialog stack so Escape closes only the top viewer and restores thumbnail focus.
-- Batch save-count reads are public; personal saved-state reads require an authenticated session and auth-versioned keys. Results join by restaurant ID; absent counts are not fabricated as zero. Saved-list/save/reservation actions still show ComingSoonDialog; no mutation is implemented.
+- Batch save-count reads are public; personal saved-state reads require an authenticated session and auth-versioned keys. Results join by restaurant ID; absent counts are not fabricated as zero. Saved-list/save actions reuse the collection feature; reservation uses the existing authenticated restaurant reservation route.
 - No client Places lookup or geolocation is introduced. Region names/IDs/counts are supplied by the server, not Japanese administrative codes or automatic marker clustering.
 
 ## Requirements / State
@@ -234,10 +248,10 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - Area click fits server cameraBounds and queries that region. Reset fits server initialBounds. Category and submitted keyword apply together. Sort uses server recommend/rating/reviews order, with no client re-ranking.
 - Search draft is separate from submitted keyword; empty results retain the search clear action and category chips, without an additional reset CTA. Filter changes clear selected restaurant. Same selected category toggles to all.
 - The toolbar opens `/search` with validated map route state. Search returns using replace navigation, retains category, and fits nonempty keyword results. Clearing keyword retains the camera. Ordinary search URL policy is unchanged.
-- A memory session retains camera, conditions, loaded results, selection and panel stages for less than five minutes after route/background departure. Pending requests are not saved as successful data. Active map-tab reselection resets; reload persistence is not provided.
+- A memory session retains camera, conditions, loaded results, selection and panel stages for less than five minutes after route/background departure. A single-use sessionStorage checkpoint bridges map-origin external login only, retaining the original deadline. Pending requests are not saved as successful data. Active map-tab reselection resets; ordinary reload persistence is not provided.
 - List collapse/expand preserves scroll. Condition changes reset scroll. Closing details restores preselection camera/stage and resets list scroll; focus falls back to the sort trigger if the original card remounts. Floating bookmark becomes close while selected.
-- An expanded list exposes `지도로 보기` in the panel footer. It collapses the list to the handle without resetting conditions or scroll; focus returns to the handle. It is not shown in normal/collapsed or restaurant-detail states.
-- SDK failure hides the restaurant panels and floating map controls while retaining search/category controls and retry. Restaurant refetch displays a spinner on the map as well as the list; list failure hides the list heading/sort control.
+- The list has no `지도로 보기` footer. Handle/keyboard/map-gesture collapse retains conditions and list scroll. The title/sort controls use the fixed DragPanel header slot, outside the vertical result scroller.
+- SDK failure hides the restaurant panels and floating map controls while retaining search/category controls and retry. Restaurant refetch displays a spinner on the map and card skeletons in the list; list failure hides the list heading/sort control.
 - Normal restaurant summary uses the floating map close button only; expanded detail retains its internal close button. Floating map controls are placed 20px above the panel.
 - Explicit viewport search captures conditions/bounds/camera. Latest request wins; stale responses produce neither results nor toast. Every successful empty result leaves only the non-expandable 30px handle and its region/condition warning toast (user approval, 2026-10-22). Nonempty first-page success reopens the normal sheet. A 503 after empty results opens the error/retry sheet, not an empty-state handle. Retry uses the failed request; next-page failure keeps loaded results and adds the illustrated inline error/retry block. Visible list-bottom intersection loads additional pages automatically, stopping on pending/error/end or a hidden/collapsed sheet.
 - A pointer-up click generated by map dragging cannot reselect a marker and reopen the collapsed detail. The next intentional pointer press or keyboard activation can select it normally.

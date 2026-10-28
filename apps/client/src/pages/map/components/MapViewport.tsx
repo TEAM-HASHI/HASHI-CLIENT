@@ -103,7 +103,7 @@ const MapCoordinateAttributions = ({
   return (
     <aside
       aria-label="지도 좌표 출처"
-      className="typo-caption-2 text-cool-gray-800 absolute inset-x-5 bottom-20 max-h-16 overflow-y-auto rounded bg-white/95 px-2 py-1"
+      className="typo-caption-2 text-cool-gray-800 absolute inset-x-5 bottom-21 max-h-16 overflow-y-auto rounded bg-white/95 px-2 py-1"
     >
       <span>좌표 출처: </span>
       {attributions.map(([key, { displayName, uri }], index) => {

@@ -4,6 +4,11 @@ import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
 import { getRedirectToFromLocationState } from '@/features/auth/utils/authRedirect'
 import emptyImage from '@/shared/assets/images/empty.webp'
 import { KakaoStartButton } from '@/shared/components/kakaoStartButton'
+import { ROUTES } from '@/app/router/path'
+import {
+  persistMapSessionForOAuth,
+  discardMapOAuthResume,
+} from '@/pages/map/utils/mapSession'
 
 export const LoginRequiredPage = () => {
   const location = useLocation()
@@ -29,6 +34,8 @@ export const LoginRequiredPage = () => {
         </p>
         <KakaoStartButton
           onPress={() => {
+            if (redirectTo === ROUTES.map) persistMapSessionForOAuth()
+            else discardMapOAuthResume()
             startKakaoOAuth(redirectTo)
           }}
         >

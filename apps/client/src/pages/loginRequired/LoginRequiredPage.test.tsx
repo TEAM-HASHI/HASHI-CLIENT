@@ -1,11 +1,15 @@
 import '@testing-library/jest-dom/vitest'
 
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { LoginRequiredPage } from '@/pages/loginRequired/LoginRequiredPage'
-import emptyImage from '@/shared/assets/images/empty.webp'
+import {
+  clearMapSession,
+  writeMapSession,
+  persistMapSessionForOAuth,
+} from '@/pages/map/utils/mapSession'
 
 const { mockStartKakaoOAuth } = vi.hoisted(() => ({
   mockStartKakaoOAuth: vi.fn(),
@@ -19,28 +23,72 @@ vi.mock('@/features/auth/hooks/useKakaoOAuthStart', () => ({
 
 describe('LoginRequiredPage', () => {
   afterEach(() => {
+    cleanup()
+    clearMapSession()
     mockStartKakaoOAuth.mockClear()
   })
 
-  it('renders the login guidance and starts OAuth', () => {
+  it('starts OAuth without a map checkpoint for a non-map entry', () => {
+    writeMapSession({
+      conditions: {
+        keyword: '',
+        category: 'all',
+        sort: 'recommended',
+        areaCode: null,
+      },
+      camera: null,
+      searchBounds: null,
+      selectedId: null,
+      stage: 'normal',
+      detailStage: 'normal',
+      isExploring: false,
+    })
+    persistMapSessionForOAuth()
     render(
       <MemoryRouter>
         <LoginRequiredPage />
       </MemoryRouter>,
     )
 
-    const graphic = screen.getByRole('presentation', { hidden: true })
-
-    expect(graphic).toHaveAttribute('src', emptyImage)
-    expect(
-      screen.getByRole('heading', {
-        name: 'Hashi와 함께 예약을 시작해보세요!',
-      }),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/더 편한 Hashi 이용을 위해/)).toBeInTheDocument()
-
     fireEvent.click(screen.getByRole('button', { name: '카카오로 로그인하기' }))
 
     expect(mockStartKakaoOAuth).toHaveBeenCalledOnce()
+    expect(sessionStorage.getItem('hashi:map:oauth-resume:v1')).toBeNull()
+  })
+
+  it('checkpoints the map only when the map-origin login button is pressed', () => {
+    writeMapSession({
+      conditions: {
+        keyword: '',
+        category: 'restaurant',
+        sort: 'rating',
+        areaCode: null,
+      },
+      camera: null,
+      searchBounds: null,
+      selectedId: '10',
+      stage: 'normal',
+      detailStage: 'expanded',
+      isExploring: true,
+    })
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/login-required',
+            state: { from: { pathname: '/map' } },
+          },
+        ]}
+      >
+        <LoginRequiredPage />
+      </MemoryRouter>,
+    )
+    expect(sessionStorage.getItem('hashi:map:oauth-resume:v1')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: '카카오로 로그인하기' }))
+    expect(
+      JSON.parse(sessionStorage.getItem('hashi:map:oauth-resume:v1')!).snapshot
+        .selectedId,
+    ).toBe('10')
+    expect(mockStartKakaoOAuth).toHaveBeenCalledWith('/map')
   })
 })

@@ -15,12 +15,17 @@ import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/rest
 import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 import { parseMapSearchContext } from '@/features/mapSearch/utils/parseMapSearchContext'
 import { useMapSession } from '@/pages/map/hooks/useMapSession'
-import { clearMapSession, readMapSession } from '@/pages/map/utils/mapSession'
+import {
+  clearMapSession,
+  readMapSession,
+  restoreMapSessionAfterOAuth,
+  discardMapOAuthResume,
+} from '@/pages/map/utils/mapSession'
 
 import { MapViewport } from '@/pages/map/components/MapViewport'
 import { MapToolbar } from '@/pages/map/components/MapToolbar'
-import { MapViewButton } from '@/pages/map/components/MapViewButton'
 import { MapRestaurantList } from '@/pages/map/components/MapRestaurantList'
+import { MapRestaurantListHeader } from '@/pages/map/components/MapRestaurantListHeader'
 import { MapRestaurantDetail } from '@/pages/map/components/MapRestaurantDetail'
 import { MapStatusView } from '@/pages/map/components/MapStatusView'
 import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
@@ -63,8 +68,15 @@ const MapMainPage = () => {
   const sessionVersion = useCollectionSessionVersion()
   const navigate = useNavigate()
   const { isAuthenticated } = useAuthStatus()
-  const [initial] = useState(() => readMapSession())
-  const [restoreDetail] = useState(location.state?.restoreMapDetail === true)
+  const [initial] = useState(() => {
+    if (isAuthenticated) return restoreMapSessionAfterOAuth()
+    discardMapOAuthResume()
+    return readMapSession()
+  })
+  const [restoreDetail] = useState(
+    location.state?.restoreMapDetail === true ||
+      initial?.restoreAfterOAuth === true,
+  )
   const state = useMapPageState(initial)
   const restaurants = useMapRestaurantSaves(state.restaurants)
   const selectedRestaurant = restaurants.find(
@@ -442,6 +454,7 @@ const MapMainPage = () => {
           className="pointer-events-none absolute inset-0"
         >
           <DragPanel
+            className="[&_.overflow-y-auto]:scrollbar-hidden"
             key={JSON.stringify([
               state.conditions,
               state.searchBounds,
@@ -467,13 +480,18 @@ const MapMainPage = () => {
                     : stage,
               )
             }
-            footer={
-              <div
-                hidden={stage !== 'expanded' || isEmptyResult}
-                className="px-5 py-4 text-center"
-              >
-                <MapViewButton onClick={() => setStage('collapsed')} />
-              </div>
+            header={
+              state.status === 'success' && restaurants.length > 0 ? (
+                <MapRestaurantListHeader
+                  filtered={filtered}
+                  sort={state.conditions.sort}
+                  sortTriggerRef={sortTriggerRef}
+                  onSortChange={(sort) => {
+                    restoreSortFocus.current = sort !== state.conditions.sort
+                    handleConditionsChange({ sort })
+                  }}
+                />
+              ) : undefined
             }
           >
             <MapRestaurantList
@@ -492,13 +510,7 @@ const MapMainPage = () => {
               loadingNext={state.loadingNext}
               onLoadNext={state.loadNext}
               restaurants={restaurants}
-              sort={state.conditions.sort}
               filtered={filtered}
-              sortTriggerRef={sortTriggerRef}
-              onSortChange={(sort) => {
-                restoreSortFocus.current = sort !== state.conditions.sort
-                handleConditionsChange({ sort })
-              }}
               onSelect={handleSelect}
               onSave={openRestaurantSave}
             />
