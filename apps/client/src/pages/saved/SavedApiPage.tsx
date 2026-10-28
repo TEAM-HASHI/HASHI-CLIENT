@@ -204,7 +204,8 @@ const SavedApiScreen = ({
         }
         renderCollectionActions={(collection) => (
           <CollectionEditMenu
-            shareInMenu={!embedded}
+            shareInMenu
+            variant={embedded ? 'map-list' : 'default'}
             name={collection.name ?? ''}
             onShare={() => share(collection)}
             onEdit={() =>

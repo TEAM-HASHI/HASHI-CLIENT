@@ -40,6 +40,9 @@ import {
   getCollectionSaveState,
 } from '@/features/collection/utils/collectionNavigation'
 
+// Figma 8317:39104의 하단 내비게이션 제외 콘텐츠 높이와 현재 행 간격을 맞춘 값.
+const MAP_SAVED_COLLECTIONS_PANEL_HEIGHT = 490
+
 export const MapPage = () => {
   const location = useLocation()
   const version = useCollectionSessionVersion()
@@ -77,11 +80,11 @@ const MapMainPage = () => {
   )
   const savedCollectionsOpen = savedCollectionsRequested && isAuthenticated
   const [savedCollectionsHeight, setSavedCollectionsHeight] = useState<number>(
-    DRAG_PANEL_HEIGHTS.normal,
+    MAP_SAVED_COLLECTIONS_PANEL_HEIGHT,
   )
   const setSavedCollectionsVisible = (open: boolean) => {
     setSavedCollectionsRequested(open)
-    if (open) setSavedCollectionsHeight(DRAG_PANEL_HEIGHTS.normal)
+    if (open) setSavedCollectionsHeight(MAP_SAVED_COLLECTIONS_PANEL_HEIGHT)
     navigate(
       { pathname: location.pathname, search: location.search },
       {
@@ -542,6 +545,7 @@ const MapMainPage = () => {
       <MapSavedCollectionsSheet
         open={savedCollectionsOpen}
         height={savedCollectionsHeight}
+        targetHeight={MAP_SAVED_COLLECTIONS_PANEL_HEIGHT}
         onHeightChange={setSavedCollectionsHeight}
         onClose={() => setSavedCollectionsVisible(false)}
       />

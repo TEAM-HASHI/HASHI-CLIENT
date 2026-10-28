@@ -238,20 +238,28 @@ export const CollectionEditMenu = ({
   onShare,
   onDelete,
   shareInMenu = false,
+  variant = 'default',
 }: {
   name: string
   onEdit: () => void
   onShare?: () => void
   onDelete?: () => void
   shareInMenu?: boolean
+  variant?: 'default' | 'map-list'
 }) => {
   const [open, setOpen] = useState(false)
+  const mapList = variant === 'map-list'
+  const showShareInMenu = shareInMenu || mapList
+  const shareOption =
+    onShare && showShareInMenu
+      ? [{ value: 'share', label: mapList ? '링크 복사' : '공유하기' }]
+      : []
   const deleteOption = onDelete
     ? [{ value: 'delete', label: '삭제하기', destructive: true }]
     : []
   return (
     <div className="flex shrink-0 items-center gap-3">
-      {onShare && !shareInMenu && (
+      {onShare && !showShareInMenu && (
         <IconButton
           size="xs"
           aria-label={`${name} 컬렉션 공유`}
@@ -263,13 +271,11 @@ export const CollectionEditMenu = ({
       <CollectionDropdown
         action
         label={`${name} 더보기`}
-        options={[
-          ...EDIT_OPTION,
-          ...(onShare && shareInMenu
-            ? [{ value: 'share', label: '공유하기' }]
-            : []),
-          ...deleteOption,
-        ]}
+        options={
+          mapList
+            ? [...shareOption, ...EDIT_OPTION, ...deleteOption]
+            : [...EDIT_OPTION, ...shareOption, ...deleteOption]
+        }
         value="edit"
         open={open}
         onOpenChange={setOpen}
