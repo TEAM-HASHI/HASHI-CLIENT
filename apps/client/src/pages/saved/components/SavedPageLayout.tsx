@@ -35,6 +35,7 @@ export const SavedPageLayout = ({
   embedded = false,
 }: SavedPageLayoutProps) => (
   <div
+    data-dropdown-boundary
     className={
       embedded
         ? 'flex h-full flex-col overflow-hidden bg-white'

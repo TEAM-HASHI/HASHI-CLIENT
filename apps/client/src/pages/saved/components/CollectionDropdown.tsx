@@ -56,11 +56,26 @@ export const CollectionDropdown = <T extends string>({
       const viewport = window.visualViewport
       const viewportTop = viewport?.offsetTop ?? 0
       const viewportLeft = viewport?.offsetLeft ?? 0
-      const bottom = viewportTop + (viewport?.height ?? window.innerHeight)
-      const right = viewportLeft + (viewport?.width ?? window.innerWidth)
+      const viewportBottom =
+        viewportTop + (viewport?.height ?? window.innerHeight)
+      const viewportRight =
+        viewportLeft + (viewport?.width ?? window.innerWidth)
+      const boundaryRect = triggerRef.current
+        ?.closest<HTMLElement>('[data-dropdown-boundary]')
+        ?.getBoundingClientRect()
+      const top = Math.max(viewportTop, boundaryRect?.top ?? viewportTop)
+      const left = Math.max(viewportLeft, boundaryRect?.left ?? viewportLeft)
+      const bottom = Math.min(
+        viewportBottom,
+        boundaryRect?.bottom ?? viewportBottom,
+      )
+      const right = Math.min(
+        viewportRight,
+        boundaryRect?.right ?? viewportRight,
+      )
       const menuHeight = options.length * OPTION_HEIGHT
       const below = Math.max(0, bottom - rect.bottom - MENU_GAP)
-      const above = Math.max(0, rect.top - viewportTop - MENU_GAP)
+      const above = Math.max(0, rect.top - top - MENU_GAP)
       const placeBelow = below >= menuHeight || below >= above
       const maxHeight = placeBelow ? below : above
       setPosition({
@@ -68,7 +83,7 @@ export const CollectionDropdown = <T extends string>({
           ? rect.bottom + MENU_GAP
           : rect.top - Math.min(menuHeight, maxHeight) - MENU_GAP,
         left: Math.max(
-          viewportLeft,
+          left,
           Math.min(rect.right - MENU_WIDTH, right - MENU_WIDTH),
         ),
         maxHeight,
