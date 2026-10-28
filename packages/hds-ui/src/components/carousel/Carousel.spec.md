@@ -378,6 +378,7 @@ Figma example mapping:
 - Embla `select` event로 indicator를 동기화합니다.
 - `defaultIndex`와 controlled `index`가 item 범위를 벗어나면 사용 가능한 범위로 보정합니다.
 - slide 개수가 동적으로 바뀌면 현재 index도 새 item 개수 안으로 보정합니다.
+- controlled index는 slide 개수가 일시적으로 줄어 표시 index가 보정되어도 부모 값에 변경 이벤트를 보내지 않으며, 항목이 다시 늘어나면 전달된 index를 사용합니다.
 
 ## Verification
 

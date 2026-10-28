@@ -168,7 +168,7 @@ const Root = ({
     onIndexChange,
   })
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!emblaApi) {
       return
     }
@@ -176,13 +176,20 @@ const Root = ({
     const handleSelect = () => {
       setCurrentIndex(emblaApi.selectedScrollSnap())
     }
+    const handleReInit = () => {
+      if (itemCount > 0 && emblaApi.selectedScrollSnap() !== currentIndex) {
+        emblaApi.scrollTo(currentIndex, true)
+      }
+    }
 
     emblaApi.on('select', handleSelect)
+    emblaApi.on('reInit', handleReInit)
 
     return () => {
       emblaApi.off('select', handleSelect)
+      emblaApi.off('reInit', handleReInit)
     }
-  }, [emblaApi, setCurrentIndex])
+  }, [currentIndex, emblaApi, itemCount, setCurrentIndex])
 
   useEffect(() => {
     if (!emblaApi) {
