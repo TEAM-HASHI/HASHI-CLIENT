@@ -121,7 +121,7 @@
   - query: `cursor`, `size`
 - response data:
   - `content`, `nextCursor`, `hasNext`
-- loading state: 페이지는 유지하고 메뉴 영역에 로딩 문구 표시; 별도 skeleton 없음
+- loading state: 페이지는 유지하고 메뉴 영역에 실제 메뉴 행과 같은 크기의 스켈레톤 3개를 표시합니다.
 - error state: 최초 실패는 메뉴 영역 재시도, 추가 조회 실패는 기존 목록 유지 및 실패한 cursor 재시도
 - empty state: 메뉴가 없으면 shared `ListEmptyState`로 `메뉴 리스트를 준비중이에요.` 문구 표시
 - refetch condition: route param `restaurantId` 변경
@@ -302,7 +302,7 @@ RestaurantDetailPage
   - description은 prop으로 전달하며 `typo-body-5 text-warm-gray-300` 스타일을 사용합니다.
   - wrapper는 탭 콘텐츠 영역 안에서 `min-h-[220px]`, `items-center`, `justify-center`, `text-center`로 가로/세로 중앙 정렬합니다.
 - skeleton:
-  - 메뉴 목록은 별도 skeleton을 사용하지 않습니다.
+  - 메뉴 목록 최초 로딩은 skeleton으로 표시하고, 추가 조회 중에는 기존 목록을 유지합니다.
   - 리뷰 목록 skeleton은 `RestaurantReviewListSkeleton`을 사용하고 placeholder 색상은 `bg-secondary-200`을 기준으로 합니다.
 - responsive:
   - mobile web only

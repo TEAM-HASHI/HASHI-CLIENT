@@ -177,7 +177,7 @@ const CollectionEditorQuery = ({
     <>
       <section
         aria-label="컬렉션 편집"
-        className="app-mobile-bottom-action-content flex h-dvh flex-col overflow-hidden bg-white pt-[var(--safe-area-top,0px)]"
+        className="app-mobile-bottom-action-content flex h-[calc(100dvh-var(--app-content-bottom,0px))] flex-col overflow-hidden bg-white pt-[var(--safe-area-top,0px)]"
       >
         <Header
           className="shrink-0"

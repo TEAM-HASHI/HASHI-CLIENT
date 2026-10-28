@@ -35,10 +35,15 @@ shared/assets/
 ```text
 app/
   providers/  전역 Provider 조립
+  layout/     공통 라우트 레이아웃과 고정 영역 조립
   router/     라우터 설정
   App.tsx     앱 root component
   main.tsx    React entry point
 ```
+
+페이지 스크롤은 `RootLayout`의 `[data-page-scroll]`이 담당하며, 고정 헤더·하단 바를 제외한 영역에서 동작합니다. 페이지 스크롤 조회·이동·이벤트 연결에는 `shared/utils/pageScroll.ts`를 사용합니다. 지도·컬렉션 등 자체 스크롤 영역은 별도로 유지합니다.
+
+추가 상단 고정 영역은 고정된 동안 `data-page-scroll-top`으로 등록합니다. 스크롤바 스타일은 클라이언트 전역 CSS에서 관리하며, 가로 목록의 숨김 설정은 유지합니다.
 
 `apps/admin`은 임시 관리자 콘솔입니다. 실제 관리자 레포가 분리되기 전까지 다음 기준을 따릅니다.
 

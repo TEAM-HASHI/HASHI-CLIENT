@@ -293,7 +293,7 @@ describe('RestaurantMenuDetailPage', () => {
     fireEvent.click(retry)
 
     expect(
-      await screen.findByText('메뉴를 불러오고 있어요.'),
+      await screen.findByRole('status', { name: '메뉴 목록 로딩 중' }),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: '시오라멘' }),
@@ -312,7 +312,7 @@ describe('RestaurantMenuDetailPage', () => {
       screen.getByRole('heading', { name: '시오라멘' }),
     ).toBeInTheDocument()
     expect(
-      screen.queryByText('메뉴를 불러오고 있어요.'),
+      screen.queryByRole('status', { name: '메뉴 목록 로딩 중' }),
     ).not.toBeInTheDocument()
   })
 

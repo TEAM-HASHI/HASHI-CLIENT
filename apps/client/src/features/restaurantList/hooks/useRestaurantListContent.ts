@@ -20,6 +20,7 @@ import {
   mapRestaurantSummaryToRestaurant,
 } from '@/features/restaurantList/utils'
 import { useInfiniteScrollTrigger } from '@/shared/hooks'
+import { scrollPageTo } from '@/shared/utils/pageScroll'
 
 type ActiveBottomSheet = 'sort' | 'category' | null
 
@@ -85,7 +86,7 @@ export const useRestaurantListContent = ({
   useEffect(() => {
     if (!resetScrollPending.current || activeBottomSheet !== null) return
     const frame = requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      scrollPageTo({ top: 0, left: 0, behavior: 'auto' })
       resetScrollPending.current = false
     })
     return () => cancelAnimationFrame(frame)
@@ -214,7 +215,7 @@ export const useRestaurantListContent = ({
     setSearchParams(nextSearchParams, { replace: true })
     setActiveBottomSheet(null)
     if (restaurantType === 'sns-hot') {
-      window.scrollTo({ behavior: 'auto', top: 0 })
+      scrollPageTo({ behavior: 'auto', top: 0 })
     } else {
       resetScrollPending.current = true
     }

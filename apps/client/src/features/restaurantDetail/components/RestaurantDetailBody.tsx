@@ -127,6 +127,7 @@ export const RestaurantDetailBody = ({
           tabBarPosition === 'relative' ? undefined : { top: headerHeight }
         }
         data-fixed={tabBarPosition === 'fixed'}
+        data-page-scroll-top={tabBarPosition === 'fixed' ? '' : undefined}
         data-testid="restaurant-detail-tab-sticky-container"
       >
         <RestaurantDetailTabs

@@ -143,7 +143,7 @@ export const RestaurantListTemplate = ({
         data-testid="restaurant-list-scroll-content"
       >
         {!hasFixedSort ? (
-          <div className="sticky top-[75px] z-10 bg-white">{filterBar}</div>
+          <div className="sticky top-0 z-10 bg-white">{filterBar}</div>
         ) : null}
 
         {isLoading ? (

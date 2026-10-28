@@ -29,6 +29,7 @@ import type {
 } from '@/features/restaurantDetail/types/restaurantDetail'
 import { useShareLink } from '@/shared/components/shareIconButton'
 import { copyTextToClipboard } from '@/shared/utils'
+import { getPageScrollY, scrollPageTo } from '@/shared/utils/pageScroll'
 
 interface RestaurantDetailTemplateProps {
   content: ReturnType<typeof useRestaurantDetailContent> & {
@@ -88,17 +89,17 @@ export const RestaurantDetailTemplate = ({
 
     const nextScrollTop =
       marker.getBoundingClientRect().top +
-      window.scrollY -
+      getPageScrollY() -
       RESTAURANT_DETAIL_HEADER_HEIGHT
 
-    window.scrollTo({ top: nextScrollTop, behavior: 'smooth' })
+    scrollPageTo({ top: nextScrollTop, behavior: 'smooth' })
   }, [markerRef])
 
   const handleTabChange = (tab: RestaurantDetailTab) => {
     onTabChange(tab)
 
     if (tab === 'info') {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      scrollPageTo({ top: 0, behavior: 'smooth' })
       return
     }
 

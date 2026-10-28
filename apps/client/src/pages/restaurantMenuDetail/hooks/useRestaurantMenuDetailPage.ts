@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { scrollPageTo } from '@/shared/utils/pageScroll'
 
 import { ROUTES } from '@/app/router/path'
 import {
@@ -118,7 +119,7 @@ export const useRestaurantMenuDetailPage = () => {
     : null
 
   useEffect(() => {
-    window.scrollTo({ top: 0 })
+    scrollPageTo({ top: 0 })
   }, [menuId])
 
   const getReturnPath = () => {

@@ -11,16 +11,19 @@ import { noticeQueryKeys } from '@/features/notice/noticeQueryKeys'
 import { formatNoticeLastUpdatedDate } from '@/features/notice/utils/formatNoticeDate'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { useInfiniteScrollTrigger } from '@/shared/hooks'
+import {
+  getPageMaxScrollY,
+  getPageScrollY,
+  scrollPageTo,
+} from '@/shared/utils/pageScroll'
 
-// ponytail: RootLayout이 경로가 바뀔 때마다 맨 위로 스크롤하므로, 공지 목록만 상세에서 돌아올 때
-// 마지막 위치를 되살린다. 여러 화면에 필요해지면 라우터 ScrollRestoration으로 옮긴다.
 const NOTICE_LIST_SCROLL_KEY = 'hashi:notice-list-state'
 
 const saveNoticeListState = (pageCount: number) => {
   try {
     sessionStorage.setItem(
       NOTICE_LIST_SCROLL_KEY,
-      JSON.stringify({ scrollY: window.scrollY, pageCount }),
+      JSON.stringify({ scrollY: getPageScrollY(), pageCount }),
     )
   } catch {
     // 저장소를 쓸 수 없으면 위치 복원만 건너뛴다.
@@ -57,7 +60,6 @@ export const NoticesPage = () => {
     queryKey: noticeQueryKeys.infiniteList(),
     queryFn: ({ pageParam }) => getNotices({ cursor: pageParam }),
     initialPageParam: null as string | null,
-    // 첫 페이지는 아래에서 오류 경계로 전달하고, 추가 페이지 실패는 목록 안에서 재시도한다.
     throwOnError: false,
     getNextPageParam: (lastPage) =>
       lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined,
@@ -76,10 +78,7 @@ export const NoticesPage = () => {
     const target = restoration
     if (!target || !data || isFetching || isFetchNextPageError) return
     const frame = requestAnimationFrame(() => {
-      const maxScrollY = Math.max(
-        0,
-        document.documentElement.scrollHeight - window.innerHeight,
-      )
+      const maxScrollY = getPageMaxScrollY()
       if (
         hasNextPage &&
         (data.pages.length < target.pageCount || maxScrollY < target.scrollY)
@@ -87,7 +86,7 @@ export const NoticesPage = () => {
         void fetchNextPage()
         return
       }
-      window.scrollTo({ top: target.scrollY })
+      scrollPageTo({ top: target.scrollY })
       setRestoration(null)
     })
     return () => cancelAnimationFrame(frame)

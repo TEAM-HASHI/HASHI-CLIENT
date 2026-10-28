@@ -89,7 +89,7 @@
   - query: 다음 페이지 `cursor`
 - response usage:
   - 다른 메뉴 목록
-- loading state: 최초 조회와 최초 실패 후 재시도는 다른 메뉴 영역에만 로딩 문구 표시; 선택 메뉴와 페이지 액션은 유지
+- loading state: 최초 조회와 최초 실패 후 재시도는 다른 메뉴 영역에만 스켈레톤을 표시하며, 선택 메뉴와 페이지 액션은 유지합니다.
 - error state: 최초 실패는 다른 메뉴 영역 재시도; 추가 조회 실패는 기존 목록 유지 및 실패한 cursor 재시도. 이 목록 오류는 page critical error에 포함하지 않음
 
 - query: restaurant save summary (`useRestaurantSaveSummary`)
