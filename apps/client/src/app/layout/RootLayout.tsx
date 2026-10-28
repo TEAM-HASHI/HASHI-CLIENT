@@ -1,19 +1,79 @@
 import { ToastRegion } from '@hashi/hds-ui'
-import { useEffect } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import {
+  Outlet,
+  useLocation,
+  useNavigationType,
+  useNavigate,
+} from 'react-router-dom'
 
+import { ROUTES } from '@/app/router/path'
+import { usePageScrollLayout } from '@/app/layout/usePageScrollLayout'
+import { scrollPageTo } from '@/shared/utils/pageScroll'
 import AsyncBoundary from '@/app/providers/AsyncBoundary'
 import { AuthSessionRestoreGate } from '@/app/providers/AuthSessionRestoreGate'
 import { trackPageView } from '@/shared/lib/analytics'
+import { CollectionTargetQueryDialog } from '@/features/collection/components/CollectionTargetQueryDialog'
+import {
+  getCollectionSaveRestaurantId,
+  getCollectionSaveState,
+} from '@/features/collection/utils/collectionNavigation'
+import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
+import { useCollectionSessionVersion } from '@/features/collection/hooks/useCollectionSessionVersion'
+import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
+
+const RestaurantCollectionSave = () => {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuthStatus()
+  useCollectionSessionVersion()
+  const id = Number(getCollectionSaveRestaurantId(location.state))
+  // 지도·컬렉션 화면은 자체 저장창을 소유한다. 상세·메뉴의 저장 진입만 조립한다.
+  if (
+    !isAuthenticated ||
+    !isValidCollectionId(id) ||
+    location.pathname === ROUTES.map ||
+    location.pathname.startsWith(ROUTES.saved)
+  )
+    return null
+  return (
+    <CollectionTargetQueryDialog
+      mode="save"
+      restaurantId={id}
+      onClose={() =>
+        navigate(
+          { pathname: location.pathname, search: location.search },
+          {
+            replace: true,
+            state: getCollectionSaveState(location.state, null),
+          },
+        )
+      }
+    />
+  )
+}
 
 export const RootLayout = () => {
+  const frameRef = usePageScrollLayout()
   const { hash = '', pathname, search = '' } = useLocation()
+  const navigationType = useNavigationType()
   const pagePath = `${pathname}${search}${hash}`
   const routeResetKey = `${pathname}${search}`
+  const previousPathnameRef = useRef<string | null>(null)
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-  }, [pathname])
+    const hasPathnameChanged = previousPathnameRef.current !== pathname
+    previousPathnameRef.current = pathname
+    const shouldPreserveListScroll =
+      navigationType === 'POP' &&
+      (pathname === ROUTES.magazines || pathname === ROUTES.search)
+
+    if (!hasPathnameChanged || shouldPreserveListScroll) {
+      return
+    }
+
+    scrollPageTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [navigationType, pathname])
 
   useEffect(() => {
     trackPageView(pagePath)
@@ -21,12 +81,21 @@ export const RootLayout = () => {
 
   return (
     <>
-      <main className="app-mobile-frame min-h-dvh bg-white">
-        <AsyncBoundary resetKeys={[routeResetKey]}>
-          <AuthSessionRestoreGate pathname={pathname}>
-            <Outlet />
-          </AuthSessionRestoreGate>
-        </AsyncBoundary>
+      <main
+        ref={frameRef}
+        data-page-scroll
+        aria-label="페이지 콘텐츠"
+        tabIndex={0}
+        className="app-page-scroll bg-white"
+      >
+        <div className="app-page-scroll-content">
+          <AsyncBoundary resetKeys={[routeResetKey]}>
+            <AuthSessionRestoreGate pathname={pathname}>
+              <Outlet />
+              <RestaurantCollectionSave key={pagePath} />
+            </AuthSessionRestoreGate>
+          </AsyncBoundary>
+        </div>
       </main>
       <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
     </>

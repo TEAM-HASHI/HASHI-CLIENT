@@ -7,7 +7,7 @@ import { cn } from '@/shared/utils'
 const MAX_REPRESENTATIVE_IMAGES = 10
 
 interface RestaurantDetailHeroProps {
-  imageUrls: string[]
+  imageUrls: (string | undefined)[]
 }
 
 export const RestaurantDetailHero = ({

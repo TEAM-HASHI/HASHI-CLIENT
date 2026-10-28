@@ -4,6 +4,7 @@ import type {
   RestaurantPhotoFilter,
   RestaurantPhotoSource,
 } from '@/features/restaurantDetail/types/restaurantPhoto'
+import { checkShouldRetryQuery } from '@/shared/api/errorPolicy'
 
 export const restaurantPhotoQueryKeys = {
   restaurant: (restaurantId: number) =>
@@ -40,7 +41,7 @@ export const restaurantPhotoCountsQueryOptions = (
     queryKey: restaurantPhotoQueryKeys.counts(sourceKey, restaurantId),
     queryFn: async ({ signal }) =>
       (await getPage({ restaurantId, filter: 'all', signal })).counts,
-    retry: 1,
+    retry: checkShouldRetryQuery,
     throwOnError: false,
   })
 
@@ -64,7 +65,7 @@ export const restaurantPhotosQueryOptions = (
       getPage({ restaurantId, filter, cursor: pageParam, signal }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) => page.nextCursor,
-    retry: 1,
+    retry: checkShouldRetryQuery,
     throwOnError: false,
     gcTime: 0,
   })

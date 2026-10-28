@@ -1,6 +1,13 @@
+import {
+  ANYWHERE_RESTAURANT_NAME_MAX_LENGTH,
+  ANYWHERE_RESTAURANT_ADDRESS_MAX_LENGTH,
+} from '@/features/reservation/constants/anywhereReservation'
+
+import { useLocation } from 'react-router-dom'
 import { useCallback, useState } from 'react'
 
 import type { ReservationGuestCounts } from '@/features/reservation/constants/guest'
+import { checkIsReservationRequestDraft } from '@/features/reservation/reservationDraft'
 import { useReservationFormControls } from '@/features/reservation/hooks/useReservationFormControls'
 import { createReservationTimeSlots } from '@/features/reservation/utils/createReservationTimeSlots'
 import { formatDateToLocalDateString } from '@/shared/utils/date'
@@ -15,12 +22,12 @@ export interface AnywhereReservationDraft {
   guests: ReservationGuestCounts
   date: string
   time: string
-  requestNote: string
+  requestNote?: string
 }
 
 const ANYWHERE_RESERVATION_BUSINESS_HOURS = {
   open: '11:00',
-  close: '20:00',
+  close: '23:30',
 }
 
 const ANYWHERE_RESERVATION_INTERVAL_MINUTES = 30
@@ -31,13 +38,24 @@ const ANYWHERE_RESERVATION_TIME_SLOTS = createReservationTimeSlots(
 )
 
 export const useAnywhereReservationForm = () => {
-  const [restaurantName, setRestaurantName] = useState('')
-  const [restaurantAddress, setRestaurantAddress] = useState('')
+  const location = useLocation()
+  const initialDraft =
+    checkIsReservationRequestDraft(location.state) &&
+    location.state.source === 'anywhere'
+      ? location.state
+      : null
+  const [restaurantName, setRestaurantName] = useState(
+    initialDraft?.restaurantName ?? '',
+  )
+  const [restaurantAddress, setRestaurantAddress] = useState(
+    initialDraft?.restaurantAddress ?? '',
+  )
   const checkIsDateReservable = useCallback(() => true, [])
   const getTimeSlots = useCallback(() => ANYWHERE_RESERVATION_TIME_SLOTS, [])
   const formControls = useReservationFormControls({
     checkIsDateReservable,
     getTimeSlots,
+    initialDraft,
   })
   const {
     fields: formFields,
@@ -47,8 +65,12 @@ export const useAnywhereReservationForm = () => {
     validity,
     values,
   } = formControls
-  const isRestaurantNameValid = restaurantName.trim().length > 0
-  const isRestaurantAddressValid = restaurantAddress.trim().length > 0
+  const isRestaurantNameValid =
+    restaurantName.trim().length > 0 &&
+    restaurantName.trim().length <= ANYWHERE_RESTAURANT_NAME_MAX_LENGTH
+  const isRestaurantAddressValid =
+    restaurantAddress.trim().length > 0 &&
+    restaurantAddress.trim().length <= ANYWHERE_RESTAURANT_ADDRESS_MAX_LENGTH
   const canSubmit =
     isRestaurantNameValid &&
     isRestaurantAddressValid &&
@@ -78,11 +100,16 @@ export const useAnywhereReservationForm = () => {
       guests: values.guestCounts,
       date: formatDateToLocalDateString(values.selectedDate),
       time: values.selectedTime,
-      requestNote: formFields.requestNote.value,
+      ...(formFields.requestNote.value.trim()
+        ? { requestNote: formFields.requestNote.value.trim() }
+        : {}),
     }
   }
 
   return {
+    hasChanges: Boolean(
+      formControls.hasChanges || restaurantName || restaurantAddress,
+    ),
     fields: {
       restaurantName: {
         value: restaurantName,

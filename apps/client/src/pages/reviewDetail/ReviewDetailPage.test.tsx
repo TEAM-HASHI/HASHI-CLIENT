@@ -24,11 +24,17 @@ const { locationState, navigateMock, reviewIdParam } = vi.hoisted(() => ({
   reviewIdParam: { current: '5' },
 }))
 
-vi.mock('react-router-dom', () => ({
-  useLocation: () => ({ state: locationState.current }),
-  useNavigate: () => navigateMock,
-  useParams: () => ({ reviewId: reviewIdParam.current }),
-}))
+vi.mock('react-router-dom', async () => {
+  const actual =
+    await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
+
+  return {
+    ...actual,
+    useLocation: () => ({ state: locationState.current }),
+    useNavigate: () => navigateMock,
+    useParams: () => ({ reviewId: reviewIdParam.current }),
+  }
+})
 
 vi.mock('@/features/review/api/getMyReviewDetail', () => ({
   getMyReviewDetail: vi.fn(),
@@ -83,10 +89,20 @@ afterEach(() => {
 })
 
 describe('ReviewDetailPage', () => {
+  it('uses a 116px compact reservation summary row', async () => {
+    renderPage()
+
+    const reservationSummary =
+      await screen.findByLabelText('리뷰 대상 예약 정보')
+
+    expect(reservationSummary.firstElementChild).toHaveClass('h-[116px]')
+  })
+
   it('renders the API review detail', async () => {
     renderPage()
 
     expect(screen.getByText('리뷰 정보를 불러오는 중입니다.')).toBeVisible()
+    expect(await screen.findByRole('banner')).toHaveTextContent('마이 리뷰')
     expect(await screen.findByText('아키토리 라멘')).toBeVisible()
     expect(screen.getByText('2026. 6. 12 18:30 방문')).toBeVisible()
     expect(screen.getByText('어른 2명 · 어린이 1명')).toBeVisible()
@@ -214,17 +230,39 @@ describe('ReviewDetailPage', () => {
     },
   )
 
-  it('opens the coming soon dialog from the edit button', async () => {
+  it('navigates to the review edit page from the edit button', async () => {
     renderPage()
 
     await screen.findByText('아키토리 라멘')
     fireEvent.click(screen.getByRole('button', { name: '수정하기' }))
 
-    expect(screen.getByText('서비스를 준비하고 있어요.')).toBeVisible()
+    expect(navigateMock).toHaveBeenCalledWith('/reviews/5/edit')
   })
 })
 
 describe('ReviewDetailContentCard', () => {
+  it('keeps overflowing review content fully visible without a collapse action', () => {
+    const content =
+      '여기 진짜 맛있어요! 면은 쫄깃하고 국물은 깔끔한데 감칠맛이 제대로예요. 차슈도 부드럽고 잡내가 없어서 마지막 한 점까지 맛있게 먹었습니다. 다음에 도쿄 오면 또 방문하고 싶어요. 여유 있게 다시 방문하고 싶은 식당이에요.'
+
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(120)
+
+    render(
+      <ReviewDetailContentCard
+        content={content}
+        images={[]}
+        keywordIds={[]}
+        rating={4}
+        writtenDate="2026.06.28"
+      />,
+    )
+
+    expect(screen.getByText(content)).toBeVisible()
+    expect(
+      screen.queryByRole('button', { name: '더보기' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('renders up to ten review images in the horizontal image list', () => {
     const images = Array.from(
       { length: REVIEW_PHOTO_MAX_COUNT + 1 },

@@ -4,7 +4,7 @@
 
 `/reservations/request`에서 예약자가 입력한 예약 정보를 확인하고, 보유 포인트를 적용한 뒤 최종 예약 진행 전 확인 모달을 보여준다.
 
-예약 확인 모달에서 일반 예약 또는 어디든 예약 생성 API를 호출하고, 성공 응답의 예약 ID로 상세 화면에 이동한다.
+예약 확인 모달에서 일반 예약 또는 어디든 예약 생성 API를 호출하고, 성공 응답의 예약 ID로 예약 요청 완료 화면에 이동한다.
 
 보유 포인트 조회 API를 사용하고, 예약 생성 성공 후 포인트 잔액 query를 무효화한다.
 
@@ -43,7 +43,7 @@ interface ReservationRequestDraftBase {
   }
   date: string
   time: string
-  requestNote: string
+  requestNote?: string
 }
 
 interface RestaurantReservationRequestDraft extends ReservationRequestDraftBase {
@@ -86,10 +86,10 @@ POST /api/v1/reservations/anywhere
 - 어디든 예약은 draft의 `restaurantName`, `restaurantAddress`를 전송한다.
 - 빈 요청사항은 생략한다.
 - 성공 응답에 `reservationId`가 없으면 실패로 처리한다.
-- 생성 응답은 `reservationId`만 보장하고 최신 포인트 잔액이나 완전한 예약 상세 객체를 제공하지 않는다.
-- 같은 화면에 즉시 반영할 완전한 객체가 없고 성공 후 상세 화면으로 이동하므로 `setQueryData`는 사용하지 않는다.
-- 생성 성공 시 `pointQueryKeys.myBalance()`를 무효화한 뒤 예약 상세 화면으로 이동한다. 예약 요청 직후 상세 진입임을 구분할 수 있도록 `{ fromReservationRequest: true }` route state를 함께 전달한다.
-- 예약 상세/목록 API query는 아직 없으므로 speculative cache key나 cache write를 추가하지 않는다.
+- 생성 API의 `ReservationResponse` 전체를 `reservationCompletionQueryKeys.detail(reservationId)`에 메모리로 저장한다.
+- 생성 성공 시 포인트와 내 예약 목록 캐시를 무효화하고 `/reservations/{reservationId}/complete`로 replace 이동한다.
+- 완료 응답은 화면에서 소비하는 임시 메모리이며 예약 상세를 조회하거나 브라우저 저장소에 보존하지 않는다.
+- 이전 입력 화면은 이동 전에 같은 history entry에 draft를 저장하여 확인 화면에서 뒤로가면 모든 입력을 복원한다.
 
 공통 request는 로그인 후 메모리에 저장된 `accessToken`을 우선 사용한다. 로컬 개발에서는 ignored `.env.local`의 `VITE_DEV_USER_ACCESS_TOKEN`을 fallback으로 사용할 수 있으며 운영 빌드에서는 이 fallback을 사용하지 않는다.
 
@@ -160,10 +160,13 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - route를 추가하지 않는다.
 - 모달은 예약자, 인원, 식당 주소, 식당 방문 일정, 최종 결제 금액을 표시한다.
 - `취소` 클릭 시 모달을 닫는다.
-- `예약` 클릭 시 draft 종류에 맞는 예약 생성 mutation을 실행한다.
+- `예약` 클릭 시 현재 시각으로 예약 날짜를 다시 검증한 뒤 draft 종류에 맞는 예약 생성 mutation을 실행한다.
+- 기존 입력 화면과 동일하게 브라우저 로컬 날짜 기준 오늘·과거 날짜를 차단한다. 확인 화면이나 모달을 열어 둔 채 자정이 지나도 생성 API를 호출하지 않는다.
+- 차단 시 모달을 닫고 `내일부터 예약할 수 있어요. 날짜를 다시 선택해주세요.` 토스트를 표시한다. 일반/어디든 예약의 이전 입력 history entry로 돌아가 저장된 draft를 복원하고 날짜를 다시 선택하게 한다. 입력 화면을 새 entry로 만들지 않아 재선택이나 예약 종료 시 동일 폼으로 되돌아오는 이력이 쌓이지 않는다.
+- 서버 날짜 정책·시간대 정책 변경은 이 프런트엔드 보완 범위에 포함하지 않는다.
 - mutation 진행 중에는 `예약`, `취소` 버튼을 비활성화하고 모달 닫기를 막는다.
 - mutation 상태가 다시 렌더링되기 전에도 동기 잠금으로 중복 예약 생성을 막는다.
-- 성공 시 모달을 닫고 `/reservations/{reservationId}`로 `{ fromReservationRequest: true }` state와 함께 이동한다.
+- 성공 시 모달을 닫고 `/reservations/{reservationId}/complete` 예약 요청 완료 화면으로 replace 이동한다.
 - 실패 시 공통 mutation 오류 토스트를 표시하고 모달을 유지한다.
 - 모달 하단의 `취소`, `예약` 버튼 typography는 `typo-sub-header-2`를 사용한다.
 
@@ -234,7 +237,7 @@ Figma의 예약 안내 문구를 page copy로 노출한다.
 - 포인트 조회 응답이 보유 포인트와 최대 사용 가능 포인트 계산에 반영된다.
 - 일반 예약은 식당 요약 응답의 `reservationFee`를 결제 기준으로 사용한다.
 - 예약 생성 성공 시 포인트 잔액 query가 무효화된다.
-- 예약 생성 성공 시 응답의 `reservationId` 상세 화면으로 이동하고, 상세 화면에서 뒤로가기를 비활성화할 수 있도록 `{ fromReservationRequest: true }` state를 전달한다.
+- 예약 생성 성공 시 응답의 `reservationId`로 예약 요청 완료 화면에 replace 이동한다.
 - 예약 생성 실패 시 모달을 유지한다.
 - 예약 생성 중 확인 버튼이 비활성화된다.
 
@@ -246,3 +249,10 @@ corepack pnpm --filter @hashi/client typecheck
 corepack pnpm --filter @hashi/client test -- ReservationRequestPage
 corepack pnpm --filter @hashi/client build
 ```
+
+## Review Follow-up Verification
+
+- draft 검증은 예약자명(앞뒤 공백 제거 후 1~50자), 유형별 정수 인원 0~100명·총합 1명 이상, 유효한 `YYYY-MM-DD` 날짜와 `HH:mm` 시간, 요청사항 1,000자 이하를 확인한다. 어디든 예약은 식당명·주소도 각각 앞뒤 공백 제거 후 1~200자로 검증한다. 잘못된 draft는 홈으로 replace 이동한다.
+- 예약 생성 API 실패 또는 응답의 예약 ID 누락 시 `예약 요청 중 문제가 발생했어요. 다시 시도해주세요.` 토스트를 한 번 표시한다. 오류 기록은 유지하며 공통 기본 토스트와 중복하지 않는다.
+- 실패 시 모달·예약 정보·사용 포인트를 보존한다. 재시도는 기존 동기 잠금 정책을 유지한다.
+- `reservationDraft.test.ts`, `useCreateReservationMutation.test.tsx`, `ReservationRequestPage.test.tsx`로 경계값·오류 문구·오류 기록·실패 후 상태를 검증한다.

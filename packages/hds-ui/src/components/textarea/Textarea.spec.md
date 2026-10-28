@@ -1,6 +1,6 @@
 # Component Spec: `Textarea`
 
-Jira: HASHI-176 (기존 HASHI-63 리디자인)
+Jira: HASHI-218 (기존 HASHI-176 리디자인)
 
 ## Purpose
 
@@ -8,9 +8,8 @@ Jira: HASHI-176 (기존 HASHI-63 리디자인)
 
 ## Figma References
 
-- [Input textbox](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=7869-36483&m=dev)
-- 기본 variant `7869:36505`, 입력 박스 `7869:36506`, 텍스트 `7869:36507`, 초과 문구 `7869:36516`, 초과 counter `7869:36518`
-- 2026-09-08 ego-browser의 Dev Mode 화면과 속성 패널에서 확인했습니다.
+- [Textarea 기본·초과 상태](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=6969-40562&m=dev)
+- 개발에서 정한 `Textarea` 이름을 유지합니다.
 
 ## Public API
 
@@ -48,10 +47,10 @@ Export: `Textarea`, `TextareaProps`. 기존 export를 유지합니다.
 ## Styling
 
 - root는 w-full. Figma 예시 너비 346px는 Storybook 프레임에만 적용합니다.
-- 이전 최소 높이 230px를 Figma의 min-height 56px로 변경하고 rows=1을 기본으로 합니다.
-- Figma의 20px inset에는 inside stroke가 포함됩니다. CSS border 1px + padding 19px로 맞추며, 19px 글꼴 환경에서 한 줄 박스는 59px입니다.
+- 최소 높이 51px, rows=1을 기본으로 합니다. 실제 높이는 글꼴의 줄 높이와 rows에 따라 늘어납니다.
+- 내부 여백은 좌우 20px, 상하 16px입니다.
 - white 배경, warm-gray-100 1px border, radius 10px, Body 4, primary-200 본문, warm-gray-300 placeholder를 유지합니다.
-- 하단 간격 8px. helper는 Body 7, counter는 Body 6 / line-height 1.36, counter 내부 간격 2px.
+- 하단 간격 12px. helper는 Body 7, counter는 Body 6 / line-height 1.36, counter 내부 간격 2px.
 - 긴 안내 문구는 줄바꿈하고 counter 영역은 축소하지 않습니다.
 - focus-visible outline과 disabled 외형은 유지합니다.
 - 리뷰 입력 호출부는 min-height 230px를 명시해 기존 큰 입력 영역을 유지합니다. 예약 요청사항의 기존 140px override도 유지합니다.

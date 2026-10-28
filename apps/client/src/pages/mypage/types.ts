@@ -3,9 +3,13 @@ export type MypageSummary = {
   profileImageUrl?: string | null
   availablePoint: number
   myReviewCount: number
+  savedRestaurantCount: number
 }
 
 export type MypageMenuAction =
+  | {
+      type: 'logout'
+    }
   | {
       type: 'comingSoon'
     }
@@ -15,7 +19,7 @@ export type MypageMenuAction =
     }
   | {
       type: 'external'
-      url?: string
+      url: string
     }
 
 export type MypageMenuItem = {

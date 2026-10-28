@@ -6,9 +6,10 @@ import {
   SaveIcon,
 } from '@hashi/hds-icons'
 import { BottomNavigation, type BottomNavigationItem } from '@hashi/hds-ui'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { matchPath, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
 
 const bottomNavigationItems = [
   { value: 'home', label: '홈', icon: <HomeIcon /> },
@@ -51,7 +52,10 @@ const getBottomNavigationValue = (
     return 'myReservations'
   }
 
-  if (targetPathname === ROUTES.saved) {
+  if (
+    targetPathname === ROUTES.saved ||
+    matchPath(ROUTES.collectionDetail, targetPathname)
+  ) {
     return 'save'
   }
 
@@ -59,7 +63,11 @@ const getBottomNavigationValue = (
     return 'map'
   }
 
-  if (targetPathname === ROUTES.mypage) {
+  if (
+    targetPathname === ROUTES.mypage ||
+    matchPath({ path: ROUTES.notices, end: false }, targetPathname) ||
+    matchPath({ path: ROUTES.terms, end: false }, targetPathname)
+  ) {
     return 'mypage'
   }
 
@@ -81,6 +89,15 @@ export const BottomNavigationLayout = () => {
         <Outlet />
       </div>
       <BottomNavigation
+        onClick={(event) => {
+          if (
+            location.pathname === ROUTES.map &&
+            event.target instanceof Element &&
+            event.target.closest('button[aria-current="page"]')
+          ) {
+            navigate(ROUTES.map, { replace: true, state: { resetMap: true } })
+          }
+        }}
         className="app-mobile-fixed-bottom"
         items={bottomNavigationItems}
         onValueChange={(value) => {
@@ -91,7 +108,11 @@ export const BottomNavigationLayout = () => {
           }
         }}
         value={getBottomNavigationValue(
-          location.pathname,
+          location.pathname === ROUTES.map &&
+            isCollectionMapState(location.state) &&
+            location.state.origin !== 'map'
+            ? ROUTES.saved
+            : location.pathname,
           loginRequiredState?.from?.pathname,
         )}
       />

@@ -6,6 +6,10 @@ import type { RestaurantMenu } from '@/features/restaurantDetail/types/restauran
 interface RestaurantOtherMenuSectionProps {
   menus: RestaurantMenu[]
   hasMoreMenus: boolean
+  isError?: boolean
+  isLoading?: boolean
+  isNextPageError?: boolean
+  onRetry?: () => void
   loadMoreRef: Ref<HTMLDivElement>
   totalCount: number
   onPressMenuItem: (menuId: string) => void
@@ -14,6 +18,10 @@ interface RestaurantOtherMenuSectionProps {
 export const RestaurantOtherMenuSection = ({
   menus,
   hasMoreMenus,
+  isError,
+  isLoading,
+  isNextPageError,
+  onRetry,
   loadMoreRef,
   totalCount,
   onPressMenuItem,
@@ -30,6 +38,10 @@ export const RestaurantOtherMenuSection = ({
       <div className="mt-2">
         <RestaurantMenuListSection
           hasMoreMenus={hasMoreMenus}
+          isMenuListError={isError}
+          isLoading={isLoading}
+          isNextPageError={isNextPageError}
+          onRetryMenuList={onRetry}
           loadMoreRef={loadMoreRef}
           menus={menus}
           onPressMenuItem={onPressMenuItem}

@@ -16,6 +16,10 @@
   - `InputReviewKeyword`
   - `InputReviewMain`
   - `ReviewSubmitBar`
+- 예약 요약은 작성 폼 밀도로 렌더링해 92px 썸네일 위아래에 각각 20px 여백을 둔다.
+- 별점 버튼은 36px 정사각형이며 버튼 사이 간격은 10px이다.
+- 사진 첨부 영역은 높이 130px, 리뷰 textarea는 최소 높이 230px와 내부 여백 20px를 유지한다.
+- 저장 영역은 좌우 20px, 위 45px, 아래 48px 여백과 높이 42px 버튼을 사용한다.
 
 ## Data Dependencies
 
@@ -24,6 +28,7 @@
 - context 응답의 식당명, 썸네일, 방문 일시, 방문 인원으로 예약 요약을 표시한다.
 - context 응답의 `reviewKeywordOptions`를 키워드 선택지로 사용하고 선택된 `code`를 form 상태에 보관한다.
 - 알려진 keyword `code`를 review feature의 HDS icon과 매핑하며, code가 없을 때는 정식 API label로 아이콘을 보완한다.
+- `GOOD_FOR_SOLO_DINING` / `혼밥하기 좋아요`는 `SoloIcon`으로 표시하고, 선택 시 서버가 제공한 code를 그대로 제출한다.
 - context 조회 중에는 로딩 상태를, 조회 실패 또는 빈 응답에는 오류 상태를 표시한다.
 - `reviewable`이 `true`인 예약만 리뷰를 제출할 수 있다.
 - 사진 파일은 `image/jpeg`, `image/png`, `image/webp`만 허용하고 제출 전까지 원본 `File[]` 상태로 보관한다.
@@ -43,6 +48,7 @@
 - 별점은 1점부터 5점까지 정수로 선택한다.
 - 키워드는 최소 1개, 최대 3개까지 선택한다.
 - 리뷰 본문은 최소 10자, 최대 1000자까지 유효하다.
+- 본문은 1000자에 도달하면 이후 입력을 받지 않는다. 붙여넣기도 최대 1000자까지만 반영하며, 삭제나 선택 영역 교체는 허용한다.
 - 사진은 선택 입력이며 `image/jpeg`, `image/png`, `image/webp`, 최대 10장, 장당 5MB 이하일 때 유효하다.
 - 지원하지 않는 MIME 타입의 사진은 프론트에서 먼저 거절하고, 파일 상태에 추가하지 않으며 에러 메시지를 표시한다.
 - 장당 5MB를 초과한 사진은 프론트에서 먼저 거절하고, 파일 상태에 추가하지 않으며 에러 메시지를 표시한다.
@@ -51,6 +57,8 @@
 - 사진을 선택하면 이미지 미리보기를 가로 스크롤 목록으로 표시한다.
 - 선택된 사진 미리보기의 삭제 버튼을 누르면 해당 사진을 파일 상태에서 제거한다.
 - 저장하기 버튼은 필수 입력값과 사진 제한이 모두 유효하고, 예약이 리뷰 작성 가능하며, 제출 중이 아닐 때만 활성화한다.
+- 최초 진입처럼 필수 입력값이 비어 있는 상태에서는 저장하기 버튼을 비활성화하고 필드 오류를 선제 노출하지 않는다.
+- 본문이 1000자이면 유효한 입력으로 취급하며, 다른 필수 조건을 만족하면 저장하기 버튼을 활성화한다.
 - 리뷰 제출 중에는 저장 버튼을 로딩/비활성화 상태로 유지해 중복 요청을 막는다.
 - 리뷰 작성 성공 시 응답의 `reviewId`로 `/reviews/:reviewId` 상세 페이지에 이동한다.
 - 이미지 업로드 또는 리뷰 작성 실패 시 상세 페이지로 이동하지 않고 재시도 가능한 오류 메시지를 표시한다.
@@ -71,7 +79,7 @@
 - 리뷰 본문 길이, 사진 개수, 사진 용량 같은 순수 검증 기준은 리뷰 작성/수정 플로우에서 함께 쓰는 규칙이므로 `features/review/utils/reviewValidation.ts`에 둔다.
 - 리뷰 입력 제한값과 에러 문구는 리뷰 작성/수정 플로우에서 함께 쓰는 규칙이므로 `features/review/constants`에 둔다.
 - 리뷰 입력 UI 컴포넌트는 리뷰 작성/수정에서 재사용 가능하므로 `features/review/components`에서 가져온다.
-- 별점, 키워드, 리뷰 본문처럼 자체 상호작용을 가진 feature component는 component test를 유지하고, 헤더/예약 요약/저장 바처럼 page flow에 종속된 단순 component는 page test에서 검증한다.
+- 자체 상호작용이나 public variant를 가진 feature component는 component test를 유지하고, 페이지의 제출·조회·navigation 조립은 page test에서 검증한다.
 
 ## Non-goals
 
@@ -79,6 +87,8 @@
 
 ## Verification
 
-- `pnpm exec vitest run src/pages/reviewNew src/features/review/components/inputReviewKeyword/InputReviewKeyword.test.tsx`
-- `pnpm typecheck`
-- `pnpm lint`
+- `corepack pnpm --filter @hashi/client exec vitest run src/pages/reviewNew/ReviewNewPage.test.tsx src/features/review/components/inputReviewRate/InputReviewRate.test.tsx src/features/review/components/inputReviewMain/InputReviewMain.test.tsx src/features/review/components/reviewReservationSummary/ReviewReservationSummary.test.tsx src/features/review/components/reviewSubmitBar/ReviewSubmitBar.test.tsx`
+- `corepack pnpm --filter @hashi/client lint`
+- `corepack pnpm --filter @hashi/client typecheck`
+- `corepack pnpm --filter @hashi/client test`
+- `corepack pnpm --filter @hashi/client build`

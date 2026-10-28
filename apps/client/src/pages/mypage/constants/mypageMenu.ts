@@ -2,23 +2,21 @@ import { ROUTES } from '@/app/router/path'
 import type { MypageMenuItem, MypageMenuSection } from '@/pages/mypage/types'
 import { HASHI_KAKAO_CHANNEL_URL } from '@/shared/constants/contact'
 
-export const HASHI_NOTICE_URL =
-  'https://ringed-mitten-50f.notion.site/Hashi-399c804d7e5e80b1991bd7b1f5165b0b'
-export const HASHI_TERMS_URL =
-  'https://ringed-mitten-50f.notion.site/Hashi-38dc804d7e5e80eebf2be0fc0ae448ac'
-
 export const createMypagePrimaryMenuItems = ({
   myReviewCount,
+  savedRestaurantCount,
 }: {
   myReviewCount: number
+  savedRestaurantCount: number
 }): MypageMenuItem[] => [
   {
     id: 'saved-restaurants',
     label: '내가 찜한 식당',
-    count: 0,
+    count: savedRestaurantCount,
     highlighted: true,
     action: {
-      type: 'comingSoon',
+      type: 'navigate',
+      path: ROUTES.saved,
     },
   },
   {
@@ -41,8 +39,8 @@ export const mypageMenuSections: MypageMenuSection[] = [
         id: 'notice',
         label: '공지사항',
         action: {
-          type: 'external',
-          url: HASHI_NOTICE_URL,
+          type: 'navigate',
+          path: ROUTES.notices,
         },
       },
       {
@@ -65,8 +63,29 @@ export const mypageMenuSections: MypageMenuSection[] = [
         id: 'terms',
         label: '이용약관',
         action: {
-          type: 'external',
-          url: HASHI_TERMS_URL,
+          type: 'navigate',
+          path: ROUTES.terms,
+        },
+      },
+    ],
+  },
+  {
+    id: 'account',
+    title: '계정',
+    items: [
+      {
+        id: 'logout',
+        label: '로그아웃',
+        action: {
+          type: 'logout',
+        },
+      },
+      {
+        id: 'withdrawal',
+        label: '회원탈퇴',
+        action: {
+          type: 'navigate',
+          path: ROUTES.withdrawal,
         },
       },
     ],

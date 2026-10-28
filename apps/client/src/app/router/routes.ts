@@ -34,7 +34,27 @@ export const appRoutes: RouteObject[] = [
           },
           {
             path: ROUTES.map,
-            element: lazyPages.comingSoon(),
+            element: lazyPages.map(),
+          },
+          {
+            path: ROUTES.notices,
+            element: lazyPages.notices(),
+          },
+          {
+            path: ROUTES.noticeDetail,
+            element: lazyPages.noticeDetail(),
+          },
+          {
+            path: ROUTES.collectionDetail,
+            element: lazyPages.saved(),
+          },
+          {
+            path: ROUTES.terms,
+            element: lazyPages.terms(),
+          },
+          {
+            path: ROUTES.termsDetail,
+            element: lazyPages.termsDetail(),
           },
         ],
       },
@@ -67,6 +87,10 @@ export const appRoutes: RouteObject[] = [
         element: withSilentLazyFallback(lazyPages.popularRestaurants()),
       },
       {
+        path: ROUTES.hotSnsRestaurants,
+        element: withSilentLazyFallback(lazyPages.hotSnsRestaurants()),
+      },
+      {
         path: ROUTES.magazines,
         element: withLazyFallback(lazyPages.magazines()),
       },
@@ -97,13 +121,19 @@ export const appRoutes: RouteObject[] = [
             path: ROUTES.reviewEdit,
             element: lazyPages.reviewEdit(),
           },
+          { path: ROUTES.collectionNew, element: lazyPages.collectionForm() },
+          {
+            path: ROUTES.collectionRestaurantEdit,
+            element: lazyPages.collectionEditor(),
+          },
+          { path: ROUTES.collectionEdit, element: lazyPages.collectionForm() },
           {
             path: ROUTES.saved,
             element: createElement(BottomNavigationLayout),
             children: [
               {
                 index: true,
-                element: lazyPages.comingSoon(),
+                element: lazyPages.saved(),
               },
             ],
           },
@@ -132,6 +162,10 @@ export const appRoutes: RouteObject[] = [
             element: lazyPages.profileNew(),
           },
           {
+            path: ROUTES.profileEdit,
+            element: lazyPages.profileEdit(),
+          },
+          {
             path: ROUTES.withdrawal,
             element: lazyPages.withdrawal(),
           },
@@ -149,7 +183,11 @@ export const appRoutes: RouteObject[] = [
           },
           {
             path: ROUTES.reservationDetail,
-            element: lazyPages.reservationDetail(),
+            element: withSilentLazyFallback(lazyPages.reservationDetail()),
+          },
+          {
+            path: ROUTES.reservationComplete,
+            element: lazyPages.reservationComplete(),
           },
         ],
       },

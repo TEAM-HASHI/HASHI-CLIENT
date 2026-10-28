@@ -3,17 +3,17 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   restaurantPhotosQueryOptions,
-  restaurantPhotoCountsQueryOptions,
   restaurantPhotoQueryKeys,
 } from '@/features/restaurantDetail/queries/restaurantPhotoQueryOptions'
 import type { RestaurantPhotoSource } from '@/features/restaurantDetail/types/restaurantPhoto'
+import { HttpStatusError } from '@/shared/api/apiError'
 
 describe('restaurant photo queries', () => {
   it('invalidates all photo lists and counts for only the reviewed restaurant', async () => {
     const client = new QueryClient()
-    const counts = restaurantPhotoQueryKeys.counts('preview', 10)
+    const counts = restaurantPhotoQueryKeys.list('preview', 10, 'all', 0)
     const list = restaurantPhotoQueryKeys.list('preview', 10, 'review', 0)
-    const other = restaurantPhotoQueryKeys.counts('preview', 20)
+    const other = restaurantPhotoQueryKeys.list('preview', 20, 'all', 0)
     for (const key of [counts, list, other]) client.setQueryData(key, {})
     await client.invalidateQueries({
       queryKey: restaurantPhotoQueryKeys.restaurant(10),
@@ -24,7 +24,7 @@ describe('restaurant photo queries', () => {
     client.clear()
   })
   it('retries a failed page once without routing to an error boundary', async () => {
-    const getPage = vi.fn().mockRejectedValue(new Error('unavailable'))
+    const getPage = vi.fn().mockRejectedValue(new HttpStatusError(503))
     const client = new QueryClient({
       defaultOptions: { queries: { retryDelay: 0 } },
     })
@@ -35,12 +35,26 @@ describe('restaurant photo queries', () => {
       'all',
       0,
     )
-    await expect(client.fetchInfiniteQuery(options)).rejects.toThrow(
-      'unavailable',
-    )
+    await expect(client.fetchInfiniteQuery(options)).rejects.toThrow()
     expect(getPage).toHaveBeenCalledTimes(2)
     expect(options.throwOnError).toBe(false)
     client.clear()
+  })
+
+  it('does not automatically retry an invalid cursor or a missing restaurant', async () => {
+    for (const status of [400, 404]) {
+      const getPage = vi.fn().mockRejectedValue(new HttpStatusError(status))
+      const client = new QueryClient({
+        defaultOptions: { queries: { retryDelay: 0 } },
+      })
+      await expect(
+        client.fetchInfiniteQuery(
+          restaurantPhotosQueryOptions({ getPage }, 'api', 10, 'all', 0),
+        ),
+      ).rejects.toThrow()
+      expect(getPage).toHaveBeenCalledTimes(1)
+      client.clear()
+    }
   })
 
   it('keeps source, restaurant, filter and reset revision caches separate', () => {
@@ -63,9 +77,6 @@ describe('restaurant photo queries', () => {
     ).not.toEqual(base)
     expect(
       restaurantPhotosQueryOptions(source, 'preview', 10, 'all', 1).queryKey,
-    ).not.toEqual(base)
-    expect(
-      restaurantPhotoCountsQueryOptions(source, 'preview', 10).queryKey,
     ).not.toEqual(base)
   })
 })

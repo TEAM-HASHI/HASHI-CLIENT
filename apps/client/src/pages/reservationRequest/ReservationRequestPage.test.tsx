@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ROUTES } from '@/app/router/path'
+import { reservationCompletionQueryKeys } from '@/features/reservation/queries/reservationCompletion'
 import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { createReservation } from '@/pages/reservationRequest/api/createReservation'
 import { ReservationRequestPage } from '@/pages/reservationRequest/ReservationRequestPage'
@@ -61,6 +62,18 @@ const reservationDraft = {
   requestNote: '',
 }
 
+const completionResponse = {
+  reservationId: 31,
+  reserverName: '김하시',
+  restaurantName: '리키마루',
+  restaurantAddress: '도쿄도 주오구 긴자 1-1',
+  reservedAt: '2026-06-01T11:00:00',
+  adultCount: 2,
+  teenCount: 0,
+  childCount: 0,
+  reservationStatus: 'REQUESTED' as const,
+}
+
 const renderPage = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -73,21 +86,25 @@ const renderPage = () => {
     availablePoint: 7_000,
   })
 
-  return render(
+  render(
     <QueryClientProvider client={queryClient}>
       <ReservationRequestPage />
     </QueryClientProvider>,
   )
+  return queryClient
 }
 
 describe('ReservationRequestPage', () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 4, 31, 12))
     mockLocationState.current = reservationDraft
     mockedCreateReservation.mockReset()
-    mockedCreateReservation.mockResolvedValue({ reservationId: 31 })
+    mockedCreateReservation.mockResolvedValue(completionResponse)
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     cleanup()
     mockLocationState.current = undefined
     mockNavigate.mockClear()
@@ -108,27 +125,66 @@ describe('ReservationRequestPage', () => {
     expect(screen.getByText('7,000원')).toBeInTheDocument()
   })
 
-  it('shows the zero-guest fallback in the page and confirm dialog', () => {
-    mockLocationState.current = {
-      ...reservationDraft,
-      guests: {
-        adult: 0,
-        teen: 0,
-        child: 0,
-      },
-    }
+  it.each([
+    { guests: { adult: 0, teen: 0, child: 0 } },
+    { guests: { adult: -1, teen: 0, child: 0 } },
+    { guestName: ' ' },
+    { date: '2026-02-31' },
+    { time: '99:99' },
+  ])(
+    'returns home without submitting an invalid draft: %j',
+    async (overrides) => {
+      mockLocationState.current = { ...reservationDraft, ...overrides }
+      renderPage()
+      await waitFor(() =>
+        expect(mockNavigate).toHaveBeenCalledWith(ROUTES.home, {
+          replace: true,
+        }),
+      )
+      expect(
+        screen.queryByRole('button', { name: '예약 요청' }),
+      ).not.toBeInTheDocument()
+      expect(mockedCreateReservation).not.toHaveBeenCalled()
+    },
+  )
 
+  it.each(['restaurant', 'anywhere'] as const)(
+    'blocks a %s reservation when midnight passes while confirmation is open',
+    (source) => {
+      const draft =
+        source === 'anywhere'
+          ? {
+              ...reservationDraft,
+              source,
+              restaurantId: null,
+              restaurantImageUrl: null,
+            }
+          : reservationDraft
+      mockLocationState.current = draft
+      vi.setSystemTime(new Date(2026, 4, 31, 23, 59))
+      renderPage()
+      fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
+      const dialog = screen.getByRole('alertdialog', {
+        name: '예약을 진행할까요?',
+      })
+      vi.setSystemTime(new Date(2026, 5, 1, 0, 0))
+      fireEvent.click(within(dialog).getByRole('button', { name: '예약' }))
+      expect(mockedCreateReservation).not.toHaveBeenCalled()
+      expect(mockNavigate).toHaveBeenCalledWith(-1)
+    },
+  )
+
+  it('blocks a draft that was already in the past before confirmation', () => {
+    vi.setSystemTime(new Date(2026, 5, 2, 12))
     renderPage()
-
-    expect(screen.getByText('0명')).toBeInTheDocument()
-
     fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
-
-    expect(
-      within(
-        screen.getByRole('alertdialog', { name: '예약을 진행할까요?' }),
-      ).getByText('0명'),
-    ).toBeInTheDocument()
+    fireEvent.click(
+      within(screen.getByRole('alertdialog')).getByRole('button', {
+        name: '예약',
+      }),
+    )
+    expect(mockedCreateReservation).not.toHaveBeenCalled()
+    expect(mockNavigate).toHaveBeenCalled()
   })
 
   it('shows the default image when the restaurant image fails to load', () => {
@@ -284,8 +340,8 @@ describe('ReservationRequestPage', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('creates the reservation and replaces the request page with the detail page', async () => {
-    renderPage()
+  it('caches the whole creation response and replaces the request page with the complete page', async () => {
+    const queryClient = renderPage()
 
     fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
 
@@ -300,16 +356,21 @@ describe('ReservationRequestPage', () => {
         draft: reservationDraft,
         usedPoint: 0,
       })
-      expect(mockNavigate).toHaveBeenCalledWith('/reservations/31', {
+      expect(
+        queryClient.getQueryData(reservationCompletionQueryKeys.detail(31)),
+      ).toEqual(completionResponse)
+      expect(mockNavigate).toHaveBeenCalledWith('/reservations/31/complete', {
         replace: true,
-        state: { fromReservationRequest: true },
       })
     })
   })
 
-  it('keeps the confirm dialog open when reservation creation fails', async () => {
+  it('keeps the confirm dialog, draft and used points when reservation creation fails', async () => {
     mockedCreateReservation.mockRejectedValue(new Error('request failed'))
     renderPage()
+    fireEvent.change(screen.getByLabelText('사용 포인트'), {
+      target: { value: '1000' },
+    })
 
     fireEvent.click(screen.getByRole('button', { name: '예약 요청' }))
 
@@ -323,6 +384,8 @@ describe('ReservationRequestPage', () => {
     })
     expect(dialog).toBeInTheDocument()
     expect(mockNavigate).not.toHaveBeenCalled()
+    expect(screen.getByLabelText('사용 포인트')).toHaveValue('1000')
+    expect(mockLocationState.current).toEqual(reservationDraft)
   })
 
   it('prevents duplicate requests from immediate repeated confirmation', async () => {

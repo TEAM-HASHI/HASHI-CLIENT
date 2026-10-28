@@ -6,7 +6,8 @@ PR을 열기 전 변경 범위, Jira 연결, 검증 결과를 명확히 남깁�
 
 - Jira 이슈가 `HASHI-*` 형식인지 확인합니다.
 - 브랜치 이름이 `type/HASHI-번호-작업-요약` 형식인지 확인합니다.
-- 커밋 메시지가 `type(scope): HASHI-번호 작업 내용` 형식인지 확인합니다.
+- 커밋 메시지가 소문자 type과 scope 없는 `type: HASHI-번호 작업 내용` 형식인지 확인합니다.
+- PR 제목이 `Type(scope): HASHI-번호 작업 내용` 형식인지 확인합니다. Type은 첫 글자만 대문자이며, scope는 `client`, `admin`, `hds-ui`, `root` 등 [Git Convention](../conventions/git.md)의 변경 대상 기준을 따릅니다.
 - PR 대상 브랜치가 `develop`인지 확인합니다.
 - 변경 범위가 하나의 Jira 이슈에 설명 가능한지 확인합니다.
 - unrelated 변경이 섞이지 않았는지 `git status`와 diff를 확인합니다.
@@ -176,7 +177,8 @@ UI 변경:
 - `vercel-admin-preview.yml`: admin preview 배포만 담당합니다.
 - `vercel-admin-production.yml`: admin production 배포만 담당합니다.
 - `chromatic.yml`: HDS Storybook/Chromatic 검증만 담당하며, HDS 관련 경로가 바뀐 PR에서 실행됩니다.
-- auto-label, auto-assign, Discord workflow는 PR 운영 자동화를 담당합니다.
+- auto-label, auto-assign workflow는 PR 운영 자동화를 담당합니다.
+- Slack workflow는 PR·리뷰·CI 실패·운영 배포 결과 알림과 수동 연결 테스트를 담당합니다. 설정과 알림 정책은 [Slack Notifications](./slack-notifications.md)를 참고합니다.
 
 ## Before Merge
 

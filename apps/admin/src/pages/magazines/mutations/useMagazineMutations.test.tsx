@@ -15,7 +15,7 @@ describe('magazine mutations', () => {
     vi.mocked(magazineApi.deleteMagazine).mockResolvedValue(undefined)
   })
 
-  it('invalidates public magazine lists after delete', async () => {
+  it('invalidates magazine lists and detail after delete', async () => {
     const queryClient = new QueryClient()
     const invalidateQueries = vi.spyOn(queryClient, 'invalidateQueries')
     const wrapper = ({ children }: { children: ReactNode }) => (
@@ -27,7 +27,7 @@ describe('magazine mutations', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
     expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: magazineQueryKeys.lists(),
+      queryKey: magazineQueryKeys.all,
     })
   })
 })

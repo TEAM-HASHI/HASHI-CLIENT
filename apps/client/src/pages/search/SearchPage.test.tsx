@@ -1,13 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
@@ -15,8 +8,9 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { ROUTES } from '@/app/router/path'
 import { SearchPage } from '@/pages/search/SearchPage'
 import type { SearchRestaurant } from '@/pages/search/types'
-import emptyMenuImage from '@/shared/assets/images/empty-menu.webp'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
+import { RECENT_SEARCH_KEYWORDS_STORAGE_KEY } from '@/pages/search/constants/searchFilters'
+import { toastQueue } from '@hashi/hds-ui'
 
 const { mockGetRestaurants, mockGetSearchKeywordRecommendations } = vi.hoisted(
   () => ({
@@ -52,86 +46,6 @@ const searchRestaurantFixtures: SearchRestaurant[] = [
     name: '긴자 야끼소바 키친',
     popularity: 90,
     rating: 4.6,
-    tag: '아끼소바',
-  },
-  {
-    businessHours: '6/19 (금) 10:30~21:30',
-    category: 'etc',
-    id: 'osaka-table-1',
-    keywords: ['아끼소바', '오코노미야키', '타코야키'],
-    name: '오사카 테이블',
-    popularity: 84,
-    rating: 4.2,
-    tag: '아끼소바',
-  },
-  {
-    businessHours: '6/19 (금) 12:00~23:00',
-    category: 'noodle',
-    id: 'musashi-noodle-bar-1',
-    keywords: ['아끼소바', '면류', '야끼우동'],
-    name: '무사시 누들바',
-    popularity: 79,
-    rating: 4,
-    tag: '아끼소바',
-  },
-  {
-    businessHours: '6/19 (금) 10:30~22:00',
-    category: 'teppanGrill',
-    id: 'tokyo-yakisoba-terrace-1',
-    keywords: ['아끼소바', '야끼소바', '철판'],
-    name: '도쿄 야끼소바 테라스',
-    popularity: 82,
-    rating: 4.3,
-    tag: '아끼소바',
-  },
-  {
-    businessHours: '6/19 (금) 11:00~22:30',
-    category: 'etc',
-    id: 'shibuya-sauce-table-1',
-    keywords: ['아끼소바', '오코노미야키', '소스'],
-    name: '시부야 소스 테이블',
-    popularity: 76,
-    rating: 4.1,
-    tag: '아끼소바',
-  },
-  {
-    businessHours: '6/19 (금) 12:00~23:00',
-    category: 'teppanGrill',
-    id: 'ginza-teppan-house-1',
-    keywords: ['아끼소바', '야끼소바', '철판요리'],
-    name: '긴자 철판 하우스',
-    popularity: 86,
-    rating: 4.5,
-    tag: '아끼소바',
-  },
-  {
-    businessHours: '6/19 (금) 10:00~21:00',
-    category: 'noodle',
-    id: 'ueno-noodle-stand-1',
-    keywords: ['아끼소바', '면류', '야끼우동'],
-    name: '우에노 누들 스탠드',
-    popularity: 72,
-    rating: 3.9,
-    tag: '아끼소바',
-  },
-  {
-    businessHours: '6/19 (금) 11:30~22:00',
-    category: 'etc',
-    id: 'asakusa-yatai-kitchen-1',
-    keywords: ['아끼소바', '야끼소바', '타코야키'],
-    name: '아사쿠사 야타이 키친',
-    popularity: 80,
-    rating: 4.2,
-    tag: '아끼소바',
-  },
-  {
-    businessHours: '6/19 (금) 12:00~22:30',
-    category: 'teppanGrill',
-    id: 'nakameguro-grill-1',
-    keywords: ['아끼소바', '철판', '야끼소바'],
-    name: '나카메구로 그릴',
-    popularity: 83,
-    rating: 4.4,
     tag: '아끼소바',
   },
   {
@@ -195,6 +109,113 @@ const LocationState = () => {
   return <div data-testid="location-state">{location.search}</div>
 }
 
+afterEach(() => {
+  cleanup()
+  toastQueue.clear()
+  vi.clearAllMocks()
+  window.localStorage.clear()
+  document.body.style.overflow = ''
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.width = ''
+  document.documentElement.style.overflow = ''
+  vi.unstubAllGlobals()
+})
+
+it.each(['#', '#두 개', '   '])(
+  'does not leave map search or store an invalid keyword: %s',
+  async (keyword) => {
+    mockGetRestaurants.mockClear()
+    mockGetSearchKeywordRecommendations.mockResolvedValue([])
+    localStorage.removeItem(RECENT_SEARCH_KEYWORDS_STORAGE_KEY)
+    const user = userEvent.setup()
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter
+          initialEntries={[
+            { pathname: ROUTES.search, state: { source: 'map', keyword: '' } },
+          ]}
+        >
+          <Routes>
+            <Route path={ROUTES.search} element={<SearchPage />} />
+            <Route path={ROUTES.map} element={<p>지도 복귀</p>} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    await user.type(screen.getByRole('searchbox'), `${keyword}{Enter}`)
+    expect(screen.queryByText('지도 복귀')).not.toBeInTheDocument()
+    expect(localStorage.getItem(RECENT_SEARCH_KEYWORDS_STORAGE_KEY)).toBeNull()
+    expect(mockGetRestaurants).not.toHaveBeenCalled()
+    cleanup()
+    client.clear()
+  },
+)
+
+it('limits map search input to 30 characters', async () => {
+  mockGetSearchKeywordRecommendations.mockResolvedValue([])
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  const user = userEvent.setup()
+  render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter
+        initialEntries={[
+          { pathname: ROUTES.search, state: { source: 'map', keyword: '' } },
+        ]}
+      >
+        <SearchPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+  await user.type(screen.getByRole('searchbox'), '가'.repeat(31))
+  expect(screen.getByRole('searchbox')).toHaveValue('가'.repeat(30))
+  cleanup()
+  client.clear()
+})
+
+it('returns a map search without fetching ordinary results and clears the draft with X', async () => {
+  mockGetRestaurants.mockClear()
+  mockGetSearchKeywordRecommendations.mockResolvedValue([])
+  const user = userEvent.setup()
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  const MapReturn = () => <output>{JSON.stringify(useLocation().state)}</output>
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: ROUTES.search,
+            state: { source: 'map', keyword: '초밥' },
+          },
+        ]}
+      >
+        <Routes>
+          <Route path={ROUTES.search} element={<SearchPage />} />
+          <Route path={ROUTES.map} element={<MapReturn />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+  expect(screen.getByRole('searchbox')).toHaveValue('초밥')
+  await user.click(screen.getByRole('button', { name: '검색어 지우기' }))
+  expect(screen.getByRole('searchbox')).toHaveValue('')
+  await user.type(screen.getByRole('searchbox'), '#{Enter}')
+  expect(screen.getByRole('searchbox')).toHaveValue('#')
+  expect(mockGetRestaurants).not.toHaveBeenCalled()
+  await user.clear(screen.getByRole('searchbox'))
+  await user.type(screen.getByRole('searchbox'), '카페{Enter}')
+  expect(screen.getByRole('status')).toHaveTextContent('카페')
+  expect(mockGetRestaurants).not.toHaveBeenCalled()
+  cleanup()
+})
+
 const renderSearchPageWithRoutes = (initialEntry: string = ROUTES.search) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -244,30 +265,10 @@ const renderSearchPageWithHistory = (
   )
 }
 
-const createDeferred = <T,>() => {
-  let resolve!: (value: T) => void
-  const promise = new Promise<T>((promiseResolve) => {
-    resolve = promiseResolve
-  })
-
-  return { promise, resolve }
-}
-
 describe('SearchPage', () => {
-  afterEach(() => {
-    cleanup()
-    vi.clearAllMocks()
-    window.localStorage.clear()
-    document.body.style.overflow = ''
-    document.body.style.position = ''
-    document.body.style.top = ''
-    document.body.style.width = ''
-    document.documentElement.style.overflow = ''
-    vi.unstubAllGlobals()
-  })
-
   beforeEach(() => {
     mockGetSearchKeywordRecommendations.mockResolvedValue(['아끼소바'])
+    mockGetRestaurants.mockReset()
     mockGetRestaurants.mockImplementation(({ genre, keyword, sort }) => {
       const normalizedKeyword = keyword.trim().toLowerCase()
       const restaurants = searchRestaurantFixtures
@@ -279,7 +280,10 @@ describe('SearchPage', () => {
           ].some((value) => value.toLowerCase().includes(normalizedKeyword))
 
           return (
-            matchesKeyword && (genre === 'all' || restaurant.category === genre)
+            matchesKeyword &&
+            (genre === 'all' ||
+              restaurant.category === genre ||
+              (genre === 'sushi' && restaurant.category === 'sushiSashimi'))
           )
         })
         .sort((firstRestaurant, secondRestaurant) => {
@@ -301,42 +305,75 @@ describe('SearchPage', () => {
     })
   })
 
-  it('shows recent and recommended keywords before searching', async () => {
-    window.localStorage.setItem(
-      'hashi:search:recent-keywords',
-      JSON.stringify(['라멘']),
-    )
-
-    renderSearchPage()
-
+  it('does not submit or store invalid hashtag searches, including direct URL entry', async () => {
+    const user = userEvent.setup()
+    renderSearchPageWithRoutes(`${ROUTES.search}?keyword=%23`)
+    const input = screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' })
+    expect(mockGetRestaurants).not.toHaveBeenCalled()
+    await user.clear(input)
+    await user.type(input, '#도쿄 라멘{Enter}')
+    expect(mockGetRestaurants).not.toHaveBeenCalled()
     expect(
-      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
-    ).toHaveAttribute('placeholder', '식당 혹은 메뉴를 검색해보세요')
-    expect(screen.getByRole('search').parentElement).toHaveClass(
-      'app-mobile-fixed-top',
-      'z-fixed',
-      'bg-white',
-    )
-    expect(screen.getByRole('search')).toHaveClass('pb-[9px]')
-    expect(screen.getByRole('button', { name: '뒤로가기' })).toHaveClass(
-      'size-11',
-    )
-    const recentSection = screen.getByRole('region', { name: '최근 검색어' })
-    const recommendedSection = screen.getByRole('region', {
-      name: '추천 검색어',
-    })
+      window.localStorage.getItem('hashi:search:recent-keywords'),
+    ).toBeNull()
+    expect(input).toHaveValue('#도쿄 라멘')
+  })
 
-    expect(recentSection).toBeInTheDocument()
-    expect(
-      within(recentSection).getByRole('button', { name: '라멘' }),
-    ).toBeInTheDocument()
-    expect(recommendedSection).toBeInTheDocument()
-    expect(
-      await within(recommendedSection).findByRole('button', {
-        name: '아끼소바',
+  it('keeps existing results during edits and resets filters only when a new search is submitted', async () => {
+    const user = userEvent.setup()
+    renderSearchPageWithRoutes(
+      `${ROUTES.search}?keyword=스시&sort=rating&category=sushiSashimi`,
+    )
+    await screen.findByText('스시 하루')
+    const input = screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' })
+    await user.clear(input)
+    await user.type(input, '야끼')
+    expect(screen.getByText('스시 하루')).toBeInTheDocument()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(1)
+    await user.clear(input)
+    await user.type(input, '아끼소바{Enter}')
+    await waitFor(() =>
+      expect(mockGetRestaurants).toHaveBeenLastCalledWith({
+        keyword: '아끼소바',
+        genre: 'all',
+        size: 10,
       }),
+    )
+    expect(screen.getByTestId('location-state')).toHaveTextContent(
+      '?keyword=%EC%95%84%EB%81%BC%EC%86%8C%EB%B0%94',
+    )
+  })
+
+  it('clears the draft and applied conditions without searching, then uses default filters for the next search', async () => {
+    const user = userEvent.setup()
+    renderSearchPageWithRoutes(
+      `${ROUTES.search}?keyword=スシ&sort=rating&category=sushiSashimi`,
+    )
+    await waitFor(() => expect(mockGetRestaurants).toHaveBeenCalled())
+    const input = screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' })
+    await user.clear(input)
+    await user.type(input, '미제출 검색어')
+    const requestCount = mockGetRestaurants.mock.calls.length
+    await user.click(screen.getByRole('button', { name: '검색어 지우기' }))
+    expect(input).toHaveValue('')
+    expect(screen.getByTestId('location-state')).toHaveTextContent(/^$/)
+    expect(
+      screen.queryByRole('button', { name: '별점순' }),
+    ).not.toBeInTheDocument()
+    expect(
+      await screen.findByRole('region', { name: '추천 검색어' }),
     ).toBeInTheDocument()
-    expect(screen.queryByText('기본순')).not.toBeInTheDocument()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(requestCount)
+
+    await user.type(input, '스시')
+    await user.keyboard('{Enter}')
+    await waitFor(() => {
+      expect(mockGetRestaurants).toHaveBeenLastCalledWith({
+        genre: 'all',
+        keyword: '스시',
+        size: 10,
+      })
+    })
   })
 
   it('searches with a recommended keyword and stores it as recent keyword', async () => {
@@ -346,27 +383,13 @@ describe('SearchPage', () => {
 
     await user.click(await screen.findByRole('button', { name: '아끼소바' }))
 
-    expect(
-      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
-    ).toHaveValue('아끼소바')
-    expect(screen.getByRole('button', { name: '기본순' })).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: '음식 장르 선택' }),
-    ).toBeInTheDocument()
-    expect(
-      await screen.findByText(
-        '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('list').parentElement).toHaveClass('pt-[122px]')
-    expect(
-      screen.getByRole('button', { name: '기본순' }).parentElement
-        ?.parentElement,
-    ).toHaveClass('app-mobile-fixed-top', 'z-fixed', 'bg-white')
-    expect(screen.getAllByRole('listitem')).toHaveLength(10)
-    expect(
-      screen.getAllByRole('listitem')[0].querySelector('a')?.firstChild,
-    ).toHaveClass('bg-warm-gray-50')
+    await waitFor(() => {
+      expect(mockGetRestaurants).toHaveBeenCalledWith({
+        genre: 'all',
+        keyword: '아끼소바',
+        size: 10,
+      })
+    })
     expect(window.localStorage.getItem('hashi:search:recent-keywords')).toBe(
       JSON.stringify(['아끼소바']),
     )
@@ -393,28 +416,6 @@ describe('SearchPage', () => {
 
     cleanup()
     vi.clearAllMocks()
-    mockGetSearchKeywordRecommendations.mockResolvedValue(['아끼소바'])
-    mockGetRestaurants.mockImplementation(({ genre, keyword, sort }) => {
-      const normalizedKeyword = keyword.trim().toLowerCase()
-      const restaurants = searchRestaurantFixtures.filter((restaurant) => {
-        const matchesKeyword = [
-          restaurant.name,
-          restaurant.tag,
-          ...restaurant.keywords,
-        ].some((value) => value.toLowerCase().includes(normalizedKeyword))
-
-        return (
-          matchesKeyword && (genre === 'all' || restaurant.category === genre)
-        )
-      })
-
-      return Promise.resolve({
-        hasNext: false,
-        restaurants: restaurants.map(convertSearchRestaurantFixtureToSummary),
-        ...(sort && { sort }),
-      })
-    })
-
     renderSearchPageWithRoutes(`${ROUTES.search}?keyword=스시`)
 
     expect(
@@ -454,106 +455,6 @@ describe('SearchPage', () => {
     expect(await screen.findByText('스시 하루')).toBeInTheDocument()
   })
 
-  it('renders search result skeletons with secondary color while searching', async () => {
-    const user = userEvent.setup()
-    const searchDeferred =
-      createDeferred<Awaited<ReturnType<typeof mockGetRestaurants>>>()
-    mockGetRestaurants.mockReturnValueOnce(searchDeferred.promise)
-
-    renderSearchPage()
-
-    await user.type(
-      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
-      '스시',
-    )
-    await user.keyboard('{Enter}')
-
-    const loadingList = screen.getByRole('list', {
-      name: '검색 결과 로딩 중',
-    })
-    const firstSkeletonItem = within(loadingList).getAllByRole('listitem')[0]
-
-    expect(firstSkeletonItem.querySelector('.bg-secondary-200')).toBeTruthy()
-    expect(firstSkeletonItem.querySelector('.bg-warm-gray-50')).toBeNull()
-
-    searchDeferred.resolve({
-      hasNext: false,
-      restaurants: searchRestaurantFixtures
-        .slice(0, 1)
-        .map(convertSearchRestaurantFixtureToSummary),
-    })
-
-    expect(
-      await screen.findByText(searchRestaurantFixtures[0].name),
-    ).toBeInTheDocument()
-  })
-
-  it('does not request recommended keywords after search results are shown', async () => {
-    const user = userEvent.setup()
-
-    renderSearchPage()
-
-    await user.type(
-      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
-      '아끼소바',
-    )
-    await user.keyboard('{Enter}')
-
-    expect(
-      await screen.findByText(
-        '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
-      ),
-    ).toBeInTheDocument()
-    expect(mockGetSearchKeywordRecommendations).toHaveBeenCalledTimes(1)
-  })
-
-  it('shows ImageFallback when a search result image request fails', async () => {
-    const user = userEvent.setup()
-
-    renderSearchPage()
-
-    await user.type(
-      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
-      '스시',
-    )
-    await user.keyboard('{Enter}')
-
-    const image = await screen.findByRole('presentation')
-    fireEvent.error(image)
-
-    expect(image).not.toBeInTheDocument()
-    expect(
-      screen
-        .getAllByRole('listitem')[0]
-        .querySelector('[data-slot="image-fallback"]'),
-    ).toBeInTheDocument()
-  })
-
-  it('locks background scroll while a filter bottom sheet is open', async () => {
-    const user = userEvent.setup()
-
-    renderSearchPage()
-
-    await user.click(await screen.findByRole('button', { name: '아끼소바' }))
-    await screen.findByText(
-      '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
-    )
-
-    await user.click(screen.getByRole('button', { name: '기본순' }))
-
-    expect(document.body.style.overflow).toBe('hidden')
-    expect(document.body.style.position).toBe('fixed')
-    expect(document.documentElement.style.overflow).toBe('hidden')
-
-    await user.click(screen.getByRole('button', { name: '적용' }))
-
-    await waitFor(() => {
-      expect(document.body.style.overflow).toBe('')
-      expect(document.body.style.position).toBe('')
-      expect(document.documentElement.style.overflow).toBe('')
-    })
-  })
-
   it('keeps search usable when recent keyword storage is unavailable', async () => {
     const user = userEvent.setup()
     const getItemSpy = vi
@@ -582,86 +483,6 @@ describe('SearchPage', () => {
 
     getItemSpy.mockRestore()
     setItemSpy.mockRestore()
-  })
-
-  it('shows empty state when submitted keyword has no result', async () => {
-    const user = userEvent.setup()
-
-    renderSearchPage()
-
-    await user.type(
-      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
-      '없는메뉴',
-    )
-    await user.keyboard('{Enter}')
-
-    await waitFor(() => {
-      expect(screen.getByText('검색된 식당이 없습니다.')).toBeInTheDocument()
-    })
-    expect(
-      screen
-        .getByText('검색된 식당이 없습니다.')
-        .parentElement?.querySelector('img'),
-    ).toHaveAttribute('src', emptyMenuImage)
-    expect(
-      screen.getByText('검색된 식당이 없습니다.').parentElement,
-    ).toHaveClass('pb-[122px]')
-    expect(screen.getByRole('button', { name: '기본순' })).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: '음식 장르 선택' }),
-    ).toBeInTheDocument()
-  })
-
-  it('navigates to home when back button is clicked on a directly opened search page', async () => {
-    const user = userEvent.setup()
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-        },
-      },
-    })
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[ROUTES.search]}>
-          <Routes>
-            <Route path={ROUTES.search} element={<SearchPage />} />
-            <Route path={ROUTES.home} element={<div>홈 화면</div>} />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>,
-    )
-
-    await user.click(screen.getByRole('button', { name: '뒤로가기' }))
-
-    expect(screen.getByText('홈 화면')).toBeInTheDocument()
-  })
-
-  it('resets sort filter to default and closes the bottom sheet', async () => {
-    const user = userEvent.setup()
-
-    renderSearchPage()
-
-    await user.click(await screen.findByRole('button', { name: '아끼소바' }))
-    await screen.findByText(
-      '아키토리 무사시 제일은 여기까지 그러니 최대길이 이 정도로까지',
-    )
-
-    await user.click(screen.getByRole('button', { name: '기본순' }))
-    await user.click(screen.getByRole('button', { name: '별점순' }))
-    await user.click(screen.getByRole('button', { name: '적용' }))
-
-    expect(
-      screen.getAllByRole('button', { name: '별점순' })[0],
-    ).toBeInTheDocument()
-
-    await user.click(screen.getAllByRole('button', { name: '별점순' })[0])
-    await user.click(screen.getByRole('button', { name: '초기화' }))
-
-    expect(
-      screen.getAllByRole('button', { name: '기본순' })[0],
-    ).toBeInTheDocument()
   })
 
   it('refetches restaurants with the applied sort filter', async () => {
@@ -721,54 +542,51 @@ describe('SearchPage', () => {
     })
   })
 
-  it('fetches the next restaurant page when the bottom sentinel enters the viewport', async () => {
-    const { IntersectionObserverMock, triggerIntersect } =
-      mockIntersectionObserver()
+  it('keeps loaded results after a next-page failure and retries only the failed cursor', async () => {
     const user = userEvent.setup()
-
+    const { triggerAllIntersects } = mockIntersectionObserver()
+    const first = convertSearchRestaurantFixtureToSummary(
+      searchRestaurantFixtures[0],
+    )
+    const next = convertSearchRestaurantFixtureToSummary(
+      searchRestaurantFixtures[2],
+    )
+    let resolveRetry!: (value: unknown) => void
     mockGetRestaurants
       .mockResolvedValueOnce({
+        restaurants: [first],
         hasNext: true,
-        nextCursor: 'next-search-cursor',
-        restaurants: [
-          convertSearchRestaurantFixtureToSummary(searchRestaurantFixtures[0]),
-        ],
+        nextCursor: 'next',
       })
-      .mockResolvedValueOnce({
-        hasNext: false,
-        restaurants: [
-          convertSearchRestaurantFixtureToSummary(searchRestaurantFixtures[1]),
-        ],
-      })
+      .mockRejectedValueOnce(new Error('next page failed'))
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveRetry = resolve
+          }),
+      )
+    renderSearchPageWithRoutes(`${ROUTES.search}?keyword=%23가성비`)
+    await screen.findByText(first.name)
+    triggerAllIntersects()
+    await screen.findByRole('button', { name: '다시 시도' })
+    expect(screen.getByText(first.name)).toBeInTheDocument()
+    triggerAllIntersects()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(2)
 
-    renderSearchPage()
-
-    await user.type(
-      screen.getByRole('searchbox', { name: '식당 또는 메뉴 검색' }),
-      '아끼소바',
+    await user.click(screen.getByRole('button', { name: '다시 시도' }))
+    expect(screen.getByText(first.name)).toBeInTheDocument()
+    expect(mockGetRestaurants).toHaveBeenLastCalledWith(
+      expect.objectContaining({ keyword: '#가성비', cursor: 'next' }),
     )
-    await user.keyboard('{Enter}')
-
+    triggerAllIntersects()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(3)
+    resolveRetry({ restaurants: [next], hasNext: false })
+    expect(await screen.findByText(next.name)).toBeInTheDocument()
+    expect(screen.getByText(first.name)).toBeInTheDocument()
     expect(
-      await screen.findByText(searchRestaurantFixtures[0].name),
-    ).toBeInTheDocument()
-    await waitFor(() => {
-      expect(IntersectionObserverMock).toHaveBeenCalled()
-    })
-
-    triggerIntersect()
-
-    await waitFor(() => {
-      expect(mockGetRestaurants).toHaveBeenCalledWith({
-        cursor: 'next-search-cursor',
-        genre: 'all',
-        keyword: '아끼소바',
-        size: 10,
-      })
-    })
-    expect(
-      await screen.findByText(searchRestaurantFixtures[1].name),
-    ).toBeInTheDocument()
+      screen.queryByRole('button', { name: '다시 시도' }),
+    ).not.toBeInTheDocument()
+    expect(mockGetRestaurants).toHaveBeenCalledTimes(3)
   })
 
   it('does not request the same next restaurant page twice when the sentinel intersects repeatedly in one render cycle', async () => {

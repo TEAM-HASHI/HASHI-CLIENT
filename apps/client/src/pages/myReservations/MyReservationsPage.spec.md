@@ -5,7 +5,8 @@ Jira: HASHI-73
 ## Purpose
 
 - 로그인한 사용자가 본인의 예약 정보를 상태별로 확인할 수 있는 예약 정보 페이지를 구현합니다.
-- 예약 상태는 `진행 중`, `방문 예정`, `방문 완료`, `예약 취소` 네 가지 chip filter로 구분합니다.
+- 예약 상태는 `진행 중`, `방문 예정`, `방문 완료`, `방문 취소` 네 가지 chip filter로 구분합니다.
+- `방문 취소` 상태에서만 총 건수 오른쪽에 `최신순`을 표시합니다. API 상태값 `CANCELED`와 정렬 요청은 변경하지 않습니다.
 - 각 예약 상태마다 카드 UI와 노출 정보가 다르므로 상태별 카드 컴포넌트를 분리합니다.
 - 예약 리스트는 무한스크롤로 조회합니다.
 - 상단 사용자명/제목과 상태 chip filter는 스크롤해도 고정되어야 합니다.
@@ -55,6 +56,7 @@ apps/client/src/pages/myReservations/
 │   ├── VisitedReservationCard.tsx
 │   └── CanceledReservationCard.tsx
 ├── hooks/
+│   ├── useMyReservationsList.ts
 │   └── useMyReservationsPage.ts
 ├── api/
 │   └── getMyReservations.ts
@@ -76,17 +78,19 @@ apps/client/src/pages/myReservations/
   - 진행 중
   - 방문 예정
   - 방문 완료
-  - 예약 취소
+  - 방문 취소
 - [ ] 상태 필터는 HDS 공통 `Chip` 컴포넌트를 사용합니다.
 - [ ] 선택된 chip은 active 스타일로 표시합니다.
 - [ ] chip 변경 시 해당 상태의 예약 목록을 조회합니다.
 - [ ] chip 변경 시 리스트 스크롤 위치를 맨 위로 이동합니다.
+- [ ] 방문 예정 예약 상세에서 뒤로 돌아오면 기존 필터, 불러온 목록, 스크롤 위치를 복원합니다.
+  - 목록 캐시가 만료된 경우에는 상세 진입 시 보관한 페이지 데이터를 초기값으로 복원한 뒤 서버와 다시 동기화합니다.
 - [ ] chip 변경 시 URL query의 `status` 값을 갱신합니다.
 - [ ] 브라우저 뒤로가기/앞으로가기 시 이전 `status` 필터 상태를 복원합니다.
 - [ ] 상단 고정 영역은 스크롤해도 고정됩니다.
   - 제목
   - 상태 chip filter
-- [ ] 총 N건 / 최신순 영역은 고정하지 않고 리스트 영역과 함께 스크롤됩니다.
+- [ ] 총 N건 영역은 고정하지 않고 리스트 영역과 함께 스크롤됩니다.
 - [ ] 리스트는 무한스크롤로 구현합니다.
 - [ ] 무한스크롤 페이지 사이즈는 10개입니다.
 - [ ] 조회된 리스트가 비어 있으면 shared `Empty` 컴포넌트를 사용합니다.
@@ -95,7 +99,7 @@ apps/client/src/pages/myReservations/
   - 카드별 크기와 비활성 상태는 page-local `ReservationCardImage`가 관리합니다.
   - 이미지 fallback은 HDS `ImageFallback`을 사용합니다.
 - [ ] 각 상태별 카드 UI를 분리합니다.
-- [ ] `진행 중`, `방문 예정`, `예약 취소` 탭은 `GET /api/v1/reservations/me` API로 조회합니다.
+- [ ] `진행 중`, `방문 예정`, `방문 취소` 탭은 `GET /api/v1/reservations/me` API로 조회합니다.
 - [ ] `방문 완료` 탭은 `GET /api/v1/reviews/visited-reservations` API로 조회합니다.
 - [ ] `진행 중` 카드의 `상세보기` 클릭 시 `reservationId`를 route params로 넣어 예약 상세 페이지로 이동합니다.
 - [ ] 페이지 상단 사용자명은 `GET /api/v1/users/me/profile-summary` 결과의 `nickname`을 사용합니다.
@@ -119,7 +123,7 @@ const reservationStatusLabels = {
   IN_PROGRESS: '진행 중',
   UPCOMING: '방문 예정',
   VISITED: '방문 완료',
-  CANCELED: '예약 취소',
+  CANCELED: '방문 취소',
 }
 ```
 
@@ -132,7 +136,7 @@ const reservationStatusLabels = {
 - `진행 중`: `GET /api/v1/reservations/me?status=IN_PROGRESS`
 - `방문 예정`: `GET /api/v1/reservations/me?status=UPCOMING`
 - `방문 완료`: `GET /api/v1/reviews/visited-reservations?reviewStatus=all`
-- `예약 취소`: `GET /api/v1/reservations/me?status=CANCELED`
+- `방문 취소`: `GET /api/v1/reservations/me?status=CANCELED`
 
 방문 완료 탭은 리뷰 데이터와 연결되어 있어 `/api/v1/reservations/me`가 아니라 별도 방문 완료 예약 API를 사용합니다. `VISITED`는 `/api/v1/reservations/me`의 status query로 전달하지 않습니다.
 
@@ -180,7 +184,7 @@ const reservationStatusLabels = {
 - description:
   - `예약을 취소하면 방문 예정 내역에서 삭제되며`
   - `동일한 예약은 다시 접수해야 합니다.`
-- cancel button: `취소하기`
+- cancel button: `예약 취소하기` (Figma `8317:36429`, 공용 ReservationCancelDialog)
 - close button: `닫기`
 
 취소 성공/실패 안내:
@@ -454,7 +458,7 @@ POST /api/v1/reservations/{reservationId}/cancel
 성공 시:
 
 - 현재 `방문 예정` 리스트에서 해당 예약을 제거하거나 refetch합니다.
-- `예약 취소` chip으로 이동해 취소된 예약 목록을 표시합니다.
+- `방문 취소` chip으로 이동해 취소된 예약 목록을 표시합니다.
 - 취소 성공 toast를 보여줍니다.
 - toast 문구는 예약 취소 API 성공 응답의 `message`를 사용합니다.
 
@@ -465,7 +469,7 @@ POST /api/v1/reservations/{reservationId}/cancel
 
 ## State
 
-`useMyReservationsPage`에서 관리합니다.
+`useMyReservationsPage`는 필터 전환, 취소, 화면 이동을 관리합니다. `useMyReservationsList`는 목록 조회, 페이지 추가, 상세 복귀 시 목록 복원을 관리합니다.
 
 local state:
 
@@ -574,7 +578,9 @@ queries:
 
 hooks:
 
+- `useMyReservationsList`
 - `useMyReservationsPage`
+- `shared/hooks/useListReturnRestoration`
 
 constants:
 
@@ -599,7 +605,7 @@ types:
 
 리스트와 함께 스크롤되는 영역:
 
-- 총 N건 / 최신순
+- 총 N건
 - 예약 카드 리스트
 
 구현 기준:
@@ -610,7 +616,7 @@ types:
 - fixed 영역의 elevation은 `shadow-header` 토큰을 사용하고 status filter 하단 `border-b`를 중복 적용하지 않습니다.
 - fixed 영역은 모바일 프레임 너비를 벗어나지 않아야 합니다.
 - z-index는 하드코딩하지 않고 `z-fixed` 토큰을 사용합니다.
-- status chip 변경 시 리스트 컨테이너 또는 window 스크롤을 맨 위로 이동합니다.
+- status chip 변경 또는 예약 취소 성공 시 리스트 컨테이너 스크롤을 맨 위로 이동합니다.
 
 하단 네비게이션:
 
@@ -640,7 +646,7 @@ types:
 초기 loading:
 
 - 상단 고정 영역은 유지합니다.
-- 총 N건 / 최신순 영역과 리스트 영역에 skeleton 또는 loading placeholder를 표시합니다.
+- 총 N건 영역과 리스트 영역에 skeleton 또는 loading placeholder를 표시합니다.
 
 다음 페이지 loading:
 
@@ -658,7 +664,7 @@ types:
 다음 페이지 조회 실패:
 
 - 기존 리스트는 유지합니다.
-- 하단에 재시도 버튼 또는 toast를 표시합니다.
+- 하단에 오류 안내와 재시도 버튼을 표시하고, 재시도 전에는 자동 추가 조회를 멈춥니다.
 
 ## Navigation
 

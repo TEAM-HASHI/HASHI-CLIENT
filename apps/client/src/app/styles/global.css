@@ -5,6 +5,8 @@
 @layer base {
   :root {
     --app-mobile-max-width: 430px;
+    --app-mobile-bottom-action-height: 106px;
+    --app-mobile-bottom-action-compact-height: 82px;
     --safe-area-top: env(safe-area-inset-top);
     --safe-area-bottom: env(safe-area-inset-bottom);
   }
@@ -16,10 +18,15 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-warm-gray-300) transparent;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     background: white;
-    overflow-x: hidden;
+    overflow: hidden;
   }
 
   body {
@@ -71,10 +78,44 @@
   }
 }
 
+@utility app-page-scroll {
+  position: fixed;
+  inset: var(--app-content-top, 0px) 0 var(--app-content-bottom, 0px);
+  width: 100%;
+  max-width: var(--app-mobile-max-width);
+  margin-inline: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  overflow-anchor: none;
+}
+
+@utility app-page-scroll-content {
+  display: flow-root;
+  margin-top: calc(0px - var(--app-content-top, 0px));
+}
+
+[data-page-scroll] .min-h-dvh {
+  min-height: calc(100dvh - var(--app-content-bottom, 0px));
+}
+
+html[style*='overflow: hidden'] [data-page-scroll],
+body[style*='overflow: hidden'] [data-page-scroll] {
+  overflow-y: hidden;
+}
+
 @utility app-mobile-frame {
   width: 100%;
   max-width: var(--app-mobile-max-width);
   margin-inline: auto;
+}
+
+@utility scrollbar-hidden {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @utility app-mobile-fixed-top {
@@ -98,12 +139,35 @@
 }
 
 @utility app-mobile-bottom-nav-layout {
-  min-height: 100dvh;
-  padding-bottom: calc(84px + var(--safe-area-bottom, 0px));
+  min-height: calc(100dvh - var(--app-content-bottom, 0px));
+  padding-bottom: max(
+    0px,
+    calc(84px + var(--safe-area-bottom, 0px) - var(--app-content-bottom, 0px))
+  );
 }
 
 @utility app-mobile-bottom-nav-content {
   min-height: calc(100dvh - 84px - var(--safe-area-bottom, 0px));
+}
+
+@utility app-mobile-bottom-action-content {
+  padding-bottom: max(
+    0px,
+    calc(
+      var(--app-mobile-bottom-action-height) + var(--safe-area-bottom, 0px) -
+        var(--app-content-bottom, 0px)
+    )
+  );
+}
+
+@utility app-mobile-bottom-action-compact-content {
+  padding-bottom: max(
+    0px,
+    calc(
+      var(--app-mobile-bottom-action-compact-height) +
+        var(--safe-area-bottom, 0px) - var(--app-content-bottom, 0px)
+    )
+  );
 }
 
 @keyframes reservation-progress-dot-ripple {

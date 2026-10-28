@@ -14,6 +14,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -153,7 +154,10 @@ const Root = ({
 }: CarouselRootProps) => {
   const [itemCount, setItemCount] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const [startIndex] = useState(() => Math.max(0, index ?? defaultIndex ?? 0))
+  const hasSyncedInitialIndex = useRef(false)
   const [viewportRef, emblaApi] = useEmblaCarousel({
+    startIndex,
     align: 'start',
     loop: false,
   })
@@ -164,7 +168,7 @@ const Root = ({
     onIndexChange,
   })
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!emblaApi) {
       return
     }
@@ -172,13 +176,20 @@ const Root = ({
     const handleSelect = () => {
       setCurrentIndex(emblaApi.selectedScrollSnap())
     }
+    const handleReInit = () => {
+      if (itemCount > 0 && emblaApi.selectedScrollSnap() !== currentIndex) {
+        emblaApi.scrollTo(currentIndex, true)
+      }
+    }
 
     emblaApi.on('select', handleSelect)
+    emblaApi.on('reInit', handleReInit)
 
     return () => {
       emblaApi.off('select', handleSelect)
+      emblaApi.off('reInit', handleReInit)
     }
-  }, [emblaApi, setCurrentIndex])
+  }, [currentIndex, emblaApi, itemCount, setCurrentIndex])
 
   useEffect(() => {
     if (!emblaApi) {
@@ -199,16 +210,16 @@ const Root = ({
     }
   }, [emblaApi])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!emblaApi || itemCount === 0) {
       return
     }
 
-    if (emblaApi.selectedScrollSnap() === currentIndex) {
-      return
+    const shouldJump = !hasSyncedInitialIndex.current || prefersReducedMotion()
+    hasSyncedInitialIndex.current = true
+    if (emblaApi.selectedScrollSnap() !== currentIndex) {
+      emblaApi.scrollTo(currentIndex, shouldJump)
     }
-
-    emblaApi.scrollTo(currentIndex, prefersReducedMotion())
   }, [currentIndex, emblaApi, itemCount])
 
   const value = useMemo<CarouselContextValue>(

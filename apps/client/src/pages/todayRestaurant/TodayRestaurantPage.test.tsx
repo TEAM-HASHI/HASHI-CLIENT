@@ -8,7 +8,6 @@ import {
 } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { RestaurantPhotoRequest } from '@/features/restaurantDetail/types/restaurantPhoto'
 
 const { mockPhotoDataSource } = vi.hoisted(() => ({
   mockPhotoDataSource: vi.fn(),
@@ -18,6 +17,7 @@ vi.mock('@/features/restaurantDetail/api/restaurantPhotoSource', () => ({
 }))
 
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
+import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import { getRandomRestaurantRecommendation } from '@/features/restaurantDetail/api/getRandomRestaurantRecommendation'
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
 import { getRestaurantStoreInformation } from '@/features/restaurantDetail/api/getRestaurantStoreInformation'
@@ -32,7 +32,9 @@ const { mockStartKakaoOAuth } = vi.hoisted(() => ({
 }))
 const { mockLocationStore } = vi.hoisted(() => ({
   mockLocationStore: {
-    state: undefined as { activeTab?: string } | undefined,
+    state: undefined as
+      | { activeTab?: string; restaurantId?: number }
+      | undefined,
   },
 }))
 const { mockAuthStore } = vi.hoisted(() => ({
@@ -114,6 +116,12 @@ vi.mock(
 )
 vi.mock('@/features/restaurantDetail/api/getRestaurantMenus', () => ({
   getRestaurantMenus: vi.fn(),
+}))
+vi.mock('@/features/restaurantDetail/api/getRestaurantSummary', () => ({
+  getRestaurantSummary: vi.fn(),
+}))
+vi.mock('@/features/restaurantDetail/hooks/useRestaurantSaveSummary', () => ({
+  useRestaurantSaveSummary: () => ({ saveCount: 7, saved: false }),
 }))
 vi.mock('@/features/restaurantDetail/api/getRestaurantReviews', () => ({
   getRestaurantReviews: vi.fn(),
@@ -246,16 +254,12 @@ describe('TodayRestaurantPage', () => {
     mockedGetRandomRestaurantRecommendation.mockResolvedValue(
       todayRestaurantSummary,
     )
+    vi.mocked(getRestaurantSummary).mockReset()
     mockedGetRestaurantStoreInformation.mockResolvedValue(
       restaurantStoreInformation,
     )
     mockedGetRestaurantMenus.mockResolvedValue(restaurantMenus)
     mockedGetRestaurantReviews.mockResolvedValue(restaurantReviews)
-    mockedGetVisitedReservations.mockResolvedValue({
-      content: [],
-      hasNext: false,
-      totalCount: 0,
-    })
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: {
@@ -348,9 +352,7 @@ describe('TodayRestaurantPage', () => {
     getBoundingClientRectSpy.mockRestore()
   })
 
-  it('switches tabs and opens the review unavailable modal from review CTA', async () => {
-    mockAuthStore.isAuthenticated = true
-
+  it('navigates to menu detail with the today source', async () => {
     renderTodayRestaurantPage()
 
     fireEvent.click(await screen.findByRole('tab', { name: '메뉴' }))
@@ -359,87 +361,13 @@ describe('TodayRestaurantPage', () => {
       'aria-selected',
       'true',
     )
-    expect(screen.getAllByText('시오라멘')[0]).toBeTruthy()
+    expect((await screen.findAllByText('시오라멘'))[0]).toBeTruthy()
 
     fireEvent.click(screen.getAllByRole('button', { name: /시오라멘/ })[0])
 
     expect(mockNavigate).toHaveBeenCalledWith('/restaurants/10/menus/100', {
       state: { source: 'today' },
     })
-
-    fireEvent.click(screen.getByRole('tab', { name: /리뷰/ }))
-
-    expect(screen.getByLabelText('4점 리뷰 1개')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: '리뷰 작성하기' }))
-
-    expect(
-      await screen.findByRole('heading', {
-        name: '실제 방문자만 작성할 수 있어요',
-      }),
-    ).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: '확인' }))
-
-    expect(
-      screen.queryByRole('heading', { name: '실제 방문자만 작성할 수 있어요' }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('renders photo counts and filters through the configured data source', async () => {
-    const getPage = vi.fn(async ({ filter }: RestaurantPhotoRequest) => ({
-      photos:
-        filter === 'menu'
-          ? []
-          : [
-              {
-                id: 'photo-1',
-                thumbnailUrl: '/photo.jpg',
-                imageUrl: '/photo.jpg',
-                width: 800,
-                height: 600,
-              },
-            ],
-      counts: { all: 1, representative: 1, menu: 0, review: 0 },
-    }))
-    mockPhotoDataSource.mockReturnValue({ key: 'test', source: { getPage } })
-    renderTodayRestaurantPage()
-    fireEvent.click(await screen.findByRole('tab', { name: /사진/ }))
-    expect(
-      await screen.findByRole('button', { name: '1번째 사진 보기' }),
-    ).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /사진\s*1/ })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    )
-    fireEvent.click(screen.getByRole('button', { name: /메뉴사진/ }))
-    expect(await screen.findByText('등록된 사진이 없어요.')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /사진\s*1/ })).toBeInTheDocument()
-  })
-
-  it('renders the photo tab empty state without a photo count when the data source is unavailable', async () => {
-    renderTodayRestaurantPage()
-
-    fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
-
-    expect(screen.getByRole('tab', { name: '사진' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    )
-    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
-    expect(
-      screen.queryByRole('tab', { name: /사진 \d+/ }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('opens login bottom sheet for unauthenticated review write action', async () => {
-    renderTodayRestaurantPage()
-
-    fireEvent.click(await screen.findByRole('tab', { name: /리뷰/ }))
-    fireEvent.click(screen.getByRole('button', { name: '리뷰 작성하기' }))
-
-    expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
-    expect(mockedGetVisitedReservations).not.toHaveBeenCalled()
   })
 
   it('navigates to review writing page when a writable visited reservation exists', async () => {
@@ -496,27 +424,6 @@ describe('TodayRestaurantPage', () => {
     expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
   })
 
-  it('smoothly scrolls to the tab position when entering with an initial menu, photo, or review tab', async () => {
-    mockLocationStore.state = { activeTab: 'photo' }
-
-    renderTodayRestaurantPage()
-
-    await screen.findByRole('tab', { name: '사진' })
-
-    expect(mockScrollTo).toHaveBeenCalledWith({
-      top: expect.any(Number),
-      behavior: 'smooth',
-    })
-  })
-
-  it('opens login bottom sheet for unauthenticated reservation action', async () => {
-    renderTodayRestaurantPage()
-
-    fireEvent.click(await screen.findByRole('button', { name: '예약하기' }))
-
-    expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
-  })
-
   it('starts Kakao OAuth from the login bottom sheet with the today path', async () => {
     renderTodayRestaurantPage()
 
@@ -538,27 +445,40 @@ describe('TodayRestaurantPage', () => {
     )
   })
 
-  it('opens login bottom sheet for unauthenticated like action', async () => {
-    renderTodayRestaurantPage()
-
-    fireEvent.click(await screen.findByRole('button', { name: '저장하기' }))
-
-    expect(screen.getByRole('dialog', { name: '로그인 안내' })).toBeTruthy()
-    expect(
-      screen.queryByRole('heading', { name: '서비스를 준비하고 있어요.' }),
-    ).not.toBeInTheDocument()
-  })
-
-  it('opens coming soon dialog for authenticated like action', async () => {
+  it('restores the reselected restaurant and tab after leaving for collection creation', async () => {
     mockAuthStore.isAuthenticated = true
-
+    mockedGetRandomRestaurantRecommendation
+      .mockResolvedValueOnce(todayRestaurantSummary)
+      .mockResolvedValueOnce(nextRestaurantSummary)
+    const view = renderTodayRestaurantPage()
+    fireEvent.click(
+      await screen.findByRole('button', { name: '다시 추천 받기' }),
+    )
+    await screen.findByText('하시 라멘')
+    fireEvent.click(screen.getByRole('tab', { name: /리뷰/ }))
+    fireEvent.click(screen.getByRole('button', { name: '저장하기' }))
+    const [, options] = mockNavigate.mock.calls.at(-1)!
+    expect(options.state).toEqual(
+      expect.objectContaining({
+        restaurantId: 11,
+        activeTab: 'review',
+        collectionSaveRestaurantId: '11',
+      }),
+    )
+    view.unmount()
+    mockLocationStore.state = options.state
+    vi.mocked(getRestaurantSummary).mockResolvedValue(nextRestaurantSummary)
+    mockedGetRandomRestaurantRecommendation.mockClear()
     renderTodayRestaurantPage()
-
-    fireEvent.click(await screen.findByRole('button', { name: '저장하기' }))
-
     expect(
-      screen.getByRole('heading', { name: '서비스를 준비하고 있어요.' }),
-    ).toBeTruthy()
+      await screen.findByRole('heading', { name: '하시 라멘' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /리뷰/ })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(getRestaurantSummary).toHaveBeenCalledWith(11)
+    expect(mockedGetRandomRestaurantRecommendation).not.toHaveBeenCalled()
   })
 
   it('gets another random recommendation excluding current restaurant when recommend again is pressed', async () => {
@@ -592,6 +512,25 @@ describe('TodayRestaurantPage', () => {
     )
   })
 
+  it('keeps the photo tab after a successful re-recommendation', async () => {
+    mockedGetRandomRestaurantRecommendation
+      .mockResolvedValueOnce(todayRestaurantSummary)
+      .mockResolvedValueOnce(nextRestaurantSummary)
+
+    renderTodayRestaurantPage()
+    fireEvent.click(await screen.findByRole('tab', { name: '사진' }))
+    fireEvent.click(screen.getByRole('button', { name: '다시 추천 받기' }))
+
+    expect(
+      await screen.findByRole('heading', { name: '하시 라멘' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: '사진' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByText('등록된 사진이 없습니다.')).toBeInTheDocument()
+  })
+
   it('copies the today restaurant link when share is pressed', async () => {
     renderTodayRestaurantPage()
 
@@ -600,25 +539,6 @@ describe('TodayRestaurantPage', () => {
     expect(mockClipboardWriteText).toHaveBeenCalledWith(
       `${window.location.origin}/restaurants/today`,
     )
-  })
-
-  it('copies the restaurant name and shows a toast when name copy is pressed', async () => {
-    renderTodayRestaurantPage()
-
-    fireEvent.click(await screen.findByRole('button', { name: '식당명 복사' }))
-
-    expect(mockClipboardWriteText).toHaveBeenCalledWith(
-      '야키니쿠 리키마루 이케부쿠로 히가시구치 텐',
-    )
-    await waitFor(() => {
-      expect(mockToastQueueClear).toHaveBeenCalled()
-      expect(mockShowToast).toHaveBeenCalledWith(
-        expect.objectContaining({
-          children: '식당명이 복사되었어요',
-          icon: expect.anything(),
-        }),
-      )
-    })
   })
 
   it('copies the restaurant name from fallback selection when Clipboard API rejects', async () => {

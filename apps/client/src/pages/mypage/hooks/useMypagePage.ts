@@ -1,32 +1,48 @@
-import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useState, useSyncExternalStore } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { ROUTES } from '@/app/router/path'
+import { useLogoutMutation } from '@/features/auth/hooks/useLogoutMutation'
 import { useMyPointBalanceQuery } from '@/features/point'
 import { useMyReviewCountQuery } from '@/features/review/queries/useMyReviewCountQuery'
 import { useMyProfileSummaryQuery } from '@/features/user'
+import { getMySavedRestaurantCount } from '@/pages/mypage/api/getMySavedRestaurantCount'
 import {
   createMypagePrimaryMenuItems,
   mypageMenuSections,
 } from '@/pages/mypage/constants/mypageMenu'
 import type { MypageMenuAction, MypageSummary } from '@/pages/mypage/types'
-
-const DEFAULT_MYPAGE_SUMMARY: MypageSummary = {
-  nickname: '하시',
-  profileImageUrl: null,
-  availablePoint: 0,
-  myReviewCount: 0,
-}
+import {
+  getAuthSessionVersion,
+  subscribeAuthSession,
+} from '@/shared/auth/authSession'
 
 export const useMypagePage = () => {
   const navigate = useNavigate()
+  const logoutMutation = useLogoutMutation(() => {
+    navigate(ROUTES.loginRequired, { replace: true })
+  })
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false)
   const myReviewCountQuery = useMyReviewCountQuery()
   const pointBalanceQuery = useMyPointBalanceQuery()
   const profileSummaryQuery = useMyProfileSummaryQuery()
+  const sessionVersion = useSyncExternalStore(
+    subscribeAuthSession,
+    getAuthSessionVersion,
+    getAuthSessionVersion,
+  )
+  const savedRestaurantCountQuery = useQuery({
+    queryKey: ['user', 'mySavedRestaurantCount', sessionVersion],
+    queryFn: ({ signal }) => getMySavedRestaurantCount(signal),
+    staleTime: 0,
+    throwOnError: false,
+  })
   const queryError =
     profileSummaryQuery.error ??
     pointBalanceQuery.error ??
-    myReviewCountQuery.error
+    myReviewCountQuery.error ??
+    savedRestaurantCountQuery.error
 
   if (queryError) {
     throw queryError
@@ -35,29 +51,34 @@ export const useMypagePage = () => {
   const isLoading =
     profileSummaryQuery.isPending ||
     pointBalanceQuery.isPending ||
-    myReviewCountQuery.isPending
+    myReviewCountQuery.isPending ||
+    savedRestaurantCountQuery.isPending
 
-  const summary = {
-    ...DEFAULT_MYPAGE_SUMMARY,
-    nickname:
-      profileSummaryQuery.data?.nickname ?? DEFAULT_MYPAGE_SUMMARY.nickname,
-    profileImageUrl:
-      profileSummaryQuery.data?.profileImageUrl ??
-      DEFAULT_MYPAGE_SUMMARY.profileImageUrl,
+  const summary: MypageSummary = {
+    nickname: profileSummaryQuery.data?.nickname ?? '하시',
+    profileImageUrl: profileSummaryQuery.data?.profileImageUrl ?? null,
     availablePoint: pointBalanceQuery.data?.availablePoint ?? 0,
     myReviewCount: myReviewCountQuery.data?.myReviewCount ?? 0,
+    savedRestaurantCount: savedRestaurantCountQuery.data ?? 0,
   }
   const primaryMenuItems = createMypagePrimaryMenuItems({
     myReviewCount: summary.myReviewCount,
+    savedRestaurantCount: summary.savedRestaurantCount,
   })
 
-  const handleComingSoonPress = () => {
-    setIsComingSoonOpen(true)
+  const handleProfileEdit = () => {
+    navigate(ROUTES.profileEdit)
   }
 
   const handleMenuAction = (action: MypageMenuAction) => {
+    if (action.type === 'logout') {
+      if (!logoutMutation.isPending) {
+        logoutMutation.mutate()
+      }
+      return
+    }
     if (action.type === 'comingSoon') {
-      handleComingSoonPress()
+      setIsComingSoonOpen(true)
       return
     }
 
@@ -65,20 +86,17 @@ export const useMypagePage = () => {
       navigate(action.path)
       return
     }
-
-    if (!action.url) {
-      handleComingSoonPress()
-    }
   }
 
   return {
+    isLoggingOut: logoutMutation.isPending,
     isComingSoonOpen,
     isLoading,
     menuSections: mypageMenuSections,
     primaryMenuItems,
     setIsComingSoonOpen,
     summary,
-    handleComingSoonPress,
+    handleProfileEdit,
     handleMenuAction,
   }
 }

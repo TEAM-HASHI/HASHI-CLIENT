@@ -50,7 +50,7 @@ export const ReservationCancelDialog = ({
             onClick={onConfirmCancelPress}
             type="button"
           >
-            취소하기
+            예약 취소하기
           </button>
         </Dialog.Footer>
       </Dialog.Content>

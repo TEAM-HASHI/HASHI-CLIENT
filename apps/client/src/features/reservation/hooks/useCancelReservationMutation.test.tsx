@@ -6,6 +6,7 @@ import { act, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { pointQueryKeys } from '@/features/point/queries/pointQueryKeys'
 import { cancelReservation } from '@/features/reservation/api/cancelReservation'
 import { getMyReservations } from '@/features/reservation/api/getMyReservations'
 import type {
@@ -58,8 +59,41 @@ describe('useCancelReservationMutation', () => {
     vi.restoreAllMocks()
   })
 
+  it('keeps the point cache when cancellation fails', async () => {
+    const queryClient = createQueryClient()
+    queryClient.setQueryData(pointQueryKeys.myBalance(), {
+      availablePoint: 7000,
+    })
+    mockedCancelReservation.mockRejectedValue(new Error('cancel failed'))
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+    const { result, unmount } = renderHook(
+      () => useCancelReservationMutation(),
+      { wrapper },
+    )
+
+    await act(async () => {
+      await expect(result.current.mutateAsync(21)).rejects.toThrow(
+        'cancel failed',
+      )
+    })
+
+    expect(
+      queryClient.getQueryState(pointQueryKeys.myBalance())?.isInvalidated,
+    ).toBe(false)
+    expect(queryClient.getQueryData(pointQueryKeys.myBalance())).toEqual({
+      availablePoint: 7000,
+    })
+    unmount()
+    queryClient.clear()
+  })
+
   it('runs page-local preparation before shared cache synchronization and success toast', async () => {
     const queryClient = createQueryClient()
+    queryClient.setQueryData(pointQueryKeys.myBalance(), {
+      availablePoint: 7000,
+    })
     const events: string[] = []
     const onCanceled = vi.fn(() => {
       events.push('page')
@@ -113,6 +147,9 @@ describe('useCancelReservationMutation', () => {
     })
 
     expect(events).toEqual(['page', 'sync', 'toast'])
+    expect(
+      queryClient.getQueryState(pointQueryKeys.myBalance())?.isInvalidated,
+    ).toBe(true)
     expect(onCanceled).toHaveBeenCalledWith({
       message: '예약 취소 요청이 완료되었습니다',
       reservation: canceledReservation,

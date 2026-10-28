@@ -1,8 +1,8 @@
 import type { SyntheticEvent } from 'react'
-import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { useProfileNewForm } from '@/pages/profileNew/hooks/useProfileNewForm'
+import { useProfileForm } from '@/features/profile/hooks/useProfileForm'
+import { useProfileAvailability } from '@/features/profile/hooks/useProfileAvailability'
 import { useProfileNewMutation } from '@/pages/profileNew/hooks/useProfileNewMutation'
 import { useUploadedProfileImageKey } from '@/pages/profileNew/hooks/useUploadedProfileImageKey'
 import { getAllowedProfileNewRedirectPath } from '@/pages/profileNew/utils/profileNewRedirect'
@@ -12,8 +12,13 @@ export const PROFILE_NEW_FORM_ID = 'profile-new-form'
 export const useProfileNewPage = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [boundaryError, setBoundaryError] = useState<unknown>()
   const { getUploadedProfileImageKey } = useUploadedProfileImageKey()
+  const form = useProfileForm()
+  const availability = useProfileAvailability({
+    nickname: form.fields.nickname.value,
+    phoneNumber: form.fields.phoneNumber.value,
+    email: form.fields.email.value,
+  })
 
   const handleBackClick = () => {
     navigate(-1)
@@ -24,16 +29,17 @@ export const useProfileNewPage = () => {
       getAllowedProfileNewRedirectPath(searchParams.get('redirectTo')),
     getUploadedProfileImageKey,
     navigateTo: navigate,
-    onUnhandledError: setBoundaryError,
     setFieldError: (...args) => form.submit.setFieldError(...args),
     setFormError: (message) => form.submit.setFormError(message),
   })
-  const form = useProfileNewForm({
-    isSubmitting: profileNewMutation.isPending,
-  })
+  const isSubmitting = profileNewMutation.isPending
+  const canSubmit =
+    form.submit.canSubmit && availability.canSubmit && !isSubmitting
 
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    if (!canSubmit) return
 
     const profileDraft = form.submit.createProfileDraft()
 
@@ -45,10 +51,12 @@ export const useProfileNewPage = () => {
   }
 
   return {
-    boundaryError,
     form,
+    fields: availability.bindFields(form.fields),
+    canSubmit,
     formId: PROFILE_NEW_FORM_ID,
     handleBackClick,
     handleSubmit,
+    isSubmitting,
   }
 }

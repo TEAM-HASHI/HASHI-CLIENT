@@ -1,141 +1,147 @@
 import '@testing-library/jest-dom/vitest'
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { createRef } from 'react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
+import { createRef, useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { SearchBar, SearchField } from './SearchBar'
+import { SearchBar } from './SearchBar'
 
-afterEach(() => {
-  cleanup()
-})
+afterEach(cleanup)
 
 describe('SearchBar', () => {
-  it('renders a search input with an accessible name', () => {
-    render(<SearchBar aria-label="식당 검색" />)
+  it('syncs the clear button with a default value supplied after mount', () => {
+    const { rerender } = render(<SearchBar aria-label="검색" defaultValue="" />)
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
 
-    const input = screen.getByRole('searchbox', { name: '식당 검색' })
-
-    expect(input).toHaveAttribute('type', 'search')
-  })
-
-  it('applies redesigned layout, state colors, and typography', () => {
-    render(<SearchBar aria-label="식당 검색" placeholder="플레이스홀더" />)
-
-    const input = screen.getByRole('searchbox', { name: '식당 검색' })
-    const root = input.parentElement
-
-    expect(root).toHaveClass(
-      'h-[45px]',
-      'rounded-[10px]',
-      'bg-primary-100',
-      'hover:bg-warm-gray-50',
-      'active:bg-warm-gray-100',
-      'py-4',
-      'pl-3',
-      'pr-3',
-    )
-    expect(input).toHaveClass(
-      'typo-body-4',
-      'text-black',
-      'placeholder:text-warm-gray-300',
-    )
-  })
-
-  it('renders the search icon by default', () => {
-    const { container } = render(<SearchBar aria-label="식당 검색" />)
-
-    const input = screen.getByRole('searchbox', { name: '식당 검색' })
-
-    expect(input.parentElement).toHaveClass('gap-2')
-    expect(container.querySelector('svg')).toHaveClass(
-      'size-6',
-      'text-cool-gray-700',
-    )
-  })
-
-  it('can hide the search icon', () => {
-    const { container } = render(
-      <SearchBar aria-label="식당 검색" icon={false} />,
-    )
-
-    const input = screen.getByRole('searchbox', { name: '식당 검색' })
-
-    expect(input.parentElement).not.toHaveClass('gap-2')
-    expect(container.querySelector('svg')).not.toBeInTheDocument()
-  })
-
-  it('renders caller-provided placeholder copy', () => {
-    render(
-      <SearchBar
-        aria-label="식당 검색"
-        placeholder="식당 혹은 메뉴를 검색해보세요"
-      />,
-    )
-
+    rerender(<SearchBar aria-label="검색" defaultValue="초밥" />)
+    expect(screen.getByRole('searchbox')).toHaveValue('초밥')
     expect(
-      screen.getByPlaceholderText('식당 혹은 메뉴를 검색해보세요'),
+      screen.getByRole('button', { name: '검색어 지우기' }),
     ).toBeInTheDocument()
+
+    rerender(<SearchBar aria-label="검색" defaultValue="" />)
+    expect(screen.getByRole('searchbox')).toHaveValue('')
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
-  it('supports controlled value changes', () => {
-    const handleChange = vi.fn()
-
-    render(
-      <SearchBar aria-label="식당 검색" onChange={handleChange} value="초밥" />,
-    )
-
-    const input = screen.getByRole('searchbox', {
-      name: '식당 검색',
-    }) as HTMLInputElement
-
-    expect(input).toHaveValue('초밥')
-
+  it('preserves user input and clear button state when the default changes', () => {
+    const { rerender } = render(<SearchBar aria-label="검색" defaultValue="" />)
+    const input = screen.getByRole('searchbox')
     fireEvent.change(input, { target: { value: '라멘' } })
 
-    expect(handleChange).toHaveBeenCalledTimes(1)
+    rerender(<SearchBar aria-label="검색" defaultValue="초밥" />)
+    expect(input).toHaveValue('라멘')
+    expect(
+      screen.getByRole('button', { name: '검색어 지우기' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '검색어 지우기' }))
+    rerender(<SearchBar aria-label="검색" defaultValue="우동" />)
+    expect(input).toHaveValue('')
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 
-  it('keeps end padding for long input values', () => {
+  it('restores the native default value and clear button after a form reset, but respects cancelled resets', async () => {
+    const renderForm = (cancelReset = false) => (
+      <form
+        onReset={(event) => {
+          if (cancelReset) event.preventDefault()
+        }}
+      >
+        <SearchBar aria-label="검색" defaultValue="초밥" />
+      </form>
+    )
+    const { rerender } = render(renderForm())
+    const input = screen.getByRole('searchbox') as HTMLInputElement
+    fireEvent.click(screen.getByRole('button'))
+    expect(input).toHaveValue('')
+    await act(async () => input.form!.reset())
+    await waitFor(() => {
+      expect(input).toHaveValue('초밥')
+      expect(screen.getByRole('button')).toBeInTheDocument()
+    })
+    fireEvent.change(input, { target: { value: '우동' } })
+    await act(async () => input.form!.reset())
+    await waitFor(() => expect(input).toHaveValue('초밥'))
+
+    rerender(renderForm(true))
+    fireEvent.click(screen.getByRole('button'))
+    await act(async () => input.form!.reset())
+    await waitFor(() => expect(input).toHaveValue(''))
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('preserves callback ref cleanup until unmount rather than running it on input changes', () => {
+    const disposeRef = vi.fn()
+    const callbackRef = vi.fn(() => disposeRef)
+    const { unmount } = render(
+      <SearchBar aria-label="검색" defaultValue="초밥" ref={callbackRef} />,
+    )
+    fireEvent.change(screen.getByRole('searchbox'), {
+      target: { value: '우동' },
+    })
+    expect(disposeRef).not.toHaveBeenCalled()
+    unmount()
+    expect(disposeRef).toHaveBeenCalledOnce()
+  })
+
+  it('clears uncontrolled input and restores focus without submitting the form', () => {
+    const onSubmit = vi.fn()
+    const inputRef = createRef<HTMLInputElement>()
+    render(
+      <form onSubmit={onSubmit}>
+        <SearchBar ref={inputRef} aria-label="검색" defaultValue="초밥" />
+      </form>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: '검색어 지우기' }))
+    expect(inputRef.current).toHaveValue('')
+    expect(inputRef.current).toHaveFocus()
+    expect(onSubmit).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+    fireEvent.change(inputRef.current!, { target: { value: '라멘' } })
+    expect(screen.getByRole('button')).toBeInTheDocument()
+  })
+
+  it('uses parent state for controlled clearing and subsequent input', () => {
+    const Controlled = () => {
+      const [value, setValue] = useState('초밥')
+      return (
+        <SearchBar
+          aria-label="검색"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onClear={() => setValue('')}
+        />
+      )
+    }
+    render(<Controlled />)
+    fireEvent.click(screen.getByRole('button', { name: '검색어 지우기' }))
+    const input = screen.getByRole('searchbox')
+    expect(input).toHaveValue('')
+    fireEvent.change(input, { target: { value: '우동' } })
+    expect(input).toHaveValue('우동')
+    expect(screen.getByRole('button')).toBeInTheDocument()
+  })
+
+  it('does not mutate controlled values when the parent keeps them unchanged', () => {
+    const onClear = vi.fn()
     render(
       <SearchBar
-        aria-label="식당 검색"
-        value="긴 검색어가 입력되어도 오른쪽 둥근 경계에 붙지 않습니다"
-        readOnly
+        aria-label="검색"
+        value="초밥"
+        onClear={onClear}
+        onChange={() => {}}
       />,
     )
-
-    const input = screen.getByRole('searchbox', { name: '식당 검색' })
-
-    expect(input.parentElement).toHaveClass('pr-3')
-    expect(input).toHaveClass('min-w-0', 'flex-1')
-  })
-
-  it('supports an uncontrolled default value', () => {
-    render(<SearchBar aria-label="식당 검색" defaultValue="돈카츠" />)
-
-    expect(screen.getByRole('searchbox', { name: '식당 검색' })).toHaveValue(
-      '돈카츠',
-    )
-  })
-
-  it('disables input interaction when disabled', () => {
-    render(<SearchBar aria-label="식당 검색" disabled />)
-
-    expect(screen.getByRole('searchbox', { name: '식당 검색' })).toBeDisabled()
-  })
-
-  it('forwards refs to the native input', () => {
-    const inputRef = createRef<HTMLInputElement>()
-
-    render(<SearchBar ref={inputRef} aria-label="식당 검색" />)
-
-    expect(inputRef.current).toBe(
-      screen.getByRole('searchbox', { name: '식당 검색' }),
-    )
-  })
-
-  it('keeps SearchField as a compatibility alias', () => {
-    expect(SearchField).toBe(SearchBar)
+    fireEvent.click(screen.getByRole('button'))
+    expect(onClear).toHaveBeenCalledOnce()
+    expect(screen.getByRole('searchbox')).toHaveValue('초밥')
   })
 })

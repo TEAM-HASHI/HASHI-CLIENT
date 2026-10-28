@@ -92,6 +92,21 @@ Object.defineProperty(window, 'scrollTo', {
   value: vi.fn(),
 })
 
+Object.defineProperty(HTMLElement.prototype, 'scrollTo', {
+  configurable: true,
+  writable: true,
+  value(options: ScrollToOptions | number, y?: number) {
+    if (typeof options === 'number') {
+      this.scrollLeft = options
+      this.scrollTop = y ?? 0
+    } else {
+      if (options.left !== undefined) this.scrollLeft = options.left
+      if (options.top !== undefined) this.scrollTop = options.top
+    }
+    this.dispatchEvent(new Event('scroll'))
+  },
+})
+
 type TestGlobal = typeof globalThis & {
   IntersectionObserver?: unknown
   matchMedia?: unknown

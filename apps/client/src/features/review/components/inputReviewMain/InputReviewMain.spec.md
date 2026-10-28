@@ -30,14 +30,16 @@
 <InputReviewMain
   value={reviewText}
   photoFiles={photoFiles}
+  photoUrls={existingPhotoUrls}
   onValueChange={setReviewText}
   onPhotoFilesChange={setPhotoFiles}
+  onPhotoUrlsChange={setExistingPhotoUrls}
 />
 ```
 
 - public export 여부: `apps/client/src/features/review/components/index.ts`에서 named export합니다.
 - public props type export 여부: `InputReviewMainProps`를 함께 export합니다.
-- 호출부가 소유하는 책임: 리뷰 본문 state, 사진 파일 state, 저장 가능 여부, API mutation.
+- 호출부가 소유하는 책임: 리뷰 본문 state, 새 사진 파일 state, 기존 사진 URL state, 저장 가능 여부, API mutation.
 - 컴포넌트가 소유하지 않는 책임: 파일 업로드, 서버 데이터 shape, route params, 리뷰 저장/수정 요청.
 - 리뷰 입력 제한값과 에러 문구는 `apps/client/src/features/review/constants/reviewInputRules.ts`를 기준으로 사용합니다.
 
@@ -49,21 +51,23 @@
 - [x] 사진 첨부 트리거를 누르면 숨겨진 file input을 엽니다.
 - [x] file input은 `accept="image/jpeg,image/png,image/webp"`와 `multiple`을 가집니다.
 - [x] file input이 변경되면 JPEG, PNG, WEBP이면서 장당 5MB 이하인 파일만 기존 `photoFiles` 뒤에 이어 `onPhotoFilesChange`에 전달합니다.
+- [x] `photoUrls`가 있으면 기존 리뷰 사진 미리보기로 표시하고, URL을 `File`로 변환하거나 업로드하지 않습니다.
+- [x] 기존 리뷰 사진 삭제 버튼을 누르면 해당 URL을 제외한 배열을 `onPhotoUrlsChange`에 전달합니다.
+- [x] 기존 사진의 별도 식별자를 관리하는 화면은 `onPhotoUrlDelete(index)`를 넘길 수 있고, 이 경우 삭제한 인덱스를 전달합니다.
 - [x] 지원하지 않는 MIME 타입은 `photoFiles`에 추가하지 않고 `JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.`를 표시합니다.
 - [x] 장당 5MB를 초과한 파일은 `photoFiles`에 추가하지 않고 `용량이 초과되었어요.`를 표시합니다.
-- [x] 선택된 사진이 10장이 되면 사진 추가 버튼과 숨겨진 file input을 비활성화합니다.
-- [x] 남은 사진 슬롯보다 많은 파일을 선택하면 최대 10장까지만 `photoFiles`에 추가하고 `사진은 최대 10장까지 첨부할 수 있어요.`를 표시합니다.
-- [x] 선택된 `photoFiles`가 있으면 사진 추가 버튼과 선택된 이미지 미리보기를 가로 스크롤 목록으로 표시합니다.
+- [x] 기존 사진 URL과 새 파일의 합계가 10장이 되면 사진 추가 버튼과 숨겨진 file input을 비활성화합니다.
+- [x] 남은 사진 슬롯보다 많은 파일을 선택하면 기존 사진 URL 수를 포함해 최대 10장까지만 `photoFiles`에 추가하고 `사진은 최대 10장까지 첨부할 수 있어요.`를 표시합니다.
+- [x] 선택된 `photoFiles` 또는 `photoUrls`가 있으면 사진 추가 버튼과 선택된 이미지 미리보기를 가로 스크롤 목록으로 표시합니다.
 - [x] 선택된 이미지 미리보기 우상단에는 18px 삭제 아이콘 버튼을 표시합니다.
 - [x] 이미지 삭제 버튼을 누르면 해당 이미지를 제외한 `photoFiles`를 `onPhotoFilesChange`에 전달합니다.
 - [x] 이미지 삭제 버튼을 누르면 기존 사진 오류 메시지를 초기화합니다.
 - [x] 리뷰 본문 textarea는 HDS `Textarea`를 사용하며, 공통 Input 리디자인 이후에도 `min-h-57.5`로 기존 최소 높이 `230px`를 유지합니다.
 - [x] textarea placeholder는 `리뷰를 작성해 주세요.`입니다.
-- [x] textarea에는 `maxLength`를 전달해 HDS `Textarea`의 입력 제한 로직을 사용합니다.
+- [x] textarea는 `maxLengthBehavior="prevent"`로 최대 1000자까지만 입력받습니다. 직접 입력과 붙여넣기 모두 제한하며, 제한에 도달해도 삭제와 선택 영역 교체는 가능합니다.
 - [x] textarea 본문은 Figma `Long Body 1` 기준인 `typo-long-body-1`을 사용합니다.
 - [x] 입력하지 않은 빈 상태의 helper text는 `10자 이상`입니다.
 - [x] textarea가 blur되었거나 본문이 입력된 뒤 10자 미만이면 helper text를 `10자 이상 작성해주세요.`로 표시합니다.
-- [x] 호출부에서 전달한 본문 값이 최대 글자 수를 초과한 상태면 helper text를 `글자 수 제한을 초과했어요.`로 표시합니다.
 - [x] 글자 수 counter는 기본 `0/1000`을 표시합니다.
 - [x] textarea가 변경되면 `onValueChange`에 다음 문자열을 전달합니다.
 - [x] `disabled`이면 사진 트리거와 textarea가 비활성화됩니다.
@@ -100,7 +104,7 @@ InputReviewMain
 
 - type: `(value: string) => void`
 - required: `false`
-- description: textarea 변경 시 HDS `Textarea`의 `maxLength` 제한을 거친 다음 문자열을 호출부에 전달합니다.
+- description: textarea 변경 시 최대 글자 수로 제한한 값을 호출부에 전달합니다.
 
 ### `photoFiles`
 
@@ -115,12 +119,31 @@ InputReviewMain
 - required: `false`
 - description: file input 변경 시 선택된 file 배열을 호출부에 전달합니다.
 
+### `photoUrls`
+
+- type: `string[]`
+- required: `false`
+- default: `[]`
+- description: 서버에서 조회한 기존 리뷰 사진 URL 목록입니다. 컴포넌트는 URL을 그대로 미리보기로 표시하고, 새 파일과 합산해 사진 최대 개수를 계산합니다.
+
+### `onPhotoUrlsChange`
+
+- type: `(urls: string[]) => void`
+- required: `false`
+- description: 기존 사진 삭제 시 남은 URL 배열을 호출부에 전달합니다. 서버 저장이나 이미지 삭제 API는 호출하지 않습니다.
+
+### `onPhotoUrlDelete`
+
+- type: `(index: number) => void`
+- required: `false`
+- description: 기존 사진을 URL과 별도 식별자로 함께 관리할 때 삭제할 기존 사진의 인덱스를 전달합니다. 제공되면 `onPhotoUrlsChange` 대신 호출합니다.
+
 ### `maxLength`
 
 - type: `number`
 - required: `false`
 - default: `1000`
-- description: 리뷰 본문 최대 글자 수 기준입니다. HDS `Textarea`에 전달해 입력 값을 제한하고 helper text와 counter 상태 판단에 사용합니다.
+- description: 리뷰 본문 최대 글자 수입니다. textarea는 이 길이에 도달하면 이후 입력을 받지 않습니다.
 
 ### `disabled`
 
@@ -139,8 +162,8 @@ InputReviewMain
 
 - local state: generated id, textarea blur 여부를 사용합니다.
 - photo uploader local state: file input ref, photo object URL 목록, 사진 형식/용량/개수 오류 메시지를 사용합니다.
-- derived state: `hasReviewTextBlurred || value.length > 0`, `value.length < 10`, `value.length > maxLength`
-- controlled state: `value`
+- derived state: `hasReviewTextBlurred || value.length > 0`, `value.length < 10`
+- controlled state: `value`, `photoFiles`, `photoUrls`
 - uncontrolled state: 없음
 - loading state: 없음
 - error state: 지원하지 않는 사진 형식 오류 메시지, 사진 장당 5MB 초과 오류 메시지, 사진 최대 10장 초과 오류 메시지
@@ -150,28 +173,26 @@ InputReviewMain
 
 1. 컴포넌트가 렌더링되면 사진 첨부 트리거와 textarea를 표시합니다.
 2. 사용자가 사진 첨부 트리거를 누르면 숨겨진 file input click을 실행합니다.
-3. 사용자가 파일을 선택하면 JPEG, PNG, WEBP이면서 5MB 이하인 파일 중 남은 사진 슬롯 수만큼만 `onPhotoFilesChange?.([...photoFiles, ...nextFiles])`로 전달합니다.
+3. 사용자가 파일을 선택하면 JPEG, PNG, WEBP이면서 5MB 이하인 파일 중 `photoFiles`와 `photoUrls`를 합산한 남은 사진 슬롯 수만큼만 `onPhotoFilesChange?.([...photoFiles, ...nextFiles])`로 전달합니다.
 4. 지원하지 않는 MIME 타입이 있으면 해당 파일은 거절하고 `JPG, PNG, WEBP 형식의 사진만 첨부할 수 있어요.`를 표시합니다.
 5. 5MB를 초과한 파일이 있으면 해당 파일은 거절하고 `용량이 초과되었어요.`를 표시합니다.
 6. 남은 사진 슬롯보다 많은 파일을 선택하면 초과 파일은 거절하고 `사진은 최대 10장까지 첨부할 수 있어요.`를 표시합니다.
-7. 선택된 사진이 10장이면 사진 추가 버튼과 file input은 비활성화됩니다.
-8. 선택된 `photoFiles`가 있으면 사진 추가 버튼과 이미지 미리보기를 `overflow-x-auto` 가로 스크롤 목록으로 표시합니다.
-9. 이미지 미리보기의 삭제 버튼을 누르면 사진 오류 메시지를 초기화하고, 해당 file index를 제외한 다음 `photoFiles` 배열을 `onPhotoFilesChange`에 전달합니다.
-10. 사용자가 textarea를 변경하면 HDS `Textarea`가 `maxLength` 기준으로 제한한 다음 `onValueChange?.(nextValue)`를 호출합니다.
+7. 기존 사진 URL과 새 파일의 합계가 10장이면 사진 추가 버튼과 file input은 비활성화됩니다.
+8. 선택된 `photoFiles` 또는 `photoUrls`가 있으면 사진 추가 버튼과 이미지 미리보기를 `overflow-x-auto` 가로 스크롤 목록으로 표시합니다.
+9. 이미지 미리보기의 삭제 버튼을 누르면 사진 오류 메시지를 초기화합니다. 기존 사진이면 `onPhotoUrlDelete`가 있을 때 해당 index를 전달하고, 없으면 해당 URL을 제외한 `photoUrls` 배열을 `onPhotoUrlsChange`에 전달합니다. 새 파일이면 해당 file index를 제외한 `photoFiles` 배열을 `onPhotoFilesChange`에 전달합니다.
+10. 사용자가 textarea를 변경하면 최대 글자 수까지만 `onValueChange?.(nextValue)`로 전달합니다.
 11. 입력하지 않은 빈 상태에서는 helper text를 `10자 이상`으로 표시합니다.
 12. textarea가 blur되었거나 본문이 입력된 뒤 `value.length < 10`이면 helper text는 `10자 이상 작성해주세요.`입니다.
-13. 호출부에서 전달한 `value.length > maxLength`이면 helper text는 `글자 수 제한을 초과했어요.`입니다.
-14. `disabled=true`이면 사진 첨부 트리거, 이미지 삭제 버튼, textarea는 입력을 받지 않습니다.
+13. `disabled=true`이면 사진 첨부 트리거, 이미지 삭제 버튼, textarea는 입력을 받지 않습니다.
 
 ## Validation
 
 - 리뷰 본문 최소 10자 helper text는 컴포넌트가 표시합니다.
-- 리뷰 본문 최대 글자 수 초과 입력은 HDS `Textarea`의 `maxLength` 입력 제한으로 먼저 막습니다.
-- 이미 초과된 controlled value가 전달된 경우의 최대 글자 수 초과 helper text는 컴포넌트가 표시합니다.
+- 리뷰 본문은 최대 글자 수에 도달하면 이후 입력을 받지 않습니다.
 - submit 가능 여부는 호출부가 처리합니다.
 - 사진 MIME 타입 검증은 컴포넌트가 처리하고, JPEG, PNG, WEBP가 아닌 파일은 호출부 상태로 전달하지 않습니다.
 - 사진 장당 5MB 검증은 컴포넌트가 처리하고, 초과 파일은 호출부 상태로 전달하지 않습니다.
-- 사진 최대 10장 추가 제한은 컴포넌트가 처리하고, 초과 파일은 호출부 상태로 전달하지 않습니다.
+- 사진 최대 10장 추가 제한은 기존 사진 URL과 새 파일의 합산 수를 기준으로 컴포넌트가 처리하고, 초과 파일은 호출부 상태로 전달하지 않습니다.
 - 사진 최대 10장 저장 가능 여부 검증은 호출부가 처리합니다.
 - invalid 상태에 따른 저장 가능 여부는 호출부가 처리합니다.
 
@@ -181,6 +202,7 @@ InputReviewMain
 - 장당 5MB를 초과한 사진 파일은 추가하지 않고 사진 영역에 오류 메시지를 표시합니다.
 - 최대 10장을 초과한 사진 파일은 추가하지 않고 사진 영역에 오류 메시지를 표시합니다.
 - 선택된 사진을 삭제하면 조건이 해소된 뒤 stale error가 남지 않도록 사진 오류 메시지를 초기화합니다.
+- 기존 사진 URL 삭제는 호출부의 local state만 갱신하며 서버 이미지나 리뷰 데이터를 변경하지 않습니다.
 - 업로드 실패, 리뷰 저장 실패, 네트워크 에러, retry는 호출부 또는 mutation 계층이 처리합니다.
 
 ## Styling
@@ -190,18 +212,18 @@ InputReviewMain
 - spacing: Figma 기준 root `px-5 py-7`, title 영역 `gap-1`, content 영역 `gap-5`를 사용합니다.
 - photo input: parent width, height `130px`, `max-w-full`, border `warm-gray-100`, radius `10px`, icon/text center alignment를 사용합니다.
 - selected photo list: parent width, `max-w-full`, `min-w-0`, `overflow-x-auto`, `overflow-y-hidden`, hidden scrollbar horizontal scroll, 130px tile, selected image `rounded-[10px] object-cover`를 사용합니다.
-- textarea: HDS `Textarea`를 사용하고, 본문 text style은 `textareaClassName="typo-long-body-1"`로 주입합니다. Figma에 없는 추가 focus border는 노출하지 않습니다.
+- textarea: HDS `Textarea`를 사용하고, 본문 text style과 20px 내부 여백을 `textareaClassName`으로 주입합니다. Figma에 없는 추가 focus border는 노출하지 않습니다.
 - responsive: 부모 너비를 따르고 내부 control은 고정 max width 없이 `w-full`, `max-w-full`, `min-w-0`, `overflow-x-hidden` 조합으로 viewport 밖으로 밀리지 않게 합니다.
 - layout shift 방지 조건: 사진 첨부 영역은 `h-[130px]`, textarea는 HDS min-height `230px`를 유지합니다.
 
 ## Accessibility
 
 - 사진 첨부 트리거는 native `button type="button"`이며 visible text를 accessible name으로 사용합니다.
-- 이미지 삭제 버튼은 native `button type="button"`이며 `${fileName} 사진 삭제` accessible name을 사용합니다.
+- 이미지 삭제 버튼은 native `button type="button"`이며 `${fileName} 사진 삭제` accessible name을 사용합니다. 기존 사진 URL은 `기존 리뷰 사진 {n} 사진 삭제`를 사용합니다.
 - file input은 `aria-label="리뷰 사진 첨부"`를 가집니다.
 - textarea는 `aria-label="리뷰 내용"`을 가집니다.
 - keyboard interaction: 사진 첨부는 button, textarea는 native textarea interaction을 사용합니다.
-- counter는 HDS `Textarea`의 `aria-live="polite"`를 사용합니다.
+- counter는 `InputReviewMain`이 직접 렌더링하며 `aria-live="polite"`를 사용합니다.
 - disabled state는 native disabled 속성을 사용합니다.
 
 ## Dependencies

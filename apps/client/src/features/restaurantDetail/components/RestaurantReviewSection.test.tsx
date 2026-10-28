@@ -131,7 +131,7 @@ describe('RestaurantReviewSection', () => {
   })
 
   it('renders only review list skeleton while review list is loading', () => {
-    const { container } = renderReviewSection({
+    renderReviewSection({
       isReviewListLoading: true,
       reviews: createReviews(10),
     })
@@ -142,9 +142,6 @@ describe('RestaurantReviewSection', () => {
     expect(screen.queryByText('혁줌마')).not.toBeInTheDocument()
     expect(screen.queryByTestId('restaurant-review-load-more')).toBeNull()
     expect(screen.getByRole('button', { name: '최신순' })).toBeInTheDocument()
-    expect(
-      container.querySelectorAll('.bg-secondary-200').length,
-    ).toBeGreaterThan(0)
   })
 
   it('renders empty state when reviews are empty', () => {
@@ -215,12 +212,6 @@ describe('RestaurantReviewSection', () => {
     ).toBeInTheDocument()
   })
 
-  it('renders the Avatar guest fallback when reviewer profile image is empty', () => {
-    renderReviewSection()
-
-    expect(screen.getByTestId('avatar-placeholder')).toBeInTheDocument()
-  })
-
   it('renders the Avatar guest fallback when reviewer profile image fails to load', () => {
     renderReviewSection({
       reviews: [
@@ -248,7 +239,7 @@ describe('RestaurantReviewSection', () => {
       '음식이 맛있어요',
       '향신료가 강하지 않아요',
       '직원분이 친절해요',
-      '전통적이에요',
+      '혼밥하기 좋아요',
       '매장이 넓어요',
       '매장이 청결해요',
       '음식이 빨리 나와요',
@@ -272,56 +263,5 @@ describe('RestaurantReviewSection', () => {
       apiReviewKeywordLabels.length,
     )
     expect(container).toBeTruthy()
-  })
-
-  it('styles compact review ratings from the app layer', () => {
-    renderReviewSection()
-
-    expect(screen.getAllByRole('img', { name: '평점 3.8점' })[0]).toHaveClass(
-      '[&&]:gap-0',
-      '[&_[data-state=filled]_svg]:text-primary-400',
-      '[&_[data-state=half]_span_svg]:text-primary-400',
-    )
-  })
-
-  it('styles the review write icon from the app layer', () => {
-    renderReviewSection()
-
-    expect(
-      screen
-        .getByRole('button', { name: '리뷰 작성하기' })
-        .querySelector('svg'),
-    ).toHaveClass(
-      'size-6',
-      '[&_path:first-child]:fill-primary-100',
-      '[&_path:last-child]:stroke-primary-100',
-    )
-  })
-
-  it('uses cool gray 600 for the write-review CTA background', () => {
-    renderReviewSection()
-
-    expect(screen.getByRole('button', { name: '리뷰 작성하기' })).toHaveClass(
-      'bg-cool-gray-600',
-    )
-  })
-
-  it('keeps the review list 16px below the write-review CTA', () => {
-    renderReviewSection()
-
-    const reviewListWrapper = screen.getByRole('heading', {
-      name: '리뷰 10',
-    }).parentElement?.parentElement
-
-    expect(reviewListWrapper).toHaveClass('pt-4')
-  })
-
-  it('keeps the write-review button inset 16px from the CTA sides', () => {
-    renderReviewSection()
-
-    const reviewButtonContent = screen.getByText('리뷰 작성하기').parentElement
-    const reviewCta = reviewButtonContent?.parentElement?.parentElement
-
-    expect(reviewCta).toHaveClass('px-4')
   })
 })

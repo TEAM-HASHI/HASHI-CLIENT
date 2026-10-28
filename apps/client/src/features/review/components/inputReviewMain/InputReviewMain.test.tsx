@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -16,6 +17,12 @@ const createImageFiles = (count: number) =>
       new File([`image-${index + 1}`], `review-${index + 1}.png`, {
         type: 'image/png',
       }),
+  )
+
+const createPhotoUrls = (count: number) =>
+  Array.from(
+    { length: count },
+    (_, index) => `https://cdn.hashi.kr/review-${index + 1}.jpg`,
   )
 
 const createLargeImageFile = (name = 'large-review.png') => {
@@ -76,6 +83,8 @@ describe('InputReviewMain', () => {
     expect(screen.getByLabelText('리뷰 내용')).toHaveClass(
       'typo-long-body-1',
       'text-primary-200',
+      'min-h-57.5',
+      'p-5',
     )
     expect(screen.getByLabelText('리뷰 내용')).toHaveAttribute(
       'maxlength',
@@ -101,7 +110,7 @@ describe('InputReviewMain', () => {
     expect(handleValueChange).toHaveBeenCalledWith('정말 맛있었어요')
   })
 
-  it('limits the next review text to maxLength before calling onValueChange', () => {
+  it('limits the next review text to the maximum length before notifying the caller', () => {
     const handleValueChange = vi.fn()
 
     render(<InputReviewMain maxLength={3} onValueChange={handleValueChange} />)
@@ -112,6 +121,36 @@ describe('InputReviewMain', () => {
 
     expect(handleValueChange).toHaveBeenCalledTimes(1)
     expect(handleValueChange).toHaveBeenCalledWith('abc')
+  })
+
+  it('blocks typing and paste beyond 1,000 characters but allows input again after deletion', async () => {
+    const user = userEvent.setup()
+    const ReviewInput = () => {
+      const [value, setValue] = useState('가'.repeat(999))
+
+      return <InputReviewMain value={value} onValueChange={setValue} />
+    }
+    render(<ReviewInput />)
+    const textarea = screen.getByRole('textbox', {
+      name: '리뷰 내용',
+    })
+
+    await user.click(textarea)
+    await user.keyboard('{End}나다')
+    expect(textarea).toHaveValue(`${'가'.repeat(999)}나`)
+    expect(screen.getByText('1000')).toBeInTheDocument()
+
+    await user.paste('추가 입력')
+    expect(textarea).toHaveValue(`${'가'.repeat(999)}나`)
+
+    await user.keyboard('{Backspace}')
+    expect(textarea).toHaveValue('가'.repeat(999))
+    await user.paste('나다라')
+    expect(textarea).toHaveValue(`${'가'.repeat(999)}나`)
+
+    expect(
+      screen.queryByText('글자 수 제한을 초과했어요.'),
+    ).not.toBeInTheDocument()
   })
 
   it('passes selected photo files to onPhotoFilesChange', () => {
@@ -126,6 +165,122 @@ describe('InputReviewMain', () => {
 
     expect(handlePhotoFilesChange).toHaveBeenCalledTimes(1)
     expect(handlePhotoFilesChange).toHaveBeenCalledWith([imageFile])
+  })
+
+  it('renders API photo URLs and removes only the selected existing image', () => {
+    const handlePhotoUrlsChange = vi.fn()
+
+    render(
+      <InputReviewMain
+        photoUrls={['https://cdn.hashi.kr/review-1.jpg']}
+        onPhotoUrlsChange={handlePhotoUrlsChange}
+      />,
+    )
+
+    expect(
+      screen.getByRole('img', { name: '기존 리뷰 사진 1 미리보기' }),
+    ).toHaveAttribute('src', 'https://cdn.hashi.kr/review-1.jpg')
+    fireEvent.click(
+      screen.getByRole('button', { name: '기존 리뷰 사진 1 사진 삭제' }),
+    )
+
+    expect(handlePhotoUrlsChange).toHaveBeenCalledWith([])
+  })
+
+  it('reports the existing photo index when photos have separate file keys', () => {
+    const handlePhotoUrlDelete = vi.fn()
+    const handlePhotoUrlsChange = vi.fn()
+
+    render(
+      <InputReviewMain
+        photoUrls={[
+          'https://cdn.hashi.kr/same.jpg',
+          'https://cdn.hashi.kr/same.jpg',
+        ]}
+        onPhotoUrlDelete={handlePhotoUrlDelete}
+        onPhotoUrlsChange={handlePhotoUrlsChange}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '기존 리뷰 사진 2 사진 삭제' }),
+    )
+
+    expect(handlePhotoUrlDelete).toHaveBeenCalledWith(1)
+    expect(handlePhotoUrlsChange).not.toHaveBeenCalled()
+  })
+
+  it('removes a local file without changing existing API photo URLs', () => {
+    const handlePhotoFilesChange = vi.fn()
+    const handlePhotoUrlsChange = vi.fn()
+    const localPhotoFile = new File(['image'], 'review.png', {
+      type: 'image/png',
+    })
+
+    render(
+      <InputReviewMain
+        photoFiles={[localPhotoFile]}
+        photoUrls={['https://cdn.hashi.kr/review-1.jpg']}
+        onPhotoFilesChange={handlePhotoFilesChange}
+        onPhotoUrlsChange={handlePhotoUrlsChange}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'review.png 사진 삭제' }),
+    )
+
+    expect(handlePhotoFilesChange).toHaveBeenCalledWith([])
+    expect(handlePhotoUrlsChange).not.toHaveBeenCalled()
+  })
+
+  it('does not revoke an API photo URL when the input unmounts', () => {
+    const { unmount } = render(
+      <InputReviewMain photoUrls={['https://cdn.hashi.kr/review-1.jpg']} />,
+    )
+
+    unmount()
+
+    expect(revokeObjectURLMock).not.toHaveBeenCalled()
+  })
+
+  it('disables adding a photo when existing URLs and local files total ten', () => {
+    render(
+      <InputReviewMain
+        photoFiles={createImageFiles(1)}
+        photoUrls={createPhotoUrls(9)}
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: '사진을 첨부해 주세요. (선택)' }),
+    ).toBeDisabled()
+  })
+
+  it('limits local additions by the number of existing photo URLs', () => {
+    const handlePhotoFilesChange = vi.fn()
+    const firstPhotoFile = new File(['first'], 'first.png', {
+      type: 'image/png',
+    })
+    const secondPhotoFile = new File(['second'], 'second.png', {
+      type: 'image/png',
+    })
+
+    render(
+      <InputReviewMain
+        photoUrls={createPhotoUrls(9)}
+        onPhotoFilesChange={handlePhotoFilesChange}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('리뷰 사진 첨부'), {
+      target: { files: [firstPhotoFile, secondPhotoFile] },
+    })
+
+    expect(handlePhotoFilesChange).toHaveBeenCalledWith([firstPhotoFile])
+    expect(
+      screen.getByText('사진은 최대 10장까지 첨부할 수 있어요.'),
+    ).toBeVisible()
   })
 
   it('rejects photo files larger than the max size and shows an error message', () => {
@@ -406,16 +561,17 @@ describe('InputReviewMain', () => {
     )
   })
 
-  it('shows helper text based on text length after text is provided', () => {
+  it('limits an externally supplied review text without showing an over-limit error', () => {
     render(<InputReviewMain maxLength={3} value="abcd" />)
 
     const textarea = screen.getByLabelText('리뷰 내용')
 
     expect(textarea).toHaveValue('abc')
-    expect(screen.getByText('글자 수 제한을 초과했어요.')).toHaveClass(
-      'text-primary-400',
-    )
-    expect(screen.getByText('4')).toHaveClass('text-primary-400')
+    expect(textarea).not.toHaveAttribute('aria-invalid')
+    expect(
+      screen.queryByText('글자 수 제한을 초과했어요.'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('3')).toHaveClass('text-primary-200')
     expect(screen.getByText('/3')).toHaveClass('text-warm-gray-300')
   })
 

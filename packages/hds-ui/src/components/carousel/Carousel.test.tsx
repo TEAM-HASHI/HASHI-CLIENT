@@ -1,12 +1,14 @@
 import '@testing-library/jest-dom/vitest'
 
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
   within,
 } from '@testing-library/react'
+import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { Carousel } from './Carousel'
@@ -162,6 +164,21 @@ describe('Carousel', () => {
     ).toHaveLength(1)
   })
 
+  it.each([{ defaultIndex: 2 }, { index: 2 }])(
+    'positions the selected initial slide immediately: %j',
+    (props) => {
+      mockCarouselLayout()
+      renderCarousel(props)
+      expect(document.querySelector('[data-hds-carousel-track]')).toHaveStyle({
+        transform: 'translate3d(-600px,0px,0px)',
+      })
+      expect(screen.getByRole('group', { name: '3 / 3' })).toHaveAttribute(
+        'data-current',
+        'true',
+      )
+    },
+  )
+
   it('renders the controlled active slide after index changes', () => {
     const { rerender } = renderCarousel({ index: 0 })
 
@@ -182,6 +199,70 @@ describe('Carousel', () => {
       'data-current',
       'true',
     )
+  })
+
+  it('preserves a controlled index when slides temporarily disappear', async () => {
+    mockCarouselLayout()
+    const onIndexChange = vi.fn()
+
+    const ControlledCarousel = ({ count }: { count: number }) => {
+      const [index, setIndex] = useState(2)
+
+      return (
+        <>
+          <output data-testid="parent-index">{index}</output>
+          <Carousel.Root
+            aria-label="콘텐츠 배너"
+            index={index}
+            onIndexChange={(nextIndex) => {
+              onIndexChange(nextIndex)
+              setIndex(nextIndex)
+            }}
+          >
+            <Carousel.Viewport>
+              <Carousel.Track>
+                {Array.from({ length: count }, (_, itemIndex) => (
+                  <Carousel.Item key={itemIndex}>
+                    Slide {itemIndex + 1}
+                  </Carousel.Item>
+                ))}
+              </Carousel.Track>
+            </Carousel.Viewport>
+          </Carousel.Root>
+        </>
+      )
+    }
+
+    const { rerender } = render(<ControlledCarousel count={3} />)
+    expect(screen.getByRole('group', { name: '3 / 3' })).toHaveAttribute(
+      'data-current',
+      'true',
+    )
+
+    rerender(<ControlledCarousel count={1} />)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    })
+    expect(screen.getByTestId('parent-index')).toHaveTextContent('2')
+    expect(screen.getByRole('group', { name: '1 / 1' })).toHaveAttribute(
+      'data-current',
+      'true',
+    )
+    expect(onIndexChange).not.toHaveBeenCalled()
+
+    rerender(<ControlledCarousel count={3} />)
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    })
+    expect(screen.getByTestId('parent-index')).toHaveTextContent('2')
+    expect(screen.getByRole('group', { name: '3 / 3' })).toHaveAttribute(
+      'data-current',
+      'true',
+    )
+    expect(onIndexChange).not.toHaveBeenCalled()
+    expect(document.querySelector('[data-hds-carousel-track]')).toHaveStyle({
+      transform: 'translate3d(-600px,0px,0px)',
+    })
   })
 
   it('merges className values for slots', () => {

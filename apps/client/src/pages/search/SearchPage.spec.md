@@ -1,5 +1,13 @@
 # Page Spec: `SearchPage`
 
+## 지도 검색 진입 (HASHI-215)
+
+- 검증된 route state `{ source: 'map', keyword: string }`으로 진입하면 최근/추천 검색 UI를 사용하되 일반 식당 결과 query는 실행하지 않는다.
+- 제출 시 `/map`에 keyword를 전달하고 replace로 복귀한다. 카테고리·카메라는 지도 메모리 세션에서 유지한다. 취소는 검색을 적용하지 않고 지도로 복귀한다.
+- X 버튼은 입력 draft만 비운다. state 누락/잘못된 타입은 기존 일반 검색 및 URL 정책을 따른다.
+- 지도 진입도 공통 검색어 검증(최대 30자, 빈 검색어·단독 `#`·해시태그 공백 제한)을 적용한다. 검색창은 공통 SearchBar의 X 버튼·IME Enter 처리를 사용한다.
+- 지도에서 전달된 기존 검색어가 30자를 넘으면 입력 초안은 30자까지만 채우고 사용자의 제출을 기다린다.
+
 ## Purpose
 
 - 사용자가 홈 화면의 상단 검색 CTA에서 진입해 식당명 또는 메뉴명으로 식당을 검색하고, 정렬 순서와 음식 장르 필터를 적용해 결과를 탐색합니다.
@@ -396,6 +404,7 @@ SearchPage
 ## Reuse Audit
 
 - `SearchBar`를 사용합니다. 검색 실행, 최근 검색어, 추천 검색어, query 동기화는 HDS 범위가 아니므로 page가 소유합니다.
+- 입력값이 있을 때 표시되는 X 버튼의 `onClear`를 페이지의 초기화 처리에 연결합니다. 입력 초안과 URL의 검색어·정렬·음식 장르 조건을 함께 지우고 초기 검색 화면으로 전환합니다. 검색 결과를 새로 요청하거나 최근 검색어를 삭제하지 않습니다.
 - `IconButton size="xs"`와 `BackIcon`을 조합해 뒤로가기 버튼을 구현합니다. 호출부에서 `44px` 터치 영역을 확보하고 아이콘은 `24px`로 유지합니다.
 - `Chip`을 최근 검색어와 추천 검색어 pill에 사용합니다. 칩 목록의 horizontal scroll과 키워드 선택 동작은 page-local `KeywordChipList`가 소유합니다.
 - `FilterBottomSheet`를 정렬/음식 장르 필터에 사용합니다. 옵션 목록, pending 값, 초기화/적용 동작은 page-local `useSearchFilterSheet`가 주입합니다.
@@ -497,6 +506,7 @@ SearchPage
 
 ## Error Handling
 
+- 추가 조회 실패 시 기존 결과를 유지하고 목록 하단에 오류와 재시도를 표시합니다. 자동 추가 조회는 중단하고, 재시도는 실패한 cursor만 요청합니다. 진행 중인 조회가 있으면 중복 요청하지 않습니다.
 - API error:
   - 검색/필터 상태는 유지하고 결과 영역에 에러 안내와 재시도 액션을 표시합니다.
   - 검색 결과 query는 local error UI가 필요하므로 `throwOnError: false`를 명시합니다.
@@ -515,7 +525,7 @@ SearchPage
   - empty: `검색된 식당이 없습니다.`
   - API error: `검색 결과를 불러오지 못했습니다.`
 - retry or fallback:
-  - API error state에서 재시도 버튼 또는 검색 재제출로 refetch합니다.
+  - 최초 조회 오류는 재시도 버튼으로 refetch하고, 추가 조회 오류는 실패한 cursor를 다시 요청합니다. 검색 재제출은 기존 검색 조건 갱신 흐름을 따릅니다.
   - 추천 검색어 API error는 검색 전 영역에서 빈 목록 fallback으로 처리합니다.
 
 ## Navigation
@@ -643,3 +653,13 @@ SearchPage
 - [ ] 5xx, network, timeout retry 정책이 `queryClient` 기본값 또는 query override와 일치하는지 확인
 - [ ] API `data: null`, `content` 누락, `keywords` 누락 시 화면이 깨지지 않는지 확인
 - [ ] bottom navigation이 표시되지 않는지 확인
+
+## QA 보완 (2026-10-27)
+
+- 검색 결과 목록에서 상세 화면으로 이동했다가 POP으로 돌아오면 동일 history entry와 검색 조건의 로드된 페이지 수 및 세로 스크롤 위치를 복원합니다.
+- sessionStorage의 `search-list:{location.key}:{location.search}`에 목록 snapshot을 저장합니다. 캐시가 없으면 저장된 페이지 수까지 cursor를 순차 조회한 뒤 스크롤을 복원합니다. 복원 중에는 일반 무한 스크롤 observer를 중지해 중복 요청을 막습니다.
+- 새 검색·필터 변경은 최상단부터 시작하며 idle/map 화면에는 목록 복원을 적용하지 않습니다. 잘못된 저장값이나 저장소 접근 실패는 검색을 막지 않습니다.
+- 결과 화면 복귀 시 검색창을 자동 focus하지 않습니다. 검색 전 idle 화면만 `preventScroll`로 focus합니다.
+- `RootLayout`은 `/search` POP에서 전역 최상단 이동을 생략하고 페이지의 목록 복원을 따릅니다.
+- 빈 검색어·유효하지 않은 해시태그 안내 토스트는 Figma `10578:32017`에 맞춘 26px 경고 아이콘(어두운 외곽선, 붉은 느낌표, 투명 내부)을 사용합니다. 공용 NoteIcon은 변경하지 않습니다.
+- 회귀 검증: 캐시 보존/페이지 재조회 후 복원, 검색 조건 변경, 오류·잘못된 저장값, 일반 PUSH와 idle/map 경계, RootLayout POP 예외를 확인합니다.

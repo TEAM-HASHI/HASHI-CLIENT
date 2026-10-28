@@ -7,14 +7,12 @@ import { ReviewDeleteDialog } from '@/pages/reviewDetail/components/ReviewDelete
 import { ReviewDetailActionBar } from '@/pages/reviewDetail/components/ReviewDetailActionBar'
 import { ReviewDetailContentCard } from '@/pages/reviewDetail/components/ReviewDetailContentCard'
 import { useReviewDetailPage } from '@/pages/reviewDetail/hooks/useReviewDetailPage'
-import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 
 export const ReviewDetailPage = () => {
   const {
     isDeleteDialogOpen,
     isDeletePending,
     isError,
-    isEditComingSoonDialogOpen,
     isInvalidReviewId,
     isPending,
     reviewDetail,
@@ -22,7 +20,6 @@ export const ReviewDetailPage = () => {
     handleConfirmDeleteClick,
     handleDeleteClick,
     handleDeleteDialogOpenChange,
-    handleEditComingSoonDialogOpenChange,
     handleEditClick,
     handleRetryClick,
   } = useReviewDetailPage()
@@ -30,10 +27,10 @@ export const ReviewDetailPage = () => {
   return (
     <section
       aria-label="리뷰 상세"
-      className="min-h-dvh min-w-0 overflow-x-hidden bg-white pt-18.75 pb-[calc(111px+var(--safe-area-bottom,0px))]"
+      className="app-mobile-bottom-action-content min-h-dvh min-w-0 overflow-x-hidden bg-white pt-18.75"
     >
       <div className="app-mobile-fixed-top z-fixed">
-        <ReviewHeader title="리뷰 상세" onBackClick={handleBackClick} />
+        <ReviewHeader title="마이 리뷰" onBackClick={handleBackClick} />
       </div>
       {isPending ? (
         <p className="typo-body-4 text-primary-200 flex min-h-[360px] items-center justify-center px-5 text-center">
@@ -55,6 +52,7 @@ export const ReviewDetailPage = () => {
       ) : (
         <>
           <ReviewReservationSummary
+            density="compact"
             restaurantName={reviewDetail.restaurantName}
             visitedAt={reviewDetail.visitedAt}
             guestSummary={reviewDetail.guestSummary}
@@ -76,10 +74,6 @@ export const ReviewDetailPage = () => {
             open={isDeleteDialogOpen}
             onConfirmDeleteClick={handleConfirmDeleteClick}
             onOpenChange={handleDeleteDialogOpenChange}
-          />
-          <ComingSoonDialog
-            open={isEditComingSoonDialogOpen}
-            onOpenChange={handleEditComingSoonDialogOpenChange}
           />
         </>
       )}

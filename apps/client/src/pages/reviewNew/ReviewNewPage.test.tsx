@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ReviewNewPage } from '@/pages/reviewNew'
 import { createReview } from '@/pages/reviewNew/api/createReview'
 import { getReviewContext } from '@/pages/reviewNew/api/getReviewContext'
-import { uploadReviewImages } from '@/pages/reviewNew/api/uploadReviewImages'
+import { uploadReviewImages } from '@/features/review/api/uploadReviewImages'
 import { createQueryClient } from '@/shared/lib/queryClient'
 
 const { navigateMock, routeState } = vi.hoisted(() => ({
@@ -59,7 +59,7 @@ vi.mock('@/pages/reviewNew/api/getReviewContext', () => ({
   getReviewContext: vi.fn(),
 }))
 
-vi.mock('@/pages/reviewNew/api/uploadReviewImages', () => ({
+vi.mock('@/features/review/api/uploadReviewImages', () => ({
   uploadReviewImages: vi.fn(),
 }))
 
@@ -144,6 +144,36 @@ describe('ReviewNewPage', () => {
     expect(getReviewContextMock).not.toHaveBeenCalled()
   })
 
+  it('renders the solo dining icon and submits its API code unchanged', async () => {
+    getReviewContextMock.mockResolvedValue({
+      ...reviewContextResponse,
+      reviewKeywordOptions: [
+        { code: 'GOOD_FOR_SOLO_DINING', label: '혼밥하기 좋아요' },
+      ],
+    })
+    renderReviewNewPage()
+    await findReviewContext()
+    const keyword = screen.getByRole('button', { name: '혼밥하기 좋아요' })
+
+    expect(keyword.querySelector('svg')).not.toBeNull()
+    fireEvent.click(keyword)
+    fireEvent.click(screen.getByRole('radio', { name: '4점' }))
+    fireEvent.change(screen.getByLabelText('리뷰 내용'), {
+      target: { value: '혼자 방문해도 편하게 식사했습니다.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '저장하기' }))
+
+    await waitFor(() =>
+      expect(createReviewMock).toHaveBeenCalledWith({
+        reservationId: 23,
+        rating: 4,
+        keywordCodes: ['GOOD_FOR_SOLO_DINING'],
+        content: '혼자 방문해도 편하게 식사했습니다.',
+        imageFileKeys: [],
+      }),
+    )
+  })
+
   it('shows an error state when context loading fails', async () => {
     getReviewContextMock.mockRejectedValue(new Error('context failed'))
 
@@ -161,6 +191,32 @@ describe('ReviewNewPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
 
     expect(navigateMock).toHaveBeenCalledWith(-1)
+  })
+
+  it('keeps save disabled before the required review fields are valid', async () => {
+    renderReviewNewPage()
+    await findReviewContext()
+
+    expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
+  })
+
+  it('limits a 1,001-character attempt to 1,000 characters and keeps save enabled', async () => {
+    renderReviewNewPage()
+    await findReviewContext()
+    fireEvent.click(screen.getByRole('radio', { name: '4점' }))
+    fireEvent.click(screen.getByRole('button', { name: '직원분이 친절해요' }))
+    const overLimitReviewText = '가'.repeat(1001)
+
+    fireEvent.change(screen.getByLabelText('리뷰 내용'), {
+      target: { value: overLimitReviewText },
+    })
+
+    expect(screen.getByLabelText('리뷰 내용')).toHaveValue('가'.repeat(1000))
+    expect(
+      screen.queryByText('글자 수 제한을 초과했어요.'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('1000')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '저장하기' })).toBeEnabled()
   })
 
   it('submits review fields and navigates to the created detail', async () => {

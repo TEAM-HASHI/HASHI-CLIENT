@@ -1,6 +1,8 @@
 import { PlusIcon } from '@hashi/hds-icons'
 import { Button } from '@hashi/hds-ui'
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ROUTES } from '@/app/router/path'
 import type { RestaurantCatalogItem } from '@/pages/restaurants/api/restaurantCatalogApi'
 import { RestaurantFormDrawer } from '@/pages/restaurants/components/RestaurantFormDrawer'
 import { RestaurantTable } from '@/pages/restaurants/components/RestaurantTable'
@@ -61,6 +63,18 @@ export const RestaurantsPage = () => {
         title="식당 관리"
         description="현재 공개 중인 식당을 확인하고 등록·수정·비공개 처리합니다."
       >
+        <Link
+          to={ROUTES.restaurantLocations}
+          className="text-cool-gray-700 border-cool-gray-100 inline-flex h-7 items-center rounded-md border px-3 text-xs font-bold"
+        >
+          위치 검토
+        </Link>
+        <Link
+          to={ROUTES.mapRegions}
+          className="text-cool-gray-700 border-cool-gray-100 inline-flex h-7 items-center rounded-md border px-3 text-xs font-bold"
+        >
+          관광 지역 관리
+        </Link>
         <Button
           size="sm"
           leftIcon={<PlusIcon className="size-4" />}

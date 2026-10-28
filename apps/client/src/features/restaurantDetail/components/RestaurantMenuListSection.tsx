@@ -9,6 +9,8 @@ interface RestaurantMenuListSectionProps {
   menus: RestaurantMenu[]
   hasMoreMenus?: boolean
   isMenuListError?: boolean
+  isLoading?: boolean
+  isNextPageError?: boolean
   loadMoreRef?: Ref<HTMLDivElement>
   onPressMenuItem: (menuId: string) => void
   onRetryMenuList?: () => void
@@ -18,10 +20,32 @@ export const RestaurantMenuListSection = ({
   menus,
   hasMoreMenus = false,
   isMenuListError = false,
+  isLoading = false,
+  isNextPageError = false,
   loadMoreRef,
   onPressMenuItem,
   onRetryMenuList,
 }: RestaurantMenuListSectionProps) => {
+  if (isLoading)
+    return (
+      <section aria-label="메뉴 목록 로딩 중" role="status" className="px-5">
+        {Array.from({ length: 3 }, (_, index) => (
+          <div
+            key={index}
+            aria-hidden="true"
+            className="border-warm-gray-50 flex h-[140px] items-center border-b pt-4 pb-3 last:border-b-0"
+          >
+            <div className="flex min-w-0 flex-1 flex-col gap-2 pr-5">
+              <div className="bg-secondary-200 h-5 w-3/5 animate-pulse rounded motion-reduce:animate-none" />
+              <div className="bg-secondary-200 h-4 w-full animate-pulse rounded motion-reduce:animate-none" />
+              <div className="bg-secondary-200 h-4 w-4/5 animate-pulse rounded motion-reduce:animate-none" />
+              <div className="bg-secondary-200 mt-1 h-5 w-2/5 animate-pulse rounded motion-reduce:animate-none" />
+            </div>
+            <div className="bg-secondary-200 size-25 shrink-0 animate-pulse rounded-[5px] motion-reduce:animate-none" />
+          </div>
+        ))}
+      </section>
+    )
   if (isMenuListError) {
     return (
       <section
@@ -93,7 +117,14 @@ export const RestaurantMenuListSection = ({
           </button>
         )
       })}
-      {hasMoreMenus && loadMoreRef ? (
+      {isNextPageError ? (
+        <div className="flex flex-col items-center gap-3 py-5">
+          <p role="alert">메뉴를 더 불러오지 못했어요.</p>
+          <Button size="sm" onClick={onRetryMenuList}>
+            메뉴 다시 불러오기
+          </Button>
+        </div>
+      ) : hasMoreMenus && loadMoreRef ? (
         <div
           ref={loadMoreRef}
           aria-hidden="true"

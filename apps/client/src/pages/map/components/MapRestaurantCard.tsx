@@ -1,0 +1,59 @@
+import type { MouseEvent } from 'react'
+
+import type { MapRestaurant } from '@/pages/map/types'
+
+import { MapRestaurantMeta } from '@/pages/map/components/MapRestaurantMeta'
+import { MapRestaurantImages } from '@/pages/map/components/MapRestaurantImages'
+import { MapSaveAction } from '@/pages/map/components/MapSaveAction'
+
+interface MapRestaurantCardProps {
+  restaurant: MapRestaurant
+  rank?: number
+  onSelect: () => void
+  onSave: () => void
+}
+
+export const MapRestaurantCard = ({
+  restaurant,
+  rank,
+  onSelect,
+  onSave,
+}: MapRestaurantCardProps) => {
+  const handleCardClick = (event: MouseEvent<HTMLElement>) => {
+    if (event.defaultPrevented || !(event.target instanceof Element)) return
+    // Native title/photo/save buttons own their actions; only delegate card space.
+    if (!event.target.closest('button, a')) onSelect()
+  }
+
+  return (
+    <article
+      className="border-warm-gray-50 cursor-pointer border-b py-4"
+      onClick={handleCardClick}
+    >
+      <div className="flex items-start gap-1">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h3>
+            <button
+              type="button"
+              aria-label={`${restaurant.name} 상세 보기`}
+              className="text-primary-200 flex w-full items-center gap-2 text-left"
+              onClick={onSelect}
+            >
+              {rank !== undefined && (
+                <span aria-hidden="true" className="typo-header-1 shrink-0">
+                  {rank}
+                </span>
+              )}
+              <span className="typo-sub-header-1 truncate">
+                {restaurant.name}
+              </span>
+            </button>
+          </h3>
+          <MapRestaurantMeta restaurant={restaurant} />
+        </div>
+        <MapSaveAction restaurant={restaurant} onSave={onSave} />
+      </div>
+      <MapRestaurantImages restaurant={restaurant} onPhotoSelect={onSelect} />
+    </article>
+  )
+}

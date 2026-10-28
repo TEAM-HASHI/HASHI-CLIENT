@@ -32,25 +32,25 @@ export interface RestaurantRatingDistribution {
 }
 
 export interface RestaurantDetail {
+  saveCount?: number
   id: string
   name: string
   localName: string
   rating: number
   reviewCount: number
   ratingDistribution: RestaurantRatingDistribution
-  likeCount: string
   summary: string
   address: string
   businessHoursSummary: string
   deposit: string
   detailDescription: string
-  lastOrderTime: string
+  lastOrderTime?: string
   businessHours: {
     day: string
     hours: string
   }[]
   priceRange: string
-  heroImages: string[]
+  heroImages: (string | undefined)[]
   menus: RestaurantMenu[]
   reviews: RestaurantReview[]
 }

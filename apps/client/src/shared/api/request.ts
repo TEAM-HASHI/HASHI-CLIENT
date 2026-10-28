@@ -4,6 +4,7 @@ import { requestTokenReissue } from '@/shared/api/requestTokenReissue'
 import {
   clearAuthSession,
   getAccessToken,
+  getAuthSessionVersion,
   setAccessToken,
 } from '@/shared/auth/authSession'
 import {
@@ -18,7 +19,9 @@ import type { SuccessResponse } from '@/shared/api/types'
 
 const normalizePath = (path: string) => path.replace(/^\/+/, '')
 
-let tokenReissuePromise: Promise<string> | undefined
+let pendingTokenReissue:
+  | { sessionVersion: number; promise: Promise<string> }
+  | undefined
 
 const createHeaders = (headersInit: Options['headers']) => {
   const headers = new Headers()
@@ -54,8 +57,12 @@ const createHeaders = (headersInit: Options['headers']) => {
   return headers
 }
 
-const getRequestOptions = (options?: Options): Options | undefined => {
-  const accessToken = getAccessToken() ?? getApiAccessToken()
+const getRequestOptions = (
+  path: string,
+  options?: Options,
+): Options | undefined => {
+  const accessToken =
+    getAccessToken() ?? (isAuthPath(path) ? null : getApiAccessToken())
 
   if (!accessToken) {
     return options
@@ -91,18 +98,27 @@ const shouldTryTokenReissue = (path: string, cause: unknown) =>
   checkIsAuthRequiredError(cause) && !isAuthPath(path)
 
 const reissueAccessToken = async () => {
-  if (!tokenReissuePromise) {
-    tokenReissuePromise = requestTokenReissue()
-      .then(({ accessToken }) => {
-        setAccessToken(accessToken)
-        return accessToken
-      })
-      .finally(() => {
-        tokenReissuePromise = undefined
-      })
+  const sessionVersion = getAuthSessionVersion()
+  if (pendingTokenReissue?.sessionVersion === sessionVersion) {
+    return pendingTokenReissue.promise
   }
 
-  return tokenReissuePromise
+  const promise = requestTokenReissue()
+    .then(({ accessToken }) => {
+      if (getAuthSessionVersion() !== sessionVersion) {
+        throw new Error('Auth session ended during token reissue')
+      }
+      setAccessToken(accessToken)
+      return accessToken
+    })
+    .finally(() => {
+      if (pendingTokenReissue?.promise === promise) {
+        pendingTokenReissue = undefined
+      }
+    })
+
+  pendingTokenReissue = { sessionVersion, promise }
+  return promise
 }
 
 const requestSuccessResponseOnce = async <TData>(
@@ -111,7 +127,7 @@ const requestSuccessResponseOnce = async <TData>(
 ): Promise<SuccessResponse<TData>> => {
   const httpResponse = await apiClient(
     normalizedPath,
-    getRequestOptions(options),
+    getRequestOptions(normalizedPath, options),
   )
   const response = await parseResponseBody(httpResponse)
 
@@ -135,21 +151,32 @@ export const requestSuccessResponse = async <TData>(
   options?: Options,
 ): Promise<SuccessResponse<TData>> => {
   const normalizedPath = normalizePath(path)
+  const sessionVersion = getAuthSessionVersion()
 
   try {
     return await requestSuccessResponseOnce<TData>(normalizedPath, options)
   } catch (cause) {
-    if (!shouldTryTokenReissue(normalizedPath, cause)) {
+    if (
+      getAuthSessionVersion() !== sessionVersion ||
+      !shouldTryTokenReissue(normalizedPath, cause)
+    ) {
       throw cause
     }
 
     try {
       await reissueAccessToken()
-    } catch {
-      clearAuthSession()
-      throw cause
+    } catch (reissueCause) {
+      if (checkIsAuthRequiredError(reissueCause)) {
+        if (getAuthSessionVersion() === sessionVersion) {
+          clearAuthSession('expired')
+        }
+        throw cause
+      }
+      if (getAuthSessionVersion() !== sessionVersion) throw cause
+      throw reissueCause
     }
 
+    if (getAuthSessionVersion() !== sessionVersion) throw cause
     return requestSuccessResponseOnce<TData>(normalizedPath, options)
   }
 }

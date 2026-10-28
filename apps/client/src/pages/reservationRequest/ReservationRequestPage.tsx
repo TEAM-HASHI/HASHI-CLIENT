@@ -1,10 +1,12 @@
 import { BackIcon } from '@hashi/hds-icons'
-import { Button, Header, IconButton } from '@hashi/hds-ui'
-import { useSuspenseQuery } from '@tanstack/react-query'
+import { Button, Header, IconButton, showToast } from '@hashi/hds-ui'
+import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import { generatePath, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { getReservationCompletePath } from '@/app/router/routePaths'
+import { reservationCompletionQueryKeys } from '@/features/reservation/queries/reservationCompletion'
 import { myPointBalanceQueryOptions } from '@/features/point/queries/pointQueryOptions'
 import {
   formatReservationDraftDateTime,
@@ -19,6 +21,8 @@ import { useReservationPoint } from '@/pages/reservationRequest/hooks/useReserva
 import { useReservationRequestDraft } from '@/pages/reservationRequest/hooks/useReservationRequestDraft'
 import type { ReservationRequestDraft } from '@/pages/reservationRequest/hooks/useReservationRequestDraft'
 
+import { checkIsTodayOrBefore } from '@/shared/utils/date'
+
 const ANYWHERE_RESERVATION_FEE = 4_000
 
 interface ReservationRequestContentProps {
@@ -29,6 +33,7 @@ const ReservationRequestContent = ({
   reservationDraft,
 }: ReservationRequestContentProps) => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const isRequestLockedRef = useRef(false)
   const { data: pointBalance } = useSuspenseQuery(myPointBalanceQueryOptions)
@@ -65,6 +70,16 @@ const ReservationRequestContent = ({
       return
     }
 
+    if (checkIsTodayOrBefore(new Date(`${reservationDraft.date}T00:00:00`))) {
+      setIsConfirmOpen(false)
+      showToast({
+        children: '내일부터 예약할 수 있어요. 날짜를 다시 선택해주세요.',
+      })
+      // 입력 화면이 저장한 draft와 기존 history entry를 그대로 복원합니다.
+      navigate(-1)
+      return
+    }
+
     isRequestLockedRef.current = true
     createReservationMutation.mutate(
       {
@@ -72,14 +87,16 @@ const ReservationRequestContent = ({
         usedPoint: reservationPoint.usedPoint,
       },
       {
-        onSuccess: ({ reservationId }) => {
-          setIsConfirmOpen(false)
-          navigate(
-            generatePath(ROUTES.reservationDetail, {
-              reservationId: String(reservationId),
-            }),
-            { replace: true, state: { fromReservationRequest: true } },
+        onSuccess: (response) => {
+          const { reservationId } = response
+          queryClient.setQueryData(
+            reservationCompletionQueryKeys.detail(reservationId),
+            response,
           )
+          setIsConfirmOpen(false)
+          navigate(getReservationCompletePath(String(reservationId)), {
+            replace: true,
+          })
         },
         onSettled: () => {
           isRequestLockedRef.current = false
