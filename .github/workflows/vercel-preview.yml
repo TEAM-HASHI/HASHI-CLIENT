@@ -111,7 +111,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 [Client QA Preview](${process.env.PREVIEW_URL})\n\n카카오 로그인은 위 고정 주소에서 시작해 주세요. 모든 PR이 공유하므로 마지막으로 연결된 배포로 변경됩니다.\n\n[이 PR의 고유 배포 주소](${process.env.DEPLOYMENT_URL}) — 로그인 QA는 고정 주소를 사용해 주세요.`,
+              body: `🚀 [Client QA Preview](${process.env.PREVIEW_URL})\n\n[이 PR의 고유 배포 주소](${process.env.DEPLOYMENT_URL})`,
             })
 
   lighthouse:
