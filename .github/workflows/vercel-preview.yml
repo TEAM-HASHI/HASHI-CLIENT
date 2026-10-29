@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/vercel-preview.yml'
       - '.github/scripts/lighthouse-*.cjs'
+      - '.github/scripts/preview-deployment.test.cjs'
       - 'apps/client/**'
       - 'configs/**'
       - 'lighthouserc.cjs'
@@ -22,6 +23,7 @@ on:
     paths:
       - '.github/workflows/vercel-preview.yml'
       - '.github/scripts/lighthouse-*.cjs'
+      - '.github/scripts/preview-deployment.test.cjs'
       - 'apps/client/**'
       - 'configs/**'
       - 'lighthouserc.cjs'
@@ -44,12 +46,18 @@ jobs:
   deploy-preview:
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
+    # All PRs share one QA alias. Serialize deployments, not Lighthouse runs.
+    concurrency:
+      group: client-preview-shared-alias
+      cancel-in-progress: false
     outputs:
       url: ${{ steps.deploy.outputs.url }}
 
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      PREVIEW_HOST: hashi-client-qa-gyeongbinmins-projects.vercel.app
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
       SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
@@ -71,29 +79,39 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Test Preview Deployment
+        run: pnpm test:preview-deployment
+
       - name: Pull Vercel Environment
-        run: pnpm exec vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        run: pnpm exec vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
 
       - name: Build Vercel Output
-        run: pnpm exec vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VITE_KAKAO_REDIRECT_URI: https://hashi-client-qa-gyeongbinmins-projects.vercel.app/oauth/callback/kakao
+        run: pnpm exec vercel build --token="$VERCEL_TOKEN"
 
       - name: Deploy Preview
         id: deploy
         run: |
-          url=$(pnpm exec vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(pnpm exec vercel deploy --prebuilt --token="$VERCEL_TOKEN")
+          pnpm exec vercel alias set "$url" "$PREVIEW_HOST" --scope="$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"
           echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "preview_url=https://$PREVIEW_HOST" >> "$GITHUB_OUTPUT"
 
       - name: Comment Preview URL
         if: github.event_name == 'pull_request'
         continue-on-error: true
         uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.preview_url }}
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
         with:
           script: |
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 Client Preview deployed: ${{ steps.deploy.outputs.url }}`,
+              body: `🚀 [Client QA Preview](${process.env.PREVIEW_URL})\n\n카카오 로그인은 위 고정 주소에서 시작해 주세요. 모든 PR이 공유하므로 마지막으로 연결된 배포로 변경됩니다.\n\n[이 PR의 고유 배포 주소](${process.env.DEPLOYMENT_URL}) — 로그인 QA는 고정 주소를 사용해 주세요.`,
             })
 
   lighthouse:
