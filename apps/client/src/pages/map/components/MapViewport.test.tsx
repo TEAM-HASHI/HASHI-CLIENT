@@ -11,6 +11,7 @@ const sdk = vi.hoisted(() => ({
   idle: () => {},
   dragStart: () => {},
   map: {
+    getDiv: () => ({ clientWidth: 430, clientHeight: 652 }),
     fitBounds: vi.fn(),
     moveCamera: vi.fn(),
     panTo: vi.fn(),
@@ -51,6 +52,7 @@ vi.mock('@vis.gl/react-google-maps', () => ({
           onClick={() =>
             onIdle({
               map: {
+                getDiv: () => ({ clientWidth: 430, clientHeight: 652 }),
                 getZoom: () => sdk.initialZoom,
                 getCenter: () => ({
                   toJSON: () => ({ lat: 35.5, lng: 139.5 }),
@@ -73,6 +75,7 @@ vi.mock('@vis.gl/react-google-maps', () => ({
           onClick={() =>
             onIdle({
               map: {
+                getDiv: () => ({ clientWidth: 430, clientHeight: 652 }),
                 getZoom: () => sdk.zoom,
                 getCenter: () => ({
                   toJSON: () => ({ lat: 36.5, lng: 140.5 }),

@@ -532,6 +532,7 @@ describe('MapPage API integration', () => {
     let zoom = 11
     const fitBounds = vi.fn()
     const map = {
+      getDiv: () => ({ clientWidth: 430, clientHeight: 652 }),
       fitBounds,
       addListener: (_name: string, callback: () => void) => {
         idle = callback

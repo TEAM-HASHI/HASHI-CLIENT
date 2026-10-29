@@ -36,6 +36,21 @@ export const useGoogleMapCamera = (
         }
       : undefined)
   const { north, south, east, west } = overviewBounds ?? {}
+  const fitBounds = (
+    bounds: MapBounds,
+    top: number,
+    bottom = 64,
+    side = 40,
+  ) => {
+    if (!map) return
+    const { clientWidth: width, clientHeight: height } = map.getDiv()
+    map.fitBounds(bounds, {
+      top: height > 0 ? Math.min(top, Math.floor(height * 0.4)) : top,
+      bottom: height > 0 ? Math.min(bottom, Math.floor(height * 0.1)) : bottom,
+      left: width > 0 ? Math.min(side, Math.floor(width * 0.15)) : side,
+      right: width > 0 ? Math.min(side, Math.floor(width * 0.15)) : side,
+    })
+  }
   useEffect(() => {
     if (
       !map ||
@@ -64,10 +79,7 @@ export const useGoogleMapCamera = (
       }
       listener.remove()
     })
-    map.fitBounds(
-      { north, south, east, west },
-      { top: 170, bottom: 64, left: 60, right: 60 },
-    )
+    fitBounds({ north, south, east, west }, 170, 64, 60)
     return () => listener.remove()
   }, [map, north, south, east, west, resetVersion, initialFitEnabled])
   useEffect(() => {
@@ -75,7 +87,7 @@ export const useGoogleMapCamera = (
     userMoved.current = false
     programmaticMove.current = true
     if (areaBounds) {
-      map.fitBounds(areaBounds, { top: 140, bottom: 64, left: 40, right: 40 })
+      fitBounds(areaBounds, 140)
       return
     }
     map.moveCamera({ center: areaPosition, zoom: 15 })
@@ -104,14 +116,15 @@ export const useGoogleMapCamera = (
       map.moveCamera({ center: searchPositions[0], zoom: 15 })
       return
     }
-    map.fitBounds(
+    fitBounds(
       {
         north: Math.max(...searchPositions.map((p) => p.lat)),
         south: Math.min(...searchPositions.map((p) => p.lat)),
         east: Math.max(...searchPositions.map((p) => p.lng)),
         west: Math.min(...searchPositions.map((p) => p.lng)),
       },
-      { top: 140, bottom: 50, left: 40, right: 40 },
+      140,
+      50,
     )
   }, [map, overviewReady, searchPositions])
   return { userMoved, programmaticMove, minimumZoom }
