@@ -106,7 +106,7 @@ export const CollectionMapQueryPage = ({
   return (
     <main
       ref={containerRef}
-      className="relative h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] overflow-hidden"
+      className="relative h-[calc(100dvh-var(--app-mobile-bottom-nav-height))] overflow-hidden"
     >
       {regions.data && (
         <MapViewport

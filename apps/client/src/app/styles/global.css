@@ -9,6 +9,10 @@
     --app-mobile-bottom-action-compact-height: 82px;
     --safe-area-top: env(safe-area-inset-top);
     --safe-area-bottom: env(safe-area-inset-bottom);
+    --app-mobile-bottom-nav-height: max(
+      84px,
+      calc(53px + var(--safe-area-bottom, 0px))
+    );
   }
 
   *,
@@ -142,12 +146,12 @@ body[style*='overflow: hidden'] [data-page-scroll] {
   min-height: calc(100dvh - var(--app-content-bottom, 0px));
   padding-bottom: max(
     0px,
-    calc(84px + var(--safe-area-bottom, 0px) - var(--app-content-bottom, 0px))
+    calc(var(--app-mobile-bottom-nav-height) - var(--app-content-bottom, 0px))
   );
 }
 
 @utility app-mobile-bottom-nav-content {
-  min-height: calc(100dvh - 84px - var(--safe-area-bottom, 0px));
+  min-height: calc(100dvh - var(--app-mobile-bottom-nav-height));
 }
 
 @utility app-mobile-bottom-action-content {

@@ -34,7 +34,7 @@ export const MyReservationsPage = () => {
   }
 
   return (
-    <section className="app-mobile-bottom-nav-content flex h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] min-h-0 flex-col overflow-hidden">
+    <section className="app-mobile-bottom-nav-content flex h-[calc(100dvh-var(--app-mobile-bottom-nav-height))] min-h-0 flex-col overflow-hidden">
       <div className="z-fixed shrink-0 bg-white px-5 pt-[calc(32px+var(--safe-area-top,0px))]">
         <MyReservationsHeader userName={userName} />
         <ReservationStatusFilter

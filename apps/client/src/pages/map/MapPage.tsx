@@ -353,7 +353,7 @@ const MapMainPage = () => {
   return (
     <main
       ref={containerRef}
-      className="relative h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] overflow-hidden bg-white"
+      className="relative h-[calc(100dvh-var(--app-mobile-bottom-nav-height))] overflow-hidden bg-white"
     >
       <h1 className="sr-only">도쿄 맛집 지도</h1>
       <div

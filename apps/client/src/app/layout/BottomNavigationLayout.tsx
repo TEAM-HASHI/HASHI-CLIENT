@@ -100,7 +100,7 @@ export const BottomNavigationLayout = () => {
               navigate(ROUTES.map, { replace: true, state: { resetMap: true } })
             }
           }}
-          className="app-mobile-fixed-bottom"
+          className="app-mobile-fixed-bottom flex h-[var(--app-mobile-bottom-nav-height)] items-end pb-[var(--safe-area-bottom,0px)]"
           items={bottomNavigationItems}
           onValueChange={(value) => {
             if (value in bottomNavigationPath) {
