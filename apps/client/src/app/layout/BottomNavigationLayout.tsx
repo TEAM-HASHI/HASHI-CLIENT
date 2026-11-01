@@ -10,6 +10,7 @@ import { matchPath, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const bottomNavigationItems = [
   { value: 'home', label: '홈', icon: <HomeIcon /> },
@@ -88,34 +89,38 @@ export const BottomNavigationLayout = () => {
       <div className="app-mobile-bottom-nav-layout">
         <Outlet />
       </div>
-      <BottomNavigation
-        onClick={(event) => {
-          if (
+      <PageFixedArea>
+        <BottomNavigation
+          onClick={(event) => {
+            if (
+              location.pathname === ROUTES.map &&
+              event.target instanceof Element &&
+              event.target.closest('button[aria-current="page"]')
+            ) {
+              navigate(ROUTES.map, { replace: true, state: { resetMap: true } })
+            }
+          }}
+          className="app-mobile-fixed-bottom"
+          items={bottomNavigationItems}
+          onValueChange={(value) => {
+            if (value in bottomNavigationPath) {
+              navigate(
+                bottomNavigationPath[
+                  value as keyof typeof bottomNavigationPath
+                ],
+              )
+            }
+          }}
+          value={getBottomNavigationValue(
             location.pathname === ROUTES.map &&
-            event.target instanceof Element &&
-            event.target.closest('button[aria-current="page"]')
-          ) {
-            navigate(ROUTES.map, { replace: true, state: { resetMap: true } })
-          }
-        }}
-        className="app-mobile-fixed-bottom"
-        items={bottomNavigationItems}
-        onValueChange={(value) => {
-          if (value in bottomNavigationPath) {
-            navigate(
-              bottomNavigationPath[value as keyof typeof bottomNavigationPath],
-            )
-          }
-        }}
-        value={getBottomNavigationValue(
-          location.pathname === ROUTES.map &&
-            isCollectionMapState(location.state) &&
-            location.state.origin !== 'map'
-            ? ROUTES.saved
-            : location.pathname,
-          loginRequiredState?.from?.pathname,
-        )}
-      />
+              isCollectionMapState(location.state) &&
+              location.state.origin !== 'map'
+              ? ROUTES.saved
+              : location.pathname,
+            loginRequiredState?.from?.pathname,
+          )}
+        />
+      </PageFixedArea>
     </>
   )
 }
