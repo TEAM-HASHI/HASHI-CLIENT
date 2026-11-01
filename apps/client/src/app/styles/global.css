@@ -10,7 +10,7 @@
     --safe-area-top: env(safe-area-inset-top);
     --safe-area-bottom: env(safe-area-inset-bottom);
     --app-mobile-bottom-nav-height: max(
-      84px,
+      73px,
       calc(53px + var(--safe-area-bottom, 0px))
     );
   }
