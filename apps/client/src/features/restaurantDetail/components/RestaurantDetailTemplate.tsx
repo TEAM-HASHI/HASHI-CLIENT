@@ -30,6 +30,7 @@ import type {
 import { useShareLink } from '@/shared/components/shareIconButton'
 import { copyTextToClipboard } from '@/shared/utils'
 import { getPageScrollY, scrollPageTo } from '@/shared/utils/pageScroll'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 interface RestaurantDetailTemplateProps {
   content: ReturnType<typeof useRestaurantDetailContent> & {
@@ -138,25 +139,27 @@ export const RestaurantDetailTemplate = ({
   return (
     <main className="app-mobile-bottom-action-compact-content min-h-dvh bg-white">
       <h1 className="sr-only">{title}</h1>
-      <div
-        className="z-fixed fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)]"
-        data-testid="restaurant-detail-fixed-header"
-      >
-        <Header
-          leftAction={
-            <IconButton aria-label="뒤로가기" onClick={onPressBack} size="xs">
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-          rightAction={{
-            type: 'icon',
-            icon: <ShareIcon className="size-6" />,
-            ariaLabel: '공유하기',
-            onClick: handleShare,
-          }}
-          title={headerTitle}
-        />
-      </div>
+      <PageFixedArea>
+        <div
+          className="z-fixed fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)]"
+          data-testid="restaurant-detail-fixed-header"
+        >
+          <Header
+            leftAction={
+              <IconButton aria-label="뒤로가기" onClick={onPressBack} size="xs">
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+            rightAction={{
+              type: 'icon',
+              icon: <ShareIcon className="size-6" />,
+              ariaLabel: '공유하기',
+              onClick: handleShare,
+            }}
+            title={headerTitle}
+          />
+        </div>
+      </PageFixedArea>
       <div
         aria-hidden="true"
         style={{ height: RESTAURANT_DETAIL_HEADER_HEIGHT }}

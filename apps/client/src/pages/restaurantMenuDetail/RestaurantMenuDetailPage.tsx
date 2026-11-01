@@ -15,6 +15,7 @@ import { RestaurantSelectedMenuSection } from '@/pages/restaurantMenuDetail/comp
 import { useRestaurantMenuDetailPage } from '@/pages/restaurantMenuDetail/hooks/useRestaurantMenuDetailPage'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { useShareLink } from '@/shared/components/shareIconButton'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 export const RestaurantMenuDetailPage = () => {
   const {
@@ -63,43 +64,48 @@ export const RestaurantMenuDetailPage = () => {
       className="app-mobile-bottom-action-compact-content min-h-dvh bg-white"
       data-testid="restaurant-menu-detail-page"
     >
-      <div
-        className="z-fixed fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
-        data-testid="restaurant-menu-detail-fixed-header"
-      >
-        <Header
-          leftAction={
-            <IconButton aria-label="뒤로가기" onClick={onPressBack} size="xs">
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-          rightAction={{
-            type: 'icon',
-            icon: <ShareIcon className="size-6" />,
-            ariaLabel: '공유하기',
-            onClick: handleShare,
-          }}
-          title={
-            <span className="block truncate whitespace-nowrap">
-              {restaurant.name}
-            </span>
-          }
-          variant="largeTitle"
-        />
-      </div>
+      <PageFixedArea>
+        <div
+          className="z-fixed fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
+          data-testid="restaurant-menu-detail-fixed-header"
+        >
+          <Header
+            leftAction={
+              <IconButton aria-label="뒤로가기" onClick={onPressBack} size="xs">
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+            rightAction={{
+              type: 'icon',
+              icon: <ShareIcon className="size-6" />,
+              ariaLabel: '공유하기',
+              onClick: handleShare,
+            }}
+            title={
+              <span className="block truncate whitespace-nowrap">
+                {restaurant.name}
+              </span>
+            }
+            variant="largeTitle"
+          />
+        </div>
+      </PageFixedArea>
 
-      <div
-        className="z-fixed fixed inset-x-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
-        data-testid="restaurant-menu-detail-tab-fixed-container"
-        style={{ top: RESTAURANT_MENU_DETAIL_HEADER_HEIGHT }}
-      >
-        <RestaurantDetailTabs
-          activeTab="menu"
-          onTabChange={onTabChange}
-          photoCount={photoCount}
-          reviewCount={restaurant.reviewCount}
-        />
-      </div>
+      <PageFixedArea>
+        <div
+          className="z-fixed fixed inset-x-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] bg-white"
+          data-testid="restaurant-menu-detail-tab-fixed-container"
+          data-page-scroll-top
+          style={{ top: RESTAURANT_MENU_DETAIL_HEADER_HEIGHT }}
+        >
+          <RestaurantDetailTabs
+            activeTab="menu"
+            onTabChange={onTabChange}
+            photoCount={photoCount}
+            reviewCount={restaurant.reviewCount}
+          />
+        </div>
+      </PageFixedArea>
       <div
         aria-hidden="true"
         data-testid="restaurant-menu-detail-fixed-spacer"
