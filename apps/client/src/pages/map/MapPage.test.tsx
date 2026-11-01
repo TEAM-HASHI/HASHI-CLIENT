@@ -269,7 +269,7 @@ describe('MapPage API integration', () => {
       available = 768
       fireEvent.resize(window)
       const expectedHeight =
-        stage === 'normal' ? '321' : panel === 'list' ? '710' : '768'
+        stage === 'normal' ? '321' : panel === 'list' ? '648' : '768'
       await waitFor(() =>
         expect(screen.getByLabelText(label)).toHaveAttribute(
           'aria-valuenow',
@@ -852,7 +852,7 @@ describe('MapPage API integration', () => {
     )
     expect(
       await screen.findByRole('slider', { name: '식당 목록 높이 조절' }),
-    ).toHaveAttribute('aria-valuenow', '710')
+    ).toHaveAttribute('aria-valuenow', '648')
     expect(
       screen.queryByRole('button', { name: '지도로 보기' }),
     ).not.toBeInTheDocument()

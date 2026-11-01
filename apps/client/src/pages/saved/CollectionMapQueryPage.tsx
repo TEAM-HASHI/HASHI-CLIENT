@@ -14,7 +14,10 @@ import {
 } from '@/app/router/routePaths'
 import { ROUTES } from '@/app/router/path'
 import { MapViewport } from '@/pages/map/components/MapViewport'
-import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
+import {
+  getMapPanelMaxHeight,
+  useMapPanelLayout,
+} from '@/pages/map/hooks/useMapPanelLayout'
 import { mapRegionsQueryOptions } from '@/pages/map/queries/mapQueryOptions'
 import { getCollectionMapMarkers } from '@/pages/saved/api/getCollectionMapMarkers'
 import { useCollectionSessionVersion } from '@/features/collection/hooks/useCollectionSessionVersion'
@@ -51,12 +54,9 @@ export const CollectionMapQueryPage = ({
   })
   const regions = useQuery(mapRegionsQueryOptions())
   const { containerRef, availableHeight } = useMapPanelLayout()
+  const maxHeight = getMapPanelMaxHeight(availableHeight)
   const [height, setHeight] = useState<number>(DRAG_PANEL_HEIGHTS.normal)
-  const panelHeight = Math.min(
-    height,
-    DRAG_PANEL_HEIGHTS.maximum,
-    Math.max(30, availableHeight),
-  )
+  const panelHeight = Math.min(height, maxHeight)
   const [clock, setClock] = useState(Date.now)
   useEffect(() => {
     const update = () => setClock(Date.now())
@@ -171,6 +171,7 @@ export const CollectionMapQueryPage = ({
         aria-label="저장 컬렉션 패널"
         handleLabel="컬렉션 패널 높이"
         height={height}
+        maxHeight={maxHeight}
         onHeightChange={setHeight}
       >
         <SavedApiPage embedded />
