@@ -19,6 +19,7 @@ import {
   ReservationUnderlineTextField,
 } from '@/features/reservation/components'
 import { useAnywhereReservationForm } from '@/pages/anywhereReservation/hooks/useAnywhereReservationForm'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const ANYWHERE_RESERVATION_FORM_ID = 'anywhere-reservation-form'
 
@@ -54,15 +55,21 @@ export const AnywhereReservationPage = () => {
 
   return (
     <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
-      <Header
-        className="app-mobile-fixed-top z-fixed fixed"
-        leftAction={
-          <IconButton aria-label="뒤로가기" onClick={handleBackClick} size="xs">
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        title="예약하기"
-      />
+      <PageFixedArea>
+        <Header
+          className="app-mobile-fixed-top z-fixed fixed"
+          leftAction={
+            <IconButton
+              aria-label="뒤로가기"
+              onClick={handleBackClick}
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          title="예약하기"
+        />
+      </PageFixedArea>
 
       <div className="px-6 pt-6.5">
         <form

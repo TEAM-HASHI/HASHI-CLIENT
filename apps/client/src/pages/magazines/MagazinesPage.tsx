@@ -4,6 +4,7 @@ import { Header, IconButton } from '@hashi/hds-ui'
 import { useMagazinesPage } from '@/pages/magazines/hooks/useMagazinesPage'
 import { MagazineHeroBannerSection } from '@/pages/magazines/sections/MagazineHeroBannerSection'
 import { RecommendedMagazineSection } from '@/pages/magazines/sections/RecommendedMagazineSection'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 export const MagazinesPage = () => {
   const {
@@ -23,19 +24,21 @@ export const MagazinesPage = () => {
 
   return (
     <div className="min-h-dvh bg-white">
-      <Header
-        className="fixed top-0 right-0 left-0 z-20 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white"
-        leftAction={
-          <IconButton
-            aria-label="홈으로 돌아가기"
-            onClick={handleBackClick}
-            size="xs"
-          >
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        title="매거진"
-      />
+      <PageFixedArea>
+        <Header
+          className="fixed top-0 right-0 left-0 z-20 mx-auto w-full max-w-[var(--app-mobile-max-width)] bg-white"
+          leftAction={
+            <IconButton
+              aria-label="홈으로 돌아가기"
+              onClick={handleBackClick}
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          title="매거진"
+        />
+      </PageFixedArea>
 
       <main className="pt-[75px]">
         <MagazineHeroBannerSection

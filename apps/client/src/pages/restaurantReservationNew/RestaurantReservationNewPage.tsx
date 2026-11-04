@@ -17,6 +17,7 @@ import {
 import { ReservationRestaurantSummary } from '@/pages/restaurantReservationNew/components/ReservationRestaurantSummary'
 import { useReservationRestaurant } from '@/pages/restaurantReservationNew/hooks/useReservationRestaurant'
 import { useRestaurantReservationForm } from '@/pages/restaurantReservationNew/hooks/useRestaurantReservationForm'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const RESERVATION_FORM_ID = 'restaurant-reservation-new-form'
 
@@ -51,23 +52,25 @@ export const RestaurantReservationNewPage = () => {
 
   return (
     <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
-      <div
-        className="app-mobile-fixed-top z-fixed bg-white"
-        data-testid="reservation-header"
-      >
-        <Header
-          leftAction={
-            <IconButton
-              aria-label="뒤로가기"
-              onClick={handleBackClick}
-              size="xs"
-            >
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-          title="예약하기"
-        />
-      </div>
+      <PageFixedArea>
+        <div
+          className="app-mobile-fixed-top z-fixed bg-white"
+          data-testid="reservation-header"
+        >
+          <Header
+            leftAction={
+              <IconButton
+                aria-label="뒤로가기"
+                onClick={handleBackClick}
+                size="xs"
+              >
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+            title="예약하기"
+          />
+        </div>
+      </PageFixedArea>
 
       <div className="px-6 pt-6.5">
         <ReservationRestaurantSummary

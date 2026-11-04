@@ -7,6 +7,7 @@ import { ReviewDeleteDialog } from '@/pages/reviewDetail/components/ReviewDelete
 import { ReviewDetailActionBar } from '@/pages/reviewDetail/components/ReviewDetailActionBar'
 import { ReviewDetailContentCard } from '@/pages/reviewDetail/components/ReviewDetailContentCard'
 import { useReviewDetailPage } from '@/pages/reviewDetail/hooks/useReviewDetailPage'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 export const ReviewDetailPage = () => {
   const {
@@ -29,9 +30,11 @@ export const ReviewDetailPage = () => {
       aria-label="리뷰 상세"
       className="app-mobile-bottom-action-content min-h-dvh min-w-0 overflow-x-hidden bg-white pt-18.75"
     >
-      <div className="app-mobile-fixed-top z-fixed">
-        <ReviewHeader title="마이 리뷰" onBackClick={handleBackClick} />
-      </div>
+      <PageFixedArea>
+        <div className="app-mobile-fixed-top z-fixed">
+          <ReviewHeader title="마이 리뷰" onBackClick={handleBackClick} />
+        </div>
+      </PageFixedArea>
       {isPending ? (
         <p className="typo-body-4 text-primary-200 flex min-h-[360px] items-center justify-center px-5 text-center">
           리뷰 정보를 불러오는 중입니다.

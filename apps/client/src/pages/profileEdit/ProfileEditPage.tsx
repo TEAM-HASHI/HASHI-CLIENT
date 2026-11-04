@@ -8,6 +8,7 @@ import { useMyInfoQuery } from '@/features/user'
 import type { MyInfo } from '@/features/user/api/getMyInfo'
 import { useProfileEditPage } from '@/pages/profileEdit/hooks/useProfileEditPage'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const PROFILE_EDIT_FORM_ID = 'profile-edit-form'
 
@@ -18,21 +19,23 @@ const ProfileEditForm = (profile: MyInfo) => {
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <h1 className="sr-only">내 정보 수정</h1>
-      <div className="app-mobile-fixed-top z-fixed bg-white">
-        <Header
-          leftAction={
-            <IconButton
-              aria-label="뒤로가기"
-              disabled={isSubmitting}
-              onClick={handleBack}
-              size="xs"
-            >
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-          title="내 정보 수정"
-        />
-      </div>
+      <PageFixedArea>
+        <div className="app-mobile-fixed-top z-fixed bg-white">
+          <Header
+            leftAction={
+              <IconButton
+                aria-label="뒤로가기"
+                disabled={isSubmitting}
+                onClick={handleBack}
+                size="xs"
+              >
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+            title="내 정보 수정"
+          />
+        </div>
+      </PageFixedArea>
 
       <form
         className="px-5 pt-[75px]"

@@ -28,7 +28,10 @@ import { MapRestaurantList } from '@/pages/map/components/MapRestaurantList'
 import { MapRestaurantListHeader } from '@/pages/map/components/MapRestaurantListHeader'
 import { MapRestaurantDetail } from '@/pages/map/components/MapRestaurantDetail'
 import { MapStatusView } from '@/pages/map/components/MapStatusView'
-import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
+import {
+  getMapPanelMaxHeight,
+  useMapPanelLayout,
+} from '@/pages/map/hooks/useMapPanelLayout'
 import { useMapPageState } from '@/pages/map/hooks/useMapPageState'
 import { useMapRestaurantSaves } from '@/pages/map/hooks/useMapRestaurantSaves'
 import { MapSavedCollectionsSheet } from '@/pages/map/components/MapSavedCollectionsSheet'
@@ -44,9 +47,6 @@ import {
   getCollectionSaveRestaurantId,
   getCollectionSaveState,
 } from '@/features/collection/utils/collectionNavigation'
-
-// Figma 8317:39104의 하단 내비게이션 제외 콘텐츠 높이와 현재 행 간격을 맞춘 값.
-const MAP_SAVED_COLLECTIONS_PANEL_HEIGHT = 490
 
 export const MapPage = () => {
   const location = useLocation()
@@ -92,11 +92,11 @@ const MapMainPage = () => {
   )
   const savedCollectionsOpen = savedCollectionsRequested && isAuthenticated
   const [savedCollectionsHeight, setSavedCollectionsHeight] = useState<number>(
-    MAP_SAVED_COLLECTIONS_PANEL_HEIGHT,
+    DRAG_PANEL_HEIGHTS.normal,
   )
   const setSavedCollectionsVisible = (open: boolean) => {
     setSavedCollectionsRequested(open)
-    if (open) setSavedCollectionsHeight(MAP_SAVED_COLLECTIONS_PANEL_HEIGHT)
+    if (open) setSavedCollectionsHeight(DRAG_PANEL_HEIGHTS.normal)
     navigate(
       { pathname: location.pathname, search: location.search },
       {
@@ -297,9 +297,7 @@ const MapMainPage = () => {
     !!state.searchBounds
   const isEmptyResult =
     state.status === 'success' && state.restaurants.length === 0
-  const maxHeight = isEmptyResult
-    ? 30
-    : Math.min(DRAG_PANEL_HEIGHTS.maximum, Math.max(30, availableHeight))
+  const maxHeight = isEmptyResult ? 30 : getMapPanelMaxHeight(availableHeight)
   const normalHeight = Math.min(DRAG_PANEL_HEIGHTS.normal, maxHeight)
   const height = isEmptyResult
     ? 30
@@ -353,7 +351,7 @@ const MapMainPage = () => {
   return (
     <main
       ref={containerRef}
-      className="relative h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] overflow-hidden bg-white"
+      className="relative h-[calc(100dvh-var(--app-mobile-bottom-nav-height))] overflow-hidden bg-white"
     >
       <h1 className="sr-only">도쿄 맛집 지도</h1>
       <div
@@ -396,7 +394,10 @@ const MapMainPage = () => {
             hasConditions={!!state.conditions.keyword}
             panelHeight={
               savedCollectionsOpen
-                ? Math.min(savedCollectionsHeight, availableHeight)
+                ? Math.min(
+                    savedCollectionsHeight,
+                    getMapPanelMaxHeight(availableHeight),
+                  )
                 : mapUnavailable
                   ? 0
                   : state.selectedRestaurant
@@ -470,7 +471,7 @@ const MapMainPage = () => {
                   ? 'maximum'
                   : stage
             }
-            maxHeight={isEmptyResult ? 30 : undefined}
+            maxHeight={maxHeight}
             onStageCommit={({ stage }) =>
               setStage(
                 isEmptyResult
@@ -557,7 +558,7 @@ const MapMainPage = () => {
       <MapSavedCollectionsSheet
         open={savedCollectionsOpen}
         height={savedCollectionsHeight}
-        targetHeight={MAP_SAVED_COLLECTIONS_PANEL_HEIGHT}
+        maxHeight={getMapPanelMaxHeight(availableHeight)}
         onHeightChange={setSavedCollectionsHeight}
         onClose={() => setSavedCollectionsVisible(false)}
       />

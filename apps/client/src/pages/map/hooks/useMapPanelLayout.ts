@@ -1,4 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { DRAG_PANEL_HEIGHTS } from '@hashi/hds-ui'
+
+export const getMapPanelMaxHeight = (availableHeight: number) =>
+  Math.min(DRAG_PANEL_HEIGHTS.maximum, Math.max(30, availableHeight - 120))
 
 // Measure the page-owned viewport, never DragPanel's private scroll element.
 export const useMapPanelLayout = () => {

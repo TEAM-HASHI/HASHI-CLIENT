@@ -39,7 +39,7 @@ export const SavedPageLayout = ({
     className={
       embedded
         ? 'flex h-full flex-col overflow-hidden bg-white'
-        : 'flex h-[calc(100dvh-84px-var(--safe-area-bottom,0px))] flex-col overflow-hidden bg-white pt-[var(--safe-area-top,0px)]'
+        : 'flex h-[calc(100dvh-var(--app-mobile-bottom-nav-height))] flex-col overflow-hidden bg-white pt-[var(--safe-area-top,0px)]'
     }
   >
     <div

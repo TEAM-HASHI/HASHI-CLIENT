@@ -1,3 +1,4 @@
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 const blockClassName = 'animate-pulse rounded-[4px] bg-secondary-200'
 
 export const ReservationDetailSkeleton = () => {
@@ -52,10 +53,12 @@ export const ReservationDetailSkeleton = () => {
             ))}
           </div>
         </div>
-        <div className="app-mobile-fixed-bottom z-fixed flex min-h-[calc(var(--app-mobile-bottom-action-height)+var(--safe-area-bottom,0px))] gap-4 bg-white px-5 pt-4">
-          <div className={`${blockClassName} h-10.5 flex-1`} />
-          <div className={`${blockClassName} h-10.5 flex-1`} />
-        </div>
+        <PageFixedArea>
+          <div className="app-mobile-fixed-bottom z-fixed flex min-h-[calc(var(--app-mobile-bottom-action-height)+var(--safe-area-bottom,0px))] gap-4 bg-white px-5 pt-4">
+            <div className={`${blockClassName} h-10.5 flex-1`} />
+            <div className={`${blockClassName} h-10.5 flex-1`} />
+          </div>
+        </PageFixedArea>
       </div>
     </div>
   )

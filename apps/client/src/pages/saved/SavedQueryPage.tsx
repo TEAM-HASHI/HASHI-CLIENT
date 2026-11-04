@@ -49,6 +49,7 @@ import {
   useInfiniteScrollTrigger,
   useListReturnRestoration,
 } from '@/shared/hooks'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const restaurantDetailReturnStore = createListReturnStore<null>()
 
@@ -341,25 +342,27 @@ export const SavedQueryPage = ({
             />
           )}
           {collection && !mapState && (
-            <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">
-              <Button
-                size="md"
-                className="pointer-events-auto h-11 gap-0.5 rounded-full px-3 shadow-[0_4px_4px_rgba(0,0,0,0.15)]"
-                leftIcon={
-                  <MapViewIcon className="fill-secondary-200 stroke-primary-100 size-6" />
-                }
-                onClick={() => {
-                  const state: CollectionMapState = {
-                    collectionId: collection.id,
-                    sort,
-                    category,
+            <PageFixedArea>
+              <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">
+                <Button
+                  size="md"
+                  className="pointer-events-auto h-11 gap-0.5 rounded-full px-3 shadow-[0_4px_4px_rgba(0,0,0,0.15)]"
+                  leftIcon={
+                    <MapViewIcon className="fill-secondary-200 stroke-primary-100 size-6" />
                   }
-                  navigate(ROUTES.map, { state })
-                }}
-              >
-                지도로 보기
-              </Button>
-            </div>
+                  onClick={() => {
+                    const state: CollectionMapState = {
+                      collectionId: collection.id,
+                      sort,
+                      category,
+                    }
+                    navigate(ROUTES.map, { state })
+                  }}
+                >
+                  지도로 보기
+                </Button>
+              </div>
+            </PageFixedArea>
           )}
         </>
       )}

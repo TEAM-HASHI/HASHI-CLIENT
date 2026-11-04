@@ -20,6 +20,7 @@ import { checkHasHttpStatus } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 export const MagazineDetailPage = () => {
   const { magazineId = '' } = useParams<{ magazineId: string }>()
@@ -99,20 +100,22 @@ const MagazineDetailContent = ({
 
   return (
     <div className="min-h-dvh bg-white">
-      <div className="app-mobile-fixed-top z-fixed bg-white">
-        <Header
-          leftAction={
-            <IconButton
-              aria-label="매거진 목록으로 돌아가기"
-              onClick={handleBackClick}
-              size="xs"
-            >
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-          title={magazine.title}
-        />
-      </div>
+      <PageFixedArea>
+        <div className="app-mobile-fixed-top z-fixed bg-white">
+          <Header
+            leftAction={
+              <IconButton
+                aria-label="매거진 목록으로 돌아가기"
+                onClick={handleBackClick}
+                size="xs"
+              >
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+            title={magazine.title}
+          />
+        </div>
+      </PageFixedArea>
 
       <div className="pt-18.75">
         <MagazineArticle

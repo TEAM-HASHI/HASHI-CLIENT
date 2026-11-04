@@ -14,6 +14,7 @@ import { NoticeContent } from '@/pages/noticeDetail/components/NoticeContent'
 import { NoticeImageViewer } from '@/pages/noticeDetail/components/NoticeImageViewer'
 import { checkIsNotFoundError } from '@/shared/api/apiError'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const parseNoticeId = (value: string | undefined) => {
   const noticeId = Number(value)
@@ -57,23 +58,25 @@ export const NoticeDetailPage = () => {
 
   return (
     <div className="app-mobile-bottom-nav-content bg-white pt-18.75">
-      <Header
-        className="app-mobile-fixed-top z-fixed fixed"
-        leftAction={
-          <IconButton
-            aria-label="뒤로가기"
-            onClick={() =>
-              fromNoticeList
-                ? navigate(-1)
-                : navigate(ROUTES.notices, { replace: true })
-            }
-            size="xs"
-          >
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        title="공지사항"
-      />
+      <PageFixedArea>
+        <Header
+          className="app-mobile-fixed-top z-fixed fixed"
+          leftAction={
+            <IconButton
+              aria-label="뒤로가기"
+              onClick={() =>
+                fromNoticeList
+                  ? navigate(-1)
+                  : navigate(ROUTES.notices, { replace: true })
+              }
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          title="공지사항"
+        />
+      </PageFixedArea>
       {notice ? (
         <article className="px-5 pb-10">
           <div className="flex min-h-25 flex-col justify-center gap-2 py-6">

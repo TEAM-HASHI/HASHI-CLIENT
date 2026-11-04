@@ -13,6 +13,7 @@ import type { ReservationCompletionResponse } from '@/features/reservation/queri
 import { createReservationReceiptInfoItems } from '@/features/reservation/utils/createReservationReceiptInfoItems'
 import { parseReservationId } from '@/features/reservation/utils/parseReservationId'
 import { ReservationCompleteProgress } from '@/pages/reservationComplete/components/ReservationCompleteProgress'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 export const ReservationCompletePage = () => {
   const navigate = useNavigate()
@@ -102,11 +103,13 @@ export const ReservationCompletePage = () => {
         </dl>
       </section>
 
-      <div className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-7 pb-[calc(48px+var(--safe-area-bottom,0px))]">
-        <Button onClick={handleConfirmClick} size="lg" width="full">
-          확인 완료
-        </Button>
-      </div>
+      <PageFixedArea>
+        <div className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-7 pb-[calc(48px+var(--safe-area-bottom,0px))]">
+          <Button onClick={handleConfirmClick} size="lg" width="full">
+            확인 완료
+          </Button>
+        </div>
+      </PageFixedArea>
     </div>
   )
 }

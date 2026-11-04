@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 export const usePageScrollLayout = () => {
-  const frameRef = useRef<HTMLElement>(null)
+  const frameRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const frame = frameRef.current
@@ -32,13 +32,14 @@ export const usePageScrollLayout = () => {
         ? undefined
         : new ResizeObserver(measure)
     const refresh = () => {
+      const scroller = frame.querySelector('[data-page-scroll]')
       const candidates = frame.querySelectorAll(
         'header, .app-mobile-fixed-top, .app-mobile-fixed-bottom, [data-page-scroll-top]',
       )
       const fixedBars = new Set<Element>()
       for (const candidate of candidates) {
         let bar: Element | null = candidate
-        while (bar && bar !== frame) {
+        while (bar && bar !== frame && bar !== scroller) {
           if (getComputedStyle(bar).position === 'fixed') {
             fixedBars.add(bar)
             break

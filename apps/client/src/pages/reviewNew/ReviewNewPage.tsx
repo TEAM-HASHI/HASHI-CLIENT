@@ -19,6 +19,7 @@ import {
   formatReviewGuestSummary,
   formatReviewVisitedAt,
 } from '@/pages/reviewNew/utils/reviewContextView'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const POSITIVE_INTEGER_PATTERN = /^[1-9]\d*$/
 
@@ -73,9 +74,11 @@ export const ReviewNewPage = () => {
       className="flex min-h-dvh w-full min-w-0 justify-center bg-white"
     >
       <div className="flex min-h-dvh w-full min-w-0 flex-col overflow-x-hidden bg-white">
-        <div className="app-mobile-fixed-top z-fixed">
-          <ReviewHeader onBackClick={() => navigate(-1)} />
-        </div>
+        <PageFixedArea>
+          <div className="app-mobile-fixed-top z-fixed">
+            <ReviewHeader onBackClick={() => navigate(-1)} />
+          </div>
+        </PageFixedArea>
         <div className="typo-body-4 text-cool-gray-700 flex flex-1 items-center justify-center px-5 pt-18.75 text-center">
           {message}
         </div>
@@ -135,9 +138,11 @@ export const ReviewNewPage = () => {
       className="flex min-h-dvh w-full min-w-0 justify-center bg-white"
     >
       <div className="flex min-h-dvh w-full min-w-0 flex-col overflow-x-hidden bg-white">
-        <div className="app-mobile-fixed-top z-fixed">
-          <ReviewHeader onBackClick={() => navigate(-1)} />
-        </div>
+        <PageFixedArea>
+          <div className="app-mobile-fixed-top z-fixed">
+            <ReviewHeader onBackClick={() => navigate(-1)} />
+          </div>
+        </PageFixedArea>
         <form
           aria-label="리뷰 작성 폼"
           className="flex min-h-0 min-w-0 flex-1 flex-col pt-18.75"

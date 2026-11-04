@@ -28,6 +28,7 @@ import { getCollectionHistoryIndex } from '@/features/collection/utils/collectio
 import { ApiError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { cn } from '@/shared/utils'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const COLOR_LABELS: Record<CollectionColor, string> = {
   red: '빨강',
@@ -183,21 +184,23 @@ export const CollectionForm = ({
         aria-label={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
         className="app-mobile-bottom-action-content min-h-dvh bg-white pt-[calc(75px+var(--safe-area-top,0px))]"
       >
-        <div className="app-mobile-fixed-top z-fixed bg-white pt-[var(--safe-area-top,0px)]">
-          <Header
-            title={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
-            leftAction={
-              <IconButton
-                size="xs"
-                aria-label="뒤로가기"
-                onClick={close}
-                disabled={isSubmitted}
-              >
-                <BackIcon className="size-6" />
-              </IconButton>
-            }
-          />
-        </div>
+        <PageFixedArea>
+          <div className="app-mobile-fixed-top z-fixed bg-white pt-[var(--safe-area-top,0px)]">
+            <Header
+              title={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
+              leftAction={
+                <IconButton
+                  size="xs"
+                  aria-label="뒤로가기"
+                  onClick={close}
+                  disabled={isSubmitted}
+                >
+                  <BackIcon className="size-6" />
+                </IconButton>
+              }
+            />
+          </div>
+        </PageFixedArea>
         <form
           id={`${id}-form`}
           className="w-full px-6"

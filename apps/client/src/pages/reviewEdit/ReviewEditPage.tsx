@@ -9,6 +9,7 @@ import {
   ReviewSubmitBar,
 } from '@/features/review/components'
 import { useReviewEditPage } from '@/pages/reviewEdit/hooks/useReviewEditPage'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 export const ReviewEditPage = () => {
   const {
@@ -47,9 +48,11 @@ export const ReviewEditPage = () => {
       className="flex min-h-dvh w-full min-w-0 justify-center bg-white"
     >
       <div className="flex min-h-dvh w-full min-w-0 flex-col overflow-x-hidden bg-white">
-        <div className="app-mobile-fixed-top z-fixed">
-          <ReviewHeader title="리뷰 수정" onBackClick={handleBackClick} />
-        </div>
+        <PageFixedArea>
+          <div className="app-mobile-fixed-top z-fixed">
+            <ReviewHeader title="리뷰 수정" onBackClick={handleBackClick} />
+          </div>
+        </PageFixedArea>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-5 pt-18.75 text-center">
           <p className="typo-body-4 text-primary-200">{message}</p>
           <Button size="sm" variant="neutral" onClick={onAction}>
@@ -90,9 +93,11 @@ export const ReviewEditPage = () => {
       className="flex min-h-dvh w-full min-w-0 justify-center bg-white"
     >
       <div className="flex min-h-dvh w-full min-w-0 flex-col overflow-x-hidden bg-white">
-        <div className="app-mobile-fixed-top z-fixed">
-          <ReviewHeader title="리뷰 수정" onBackClick={handleBackClick} />
-        </div>
+        <PageFixedArea>
+          <div className="app-mobile-fixed-top z-fixed">
+            <ReviewHeader title="리뷰 수정" onBackClick={handleBackClick} />
+          </div>
+        </PageFixedArea>
         <form
           aria-label="리뷰 수정 폼"
           className="flex min-h-0 min-w-0 flex-1 flex-col pt-18.75"

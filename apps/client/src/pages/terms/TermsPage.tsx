@@ -8,6 +8,7 @@ import { getTermsDetailPath } from '@/app/router/routePaths'
 import { getTerms } from '@/features/terms/api/getTerms'
 import { termsQueryKeys } from '@/features/terms/queries/termsQueryKeys'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 export const TermsPage = () => {
   const navigate = useNavigate()
@@ -19,19 +20,21 @@ export const TermsPage = () => {
 
   return (
     <div className="app-mobile-bottom-nav-content bg-white pt-18.75">
-      <Header
-        className="app-mobile-fixed-top z-fixed fixed"
-        leftAction={
-          <IconButton
-            aria-label="뒤로가기"
-            onClick={() => navigate(ROUTES.mypage, { replace: true })}
-            size="xs"
-          >
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        title="이용약관"
-      />
+      <PageFixedArea>
+        <Header
+          className="app-mobile-fixed-top z-fixed fixed"
+          leftAction={
+            <IconButton
+              aria-label="뒤로가기"
+              onClick={() => navigate(ROUTES.mypage, { replace: true })}
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          title="이용약관"
+        />
+      </PageFixedArea>
 
       {query.isPending ? (
         <LoadingScreen />

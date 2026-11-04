@@ -7,6 +7,7 @@ import { HomeQuickMenuSection } from '@/pages/home/components/HomeQuickMenuSecti
 import { HomeSearchEntry } from '@/pages/home/components/HomeSearchEntry'
 import { HotSnsRestaurantSection } from '@/pages/home/components/HotSnsRestaurantSection'
 import { useHomePage } from '@/pages/home/hooks/useHomePage'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 export const HomePage = () => {
   const {
@@ -25,13 +26,15 @@ export const HomePage = () => {
     <>
       <div className="px-5 pt-[100px] pb-8">
         <h1 className="sr-only">Hashi 홈</h1>
-        <header
-          aria-label="홈 상단 영역"
-          className="app-mobile-fixed-top z-fixed bg-white px-5 pt-[18px] pb-5"
-        >
-          <HomeLogo />
-          <HomeSearchEntry to={searchPath} />
-        </header>
+        <PageFixedArea>
+          <header
+            aria-label="홈 상단 영역"
+            className="app-mobile-fixed-top z-fixed bg-white px-5 pt-[18px] pb-5"
+          >
+            <HomeLogo />
+            <HomeSearchEntry to={searchPath} />
+          </header>
+        </PageFixedArea>
         <HomeCurationSection
           banners={homeBanners}
           isError={homeBannersState.isError}

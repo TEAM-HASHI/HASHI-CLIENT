@@ -10,6 +10,7 @@ import { ReservationReceiptInfoCard } from '@/pages/reservationDetail/components
 import { ReservationDetailSkeleton } from '@/pages/reservationDetail/components/ReservationDetailSkeleton'
 import { useReservationDetailPage } from '@/pages/reservationDetail/hooks/useReservationDetailPage'
 import { NotFoundPage } from '@/pages/notFound'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 export const ReservationDetailPage = () => {
   const {
@@ -38,19 +39,21 @@ export const ReservationDetailPage = () => {
 
   return (
     <section className="app-mobile-bottom-action-content min-h-dvh pt-18.75">
-      <Header
-        leftAction={
-          <IconButton
-            aria-label="이전 페이지로 이동"
-            onClick={handleBack}
-            size="xs"
-          >
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        title="예약 상세"
-        className="app-mobile-fixed-top z-fixed fixed"
-      />
+      <PageFixedArea>
+        <Header
+          leftAction={
+            <IconButton
+              aria-label="이전 페이지로 이동"
+              onClick={handleBack}
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          title="예약 상세"
+          className="app-mobile-fixed-top z-fixed fixed"
+        />
+      </PageFixedArea>
       {isLoading || !viewModel ? (
         <ReservationDetailSkeleton />
       ) : (
