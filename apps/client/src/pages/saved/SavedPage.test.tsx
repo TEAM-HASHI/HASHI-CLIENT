@@ -1,4 +1,10 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -9,6 +15,7 @@ import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvide
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import type { CollectionData } from '@/pages/saved/types'
 import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
+import { CollectionEditMenu } from '@/pages/saved/components/CollectionDropdown'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import {
   mapCollectionSummary,
@@ -89,6 +96,40 @@ describe('서버 응답 목록 표시', () => {
 })
 
 describe('SavedPage', () => {
+  it.each(['수정하기', '공유하기', '삭제하기'] as const)(
+    '터치 중 포커스 대상이 사라져도 %s 동작을 실행한다',
+    async (label) => {
+      const onEdit = vi.fn()
+      const onShare = vi.fn()
+      const onDelete = vi.fn()
+      render(
+        <CollectionEditMenu
+          name="여행"
+          shareInMenu
+          onEdit={onEdit}
+          onShare={onShare}
+          onDelete={onDelete}
+        />,
+      )
+      await userEvent.click(screen.getByRole('button', { name: '여행 더보기' }))
+      const item = screen.getByRole('menuitem', { name: label })
+      fireEvent.pointerDown(item, { pointerType: 'touch' })
+      fireEvent.blur(screen.getByRole('menuitem', { name: '수정하기' }), {
+        relatedTarget: null,
+      })
+      fireEvent.pointerUp(item, { pointerType: 'touch' })
+      fireEvent.click(item)
+
+      const callbacks = {
+        수정하기: onEdit,
+        공유하기: onShare,
+        삭제하기: onDelete,
+      }
+      expect(callbacks[label]).toHaveBeenCalledOnce()
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    },
+  )
+
   it('외부 식당 선택 콜백을 유지하고 더보기 클릭은 상세 선택으로 전달하지 않는다', async () => {
     const select = vi.fn()
     const { user, router } = setup(collectionMocks, select)
