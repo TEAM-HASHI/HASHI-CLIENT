@@ -183,6 +183,7 @@ export const CollectionDropdown = <T extends string>({
             }}
             onBlur={(event) => {
               if (
+                event.relatedTarget !== null &&
                 !event.currentTarget.contains(
                   event.relatedTarget as Node | null,
                 )
