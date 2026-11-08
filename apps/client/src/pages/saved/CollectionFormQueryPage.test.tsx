@@ -16,6 +16,8 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CollectionFormQueryPage } from '@/pages/saved/CollectionFormQueryPage'
+import { CollectionTargetQueryDialog } from '@/features/collection/components/CollectionTargetQueryDialog'
+import { saveRestaurant } from '@/features/collection/api/saveRestaurant'
 import { createCollection } from '@/features/collection/api/createCollection'
 import { updateCollection } from '@/features/collection/api/updateCollection'
 import { getCollection } from '@/features/collection/api/getCollection'
@@ -31,6 +33,9 @@ import {
 
 vi.mock('@/features/collection/api/createCollection', () => ({
   createCollection: vi.fn(),
+}))
+vi.mock('@/features/collection/api/saveRestaurant', () => ({
+  saveRestaurant: vi.fn(),
 }))
 vi.mock('@/features/collection/api/updateCollection', () => ({
   updateCollection: vi.fn(),
@@ -56,7 +61,7 @@ const Returned = () => {
   const location = useLocation()
   return <div>원래 화면 {JSON.stringify(location.state)}</div>
 }
-const setup = (editing = false) => {
+const setup = (editing = false, fromSaveDialog = false) => {
   const onError = vi.fn()
   const client = new QueryClient({
     defaultOptions: {
@@ -67,7 +72,18 @@ const setup = (editing = false) => {
   clients.push(client)
   const router = createMemoryRouter(
     [
-      { path: '/saved', element: <Returned /> },
+      {
+        path: '/saved',
+        element: fromSaveDialog ? (
+          <CollectionTargetQueryDialog
+            mode="save"
+            restaurantId={55}
+            onClose={() => {}}
+          />
+        ) : (
+          <Returned />
+        ),
+      },
       { path: '/saved/collections/new', element: <CollectionFormQueryPage /> },
       {
         path: '/saved/collections/:collectionId/edit',
@@ -101,6 +117,7 @@ const setup = (editing = false) => {
           },
         },
       ],
+      ...(fromSaveDialog && { initialIndex: 0 }),
     },
   )
   render(
@@ -128,6 +145,51 @@ afterEach(() => {
 })
 
 describe('컬렉션 API 폼 연결', () => {
+  it('저장창에서 생성한 컬렉션을 선택하고 기존 선택도 유지하며 저장은 확정할 때만 요청한다', async () => {
+    const existing = { ...detail, name: '기존 컬렉션', saved: false }
+    const created = {
+      ...detail,
+      collectionId: 42,
+      name: '새 여행',
+      saved: false,
+    }
+    const items = [existing]
+    vi.mocked(getCollections).mockImplementation(async () => ({
+      collections: [...items],
+      totalCount: items.length,
+      hasNext: false,
+      nextCursor: undefined,
+    }))
+    vi.mocked(createCollection).mockImplementation(async () => {
+      items.unshift(created)
+      return created
+    })
+    vi.mocked(saveRestaurant).mockImplementation(async (id) =>
+      id === 42 ? created : existing,
+    )
+    const { user } = setup(false, true)
+    await user.click(
+      await screen.findByRole('checkbox', { name: /기존 컬렉션/ }),
+    )
+    await user.click(screen.getByRole('button', { name: '새 컬렉션 만들기' }))
+    await user.type(await screen.findByLabelText('컬렉션명'), '새 여행')
+    await user.click(screen.getByRole('radio', { name: '빨강' }))
+    const createButton = screen.getByRole('button', { name: '만들기' })
+    await waitFor(() => expect(createButton).toBeEnabled())
+    await user.click(createButton)
+
+    expect(
+      await screen.findByRole('checkbox', { name: /새 여행/ }),
+    ).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: /기존 컬렉션/ })).toBeChecked()
+    expect(saveRestaurant).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: '저장' }))
+    await waitFor(() => {
+      expect(saveRestaurant).toHaveBeenCalledWith(42, { restaurantId: 55 })
+      expect(saveRestaurant).toHaveBeenCalledWith(8, { restaurantId: 55 })
+    })
+  })
+
   it.each(['조회 중', '조회 실패'] as const)(
     '이름 목록 %s에도 기존 이름의 색상 수정은 저장하고 이름 변경은 확인을 기다린다',
     async (state) => {
