@@ -182,7 +182,7 @@ export const CollectionForm = ({
     <>
       <section
         aria-label={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
-        className="app-mobile-bottom-action-content min-h-dvh bg-white pt-[calc(75px+var(--safe-area-top,0px))]"
+        className="min-h-dvh bg-white pt-[calc(75px+var(--safe-area-top,0px))] pb-5"
       >
         <PageFixedArea>
           <div className="app-mobile-fixed-top z-fixed bg-white pt-[var(--safe-area-top,0px)]">
@@ -404,6 +404,7 @@ export const CollectionForm = ({
         </form>
         <BottomActionBar
           aria-label={collection ? '컬렉션 수정 제출' : '컬렉션 생성 제출'}
+          layout="padded"
           endAction={
             <Button
               form={`${id}-form`}
