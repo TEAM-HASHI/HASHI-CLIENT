@@ -45,7 +45,7 @@ export const REVIEW_KEYWORDS: ReviewKeywordOption[] = [
   {
     id: 'kind',
     code: 'STAFF_IS_KIND',
-    label: '직원분이 친절해요',
+    label: '친절해요',
     Icon: SmileIcon,
   },
   {
@@ -95,14 +95,13 @@ const reviewKeywordById = new Map(
 const reviewKeywordByLabel = new Map(
   REVIEW_KEYWORDS.map((keyword) => [keyword.label, keyword]),
 )
+const kindKeyword = reviewKeywordByCode.get('STAFF_IS_KIND')
+if (kindKeyword) reviewKeywordByLabel.set('직원분이 친절해요', kindKeyword)
 
 export const getReviewKeywordByValue = (value: string) =>
   reviewKeywordByCode.get(value) ??
   reviewKeywordById.get(value) ??
   reviewKeywordByLabel.get(value)
-
-export const getReviewKeywordIconByCode = (code: string) =>
-  reviewKeywordByCode.get(code)?.Icon
 
 export const getReviewKeywordIcon = ({
   code,

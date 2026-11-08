@@ -64,7 +64,7 @@ export const ReviewDetailPage = () => {
           <ReviewDetailContentCard
             content={reviewDetail.content}
             images={reviewDetail.images}
-            keywordIds={reviewDetail.keywordIds}
+            keywords={reviewDetail.keywords}
             rating={reviewDetail.rating}
             writtenDate={reviewDetail.writtenDate}
           />
