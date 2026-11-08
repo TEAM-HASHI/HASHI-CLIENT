@@ -51,7 +51,7 @@ export const RestaurantReservationNewPage = () => {
   }
 
   return (
-    <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
+    <div className="min-h-dvh bg-white pt-18.75 pb-5">
       <PageFixedArea>
         <div
           className="app-mobile-fixed-top z-fixed bg-white"

@@ -13,7 +13,7 @@ import type { ReservationCompletionResponse } from '@/features/reservation/queri
 import { createReservationReceiptInfoItems } from '@/features/reservation/utils/createReservationReceiptInfoItems'
 import { parseReservationId } from '@/features/reservation/utils/parseReservationId'
 import { ReservationCompleteProgress } from '@/pages/reservationComplete/components/ReservationCompleteProgress'
-import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
+import { BottomActionBar } from '@/shared/components/bottomActionBar'
 
 export const ReservationCompletePage = () => {
   const navigate = useNavigate()
@@ -50,7 +50,7 @@ export const ReservationCompletePage = () => {
   }
 
   return (
-    <div className="min-h-dvh bg-white pt-34.25 pb-29.5">
+    <div className="min-h-dvh bg-white pt-34.25 pb-5">
       <section
         aria-labelledby="reservation-complete-heading"
         className="flex flex-col items-center px-10 text-center"
@@ -103,13 +103,15 @@ export const ReservationCompletePage = () => {
         </dl>
       </section>
 
-      <PageFixedArea>
-        <div className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-7 pb-[calc(48px+var(--safe-area-bottom,0px))]">
+      <BottomActionBar
+        aria-label="예약 완료 액션"
+        layout="padded"
+        endAction={
           <Button onClick={handleConfirmClick} size="lg" width="full">
             확인 완료
           </Button>
-        </div>
-      </PageFixedArea>
+        }
+      />
     </div>
   )
 }

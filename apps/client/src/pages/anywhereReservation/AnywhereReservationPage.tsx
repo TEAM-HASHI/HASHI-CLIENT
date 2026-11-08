@@ -54,7 +54,7 @@ export const AnywhereReservationPage = () => {
   }
 
   return (
-    <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
+    <div className="min-h-dvh bg-white pt-18.75 pb-5">
       <PageFixedArea>
         <Header
           className="app-mobile-fixed-top z-fixed fixed"
