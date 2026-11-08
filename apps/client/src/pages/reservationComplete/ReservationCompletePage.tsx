@@ -95,7 +95,7 @@ export const ReservationCompletePage = () => {
               <dt className="typo-body-4 text-cool-gray-500 shrink-0">
                 {label}
               </dt>
-              <dd className="typo-sub-header-2 text-primary-200 min-w-0 text-right break-keep">
+              <dd className="typo-sub-header-2 text-primary-200 min-w-0 text-right wrap-anywhere break-keep">
                 {value}
               </dd>
             </div>
