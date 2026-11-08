@@ -966,6 +966,9 @@ describe('MapPage API integration', () => {
     )
     await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(screen.getByRole('button', { name: '시부야 식당 보기' }))
+    const list = await screen.findByRole('list', { name: '식당 검색 결과' })
+    const scroller = list.closest('[data-map-list]')!.parentElement!
+    fireEvent.scroll(scroller, { target: { scrollTop: 180 } })
     await user.click(
       screen.getByRole('button', { name: '야키니쿠 리키마루 상세 보기' }),
     )
@@ -978,9 +981,14 @@ describe('MapPage API integration', () => {
     await user.click(screen.getByRole('tab', { name: '메뉴' }))
     expect(await screen.findByText('메뉴 리스트를 준비중이에요.')).toBeVisible()
     await user.click(screen.getByRole('button', { name: '식당 상세 닫기' }))
+    expect(
+      screen
+        .getByRole('list', { name: '식당 검색 결과' })
+        .closest('[data-map-list]')!.parentElement!.scrollTop,
+    ).toBe(180)
     await waitFor(() =>
       expect(
-        screen.getByRole('button', { name: '정렬: 추천순' }),
+        screen.getByRole('button', { name: '야키니쿠 리키마루 상세 보기' }),
       ).toHaveFocus(),
     )
     expect(

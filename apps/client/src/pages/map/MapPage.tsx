@@ -168,7 +168,6 @@ const MapMainPage = () => {
   const [selectionStage, setSelectionStage] = useState<MapPanelStage>(
     initial?.selectionStage ?? 'normal',
   )
-  const [listVersion, setListVersion] = useState(0)
   const selectionTriggerRef = useRef<HTMLElement | null>(null)
   const restoreSelectionFocus = useRef(false)
   const sortTriggerRef = useRef<HTMLButtonElement | null>(null)
@@ -329,7 +328,6 @@ const MapMainPage = () => {
     state.setSelectedId(null)
     state.restoreCamera(selectionCamera, selectionIsExploring)
     setStage(selectionStage)
-    setListVersion((version) => version + 1)
   }
   const handleDetailFailure = () => {
     handleCloseDetail()
@@ -446,21 +444,16 @@ const MapMainPage = () => {
           onCategoryChange={(category) => handleConditionsChange({ category })}
         />
         <div
-          hidden={
-            savedCollectionsOpen ||
-            !!state.selectedRestaurant ||
-            mapUnavailable ||
-            !state.regions
-          }
+          hidden={savedCollectionsOpen || mapUnavailable || !state.regions}
+          inert={!!state.selectedRestaurant}
+          style={{
+            visibility: state.selectedRestaurant ? 'hidden' : undefined,
+          }}
           className="pointer-events-none absolute inset-0"
         >
           <DragPanel
             className="[&_.overflow-y-auto]:scrollbar-hidden"
-            key={JSON.stringify([
-              state.conditions,
-              state.searchBounds,
-              listVersion,
-            ])}
+            key={JSON.stringify([state.conditions, state.searchBounds])}
             aria-label="지도 식당 목록"
             handleLabel="식당 목록 높이 조절"
             height={height}
