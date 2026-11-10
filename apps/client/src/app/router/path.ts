@@ -24,6 +24,7 @@ export const ROUTES = {
   profileNew: '/profile/new',
   profileEdit: '/profile/edit',
   withdrawal: '/withdrawal',
+  friendInvite: '/friend-invite',
   notices: '/notices',
   noticeDetail: '/notices/:noticeId',
   terms: '/terms',
