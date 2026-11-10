@@ -265,8 +265,8 @@ describe('컬렉션 API 폼 연결', () => {
       }),
     )
     const { user, client, router } = setup()
+    expect(screen.getByRole('radio', { name: '빨강' })).toBeChecked()
     await user.type(screen.getByLabelText('컬렉션명'), '  여행  ')
-    await user.click(screen.getByRole('radio', { name: '빨강' }))
     fireEvent.change(screen.getByLabelText('설명'), {
       target: { value: '첫 줄\n둘째 줄' },
     })
