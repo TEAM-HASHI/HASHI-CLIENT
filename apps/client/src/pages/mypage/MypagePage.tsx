@@ -1,5 +1,6 @@
 import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 import { MenuButton } from '@/pages/mypage/components/MenuButton'
+import { MypageEventBanner } from '@/pages/mypage/components/MypageEventBanner'
 import { MypageMenuSection } from '@/pages/mypage/components/MypageMenuSection'
 import { MypagePointSummary } from '@/pages/mypage/components/MypagePointSummary'
 import { MypageProfile } from '@/pages/mypage/components/MypageProfile'
@@ -34,7 +35,7 @@ export const MypagePage = () => {
 
         <MypagePointSummary point={summary.availablePoint} />
 
-        <div className="mb-8 flex flex-col gap-3.25">
+        <div className="mb-10 flex flex-col gap-3.25">
           {primaryMenuItems.map((item) => (
             <MenuButton
               action={item.action}
@@ -45,6 +46,9 @@ export const MypagePage = () => {
               onPress={handleMenuAction}
             />
           ))}
+          <MypageEventBanner
+            onNavigate={(path) => handleMenuAction({ type: 'navigate', path })}
+          />
         </div>
 
         <div className="relative left-1 flex flex-col gap-4.5">
