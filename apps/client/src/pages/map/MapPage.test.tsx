@@ -500,10 +500,19 @@ describe('MapPage API integration', () => {
           <MapPage />
         </MemoryRouter>,
       )
-      await user.click(
-        await screen.findByRole('button', { name: '선택한 식당 닫기' }),
-      )
+      const closeDetail = await screen.findByRole('button', {
+        name: '선택한 식당 닫기',
+      })
       if (isExploring) {
+        expect(
+          screen.queryByRole('button', { name: '전체 지역 보기' }),
+        ).not.toBeInTheDocument()
+      }
+      await user.click(closeDetail)
+      if (isExploring) {
+        expect(
+          screen.getByRole('button', { name: '전체 지역 보기' }),
+        ).toBeVisible()
         expect(
           screen.queryByRole('button', { name: '우에노 식당 보기' }),
         ).not.toBeInTheDocument()

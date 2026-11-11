@@ -470,17 +470,20 @@ export const MapViewport = (props: MapViewportProps) => {
           <MapFailure configuration />
         )}
       </div>
-      {props.zoomed && !props.mapUnavailable && !props.onCloseCollection && (
-        <IconButton
-          aria-label="전체 지역 보기"
-          variant="soft"
-          size="sm"
-          className="absolute top-30 left-5 shadow-[0_0_4px_rgba(0,0,0,0.2)]"
-          onClick={props.onResetArea}
-        >
-          <BackIcon className="size-5" />
-        </IconButton>
-      )}
+      {props.zoomed &&
+        !props.selectedId &&
+        !props.mapUnavailable &&
+        !props.onCloseCollection && (
+          <IconButton
+            aria-label="전체 지역 보기"
+            variant="soft"
+            size="sm"
+            className="absolute top-30 left-5 shadow-[0_0_4px_rgba(0,0,0,0.2)]"
+            onClick={props.onResetArea}
+          >
+            <BackIcon className="size-5" />
+          </IconButton>
+        )}
       {(!props.mapUnavailable || props.onCloseCollection) && (
         <IconButton
           aria-label={
