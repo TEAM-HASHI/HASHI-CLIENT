@@ -637,9 +637,22 @@ describe('MapPage API integration', () => {
     await user.keyboard('{End}')
     expect(restoredHandle).toHaveAttribute('aria-valuenow', '30')
   })
-  it('opens a retryable failure after empty results instead of keeping the sheet locked', async () => {
+  it.each(['empty', 'rows', 'expired'])('retries a 503: %s', async (kind) => {
     const source = vi.mocked(getMapRestaurants)
-    source.mockResolvedValueOnce({ ...createMapPageFixture(), restaurants: [] })
+    const expires = Date.now() + 60_000
+    if (kind !== 'rows') {
+      const initial = createMapPageFixture()
+      source.mockResolvedValueOnce({
+        ...initial,
+        restaurants:
+          kind === 'empty'
+            ? []
+            : initial.restaurants.map((restaurant) => ({
+                ...restaurant,
+                validUntil: new Date(expires).toISOString(),
+              })),
+      })
+    }
     const user = userEvent.setup()
     render(
       <MemoryRouter>
@@ -649,7 +662,10 @@ describe('MapPage API integration', () => {
     const handle = await screen.findByRole('slider', {
       name: '식당 목록 높이 조절',
     })
-    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '30'))
+    if (kind !== 'empty')
+      await screen.findByRole('list', { name: '식당 검색 결과' })
+    else
+      await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '30'))
     source.mockRejectedValueOnce(
       new ApiError(
         {
@@ -664,12 +680,35 @@ describe('MapPage API integration', () => {
       ),
     )
     await user.click(screen.getByRole('button', { name: '카페' }))
-    const retry = await screen.findByRole('button', { name: '다시 시도하기' })
+    let retry = await screen.findByRole('button', { name: '다시 시도하기' })
     expect(retry).toBeVisible()
+    if (kind !== 'empty') {
+      const list = screen.getByRole('list', { name: '식당 검색 결과' })
+      const alert = screen.getByText(
+        '식당 목록을 불러오지 못했어요. 이전 결과를 표시하고 있어요.',
+      )
+      expect(alert).toBeVisible()
+      expect(
+        retry.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+    }
+    if (kind === 'expired') {
+      vi.spyOn(Date, 'now').mockReturnValue(expires)
+      act(() => window.dispatchEvent(new Event('pageshow')))
+      expect(
+        screen.queryByRole('list', { name: '식당 검색 결과' }),
+      ).not.toBeInTheDocument()
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '식당 목록을 불러오지 못했어요!',
+      )
+      retry = screen.getByRole('button', { name: '다시 시도하기' })
+    }
     expect(
       screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
     ).not.toHaveAttribute('aria-valuenow', '30')
     await user.click(retry)
+    await waitFor(() => expect(retry).not.toBeInTheDocument())
+    expect(source.mock.lastCall?.[0]).toMatchObject({ placeType: 'cafe' })
     expect(
       await screen.findByRole('list', { name: '식당 검색 결과' }),
     ).toBeVisible()

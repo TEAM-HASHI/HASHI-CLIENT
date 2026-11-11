@@ -1,4 +1,4 @@
-import { DragPanel, DRAG_PANEL_HEIGHTS, showToast } from '@hashi/hds-ui'
+import { Button, DragPanel, DRAG_PANEL_HEIGHTS, showToast } from '@hashi/hds-ui'
 import {
   useEffect,
   useEffectEvent,
@@ -475,7 +475,21 @@ const MapMainPage = () => {
               )
             }
             header={
-              state.status === 'success' && restaurants.length > 0 ? (
+              state.showingPreviousResults ? (
+                <div className="flex flex-wrap items-center justify-between gap-2 px-5 pb-3">
+                  <p role="alert" className="typo-caption-1 text-cool-gray-800">
+                    식당 목록을 불러오지 못했어요. 이전 결과를 표시하고 있어요.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="neutral"
+                    onClick={state.retry}
+                    disabled={state.retryDisabled}
+                  >
+                    다시 시도하기
+                  </Button>
+                </div>
+              ) : state.status === 'success' && restaurants.length > 0 ? (
                 <MapRestaurantListHeader
                   filtered={filtered}
                   sort={state.conditions.sort}

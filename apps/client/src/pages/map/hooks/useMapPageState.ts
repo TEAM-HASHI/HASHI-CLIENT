@@ -320,8 +320,9 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
         !allRestaurants.some((item) => item.id === selectedId)) ||
       (allRestaurants.some((item) => item.id === selectedId) &&
         !restaurants.some((item) => item.id === selectedId)))
+  const showingPreviousResults = preservePrevious && restaurants.length > 0
   const status: 'loading' | 'success' | 'error' =
-    inputError || (query.isError && !query.data && !preservePrevious)
+    inputError || (query.isError && !query.data && !showingPreviousResults)
       ? 'error'
       : resultData
         ? 'success'
@@ -456,18 +457,14 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
     emptyEvent,
     notice,
     errorMessage: inputError ?? undefined,
-    queryData:
-      status === 'success' && !preservePrevious ? query.data : undefined,
+    queryData: status === 'success' ? query.data : undefined,
     nextCursor: currentLast?.nextCursor,
-    nextError: query.isFetchNextPageError || preservePrevious,
+    showingPreviousResults,
+    nextError: query.isFetchNextPageError,
     loadingNext: query.isFetchingNextPage,
     retryDisabled,
     loadNext: () => {
       if (retryDisabled) return
-      if (preservePrevious) {
-        retry()
-        return
-      }
       if (query.hasNextPage && !query.isFetching)
         void query.fetchNextPage({ cancelRefetch: false })
     },
