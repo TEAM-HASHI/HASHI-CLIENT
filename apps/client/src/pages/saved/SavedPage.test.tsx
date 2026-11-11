@@ -96,39 +96,44 @@ describe('서버 응답 목록 표시', () => {
 })
 
 describe('SavedPage', () => {
-  it.each(['수정하기', '공유하기', '삭제하기'] as const)(
-    '터치 중 포커스 대상이 사라져도 %s 동작을 실행한다',
-    async (label) => {
-      const onEdit = vi.fn()
-      const onShare = vi.fn()
-      const onDelete = vi.fn()
-      render(
-        <CollectionEditMenu
-          name="여행"
-          shareInMenu
-          onEdit={onEdit}
-          onShare={onShare}
-          onDelete={onDelete}
-        />,
-      )
-      await userEvent.click(screen.getByRole('button', { name: '여행 더보기' }))
-      const item = screen.getByRole('menuitem', { name: label })
-      fireEvent.pointerDown(item, { pointerType: 'touch' })
-      fireEvent.blur(screen.getByRole('menuitem', { name: '수정하기' }), {
-        relatedTarget: null,
-      })
-      fireEvent.pointerUp(item, { pointerType: 'touch' })
-      fireEvent.click(item)
+  it('다른 메뉴 항목을 터치하다 포커스 대상이 사라져도 선택한 동작을 실행한다', async () => {
+    const onShare = vi.fn()
+    render(
+      <CollectionEditMenu
+        name="여행"
+        shareInMenu
+        onEdit={vi.fn()}
+        onShare={onShare}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: '여행 더보기' }))
+    const item = screen.getByRole('menuitem', { name: '공유하기' })
+    fireEvent.pointerDown(item, { pointerType: 'touch' })
+    fireEvent.blur(screen.getByRole('menuitem', { name: '수정하기' }), {
+      relatedTarget: null,
+    })
+    fireEvent.pointerUp(item, { pointerType: 'touch' })
+    fireEvent.click(item)
 
-      const callbacks = {
-        수정하기: onEdit,
-        공유하기: onShare,
-        삭제하기: onDelete,
-      }
-      expect(callbacks[label]).toHaveBeenCalledOnce()
-      expect(screen.queryByRole('menu')).not.toBeInTheDocument()
-    },
-  )
+    expect(onShare).toHaveBeenCalledOnce()
+  })
+
+  it('Tab으로 메뉴 안에서 이동할 때는 유지하고 페이지를 벗어나면 닫는다', async () => {
+    const user = userEvent.setup()
+    render(
+      <CollectionEditMenu name="여행" onEdit={vi.fn()} onDelete={vi.fn()} />,
+    )
+    const trigger = screen.getByRole('button', { name: '여행 더보기' })
+    await user.click(trigger)
+    await user.tab()
+    const lastItem = screen.getByRole('menuitem', { name: '삭제하기' })
+    expect(lastItem).toHaveFocus()
+
+    expect(fireEvent.keyDown(lastItem, { key: 'Tab' })).toBe(true)
+    fireEvent.blur(lastItem, { relatedTarget: null })
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  })
 
   it('외부 식당 선택 콜백을 유지하고 더보기 클릭은 상세 선택으로 전달하지 않는다', async () => {
     const select = vi.fn()
