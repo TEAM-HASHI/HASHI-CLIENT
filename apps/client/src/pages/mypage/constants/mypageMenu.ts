@@ -16,7 +16,7 @@ export const createMypagePrimaryMenuItems = ({
     highlighted: true,
     action: {
       type: 'navigate',
-      path: ROUTES.saved,
+      path: ROUTES.mypageSaved,
     },
   },
   {

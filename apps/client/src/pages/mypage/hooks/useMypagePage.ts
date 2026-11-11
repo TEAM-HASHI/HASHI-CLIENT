@@ -83,7 +83,9 @@ export const useMypagePage = () => {
     }
 
     if (action.type === 'navigate') {
-      navigate(action.path)
+      if (action.path === ROUTES.mypageSaved)
+        navigate(action.path, { state: { mypageSavedBackSteps: 1 } })
+      else navigate(action.path)
       return
     }
   }

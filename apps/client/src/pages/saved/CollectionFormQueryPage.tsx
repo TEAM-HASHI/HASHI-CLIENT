@@ -7,6 +7,7 @@ import { useEffect, useState, type ComponentProps } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { isMypageSavedPath } from '@/app/router/routePaths'
 import type { CollectionDetailData } from '@/features/collection/api/collectionApiTypes'
 import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import type { UpdateCollectionBody } from '@/features/collection/api/updateCollection'
@@ -203,7 +204,11 @@ const CollectionApiForm = ({
         ) : null
       }
       onClose={onClose}
-      onDiscard={() => navigate(ROUTES.saved, { replace: true })}
+      onDiscard={() => {
+        if (isMypageSavedPath(getCollectionReturn(location.state).pathname))
+          onClose()
+        else navigate(ROUTES.saved, { replace: true })
+      }}
       onSubmitSuccess={() => {
         if (sessionVersion === getAuthSessionVersion()) onClose()
       }}

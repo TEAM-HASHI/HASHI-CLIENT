@@ -8,6 +8,13 @@ import { getAuthSessionVersion } from '@/shared/auth/authSession'
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
 
+export const getMypageSavedBackSteps = (state: unknown) => {
+  const steps = isRecord(state) ? state.mypageSavedBackSteps : undefined
+  return typeof steps === 'number' && Number.isSafeInteger(steps) && steps > 0
+    ? steps
+    : null
+}
+
 let createdSaveTarget: { key: string; id: string; session: number } | undefined
 
 export const rememberCreatedCollectionSaveTarget = (

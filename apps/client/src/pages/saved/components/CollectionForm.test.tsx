@@ -292,7 +292,7 @@ describe('CollectionForm', () => {
     expect(screen.getByText('중복된 컬렉션명입니다.')).toBeVisible()
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
   })
-  it('이름과 색상이 필요하며 생성 입력 공백을 유지한다', async () => {
+  it('생성은 빨강이 기본 선택이며 이름 입력 후 선택 없이 제출할 수 있다', async () => {
     const onSubmit = vi.fn()
     const user = userEvent.setup()
     renderForm(
@@ -303,9 +303,9 @@ describe('CollectionForm', () => {
       />,
     )
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+    expect(screen.getByRole('radio', { name: '빨강' })).toBeChecked()
     await user.type(screen.getByLabelText('컬렉션명'), '  새 여행  ')
-    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
-    await user.click(screen.getByRole('radio', { name: '빨강' }))
+    expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled()
     await user.click(screen.getByRole('button', { name: '만들기' }))
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -351,12 +351,12 @@ describe('CollectionForm', () => {
     fireEvent.compositionEnd(description)
     expect(description).toHaveValue('가'.repeat(30))
     expect(screen.getByText('/30').parentElement).toHaveTextContent('30/30')
-    expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()
+    expect(screen.getByText('최대 30자까지 입력할 수 있어요.')).toBeVisible()
     expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
 
     fireEvent.change(description, { target: { value: '가'.repeat(29) } })
     expect(
-      screen.queryByText('글자 수 제한을 초과했어요.'),
+      screen.queryByText('최대 30자까지 입력할 수 있어요.'),
     ).not.toBeInTheDocument()
     fireEvent.change(description, { target: { value: '가'.repeat(30) } })
     expect(screen.getByText('/30').parentElement).toHaveTextContent('30/30')
@@ -377,7 +377,7 @@ describe('CollectionForm', () => {
       target: { value: '가'.repeat(31) },
     })
     expect(screen.getByText('중복된 컬렉션명입니다.')).toBeVisible()
-    expect(screen.getByText('글자 수 제한을 초과했어요.')).toBeVisible()
+    expect(screen.getByText('최대 30자까지 입력할 수 있어요.')).toBeVisible()
   })
   it('앞뒤 공백만 바꾸면 저장을 비활성화하고 실제 변경 후 되돌리기도 판정한다', () => {
     const collection = {

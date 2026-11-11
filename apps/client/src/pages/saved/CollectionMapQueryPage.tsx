@@ -26,6 +26,7 @@ import { useCollectionQuery } from '@/features/collection/queries/useCollectionQ
 import { SavedApiPage } from '@/pages/saved/SavedApiPage'
 import { CollectionMapMarker } from '@/pages/saved/components/CollectionMapMarker'
 import type { CollectionMapState } from '@/features/collection/types'
+import { getMypageSavedBackSteps } from '@/features/collection/utils/collectionNavigation'
 import { runWithCollectionSession } from '@/features/collection/utils/collectionSession'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
@@ -98,9 +99,14 @@ export const CollectionMapQueryPage = ({
       })
       return
     }
+    const backSteps = getMypageSavedBackSteps(view)
     navigate(
-      `${getCollectionDetailPath(view.collectionId)}?${new URLSearchParams({ sort: params.get('sort') ?? view.sort, category: params.get('category') ?? view.category })}`,
-      { replace: true },
+      `${getCollectionDetailPath(view.collectionId, view.origin === 'mypage')}?${new URLSearchParams({ sort: params.get('sort') ?? view.sort, category: params.get('category') ?? view.category })}`,
+      {
+        replace: true,
+        // The map entry is replaced with the filtered detail, so skip the original detail on back.
+        state: backSteps ? { mypageSavedBackSteps: backSteps + 1 } : undefined,
+      },
     )
   }
   return (

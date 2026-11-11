@@ -55,7 +55,9 @@ describe('MypagePage', () => {
     await user.click(
       await screen.findByRole('button', { name: /내가 찜한 식당/ }),
     )
-    expect(mockNavigate).toHaveBeenCalledWith('/saved')
+    expect(mockNavigate).toHaveBeenCalledWith('/mypage/saved', {
+      state: { mypageSavedBackSteps: 1 },
+    })
     expect(
       screen.queryByText('서비스를 준비하고 있어요.'),
     ).not.toBeInTheDocument()

@@ -13,6 +13,7 @@ import { ROUTES } from '@/app/router/path'
 import {
   getCollectionDetailPath,
   getRestaurantDetailPath,
+  isMypageSavedPath,
 } from '@/app/router/routePaths'
 import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import { CollectionDropdown } from '@/pages/saved/components/CollectionDropdown'
@@ -36,6 +37,7 @@ import type {
   SavedRestaurantReadModelTypes,
 } from '@/features/collection/types/collectionReadModels'
 import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
+import { getMypageSavedBackSteps } from '@/features/collection/utils/collectionNavigation'
 import {
   mapCollectionDetail,
   mapCollectionSummary,
@@ -80,6 +82,9 @@ export const SavedQueryPage = ({
 }: SavedQueryPageProps) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const fromMypage = isMypageSavedPath(location.pathname)
+  const backSteps = fromMypage ? getMypageSavedBackSteps(location.state) : null
+  const listPath = fromMypage ? ROUTES.mypageSaved : ROUTES.saved
   const { collectionId: paramId } = useParams<{ collectionId: string }>()
   const mapState =
     location.pathname === ROUTES.map && isCollectionMapState(location.state)
@@ -197,7 +202,7 @@ export const SavedQueryPage = ({
     </div>
   )
 
-  if (detail && !validId) return <Navigate to={ROUTES.saved} replace />
+  if (detail && !validId) return <Navigate to={listPath} replace />
   if (!detail && !isAuthenticated) return null
 
   return (
@@ -233,8 +238,12 @@ export const SavedQueryPage = ({
           />
         )
       }
+      backLabel={fromMypage && !detail ? '마이로 돌아가기' : undefined}
       onBack={() => {
-        navigate(ROUTES.saved)
+        if (backSteps) navigate(-backSteps)
+        else if (fromMypage)
+          navigate(detail ? listPath : ROUTES.mypage, { replace: true })
+        else navigate(listPath)
         setMenu(null)
       }}
       onCreate={onCreate}
@@ -324,7 +333,12 @@ export const SavedQueryPage = ({
                           origin: 'map',
                         }
                         navigate(ROUTES.map, { state })
-                      } else navigate(getCollectionDetailPath(item.id))
+                      } else
+                        navigate(getCollectionDetailPath(item.id, fromMypage), {
+                          state: fromMypage
+                            ? { mypageSavedBackSteps: 1 }
+                            : undefined,
+                        })
                     }}
                     moreAction={renderCollectionActions?.(item) ?? false}
                   />
@@ -355,6 +369,8 @@ export const SavedQueryPage = ({
                       collectionId: collection.id,
                       sort,
                       category,
+                      ...(fromMypage && { origin: 'mypage' }),
+                      ...(backSteps && { mypageSavedBackSteps: backSteps }),
                     }
                     navigate(ROUTES.map, { state })
                   }}
