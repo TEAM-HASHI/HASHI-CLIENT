@@ -1,5 +1,3 @@
-import type { ReviewKeywordId } from '@/features/review/constants'
-
 export interface ReviewDetailImage {
   id: string
   src: string
@@ -16,5 +14,5 @@ export interface ReviewDetail {
   writtenDate: string
   content: string
   images: ReviewDetailImage[]
-  keywordIds: ReviewKeywordId[]
+  keywords: string[]
 }

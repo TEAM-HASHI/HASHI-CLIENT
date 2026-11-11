@@ -1,8 +1,13 @@
 import { BackIcon } from '@hashi/hds-icons'
 import { Button, Header, IconButton } from '@hashi/hds-ui'
 import { useQuery } from '@tanstack/react-query'
-import { useState, useSyncExternalStore } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import {
+  useLocation,
+  useNavigate,
+  useNavigationType,
+  useParams,
+} from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet/AuthGateBottomSheet'
@@ -21,6 +26,9 @@ import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
+import { getPageScrollY, scrollPageTo } from '@/shared/utils/pageScroll'
+
+let restaurantReturnScroll: { key: string; top: number } | undefined
 
 export const MagazineDetailPage = () => {
   const { magazineId = '' } = useParams<{ magazineId: string }>()
@@ -47,6 +55,7 @@ const MagazineDetailContent = ({
 }) => {
   const location = useLocation()
   const navigate = useNavigate()
+  const navigationType = useNavigationType()
   const id = Number(magazineId)
   const isValidId =
     /^\d+$/.test(magazineId) && Number.isSafeInteger(id) && id > 0
@@ -58,6 +67,22 @@ const MagazineDetailContent = ({
   const { isAuthenticated } = useAuthStatus()
   const { startKakaoOAuth } = useKakaoOAuthStart()
   const [isAuthGateOpen, setIsAuthGateOpen] = useState(false)
+  const scrollKey = `${magazineId}:${location.key}`
+  const [returnScroll] = useState(() =>
+    navigationType === 'POP' && restaurantReturnScroll?.key === scrollKey
+      ? restaurantReturnScroll.top
+      : undefined,
+  )
+  const hasContent = !!query.data
+
+  useEffect(() => {
+    if (!hasContent || returnScroll === undefined) return
+
+    const frame = requestAnimationFrame(() =>
+      scrollPageTo({ top: returnScroll, behavior: 'auto' }),
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [hasContent, returnScroll])
 
   const handleLikeToggle = () => {
     if (!isAuthenticated) {
@@ -126,7 +151,12 @@ const MagazineDetailContent = ({
           onLikeToggle={handleLikeToggle}
         />
 
-        <MagazineRestaurantSection restaurants={magazine.restaurants} />
+        <MagazineRestaurantSection
+          restaurants={magazine.restaurants}
+          onRestaurantClick={() => {
+            restaurantReturnScroll = { key: scrollKey, top: getPageScrollY() }
+          }}
+        />
       </div>
       <AuthGateBottomSheet
         open={isAuthGateOpen}

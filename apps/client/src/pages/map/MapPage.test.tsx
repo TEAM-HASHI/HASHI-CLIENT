@@ -500,10 +500,19 @@ describe('MapPage API integration', () => {
           <MapPage />
         </MemoryRouter>,
       )
-      await user.click(
-        await screen.findByRole('button', { name: '선택한 식당 닫기' }),
-      )
+      const closeDetail = await screen.findByRole('button', {
+        name: '선택한 식당 닫기',
+      })
       if (isExploring) {
+        expect(
+          screen.queryByRole('button', { name: '전체 지역 보기' }),
+        ).not.toBeInTheDocument()
+      }
+      await user.click(closeDetail)
+      if (isExploring) {
+        expect(
+          screen.getByRole('button', { name: '전체 지역 보기' }),
+        ).toBeVisible()
         expect(
           screen.queryByRole('button', { name: '우에노 식당 보기' }),
         ).not.toBeInTheDocument()
@@ -628,9 +637,22 @@ describe('MapPage API integration', () => {
     await user.keyboard('{End}')
     expect(restoredHandle).toHaveAttribute('aria-valuenow', '30')
   })
-  it('opens a retryable failure after empty results instead of keeping the sheet locked', async () => {
+  it.each(['empty', 'rows', 'expired'])('retries a 503: %s', async (kind) => {
     const source = vi.mocked(getMapRestaurants)
-    source.mockResolvedValueOnce({ ...createMapPageFixture(), restaurants: [] })
+    const expires = Date.now() + 60_000
+    if (kind !== 'rows') {
+      const initial = createMapPageFixture()
+      source.mockResolvedValueOnce({
+        ...initial,
+        restaurants:
+          kind === 'empty'
+            ? []
+            : initial.restaurants.map((restaurant) => ({
+                ...restaurant,
+                validUntil: new Date(expires).toISOString(),
+              })),
+      })
+    }
     const user = userEvent.setup()
     render(
       <MemoryRouter>
@@ -640,7 +662,10 @@ describe('MapPage API integration', () => {
     const handle = await screen.findByRole('slider', {
       name: '식당 목록 높이 조절',
     })
-    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '30'))
+    if (kind !== 'empty')
+      await screen.findByRole('list', { name: '식당 검색 결과' })
+    else
+      await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '30'))
     source.mockRejectedValueOnce(
       new ApiError(
         {
@@ -655,12 +680,35 @@ describe('MapPage API integration', () => {
       ),
     )
     await user.click(screen.getByRole('button', { name: '카페' }))
-    const retry = await screen.findByRole('button', { name: '다시 시도하기' })
+    let retry = await screen.findByRole('button', { name: '다시 시도하기' })
     expect(retry).toBeVisible()
+    if (kind !== 'empty') {
+      const list = screen.getByRole('list', { name: '식당 검색 결과' })
+      const alert = screen.getByText(
+        '식당 목록을 불러오지 못했어요. 이전 결과를 표시하고 있어요.',
+      )
+      expect(alert).toBeVisible()
+      expect(
+        retry.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+    }
+    if (kind === 'expired') {
+      vi.spyOn(Date, 'now').mockReturnValue(expires)
+      act(() => window.dispatchEvent(new Event('pageshow')))
+      expect(
+        screen.queryByRole('list', { name: '식당 검색 결과' }),
+      ).not.toBeInTheDocument()
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        '식당 목록을 불러오지 못했어요!',
+      )
+      retry = screen.getByRole('button', { name: '다시 시도하기' })
+    }
     expect(
       screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
     ).not.toHaveAttribute('aria-valuenow', '30')
     await user.click(retry)
+    await waitFor(() => expect(retry).not.toBeInTheDocument())
+    expect(source.mock.lastCall?.[0]).toMatchObject({ placeType: 'cafe' })
     expect(
       await screen.findByRole('list', { name: '식당 검색 결과' }),
     ).toBeVisible()
@@ -757,7 +805,7 @@ describe('MapPage API integration', () => {
     ).not.toBeInTheDocument()
     toastQueue.clear()
   })
-  it('locks an empty category to the handle and reopens when clearing the category returns results', async () => {
+  it('reuses the last query bounds when switching from an empty bar list to restaurants', async () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
@@ -766,22 +814,36 @@ describe('MapPage API integration', () => {
       </MemoryRouter>,
     )
     await screen.findByRole('list', { name: '식당 검색 결과' })
-    vi.mocked(getMapRestaurants).mockResolvedValueOnce({
-      ...createMapPageFixture(),
+    const source = vi.mocked(getMapRestaurants)
+    source.mockImplementationOnce(async (request) => ({
+      ...createMapPageFixture(request),
       restaurants: [],
-    })
-    await user.click(screen.getByRole('button', { name: '카페' }))
+    }))
+    await user.click(screen.getByRole('button', { name: '주점' }))
     await screen.findByText('조건에 맞는 맛집이 없어요.')
     const handle = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
     handle.focus()
     await user.keyboard('{End}')
     expect(handle).toHaveAttribute('aria-valuenow', '30')
-    expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-    await user.click(screen.getByRole('button', { name: '전체' }))
+    const resizedMap = {
+      getBounds: () => ({
+        toJSON: () => ({
+          ...mapRegionsFixture.initialBounds,
+          north: mapRegionsFixture.queryLimits.supportedBounds.north + 0.01,
+        }),
+      }),
+      getCenter: () => ({ toJSON: () => ({ lat: 35.7, lng: 139.7 }) }),
+      getDiv: () => ({ clientWidth: 393, clientHeight: 677 }),
+      getZoom: () => 11,
+    } as unknown as SdkMap
+    act(() => sdkState.onIdle?.({ map: resizedMap }))
+    await user.click(screen.getByRole('button', { name: '음식점' }))
     await screen.findByRole('list', { name: '식당 검색 결과' })
+    expect(source.mock.lastCall?.[0]).toEqual({
+      ...mapRegionsFixture.initialBounds,
+      sort: 'recommend',
+      placeType: 'restaurant',
+    })
     expect(
       screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
     ).not.toHaveAttribute('aria-valuenow', '30')
@@ -966,6 +1028,9 @@ describe('MapPage API integration', () => {
     )
     await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(screen.getByRole('button', { name: '시부야 식당 보기' }))
+    const list = await screen.findByRole('list', { name: '식당 검색 결과' })
+    const scroller = list.closest('[data-map-list]')!.parentElement!
+    fireEvent.scroll(scroller, { target: { scrollTop: 180 } })
     await user.click(
       screen.getByRole('button', { name: '야키니쿠 리키마루 상세 보기' }),
     )
@@ -978,9 +1043,14 @@ describe('MapPage API integration', () => {
     await user.click(screen.getByRole('tab', { name: '메뉴' }))
     expect(await screen.findByText('메뉴 리스트를 준비중이에요.')).toBeVisible()
     await user.click(screen.getByRole('button', { name: '식당 상세 닫기' }))
+    expect(
+      screen
+        .getByRole('list', { name: '식당 검색 결과' })
+        .closest('[data-map-list]')!.parentElement!.scrollTop,
+    ).toBe(180)
     await waitFor(() =>
       expect(
-        screen.getByRole('button', { name: '정렬: 추천순' }),
+        screen.getByRole('button', { name: '야키니쿠 리키마루 상세 보기' }),
       ).toHaveFocus(),
     )
     expect(

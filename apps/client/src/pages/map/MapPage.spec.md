@@ -4,7 +4,7 @@
 
 - 로컬과 QA에서 동일한 430×303px 지도·줌 9.359 조건의 라벨 하방 누적 이동을 재현했다. 배포 환경이나 Map ID별 별도 UI로 분기하지 않는다.
 - 최초/지역/검색 결과 fit 여백은 실제 지도 크기에 맞춰 축소한다. 긴 화면의 기존 여백은 유지하고, 짧은 화면에서 고정 여백 때문에 지도가 과도하게 축소되지 않도록 한다.
-- 지역 라벨은 실제 좌표를 변경하지 않고 가까운 상하·좌우 화면 공간에 배치한다. 검색·분류 UI 및 지도 경계 안에서 충돌을 피하고, 옮겨진 라벨은 원래 좌표에 연결선을 표시한다. 화면 밖 지역을 강제로 화면 안에 끌어오지 않는다.
+- 지역 라벨은 실제 좌표를 변경하지 않고 가까운 상하·좌우 화면 공간에 배치한다. 검색·분류 UI 및 지도 경계 안에서 충돌을 피한다. 화면 밖 지역을 강제로 화면 안에 끌어오지 않는다.
 - 검증: 430×303px 재현 조건, 아홉 지역 밀집, 기존 긴 화면 여백, 상세/검색/복귀 카메라 회귀를 자동 테스트하고 실제 SDK를 사용하는 로컬 지도에서 확인한다. API·로그인·라우팅·HDS 공개 API는 변경하지 않는다.
 - 로컬 실제 SDK 검증: 지도 430×303px(줌 10.4986), 430×532px(줌 11.5221)에서 아홉 라벨의 화면 내부 배치·라벨 간 비겹침·북마크 비가림을 DOM 사각형으로 확인했다. 실제 서버 지역 선택→개별 식당 핀→전체 지역 복귀도 확인했다. 360/375/390/414/430×303px 밀집 배치는 순수 함수 회귀 테스트로 검증한다.
 - 목록 높이와 확대·축소 단계는 기존 명세를 유지한다. 자동 시트 축소나 지역 라벨 생략은 이번 PR에 포함하지 않는다. 잔여 제약으로 320×303px처럼 아주 작은 지도에서는 검색·분류·시트·북마크 영역을 제외하면 96×44px 지역 라벨 아홉 개의 공간이 부족해 일부 북마크 가림이 남는다.
@@ -103,7 +103,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 
 - 상세 표시 중 지도 왼쪽 북마크는 닫기 X로 대체한다. 확장 상세에서도 키보드로 접근 가능한 닫기 동작을 유지한다.
 - 선택 전에 카메라·표시 모드(지역 묶음/개별 핀)·목록 시트 상태를 기록한다. X로 닫으면 이를 함께 복원하고 선택을 해제한다. 소수점 줌 구간에서도 선택 이후의 표시 모드로 다시 판단하지 않는다. 상세 상태에서 탭을 왕복해도 선택 전 표시 모드를 보존한다.
-- SDK 로딩 중 선택하여 저장된 카메라가 없으면 최초 지역 영역으로 fit한다. 검색어·카테고리·정렬·조회 결과는 초기화하지 않는다. 목록 스크롤과 상세 내부 탭·스크롤은 닫기 후 복원 대상이 아니다.
+- SDK 로딩 중 선택하여 저장된 카메라가 없으면 최초 지역 영역으로 fit한다. 검색어·카테고리·정렬·조회 결과와 목록 스크롤은 유지한다. 상세 내부 탭·스크롤은 상세를 닫고 다시 열 때 복원하지 않는다.
 - 상세 재진입은 기본 정보 탭에서 시작한다. 사진 모달의 포커스 복원과 확장 상세의 배경 격리는 유지한다.
 - 메뉴 카드 선택은 기존 메뉴 상세 route에 `source: 'map'`을 전달한다. 메뉴 상세의 뒤로가기/다른 탭은 지도 상세의 메뉴/선택 탭으로 복귀한다. 다른 메뉴 탐색은 replace하여 메뉴 간 history 루프를 만들지 않는다. 복귀용 탭 state는 한 번 적용하고 제거하며, 이후 브라우저 뒤로가기는 최신 지도 세션 탭을 복원한다.
 - 지도 상세 리뷰 진입은 최신순·5개 단위 첫 페이지를 새로 조회한다. 다른 탭에서 재진입하거나 메뉴 상세에서 리뷰 탭으로 직접 복귀해도 이전 커서 페이지를 유지하지 않는다. 탭 클릭 시 리뷰 영역 시작점으로 스크롤한다. 사진 모달 닫기는 리뷰 재진입이 아니다.
@@ -251,7 +251,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 
 - First view: search, 전체/음식점/주점/카페, area markers, floating saved action, ranked recommendations.
 - Display follows `getMapDisplayMode` relative to the fitted initial minimum zoom: overview at the minimum, pins at minimum+1, previous mode in between. User zoom-out without a keyword restores regions and clears any category, re-querying the current viewport only when a category was cleared. Search results and selected detail are exempt from automatic overview transition.
-- The fitted initial camera zoom is the minimum zoom. Region labels reserve non-overlapping screen space without changing geographic anchors; displaced labels have a connector to the original anchor.
+- The fitted initial camera zoom is the minimum zoom. Region labels reserve non-overlapping screen space without changing geographic anchors.
 - A restaurant/region selected before SDK readiness waits for the initial fit to finish, so its detail zoom cannot become the minimum. Zoom-out remains available to the initial overview level after selection.
 - `현재 위치에서 검색` uses the Figma pill and LocationIcon. It requires changed bounds after a user gesture regardless of category, not initial fit, area selection or restoration. Gestures collapse the active panel and clear the old area condition. Normal movement does not automatically query; clearing a category at overview zoom is the explicit exception.
 - Area click fits server cameraBounds and queries that region. Reset fits server initialBounds. Category and submitted keyword apply together. Sort uses server recommend/rating/reviews order, with no client re-ranking.
@@ -299,7 +299,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - `hooks/useMapRestaurantDetail.ts`: existing feature summary/store/menu/photo/review queries and detail UI state. Cached summary/store errors wait for an in-flight or paused re-selection retry to settle before closing details. `hooks/useMapRestaurantSaves.ts` enriches loaded records with batch read-only counts/personal state.
 - `hooks/useMapSession.ts`, `utils/mapSession.ts`: memory snapshots and expiry. `features/mapSearch` validates the contract shared with SearchPage.
 - `MapStatusView.tsx`, `MapSearchAreaButton.tsx`: presentation-only state UI and viewport-search CTA. Figma loading/error SVGs use shared assets; marker icons remain HDS icons.
-- `data/mapPreviewRestaurants.ts`, `utils/filterMapRestaurants.ts`, `utils/getMapAreaMarkers.ts`: legacy fixtures/utilities exercised by tests only; not sources for runtime API results or region counts.
+- `data/mapPreviewRestaurants.ts`, `utils/filterMapRestaurants.ts`: legacy fixtures/utilities exercised by tests only; not sources for runtime API results or region counts.
 - `utils/layoutMapAreaLabels.ts`: screen-space region label offsets using map zoom; never changes geographic anchors.
 - `components/MapViewport.tsx`: SDK provider, loading/failure state, geographic markers and explicit viewport search. Google attribution stays above the sheet because map height excludes the panel.
 - `hooks/useGoogleMapCamera.ts`: initial/reset overview, area selection and selected restaurant camera movement without recreating the map on filter/panel changes.

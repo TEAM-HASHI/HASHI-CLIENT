@@ -8,7 +8,7 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
 import { MagazineDetailPage } from '@/pages/magazineDetail/MagazineDetailPage'
@@ -66,6 +66,46 @@ afterEach(() => {
   clearAuthSession()
   vi.resetAllMocks()
   vi.unstubAllEnvs()
+})
+
+it('restores the magazine scroll after opening a linked restaurant and going back', async () => {
+  vi.mocked(request).mockResolvedValue({
+    ...detail,
+    restaurants: [{ restaurantId: 10, name: '테스트 식당' }],
+  })
+  const scrollTo = vi.fn()
+  const Restaurant = () => {
+    const navigate = useNavigate()
+    return <button onClick={() => navigate(-1)}>뒤로가기</button>
+  }
+
+  const { container } = render(
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter
+        initialEntries={[{ pathname: '/magazines/1', key: 'article' }]}
+      >
+        <div data-page-scroll="">
+          <Routes>
+            <Route path="/magazines/1" element={<MagazineDetailPage />} />
+            <Route path="/restaurants/10" element={<Restaurant />} />
+          </Routes>
+        </div>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+  const scroller = container.querySelector<HTMLElement>('[data-page-scroll]')!
+  scroller.scrollTo = scrollTo
+  const link = await screen.findByRole('link', {
+    name: '테스트 식당 상세 보기',
+  })
+  scroller.scrollTop = 640
+  fireEvent.click(link)
+  scroller.scrollTop = 0
+  fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
+
+  await waitFor(() =>
+    expect(scrollTo).toHaveBeenCalledWith({ top: 640, behavior: 'auto' }),
+  )
 })
 
 it('opens the login gate without changing likes or sending a mutation', async () => {

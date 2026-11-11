@@ -40,7 +40,6 @@
   - 식당 상세 리뷰와 동일한 `ReviewKeywordBadge`를 사용한다.
   - 키워드 칩은 한 줄로 표시하고 가로 공간이 부족하면 스크롤로 최대 3개를 확인한다.
   - 가로 스크롤바는 노출하지 않는다.
-  - API가 한글 문구로 반환한 키워드는 알려진 review keyword ID로 변환하고, 알 수 없는 문구는 표시하지 않는다.
 - 하단에는 fixed action bar를 보여준다.
   - 좌우 `20px`, 상단 `16px`, 버튼 간격 `16px`, 버튼 높이 `42px`을 적용한다.
   - `삭제하기`는 HDS destructive, `수정하기`는 HDS neutral button으로 Figma의 회색 배경을 재사용한다.

@@ -1,15 +1,5 @@
-import {
-  REVIEW_KEYWORDS,
-  type ReviewKeywordId,
-} from '@/features/review/constants'
 import type { MyReviewDetailData } from '@/features/review/api/getMyReviewDetail'
 import type { ReviewDetail } from '@/pages/reviewDetail/types'
-
-const keywordIdByLabel = new Map<string, ReviewKeywordId>([
-  ...REVIEW_KEYWORDS.map(
-    ({ id, label }) => [label, id] as [string, ReviewKeywordId],
-  ),
-])
 
 const timeZoneSuffixPattern = /(Z|[+-]\d{2}:\d{2})$/
 
@@ -92,11 +82,7 @@ export const toReviewDetail = (data: MyReviewDetailData): ReviewDetail => {
       id: `review-${data.reviewId}-image-${index + 1}`,
       src,
     })),
-    keywordIds: (data.keywords ?? []).flatMap((keyword) => {
-      const id = keywordIdByLabel.get(keyword)
-
-      return id ? [id] : []
-    }),
+    keywords: data.keywords ?? [],
     rating: data.rating ?? 0,
     restaurantName,
     thumbnailSrc: data.restaurantThumbnailUrl,

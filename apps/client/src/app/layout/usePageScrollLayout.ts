@@ -55,7 +55,7 @@ export const usePageScrollLayout = () => {
       }
       for (const bar of fixedBars) {
         if (!bars.has(bar)) {
-          resizeObserver?.observe(bar)
+          resizeObserver?.observe(bar, { box: 'border-box' })
           bars.add(bar)
         }
       }

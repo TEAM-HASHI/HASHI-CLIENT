@@ -5,10 +5,12 @@ import type { MagazineDetailRestaurant } from '@/pages/magazineDetail/types'
 
 interface MagazineRestaurantSectionProps {
   restaurants: MagazineDetailRestaurant[]
+  onRestaurantClick: () => void
 }
 
 export const MagazineRestaurantSection = ({
   restaurants,
+  onRestaurantClick,
 }: MagazineRestaurantSectionProps) => {
   if (restaurants.length === 0) {
     return null
@@ -31,7 +33,11 @@ export const MagazineRestaurantSection = ({
       </h2>
       <div className="mt-4">
         {restaurants.map((restaurant) => (
-          <MagazineRestaurantCard key={restaurant.id} restaurant={restaurant} />
+          <MagazineRestaurantCard
+            key={restaurant.id}
+            onClick={onRestaurantClick}
+            restaurant={restaurant}
+          />
         ))}
       </div>
     </section>

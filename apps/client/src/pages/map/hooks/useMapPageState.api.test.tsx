@@ -206,10 +206,10 @@ it('keeps successful results on configuration failure and retries the failed vie
   act(() => result.current.handleCameraChange(camera))
   pages.mockRejectedValueOnce(apiError(503, 'RESTAURANT-017'))
   act(() => result.current.handleSearchArea(moved))
-  await waitFor(() => expect(result.current.nextError).toBe(true))
+  await waitFor(() => expect(result.current.showingPreviousResults).toBe(true))
   expect(result.current.restaurants[0]?.name).toBe('서버 식당')
   act(() => result.current.retry())
-  await waitFor(() => expect(result.current.nextError).toBe(false))
+  await waitFor(() => expect(result.current.showingPreviousResults).toBe(false))
   expect(pages).toHaveBeenLastCalledWith({ ...moved, sort: 'recommend' })
 })
 
@@ -236,7 +236,7 @@ it('does not reuse an old session when sorting a failed new filter', async () =>
   await waitFor(() => expect(result.current.status).toBe('success'))
   pages.mockRejectedValueOnce(apiError(503, 'RESTAURANT-017'))
   act(() => result.current.handleConditionsChange({ category: 'cafe' }))
-  await waitFor(() => expect(result.current.nextError).toBe(true))
+  await waitFor(() => expect(result.current.showingPreviousResults).toBe(true))
   act(() => result.current.handleConditionsChange({ sort: 'rating' }))
   await waitFor(() => expect(pages).toHaveBeenCalledTimes(3))
   expect(pages).toHaveBeenLastCalledWith({
