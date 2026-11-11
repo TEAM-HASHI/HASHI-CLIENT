@@ -253,6 +253,16 @@ type ComingSoonDialogProps = {
 - count 데이터는 `GET /api/v1/reviews/me/count`의 `reviewCount`를 사용합니다.
 - route: `ROUTES.myReviews`
 
+### 3-1. Event Banner
+
+주요 메뉴 카드 아래에 이벤트 배너를 보여줍니다.
+
+- 디자인: Figma `Hashi.kr` > 2️⃣ 서비스 전체 화면 [2차 스프린트] > 마이 페이지 > `마이` (node-id 11609-238977), 배너 `indicator_pagination` (11609-239031)
+- 문구: `[EVENT]` / `친구 초대하고` + `400 포인트 받기`(primary-400). 금액은 Figma 그대로이며 친구 초대 페이지(`4,000P`)와 다르므로 디자인 확인이 필요합니다.
+- 누르면 `ROUTES.friendInvite`로 이동합니다.
+- HDS `Carousel`로 감쌉니다. Figma는 3장(두 번째: `Hashi Pick 예약시 2000 포인트 지급`, 세 번째: 미정)이지만, 확정된 친구 초대 배너 한 장만 노출합니다. 배너는 `MypageEventBanner`의 목록에 추가합니다.
+- 인디케이터는 배너 아래 10px, 6px 점·4px 간격, 현재 `warm-gray-300`·나머지 `warm-gray-100`입니다. 한 장이면 HDS가 점을 숨기지만 자리는 유지해, 서비스 이용 섹션까지 간격(배너 아래 56px)이 장수와 관계없이 같습니다.
+
 ### 4. Service Menu Section
 
 서비스 이용 관련 메뉴를 보여줍니다.
