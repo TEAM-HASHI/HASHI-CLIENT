@@ -58,6 +58,7 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
   const [isExploring, setIsExploring] = useState(initial?.isExploring ?? false)
   const [cameraSnapshot, setCameraSnapshot] = useState(initial?.camera ?? null)
   const camera = useRef(initial?.camera ?? null)
+  const hasUserMovedSinceRequest = useRef(false)
   const [cameraRequest, setCameraRequest] = useState(initial?.camera ?? null)
   const [searchPositions, setSearchPositions] = useState<MapPosition[] | null>(
     null,
@@ -331,6 +332,7 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
     reason: Reason,
     sessionId?: string,
   ) => {
+    hasUserMovedSinceRequest.current = false
     setConditions(next)
     setSelectedId(null)
     setEmptyEvent(null)
@@ -366,7 +368,13 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
           : patch.sort
             ? 'sort'
             : 'conditions'
-    const nextBounds = area?.cameraBounds ?? camera.current?.bounds ?? bounds
+    const keepQueryBounds =
+      reason === 'conditions' &&
+      patch.category !== undefined &&
+      !hasUserMovedSinceRequest.current
+    const nextBounds =
+      area?.cameraBounds ??
+      (keepQueryBounds ? bounds : (camera.current?.bounds ?? bounds))
     const prior = lastSuccessRef.current?.pages.at(-1)
     // A session belongs to one successful query, not merely the latest UI chips.
     const reuseSession =
@@ -477,6 +485,7 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
       setCameraSnapshot(value)
     },
     handleUserMove: () => {
+      hasUserMovedSinceRequest.current = true
       if (conditions.areaCode)
         setConditions((current) => ({ ...current, areaCode: null }))
     },

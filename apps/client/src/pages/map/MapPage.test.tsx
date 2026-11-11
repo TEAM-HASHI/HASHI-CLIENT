@@ -766,7 +766,7 @@ describe('MapPage API integration', () => {
     ).not.toBeInTheDocument()
     toastQueue.clear()
   })
-  it('locks an empty category to the handle and reopens when clearing the category returns results', async () => {
+  it('reuses the last query bounds when switching from an empty bar list to restaurants', async () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter>
@@ -775,22 +775,36 @@ describe('MapPage API integration', () => {
       </MemoryRouter>,
     )
     await screen.findByRole('list', { name: '식당 검색 결과' })
-    vi.mocked(getMapRestaurants).mockResolvedValueOnce({
-      ...createMapPageFixture(),
+    const source = vi.mocked(getMapRestaurants)
+    source.mockImplementationOnce(async (request) => ({
+      ...createMapPageFixture(request),
       restaurants: [],
-    })
-    await user.click(screen.getByRole('button', { name: '카페' }))
+    }))
+    await user.click(screen.getByRole('button', { name: '주점' }))
     await screen.findByText('조건에 맞는 맛집이 없어요.')
     const handle = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
     handle.focus()
     await user.keyboard('{End}')
     expect(handle).toHaveAttribute('aria-valuenow', '30')
-    expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-    await user.click(screen.getByRole('button', { name: '전체' }))
+    const resizedMap = {
+      getBounds: () => ({
+        toJSON: () => ({
+          ...mapRegionsFixture.initialBounds,
+          north: mapRegionsFixture.queryLimits.supportedBounds.north + 0.01,
+        }),
+      }),
+      getCenter: () => ({ toJSON: () => ({ lat: 35.7, lng: 139.7 }) }),
+      getDiv: () => ({ clientWidth: 393, clientHeight: 677 }),
+      getZoom: () => 11,
+    } as unknown as SdkMap
+    act(() => sdkState.onIdle?.({ map: resizedMap }))
+    await user.click(screen.getByRole('button', { name: '음식점' }))
     await screen.findByRole('list', { name: '식당 검색 결과' })
+    expect(source.mock.lastCall?.[0]).toEqual({
+      ...mapRegionsFixture.initialBounds,
+      sort: 'recommend',
+      placeType: 'restaurant',
+    })
     expect(
       screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
     ).not.toHaveAttribute('aria-valuenow', '30')
