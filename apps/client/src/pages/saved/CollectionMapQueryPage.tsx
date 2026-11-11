@@ -137,7 +137,6 @@ export const CollectionMapQueryPage = ({
             navigate(getRestaurantDetailPath(restaurantId))
           }
           onSelectArea={() => {}}
-          onSearchArea={() => {}}
           onExplore={() => {}}
           onResetArea={() => {}}
           onSaved={close}

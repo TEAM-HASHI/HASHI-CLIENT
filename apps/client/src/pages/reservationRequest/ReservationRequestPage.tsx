@@ -22,6 +22,7 @@ import { useReservationRequestDraft } from '@/pages/reservationRequest/hooks/use
 import type { ReservationRequestDraft } from '@/pages/reservationRequest/hooks/useReservationRequestDraft'
 
 import { checkIsTodayOrBefore } from '@/shared/utils/date'
+import { BottomActionBar } from '@/shared/components/bottomActionBar'
 import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const ANYWHERE_RESERVATION_FEE = 4_000
@@ -107,7 +108,7 @@ const ReservationRequestContent = ({
   }
 
   return (
-    <div className="min-h-dvh bg-white pt-18.75 pb-[128px]">
+    <div className="min-h-dvh bg-white pt-18.75 pb-5">
       <PageFixedArea>
         <Header
           className="app-mobile-fixed-top z-fixed fixed"
@@ -144,8 +145,10 @@ const ReservationRequestContent = ({
 
       <ReservationNoticeSection />
 
-      <PageFixedArea>
-        <div className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-[17px] pb-[calc(17px+var(--safe-area-bottom,0px))]">
+      <BottomActionBar
+        aria-label="예약 요청 액션"
+        layout="padded"
+        endAction={
           <Button
             className="h-[46px]"
             onClick={handleRequestClick}
@@ -154,8 +157,8 @@ const ReservationRequestContent = ({
           >
             예약 요청
           </Button>
-        </div>
-      </PageFixedArea>
+        }
+      />
 
       <ReservationConfirmDialog
         finalPaymentAmount={reservationPoint.finalPaymentAmount}

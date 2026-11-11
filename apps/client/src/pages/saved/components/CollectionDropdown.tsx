@@ -46,6 +46,7 @@ export const CollectionDropdown = <T extends string>({
       setPortalContainer(node.closest('[role="dialog"]') ?? document.body)
   }, [])
   const menuRef = useRef<HTMLDivElement>(null)
+  const tabbing = useRef(false)
   const [position, setPosition] = useState({ top: 0, left: 0, maxHeight: 0 })
 
   useLayoutEffect(() => {
@@ -107,6 +108,7 @@ export const CollectionDropdown = <T extends string>({
     )
     selected?.focus({ preventScroll: true })
     const dismiss = (event: PointerEvent) => {
+      tabbing.current = false
       if (
         event.target instanceof Node &&
         !menuRef.current?.contains(event.target) &&
@@ -182,14 +184,21 @@ export const CollectionDropdown = <T extends string>({
               ...position,
             }}
             onBlur={(event) => {
+              const wasTabbing = tabbing.current
+              tabbing.current = false
+              const nextTarget = event.relatedTarget
               if (
-                !event.currentTarget.contains(
-                  event.relatedTarget as Node | null,
-                )
+                nextTarget
+                  ? !event.currentTarget.contains(nextTarget)
+                  : wasTabbing
               )
                 onOpenChange(false)
             }}
             onKeyDown={(event) => {
+              if (event.key === 'Tab') {
+                tabbing.current = true
+                return
+              }
               const items = [
                 ...(menuRef.current?.querySelectorAll<HTMLButtonElement>(
                   '[role="menuitemradio"], [role="menuitem"]',
@@ -216,6 +225,9 @@ export const CollectionDropdown = <T extends string>({
                         items.length
                 items[next]?.focus()
               }
+            }}
+            onKeyUp={(event) => {
+              if (event.key === 'Tab') tabbing.current = false
             }}
           >
             {options.map((option) => (

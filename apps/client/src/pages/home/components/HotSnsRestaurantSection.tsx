@@ -40,21 +40,20 @@ export const HotSnsRestaurantSection = ({
 
   return (
     <section className="mt-[29px]" aria-labelledby="home-sns-heading">
-      <div className="flex items-center justify-between">
+      <Link
+        className="flex min-h-6 w-full items-center justify-between gap-2"
+        to={listPath}
+      >
         <h2
           className="typo-sub-header-1 text-primary-200"
           id="home-sns-heading"
         >
           SNS에서 핫한 일본 식당
         </h2>
-        <Link
-          aria-label="SNS 맛집 전체보기"
-          className="text-primary-200 flex size-6 items-center justify-center"
-          to={listPath}
-        >
+        <span className="text-primary-200 flex size-6 shrink-0 items-center justify-center">
           <NextIcon aria-hidden="true" className="size-5" />
-        </Link>
-      </div>
+        </span>
+      </Link>
       <ul className="mt-5 flex flex-col gap-[14px]">
         {isLoading
           ? renderSkeletonItems()

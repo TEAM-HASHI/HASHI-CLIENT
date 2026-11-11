@@ -15,6 +15,41 @@ export const getMypageSavedBackSteps = (state: unknown) => {
     : null
 }
 
+let createdSaveTarget: { key: string; id: string; session: number } | undefined
+
+export const rememberCreatedCollectionSaveTarget = (
+  state: unknown,
+  collectionId: number | undefined,
+) => {
+  if (
+    isRecord(state) &&
+    typeof state.collectionSaveCreationKey === 'string' &&
+    getCollectionSaveRestaurantId(state) &&
+    isValidCollectionId(collectionId)
+  ) {
+    createdSaveTarget = {
+      key: state.collectionSaveCreationKey,
+      id: String(collectionId),
+      session: getAuthSessionVersion(),
+    }
+  }
+}
+
+export const getCreatedCollectionSaveTarget = (state: unknown) =>
+  createdSaveTarget &&
+  createdSaveTarget.session === getAuthSessionVersion() &&
+  isRecord(state) &&
+  state.collectionSaveCreationKey === createdSaveTarget.key &&
+  getCollectionSaveRestaurantId(state)
+    ? createdSaveTarget
+    : undefined
+
+export const clearCreatedCollectionSaveTarget = (
+  target: NonNullable<typeof createdSaveTarget>,
+) => {
+  if (createdSaveTarget === target) createdSaveTarget = undefined
+}
+
 export const getCollectionSaveState = (
   state: unknown,
   restaurantId: string | null,

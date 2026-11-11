@@ -29,7 +29,7 @@ describe('toReviewDetail', () => {
           src: 'https://cdn.hashi.kr/review-1.jpg',
         },
       ],
-      keywordIds: ['delicious', 'kind'],
+      keywords: ['음식이 맛있어요', '직원분이 친절해요', '알 수 없는 값'],
       rating: 4,
       restaurantName: '아키토리 라멘',
       thumbnailSrc: 'https://cdn.hashi.kr/restaurant.jpg',
