@@ -42,7 +42,7 @@ interface MapViewportProps {
   panelHeight: number
   onSelectRestaurant: (id: string) => void
   onSelectArea: (code: string) => void
-  onSearchArea: (bounds: MapBounds) => void
+  onSearchArea?: (bounds: MapBounds) => void
   onExplore: () => void
   onOverview?: () => void
   hasConditions?: boolean
@@ -404,6 +404,7 @@ const GoogleMapSurface = ({
         {ready &&
           !failed &&
           !loadingRestaurants &&
+          onSearchArea &&
           hasUserMoved &&
           boundsChanged &&
           currentBounds && (

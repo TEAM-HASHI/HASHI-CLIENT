@@ -429,6 +429,17 @@ it('does not search on idle, and submits the latest bounds only after a click', 
   ).not.toBeInTheDocument()
 })
 
+it('does not offer viewport search after movement when no search is connected', () => {
+  render(<MapViewport {...props} onSearchArea={undefined} />)
+  fireEvent.click(screen.getByText('초기 idle'))
+  fireEvent.click(screen.getByText('이동 idle'))
+  fireEvent.wheel(screen.getByText('초기 idle'))
+  fireEvent.click(screen.getByText('초기 idle'))
+  expect(
+    screen.queryByRole('button', { name: '현재 위치에서 검색' }),
+  ).not.toBeInTheDocument()
+})
+
 it('offers viewport search without a category after user movement', () => {
   render(<MapViewport {...props} />)
   fireEvent.click(screen.getByText('초기 idle'))
