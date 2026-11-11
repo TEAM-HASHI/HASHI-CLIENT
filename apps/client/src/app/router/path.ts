@@ -21,6 +21,8 @@ export const ROUTES = {
   reviewDetail: '/reviews/:reviewId',
   reviewEdit: '/reviews/:reviewId/edit',
   mypage: '/mypage',
+  mypageSaved: '/mypage/saved',
+  mypageCollectionDetail: '/mypage/saved/:collectionId',
   profileNew: '/profile/new',
   profileEdit: '/profile/edit',
   withdrawal: '/withdrawal',

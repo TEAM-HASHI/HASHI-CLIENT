@@ -83,6 +83,16 @@ export const BottomNavigationLayout = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const loginRequiredState = location.state as LoginRequiredLocationState | null
+  const collectionMap =
+    location.pathname === ROUTES.map && isCollectionMapState(location.state)
+      ? location.state
+      : null
+  const navigationPath =
+    collectionMap && collectionMap.origin !== 'map'
+      ? collectionMap.origin === 'mypage'
+        ? ROUTES.mypageSaved
+        : ROUTES.saved
+      : location.pathname
 
   return (
     <>
@@ -112,11 +122,7 @@ export const BottomNavigationLayout = () => {
             }
           }}
           value={getBottomNavigationValue(
-            location.pathname === ROUTES.map &&
-              isCollectionMapState(location.state) &&
-              location.state.origin !== 'map'
-              ? ROUTES.saved
-              : location.pathname,
+            navigationPath,
             loginRequiredState?.from?.pathname,
           )}
         />

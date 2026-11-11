@@ -145,6 +145,11 @@ export const appRoutes: RouteObject[] = [
                 index: true,
                 element: lazyPages.mypage(),
               },
+              { path: ROUTES.mypageSaved, element: lazyPages.saved() },
+              {
+                path: ROUTES.mypageCollectionDetail,
+                element: lazyPages.saved(),
+              },
             ],
           },
           {

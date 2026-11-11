@@ -4,7 +4,11 @@ import '@testing-library/jest-dom/vitest'
 import userEvent from '@testing-library/user-event'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
-import { RouterProvider, createMemoryRouter } from 'react-router-dom'
+import {
+  RouterProvider,
+  createMemoryRouter,
+  type Location,
+} from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCollection } from '@/features/collection/api/createCollection'
@@ -161,9 +165,11 @@ vi.mock('@vis.gl/react-google-maps', () => ({
   useMap: () => null,
 }))
 
-const renderRoute = async (initialEntry: string) => {
+const renderRoute = async (
+  ...initialEntries: (string | Partial<Location>)[]
+) => {
   const router = createMemoryRouter(appRoutes, {
-    initialEntries: [initialEntry],
+    initialEntries,
   })
   const queryClient = createQueryClient()
 
@@ -847,6 +853,59 @@ describe('appRoutes', () => {
     )
     expect(await screen.findByText('총 0개')).toBeVisible()
     expect(deleteCollection).toHaveBeenLastCalledWith(42)
+  })
+
+  it('keeps collections opened from My Page outside the active tabs and returns to My Page', async () => {
+    setAccessToken('test-session')
+    const { router } = await renderRoute('/mypage/saved')
+    const user = userEvent.setup()
+    await user.click(
+      await screen.findByRole('button', { name: 'API 여행 컬렉션 열기' }),
+    )
+    const backToCollections = await screen.findByRole('button', {
+      name: '컬렉션 목록으로 돌아가기',
+    })
+    expect(
+      screen.queryByRole('button', { current: 'page' }),
+    ).not.toBeInTheDocument()
+    await user.click(backToCollections)
+    const backToMypage = await screen.findByRole('button', {
+      name: '마이로 돌아가기',
+    })
+    expect(
+      screen.queryByRole('button', { current: 'page' }),
+    ).not.toBeInTheDocument()
+    await user.click(backToMypage)
+    await waitFor(() => expect(router.state.location.pathname).toBe('/mypage'))
+    await user.click(screen.getByRole('button', { name: '저장' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/saved'))
+    expect(screen.getByRole('button', { name: '저장' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(
+      screen.queryByRole('button', { name: '마이로 돌아가기' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not reopen a closed My Page collection when navigating back', async () => {
+    setAccessToken('test-session')
+    const { router } = await renderRoute('/', '/mypage', {
+      pathname: '/mypage/saved',
+      state: { mypageSavedBackSteps: 1 },
+    })
+    const user = userEvent.setup()
+    await user.click(
+      await screen.findByRole('button', { name: 'API 여행 컬렉션 열기' }),
+    )
+    await user.click(
+      await screen.findByRole('button', { name: '컬렉션 목록으로 돌아가기' }),
+    )
+    await user.click(
+      await screen.findByRole('button', { name: '마이로 돌아가기' }),
+    )
+    await act(async () => router.navigate(-1))
+    expect(router.state.location.pathname).toBe('/')
   })
 
   it.each([

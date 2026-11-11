@@ -11,6 +11,7 @@ type SavedPageLayoutProps = {
   headerActions?: ReactNode
   filters?: ReactNode
   onBack: () => void
+  backLabel?: string
   onCreate?: () => void
   scrollRef?: Ref<HTMLDivElement>
   scrollKey: string
@@ -18,7 +19,6 @@ type SavedPageLayoutProps = {
   embedded?: boolean
 }
 
-/** 조회와 fixture에서 동일한 고정 헤더·내부 스크롤 영역을 사용한다. */
 export const SavedPageLayout = ({
   detail,
   title,
@@ -28,6 +28,7 @@ export const SavedPageLayout = ({
   headerActions,
   filters,
   onBack,
+  backLabel = detail ? '컬렉션 목록으로 돌아가기' : undefined,
   onCreate,
   scrollRef,
   scrollKey,
@@ -58,10 +59,10 @@ export const SavedPageLayout = ({
                 }
                 subtitle={detail ? '저장한 장소' : undefined}
                 leftAction={
-                  detail ? (
+                  backLabel ? (
                     <IconButton
                       size="xs"
-                      aria-label="컬렉션 목록으로 돌아가기"
+                      aria-label={backLabel}
                       onClick={onBack}
                     >
                       <BackIcon className="size-6" />
