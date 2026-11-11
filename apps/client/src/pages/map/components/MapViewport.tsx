@@ -371,32 +371,17 @@ const GoogleMapSurface = ({
                       anchorLeft="-50%"
                       anchorTop="-50%"
                     >
-                      <div className="pointer-events-auto relative">
-                        {(offset.x !== 0 || offset.y !== 0) && (
-                          <svg
-                            aria-hidden="true"
-                            className="text-cool-gray-600 pointer-events-none absolute top-1/2 left-1/2 h-px w-px overflow-visible"
-                          >
-                            <line
-                              x1={0}
-                              y1={0}
-                              x2={offset.x}
-                              y2={offset.y}
-                              stroke="currentColor"
-                            />
-                          </svg>
-                        )}
-                        <div
-                          style={{
-                            transform: `translate(${offset.x}px, ${offset.y}px)`,
-                          }}
-                        >
-                          <MapAreaMarker
-                            area={area}
-                            onSelect={onSelectArea}
-                            belowAnchor={offset.y > 0}
-                          />
-                        </div>
+                      <div
+                        className="pointer-events-auto"
+                        style={{
+                          transform: `translate(${offset.x}px, ${offset.y}px)`,
+                        }}
+                      >
+                        <MapAreaMarker
+                          area={area}
+                          onSelect={onSelectArea}
+                          belowAnchor={offset.y > 0}
+                        />
                       </div>
                     </AdvancedMarker>
                   )

@@ -19,8 +19,6 @@ const project = ({ lat, lng }: MapPosition, scale: number) => {
   }
 }
 
-// Keep 96×44px targets near their anchors, with 8px between targets.
-// A bounded two-dimensional search avoids an unbounded downward cascade.
 export const layoutMapAreaLabels = (
   areas: readonly Pick<MapArea, 'code' | 'position'>[],
   zoom: number,
@@ -47,7 +45,6 @@ export const layoutMapAreaLabels = (
       const insetX = viewport
         ? Math.min(viewport.width < 376 ? 48 : 56, viewport.width / 2)
         : 0
-      // The sheet overlaps the map's last 20px; keep a further 8px gap.
       const maxY = viewport ? Math.max(22, viewport.height - 50) : Infinity
       const minY = Math.min(140, maxY)
       const columns = viewport
@@ -69,8 +66,6 @@ export const layoutMapAreaLabels = (
           }
         }),
       )
-      // A short viewport needs shared slots: independently shifted rows can
-      // otherwise fragment the little remaining space between overlays.
       const candidates =
         viewport && viewport.height < 400
           ? Array.from(
