@@ -20,6 +20,9 @@ import { useCollectionQuery } from '@/features/collection/queries/useCollectionQ
 import { useCollectionsInfiniteQuery } from '@/features/collection/queries/useCollectionsInfiniteQuery'
 import { mapCollectionSummary } from '@/features/collection/utils/collectionReadAdapters'
 import {
+  clearCreatedCollectionSaveTarget,
+  getCreatedCollectionSaveTarget,
+  getCollectionSaveRestaurantId,
   getCollectionSaveChanges,
   getCollectionSaveSelectedId,
   getCollectionSaveState,
@@ -69,12 +72,23 @@ const CollectionTargetQueryDialogContent = (
       mounted.current = false
     }
   }, [])
-  const [selectedId, setSelectedId] = useState(() =>
-    getCollectionSaveSelectedId(props.restoreSelection ? location.state : null),
+  const restoreState = props.restoreSelection ? location.state : null
+  const [createdTarget] = useState(() =>
+    props.mode === 'save' &&
+    getCollectionSaveRestaurantId(restoreState) === String(props.restaurantId)
+      ? getCreatedCollectionSaveTarget(restoreState)
+      : undefined,
   )
-  const [saveChanges, setSaveChanges] = useState(() =>
-    getCollectionSaveChanges(props.restoreSelection ? location.state : null),
+  useEffect(() => {
+    if (createdTarget) clearCreatedCollectionSaveTarget(createdTarget)
+  }, [createdTarget])
+  const [selectedId, setSelectedId] = useState(
+    () => createdTarget?.id ?? getCollectionSaveSelectedId(restoreState),
   )
+  const [saveChanges, setSaveChanges] = useState(() => ({
+    ...getCollectionSaveChanges(restoreState),
+    ...(createdTarget && { [createdTarget.id]: true }),
+  }))
   const [listRoot, setListRoot] = useState<HTMLDivElement | null>(null)
   const moving = props.mode === 'move'
   const restaurantIds = props.mode === 'move' ? props.restaurantIds : []
@@ -190,6 +204,7 @@ const CollectionTargetQueryDialogContent = (
                 props.createState ?? location.state,
                 String(props.restaurantId),
               ),
+              collectionSaveCreationKey: location.key,
               collectionSaveChanges: saveChanges,
             }
           : (props.createState ?? location.state)

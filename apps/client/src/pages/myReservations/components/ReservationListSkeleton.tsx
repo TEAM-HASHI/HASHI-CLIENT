@@ -113,7 +113,8 @@ export const ReservationListSkeleton = ({
       aria-hidden="true"
       className={cn(
         'mb-2 flex flex-col',
-        selectedStatus !== 'CANCELED' && 'gap-2',
+        selectedStatus !== 'CANCELED' &&
+          (selectedStatus === 'IN_PROGRESS' ? 'gap-4' : 'gap-2'),
       )}
       data-testid="my-reservations-skeleton"
     >

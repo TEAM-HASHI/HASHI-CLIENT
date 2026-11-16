@@ -28,6 +28,7 @@ import { getCollectionHistoryIndex } from '@/features/collection/utils/collectio
 import { ApiError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { cn } from '@/shared/utils'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const COLOR_LABELS: Record<CollectionColor, string> = {
   red: '빨강',
@@ -40,10 +41,11 @@ const COLOR_LABELS: Record<CollectionColor, string> = {
 const EMPTY_DRAFT: CollectionDraft = {
   name: '',
   description: '',
-  color: null,
+  color: 'red',
   isPublic: true,
 }
 const LIMIT_MESSAGE = '글자 수 제한을 초과했어요.'
+const DESCRIPTION_LIMIT_MESSAGE = '최대 30자까지 입력할 수 있어요.'
 const DESCRIPTION_MIN_HEIGHT = 51
 const DESCRIPTION_MAX_CLIENT_HEIGHT = 127
 const DESCRIPTION_BORDER_HEIGHT = 2
@@ -181,23 +183,25 @@ export const CollectionForm = ({
     <>
       <section
         aria-label={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
-        className="app-mobile-bottom-action-content min-h-dvh bg-white pt-[calc(75px+var(--safe-area-top,0px))]"
+        className="min-h-dvh bg-white pt-[calc(75px+var(--safe-area-top,0px))] pb-5"
       >
-        <div className="app-mobile-fixed-top z-fixed bg-white pt-[var(--safe-area-top,0px)]">
-          <Header
-            title={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
-            leftAction={
-              <IconButton
-                size="xs"
-                aria-label="뒤로가기"
-                onClick={close}
-                disabled={isSubmitted}
-              >
-                <BackIcon className="size-6" />
-              </IconButton>
-            }
-          />
-        </div>
+        <PageFixedArea>
+          <div className="app-mobile-fixed-top z-fixed bg-white pt-[var(--safe-area-top,0px)]">
+            <Header
+              title={collection ? '컬렉션 수정' : '새 컬렉션 만들기'}
+              leftAction={
+                <IconButton
+                  size="xs"
+                  aria-label="뒤로가기"
+                  onClick={close}
+                  disabled={isSubmitted}
+                >
+                  <BackIcon className="size-6" />
+                </IconButton>
+              }
+            />
+          </div>
+        </PageFixedArea>
         <form
           id={`${id}-form`}
           className="w-full px-6"
@@ -229,7 +233,7 @@ export const CollectionForm = ({
               }}
             />
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 pb-5">
             <label
               htmlFor={`${id}-name`}
               className="typo-sub-header-1 text-primary-200"
@@ -263,7 +267,7 @@ export const CollectionForm = ({
             />
             <div
               id={`${id}-name-status`}
-              className="flex flex-wrap justify-between gap-1"
+              className="flex flex-wrap items-center justify-between gap-1"
             >
               <span className="typo-body-7 text-primary-400" role="status">
                 {overLimit.name
@@ -328,7 +332,7 @@ export const CollectionForm = ({
             </label>
             <Textarea
               disabled={isSubmitted}
-              className="gap-3"
+              className="gap-3 [&>div]:items-center"
               textareaClassName="min-h-[51px] max-h-[129px] px-5 py-4"
               id={`${id}-description`}
               ref={descriptionRef}
@@ -338,7 +342,7 @@ export const CollectionForm = ({
               maxLength={COLLECTION_DESCRIPTION_LIMIT}
               maxLengthBehavior="allow"
               showCounter
-              errorMessage={LIMIT_MESSAGE}
+              errorMessage={DESCRIPTION_LIMIT_MESSAGE}
               onKeyDown={(event) => {
                 if (
                   event.key === 'Enter' &&
@@ -401,6 +405,7 @@ export const CollectionForm = ({
         </form>
         <BottomActionBar
           aria-label={collection ? '컬렉션 수정 제출' : '컬렉션 생성 제출'}
+          layout="padded"
           endAction={
             <Button
               form={`${id}-form`}

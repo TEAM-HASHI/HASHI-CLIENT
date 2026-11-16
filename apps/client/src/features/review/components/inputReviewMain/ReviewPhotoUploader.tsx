@@ -92,12 +92,15 @@ export const ReviewPhotoUploader = ({
               />
               <button
                 aria-label={`${name} 사진 삭제`}
-                className="text-cool-gray-900 focus-visible:outline-cool-gray-500 absolute top-1.5 right-1.5 flex size-[18px] items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+                className="text-cool-gray-900 focus-visible:outline-cool-gray-500 absolute top-0 right-0 size-11 focus-visible:outline-2 focus-visible:-outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={disabled}
                 type="button"
                 onClick={() => onPhotoDeleteClick(index)}
               >
-                <CloseSmallIcon aria-hidden="true" className="size-[18px]" />
+                <CloseSmallIcon
+                  aria-hidden="true"
+                  className="absolute top-1.5 right-1.5 size-[18px]"
+                />
               </button>
             </li>
           ))}

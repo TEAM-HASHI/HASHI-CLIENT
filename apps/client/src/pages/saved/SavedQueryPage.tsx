@@ -13,6 +13,7 @@ import { ROUTES } from '@/app/router/path'
 import {
   getCollectionDetailPath,
   getRestaurantDetailPath,
+  isMypageSavedPath,
 } from '@/app/router/routePaths'
 import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import { CollectionDropdown } from '@/pages/saved/components/CollectionDropdown'
@@ -36,6 +37,7 @@ import type {
   SavedRestaurantReadModelTypes,
 } from '@/features/collection/types/collectionReadModels'
 import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
+import { getMypageSavedBackSteps } from '@/features/collection/utils/collectionNavigation'
 import {
   mapCollectionDetail,
   mapCollectionSummary,
@@ -49,6 +51,7 @@ import {
   useInfiniteScrollTrigger,
   useListReturnRestoration,
 } from '@/shared/hooks'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const restaurantDetailReturnStore = createListReturnStore<null>()
 
@@ -79,6 +82,9 @@ export const SavedQueryPage = ({
 }: SavedQueryPageProps) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const fromMypage = isMypageSavedPath(location.pathname)
+  const backSteps = fromMypage ? getMypageSavedBackSteps(location.state) : null
+  const listPath = fromMypage ? ROUTES.mypageSaved : ROUTES.saved
   const { collectionId: paramId } = useParams<{ collectionId: string }>()
   const mapState =
     location.pathname === ROUTES.map && isCollectionMapState(location.state)
@@ -196,7 +202,7 @@ export const SavedQueryPage = ({
     </div>
   )
 
-  if (detail && !validId) return <Navigate to={ROUTES.saved} replace />
+  if (detail && !validId) return <Navigate to={listPath} replace />
   if (!detail && !isAuthenticated) return null
 
   return (
@@ -232,8 +238,12 @@ export const SavedQueryPage = ({
           />
         )
       }
+      backLabel={fromMypage && !detail ? '마이로 돌아가기' : undefined}
       onBack={() => {
-        navigate(ROUTES.saved)
+        if (backSteps) navigate(-backSteps)
+        else if (fromMypage)
+          navigate(detail ? listPath : ROUTES.mypage, { replace: true })
+        else navigate(listPath)
         setMenu(null)
       }}
       onCreate={onCreate}
@@ -323,7 +333,12 @@ export const SavedQueryPage = ({
                           origin: 'map',
                         }
                         navigate(ROUTES.map, { state })
-                      } else navigate(getCollectionDetailPath(item.id))
+                      } else
+                        navigate(getCollectionDetailPath(item.id, fromMypage), {
+                          state: fromMypage
+                            ? { mypageSavedBackSteps: 1 }
+                            : undefined,
+                        })
                     }}
                     moreAction={renderCollectionActions?.(item) ?? false}
                   />
@@ -341,25 +356,29 @@ export const SavedQueryPage = ({
             />
           )}
           {collection && !mapState && (
-            <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">
-              <Button
-                size="md"
-                className="pointer-events-auto h-11 gap-0.5 rounded-full px-3 shadow-[0_4px_4px_rgba(0,0,0,0.15)]"
-                leftIcon={
-                  <MapViewIcon className="fill-secondary-200 stroke-primary-100 size-6" />
-                }
-                onClick={() => {
-                  const state: CollectionMapState = {
-                    collectionId: collection.id,
-                    sort,
-                    category,
+            <PageFixedArea>
+              <div className="app-mobile-fixed-bottom pointer-events-none bottom-[calc(100px+var(--safe-area-bottom,0px))] z-10 flex justify-end px-5">
+                <Button
+                  size="md"
+                  className="pointer-events-auto h-11 gap-0.5 rounded-full px-3 shadow-[0_4px_4px_rgba(0,0,0,0.15)]"
+                  leftIcon={
+                    <MapViewIcon className="fill-secondary-200 stroke-primary-100 size-6" />
                   }
-                  navigate(ROUTES.map, { state })
-                }}
-              >
-                지도로 보기
-              </Button>
-            </div>
+                  onClick={() => {
+                    const state: CollectionMapState = {
+                      collectionId: collection.id,
+                      sort,
+                      category,
+                      ...(fromMypage && { origin: 'mypage' }),
+                      ...(backSteps && { mypageSavedBackSteps: backSteps }),
+                    }
+                    navigate(ROUTES.map, { state })
+                  }}
+                >
+                  지도로 보기
+                </Button>
+              </div>
+            </PageFixedArea>
           )}
         </>
       )}

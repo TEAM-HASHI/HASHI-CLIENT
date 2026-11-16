@@ -74,8 +74,13 @@ test('제품 컬렉션 라우트에서 HTTP 기반 생성·편집·삭제와 실
   })
   await page.goto('/saved')
   await page.getByRole('button', { name: '새 컬렉션 만들기' }).click()
+  await expect(page.getByRole('radio', { name: '빨강' })).toBeChecked()
+  const coverColor = page.locator('form .grid > div').first()
+  await expect(coverColor).toHaveCSS('background-color', 'rgb(255, 93, 93)')
   await page.getByLabel('컬렉션명', { exact: true }).fill('브라우저 여행')
   await page.getByRole('radio', { name: '초록' }).click()
+  await expect(page.getByRole('radio', { name: '초록' })).toBeChecked()
+  await expect(coverColor).toHaveCSS('background-color', 'rgb(222, 220, 95)')
   await page.getByRole('button', { name: '만들기', exact: true }).click()
   await expect(
     page.getByRole('button', { name: '브라우저 여행 컬렉션 열기' }),
@@ -88,7 +93,7 @@ test('제품 컬렉션 라우트에서 HTTP 기반 생성·편집·삭제와 실
   await expect(
     page.getByRole('button', { name: '수정한 여행 컬렉션 열기' }),
   ).toBeVisible()
-  expect(collection).toMatchObject({ description: '설명 수정' })
+  expect(collection).toMatchObject({ description: '설명 수정', color: 'green' })
   await page.reload()
   await expect(
     page.getByRole('button', { name: '수정한 여행 컬렉션 열기' }),

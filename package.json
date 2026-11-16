@@ -42,6 +42,7 @@
     "test:lighthouse-comment": "node --test .github/scripts/lighthouse-comment.test.cjs",
     "test:lighthouse-preview-validation": "node --test .github/scripts/lighthouse-preview-validation.test.cjs",
     "test:lighthouse": "pnpm test:lighthouse-comment && pnpm test:lighthouse-preview-validation",
+    "test:preview-deployment": "node --test .github/scripts/preview-deployment.test.cjs",
     "test:e2e": "pnpm --filter @hashi/client test:e2e",
     "preview": "pnpm preview:client",
     "preview:client": "pnpm --filter @hashi/client preview",

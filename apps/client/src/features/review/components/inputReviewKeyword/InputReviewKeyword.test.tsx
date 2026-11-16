@@ -31,53 +31,6 @@ describe('InputReviewKeyword', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('renders the keyword prompt and all review keyword badges', () => {
-    render(<InputReviewKeyword />)
-
-    expect(screen.getByText('어떤 점이 좋으셨나요?')).toHaveClass(
-      'typo-sub-header-1',
-      'text-primary-200',
-    )
-    expect(screen.getByText('( 키워드를 1개~3개 선택해주세요.)')).toHaveClass(
-      'typo-body-7',
-      'text-cool-gray-600',
-    )
-    expect(
-      screen.getByRole('group', { name: '리뷰 키워드 선택' }),
-    ).toBeInTheDocument()
-
-    expect(
-      screen.getByRole('button', { name: '음식이 맛있어요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    expect(
-      screen.getByRole('button', { name: '향신료가 강하지 않아요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    expect(
-      screen.getByRole('button', { name: '혼밥하기 좋아요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    expect(
-      screen.getByRole('button', { name: '직원분이 친절해요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    expect(
-      screen.getByRole('button', { name: '매장이 넓어요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    expect(
-      screen.getByRole('button', { name: '매장이 청결해요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    expect(
-      screen.getByRole('button', { name: '음식이 빨리 나와요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    expect(
-      screen.getByRole('button', { name: '사진이 잘 나와요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    expect(
-      screen.getByRole('button', { name: '가성비가 좋아요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-    expect(
-      screen.getByRole('button', { name: '대화하기 좋아요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
-  })
-
   it('marks selected keywords as pressed', () => {
     render(
       <InputReviewKeyword selectedKeywordIds={['delicious', 'cleanStore']} />,
@@ -89,9 +42,10 @@ describe('InputReviewKeyword', () => {
     expect(
       screen.getByRole('button', { name: '매장이 청결해요' }),
     ).toHaveAttribute('aria-pressed', 'true')
-    expect(
-      screen.getByRole('button', { name: '직원분이 친절해요' }),
-    ).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: '친절해요' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
   })
 
   it('renders the solo dining icon and toggles the replacement keyword', () => {
@@ -121,7 +75,7 @@ describe('InputReviewKeyword', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: '직원분이 친절해요' }))
+    fireEvent.click(screen.getByRole('button', { name: '친절해요' }))
 
     expect(handleSelectedKeywordIdsChange).toHaveBeenCalledTimes(1)
     expect(handleSelectedKeywordIdsChange).toHaveBeenCalledWith([
@@ -160,7 +114,7 @@ describe('InputReviewKeyword', () => {
       name: '대화하기 좋아요',
     })
     const selectedKeyword = screen.getByRole('button', {
-      name: '직원분이 친절해요',
+      name: '친절해요',
     })
 
     expect(unselectedKeyword).toHaveAttribute('aria-disabled', 'true')

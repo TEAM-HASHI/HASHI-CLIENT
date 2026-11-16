@@ -136,7 +136,7 @@ ReservationCompletePage
 - responsive:
   - 앱 모바일 프레임 기준
 - fixed area:
-  - 하단 CTA: `app-mobile-fixed-bottom`, padding 16/20/49 + safe area
+  - 하단 CTA: `BottomActionBar`, 위·아래 16px, 좌우 20px, 하단 safe area 추가
 - scroll area:
   - 본문은 CTA에 가리지 않도록 하단 여백을 가진다.
 - empty/loading/error layout:

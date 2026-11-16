@@ -52,12 +52,12 @@ const createRestaurantsResult = ({
   }
 }
 
-const renderPopularRestaurantsPage = () => {
+const renderPopularRestaurantsPage = (search = '') => {
   const queryClient = createQueryClient()
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[ROUTES.popularRestaurants]}>
+      <MemoryRouter initialEntries={[`${ROUTES.popularRestaurants}${search}`]}>
         <Routes>
           <Route
             element={<PopularRestaurantsPage />}
@@ -83,38 +83,39 @@ describe('PopularRestaurantsPage', () => {
     vi.unstubAllGlobals()
   })
 
-  it('resets only the draft sort and keeps the bottom sheet open until apply is pressed', async () => {
-    renderPopularRestaurantsPage()
-    await screen.findByRole('button', { name: /히마와리 스시 1/ })
+  it.each([
+    {
+      trigger: '정렬 필터: 별점순',
+      title: '정렬 순서',
+      sort: 'basic',
+      genre: 'sushi',
+    },
+    {
+      trigger: '음식 장르 필터: 스시/사시미류',
+      title: '음식 장르 선택',
+      sort: 'rating',
+      genre: 'all',
+    },
+  ])(
+    'resets $title immediately, closes the sheet, and preserves the other filter',
+    async ({ trigger, title, sort, genre }) => {
+      renderPopularRestaurantsPage('?sort=rating&genre=sushi')
+      await screen.findByRole('button', { name: /히마와리 스시 1/ })
 
-    fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 기본순' }))
-    fireEvent.click(screen.getByRole('button', { name: '별점순' }))
-    fireEvent.click(screen.getByRole('button', { name: '적용' }))
-    await screen.findByRole('button', { name: '정렬 필터: 별점순' })
+      fireEvent.click(screen.getByRole('button', { name: trigger }))
+      const sheet = screen.getByRole('dialog', { name: title })
+      fireEvent.click(screen.getByRole('button', { name: '초기화' }))
+      fireEvent.animationEnd(sheet)
 
-    fireEvent.click(screen.getByRole('button', { name: '정렬 필터: 별점순' }))
-    fireEvent.click(screen.getByRole('button', { name: '초기화' }))
-
-    expect(
-      screen.getByRole('dialog', { name: '정렬 순서' }),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: '정렬 필터: 별점순' }),
-    ).toBeInTheDocument()
-    expect(mockedGetRestaurants).toHaveBeenCalledTimes(2)
-
-    fireEvent.click(screen.getByRole('button', { name: '적용' }))
-
-    expect(
-      screen.getByRole('button', { name: '정렬 필터: 기본순' }),
-    ).toBeInTheDocument()
-    await waitFor(() => {
-      expect(mockedGetRestaurants).toHaveBeenLastCalledWith({
-        genre: 'all',
-        size: 10,
-        sort: 'basic',
-        type: 'popular',
+      expect(sheet).not.toBeInTheDocument()
+      await waitFor(() => {
+        expect(mockedGetRestaurants).toHaveBeenLastCalledWith({
+          genre,
+          size: 10,
+          sort,
+          type: 'popular',
+        })
       })
-    })
-  })
+    },
+  )
 })

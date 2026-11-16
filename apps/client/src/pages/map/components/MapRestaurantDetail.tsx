@@ -22,6 +22,7 @@ import { useMapPanelLayout } from '@/pages/map/hooks/useMapPanelLayout'
 import { useMapRestaurantDetail } from '@/pages/map/hooks/useMapRestaurantDetail'
 import type { MapPanelStage, MapRestaurant } from '@/pages/map/types'
 import { cn } from '@/shared/utils'
+import { PageFixedAreaProvider } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 interface MapRestaurantDetailProps {
   restaurant: MapRestaurant
@@ -130,8 +131,10 @@ const SelectedRestaurantDetail = (props: MapRestaurantDetailProps) => {
         aria-label={`${model.displayRestaurant.name} 전체 상세`}
         className="fixed inset-0 mx-auto h-dvh w-full max-w-[var(--app-mobile-max-width,430px)] rounded-none p-0 pt-[var(--safe-area-top,0px)]"
       >
-        {panel}
-        {viewer}
+        <PageFixedAreaProvider container={null}>
+          {panel}
+          {viewer}
+        </PageFixedAreaProvider>
       </Dialog.Content>
     </Dialog.Root>
   )

@@ -7,15 +7,18 @@ import type { MagazineDetailRestaurant } from '@/pages/magazineDetail/types'
 
 interface MagazineRestaurantCardProps {
   restaurant: MagazineDetailRestaurant
+  onClick: () => void
 }
 
 export const MagazineRestaurantCard = ({
   restaurant,
+  onClick,
 }: MagazineRestaurantCardProps) => {
   return (
     <Link
       aria-label={`${restaurant.name} 상세 보기`}
       className="focus-visible:outline-cool-gray-900 block focus-visible:outline-2 focus-visible:outline-offset-2"
+      onClick={onClick}
       to={getRestaurantDetailPath(restaurant.id)}
     >
       <article className="border-warm-gray-50 flex min-h-67 flex-col justify-center gap-2 border-b py-3">

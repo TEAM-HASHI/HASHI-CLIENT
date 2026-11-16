@@ -1,4 +1,5 @@
 import { Button } from '@hashi/hds-ui'
+import { BottomActionBar } from '@/shared/components/bottomActionBar'
 
 interface WithdrawalBottomBarProps {
   canWithdraw: boolean
@@ -14,11 +15,10 @@ export const WithdrawalBottomBar = ({
   onWithdraw,
 }: WithdrawalBottomBarProps) => {
   return (
-    <footer
+    <BottomActionBar
       aria-label="회원 탈퇴 액션"
-      className="app-mobile-fixed-bottom z-fixed bg-white px-5 pt-4 pb-[calc(48px+var(--safe-area-bottom,0px))]"
-    >
-      <div className="grid grid-cols-2 gap-4">
+      layout="padded"
+      startAction={
         <Button
           disabled={isPending}
           onClick={onReturn}
@@ -28,6 +28,8 @@ export const WithdrawalBottomBar = ({
         >
           돌아가기
         </Button>
+      }
+      endAction={
         <Button
           disabled={!canWithdraw}
           onClick={onWithdraw}
@@ -36,7 +38,7 @@ export const WithdrawalBottomBar = ({
         >
           탈퇴하기
         </Button>
-      </div>
-    </footer>
+      }
+    />
   )
 }

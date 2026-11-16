@@ -1,4 +1,10 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -9,6 +15,7 @@ import { CollectionDataProvider } from '@/pages/saved/data/CollectionDataProvide
 import { collectionMocks } from '@/pages/saved/data/collectionMocks'
 import type { CollectionData } from '@/pages/saved/types'
 import { CollectionListRow } from '@/pages/saved/components/CollectionListRow'
+import { CollectionEditMenu } from '@/pages/saved/components/CollectionDropdown'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import {
   mapCollectionSummary,
@@ -89,6 +96,45 @@ describe('서버 응답 목록 표시', () => {
 })
 
 describe('SavedPage', () => {
+  it('다른 메뉴 항목을 터치하다 포커스 대상이 사라져도 선택한 동작을 실행한다', async () => {
+    const onShare = vi.fn()
+    render(
+      <CollectionEditMenu
+        name="여행"
+        shareInMenu
+        onEdit={vi.fn()}
+        onShare={onShare}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: '여행 더보기' }))
+    const item = screen.getByRole('menuitem', { name: '공유하기' })
+    fireEvent.pointerDown(item, { pointerType: 'touch' })
+    fireEvent.blur(screen.getByRole('menuitem', { name: '수정하기' }), {
+      relatedTarget: null,
+    })
+    fireEvent.pointerUp(item, { pointerType: 'touch' })
+    fireEvent.click(item)
+
+    expect(onShare).toHaveBeenCalledOnce()
+  })
+
+  it('Tab으로 메뉴 안에서 이동할 때는 유지하고 페이지를 벗어나면 닫는다', async () => {
+    const user = userEvent.setup()
+    render(
+      <CollectionEditMenu name="여행" onEdit={vi.fn()} onDelete={vi.fn()} />,
+    )
+    const trigger = screen.getByRole('button', { name: '여행 더보기' })
+    await user.click(trigger)
+    await user.tab()
+    const lastItem = screen.getByRole('menuitem', { name: '삭제하기' })
+    expect(lastItem).toHaveFocus()
+
+    expect(fireEvent.keyDown(lastItem, { key: 'Tab' })).toBe(true)
+    fireEvent.blur(lastItem, { relatedTarget: null })
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  })
+
   it('외부 식당 선택 콜백을 유지하고 더보기 클릭은 상세 선택으로 전달하지 않는다', async () => {
     const select = vi.fn()
     const { user, router } = setup(collectionMocks, select)

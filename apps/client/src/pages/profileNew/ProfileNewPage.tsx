@@ -5,6 +5,7 @@ import { ProfileFields } from '@/features/profile/components/ProfileFields'
 import { ProfileFormBottomBar } from '@/features/profile/components/ProfileFormBottomBar'
 import { ProfileImageSection } from '@/features/profile/components/ProfileImageSection'
 import { useProfileNewPage } from '@/pages/profileNew/hooks/useProfileNewPage'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 export const ProfileNewPage = () => {
   const {
@@ -20,20 +21,22 @@ export const ProfileNewPage = () => {
   return (
     <div className="flex min-h-dvh flex-col bg-white">
       <h1 className="sr-only">프로필 생성</h1>
-      <div className="app-mobile-fixed-top z-fixed bg-white">
-        <Header
-          leftAction={
-            <IconButton
-              aria-label="뒤로가기"
-              onClick={handleBackClick}
-              size="xs"
-            >
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-          title="프로필 생성"
-        />
-      </div>
+      <PageFixedArea>
+        <div className="app-mobile-fixed-top z-fixed bg-white">
+          <Header
+            leftAction={
+              <IconButton
+                aria-label="뒤로가기"
+                onClick={handleBackClick}
+                size="xs"
+              >
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+            title="프로필 생성"
+          />
+        </div>
+      </PageFixedArea>
 
       <form className="px-5 pt-[75px]" id={formId} onSubmit={handleSubmit}>
         <ProfileImageSection

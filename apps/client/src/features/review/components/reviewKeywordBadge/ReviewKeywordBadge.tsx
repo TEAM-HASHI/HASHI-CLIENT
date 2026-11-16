@@ -12,7 +12,6 @@ export const ReviewKeywordBadge = ({ keyword }: ReviewKeywordBadgeProps) => {
 
   return (
     <Badge
-      className="border-warm-gray-100 rounded-[5px] px-2.5 py-1"
       icon={
         KeywordIcon ? (
           <KeywordIcon aria-hidden="true" className="size-6" />

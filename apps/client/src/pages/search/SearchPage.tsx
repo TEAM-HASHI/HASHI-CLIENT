@@ -29,6 +29,7 @@ import searchToastWarningIcon from '@/shared/assets/icons/search-toast-warning.s
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { cn } from '@/shared/utils'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const getOptionLabel = <TValue extends string>(
   options: readonly { label: string; value: TValue }[],
@@ -168,30 +169,32 @@ export const SearchPage = () => {
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <div className="app-mobile-fixed-top z-fixed bg-white">
-        <SearchHeader
-          inputRef={searchInputRef}
-          keyword={keyword}
-          onBackClick={handleBackClick}
-          onKeywordChange={setKeyword}
-          onKeywordClear={handleKeywordClear}
-          onSearchSubmit={() => {
-            submitSearch()
-          }}
-        />
-        {!isSearchIdle && (
-          <SearchFilterBar
-            categoryLabel={foodCategoryLabel}
-            onCategoryClick={() => {
-              foodCategorySheet.onOpenChange(true)
+      <PageFixedArea>
+        <div className="app-mobile-fixed-top z-fixed bg-white">
+          <SearchHeader
+            inputRef={searchInputRef}
+            keyword={keyword}
+            onBackClick={handleBackClick}
+            onKeywordChange={setKeyword}
+            onKeywordClear={handleKeywordClear}
+            onSearchSubmit={() => {
+              submitSearch()
             }}
-            onSortClick={() => {
-              sortSheet.onOpenChange(true)
-            }}
-            sortLabel={sortLabel}
           />
-        )}
-      </div>
+          {!isSearchIdle && (
+            <SearchFilterBar
+              categoryLabel={foodCategoryLabel}
+              onCategoryClick={() => {
+                foodCategorySheet.onOpenChange(true)
+              }}
+              onSortClick={() => {
+                sortSheet.onOpenChange(true)
+              }}
+              sortLabel={sortLabel}
+            />
+          )}
+        </div>
+      </PageFixedArea>
       <div
         className={cn(
           'flex flex-1 flex-col',

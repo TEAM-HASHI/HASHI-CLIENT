@@ -9,6 +9,7 @@ import { termsQueryKeys } from '@/features/terms/queries/termsQueryKeys'
 import { checkIsNotFoundError } from '@/shared/api/apiError'
 import { LoadingScreen } from '@/shared/components/loadingScreen'
 import { NotFoundPage } from '@/pages/notFound'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const formatLastUpdatedDate = (effectiveDate: string) =>
   effectiveDate.replaceAll('-', '. ')
@@ -34,27 +35,29 @@ export const TermsDetailPage = () => {
 
   return (
     <div className="app-mobile-bottom-nav-content bg-white pt-18.75">
-      <Header
-        className="app-mobile-fixed-top z-fixed fixed"
-        contentClassName={
-          policy?.type === 'SERVICE_TERMS' ? 'text-black' : undefined
-        }
-        leftAction={
-          <IconButton
-            aria-label="뒤로가기"
-            onClick={() => navigate(ROUTES.terms, { replace: true })}
-            size="xs"
-          >
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        subtitle={
-          policy
-            ? `최종 업데이트: ${formatLastUpdatedDate(policy.effectiveDate)}`
-            : undefined
-        }
-        title={policy?.title ?? '이용약관'}
-      />
+      <PageFixedArea>
+        <Header
+          className="app-mobile-fixed-top z-fixed fixed"
+          contentClassName={
+            policy?.type === 'SERVICE_TERMS' ? 'text-black' : undefined
+          }
+          leftAction={
+            <IconButton
+              aria-label="뒤로가기"
+              onClick={() => navigate(ROUTES.terms, { replace: true })}
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          subtitle={
+            policy
+              ? `최종 업데이트: ${formatLastUpdatedDate(policy.effectiveDate)}`
+              : undefined
+          }
+          title={policy?.title ?? '이용약관'}
+        />
+      </PageFixedArea>
 
       {query.isPending ? (
         <LoadingScreen />

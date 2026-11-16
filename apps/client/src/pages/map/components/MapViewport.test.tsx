@@ -11,6 +11,7 @@ const sdk = vi.hoisted(() => ({
   idle: () => {},
   dragStart: () => {},
   map: {
+    getDiv: () => ({ clientWidth: 430, clientHeight: 652 }),
     fitBounds: vi.fn(),
     moveCamera: vi.fn(),
     panTo: vi.fn(),
@@ -51,6 +52,7 @@ vi.mock('@vis.gl/react-google-maps', () => ({
           onClick={() =>
             onIdle({
               map: {
+                getDiv: () => ({ clientWidth: 430, clientHeight: 652 }),
                 getZoom: () => sdk.initialZoom,
                 getCenter: () => ({
                   toJSON: () => ({ lat: 35.5, lng: 139.5 }),
@@ -73,6 +75,7 @@ vi.mock('@vis.gl/react-google-maps', () => ({
           onClick={() =>
             onIdle({
               map: {
+                getDiv: () => ({ clientWidth: 430, clientHeight: 652 }),
                 getZoom: () => sdk.zoom,
                 getCenter: () => ({
                   toJSON: () => ({ lat: 36.5, lng: 140.5 }),
@@ -421,6 +424,17 @@ it('does not search on idle, and submits the latest bounds only after a click', 
     west: 139,
     east: 140,
   })
+  expect(
+    screen.queryByRole('button', { name: '현재 위치에서 검색' }),
+  ).not.toBeInTheDocument()
+})
+
+it('does not offer viewport search after movement when no search is connected', () => {
+  render(<MapViewport {...props} onSearchArea={undefined} />)
+  fireEvent.click(screen.getByText('초기 idle'))
+  fireEvent.click(screen.getByText('이동 idle'))
+  fireEvent.wheel(screen.getByText('초기 idle'))
+  fireEvent.click(screen.getByText('초기 idle'))
   expect(
     screen.queryByRole('button', { name: '현재 위치에서 검색' }),
   ).not.toBeInTheDocument()

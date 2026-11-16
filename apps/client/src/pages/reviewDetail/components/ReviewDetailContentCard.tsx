@@ -1,10 +1,7 @@
 import { StarRating } from '@hashi/hds-ui'
 
 import { ReviewKeywordBadge } from '@/features/review/components'
-import {
-  REVIEW_PHOTO_MAX_COUNT,
-  type ReviewKeywordId,
-} from '@/features/review/constants'
+import { REVIEW_PHOTO_MAX_COUNT } from '@/features/review/constants'
 import type { ReviewDetailImage } from '@/pages/reviewDetail/types'
 
 interface ReviewDetailContentCardProps {
@@ -12,7 +9,7 @@ interface ReviewDetailContentCardProps {
   writtenDate: string
   content: string
   images: ReviewDetailImage[]
-  keywordIds: ReviewKeywordId[]
+  keywords: string[]
 }
 
 export const ReviewDetailContentCard = ({
@@ -20,7 +17,7 @@ export const ReviewDetailContentCard = ({
   writtenDate,
   content,
   images,
-  keywordIds,
+  keywords,
 }: ReviewDetailContentCardProps) => {
   const visibleImages = images.slice(0, REVIEW_PHOTO_MAX_COUNT)
 
@@ -60,14 +57,14 @@ export const ReviewDetailContentCard = ({
         </ul>
       ) : null}
 
-      {keywordIds.length > 0 ? (
+      {keywords.length > 0 ? (
         <ul
           aria-label="선택한 리뷰 키워드"
           className="flex max-w-full min-w-0 [scrollbar-width:none] gap-2 overflow-x-auto overflow-y-hidden [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
-          {keywordIds.map((keywordId) => (
-            <li className="shrink-0" key={keywordId}>
-              <ReviewKeywordBadge keyword={keywordId} />
+          {keywords.map((keyword) => (
+            <li className="shrink-0" key={keyword}>
+              <ReviewKeywordBadge keyword={keyword} />
             </li>
           ))}
         </ul>

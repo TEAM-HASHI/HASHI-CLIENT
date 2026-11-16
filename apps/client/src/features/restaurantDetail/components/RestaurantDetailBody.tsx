@@ -14,6 +14,7 @@ import type { useRestaurantDetailContent } from '@/features/restaurantDetail/hoo
 import type { useRestaurantPhotos } from '@/features/restaurantDetail/hooks/useRestaurantPhotos'
 import type { RestaurantDetail } from '@/features/restaurantDetail/types/restaurantDetail'
 import { cn } from '@/shared/utils'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 type TabContent = Pick<
   ReturnType<typeof useRestaurantDetailContent>,
@@ -116,27 +117,29 @@ export const RestaurantDetailBody = ({
   return (
     <>
       <div aria-hidden="true" ref={markerRef} />
-      <div
-        className={cn(
-          'z-fixed bg-white',
-          tabBarPosition === 'fixed'
-            ? 'fixed inset-x-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)]'
-            : tabBarPosition,
-        )}
-        style={
-          tabBarPosition === 'relative' ? undefined : { top: headerHeight }
-        }
-        data-fixed={tabBarPosition === 'fixed'}
-        data-page-scroll-top={tabBarPosition === 'fixed' ? '' : undefined}
-        data-testid="restaurant-detail-tab-sticky-container"
-      >
-        <RestaurantDetailTabs
-          activeTab={activeTab}
-          onTabChange={content.onTabChange}
-          reviewCount={restaurant.reviewCount}
-          photoCount={photos.enabled ? photos.counts?.all : undefined}
-        />
-      </div>
+      <PageFixedArea enabled={tabBarPosition === 'fixed'}>
+        <div
+          className={cn(
+            'z-fixed bg-white',
+            tabBarPosition === 'fixed'
+              ? 'fixed inset-x-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)]'
+              : tabBarPosition,
+          )}
+          style={
+            tabBarPosition === 'relative' ? undefined : { top: headerHeight }
+          }
+          data-fixed={tabBarPosition === 'fixed'}
+          data-page-scroll-top={tabBarPosition === 'fixed' ? '' : undefined}
+          data-testid="restaurant-detail-tab-sticky-container"
+        >
+          <RestaurantDetailTabs
+            activeTab={activeTab}
+            onTabChange={content.onTabChange}
+            reviewCount={restaurant.reviewCount}
+            photoCount={photos.enabled ? photos.counts?.all : undefined}
+          />
+        </div>
+      </PageFixedArea>
       {tabBarPosition === 'fixed' && (
         <div
           aria-hidden="true"

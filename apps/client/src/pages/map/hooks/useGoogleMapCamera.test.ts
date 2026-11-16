@@ -17,7 +17,10 @@ const areas = [
 const sdk = vi.hoisted(() => ({
   idle: () => {},
   zoom: 11.75,
+  width: 430,
+  height: 652,
   map: {
+    getDiv: () => ({ clientWidth: sdk.width, clientHeight: sdk.height }),
     fitBounds: vi.fn(),
     moveCamera: vi.fn(),
     panTo: vi.fn(),
@@ -36,7 +39,30 @@ vi.mock('@vis.gl/react-google-maps', () => ({ useMap: () => sdk.map }))
 
 beforeEach(() => {
   sdk.zoom = 11.75
+  sdk.width = 430
+  sdk.height = 652
   vi.clearAllMocks()
+})
+
+it('leaves usable fitting space on the 430×303 map that reproduced the distant overview', () => {
+  sdk.height = 303
+  renderHook(() =>
+    useGoogleMapCamera(
+      areas,
+      undefined,
+      undefined,
+      0,
+      null,
+      null,
+      initialBounds,
+    ),
+  )
+  const padding = sdk.map.fitBounds.mock.calls[0][1] as {
+    top: number
+    bottom: number
+  }
+  expect(sdk.height - padding.top - padding.bottom).toBeGreaterThanOrEqual(150)
+  expect(padding.top).toBeGreaterThan(padding.bottom)
 })
 afterEach(cleanup)
 

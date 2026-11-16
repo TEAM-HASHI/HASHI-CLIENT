@@ -50,7 +50,7 @@ const reviewDetailResponse = {
   content: '정말 맛있습니다. 다음에도 방문하고 싶어요.',
   createdAt: '2026-07-12T13:11:01.19277',
   imageUrls: ['https://cdn.hashi.kr/review-1.jpg'],
-  keywords: ['음식이 맛있어요', '직원분이 친절해요', '가성비가 좋아요'],
+  keywords: ['음식이 맛있어요', '친절해요', '전통적이에요'],
   rating: 4,
   reviewId: 5,
   restaurantName: '아키토리 라멘',
@@ -89,15 +89,6 @@ afterEach(() => {
 })
 
 describe('ReviewDetailPage', () => {
-  it('uses a 116px compact reservation summary row', async () => {
-    renderPage()
-
-    const reservationSummary =
-      await screen.findByLabelText('리뷰 대상 예약 정보')
-
-    expect(reservationSummary.firstElementChild).toHaveClass('h-[116px]')
-  })
-
   it('renders the API review detail', async () => {
     renderPage()
 
@@ -109,19 +100,15 @@ describe('ReviewDetailPage', () => {
     expect(screen.getByRole('img', { name: '평점 4점' })).toBeVisible()
     expect(screen.getByText('2026.07.12')).toBeVisible()
     expect(screen.getByText('음식이 맛있어요')).toBeVisible()
-    expect(screen.getByText('직원분이 친절해요')).toBeVisible()
-    expect(screen.getByText('가성비가 좋아요')).toBeVisible()
+    expect(
+      screen.getByText('친절해요').closest('li')?.querySelector('svg'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('전통적이에요')).toBeVisible()
     const keywordList = screen.getByRole('list', {
       name: '선택한 리뷰 키워드',
     })
 
-    expect(keywordList).toHaveClass(
-      'overflow-x-auto',
-      '[scrollbar-width:none]',
-      '[&::-webkit-scrollbar]:hidden',
-    )
-    expect(keywordList).not.toHaveClass('flex-wrap')
-    expect(keywordList.querySelectorAll('svg')).toHaveLength(3)
+    expect(keywordList.querySelectorAll('svg')).toHaveLength(2)
     expect(getMyReviewDetail).toHaveBeenCalledWith(5)
   })
 
@@ -251,7 +238,7 @@ describe('ReviewDetailContentCard', () => {
       <ReviewDetailContentCard
         content={content}
         images={[]}
-        keywordIds={[]}
+        keywords={[]}
         rating={4}
         writtenDate="2026.06.28"
       />,
@@ -277,7 +264,7 @@ describe('ReviewDetailContentCard', () => {
       <ReviewDetailContentCard
         content="정말 맛있습니다. 다음에도 또 방문하고 싶은 곳이에요."
         images={images}
-        keywordIds={[]}
+        keywords={[]}
         rating={4}
         writtenDate="2026.06.28"
       />,

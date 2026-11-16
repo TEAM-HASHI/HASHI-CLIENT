@@ -186,6 +186,20 @@ describe('RootLayout', () => {
       expect(headerBounds.mock.calls.length).toBeGreaterThan(measurements)
     })
     expect(observe).toHaveBeenCalledTimes(3)
+    const scroller = screen.getByRole('main', { name: '페이지 콘텐츠' })
+    scroller.style.position = 'fixed'
+    scroller.getBoundingClientRect = () =>
+      new DOMRect(0, 125, 430, window.innerHeight - 125 - 84)
+    const contentHeader = document.createElement('header')
+    const previousMeasurements = headerBounds.mock.calls.length
+    outlet.append(contentHeader)
+    await waitFor(() => {
+      expect(headerBounds.mock.calls.length).toBeGreaterThan(
+        previousMeasurements,
+      )
+    })
+    expect(rootStyle.getPropertyValue('--app-content-top')).toBe('125px')
+    expect(observe).toHaveBeenCalledTimes(3)
     headerHeight = 119
     window.dispatchEvent(new Event('resize'))
     expect(rootStyle.getPropertyValue('--app-content-top')).toBe('169px')

@@ -264,11 +264,11 @@ export const useRestaurantListContent = ({
   }
 
   const handleResetSort = () => {
-    setDraftSort(defaultSortOption)
+    applyFilters(defaultSortOption, selectedCategory)
   }
 
   const handleResetCategory = () => {
-    setDraftCategory(DEFAULT_CATEGORY_OPTION)
+    applyFilters(selectedSort, DEFAULT_CATEGORY_OPTION)
   }
 
   const handleApplySort = () => {

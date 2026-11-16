@@ -16,6 +16,7 @@ import {
   getPageScrollY,
   scrollPageTo,
 } from '@/shared/utils/pageScroll'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const NOTICE_LIST_SCROLL_KEY = 'hashi:notice-list-state'
 
@@ -114,23 +115,25 @@ export const NoticesPage = () => {
 
   return (
     <div className="app-mobile-bottom-nav-content bg-white pt-18.75">
-      <Header
-        className="app-mobile-fixed-top z-fixed fixed"
-        leftAction={
-          <IconButton
-            aria-label="뒤로가기"
-            onClick={() =>
-              window.history.state?.idx > 0
-                ? navigate(-1)
-                : navigate(ROUTES.mypage, { replace: true })
-            }
-            size="xs"
-          >
-            <BackIcon className="size-6" />
-          </IconButton>
-        }
-        title="공지사항"
-      />
+      <PageFixedArea>
+        <Header
+          className="app-mobile-fixed-top z-fixed fixed"
+          leftAction={
+            <IconButton
+              aria-label="뒤로가기"
+              onClick={() =>
+                window.history.state?.idx > 0
+                  ? navigate(-1)
+                  : navigate(ROUTES.mypage, { replace: true })
+              }
+              size="xs"
+            >
+              <BackIcon className="size-6" />
+            </IconButton>
+          }
+          title="공지사항"
+        />
+      </PageFixedArea>
       {noticesQuery.isPending ? (
         <LoadingScreen className="min-h-[calc(100dvh-159px)]" />
       ) : notices.length === 0 ? (

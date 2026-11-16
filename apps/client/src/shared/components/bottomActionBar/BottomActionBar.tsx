@@ -1,13 +1,14 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
 import { cn } from '@/shared/utils'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 type BottomActionBarProps = Omit<
   ComponentPropsWithoutRef<'div'>,
   'children' | 'role'
 > & {
   'aria-label': string
-  layout?: 'standard' | 'compact'
+  layout?: 'standard' | 'compact' | 'padded'
   leadingAction?: ReactNode
   startAction?: ReactNode
   endAction: ReactNode
@@ -25,35 +26,41 @@ export const BottomActionBar = ({
   const isCompact = layout === 'compact'
 
   return (
-    <div
-      {...props}
-      role="group"
-      aria-label={ariaLabel}
-      className={cn(
-        'app-mobile-fixed-bottom z-fixed bg-white px-5 pt-4',
-        isCompact
-          ? 'min-h-[calc(var(--app-mobile-bottom-action-compact-height)+var(--safe-area-bottom,0px))]'
-          : 'min-h-[calc(var(--app-mobile-bottom-action-height)+var(--safe-area-bottom,0px))]',
-        className,
-      )}
-    >
+    <PageFixedArea>
       <div
+        {...props}
+        role="group"
+        aria-label={ariaLabel}
         className={cn(
-          'flex items-center',
-          isCompact ? 'h-[49px] gap-[17px]' : 'gap-4',
+          'app-mobile-fixed-bottom z-fixed bg-white px-5 pt-4',
+          layout === 'padded'
+            ? 'pb-[calc(16px+var(--safe-area-bottom,0px))]'
+            : isCompact
+              ? 'min-h-[calc(var(--app-mobile-bottom-action-compact-height)+var(--safe-area-bottom,0px))]'
+              : 'min-h-[calc(var(--app-mobile-bottom-action-height)+var(--safe-area-bottom,0px))]',
+          className,
         )}
       >
-        {leadingAction ? <div className="shrink-0">{leadingAction}</div> : null}
         <div
           className={cn(
-            'grid min-w-0 flex-1 gap-4',
-            startAction ? 'grid-cols-2' : 'grid-cols-1',
+            'flex items-center',
+            isCompact ? 'h-[49px] gap-[17px]' : 'gap-4',
           )}
         >
-          {startAction}
-          {endAction}
+          {leadingAction ? (
+            <div className="shrink-0">{leadingAction}</div>
+          ) : null}
+          <div
+            className={cn(
+              'grid min-w-0 flex-1 gap-4',
+              startAction ? 'grid-cols-2' : 'grid-cols-1',
+            )}
+          >
+            {startAction}
+            {endAction}
+          </div>
         </div>
       </div>
-    </div>
+    </PageFixedArea>
   )
 }

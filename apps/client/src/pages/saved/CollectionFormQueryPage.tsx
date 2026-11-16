@@ -7,6 +7,7 @@ import { useEffect, useState, type ComponentProps } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { isMypageSavedPath } from '@/app/router/routePaths'
 import type { CollectionDetailData } from '@/features/collection/api/collectionApiTypes'
 import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import type { UpdateCollectionBody } from '@/features/collection/api/updateCollection'
@@ -23,7 +24,10 @@ import {
   normalizeCollectionDraft,
   type CollectionDraft,
 } from '@/pages/saved/utils/collectionMutations'
-import { getCollectionReturn } from '@/features/collection/utils/collectionNavigation'
+import {
+  getCollectionReturn,
+  rememberCreatedCollectionSaveTarget,
+} from '@/features/collection/utils/collectionNavigation'
 import { HttpStatusError } from '@/shared/api/apiError'
 import { getErrorPresentation } from '@/shared/api/errorPresentation'
 import { useAuthStatus } from '@/shared/hooks'
@@ -153,6 +157,7 @@ const CollectionApiForm = ({
 }) => {
   const sessionVersion = useCollectionSessionVersion()
   const [collection] = useState(initialCollection)
+  const location = useLocation()
   const navigate = useNavigate()
   const create = useCreateCollectionMutation(captureError)
   const update = useUpdateCollectionMutation(captureError)
@@ -199,7 +204,11 @@ const CollectionApiForm = ({
         ) : null
       }
       onClose={onClose}
-      onDiscard={() => navigate(ROUTES.saved, { replace: true })}
+      onDiscard={() => {
+        if (isMypageSavedPath(getCollectionReturn(location.state).pathname))
+          onClose()
+        else navigate(ROUTES.saved, { replace: true })
+      }}
       onSubmitSuccess={() => {
         if (sessionVersion === getAuthSessionVersion()) onClose()
       }}
@@ -211,12 +220,18 @@ const CollectionApiForm = ({
           })
         } else {
           if (!draft.color) throw new Error('A collection color is required')
-          await create.mutateAsync({
+          const created = await create.mutateAsync({
             name: draft.name,
             description: draft.description,
             color: draft.color,
             visibility: draft.isPublic ? 'public' : 'private',
           })
+          if (sessionVersion === getAuthSessionVersion()) {
+            rememberCreatedCollectionSaveTarget(
+              getCollectionReturn(location.state).state,
+              created.collectionId,
+            )
+          }
         }
       }}
     />

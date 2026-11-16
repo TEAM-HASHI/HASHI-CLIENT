@@ -73,7 +73,6 @@ export const FilterBottomSheet = ({
         maxHeightClassName,
       )}
       footer={sheetFooter}
-      footerClassName={isRestaurantList ? 'pb-11' : undefined}
       headerClassName={
         isRestaurantList ? 'min-h-13 pt-7 [&>button]:top-7' : undefined
       }

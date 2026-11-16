@@ -1,4 +1,4 @@
-import { generatePath } from 'react-router-dom'
+import { generatePath, matchPath } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
 
@@ -37,8 +37,17 @@ export const getNoticeDetailPath = (noticeId: string) =>
 export const getTermsDetailPath = (policyId: string) =>
   generatePath(ROUTES.termsDetail, { policyId })
 
-export const getCollectionDetailPath = (collectionId: string) =>
-  generatePath(ROUTES.collectionDetail, { collectionId })
+export const isMypageSavedPath = (pathname: string) =>
+  matchPath({ path: ROUTES.mypageSaved, end: false }, pathname) !== null
+
+export const getCollectionDetailPath = (
+  collectionId: string,
+  fromMypage = false,
+) =>
+  generatePath(
+    fromMypage ? ROUTES.mypageCollectionDetail : ROUTES.collectionDetail,
+    { collectionId },
+  )
 
 export const getCollectionEditPath = (collectionId: string) =>
   generatePath(ROUTES.collectionEdit, { collectionId })

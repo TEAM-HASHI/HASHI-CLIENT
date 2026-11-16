@@ -13,6 +13,7 @@ import type {
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { cn } from '@/shared/utils'
+import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 type RestaurantListTemplateProps = {
   filterMode?: 'bottom-sheet' | 'inline-sort'
@@ -114,26 +115,28 @@ export const RestaurantListTemplate = ({
 
   return (
     <div className="flex min-h-dvh flex-col bg-white">
-      <div
-        className="app-mobile-fixed-top z-fixed bg-white"
-        data-testid="restaurant-list-sticky-header"
-      >
-        <Header
-          className="text-primary-200"
-          elevated={restaurantType !== 'sns-hot'}
-          leftAction={
-            <IconButton
-              aria-label="뒤로가기"
-              onClick={handleBackClick}
-              size="xs"
-            >
-              <BackIcon className="size-6" />
-            </IconButton>
-          }
-          title={<h1>{title}</h1>}
-        />
-        {hasFixedSort ? filterBar : null}
-      </div>
+      <PageFixedArea>
+        <div
+          className="app-mobile-fixed-top z-fixed bg-white"
+          data-testid="restaurant-list-sticky-header"
+        >
+          <Header
+            className="text-primary-200"
+            elevated={restaurantType !== 'sns-hot'}
+            leftAction={
+              <IconButton
+                aria-label="뒤로가기"
+                onClick={handleBackClick}
+                size="xs"
+              >
+                <BackIcon className="size-6" />
+              </IconButton>
+            }
+            title={<h1>{title}</h1>}
+          />
+          {hasFixedSort ? filterBar : null}
+        </div>
+      </PageFixedArea>
 
       <div
         className={cn(

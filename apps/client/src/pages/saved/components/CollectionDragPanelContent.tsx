@@ -34,6 +34,7 @@ import { CollectionPanelHeader } from '@/pages/saved/components/CollectionPanelH
 import { CollectionPanelList } from '@/pages/saved/components/CollectionPanelList'
 import { SavedRestaurantRow } from '@/pages/saved/components/SavedRestaurantRow'
 import { cn } from '@/shared/utils'
+import { getMapPanelMaxHeight } from '@/pages/map/hooks/useMapPanelLayout'
 
 const COLLECTION_PANEL_HEIGHT = {
   closeGap: 20,
@@ -200,7 +201,9 @@ export const CollectionDragPanelContent = ({
           aria-label="저장 컬렉션 패널"
           handleLabel="컬렉션 패널 높이"
           height={height}
-          maxHeight={collection ? 'fullscreen' : undefined}
+          maxHeight={
+            collection ? 'fullscreen' : getMapPanelMaxHeight(availableHeight)
+          }
           onHeightChange={(next) => {
             setMenu(null)
             if (next <= 30 && height > next) {

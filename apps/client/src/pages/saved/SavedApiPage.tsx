@@ -12,6 +12,7 @@ import {
   getCollectionDetailPath,
   getCollectionEditPath,
   getCollectionRestaurantEditPath,
+  isMypageSavedPath,
 } from '@/app/router/routePaths'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
@@ -315,8 +316,17 @@ const SavedApiScreen = ({
             onClose={close}
             onDeleted={() => {
               if (location.pathname !== ROUTES.map) {
-                navigate(ROUTES.saved, { replace: true })
+                navigate(
+                  isMypageSavedPath(location.pathname)
+                    ? ROUTES.mypageSaved
+                    : ROUTES.saved,
+                  { replace: true },
+                )
               } else if (isCollectionMapState(location.state)) {
+                if (location.state.origin === 'mypage') {
+                  navigate(ROUTES.mypageSaved, { replace: true })
+                  return
+                }
                 navigate(ROUTES.map, {
                   replace: true,
                   state: {

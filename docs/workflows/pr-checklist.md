@@ -167,6 +167,9 @@ UI 변경:
   - CI, ESLint, package, lockfile, workspace, Turbo 설정처럼 전체 프로젝트에 영향을 줄 수 있는 파일이 변경되거나 비교할 commit을 찾지 못하면 전체 검증으로 fallback합니다.
   - `Client & HDS Tests`는 client 코드, 공통 package/config, package/workspace 설정 또는 CI workflow 변경에서 `pnpm test`를 실행합니다. 이 범위에 영향을 주지 않는 문서나 admin-only 변경에서는 test를 생략합니다.
 - `vercel-preview.yml`: client 빌드 결과에 영향을 주는 경로가 변경된 경우에만 Preview 배포와 Preview 기반 Lighthouse 측정을 실행합니다.
+  - 모든 PR과 `develop` Preview가 `https://hashi-client-qa-gyeongbinmins-projects.vercel.app` 별칭을 공유합니다. 배포 job을 직렬화하며, 마지막으로 별칭 연결에 성공한 배포가 표시됩니다. PR별 화면을 동시에 유지하는 주소가 아닙니다. 대기 중 workflow/job은 GitHub concurrency 정책에 따라 더 최신 실행으로 대체될 수 있습니다.
+  - 배포 후 `vercel alias set`으로 고정 별칭을 연결하며, 실패하면 성공 댓글을 남기지 않습니다. PR 댓글의 QA 링크는 고정 주소, 고유 배포 링크는 해당 PR 빌드 확인용입니다. production/admin 별칭은 변경하지 않습니다.
+  - Preview build의 `VITE_KAKAO_REDIRECT_URI`는 `https://hashi-client-qa-gyeongbinmins-projects.vercel.app/oauth/callback/kakao`로 지정합니다. Vercel에서 내려받은 Preview 환경 변수보다 빌드 프로세스 환경 변수를 우선 사용합니다. 로컬·production 설정은 변경하지 않습니다.
   - PR에서는 Preview 배포 후 Lighthouse가 배포 URL의 홈(`/`)을 모바일 환경에서 1회 측정합니다.
   - Preview URL 불일치, Lighthouse runtime error, 브라우저 CORS 오류, 홈 필수 API non-2xx는 측정 신뢰성 오류로 보고 workflow를 실패시킵니다.
   - Performance 80, Accessibility·Best Practices·SEO 90 기준은 모두 warning으로 처리하므로 점수 미달만으로 workflow를 실패시키지 않습니다.
@@ -179,6 +182,15 @@ UI 변경:
 - `chromatic.yml`: HDS Storybook/Chromatic 검증만 담당하며, HDS 관련 경로가 바뀐 PR에서 실행됩니다.
 - auto-label, auto-assign workflow는 PR 운영 자동화를 담당합니다.
 - Slack workflow는 PR·리뷰·CI 실패·운영 배포 결과 알림과 수동 연결 테스트를 담당합니다. 설정과 알림 정책은 [Slack Notifications](./slack-notifications.md)를 참고합니다.
+
+### Shared Preview 로그인 설정
+
+- 개발 서버의 `KAKAO_REDIRECT_URI`와 Kakao Developers의 등록 Redirect URI를 Preview build와 **동일한 callback URL**로 설정해야 합니다. 서버의 callback 설정을 바꾸면 해당 서버를 공유하는 다른 클라이언트의 로그인에도 영향을 주므로 서버 담당자와 조율합니다. CORS 허용만으로 OAuth redirect 설정이 완료되지는 않습니다.
+- 서버 CORS에는 고정 QA origin을 허용합니다. 기존 `^https://hashi-client-[a-z0-9]+-gyeongbinmins-projects\.vercel\.app$` 패턴에도 `qa` 주소가 포함되지만, 필요 이상으로 모든 `*.vercel.app`을 허용하지 않습니다.
+- Google Maps 웹용 키의 웹사이트 제한에도 `https://hashi-client-qa-gyeongbinmins-projects.vercel.app/*`를 추가합니다.
+- 로그인은 반드시 **고정 QA 주소에서 시작하고 같은 주소로 복귀**합니다. OAuth state와 지도 복원 데이터는 origin별 `sessionStorage`에 저장되므로, 고유 배포 주소에서 시작해 고정 주소로 돌아오는 로그인은 지원하지 않습니다. 고유 배포 주소를 강제로 고정 주소로 리다이렉트하지 않습니다. Lighthouse는 측정 대상 PR의 고유 배포 URL을 검증해야 하기 때문입니다.
+- Vercel Deployment Protection이 활성화되어 있다면 QA 사용자의 접근 권한도 별도로 확인합니다. 별칭 연결은 보호 설정을 해제하지 않습니다.
+- `pnpm test:preview-deployment`는 workflow shell의 build 환경 변수, 별칭 연결, 실패 전파를 외부 CLI 대역으로 확인합니다. 실제 도메인 소유권, Vercel 권한, 서버 CORS, 카카오 로그인 성공은 **배포 후 고정 주소에서 별도 확인**합니다.
 
 ## Before Merge
 

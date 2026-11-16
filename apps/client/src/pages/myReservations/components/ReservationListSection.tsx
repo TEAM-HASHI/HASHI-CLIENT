@@ -60,7 +60,8 @@ export const ReservationListSection = ({
         <div
           className={cn(
             'flex flex-col',
-            selectedStatus !== 'CANCELED' && 'gap-2',
+            selectedStatus !== 'CANCELED' &&
+              (selectedStatus === 'IN_PROGRESS' ? 'gap-4' : 'gap-2'),
           )}
         >
           <ReservationCardsByStatus

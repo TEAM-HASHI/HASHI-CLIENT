@@ -17,7 +17,8 @@ export type CollectionViewState = {
 
 export type CollectionMapState = CollectionViewState & {
   collectionId: string
-  origin?: 'map'
+  origin?: 'map' | 'mypage'
+  mypageSavedBackSteps?: number
 }
 
 export const INITIAL_COLLECTION_VIEW: CollectionViewState = {

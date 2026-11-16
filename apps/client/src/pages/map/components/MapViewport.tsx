@@ -13,7 +13,10 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { MapAreaMarker } from '@/pages/map/components/MapAreaMarker'
 import { MapRestaurantMarker } from '@/pages/map/components/MapRestaurantMarker'
 import { useGoogleMapCamera } from '@/pages/map/hooks/useGoogleMapCamera'
-import { layoutMapAreaLabels } from '@/pages/map/utils/layoutMapAreaLabels'
+import {
+  layoutMapAreaLabels,
+  type MapLabelViewport,
+} from '@/pages/map/utils/layoutMapAreaLabels'
 import { getMapDisplayMode } from '@/pages/map/utils/mapDisplayPolicy'
 import type {
   MapAreaMarkerData,
@@ -39,7 +42,7 @@ interface MapViewportProps {
   panelHeight: number
   onSelectRestaurant: (id: string) => void
   onSelectArea: (code: string) => void
-  onSearchArea: (bounds: MapBounds) => void
+  onSearchArea?: (bounds: MapBounds) => void
   onExplore: () => void
   onOverview?: () => void
   hasConditions?: boolean
@@ -158,6 +161,9 @@ const GoogleMapSurface = ({
   const [searchedBounds, setSearchedBounds] = useState<MapBounds | null>(null)
   const [hasUserMoved, setHasUserMoved] = useState(false)
   const [zoom, setZoom] = useState(11)
+  const [labelViewport, setLabelViewport] = useState<MapLabelViewport | null>(
+    null,
+  )
   const firstIdleZoom = useRef<number | null>(null)
   const [timedOut, setTimedOut] = useState(false)
   const [authFailed, setAuthFailed] = useState(false)
@@ -202,7 +208,9 @@ const GoogleMapSurface = ({
     status === APILoadingStatus.FAILED ||
     status === APILoadingStatus.AUTH_FAILURE ||
     (timedOut && !ready)
-  const offsets = layoutMapAreaLabels(areas, zoom)
+  const offsets = labelViewport
+    ? layoutMapAreaLabels(areas, zoom, labelViewport)
+    : {}
   useEffect(() => {
     onMapFailureChange?.(failed)
   }, [failed, onMapFailureChange])
@@ -280,6 +288,11 @@ const GoogleMapSurface = ({
               const overviewZoom =
                 minimumZoom.current ?? firstIdleZoom.current ?? nextZoom
               const center = map.getCenter()?.toJSON()
+              if (center) {
+                const { clientWidth: width, clientHeight: height } =
+                  map.getDiv()
+                setLabelViewport({ center, width, height })
+              }
               if (center)
                 onCameraChange?.({
                   center,
@@ -349,32 +362,30 @@ const GoogleMapSurface = ({
                     </div>
                   </AdvancedMarker>
                 ))
-              : areas.map((area) => (
-                  <AdvancedMarker key={area.code} position={area.position}>
-                    <div
-                      className="pointer-events-auto relative"
-                      style={{
-                        transform: `translateY(${offsets[area.code] ?? 0}px)`,
-                      }}
+              : areas.map((area) => {
+                  const offset = offsets[area.code] ?? { x: 0, y: 0 }
+                  return (
+                    <AdvancedMarker
+                      key={area.code}
+                      position={area.position}
+                      anchorLeft="-50%"
+                      anchorTop="-50%"
                     >
-                      {!!offsets[area.code] && (
-                        <span
-                          aria-hidden="true"
-                          className="bg-cool-gray-600 pointer-events-none absolute left-1/2 w-px"
-                          style={{
-                            height: Math.max(0, offsets[area.code] - 44),
-                            bottom: '100%',
-                          }}
+                      <div
+                        className="pointer-events-auto"
+                        style={{
+                          transform: `translate(${offset.x}px, ${offset.y}px)`,
+                        }}
+                      >
+                        <MapAreaMarker
+                          area={area}
+                          onSelect={onSelectArea}
+                          belowAnchor={offset.y > 0}
                         />
-                      )}
-                      <MapAreaMarker
-                        area={area}
-                        onSelect={onSelectArea}
-                        belowAnchor={!!offsets[area.code]}
-                      />
-                    </div>
-                  </AdvancedMarker>
-                ))}
+                      </div>
+                    </AdvancedMarker>
+                  )
+                })}
           </GoogleMap>
         )}
         {(!ready || loadingRestaurants) && !failed && (
@@ -393,6 +404,7 @@ const GoogleMapSurface = ({
         {ready &&
           !failed &&
           !loadingRestaurants &&
+          onSearchArea &&
           hasUserMoved &&
           boundsChanged &&
           currentBounds && (
@@ -444,17 +456,20 @@ export const MapViewport = (props: MapViewportProps) => {
           <MapFailure configuration />
         )}
       </div>
-      {props.zoomed && !props.mapUnavailable && !props.onCloseCollection && (
-        <IconButton
-          aria-label="전체 지역 보기"
-          variant="soft"
-          size="sm"
-          className="absolute top-30 left-5 shadow-[0_0_4px_rgba(0,0,0,0.2)]"
-          onClick={props.onResetArea}
-        >
-          <BackIcon className="size-5" />
-        </IconButton>
-      )}
+      {props.zoomed &&
+        !props.selectedId &&
+        !props.mapUnavailable &&
+        !props.onCloseCollection && (
+          <IconButton
+            aria-label="전체 지역 보기"
+            variant="soft"
+            size="sm"
+            className="absolute top-30 left-5 shadow-[0_0_4px_rgba(0,0,0,0.2)]"
+            onClick={props.onResetArea}
+          >
+            <BackIcon className="size-5" />
+          </IconButton>
+        )}
       {(!props.mapUnavailable || props.onCloseCollection) && (
         <IconButton
           aria-label={

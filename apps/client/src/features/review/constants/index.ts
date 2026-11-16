@@ -14,7 +14,6 @@ export {
 export {
   getReviewKeywordByValue,
   getReviewKeywordIcon,
-  getReviewKeywordIconByCode,
   REVIEW_KEYWORDS,
 } from './reviewKeywords'
 export type { ReviewKeywordId, ReviewKeywordOption } from './reviewKeywords'

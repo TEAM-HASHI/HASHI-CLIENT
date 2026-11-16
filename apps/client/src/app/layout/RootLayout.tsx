@@ -1,5 +1,5 @@
 import { ToastRegion } from '@hashi/hds-ui'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Outlet,
   useLocation,
@@ -21,6 +21,7 @@ import {
 import { isValidCollectionId } from '@/features/collection/api/collectionReadContracts'
 import { useCollectionSessionVersion } from '@/features/collection/hooks/useCollectionSessionVersion'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
+import { PageFixedAreaProvider } from '@/shared/components/pageFixedArea/PageFixedArea'
 
 const RestaurantCollectionSave = () => {
   const location = useLocation()
@@ -55,6 +56,7 @@ const RestaurantCollectionSave = () => {
 
 export const RootLayout = () => {
   const frameRef = usePageScrollLayout()
+  const [fixedArea, setFixedArea] = useState<HTMLDivElement | null>(null)
   const { hash = '', pathname, search = '' } = useLocation()
   const navigationType = useNavigationType()
   const pagePath = `${pathname}${search}${hash}`
@@ -80,24 +82,26 @@ export const RootLayout = () => {
   }, [pagePath])
 
   return (
-    <>
-      <main
-        ref={frameRef}
-        data-page-scroll
-        aria-label="페이지 콘텐츠"
-        tabIndex={0}
-        className="app-page-scroll bg-white"
-      >
-        <div className="app-page-scroll-content">
-          <AsyncBoundary resetKeys={[routeResetKey]}>
-            <AuthSessionRestoreGate pathname={pathname}>
-              <Outlet />
-              <RestaurantCollectionSave key={pagePath} />
-            </AuthSessionRestoreGate>
-          </AsyncBoundary>
-        </div>
-      </main>
+    <PageFixedAreaProvider container={fixedArea}>
+      <div ref={frameRef}>
+        <main
+          data-page-scroll
+          aria-label="페이지 콘텐츠"
+          tabIndex={0}
+          className="app-page-scroll bg-white"
+        >
+          <div className="app-page-scroll-content">
+            <AsyncBoundary resetKeys={[routeResetKey]}>
+              <AuthSessionRestoreGate pathname={pathname}>
+                <Outlet />
+                <RestaurantCollectionSave key={pagePath} />
+              </AuthSessionRestoreGate>
+            </AsyncBoundary>
+          </div>
+        </main>
+        <div ref={setFixedArea} data-page-fixed-root />
+      </div>
       <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
-    </>
+    </PageFixedAreaProvider>
   )
 }
