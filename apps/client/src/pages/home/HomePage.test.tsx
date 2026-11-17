@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
+import { getMagazineDetailPath } from '@/app/router/routePaths'
 import { HomePage } from '@/pages/home/HomePage'
 
 const { mockGetHotSnsRestaurants } = vi.hoisted(() => ({
@@ -136,10 +137,7 @@ describe('HomePage', () => {
     ).toHaveClass('aspect-[353/160]')
     expect(
       screen.getByRole('link', { name: '도쿄 미식 큐레이션 배너' }),
-    ).toHaveAttribute('href', 'https://www.instagram.com/hashi_tokyo_curation/')
-    expect(
-      screen.getByRole('link', { name: '도쿄 미식 큐레이션 배너' }),
-    ).toHaveAttribute('target', '_blank')
+    ).toHaveAttribute('href', getMagazineDetailPath('1'))
     expect(screen.getByRole('link', { name: '하시 PICK' })).toHaveAttribute(
       'href',
       ROUTES.hashiPickRestaurants,
@@ -161,11 +159,11 @@ describe('HomePage', () => {
     )
   })
 
-  it('renders API banner images even when title or Instagram URL is missing', async () => {
+  it('opens the magazine detail even without an Instagram URL or title', async () => {
     mockGetMagazineBanners.mockResolvedValue({
       banners: [
         {
-          magazineId: 1,
+          magazineId: 42,
           bannerImageUrl: 'https://example.com/home-banner-without-link.jpg',
         },
       ],
@@ -179,9 +177,10 @@ describe('HomePage', () => {
     expect(
       screen.getByRole('img', { name: '맛집 큐레이션 배너' }),
     ).toHaveAttribute('src', 'https://example.com/home-banner-without-link.jpg')
-    expect(
-      screen.queryByRole('link', { name: '맛집 큐레이션 배너' }),
-    ).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('link', { name: '맛집 큐레이션 배너' }))
+    expect(screen.getByTestId('location-pathname')).toHaveTextContent(
+      getMagazineDetailPath('42'),
+    )
   })
 
   it('renders secondary color skeletons while home banners and SNS restaurants are loading', () => {

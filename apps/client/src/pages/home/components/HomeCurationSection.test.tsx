@@ -1,15 +1,15 @@
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
 import { HomeCurationSection } from '@/pages/home/components/HomeCurationSection'
 
 const banners = [
-  { id: '1', imageUrl: '/first.jpg', imageAlt: '첫 배너', instagramUrl: null },
+  { id: '1', imageUrl: '/first.jpg', imageAlt: '첫 배너' },
   {
     id: '2',
     imageUrl: '/second.jpg',
     imageAlt: '둘째 배너',
-    instagramUrl: 'https://www.instagram.com/example/',
   },
 ]
 
@@ -18,6 +18,7 @@ describe('HomeCurationSection', () => {
     const props = { isLoading: false, isError: false, onRetry: vi.fn() }
     const { rerender } = render(
       <HomeCurationSection {...props} banners={banners} />,
+      { wrapper: MemoryRouter },
     )
     const carousel = screen.getByRole('region', { name: '맛집 큐레이션 배너' })
     const indicators = carousel.querySelectorAll(

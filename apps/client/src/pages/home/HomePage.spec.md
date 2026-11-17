@@ -115,7 +115,7 @@ export const HomeLogo = () => {
 - [x] 메인 배너는 여러 장 carousel로 노출합니다.
 - [x] 이미지형 HDS `Banner`와 Track 밖에 하나만 렌더링하는 `Carousel.Indicator`를 조합합니다. 스와이프 중에도 indicator는 배너 영역에 고정됩니다. 모서리 5px, indicator 오른쪽 20px/아래 23px, 활성 12×4px/비활성 4×4px, 간격 7px입니다.
 - [x] 메인 배너는 매거진 상단 대표 배너와 같은 `353:160` 이미지 비율을 사용합니다.
-- [x] 메인 배너 데이터는 서버에서 받은 이미지와 인스타그램 이동 대상 정보로 구성합니다.
+- [x] 메인 배너는 서버에서 받은 이미지와 매거진 ID를 사용해 해당 매거진 상세로 연결합니다.
 - [x] 퀵 버튼 4개를 노출합니다.
   - 하시 PICK: `ROUTES.hashiPickRestaurants`
   - 인기 맛집: `ROUTES.popularRestaurants`
@@ -152,10 +152,8 @@ export const HomeLogo = () => {
     - `magazineId`
     - `title`
     - `bannerImageUrl`
-    - `instagramRedirectUrl`
   - `magazineId`와 `bannerImageUrl`이 있으면 홈 배너로 렌더링합니다.
   - `title`이 없으면 `맛집 큐레이션 배너`를 이미지 대체 텍스트 fallback으로 사용합니다.
-  - `instagramRedirectUrl`이 없거나 유효한 Instagram URL이 아니면 배너 이미지는 렌더링하되 외부 링크로 만들지 않습니다.
   - source: `RestaurantListResponse.content`
   - `restaurantId` -> link id
   - `name` -> list title
@@ -198,7 +196,7 @@ export const HomeLogo = () => {
 2. 페이지가 홈 콘텐츠를 구성합니다.
 3. 비로그인 상태이고 현재 브라우저 세션에서 아직 표시한 적이 없다면 기존 로그인 유도 바텀시트를 표시합니다.
 4. 사용자가 검색 영역을 선택하면 홈에서 입력을 받지 않고 `/search`로 이동합니다.
-5. 사용자가 메인 배너를 선택하면 해당 인스타그램 링크로 이동합니다.
+5. 사용자가 메인 배너를 선택하면 해당 매거진 상세로 이동합니다.
 6. 사용자가 퀵 버튼을 선택하면 연결된 앱 내부 화면으로 이동합니다.
 7. 사용자가 어디든 예약 CTA의 `예약하기` 버튼을 선택하면 `/reservations/anywhere`로 이동합니다.
 8. 사용자가 SNS 맛집 항목을 선택하면 해당 식당 상세로 이동합니다.
@@ -302,12 +300,8 @@ BottomNavigationLayout
 - Data:
   - 최종 서버 응답은 `GET /api/v1/magazines/banners`의 `MagazineBannerResponse`를 사용합니다.
   - 문구는 이미지에 포함되어 있으므로 홈 UI가 별도 제목/설명 copy를 배너 위에 덧씌우지 않습니다.
-  - 이동 대상은 서버가 내려주는 `instagramRedirectUrl`입니다.
 - Behavior:
-  - 배너 항목은 `instagramUrl`을 데이터에 포함합니다.
-  - 외부 링크이므로 React Router `Link`가 아니라 `<a>`를 사용합니다.
-  - 유효한 `instagramUrl`이 있으면 클릭 영역 전체가 하나의 링크로 동작합니다.
-  - 유효한 `instagramUrl`이 없으면 배너 이미지는 노출하되 클릭 가능한 링크로 렌더링하지 않습니다.
+  - 배너 전체가 `magazineId`에 해당하는 매거진 상세로 이동하는 내부 링크로 동작합니다. 인스타그램 URL이 없어도 동일하게 이동합니다.
   - carousel은 여러 장을 지원하고, 단일 배너 데이터만 있을 때도 구조는 `Carousel` 기반으로 유지합니다.
 
 ### 3. Quick buttons
@@ -438,7 +432,7 @@ BottomNavigationLayout
   - `/`
 - links:
   - Search entry: `ROUTES.search`
-  - Main banner: banner data의 `instagramUrl`
+  - Main banner: `ROUTES.magazineDetail`
   - 하시 PICK: `ROUTES.hashiPickRestaurants`
   - 인기 맛집: `ROUTES.popularRestaurants`
   - 매거진: `ROUTES.magazines`
@@ -447,7 +441,7 @@ BottomNavigationLayout
   - SNS 리스트 항목: `ROUTES.restaurantDetail`
 - route params:
   - SNS 리스트 식당 상세 이동: `restaurantId`
-  - 메인 배너 이동: 서버가 내려준 Instagram URL
+  - 메인 배너의 매거진 상세 이동: `magazineId`
 - search params:
   - 없음
 - success redirect:

@@ -1,5 +1,7 @@
 import { Banner, Carousel } from '@hashi/hds-ui'
+import { Link } from 'react-router-dom'
 
+import { getMagazineDetailPath } from '@/app/router/routePaths'
 import type { HomeBanner } from '@/pages/home/homeContent'
 
 interface HomeCurationSectionProps {
@@ -61,10 +63,6 @@ export const HomeCurationSection = ({
     return null
   }
 
-  const renderBannerImage = ({ imageAlt, imageUrl }: HomeBanner) => (
-    <Banner imageAlt={imageAlt} imageSrc={imageUrl} />
-  )
-
   return (
     <section className="mt-5" aria-labelledby="home-curation-heading">
       <h2
@@ -82,20 +80,15 @@ export const HomeCurationSection = ({
           <Carousel.Track>
             {banners.map((banner) => (
               <Carousel.Item key={banner.id}>
-                {banner.instagramUrl ? (
-                  <a
-                    className="block size-full"
-                    href={banner.instagramUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    {renderBannerImage(banner)}
-                  </a>
-                ) : (
-                  <div aria-disabled="true" className="block size-full">
-                    {renderBannerImage(banner)}
-                  </div>
-                )}
+                <Link
+                  className="block size-full"
+                  to={getMagazineDetailPath(banner.id)}
+                >
+                  <Banner
+                    imageAlt={banner.imageAlt}
+                    imageSrc={banner.imageUrl}
+                  />
+                </Link>
               </Carousel.Item>
             ))}
           </Carousel.Track>
