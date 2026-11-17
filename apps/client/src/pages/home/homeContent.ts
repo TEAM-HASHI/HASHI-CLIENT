@@ -2,7 +2,6 @@ export type HomeBanner = {
   id: string
   imageUrl: string
   imageAlt: string
-  instagramUrl: string | null
 }
 
 export type HomeQuickLinkId =
