@@ -16,6 +16,8 @@ export interface RegionAssignment {
 }
 
 const endpoint = '/api/v1/admin/map-regions'
+const assignmentPath = (restaurantId: number) =>
+  `/api/v1/admin/restaurants/${restaurantId}/map-region`
 const isRegion = (region: MapRegion) =>
   region &&
   Number.isSafeInteger(region.mapRegionId) &&
@@ -65,13 +67,30 @@ export const mapRegionApi = {
       )
     return result
   },
+  async getAssignment(restaurantId: number, signal?: AbortSignal) {
+    const result = await request<RegionAssignment>(
+      assignmentPath(restaurantId),
+      {
+        signal,
+        cache: 'no-store',
+      },
+    )
+    if (
+      !result ||
+      result.restaurantId !== restaurantId ||
+      (result.mapRegionId !== null &&
+        (!Number.isSafeInteger(result.mapRegionId) || result.mapRegionId <= 0))
+    )
+      throw new Error('식당 배정 조회 응답을 확인할 수 없습니다.')
+    return result
+  },
   async assign(
     restaurantId: number,
     mapRegionId: number | null,
     signal?: AbortSignal,
   ) {
     const result = await request<RegionAssignment>(
-      `/api/v1/admin/restaurants/${restaurantId}/map-region`,
+      assignmentPath(restaurantId),
       {
         method: 'put',
         json: { mapRegionId },

@@ -13,7 +13,15 @@ export const regionKeys = {
   all: ['admin', 'map-region'] as const,
   list: (page: number) => ['admin', 'map-region', 'list', page] as const,
   choices: ['admin', 'map-region', 'choices'] as const,
+  assignment: (restaurantId: number) =>
+    ['admin', 'map-region', 'assignment', restaurantId] as const,
 }
+export const regionAssignmentOptions = (restaurantId: number) =>
+  queryOptions({
+    queryKey: regionKeys.assignment(restaurantId),
+    queryFn: ({ signal }) => mapRegionApi.getAssignment(restaurantId, signal),
+  })
+
 export const regionListOptions = (page: number) =>
   queryOptions({
     queryKey: regionKeys.list(page),
