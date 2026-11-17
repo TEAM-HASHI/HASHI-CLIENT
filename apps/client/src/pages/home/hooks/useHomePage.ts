@@ -6,7 +6,6 @@ import { getRestaurantDetailPath } from '@/app/router/routePaths'
 import { useKakaoOAuthStart } from '@/features/auth/hooks/useKakaoOAuthStart'
 import { getPathFromLocation } from '@/features/auth/utils/authRedirect'
 import { useMagazineBannersQuery } from '@/features/magazine/hooks/useMagazineBannersQuery'
-import { normalizeInstagramUrl } from '@/features/magazine/utils/normalizeInstagramUrl'
 import { useAuthStatus } from '@/shared/hooks'
 import type { HomeBanner } from '@/pages/home/homeContent'
 
@@ -53,9 +52,6 @@ export const useHomePage = () => {
   const homeBanners = useMemo<HomeBanner[]>(() => {
     return (magazineBannersQuery.data?.banners ?? []).flatMap((banner) => {
       const { bannerImageUrl, magazineId, title } = banner
-      const instagramUrl = normalizeInstagramUrl(
-        banner.instagramRedirectUrl ?? '',
-      )
 
       if (magazineId === undefined || !bannerImageUrl) {
         return []
@@ -65,7 +61,6 @@ export const useHomePage = () => {
         id: String(magazineId),
         imageUrl: bannerImageUrl,
         imageAlt: title || '맛집 큐레이션 배너',
-        instagramUrl,
       }
     })
   }, [magazineBannersQuery.data?.banners])
