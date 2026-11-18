@@ -1,4 +1,4 @@
-import type { SyntheticEvent } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { useProfileForm } from '@/features/profile/hooks/useProfileForm'
@@ -14,6 +14,9 @@ export const useProfileNewPage = () => {
   const [searchParams] = useSearchParams()
   const { getUploadedProfileImageKey } = useUploadedProfileImageKey()
   const form = useProfileForm()
+  // TODO: 초대자 코드 검증 API와 온보딩 요청 필드가 나오면 연결한다.
+  // 지금은 입력만 받고 서버로 보내지 않는다.
+  const [inviteCode, setInviteCode] = useState('')
   const availability = useProfileAvailability({
     nickname: form.fields.nickname.value,
     phoneNumber: form.fields.phoneNumber.value,
@@ -52,7 +55,10 @@ export const useProfileNewPage = () => {
 
   return {
     form,
-    fields: availability.bindFields(form.fields),
+    fields: {
+      ...availability.bindFields(form.fields),
+      inviteCode: { value: inviteCode, onValueChange: setInviteCode },
+    },
     canSubmit,
     formId: PROFILE_NEW_FORM_ID,
     handleBackClick,

@@ -175,6 +175,10 @@ export const appRoutes: RouteObject[] = [
             element: lazyPages.withdrawal(),
           },
           {
+            path: ROUTES.friendInvite,
+            element: lazyPages.friendInvite(),
+          },
+          {
             path: ROUTES.restaurantReservationNew,
             element: lazyPages.restaurantReservationNew(),
           },

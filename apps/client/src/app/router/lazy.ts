@@ -50,6 +50,7 @@ const MypagePage = lazyRoute(() => import('@/pages/mypage'))
 const ProfileNewPage = lazyRoute(() => import('@/pages/profileNew'))
 const ProfileEditPage = lazyRoute(() => import('@/pages/profileEdit'))
 const WithdrawalPage = lazyRoute(() => import('@/pages/withdrawal'))
+const FriendInvitePage = lazyRoute(() => import('@/pages/friendInvite'))
 const NoticesPage = lazyRoute(() => import('@/pages/notices'))
 const NoticeDetailPage = lazyRoute(() => import('@/pages/noticeDetail'))
 const TermsPage = lazyRoute(() => import('@/pages/terms'))
@@ -103,6 +104,7 @@ export const lazyPages = {
   profileNew: () => lazyPage(ProfileNewPage),
   profileEdit: () => lazyPage(ProfileEditPage),
   withdrawal: () => lazyPage(WithdrawalPage),
+  friendInvite: () => lazyPage(FriendInvitePage),
   notices: () => lazyPage(NoticesPage),
   noticeDetail: () => lazyPage(NoticeDetailPage),
   terms: () => lazyPage(TermsPage),

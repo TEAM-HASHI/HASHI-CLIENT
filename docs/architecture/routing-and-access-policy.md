@@ -75,6 +75,7 @@
 | 마이 페이지           | `/mypage`                                           |                                                                                                                                                           |
 | 프로필 생성 페이지    | `/profile/new`                                      | 신규 회원 onboarding session만 접근하며, 인증 완료 회원은 홈으로 이동합니다.                                                                              |
 | 탈퇴 페이지           | `/withdrawal`                                       | 유지 여부 논의 중입니다.                                                                                                                                  |
+| 친구 초대 페이지      | `/friend-invite`                                    | 하단 내비게이션을 표시하지 않습니다. 초대코드 API 연동 전입니다.                                                                                          |
 | 예약 페이지           | `/restaurants/:restaurantId/reservations/new`       |                                                                                                                                                           |
 | 어디든 예약 페이지    | `/reservations/anywhere`                            |                                                                                                                                                           |
 | 예약 요청 페이지      | `/reservations/request`                             |                                                                                                                                                           |

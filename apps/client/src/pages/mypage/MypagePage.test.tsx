@@ -49,6 +49,15 @@ const renderMypagePage = () => {
 }
 
 describe('MypagePage', () => {
+  it('이벤트 배너를 누르면 친구 초대 페이지로 이동한다', async () => {
+    renderMypagePage()
+    const user = (await import('@testing-library/user-event')).default.setup()
+    await user.click(
+      await screen.findByRole('button', { name: /친구 초대하고/ }),
+    )
+    expect(mockNavigate).toHaveBeenCalledWith('/friend-invite')
+  })
+
   it('내가 찜한 식당에서 실제 컬렉션 목록을 연다', async () => {
     renderMypagePage()
     const user = (await import('@testing-library/user-event')).default.setup()

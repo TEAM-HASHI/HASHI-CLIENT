@@ -22,6 +22,8 @@ interface ProfileFieldsProps {
     phoneNumber: ProfileFieldState
     englishName: Omit<ProfileFieldState, 'onBlur'>
     email: ProfileFieldState
+    // 온보딩(프로필 생성)에서만 전달한다.
+    inviteCode?: ProfileFieldState & { successMessage?: string }
   }
 }
 
@@ -156,6 +158,46 @@ export const ProfileFields = ({
           message={fields.birthDate.errorMessage}
         />
       </div>
+
+      {fields.inviteCode ? (
+        <div>
+          <InputField
+            aria-describedby={
+              fields.inviteCode.errorMessage
+                ? 'profile-invite-code-error'
+                : fields.inviteCode.successMessage
+                  ? 'profile-invite-code-success'
+                  : undefined
+            }
+            aria-invalid={Boolean(fields.inviteCode.errorMessage)}
+            autoCapitalize="none"
+            autoComplete="off"
+            className={PROFILE_INPUT_CLASS_NAME}
+            disabled={disabled || fields.inviteCode.disabled}
+            label="초대자 코드 (선택)"
+            onBlur={fields.inviteCode.onBlur}
+            onChange={(event) => {
+              fields.inviteCode?.onValueChange(event.target.value)
+            }}
+            placeholder="초대자 코드를 입력해주세요."
+            value={fields.inviteCode.value}
+          />
+          <FieldError
+            id="profile-invite-code-error"
+            message={fields.inviteCode.errorMessage}
+          />
+          {!fields.inviteCode.errorMessage &&
+          fields.inviteCode.successMessage ? (
+            <p
+              className="typo-body-7 text-success mt-2.25"
+              id="profile-invite-code-success"
+              role="status"
+            >
+              {fields.inviteCode.successMessage}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }
