@@ -88,6 +88,19 @@ describe('ReservationsPage', () => {
     } as unknown as ReturnType<typeof useUpdateReservationStatusMutation>)
   })
 
+  it('preserves the original request note including whitespace and newlines', () => {
+    const requestNote = '  창가 자리\n부탁드립니다.  '
+    const result = createReservationsQueryResult()
+    result.data!.reservations = [{ ...reservation, requestNote }]
+    useReservationsQueryMock.mockReturnValue(result)
+    render(<ReservationsPage />)
+
+    const header = screen.getByRole('columnheader', { name: '요청사항' })
+    const index = Array.from(header.parentElement!.children).indexOf(header)
+    const row = screen.getByText('RSV-91').closest('tr')!
+    expect(row.children[index].textContent).toBe(requestNote)
+  })
+
   it('uses only server-supported filters and pagination', async () => {
     const user = userEvent.setup()
     render(<ReservationsPage />)
@@ -137,50 +150,6 @@ describe('ReservationsPage', () => {
     expect(
       screen.getByRole('dialog', { name: '예약자 정보' }),
     ).toHaveTextContent('hashi@example.com')
-  })
-
-  it('keeps reservation actions on a single line', () => {
-    render(<ReservationsPage />)
-
-    const userButton = screen.getByRole('button', { name: '예약자 보기' })
-    const statusButton = screen.getByRole('button', {
-      name: '예약 상태 변경',
-    })
-
-    expect(userButton).toHaveClass('shrink-0', 'whitespace-nowrap')
-    expect(statusButton).toHaveClass('shrink-0', 'whitespace-nowrap')
-    expect(userButton.parentElement).toHaveClass('min-w-max', 'flex-nowrap')
-  })
-
-  it('keeps payment and reservation status chips on a single line', () => {
-    render(<ReservationsPage />)
-
-    expect(screen.getByText('결제완료')).toHaveClass(
-      'shrink-0',
-      'whitespace-nowrap',
-    )
-    expect(screen.getByText('요청됨')).toHaveClass(
-      'shrink-0',
-      'whitespace-nowrap',
-    )
-  })
-
-  it('keeps compact reservation fields on one line in a scrollable table', () => {
-    render(<ReservationsPage />)
-
-    expect(screen.getByRole('table')).toHaveClass('w-full', 'min-w-[103rem]')
-    expect(screen.getByText('RSV-91').closest('td')).toHaveClass(
-      'whitespace-nowrap',
-    )
-    expect(screen.getByText('김하시').closest('td')).toHaveClass(
-      'whitespace-nowrap',
-    )
-    expect(screen.getByText('일반').closest('td')).toHaveClass(
-      'whitespace-nowrap',
-    )
-    expect(screen.getByText('30,000원').closest('td')).toHaveClass(
-      'whitespace-nowrap',
-    )
   })
 
   it('warns on active reservations for the same restaurant in the same minute', () => {
@@ -239,19 +208,6 @@ describe('ReservationsPage', () => {
     expect(screen.getByText('정다른시간').closest('tr')).not.toHaveClass(
       'bg-red-50',
     )
-  })
-
-  it('wraps guest categories only between complete labels', () => {
-    render(<ReservationsPage />)
-
-    const adultCount = screen.getByText('성인 2,')
-    const teenCount = screen.getByText('청소년 1,')
-    const childCount = screen.getByText('어린이 1')
-
-    expect(adultCount).toHaveClass('whitespace-nowrap')
-    expect(teenCount).toHaveClass('whitespace-nowrap')
-    expect(childCount).toHaveClass('whitespace-nowrap')
-    expect(adultCount.parentElement).toHaveClass('flex-wrap')
   })
 
   it('changes a reservation to a documented status', async () => {

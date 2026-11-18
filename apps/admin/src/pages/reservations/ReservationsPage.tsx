@@ -49,6 +49,7 @@ const tableColumns = [
   { key: 'restaurant', label: '식당', className: 'w-56' },
   { key: 'guestCount', label: '인원', className: 'w-44 whitespace-nowrap' },
   { key: 'type', label: '예약 유형', className: 'w-28 whitespace-nowrap' },
+  { key: 'requestNote', label: '요청사항', className: 'w-64' },
   { key: 'payment', label: '결제', className: 'w-28 whitespace-nowrap' },
   { key: 'amount', label: '결제 금액', className: 'w-28 whitespace-nowrap' },
   { key: 'status', label: '예약 상태', className: 'w-28 whitespace-nowrap' },
@@ -190,7 +191,7 @@ export const ReservationsPage = () => {
         <div className="border-cool-gray-100 overflow-hidden rounded-lg border">
           <AdminTable
             columns={tableColumns}
-            tableClassName="w-full min-w-[103rem]"
+            tableClassName="w-full min-w-[119rem]"
             isLoading={reservationsQuery.isLoading}
             isError={reservationsQuery.isError}
             isEmpty={reservations.length === 0}
@@ -242,6 +243,11 @@ export const ReservationsPage = () => {
                   </td>
                   <td className="text-cool-gray-600 px-3 py-3 text-sm whitespace-nowrap">
                     {reservationTypeLabel[reservation.reservationType]}
+                  </td>
+                  <td className="text-cool-gray-700 px-3 py-3 text-sm wrap-anywhere whitespace-pre-wrap">
+                    {reservation.requestNote.trim()
+                      ? reservation.requestNote
+                      : '-'}
                   </td>
                   <td className="px-3 py-3">
                     <PaymentStatusBadge status={reservation.paymentStatus} />
