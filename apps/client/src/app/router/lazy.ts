@@ -46,6 +46,7 @@ const ReviewNewPage = lazyRoute(() => import('@/pages/reviewNew'))
 const MyReviewsPage = lazyRoute(() => import('@/pages/myReviews'))
 const ReviewDetailPage = lazyRoute(() => import('@/pages/reviewDetail'))
 const ReviewEditPage = lazyRoute(() => import('@/pages/reviewEdit'))
+const ReviewReportPage = lazyRoute(() => import('@/pages/reviewReport'))
 const MypagePage = lazyRoute(() => import('@/pages/mypage'))
 const ProfileNewPage = lazyRoute(() => import('@/pages/profileNew'))
 const ProfileEditPage = lazyRoute(() => import('@/pages/profileEdit'))
@@ -99,6 +100,7 @@ export const lazyPages = {
   myReviews: () => lazyPage(MyReviewsPage),
   reviewDetail: () => lazyPage(ReviewDetailPage),
   reviewEdit: () => lazyPage(ReviewEditPage),
+  reviewReport: () => lazyPage(ReviewReportPage),
   mypage: () => lazyPage(MypagePage),
   profileNew: () => lazyPage(ProfileNewPage),
   profileEdit: () => lazyPage(ProfileEditPage),
