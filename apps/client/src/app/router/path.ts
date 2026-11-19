@@ -20,6 +20,7 @@ export const ROUTES = {
   myReviews: '/my-reviews',
   reviewDetail: '/reviews/:reviewId',
   reviewEdit: '/reviews/:reviewId/edit',
+  reviewReport: '/reviews/:reviewId/report',
   mypage: '/mypage',
   mypageSaved: '/mypage/saved',
   mypageCollectionDetail: '/mypage/saved/:collectionId',

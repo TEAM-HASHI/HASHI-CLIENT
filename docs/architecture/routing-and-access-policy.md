@@ -68,6 +68,7 @@
 | 마이 리뷰 페이지      | `/my-reviews`                                       | 리뷰 쓰기, 작성한 리뷰보기 탭을 가집니다.                                                                                                                 |
 | 리뷰 상세 페이지      | `/reviews/:reviewId`                                |                                                                                                                                                           |
 | 리뷰 수정 페이지      | `/reviews/:reviewId/edit`                           |                                                                                                                                                           |
+| 리뷰 신고 페이지      | `/reviews/:reviewId/report`                         | 대상 상태를 확인한 후 신고 폼을 표시한다.                                                                                                                 |
 | 저장 페이지           | `/saved`                                            | API 기반 컬렉션 목록과 추가 조회를 제공합니다.                                                                                                            |
 | 컬렉션 생성           | `/saved/collections/new`                            | 독립 폼 페이지이며 하단 내비게이션을 표시하지 않습니다.                                                                                                   |
 | 컬렉션 수정           | `/saved/collections/:collectionId/edit`             | 독립 폼 페이지이며 변경이 있는 뒤로가기에 폐기 확인을 표시합니다.                                                                                         |

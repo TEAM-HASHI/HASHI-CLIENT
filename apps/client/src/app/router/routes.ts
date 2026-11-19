@@ -121,6 +121,10 @@ export const appRoutes: RouteObject[] = [
             path: ROUTES.reviewEdit,
             element: lazyPages.reviewEdit(),
           },
+          {
+            path: ROUTES.reviewReport,
+            element: lazyPages.reviewReport(),
+          },
           { path: ROUTES.collectionNew, element: lazyPages.collectionForm() },
           {
             path: ROUTES.collectionRestaurantEdit,
