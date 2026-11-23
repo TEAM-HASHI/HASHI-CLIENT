@@ -15,10 +15,10 @@ export const SearchIdlePanel = ({
   onRecentKeywordsClear,
 }: SearchIdlePanelProps) => {
   return (
-    <div className="flex flex-col gap-[38px] px-5 pt-[26px]">
+    <div className="flex flex-col gap-10 px-5 pt-[26px]">
       {recentSearchKeywords.length > 0 && (
         <section aria-labelledby="recent-search-keywords-title">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex h-4.5 items-center justify-between">
             <h2
               className="typo-sub-header-3 text-primary-200"
               id="recent-search-keywords-title"
@@ -40,7 +40,6 @@ export const SearchIdlePanel = ({
           />
         </section>
       )}
-      <RecentRestaurants />
       {recommendedSearchKeywords.length > 0 && (
         <section aria-labelledby="recommended-search-keywords-title">
           <h2
@@ -55,6 +54,7 @@ export const SearchIdlePanel = ({
           />
         </section>
       )}
+      <RecentRestaurants />
     </div>
   )
 }

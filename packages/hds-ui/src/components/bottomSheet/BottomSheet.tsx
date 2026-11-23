@@ -62,7 +62,7 @@ export const BottomSheet = ({
     onOpenChange(false)
   }, [onOpenChange])
   const handleKeyDown = useFocusTrap({
-    enabled: open,
+    enabled: open && isMounted,
     containerRef: panelRef,
     onEscape: handlePressClose,
   })

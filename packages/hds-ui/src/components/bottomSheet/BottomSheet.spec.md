@@ -99,7 +99,7 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 5. sheet가 열려 있는 동안 `documentElement`와 `body`의 배경 스크롤을 잠그고, 닫힐 때 기존 inline style과 스크롤 위치를 복구합니다.
 6. `title`이 있으면 dialog accessible name으로 연결합니다.
 7. `title`이 없으면 `aria-label`을 dialog accessible name으로 연결합니다.
-8. sheet가 열리면 sheet panel로 focus를 이동합니다.
+8. sheet가 열리고 panel DOM이 마운트된 뒤 focus trap을 활성화해 panel로 focus를 이동합니다. 처음 닫힌 상태에서 열어도 동일합니다.
 9. `Tab`과 `Shift + Tab` focus는 sheet 내부에서 순환합니다.
 10. `Escape` key를 누르면 `onOpenChange(false)`를 호출합니다.
 11. sheet가 닫히면 이전 focus 위치로 복귀합니다.

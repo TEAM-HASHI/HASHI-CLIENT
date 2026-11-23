@@ -8,6 +8,19 @@
 - 지도 진입도 공통 검색어 검증(최대 30자, 빈 검색어·단독 `#`·해시태그 공백 제한)을 적용한다. 검색창은 공통 SearchBar의 X 버튼·IME Enter 처리를 사용한다.
 - 지도에서 전달된 기존 검색어가 30자를 넘으면 입력 초안은 30자까지만 채우고 사용자의 제출을 기다린다.
 
+## HASHI-259 검색 리디자인 (2026-11-23)
+
+- 기준: Figma `11720:73901`(초기 화면), `11720:73668`(결과 없음), 최신 PLAN `RESTAURANT_SEARCH`.
+- 최근 검색어 → 추천 검색어 → 최근 본 맛집 순서로 배치한다. 기존 이력 전체 삭제 기능과 가로 스크롤은 유지한다.
+- 최근 본 맛집은 기존 요약 query를 재사용해 대표 사진과 전체 주소·음식 종류·식당명을 카드로 표시한다. 새 이력 API·계정 병합은 이번 리디자인에 포함하지 않는다.
+- 서버 반영 전 임시 표시: 현재 재사용하는 요약 응답에 지역명 필드가 없어 전체 주소를 음식 종류 앞에 표시한다. 목록 응답에는 `area`가 있으나 요약 응답에는 없음을 실제 개발 서버 응답으로 확인했다. 주소는 카드 안에서 한 줄 말줄임하며 전체 값은 title에 유지한다. 요약 API의 `area` 필드 추가를 서버에 요청할 예정이며, 서버 반영 후 `지역명 · 음식 종류`로 후속 수정한다. 이번 PR에는 지역명 연동을 포함하지 않는다.
+- 카드 폭은 120px, 썸네일은 106×80px·모서리 3px, 카드 간격은 13px이다. 긴 이름은 한 줄 말줄임하고 이미지 실패 시 기존 HDS Thumbnail fallback을 사용한다.
+- 결과 없음은 원본 SVG, `찾는 식당이 검색되지 않나요?`, `식당명과 주소를 알려주시면 / 예약 가능 여부를 확인해 드려요.`, `어디든 예약 요청` 버튼으로 구성한다.
+- 빈 상태는 기존 검색 헤더·필터 아래 148px 간격으로 시작한다. 버튼은 152×42px·Cool Gray 900으로 표시한다. SVG의 내보내기 영역은 94×77px이며 원본 레이어 93.125×73.003px 기준으로 stroke 여백을 보정한다.
+- 버튼 선택 시 로그인 사용자는 기존 `ROUTES.anywhereReservation`으로 이동하고 비로그인 사용자는 기존 AuthGateBottomSheet를 연다. 카카오 로그인 완료 목적지는 어디든 예약으로 전달한다.
+- 검색 입력·초기화·정렬·장르·추가 조회·지도 검색 전달·오류 재시도는 기존 동작을 유지한다. 라우트·API 변경은 없다. 기존 HDS BottomSheet의 focus trap은 panel DOM 마운트 후 활성화하도록 보완한다.
+- 검증: 기존 검색 페이지 및 최근 본 맛집 테스트에 예약 CTA의 로그인 분기와 카드 데이터·이동 확인만 추가한다. CSS 전용 테스트 파일은 만들지 않고 320px·393px 브라우저로 확인한다.
+
 ## Purpose
 
 - 사용자가 홈 화면의 상단 검색 CTA에서 진입해 식당명 또는 메뉴명으로 식당을 검색하고, 정렬 순서와 음식 장르 필터를 적용해 결과를 탐색합니다.
@@ -74,7 +87,7 @@
 - [x] 검색 결과 상태에서는 정렬/음식 장르 필터 바까지 상단 고정 영역에 포함합니다.
 - [x] 뒤로가기 버튼은 24px 아이콘을 유지하고 44px 터치 영역을 제공합니다.
 - [x] 뒤로가기 버튼을 누르면 이전 화면으로 돌아갑니다.
-- [x] 검색창 placeholder는 `식당 혹은 메뉴를 검색해보세요`를 사용합니다.
+- [x] 검색창 placeholder는 기존 `검색어를 입력해보세요`를 사용합니다.
 - [x] 홈 검색 CTA에서 진입하면 검색창에 자동 focus를 주어 키보드가 노출됩니다.
 - [x] `/search` 직접 진입 시에도 검색창에 focus를 줄 수 있지만, 브라우저/OS 정책으로 자동 키보드 노출이 제한될 수 있음을 허용합니다.
 - [x] 검색 전에는 식당 리스트와 필터 바 대신 최근 검색어와 추천 검색어 영역을 보여줍니다.
@@ -98,7 +111,7 @@
 - [x] 식당 목록 API의 `todayBusinessHour`를 시간 영역에 표시합니다.
 - [x] `todayBusinessHour`가 없거나 영업시간 정보가 불완전하면 시간 영역에는 `영업시간 확인 필요`를 표시합니다.
 - [x] 식당 이미지는 HDS `Thumbnail`을 사용하며, 이미지가 없거나 로드에 실패하면 내부 fallback을 표시합니다.
-- [x] 검색 결과가 없으면 결과 리스트 대신 shared `ListEmptyState`를 보여줍니다.
+- [x] 검색 결과가 없으면 결과 리스트 대신 page-local `SearchEmptyState`를 보여줍니다.
 - [x] empty state에서도 검색어와 적용된 필터값은 유지합니다.
 - [x] 좁은 viewport에서 긴 식당명은 최대 2줄까지 보여주고 카드 레이아웃을 깨지 않습니다.
 - [x] 모든 버튼성 요소는 `button` 또는 접근 가능한 interactive element로 구현합니다.
@@ -218,7 +231,7 @@ export const searchRestaurantQueryKeys = {
   - 예상 가능한 400/401 API error는 local error state에서 처리합니다.
   - 5xx, network, timeout, unexpected non-API error는 기본 query policy에 따라 retry 또는 ErrorBoundary throw 후보가 될 수 있지만, 검색 결과 영역 local error UI를 유지해야 하면 query option에서 `throwOnError: false`를 명시합니다.
 - empty state:
-  - shared `ListEmptyState`에 `검색된 식당이 없습니다.` 문구를 전달해 결과 영역 중앙에 표시합니다.
+  - page-local `SearchEmptyState`에 `찾는 식당이 검색되지 않나요?` 안내와 기존 어디든 예약 진입 버튼을 표시합니다.
 - query update condition:
   - 검색 제출
   - 최근 검색어 탭
@@ -355,13 +368,14 @@ SearchPage
       KeywordChipList
     RecommendedSearchKeywordSection
       KeywordChipList
+    RecentRestaurants
   SearchFilterBar
     SortFilterTrigger
     FoodCategoryFilterTrigger
   SearchResultArea
     RestaurantResultList
       RestaurantResultItem
-    ListEmptyState
+    SearchEmptyState
     SearchErrorState
   FilterBottomSheet(sort)
   FilterBottomSheet(foodCategory)
@@ -378,8 +392,8 @@ SearchPage
   - `Thumbnail`: 검색 결과 이미지와 이미지 로드 실패 fallback
 - app shared component:
   - `FilterBottomSheet`: 정렬/음식 장르 단일 선택 바텀시트 조합
-  - `ListEmptyState`: 검색 결과 없음 상태
 - page-local component:
+  - `SearchEmptyState`: 검색 결과 없음과 예약 진입
   - `SearchHeader`
   - `SearchIdlePanel`
   - `KeywordChipList`
@@ -399,7 +413,7 @@ SearchPage
   - `SearchIcon`은 `SearchBar` 내부에서 사용
   - `StarFillIcon`: 결과 리스트의 단일 별점 아이콘
   - `ClockSmallIcon`
-  - empty state graphic은 shared `ListEmptyState`가 소유하는 공통 이미지를 사용합니다.
+  - empty state graphic은 page-local `SearchEmptyState`가 소유하는 공통 이미지를 사용합니다.
 
 ## Reuse Audit
 
@@ -412,11 +426,11 @@ SearchPage
 - API 연동된 검색 식당 데이터와 추천 검색어는 page-local mock data에 의존하지 않습니다.
 - `BottomSheet`를 직접 새로 만들지 않습니다. overlay click과 Escape close는 기존 `BottomSheet`의 접근성 계약을 따릅니다.
 - `Button`을 바텀시트 footer 액션에 사용합니다.
-- 검색 결과 없음 UI는 shared `ListEmptyState`를 사용합니다. 검색 페이지는 `description="검색된 식당이 없습니다."`와 결과 영역 중앙 정렬에 필요한 `className`만 주입합니다.
+- 검색 결과 없음 UI는 page-local `SearchEmptyState`를 사용합니다. 검색 페이지는 Figma 원본 일러스트·안내·어디든 예약 요청 버튼을 표시합니다.
 - `Header`는 사용하지 않습니다. HDS `Header` spec에서 `bar_search_back_button`은 `IconButton` + `SearchBar` 조합으로 분류되어 `Header` v1 범위에서 제외되어 있습니다.
 - `StarRating`은 사용하지 않습니다. 검색 결과 리스트 디자인은 5개 별 묶음이 아니라 단일 별 아이콘 + 숫자 텍스트이므로 `StarFillIcon`과 텍스트 조합이 더 정확합니다.
 - `Badge`는 사용하지 않습니다. 음식 종류는 pill/badge가 아니라 `# 아끼소바` 형태의 텍스트 태그로 보이므로 page-local 텍스트로 구현합니다.
-- 검색 전용 `SearchEmptyState`와 page-local empty asset은 사용하지 않습니다. list empty UI는 앱 공통 `ListEmptyState`로 통일합니다.
+- 검색 빈 상태는 전용 일러스트와 예약 안내가 필요해 page-local `SearchEmptyState`를 사용합니다. 앱 공통 `ListEmptyState`는 수정하지 않습니다.
 - `BottomNavigation`은 사용하지 않습니다. `/search`는 하단 네비게이션 대상 route가 아닙니다.
 
 ## Implementation File Plan
@@ -429,8 +443,8 @@ SearchPage
   - 기존 page export를 유지합니다.
 - `apps/client/src/shared/components/filterBottomSheet/FilterBottomSheet.tsx`
   - 정렬/음식 장르 바텀시트에 재사용합니다.
-- `apps/client/src/shared/components/listEmptyState/ListEmptyState.tsx`
-  - 검색 결과 없음 상태에 재사용합니다.
+- `apps/client/src/pages/search/components/SearchEmptyState.tsx`
+  - 검색 결과 없음 안내와 기존 예약 진입을 조합합니다.
 - `apps/client/src/shared/api/request.ts`
   - 실제 검색 API endpoint 함수는 이 request helper를 통해 호출합니다.
 - `apps/client/src/shared/lib/queryClient.ts`
@@ -522,7 +536,7 @@ SearchPage
   - `todayBusinessHour`가 없거나 영업시간 정보가 불완전하면 `영업시간 확인 필요`를 표시합니다.
   - 별점, 태그가 없을 때 숨김 또는 대체 문구는 추가 확인 후 구현합니다.
 - user-facing message:
-  - empty: `검색된 식당이 없습니다.`
+  - empty: `찾는 식당이 검색되지 않나요?`
   - API error: `검색 결과를 불러오지 못했습니다.`
 - retry or fallback:
   - 최초 조회 오류는 재시도 버튼으로 refetch하고, 추가 조회 오류는 실패한 cursor를 다시 요청합니다. 검색 재제출은 기존 검색 조건 갱신 흐름을 따릅니다.
@@ -597,10 +611,10 @@ SearchPage
   - 시간 icon은 `ClockSmallIcon 16px`, icon과 text 사이 간격은 `6px`입니다.
   - 시간 text는 `typo-body-7 text-primary-200`입니다.
 - empty state:
-  - shared `ListEmptyState`를 사용하고 호출부에서 `description="검색된 식당이 없습니다."`를 전달합니다.
-  - 검색 결과 영역의 남은 높이 안에서 중앙 정렬되도록 호출부 `className`으로 `min-h-0 flex-1`을 보정합니다.
-  - 상단 fixed 검색/필터 영역 아래에서만 중앙 정렬하면 전체 화면 기준으로 아래에 치우쳐 보이므로, 호출부 `pb-[122px]`로 fixed 영역 높이만큼 시각 중심을 보정합니다.
-  - empty graphic과 description typography는 `ListEmptyState`의 기본 스타일을 따릅니다.
+  - page-local `SearchEmptyState`를 사용하고 호출부에서 기존 로그인 안내와 어디든 예약 경로를 연결합니다.
+  - 검색/필터 영역 아래 148px에서 일러스트를 시작합니다.
+  - 제목은 20px·semibold·30px 줄 높이, 설명은 Body 6·Cool Gray 500을 사용합니다.
+  - 설명과 버튼 사이 간격은 22.811px입니다.
 - bottom sheet:
   - title은 `typo-sub-header-2 text-black`입니다.
   - close icon은 HDS `BottomSheet` 기본 `CancelIcon`, `24px`를 사용합니다.
@@ -618,7 +632,7 @@ SearchPage
   - chip은 HDS `Chip`을 사용하고, 배경은 `warm-gray-50` (`#EFEFEF`), radius는 `100px`, text는 `typo-body-7 text-black`, padding은 vertical `8px` / horizontal `12px`입니다.
   - chip 목록은 길어질 경우 horizontal scroll을 허용하며 시작 padding은 `20px`, chip 사이 간격은 `8px`입니다.
   - chip 목록의 scrollbar는 노출하지 않습니다.
-  - 최근 검색어 section과 추천 검색어 section 사이 간격은 `38px`입니다.
+  - 초기 화면 section 사이 간격은 `40px`입니다.
 - scroll area:
   - 검색 전 최근/추천 검색어 영역과 검색 후 식당 리스트/상태 영역은 상단 고정 영역 아래에서 스크롤됩니다.
 - keyboard:
