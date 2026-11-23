@@ -77,6 +77,8 @@ src/icons/ChevronDownIcon.tsx
 
 지도 그림도 동일한 파이프라인을 사용합니다. RestaurantMarkerIcon, CafeMarkerIcon, BarMarkerIcon은 그림만 제공하고 강조색은 currentColor를 따릅니다. MapViewIcon의 fill/stroke와 MapPinTailIcon의 색·크기는 호출부가 지정합니다. 이름·평점·선택·disabled 동작과 지도 좌표 처리는 앱에 남깁니다.
 
+RestaurantCategoryIcon, CafeCategoryIcon, BarCategoryIcon은 16px 카테고리 그림이며, 본체는 currentColor로 선택 상태를 표현하고 빨간 포인트는 유지합니다.
+
 ## Review Checklist
 
 - [ ] 이 아이콘이 `packages/hds-icons`에 속하는지 확인했습니다.

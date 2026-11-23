@@ -659,7 +659,7 @@ describe('MapPage API integration', () => {
         <MapPage />
       </MemoryRouter>,
     )
-    const handle = await screen.findByRole('slider', {
+    let handle = await screen.findByRole('slider', {
       name: '식당 목록 높이 조절',
     })
     if (kind !== 'empty')
@@ -680,6 +680,12 @@ describe('MapPage API integration', () => {
       ),
     )
     await user.click(screen.getByRole('button', { name: '카페' }))
+    handle = await screen.findByRole('slider', {
+      name: '식당 목록 높이 조절',
+    })
+    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '30'))
+    handle.focus()
+    await user.keyboard('{End}')
     let retry = await screen.findByRole('button', { name: '다시 시도하기' })
     expect(retry).toBeVisible()
     if (kind !== 'empty') {
@@ -695,6 +701,8 @@ describe('MapPage API integration', () => {
     if (kind === 'expired') {
       vi.spyOn(Date, 'now').mockReturnValue(expires)
       act(() => window.dispatchEvent(new Event('pageshow')))
+      handle.focus()
+      await user.keyboard('{End}')
       expect(
         screen.queryByRole('list', { name: '식당 검색 결과' }),
       ).not.toBeInTheDocument()
@@ -715,7 +723,7 @@ describe('MapPage API integration', () => {
   })
 
   it.each(['initial', 'refresh'])(
-    'opens a failed %s request after the panel was collapsed and retries successfully',
+    'shows a failed %s request toast and retries after expanding the collapsed panel',
     async (reason) => {
       const user = userEvent.setup()
       let rejectRequest!: (reason: Error) => void
@@ -728,6 +736,7 @@ describe('MapPage API integration', () => {
       render(
         <MemoryRouter>
           <MapPage />
+          <ToastRegion />
         </MemoryRouter>,
       )
       if (reason === 'refresh') {
@@ -741,6 +750,15 @@ describe('MapPage API integration', () => {
       handle.focus()
       await user.keyboard('{Home}')
       await act(async () => rejectRequest(new Error('network')))
+      expect(
+        await screen.findByText('식당 목록을 불러오지 못했어요.'),
+      ).toBeVisible()
+      expect(handle).toHaveAttribute('aria-valuenow', '30')
+      expect(
+        screen.queryByRole('button', { name: '다시 시도하기' }),
+      ).not.toBeInTheDocument()
+      handle.focus()
+      await user.keyboard('{End}')
       const retry = await screen.findByRole('button', { name: '다시 시도하기' })
       expect(handle).not.toHaveAttribute('aria-valuenow', '30')
       await user.click(retry)
@@ -837,7 +855,7 @@ describe('MapPage API integration', () => {
       getZoom: () => 11,
     } as unknown as SdkMap
     act(() => sdkState.onIdle?.({ map: resizedMap }))
-    await user.click(screen.getByRole('button', { name: '음식점' }))
+    await user.click(screen.getByRole('button', { name: '식당' }))
     await screen.findByRole('list', { name: '식당 검색 결과' })
     expect(source.mock.lastCall?.[0]).toEqual({
       ...mapRegionsFixture.initialBounds,
@@ -1188,7 +1206,7 @@ describe('MapPage API integration', () => {
         </MemoryRouter>,
       )
       await screen.findByRole('list', { name: '식당 검색 결과' })
-      await user.click(screen.getByRole('button', { name: '음식점' }))
+      await user.click(screen.getByRole('button', { name: '식당' }))
       await user.click(
         await screen.findByRole('button', {
           name: '코코네 돈카츠 신도심점 상세 보기',
@@ -1213,7 +1231,7 @@ describe('MapPage API integration', () => {
         }),
       ).toBeVisible()
       await user.click(screen.getByRole('button', { name: '식당 상세 닫기' }))
-      expect(screen.getByRole('button', { name: '음식점' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: '식당' })).toHaveAttribute(
         'aria-pressed',
         'true',
       )

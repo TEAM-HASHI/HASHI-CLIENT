@@ -70,9 +70,11 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
     id: number
     kind: 'region' | 'conditions'
   } | null>(null)
-  const [notice, setNotice] = useState<{ id: number; message: string } | null>(
-    null,
-  )
+  const [notice, setNotice] = useState<{
+    id: number
+    message: string
+    kind?: 'list-error'
+  } | null>(null)
   const [clock, setClock] = useState(Date.now)
   const [retryAt, setRetryAt] = useState(0)
   const sequence = useRef(0)
@@ -245,8 +247,20 @@ export const useMapPageState = (initial: MapSessionSnapshot | null = null) => {
         id: ++sequence.current,
         message: '지도를 확대하거나 검색 조건을 조정한 후 다시 시도해주세요.',
       })
+    } else if (!query.isFetchNextPageError) {
+      setNotice({
+        id: ++sequence.current,
+        kind: 'list-error',
+        message: '식당 목록을 불러오지 못했어요.',
+      })
     }
-  }, [query.error, query.isFetching, request.reason, request.version])
+  }, [
+    query.error,
+    query.isFetching,
+    query.isFetchNextPageError,
+    request.reason,
+    request.version,
+  ])
 
   const preservePrevious =
     hasStatus(query.error, 503) &&

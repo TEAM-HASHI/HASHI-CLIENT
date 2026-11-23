@@ -408,7 +408,7 @@ const GoogleMapSurface = ({
           hasUserMoved &&
           boundsChanged &&
           currentBounds && (
-            <div className="absolute inset-x-0 bottom-8 text-center">
+            <div className="absolute inset-x-0 bottom-10 text-center">
               <MapSearchAreaButton
                 onClick={() => {
                   userMovedRef.current = false
