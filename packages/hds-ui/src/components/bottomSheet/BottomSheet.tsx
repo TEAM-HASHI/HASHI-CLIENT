@@ -14,6 +14,7 @@ export type BottomSheetProps = {
   children: ReactNode
   footer?: ReactNode
   className?: string
+  overlayClassName?: string
   headerClassName?: string
   footerClassName?: string
   showHandle?: boolean
@@ -51,6 +52,7 @@ export const BottomSheet = ({
   showHandle = true,
   showCloseButton = true,
   className,
+  overlayClassName,
   headerClassName,
   footerClassName,
   'aria-label': ariaLabel = '바텀시트',
@@ -94,6 +96,7 @@ export const BottomSheet = ({
       className={cn(
         'z-overlay bg-dim/50 fixed inset-y-0 right-0 left-0 mx-auto flex w-full max-w-(--app-mobile-max-width,100%) items-end',
         overlayAnimationClass,
+        overlayClassName,
       )}
       onClick={handlePressClose}
     >

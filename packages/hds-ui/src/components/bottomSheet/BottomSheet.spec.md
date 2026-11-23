@@ -90,6 +90,12 @@ HDS는 sheet shell, overlay, open/close interaction, title/header, footer slot, 
 - required: `false`
 - description: sheet panel에 병합할 class입니다.
 
+### `overlayClassName`
+
+- type: `string`
+- required: `false`
+- description: 배경 overlay에 병합할 class입니다. 화면별 디자인의 dim 색상·투명도만 조정할 수 있으며 기본 overlay와 열림·닫힘 동작은 유지합니다.
+
 ## Behavior
 
 1. `open`이 `false`이면 DOM에 렌더링하지 않습니다.

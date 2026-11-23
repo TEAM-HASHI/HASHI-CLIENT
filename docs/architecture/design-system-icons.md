@@ -93,3 +93,5 @@ pnpm --filter @hashi/hds-icons typecheck
 pnpm --filter @hashi/hds-icons build
 pnpm format:check
 ```
+
+HASHI-258의 `BellIcon`은 홈의 소식 알림 진입점에 사용하는 Figma 원본 24px 아이콘입니다. 읽음 여부 판정과 화면 이동은 아이콘이 아닌 앱에서 담당합니다.

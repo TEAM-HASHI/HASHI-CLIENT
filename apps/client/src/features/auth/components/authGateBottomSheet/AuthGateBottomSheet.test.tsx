@@ -10,7 +10,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet/AuthGateBottomSheet'
-import loginImage from '@/shared/assets/images/login.webp'
+import loginImage from '@/shared/assets/images/login-redesign.svg'
 import {
   clearAuthSession,
   startAuthenticatedSession,
@@ -33,9 +33,7 @@ describe('AuthGateBottomSheet', () => {
     )
 
     expect(screen.getByText('간편하게 로그인하고')).toBeInTheDocument()
-    expect(
-      screen.getByText('Hashi와 일본 미식 여행을 완성해보세요!'),
-    ).toBeInTheDocument()
+    expect(screen.getByText('일본 미식 여행을 즐겨보세요!')).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: '카카오로 로그인하기' }),
     ).toBeInTheDocument()

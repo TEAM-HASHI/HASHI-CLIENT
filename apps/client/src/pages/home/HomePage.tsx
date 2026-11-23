@@ -1,3 +1,7 @@
+import { BellIcon } from '@hashi/hds-icons'
+import { IconButton } from '@hashi/hds-ui'
+import { useState } from 'react'
+
 import { ROUTES } from '@/app/router/path'
 import { AuthGateBottomSheet } from '@/features/auth/components/authGateBottomSheet'
 import { AnywhereReservationCta } from '@/pages/home/components/AnywhereReservationCta'
@@ -8,8 +12,10 @@ import { HomeSearchEntry } from '@/pages/home/components/HomeSearchEntry'
 import { HotSnsRestaurantSection } from '@/pages/home/components/HotSnsRestaurantSection'
 import { useHomePage } from '@/pages/home/hooks/useHomePage'
 import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
+import { ComingSoonDialog } from '@/shared/components/comingSoonDialog'
 
 export const HomePage = () => {
+  const [isNotificationGuideOpen, setIsNotificationGuideOpen] = useState(false)
   const {
     authGate,
     getRestaurantDetailPath,
@@ -31,7 +37,16 @@ export const HomePage = () => {
             aria-label="홈 상단 영역"
             className="app-mobile-fixed-top z-fixed bg-white px-5 pt-[18px] pb-5"
           >
-            <HomeLogo />
+            <div className="relative h-[23px]">
+              <HomeLogo />
+              <IconButton
+                aria-label="소식 알림"
+                className="absolute -top-2.5 -right-1.5 size-11"
+                onClick={() => setIsNotificationGuideOpen(true)}
+              >
+                <BellIcon aria-hidden="true" className="size-6" />
+              </IconButton>
+            </div>
             <HomeSearchEntry to={searchPath} />
           </header>
         </PageFixedArea>
@@ -58,6 +73,10 @@ export const HomePage = () => {
         open={authGate.open}
         onKakaoPress={authGate.onKakaoPress}
         onOpenChange={authGate.onOpenChange}
+      />
+      <ComingSoonDialog
+        open={isNotificationGuideOpen}
+        onOpenChange={setIsNotificationGuideOpen}
       />
     </>
   )
