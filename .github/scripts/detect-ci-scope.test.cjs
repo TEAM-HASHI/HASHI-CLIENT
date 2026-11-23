@@ -68,15 +68,17 @@ test('uses affected quality checks and skips tests for documentation-only change
   })
 })
 
-test('runs affected quality checks and tests for client changes', (t) => {
-  const diff = createDiff('apps/client/src/example.ts')
-  t.after(() => fs.rmSync(diff.cwd, { force: true, recursive: true }))
+for (const app of ['client', 'mobile']) {
+  test(`runs affected quality checks and tests for ${app} changes`, (t) => {
+    const diff = createDiff(`apps/${app}/src/example.ts`)
+    t.after(() => fs.rmSync(diff.cwd, { force: true, recursive: true }))
 
-  assert.deepEqual(detectScope(diff), {
-    turbo_args: '--affected',
-    run_tests: 'true',
+    assert.deepEqual(detectScope(diff), {
+      turbo_args: '--affected',
+      run_tests: 'true',
+    })
   })
-})
+}
 
 test('uses affected quality checks and skips client tests for admin-only changes', (t) => {
   const diff = createDiff('apps/admin/src/example.ts')

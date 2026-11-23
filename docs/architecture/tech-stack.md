@@ -46,6 +46,8 @@
 
 ## Official Docs
 
+- Mobile (Current): `apps/mobile`은 Expo SDK 58, React Native 0.88, React 19.3 기반 WebView 앱 셸입니다. 모바일 전용 버전은 해당 `package.json`을 따르며 웹 catalog 버전은 변경하지 않습니다. [실행·검증](./mobile-webview.md), [Expo](https://docs.expo.dev/), [WebView](https://github.com/react-native-webview/react-native-webview).
+
 - 지도: `@vis.gl/react-google-maps@1.10.1` (Current, client 전용). [공식 문서](https://visgl.github.io/react-google-maps/). Google Maps JavaScript SDK와 Advanced Marker를 연결하며 식당 데이터 API와는 별개입니다.
 
 - Package manager: [pnpm](https://pnpm.io/)

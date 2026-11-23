@@ -65,7 +65,7 @@ jobs:
         run: pnpm turbo build ${{ steps.ci-scope.outputs.turbo_args }}
 
   test:
-    name: Client & HDS Tests
+    name: Client, HDS & Mobile Tests
     runs-on: ubuntu-latest
 
     steps:

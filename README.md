@@ -180,6 +180,7 @@
 | --------------------- | ------------------- | ----------------------- |
 | `apps/client`         | `@hashi/client`     | 사용자 서비스 앱        |
 | `apps/admin`          | `@hashi/admin`      | 관리자 앱               |
+| `apps/mobile`         | `@hashi/mobile`     | Expo WebView 앱 셸      |
 | `packages/hds-ui`     | `@hashi/hds-ui`     | 공통 UI 컴포넌트 패키지 |
 | `packages/hds-icons`  | `@hashi/hds-icons`  | 공통 아이콘 패키지      |
 | `packages/hds-tokens` | `@hashi/hds-tokens` | 디자인 토큰 패키지      |
@@ -190,9 +191,12 @@
 | ------ | ----------------- | ------------------- | --------------------- |
 | Client | `pnpm dev:client` | `pnpm build:client` | `pnpm preview:client` |
 | Admin  | `pnpm dev:admin`  | `pnpm build:admin`  | `pnpm preview:admin`  |
+| Mobile | `pnpm dev:mobile` | `pnpm build:mobile` | 실제 기기·에뮬레이터  |
 | All    | -                 | `pnpm build`        | -                     |
 
 기본 `vercel.json`은 client 배포용입니다. Admin은 별도 Vercel project에서 `vercel.admin.json`을 사용합니다.
+
+Mobile 환경변수와 실행 방법은 [Mobile WebView](./docs/architecture/mobile-webview.md)를 따릅니다. `build:mobile`은 스토어용 앱 바이너리가 아닌 JS 번들 생성입니다.
 
 GitHub Actions는 client와 admin 배포 workflow를 분리합니다. Admin workflow는
 `VERCEL_ADMIN_PROJECT_ID` repository secret으로 Admin Vercel project를 선택하고,

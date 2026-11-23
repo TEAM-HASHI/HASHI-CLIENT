@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "HASHI",
+    "slug": "hashi-mobile",
+    "version": "0.1.0",
+    "platforms": ["ios", "android"],
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/app-icon.png",
+    "ios": {
+      "bundleIdentifier": "kr.hashi.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "kr.hashi.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/app-icon.png",
+        "backgroundColor": "#1d1d1d"
+      }
+    },
+    "plugins": [
+      "./plugins/withAndroidLauncherInset.cjs",
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/Pretendard-SemiBold.otf"]
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFFFF",
+          "ios": {
+            "image": "./assets/app-logo.png",
+            "imageWidth": 132
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "49dde41d-4841-4153-b1d7-266c93fb6a3b"
+      }
+    },
+    "owner": "jyeon03s-team"
+  }
+}
