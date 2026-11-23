@@ -32,6 +32,7 @@ else
       .github/scripts/detect-ci-scope.sh | \
         .github/workflows/ci.yml | \
         apps/client/* | \
+        apps/mobile/* | \
         configs/* | \
         package.json | \
         packages/* | \

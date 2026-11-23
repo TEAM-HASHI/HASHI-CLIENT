@@ -29,6 +29,9 @@ export default tseslint.config(
     ignores: [
       '**/.turbo/**',
       '**/dist/**',
+      '**/.expo/**',
+      'apps/mobile/ios/**',
+      'apps/mobile/android/**',
       '**/node_modules/**',
       '**/playwright-report/**',
       '**/storybook-static/**',
@@ -53,6 +56,7 @@ export default tseslint.config(
     files: [
       'apps/client/**/*.{ts,tsx}',
       'apps/admin/**/*.{ts,tsx}',
+      'apps/mobile/**/*.{ts,tsx}',
       'packages/hds-icons/src/**/*.{ts,tsx}',
       'packages/hds-ui/src/**/*.{ts,tsx}',
     ],
@@ -69,6 +73,13 @@ export default tseslint.config(
   {
     files: ['apps/client/**/*.{ts,tsx}', 'apps/admin/**/*.{ts,tsx}'],
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
+  },
+  {
+    files: ['apps/mobile/**/*.{ts,tsx}'],
+    extends: [reactHooks.configs.flat.recommended],
+    languageOptions: {
+      globals: { process: 'readonly' },
+    },
   },
   {
     files: [

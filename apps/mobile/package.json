@@ -1,0 +1,29 @@
+{
+  "name": "@hashi/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "dev": "expo start --go",
+    "android": "expo start --go --android",
+    "ios": "expo start --go --ios",
+    "build": "expo export --platform all",
+    "lint": "pnpm --dir ../.. exec eslint apps/mobile --config eslint.config.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --environment node"
+  },
+  "dependencies": {
+    "expo": "~58.0.26",
+    "expo-font": "~58.0.12",
+    "expo-splash-screen": "~58.0.14",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-webview": "14.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.3.0",
+    "typescript": "~6.0.3",
+    "vitest": "catalog:"
+  }
+}

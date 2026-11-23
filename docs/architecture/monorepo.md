@@ -8,6 +8,7 @@ HASHI Client는 pnpm workspace와 Turborepo를 사용하는 프론트엔드 모�
 ```text
 apps/
   client/      HASHI 웹 클라이언트 앱
+  mobile/      Expo 기반 iOS/Android WebView 앱 셸
 
 packages/
   hds-tokens/  HASHI Design System CSS 토큰
@@ -61,7 +62,7 @@ pnpm --filter @hashi/hds-icons build
 - `build`는 dependency package의 `build`를 먼저 실행합니다.
 - `lint`와 `typecheck`는 workspace 전체 기준으로 실행합니다.
 - `test:e2e`는 client app의 Playwright 검증을 실행하고, Storybook task는 HDS UI 문서화와 컴포넌트 상태 확인에 사용합니다.
-- mobile task는 아직 없습니다. 도입 시 `turbo.json`, [Tech Stack](./tech-stack.md), 관련 문서를 함께 갱신합니다.
+- mobile의 `build`는 네이티브 앱 바이너리가 아닌 iOS/Android JS 번들을 생성합니다. 실행과 검증은 [Mobile WebView](./mobile-webview.md)를 따릅니다.
 
 ## Generator Ownership
 

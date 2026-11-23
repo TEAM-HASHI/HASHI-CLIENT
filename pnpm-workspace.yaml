@@ -3,6 +3,11 @@ packages:
   - packages/*
   - configs/*
 
+# Use the root catalog version for unbound React types, not the mobile version.
+hoistPattern:
+  - '*'
+  - '!@types/react'
+
 catalog:
   '@eslint/js': ^10.0.1
   '@lhci/cli': ^0.15.1

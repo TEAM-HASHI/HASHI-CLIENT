@@ -44,6 +44,19 @@ storybook-static
 # Vercel
 .vercel
 
+# Expo generated files
+**/.expo/
+apps/mobile/ios/
+apps/mobile/android/
+
+# Mobile signing credentials
+apps/mobile/**/credentials.json
+apps/mobile/**/*.jks
+apps/mobile/**/*.keystore
+apps/mobile/**/*.p12
+apps/mobile/**/*.p8
+apps/mobile/**/*.mobileprovision
+
 # Playwright
 playwright-report/
 test-results/
