@@ -13,11 +13,34 @@ import { BottomSheet } from './BottomSheet'
 describe('BottomSheet', () => {
   afterEach(() => {
     cleanup()
+    vi.restoreAllMocks()
     document.body.style.overflow = ''
     document.body.style.position = ''
     document.body.style.top = ''
     document.body.style.width = ''
     document.documentElement.style.overflow = ''
+  })
+
+  it('focuses the panel when opened after initially being unmounted', () => {
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callback(0)
+      return 0
+    })
+    const onOpenChange = vi.fn()
+    const { rerender } = render(
+      <BottomSheet open={false} onOpenChange={onOpenChange} title="예약 안내">
+        콘텐츠
+      </BottomSheet>,
+    )
+    rerender(
+      <BottomSheet open onOpenChange={onOpenChange} title="예약 안내">
+        콘텐츠
+      </BottomSheet>,
+    )
+    const dialog = screen.getByRole('dialog', { name: '예약 안내' })
+    expect(dialog).toHaveFocus()
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' })
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('does not render when open is false', () => {
