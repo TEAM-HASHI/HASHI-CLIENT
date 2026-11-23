@@ -27,7 +27,7 @@ import { useSearchUrlState } from '@/pages/search/hooks/useSearchUrlState'
 import { useSearchKeywordRecommendationsQuery } from '@/pages/search/queries/useSearchKeywordRecommendationsQuery'
 import searchToastWarningIcon from '@/shared/assets/icons/search-toast-warning.svg'
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
-import { ListEmptyState } from '@/shared/components/listEmptyState'
+import { SearchEmptyState } from '@/pages/search/components/SearchEmptyState'
 import { cn } from '@/shared/utils'
 import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 
@@ -226,10 +226,7 @@ export const SearchPage = () => {
                 )}
               </>
             ) : (
-              <ListEmptyState
-                className="min-h-0 flex-1 pb-[127px]"
-                description="검색된 식당이 없습니다."
-              />
+              <SearchEmptyState />
             )}
           </>
         )}

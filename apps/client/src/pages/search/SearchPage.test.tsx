@@ -1,6 +1,12 @@
 import '@testing-library/jest-dom/vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
@@ -11,6 +17,10 @@ import type { SearchRestaurant } from '@/pages/search/types'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 import { RECENT_SEARCH_KEYWORDS_STORAGE_KEY } from '@/pages/search/constants/searchFilters'
 import { toastQueue } from '@hashi/hds-ui'
+import {
+  clearAuthSession,
+  startAuthenticatedSession,
+} from '@/shared/auth/authSession'
 
 const { mockGetRestaurants, mockGetSearchKeywordRecommendations } = vi.hoisted(
   () => ({
@@ -111,6 +121,7 @@ const LocationState = () => {
 
 afterEach(() => {
   cleanup()
+  clearAuthSession()
   toastQueue.clear()
   vi.clearAllMocks()
   window.localStorage.clear()
@@ -647,3 +658,58 @@ describe('SearchPage', () => {
     })
   })
 })
+
+it.each([false, true])(
+  'offers the existing reservation flow from empty results (authenticated: %s)',
+  async (authenticated) => {
+    if (authenticated) startAuthenticatedSession('test-token', 1)
+    mockGetRestaurants.mockResolvedValue({ restaurants: [], hasNext: false })
+    mockGetSearchKeywordRecommendations.mockResolvedValue([])
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    const user = userEvent.setup()
+    render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter initialEntries={['/search?keyword=없는식당']}>
+          <Routes>
+            <Route path={ROUTES.search} element={<SearchPage />} />
+            <Route
+              path={ROUTES.anywhereReservation}
+              element={<p>어디든 예약 화면</p>}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    expect(
+      await screen.findByRole('heading', {
+        name: '찾는 식당이 검색되지 않나요?',
+      }),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '어디든 예약 요청' }))
+    if (authenticated) {
+      expect(screen.getByText('어디든 예약 화면')).toBeInTheDocument()
+    } else {
+      expect(
+        screen.getByRole('dialog', { name: '로그인 안내' }),
+      ).toBeInTheDocument()
+      await waitFor(() =>
+        expect(
+          screen.getByRole('dialog', { name: '로그인 안내' }),
+        ).toHaveFocus(),
+      )
+      await user.keyboard('{Escape}')
+      fireEvent.animationEnd(
+        screen.getByRole('dialog', { name: '로그인 안내' }),
+      )
+      await waitFor(() =>
+        expect(
+          screen.queryByRole('dialog', { name: '로그인 안내' }),
+        ).not.toBeInTheDocument(),
+      )
+      expect(screen.getByRole('searchbox')).toHaveValue('없는식당')
+    }
+    client.clear()
+  },
+)

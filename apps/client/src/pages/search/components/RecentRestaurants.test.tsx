@@ -6,7 +6,7 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import { getRestaurantSummary } from '@/features/restaurantDetail/api/getRestaurantSummary'
 import {
@@ -59,4 +59,42 @@ it('removes only confirmed missing restaurants and clears restaurant history ind
   expect(localStorage.getItem('hashi:search:recent-keywords')).toBe(
     JSON.stringify(['라멘']),
   )
+})
+
+it('shows summary image and category and opens the selected restaurant', async () => {
+  saveRecentRestaurant({ id: 3, name: '스시 하루' })
+  vi.mocked(getRestaurantSummary).mockResolvedValue({
+    restaurantId: 3,
+    name: '스시 하루',
+    address: '일본 도쿄도 주오구',
+    foodCategory: '스시',
+    thumbnailUrl: 'https://example.com/sushi.jpg',
+    imageUrls: [],
+    reservationFee: 0,
+  })
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <Routes>
+          <Route path="/" element={<RecentRestaurants />} />
+          <Route path="/restaurants/3" element={<p>식당 상세 화면</p>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+  expect(await screen.findByText('스시')).toBeInTheDocument()
+  expect(screen.getByTitle('일본 도쿄도 주오구')).toHaveTextContent(
+    '일본 도쿄도 주오구',
+  )
+  const card = screen.getByRole('button', { name: '스시 하루' })
+  expect(card.querySelector('img')).toHaveAttribute(
+    'src',
+    'https://example.com/sushi.jpg',
+  )
+  fireEvent.click(card)
+  expect(screen.getByText('식당 상세 화면')).toBeInTheDocument()
+  client.clear()
 })
