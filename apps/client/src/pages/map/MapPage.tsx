@@ -85,6 +85,9 @@ const MapMainPage = () => {
   const { containerRef, availableHeight } = useMapPanelLayout()
   const [stage, setStage] = useState<MapPanelStage>(initial?.stage ?? 'normal')
   const [previousStatus, setPreviousStatus] = useState(state.status)
+  const [collapsedNoticeId, setCollapsedNoticeId] = useState<number | null>(
+    null,
+  )
   const [reviewUnavailable, setReviewUnavailable] = useState(false)
   const [savedCollectionsRequested, setSavedCollectionsRequested] = useState(
     location.state?.mapSavedCollectionsOpen === true &&
@@ -252,7 +255,10 @@ const MapMainPage = () => {
   useEffect(() => {
     if (!state.notice || lastNotice.current === state.notice.id) return
     lastNotice.current = state.notice.id
-    showToast({ children: state.notice.message })
+    showToast({
+      icon: <img src={mapToastWarning} alt="" width={26} height={26} />,
+      children: state.notice.message,
+    })
   }, [state.notice])
   useLayoutEffect(() => {
     if (restoreSortFocus.current && sortTriggerRef.current) {
@@ -283,11 +289,17 @@ const MapMainPage = () => {
   // Open settled results once, without preventing later user map gestures.
   if (previousStatus !== state.status) {
     setPreviousStatus(state.status)
-    if (
-      state.status === 'error' ||
-      (state.status === 'success' && state.restaurants.length > 0)
-    )
+    if (state.status === 'error')
+      setStage(state.errorMessage ? 'normal' : 'collapsed')
+    else if (state.status === 'success' && state.restaurants.length > 0)
       setStage('normal')
+  }
+  if (
+    state.notice?.kind === 'list-error' &&
+    collapsedNoticeId !== state.notice.id
+  ) {
+    setCollapsedNoticeId(state.notice.id)
+    setStage('collapsed')
   }
   const filtered =
     state.conditions.category !== 'all' ||

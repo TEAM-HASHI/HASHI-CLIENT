@@ -785,7 +785,8 @@ test('dragging the handle expands the sheet and body scroll survives collapse', 
   await page.mouse.down()
   await page.mouse.move(box.x + box.width / 2, 40, { steps: 12 })
   await page.mouse.up()
-  await expect(handle).toHaveAttribute('aria-valuenow', '710')
+  const maxHeight = await handle.getAttribute('aria-valuemax')
+  await expect.poll(() => handle.getAttribute('aria-valuenow')).toBe(maxHeight)
   const list = page.getByRole('list', { name: '식당 검색 결과' })
   const scroller = list.locator('..').locator('..')
   await scroller.evaluate((element) => {
@@ -814,9 +815,10 @@ test('dragging the handle expands the sheet and body scroll survives collapse', 
 test('expanded detail contains focus, has sticky headings and restores the photo trigger', async ({
   page,
 }) => {
-  await page
-    .getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' })
-    .click()
+  const trigger = page.getByRole('button', {
+    name: '코코네 돈카츠 신도심점 상세 보기',
+  })
+  await trigger.click()
   await page.getByRole('slider', { name: '식당 상세 높이 조절' }).press('End')
   const detail = page.getByRole('dialog', {
     name: '코코네 돈카츠 신도심점 전체 상세',
@@ -861,7 +863,7 @@ test('expanded detail contains focus, has sticky headings and restores the photo
     detail.getByRole('button', { name: '예약하기' }),
   ).toBeInViewport()
   await page.getByRole('button', { name: '식당 상세 닫기' }).click()
-  await expect(page.getByRole('button', { name: '정렬: 추천순' })).toBeFocused()
+  await expect(trigger).toBeFocused()
 })
 
 test('API photo gallery keeps the expanded sheet open after closing its viewer and resets filters', async ({
@@ -976,7 +978,7 @@ test('external login restores map filters and expanded detail after a fresh docu
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.getByRole('button', { name: '음식점', exact: true }).click()
+  await page.getByRole('button', { name: '식당', exact: true }).click()
   await page
     .getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' })
     .click()
@@ -1026,7 +1028,7 @@ test('external login restores map filters and expanded detail after a fresh docu
   expect(writes).toEqual([])
   await page.getByRole('button', { name: '식당 상세 닫기' }).click()
   await expect(
-    page.getByRole('button', { name: '음식점', exact: true }),
+    page.getByRole('button', { name: '식당', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true')
   expect(
     await page.evaluate(() =>

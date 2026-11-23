@@ -101,7 +101,14 @@ export const RootLayout = () => {
         </main>
         <div ref={setFixedArea} data-page-fixed-root />
       </div>
-      <ToastRegion className="z-toast fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] px-5 pt-[calc(32px+var(--safe-area-top,0px))]" />
+      <ToastRegion
+        className="z-toast fixed inset-x-0 top-0 mx-auto w-full max-w-[var(--app-mobile-max-width,100%)] px-5 pt-[calc(32px+var(--safe-area-top,0px))]"
+        style={
+          pathname === ROUTES.map
+            ? { paddingTop: 'calc(20px + var(--safe-area-top, 0px))' }
+            : undefined
+        }
+      />
     </PageFixedAreaProvider>
   )
 }
