@@ -104,6 +104,21 @@ describe('HomePage', () => {
     document.body.style.overflow = ''
   })
 
+  it('opens the existing coming-soon guide from the notification entry', () => {
+    window.sessionStorage.setItem('hashi:home-auth-gate-shown', 'true')
+    renderHomePage()
+
+    fireEvent.click(screen.getByRole('button', { name: '소식 알림' }))
+    expect(
+      screen.getByRole('heading', { name: '서비스를 준비하고 있어요.' }),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '확인' }))
+    expect(
+      screen.queryByRole('heading', { name: '서비스를 준비하고 있어요.' }),
+    ).not.toBeInTheDocument()
+  })
+
   it('renders the home landing content and primary navigation links', async () => {
     renderHomePage()
 
