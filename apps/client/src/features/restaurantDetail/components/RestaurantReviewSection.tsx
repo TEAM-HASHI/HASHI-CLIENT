@@ -99,7 +99,7 @@ const RatingDistribution = ({
             <span className="typo-caption-3 text-primary-200 w-3 text-center">
               {score}
             </span>
-            <div className="bg-secondary-200 h-[3px] w-[150px] overflow-hidden rounded-full">
+            <div className="bg-secondary-200 h-[3px] max-w-[150px] min-w-0 flex-1 overflow-hidden rounded-full">
               <div
                 className="animate-restaurant-rating-distribution bg-primary-400 h-full rounded-full"
                 style={
@@ -136,7 +136,7 @@ export const RestaurantReviewSection = ({
   return (
     <section aria-label="리뷰" className="pb-8">
       <div className="relative h-[171px]">
-        <div className="absolute top-[54px] left-[42px] flex w-[90px] flex-col items-center gap-2">
+        <div className="absolute top-[54px] left-[10.69%] flex w-[90px] flex-col items-center gap-2">
           <div className="flex flex-col items-center">
             <p className="typo-sub-header-1 text-primary-200">
               {rating.toFixed(1)}
@@ -150,7 +150,7 @@ export const RestaurantReviewSection = ({
           />
         </div>
         <RatingDistribution
-          className="absolute top-7 left-[181px]"
+          className="absolute top-7 right-[10.69%] w-[43.26%] max-w-[170px]"
           distribution={ratingDistribution}
           totalCount={reviewCount}
         />
@@ -158,15 +158,15 @@ export const RestaurantReviewSection = ({
 
       <div
         className={cn(
-          'bg-cool-gray-50 flex h-[150px] flex-col items-center rounded-[10px] px-4 py-4',
+          'bg-cool-gray-50 flex min-h-[150px] flex-col items-center rounded-[10px] px-4 py-4',
           REVIEW_CONTENT_WIDTH_CLASS_NAME,
         )}
       >
         <div className="flex w-full flex-col items-center gap-2">
-          <div className="flex w-full items-center justify-between">
-            <div className="text-primary-200 flex w-[219px] shrink-0 flex-col gap-1">
+          <div className="flex w-full items-center justify-between gap-7">
+            <div className="text-primary-200 flex min-w-0 flex-1 flex-col gap-1">
               <p className="typo-sub-header-2 truncate">{restaurantName}</p>
-              <p className="typo-body-4 whitespace-nowrap">
+              <p className="typo-body-4 break-keep">
                 다녀오셨나요? 리뷰를 남겨보세요!
               </p>
             </div>
@@ -286,7 +286,11 @@ export const RestaurantReviewSection = ({
 
                 <div className={HORIZONTAL_SCROLL_CLASS_NAME}>
                   {review.keywords.map((keyword) => (
-                    <ReviewKeywordBadge key={keyword} keyword={keyword} />
+                    <ReviewKeywordBadge
+                      className="h-8"
+                      key={keyword}
+                      keyword={keyword}
+                    />
                   ))}
                 </div>
               </article>

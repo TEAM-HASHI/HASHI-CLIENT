@@ -233,6 +233,7 @@ export const RestaurantDetailTemplate = ({
       />
 
       <ReviewImageViewer
+        review={content.reviewImageViewerReview}
         imageUrls={reviewImageViewerImageUrls}
         initialIndex={reviewImageViewerInitialIndex}
         onClose={onCloseReviewImageViewer}

@@ -4,6 +4,7 @@ import {
   fireEvent,
   render,
   screen,
+  within,
   waitFor,
 } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -405,6 +406,9 @@ describe('RestaurantDetailPage', () => {
     expect(
       screen.getByRole('dialog', { name: '리뷰 이미지 상세보기' }),
     ).toBeTruthy()
+    const viewer = screen.getByRole('dialog', { name: '리뷰 이미지 상세보기' })
+    expect(within(viewer).getByText('하시유저')).toBeInTheDocument()
+    expect(within(viewer).getByText('정말 맛있습니다.')).toBeInTheDocument()
     expect(
       screen
         .getAllByTestId('review-image-viewer-image')[0]
@@ -689,14 +693,14 @@ describe('RestaurantDetailPage', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: '실제 방문자만 작성할 수 있어요',
+        name: '예약하고 리뷰를 남겨보세요!',
       }),
     ).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: '확인' }))
 
     expect(
-      screen.queryByRole('heading', { name: '실제 방문자만 작성할 수 있어요' }),
+      screen.queryByRole('heading', { name: '예약하고 리뷰를 남겨보세요!' }),
     ).not.toBeInTheDocument()
   })
 
@@ -720,7 +724,7 @@ describe('RestaurantDetailPage', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: '실제 방문자만 작성할 수 있어요',
+        name: '예약하고 리뷰를 남겨보세요!',
       }),
     ).toBeTruthy()
     expect(mockNavigate).not.toHaveBeenCalledWith(

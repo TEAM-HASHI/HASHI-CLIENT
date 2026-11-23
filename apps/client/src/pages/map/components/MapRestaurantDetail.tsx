@@ -11,7 +11,10 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { RestaurantDetailBody } from '@/features/restaurantDetail/components/RestaurantDetailBody'
 import { RestaurantBottomBar } from '@/features/restaurantDetail/components/RestaurantBottomBar'
 import { ReviewImageViewer } from '@/features/restaurantDetail/components/ReviewImageViewer'
-import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
+import type {
+  RestaurantDetailTab,
+  RestaurantReview,
+} from '@/features/restaurantDetail/types/restaurantDetail'
 import type { ReviewSortValue } from '@/features/restaurantDetail/constants/restaurantReview'
 import { MapPhotoViewer } from '@/pages/map/components/MapPhotoViewer'
 import { MapRestaurantImages } from '@/pages/map/components/MapRestaurantImages'
@@ -51,7 +54,7 @@ const SelectedRestaurantDetail = (props: MapRestaurantDetailProps) => {
   const [photoViewer, setPhotoViewer] = useState<{
     images: string[]
     index: number
-    review?: boolean
+    review?: RestaurantReview
   } | null>(null)
   const model = useMapRestaurantDetail(props)
   const summaryRef = useRef<HTMLDivElement>(null)
@@ -80,10 +83,9 @@ const SelectedRestaurantDetail = (props: MapRestaurantDetailProps) => {
         setPhotoViewer({ images: model.displayRestaurant.images, index })
       }
       onReviewPhotoSelect={(reviewId, index) => {
-        const images = model.detail?.reviews.find(
-          ({ id }) => id === reviewId,
-        )?.images
-        if (images?.length) setPhotoViewer({ images, index, review: true })
+        const review = model.detail?.reviews.find(({ id }) => id === reviewId)
+        if (review?.images.length)
+          setPhotoViewer({ images: review.images, index, review })
       }}
     />
   )
@@ -91,6 +93,7 @@ const SelectedRestaurantDetail = (props: MapRestaurantDetailProps) => {
     photoViewer &&
     (photoViewer.review ? (
       <ReviewImageViewer
+        review={photoViewer.review}
         imageUrls={photoViewer.images}
         initialIndex={photoViewer.index}
         open
