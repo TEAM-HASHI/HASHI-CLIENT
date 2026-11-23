@@ -18,7 +18,10 @@ import {
   REVIEW_PAGE_SIZE,
   type ReviewSortValue,
 } from '@/features/restaurantDetail/constants/restaurantReview'
-import type { RestaurantDetailTab } from '@/features/restaurantDetail/types/restaurantDetail'
+import type {
+  RestaurantDetailTab,
+  RestaurantReview,
+} from '@/features/restaurantDetail/types/restaurantDetail'
 import { createRestaurantDetailViewModel } from '@/features/restaurantDetail/utils/createRestaurantDetailViewModel'
 
 interface UseRestaurantDetailContentParams {
@@ -42,9 +45,8 @@ export const useRestaurantDetailContent = ({
   const [selectedReviewSort, setSelectedReviewSort] =
     useState<ReviewSortValue>('latest')
   const [isReviewImageViewerOpen, setIsReviewImageViewerOpen] = useState(false)
-  const [reviewImageViewerImageUrls, setReviewImageViewerImageUrls] = useState<
-    string[]
-  >([])
+  const [reviewImageViewerReview, setReviewImageViewerReview] =
+    useState<RestaurantReview>()
   const [reviewImageViewerInitialIndex, setReviewImageViewerInitialIndex] =
     useState(0)
   const [isReviewUnavailableModalOpen, setIsReviewUnavailableModalOpen] =
@@ -137,7 +139,8 @@ export const useRestaurantDetailContent = ({
       (review) => review.id === reviewId,
     )
 
-    setReviewImageViewerImageUrls(selectedReview?.images ?? [])
+    if (!selectedReview?.images.length) return
+    setReviewImageViewerReview(selectedReview)
     setReviewImageViewerInitialIndex(imageIndex)
     setIsReviewImageViewerOpen(true)
   }
@@ -148,7 +151,7 @@ export const useRestaurantDetailContent = ({
     setActiveTab(tab)
     setSelectedReviewSort('latest')
     setIsReviewImageViewerOpen(false)
-    setReviewImageViewerImageUrls([])
+    setReviewImageViewerReview(undefined)
     setReviewImageViewerInitialIndex(0)
     setIsReviewUnavailableModalOpen(false)
   }
@@ -212,7 +215,8 @@ export const useRestaurantDetailContent = ({
     onTabChange: handleTabChange,
     resetDetailState,
     restaurant,
-    reviewImageViewerImageUrls,
+    reviewImageViewerImageUrls: reviewImageViewerReview?.images ?? [],
+    reviewImageViewerReview,
     reviewImageViewerInitialIndex,
     reviewLoadMoreRef: infiniteLists.reviewLoadMoreRef,
     selectedReviewSort,

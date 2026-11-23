@@ -21,6 +21,15 @@ describe('ReviewImageViewer', () => {
       <ReviewImageViewer
         imageUrls={['/review-1.jpg', '/review-2.jpg']}
         initialIndex={1}
+        review={{
+          id: 'review-1',
+          reviewerName: '하시유저',
+          rating: 4,
+          date: '2026.11.23',
+          content: '사진과 함께 확인하는 리뷰 본문입니다.',
+          images: ['/review-1.jpg', '/review-2.jpg'],
+          keywords: ['STAFF_IS_KIND'],
+        }}
         onClose={vi.fn()}
         open
       />,
@@ -34,6 +43,14 @@ describe('ReviewImageViewer', () => {
       'src',
       '/review-2.jpg',
     )
+    expect(
+      screen.getByRole('heading', { name: '하시유저' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('2026.11.23')).toBeInTheDocument()
+    expect(
+      screen.getByText('사진과 함께 확인하는 리뷰 본문입니다.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('친절해요')).toBeInTheDocument()
   })
 
   it('renders ImageFallback when viewer image fails to load', () => {
