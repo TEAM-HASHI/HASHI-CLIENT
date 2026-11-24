@@ -5,11 +5,23 @@ import {
   Chip,
   ExpandableText,
   StarRating,
+  showToast,
   Thumbnail,
 } from '@hashi/hds-ui'
-import type { CSSProperties, Ref } from 'react'
+import {
+  useContext,
+  useRef,
+  useState,
+  type CSSProperties,
+  type Ref,
+} from 'react'
 
 import { ReviewKeywordBadge } from '@/features/review/components'
+import { ReviewModerationDialog } from '@/features/restaurantDetail/components/ReviewModerationDialog'
+import { ReviewModerationMenu } from '@/features/restaurantDetail/components/ReviewModerationMenu'
+import { showReviewModerationSuccess } from '@/features/restaurantDetail/components/ReviewModerationToast'
+import { ReviewModerationContext } from '@/features/restaurantDetail/reviewModeration'
+import { getAuthSessionVersion } from '@/shared/auth/authSession'
 import graphicBillUrl from '@/features/restaurantDetail/assets/graphic-bill.svg'
 import { RestaurantReviewListSkeleton } from '@/features/restaurantDetail/components/RestaurantReviewListSkeleton'
 import {
@@ -25,6 +37,7 @@ import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { cn } from '@/shared/utils'
 
 interface RestaurantReviewSectionProps {
+  restaurantId?: string
   rating: number
   restaurantName: string
   reviewCount: number
@@ -117,6 +130,7 @@ const RatingDistribution = ({
 }
 
 export const RestaurantReviewSection = ({
+  restaurantId,
   rating,
   restaurantName,
   reviewCount,
@@ -133,6 +147,33 @@ export const RestaurantReviewSection = ({
   onRetryReviewList,
   onSelectSort,
 }: RestaurantReviewSectionProps) => {
+  const moderation = useContext(ReviewModerationContext)
+  const [blockTarget, setBlockTarget] = useState<string | null>(null)
+  const [isBlocking, setIsBlocking] = useState(false)
+  const blocking = useRef(false)
+  const displayedReviews = moderation
+    ? reviews.filter(({ id }) => moderation.getReviewStatus(id) !== 'blocked')
+    : reviews
+
+  const blockReviewer = async () => {
+    if (!moderation || !blockTarget || blocking.current) return
+    blocking.current = true
+    const session = getAuthSessionVersion()
+    setIsBlocking(true)
+    try {
+      await moderation.blockReviewer(blockTarget)
+      if (getAuthSessionVersion() !== session) return
+      setBlockTarget(null)
+      showReviewModerationSuccess('사용자를 차단했어요.')
+    } catch {
+      if (getAuthSessionVersion() === session)
+        showToast({ children: '사용자를 차단하지 못했어요.' })
+    } finally {
+      blocking.current = false
+      setIsBlocking(false)
+    }
+  }
+
   return (
     <section aria-label="리뷰" className="pb-8">
       <div className="relative h-[171px]">
@@ -229,12 +270,15 @@ export const RestaurantReviewSection = ({
                 </Button>
               ) : null}
             </div>
-          ) : reviews.length === 0 ? (
+          ) : displayedReviews.length === 0 ? (
             <ListEmptyState description="작성된 리뷰가 없습니다." />
           ) : (
-            reviews.map((review) => (
+            displayedReviews.map((review) => (
               <article
-                className="border-warm-gray-100 flex flex-col gap-4 overflow-hidden border-b pt-5 pb-7 last:border-b-0 last:pb-0"
+                className={cn(
+                  'border-warm-gray-100 flex min-w-0 flex-col gap-4 border-b pt-5 pb-7 last:border-b-0 last:pb-0',
+                  !moderation && 'overflow-hidden',
+                )}
                 key={`${selectedSort}:${review.id}`}
               >
                 <div className="flex flex-col gap-2">
@@ -247,6 +291,19 @@ export const RestaurantReviewSection = ({
                     <h3 className="typo-sub-header-2 text-primary-200">
                       {review.reviewerName}
                     </h3>
+                    {moderation &&
+                      ['available', 'reported'].includes(
+                        moderation.getReviewStatus(review.id),
+                      ) && (
+                        <ReviewModerationMenu
+                          key={review.id}
+                          moderation={moderation}
+                          onBlock={() => setBlockTarget(review.id)}
+                          restaurantId={restaurantId}
+                          reviewId={review.id}
+                          reviewerName={review.reviewerName}
+                        />
+                      )}
                   </div>
                   <div className="flex items-center justify-between">
                     <StarRating
@@ -309,6 +366,23 @@ export const RestaurantReviewSection = ({
           ) : null}
         </div>
       </div>
+      {blockTarget && (
+        <ReviewModerationDialog
+          confirmLabel="차단하기"
+          description={
+            <>
+              차단하면 서로의 게시글과 리뷰를 볼 수 없으며,
+              <br />
+              차단 후에는 해제할 수 없습니다.
+            </>
+          }
+          onClose={() => setBlockTarget(null)}
+          onConfirm={() => void blockReviewer()}
+          open
+          pending={isBlocking}
+          title="이 유저를 차단할까요?"
+        />
+      )}
     </section>
   )
 }

@@ -1,0 +1,3 @@
+[role='alertdialog']:has([data-review-moderation-toast]) {
+  height: 68px;
+}

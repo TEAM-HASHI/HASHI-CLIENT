@@ -97,6 +97,7 @@ export const RestaurantDetailBody = ({
       />
     ) : (
       <RestaurantReviewSection
+        restaurantId={restaurant.id}
         restaurantName={restaurant.name}
         rating={restaurant.rating}
         reviewCount={restaurant.reviewCount}
