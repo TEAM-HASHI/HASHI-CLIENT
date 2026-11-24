@@ -1,14 +1,18 @@
 import { ImageFallback } from '@hashi/hds-ui'
 import { useState } from 'react'
 
+import { cn } from '@/shared/utils'
+
 interface NoticeAttachmentImageProps {
   alt: string
   src: string | null
+  className?: string
 }
 
 export const NoticeAttachmentImage = ({
   alt,
   src,
+  className,
 }: NoticeAttachmentImageProps) => {
   const [hasError, setHasError] = useState(false)
 
@@ -19,7 +23,7 @@ export const NoticeAttachmentImage = ({
   return (
     <img
       alt={alt}
-      className="size-full object-contain"
+      className={cn('size-full object-contain', className)}
       onError={() => setHasError(true)}
       src={src}
     />

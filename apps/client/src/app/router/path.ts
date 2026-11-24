@@ -27,6 +27,7 @@ export const ROUTES = {
   profileEdit: '/profile/edit',
   withdrawal: '/withdrawal',
   notices: '/notices',
+  notifications: '/notifications',
   noticeDetail: '/notices/:noticeId',
   terms: '/terms',
   termsDetail: '/terms/:policyId',

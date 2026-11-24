@@ -1,6 +1,6 @@
 import { useRef, useState, type TouchEvent } from 'react'
 
-import { NoticeAttachmentImage } from '@/pages/noticeDetail/components/NoticeAttachmentImage'
+import { NoticeAttachmentImage } from '@/features/notice/components/NoticeAttachmentImage'
 
 type Transform = { scale: number; x: number; y: number }
 type Gesture = {

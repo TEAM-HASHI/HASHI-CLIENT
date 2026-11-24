@@ -3,7 +3,7 @@ import { Carousel, IconButton } from '@hashi/hds-ui'
 import { useState } from 'react'
 
 import type { NoticeImage } from '@/features/notice/types'
-import { NoticeZoomImage } from '@/pages/noticeDetail/components/NoticeZoomImage'
+import { NoticeZoomImage } from '@/features/notice/components/NoticeZoomImage'
 import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
 
 interface NoticeImageViewerProps {
