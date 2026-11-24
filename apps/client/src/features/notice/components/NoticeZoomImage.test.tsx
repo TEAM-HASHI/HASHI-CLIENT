@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { NoticeZoomImage } from '@/pages/noticeDetail/components/NoticeZoomImage'
+import { NoticeZoomImage } from '@/features/notice/components/NoticeZoomImage'
 
 const touch = (clientX: number, clientY: number) => ({ clientX, clientY })
 

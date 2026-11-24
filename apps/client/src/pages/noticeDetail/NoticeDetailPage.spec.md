@@ -39,11 +39,11 @@ Jira: HASHI-208
   - `apps/client/src/pages/noticeDetail/NoticeDetailPage.tsx`
 - spec path:
   - `apps/client/src/pages/noticeDetail/NoticeDetailPage.spec.md`
-- page-local components:
-  - `components/NoticeContent.tsx`
-  - `components/NoticeAttachmentImage.tsx`
-  - `components/NoticeImageViewer.tsx`
-  - `components/NoticeZoomImage.tsx`
+- shared feature components (HASHI-261에서 서비스 공지 화면과 재사용):
+  - `apps/client/src/features/notice/components/NoticeContent.tsx`
+  - `apps/client/src/features/notice/components/NoticeAttachmentImage.tsx`
+  - `apps/client/src/features/notice/components/NoticeImageViewer.tsx`
+  - `apps/client/src/features/notice/components/NoticeZoomImage.tsx`
 
 ## Requirements
 

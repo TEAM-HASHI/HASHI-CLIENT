@@ -63,6 +63,10 @@ export const appRoutes: RouteObject[] = [
         element: withLazyFallback(lazyPages.comingSoon()),
       },
       {
+        path: ROUTES.notifications,
+        element: withLazyFallback(lazyPages.notifications()),
+      },
+      {
         path: ROUTES.search,
         element: withLazyFallback(lazyPages.search()),
       },

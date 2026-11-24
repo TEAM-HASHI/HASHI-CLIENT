@@ -1,6 +1,6 @@
+import { LoadErrorIcon } from '@hashi/hds-icons'
 import { Button } from '@hashi/hds-ui'
 import spinner from '@/shared/assets/images/map/loading-spinner.svg'
-import errorMark from '@/shared/assets/images/map/error-mark.svg'
 
 export const MapStatusView = ({
   message,
@@ -21,10 +21,11 @@ export const MapStatusView = ({
       <img src={spinner} alt="" className="size-20 motion-safe:animate-spin" />
     ) : (
       <span className="relative h-[27.758px] w-12">
-        <img
-          src={errorMark}
-          alt=""
-          className="absolute top-0 left-0 max-w-none"
+        <LoadErrorIcon
+          aria-hidden="true"
+          className="text-warm-gray-300 absolute top-0 left-0 max-w-none"
+          height={29.2938}
+          width={48}
         />
       </span>
     )}
