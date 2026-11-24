@@ -37,7 +37,7 @@
 
 - query/mutation 없음. `data/serviceNoticeFixtures.ts`는 명시적 퍼블리싱 예시 데이터다.
 - local: 표시 개수·읽은 ID·확인 불가 ID·목록 스크롤·이미지 뷰어.
-- URL: `tab`, `notice`. 개발 전용 검수: `preview=error|more-error|detail-error|unavailable|design`, `previewUser=member`(실제 인증 변경 없음).
+- URL: `tab`, `notice`. 개발 전용 검수: `preview=error|more-error|detail-error|unavailable`, `previewUser=member`(실제 인증 변경 없음).
 - 실제 auth는 `useAuthStatus`를 사용한다. 목 읽음은 서버 저장되지 않고 페이지 이탈·새로고침 시 초기화된다.
 
 ## Component Mapping

@@ -140,12 +140,10 @@ export const NotificationsPage = () => {
   const notices = SERVICE_NOTICE_FIXTURES.filter(
     (notice) => !removedIds.includes(notice.id),
   )
-  const displayedNotices = notices
-    .slice(0, preview === 'design' ? 6 : visibleCount)
-    .map((notice) => ({
-      ...notice,
-      isRead: isMember && readIds.has(notice.id),
-    }))
+  const displayedNotices = notices.slice(0, visibleCount).map((notice) => ({
+    ...notice,
+    isRead: isMember && readIds.has(notice.id),
+  }))
 
   const renderContent = () => {
     if (selectedNotice) {
@@ -167,7 +165,7 @@ export const NotificationsPage = () => {
     }
     return (
       <ServiceNoticeList
-        hasNext={preview !== 'design' && visibleCount < notices.length}
+        hasNext={visibleCount < notices.length}
         isNextError={preview === 'more-error'}
         notices={displayedNotices}
         onLoadMore={() =>

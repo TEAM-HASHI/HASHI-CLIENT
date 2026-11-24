@@ -1,4 +1,4 @@
-import noticeExample from '@/pages/notifications/assets/notice-example.png'
+import noticeExample from '@/shared/assets/images/notifications/notice-example.png'
 import type { ServiceNotice } from '@/pages/notifications/types'
 
 const body: ServiceNotice['body'] = [

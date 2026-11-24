@@ -79,7 +79,7 @@ it('shows the full error illustration and retries a failed next page', async () 
   expect(screen.getByRole('alert')).toHaveTextContent(
     '식당 목록을 불러오지 못했어요!',
   )
-  expect(screen.getByRole('alert').querySelector('img')).not.toBeNull()
+  expect(screen.getByRole('alert').querySelector('svg')).not.toBeNull()
   await userEvent.click(screen.getByRole('button', { name: '다시 시도하기' }))
   expect(retry).toHaveBeenCalledOnce()
 })
@@ -139,7 +139,7 @@ it('shows the error message and retries a failed initial request', async () => {
   expect(screen.getByRole('alert')).toHaveTextContent(
     '식당 목록을 불러오지 못했어요!',
   )
-  expect(screen.getByRole('alert').querySelector('img')).not.toBeNull()
+  expect(screen.getByRole('alert').querySelector('svg')).not.toBeNull()
   expect(screen.queryByRole('heading')).not.toBeInTheDocument()
   await userEvent.click(screen.getByRole('button', { name: '다시 시도하기' }))
   expect(retry).toHaveBeenCalledOnce()
