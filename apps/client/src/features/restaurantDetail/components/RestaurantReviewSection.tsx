@@ -369,7 +369,13 @@ export const RestaurantReviewSection = ({
       {blockTarget && (
         <ReviewModerationDialog
           confirmLabel="차단하기"
-          description="차단한 사용자와는 서로의 게시글과 리뷰를 볼 수 없어요."
+          description={
+            <>
+              차단하면 서로의 게시글과 리뷰를 볼 수 없으며,
+              <br />
+              차단 후에는 해제할 수 없습니다.
+            </>
+          }
           onClose={() => setBlockTarget(null)}
           onConfirm={() => void blockReviewer()}
           open

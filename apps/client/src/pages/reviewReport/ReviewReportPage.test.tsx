@@ -31,7 +31,7 @@ const renderFlow = (status: 'available' | 'reported' | 'own' = 'available') => {
     return 'submitted' as const
   })
 
-  render(
+  const { container } = render(
     <ReviewModerationContext.Provider
       value={{
         getReviewStatus: () => reviewStatus,
@@ -86,7 +86,8 @@ const renderFlow = (status: 'available' | 'reported' | 'own' = 'available') => {
     </ReviewModerationContext.Provider>,
   )
 
-  return { blockReviewer, reportReview }
+  container.setAttribute('data-page-scroll', '')
+  return { blockReviewer, reportReview, container }
 }
 
 const chooseReviewAction = (action: '차단하기' | '신고하기') => {
@@ -103,9 +104,40 @@ afterEach(() => {
 })
 
 describe('리뷰 차단·신고', () => {
+  it.each([
+    ['아래', 340, 'top-full'],
+    ['위', 650, 'bottom-full'],
+  ] as const)('더보기 메뉴를 %s에 표시한다', (_side, triggerTop, position) => {
+    const { container } = renderFlow()
+    const trigger = screen.getByRole('button', {
+      name: '리뷰 작성자 리뷰 더보기',
+    })
+    const getRect = HTMLElement.prototype.getBoundingClientRect
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: HTMLElement) {
+        if (this === container) return new DOMRect(0, 0, 393, 700)
+        if (this === trigger) return new DOMRect(341, triggerTop, 32, 32)
+        if (this.id && this.id === trigger.getAttribute('aria-controls'))
+          return new DOMRect(231, triggerTop + 32, 142, 82)
+        return getRect.call(this)
+      })
+    try {
+      fireEvent.click(trigger)
+      expect(
+        screen.getByRole('button', { name: '신고하기' }).parentElement,
+      ).toHaveClass(position)
+    } finally {
+      rect.mockRestore()
+    }
+  })
+
   it('차단 취소 후 목록을 유지하고, 성공 후 작성자 리뷰를 숨긴다', async () => {
     const { blockReviewer } = renderFlow()
     chooseReviewAction('차단하기')
+    expect(screen.getByRole('dialog')).toHaveTextContent(
+      '차단 후에는 해제할 수 없습니다.',
+    )
     fireEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', {
         name: '돌아가기',
@@ -139,6 +171,33 @@ describe('리뷰 차단·신고', () => {
       await screen.findByRole('dialog', { name: '로그인 안내' }),
     ).toBeVisible()
     expect(reportReview).not.toHaveBeenCalled()
+  })
+
+  it('신고 상세 입력창은 내용에 맞게 최대 세 줄까지 커지고 비우면 원래 높이로 돌아온다', () => {
+    renderFlow()
+    chooseReviewAction('신고하기')
+    const details = screen.getByRole('textbox', {
+      name: '상세 내용',
+    }) as HTMLTextAreaElement
+    // jsdom does not measure native textarea rows.
+    Object.defineProperties(details, {
+      offsetHeight: { get: () => 34 + details.rows * 19 },
+      clientHeight: { get: () => 32 + details.rows * 19 },
+      scrollHeight: { get: () => 32 + details.value.split('\n').length * 19 },
+    })
+
+    expect(details).toHaveAttribute('rows', '1')
+    expect(details.style.height).toBe('')
+    fireEvent.change(details, { target: { value: '첫 줄\n둘째 줄' } })
+    expect(details.style.height).toBe('72px')
+    fireEvent.change(details, {
+      target: { value: '첫 줄\n둘째 줄\n셋째 줄\n넷째 줄' },
+    })
+    expect(details.style.height).toBe('91px')
+    fireEvent.change(details, { target: { value: '한 줄' } })
+    expect(details.style.height).toBe('53px')
+    fireEvent.change(details, { target: { value: '' } })
+    expect(details.style.height).toBe('')
   })
 
   it('신고 사유와 최대 1000자를 검증하고, 취소·실패 후 입력을 보존한다', async () => {

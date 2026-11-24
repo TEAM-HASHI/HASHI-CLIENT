@@ -1,5 +1,5 @@
 import { Button, Textarea, showToast } from '@hashi/hds-ui'
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { ROUTES } from '@/app/router/path'
@@ -26,7 +26,27 @@ const reasons = [
 ] as const
 
 const MAX_DETAILS_LENGTH = 1000
+const MAX_DETAILS_ROWS = 3
 const REPORT_FAILURE_MESSAGE = '신고를 접수하지 못했어요.'
+
+const fitDetailsTextarea = (textarea: HTMLTextAreaElement) => {
+  const scrollTop = textarea.scrollTop
+  textarea.style.removeProperty('height')
+  if (!textarea.value) return
+
+  // Keep scrollbar width from changing line wrapping during measurement.
+  textarea.style.overflowY = 'hidden'
+  const borderHeight = textarea.offsetHeight - textarea.clientHeight
+  const contentHeight = textarea.scrollHeight + borderHeight
+  // Measure the row limit with the native control's current font and padding.
+  const rows = textarea.rows
+  textarea.rows = MAX_DETAILS_ROWS
+  const maxHeight = textarea.offsetHeight
+  textarea.rows = rows
+  textarea.style.height = `${Math.min(contentHeight, maxHeight)}px`
+  textarea.style.removeProperty('overflow-y')
+  textarea.scrollTop = scrollTop
+}
 
 export const ReviewReportPage = () => {
   const { reviewId } = useParams()
@@ -41,6 +61,7 @@ const ReviewReportForm = ({ reviewId }: { reviewId?: string }) => {
   const [details, setDetails] = useState('')
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [pending, setPending] = useState(false)
+  const detailsRef = useRef<HTMLTextAreaElement>(null)
   const submitting = useRef(false)
   const active = useRef(false)
 
@@ -55,6 +76,18 @@ const ReviewReportForm = ({ reviewId }: { reviewId?: string }) => {
     reviewId && /^[1-9]\d*$/.test(reviewId)
       ? moderation?.getReviewStatus(reviewId)
       : undefined
+
+  useLayoutEffect(() => {
+    if (detailsRef.current) fitDetailsTextarea(detailsRef.current)
+  }, [details, status])
+
+  useEffect(() => {
+    const textarea = detailsRef.current
+    if (!textarea) return
+    const resize = () => fitDetailsTextarea(textarea)
+    window.addEventListener('resize', resize)
+    return () => window.removeEventListener('resize', resize)
+  }, [status])
 
   const goBack = () => {
     if (location.state?.fromReviewList === true) void navigate(-1)
@@ -160,6 +193,7 @@ const ReviewReportForm = ({ reviewId }: { reviewId?: string }) => {
               </label>
               <Textarea
                 id="review-report-details"
+                ref={detailsRef}
                 name="details"
                 maxLength={MAX_DETAILS_LENGTH}
                 onChange={(event) => setDetails(event.target.value)}
@@ -171,6 +205,7 @@ const ReviewReportForm = ({ reviewId }: { reviewId?: string }) => {
                     : undefined
                 }
                 className="[&_p[id$='helper-text']]:text-primary-400"
+                textareaClassName="overflow-y-auto"
               />
             </div>
           </div>

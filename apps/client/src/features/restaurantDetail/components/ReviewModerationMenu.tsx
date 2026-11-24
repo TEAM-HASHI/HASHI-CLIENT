@@ -1,6 +1,6 @@
 import { MenuIcon } from '@hashi/hds-icons'
 import { showToast } from '@hashi/hds-ui'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { getReviewReportPath } from '@/app/router/routePaths'
@@ -13,6 +13,7 @@ import {
   type ReviewModeration,
 } from '@/features/restaurantDetail/reviewModeration'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
+import { cn } from '@/shared/utils'
 
 interface ReviewModerationMenuProps {
   reviewId: string
@@ -30,14 +31,53 @@ export const ReviewModerationMenu = ({
   onBlock,
 }: ReviewModerationMenuProps) => {
   const [open, setOpen] = useState(false)
+  const [opensAbove, setOpensAbove] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
   const menuId = useId()
   const menuRef = useRef<HTMLDivElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated } = useAuthStatus()
   const { startKakaoOAuth } = useKakaoOAuthStart()
+
+  useLayoutEffect(() => {
+    const trigger = triggerRef.current
+    const popup = popupRef.current
+    if (!open || !trigger || !popup) return
+
+    // The page scroller excludes fixed actions. The map uses its own panel scroller.
+    const scrollArea = trigger.closest('[data-page-scroll], .overflow-y-auto')
+    const viewport = window.visualViewport
+    const updatePlacement = () => {
+      const anchor = trigger.getBoundingClientRect()
+      const scrollBounds = scrollArea?.getBoundingClientRect()
+      const viewportTop = viewport?.offsetTop ?? 0
+      const viewportBottom =
+        viewportTop + (viewport?.height ?? window.innerHeight)
+      const top = Math.max(viewportTop, scrollBounds?.top ?? viewportTop)
+      const bottom = Math.min(
+        viewportBottom,
+        scrollBounds?.bottom ?? viewportBottom,
+      )
+      const above = anchor.top - top
+      const below = bottom - anchor.bottom
+      setOpensAbove(
+        below < popup.getBoundingClientRect().height && above > below,
+      )
+    }
+
+    updatePlacement()
+    window.addEventListener('scroll', updatePlacement, true)
+    window.addEventListener('resize', updatePlacement)
+    viewport?.addEventListener('resize', updatePlacement)
+    return () => {
+      window.removeEventListener('scroll', updatePlacement, true)
+      window.removeEventListener('resize', updatePlacement)
+      viewport?.removeEventListener('resize', updatePlacement)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -118,8 +158,12 @@ export const ReviewModerationMenu = ({
       </button>
       {open && (
         <div
-          className="border-warm-gray-100 absolute top-full right-0 z-10 w-[142px] rounded-[12px] border bg-white px-2"
+          className={cn(
+            'border-warm-gray-100 absolute right-0 z-10 w-[142px] rounded-[12px] border bg-white px-2',
+            opensAbove ? 'bottom-full' : 'top-full',
+          )}
           id={menuId}
+          ref={popupRef}
         >
           <button
             className="typo-body-5 text-primary-200 border-secondary-200 block h-10 w-full border-b focus-visible:outline-2"
