@@ -1,6 +1,6 @@
+import { LoadErrorIcon } from '@hashi/hds-icons'
 import { Button } from '@hashi/hds-ui'
 
-import errorMark from '@/features/notification/assets/notification-load-error.svg'
 import { cn } from '@/shared/utils'
 
 interface NotificationLoadErrorProps {
@@ -17,11 +17,11 @@ export const NotificationLoadError = ({
   >
     <div className="flex flex-col items-center gap-2.5" role="alert">
       <div className="flex h-11.5 items-center justify-center">
-        <img
-          alt=""
+        <LoadErrorIcon
           aria-hidden="true"
-          className="h-auto w-12"
-          src={errorMark}
+          className="text-warm-gray-300 h-auto w-12"
+          height={29.2938}
+          width={48}
         />
       </div>
       <p className="typo-caption-1 text-warm-gray-300 font-medium">

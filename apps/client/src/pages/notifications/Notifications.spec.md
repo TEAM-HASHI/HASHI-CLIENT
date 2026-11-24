@@ -45,7 +45,7 @@
 - 페이지: URL·탭·목 흐름 조립. page-local `ServiceNoticeList`, `ServiceNoticeDetail`.
 - `features/notice/components`: 기존·신규 공지 화면이 공유하는 본문·첨부 이미지·확대 뷰어와 테스트를 이동한다.
 - `features/notification/components`: 260·261이 공유하는 `NotificationLayout`·`NotificationHeader`·`NotificationLoadError`. 탭·뒤로가기는 콜백으로 위임하고 라우트·API·목 데이터는 페이지가 소유한다. 공통 계약은 `NotificationLayout.spec.md`를 따른다.
-- HDS public API 변경 없음. 오류 마크·상세 예시 이미지는 Figma 자산을 로컬 저장한다.
+- HDS UI public API 변경 없음. 오류 마크는 `@hashi/hds-icons`의 SVGR `LoadErrorIcon`을 사용한다. 상세 예시 이미지는 목 데이터 검수용 Figma 자산이다.
 
 ## Verification
 
