@@ -20,6 +20,7 @@ import { getMapRestaurants } from '@/pages/map/api/getMapRestaurants'
 import { getMapRestaurantLocation } from '@/pages/map/api/getMapRestaurantLocation'
 import { getRestaurantMenus } from '@/features/restaurantDetail/api/getRestaurantMenus'
 import { getRestaurantReviews } from '@/features/restaurantDetail/api/getRestaurantReviews'
+import { ReviewModerationContext } from '@/features/restaurantDetail/reviewModeration'
 import type { MapRestaurantPage } from '@/pages/map/api/mapApiTypes'
 import {
   createMapLocationFixture,
@@ -32,8 +33,10 @@ import { ApiError, HttpStatusError } from '@/shared/api/apiError'
 import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
 import { ToastRegion, toastQueue } from '@hashi/hds-ui'
 import {
+  createMemoryRouter,
   MemoryRouter,
   Route,
+  RouterProvider,
   Routes,
   useLocation,
   useNavigate,
@@ -50,6 +53,7 @@ import {
 import { getVisitedReservations } from '@/features/review/api/getVisitedReservations'
 import { getRestaurantMain } from '@/features/restaurantDetail/api/getRestaurantMain'
 import { RestaurantReservationNewPage } from '@/pages/restaurantReservationNew/RestaurantReservationNewPage'
+import { ReviewReportPage } from '@/pages/reviewReport/ReviewReportPage'
 
 vi.mock('@/pages/map/api/getMapRegions', () => ({ getMapRegions: vi.fn() }))
 vi.mock('@/features/collection/api/getCollections', () => ({
@@ -1320,6 +1324,112 @@ describe('MapPage API integration', () => {
       ).toHaveProperty('scrollTop', 240),
     )
   })
+
+  it.each(['form back', 'history back', 'report success'] as const)(
+    'restores the map review sort and scroll after %s from the report screen',
+    async (exit) => {
+      startAuthenticatedSession('map-test-token', 1)
+      vi.mocked(getRestaurantReviews).mockResolvedValue({
+        averageRating: 5,
+        reviewCount: 1,
+        reviews: [
+          {
+            reviewId: 1,
+            reviewerNickname: '테스트 작성자',
+            rating: 5,
+            content: '지도 리뷰',
+            keywords: [],
+            previewImageUrls: [],
+          },
+        ],
+        hasNext: false,
+      })
+      const user = userEvent.setup()
+      // Match the app's data router so the test exercises its navigation timing.
+      const router = createMemoryRouter(
+        [
+          { path: '/map', element: <MapPage /> },
+          { path: '/reviews/:reviewId/report', element: <ReviewReportPage /> },
+        ],
+        { initialEntries: ['/map'] },
+      )
+      render(
+        <ReviewModerationContext.Provider
+          value={{
+            getReviewStatus: () => 'available',
+            blockReviewer: async () => {},
+            reportReview: async () => 'submitted',
+          }}
+        >
+          <RouterProvider router={router} />
+        </ReviewModerationContext.Provider>,
+      )
+
+      await user.click(
+        await screen.findByRole('button', {
+          name: '코코네 돈카츠 신도심점 상세 보기',
+        }),
+      )
+      screen.getByRole('slider', { name: '식당 상세 높이 조절' }).focus()
+      await user.keyboard('{End}')
+      await user.click(screen.getByRole('tab', { name: /리뷰/ }))
+      await user.click(
+        await screen.findByRole('button', { name: '높은 평점 순' }),
+      )
+      const getReviewScrollRoot = () =>
+        screen
+          .getByRole('tabpanel', { name: '리뷰' })
+          .closest<HTMLElement>('.overflow-y-auto')!
+      const scrollRoot = getReviewScrollRoot()
+      scrollRoot.scrollTop = 240
+      fireEvent.scroll(scrollRoot)
+
+      await user.click(
+        await screen.findByRole('button', {
+          name: '테스트 작성자 리뷰 더보기',
+        }),
+      )
+      await user.click(screen.getByRole('button', { name: '신고하기' }))
+      const report = await screen.findByRole('region', { name: '리뷰 신고' })
+      if (exit === 'form back') {
+        await user.click(
+          within(report).getByRole('button', { name: '뒤로가기' }),
+        )
+      } else if (exit === 'history back') {
+        await act(async () => {
+          await router.navigate(-1)
+        })
+      } else {
+        await user.click(
+          within(report).getByRole('radio', {
+            name: '근거 없이 악의적인 내용',
+          }),
+        )
+        await user.click(
+          within(report).getByRole('button', { name: '신고하기' }),
+        )
+        const confirm = await screen.findByRole('dialog', {
+          name: '이 리뷰를 신고할까요?',
+        })
+        await user.click(
+          within(confirm).getByRole('button', { name: '신고하기' }),
+        )
+      }
+
+      const detail = await screen.findByRole('dialog', {
+        name: '코코네 돈카츠 신도심점 전체 상세',
+      })
+      expect(
+        await within(detail).findByRole('tab', { name: /리뷰/ }),
+      ).toHaveAttribute('aria-selected', 'true')
+      expect
+        .soft(within(detail).getByRole('button', { name: '높은 평점 순' }))
+        .toHaveAttribute('aria-pressed', 'true')
+      await waitFor(() =>
+        expect(getReviewScrollRoot()).toHaveProperty('scrollTop', 240),
+      )
+    },
+  )
 
   it.each(['expired', 'logout', 'account-change'] as const)(
     'handles a late review auth error after %s without affecting another session',

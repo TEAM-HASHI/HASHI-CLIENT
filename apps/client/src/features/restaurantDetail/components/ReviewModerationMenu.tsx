@@ -57,7 +57,7 @@ export const ReviewModerationMenu = ({
     triggerRef.current?.focus({ preventScroll: true })
   }
 
-  const handleAction = async (action: 'block' | 'report') => {
+  const handleAction = (action: 'block' | 'report') => {
     closeMenu()
     if (!isAuthenticated) {
       setLoginOpen(true)
@@ -77,7 +77,7 @@ export const ReviewModerationMenu = ({
     }
 
     const from = getPathFromLocation(location)
-    await navigate(from, {
+    void navigate(from, {
       replace: true,
       state: {
         ...location.state,
@@ -123,14 +123,14 @@ export const ReviewModerationMenu = ({
         >
           <button
             className="typo-body-5 text-primary-200 border-secondary-200 block h-10 w-full border-b focus-visible:outline-2"
-            onClick={() => void handleAction('block')}
+            onClick={() => handleAction('block')}
             type="button"
           >
             차단하기
           </button>
           <button
             className="typo-body-5 text-primary-400 block h-10 w-full focus-visible:outline-2"
-            onClick={() => void handleAction('report')}
+            onClick={() => handleAction('report')}
             type="button"
           >
             신고하기
