@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { NoticeAttachmentImage } from '@/features/notice/components/NoticeAttachmentImage'
 import { NoticeContent } from '@/features/notice/components/NoticeContent'
 import { NoticeImageViewer } from '@/features/notice/components/NoticeImageViewer'
-import type { ServiceNotice } from '@/pages/notifications/types'
+import type { ServiceNotice } from '@/pages/notifications/types/serviceNotice'
 
 export const ServiceNoticeDetail = ({ notice }: { notice: ServiceNotice }) => {
   const [viewerIndex, setViewerIndex] = useState<number | null>(null)

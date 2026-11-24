@@ -17,7 +17,7 @@
 
 - `ROUTES.notifications`: `/notifications`, `lazyPages.notifications`, `appRoutes` public route, guard 없음.
 - `RootLayout` 아래, `BottomNavigationLayout` 밖. 서비스 공지는 비회원도 조회한다.
-- 기본 탭은 `news`, `?tab=notice`로 서비스 공지를 연다. 소식 탭은 준비 안내만 표시하며 소식 알림 구현 범위가 아니다.
+- 기본 탭은 `news`, `?tab=notice`로 서비스 공지를 연다. 소식 패널은 components/news, 공지 목록·상세는 components/notice에 둔다. 일반 회원의 소식 API 미연결 상태는 준비 안내로 표시하고 비회원은 로그인 유도를 표시한다.
 - 목 상세는 `?tab=notice&notice=1`. API 연동 시 최종 상세 URL을 확정한다.
 - 목록 뒤로가기: 이전 화면, 직접 진입은 홈 replace. 상세 복귀: 서비스 공지 탭·스크롤·불러온 개수 유지.
 
@@ -36,13 +36,13 @@
 ## Data Dependencies and state
 
 - query/mutation 없음. `data/serviceNoticeFixtures.ts`는 명시적 퍼블리싱 예시 데이터다.
-- local: 표시 개수·읽은 ID·확인 불가 ID·목록 스크롤·이미지 뷰어.
+- local: 탭별 표시 개수·읽은 ID·목록 스크롤, 확인 불가 공지 ID·이미지 뷰어. 소식 상태는 페이지에서 호출하는 hooks/useNotificationNews가 소유하며 탭 전환 시 유지한다.
 - URL: `tab`, `notice`. 개발 전용 검수: `preview=error|more-error|detail-error|unavailable`, `previewUser=member`(실제 인증 변경 없음).
 - 실제 auth는 `useAuthStatus`를 사용한다. 목 읽음은 서버 저장되지 않고 페이지 이탈·새로고침 시 초기화된다.
 
 ## Component Mapping
 
-- 페이지: URL·탭·목 흐름 조립. page-local `ServiceNoticeList`, `ServiceNoticeDetail`.
+- 페이지: URL·탭·목 흐름 조립. page-local `components/notice`의 ServiceNoticeList·ServiceNoticeDetail 및 `components/news`의 NotificationNewsPanel.
 - `features/notice/components`: 기존·신규 공지 화면이 공유하는 본문·첨부 이미지·확대 뷰어와 테스트를 이동한다.
 - `features/notification/components`: 260·261이 공유하는 `NotificationLayout`·`NotificationHeader`·`NotificationLoadError`. 탭·뒤로가기는 콜백으로 위임하고 라우트·API·목 데이터는 페이지가 소유한다. 공통 계약은 `NotificationLayout.spec.md`를 따른다.
 - HDS UI public API 변경 없음. 오류 마크는 `@hashi/hds-icons`의 SVGR `LoadErrorIcon`을 사용한다. 상세 예시 이미지는 목 데이터 검수용 Figma 자산이다.
@@ -52,3 +52,21 @@
 - 목록 10개·추가 조회, 회원/비회원 읽음, 상세 복귀·스크롤 복원, 오류 재시도, 확인 불가 토스트를 자동 테스트로 확인한다.
 - 공통 레이아웃 및 기존 공지 목록·상세·본문·이미지 뷰어 회귀를 확인한다.
 - client lint·typecheck·test·build와 320/393/430px 브라우저 QA를 수행한다. 실행 결과는 PR에 기록한다.
+
+## HASHI-260 integration
+
+- `/notifications`에서 두 탭을 통합 검수한다. 별도 preview HTML과 React root는 제거한다.
+- 소식 개발 검수: `?previewNews=list|read|empty|guest|loading|error|more-error|long&previewUser=member`. 실제 회원 인증을 변경하지 않는다. production에서는 이 예시 데이터를 사용하지 않는다.
+- 일반 비회원의 소식 로그인 버튼은 기존 Kakao OAuth 시작 함수를 사용하고 `/notifications`로 복귀한다. 소식 API는 아직 연결하지 않아 일반 회원은 준비 안내를 본다.
+- 소식 fixture 선택은 읽음 표시와 목적지 토스트만 제공하며 가짜 예약 화면으로 이동하지 않는다.
+- components/news|notice, data, types, utils로 배치 규칙을 통일한다. 공통 UI는 features/notification을 재사용한다.
+- 소식 제품 자산은 기존 shared/HDS 재사용을 먼저 확인하고 고유 자산만 shared/assets/images/notifications/news에 둔다. 체크무늬 공지 첨부 이미지는 제품 자산이 아닌 data/assets의 퍼블리싱 fixture다. 261번의 기존 공지 fixture 노출 정책은 변경하지 않는다.
+
+## 통합 검증 기록 — 2026-11-24
+
+- 통합 페이지18개·패널11개·시간/목적지26개, 총55개 테스트 통과. 새 통합 동작3개가 실패하는 것을 확인한 뒤 구현했다.
+- Node22 `pnpm verify` 통과: client225files/1496tests, HDS26files/243tests, 전체format/lint/typecheck/build.
+- 393px 두 탭 전환·읽음 보존·10→14개 추가 조회·스크롤403px 보존, 320px 긴 텍스트/자산 로딩/가로 넘침 없음, 430px 비회원 화면 확인.
+- 브라우저 검수는 개발API의 로컬CORS 실패로 인해 로컬 인증401응답을 사용했다. 실제 OAuth 성공은 이번 검수 범위에 포함하지 않았다.
+- production dist에 news-preview fixture·개발 검수 토스트·긴 제목 검수 문구·별도previewHTML이 포함되지 않음을 확인했다.
+- verify-api-integration: API/query/mutation/generated타입 변경 없음. page-local 검수 상태·기존 인증 시작 hook·테스트 격리·spec 동기화 확인. 독립 리뷰의 추가 actionablefinding 없음.
