@@ -14,6 +14,10 @@ import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
 import { mockIntersectionObserver } from '@/test/mockIntersectionObserver'
 
 const auth = vi.hoisted(() => ({ isAuthenticated: false }))
+const startKakaoOAuth = vi.hoisted(() => vi.fn())
+vi.mock('@/features/auth/hooks/useKakaoOAuthStart', () => ({
+  useKakaoOAuthStart: () => ({ startKakaoOAuth }),
+}))
 vi.mock('@/shared/hooks/useAuthStatus', () => ({ useAuthStatus: () => auth }))
 
 const renderPage = (entry = '/notifications?tab=notice') =>
@@ -27,6 +31,7 @@ const firstNotice = () =>
   screen.getByRole('button', { name: /하시의 공지사항 안내합니다/ })
 
 beforeEach(() => {
+  startKakaoOAuth.mockClear()
   auth.isAuthenticated = false
 })
 afterEach(() => {
@@ -216,5 +221,46 @@ describe('NotificationsPage publishing', () => {
     renderPage('/notifications?tab=notice&notice=1&preview=detail-error')
     fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }))
     expect(firstNotice()).toHaveAttribute('data-read', 'false')
+  })
+})
+
+describe('통합 소식 알림', () => {
+  it('일반 비회원 진입에서 로그인 유도를 보여주고 소식 탭 복귀 경로를 전달한다', () => {
+    renderPage('/notifications')
+    fireEvent.click(screen.getByRole('button', { name: '카카오로 로그인하기' }))
+    expect(startKakaoOAuth).toHaveBeenCalledWith('/notifications')
+  })
+  it('뉴스 fixture는 명시적 검수에서만 노출한다', () => {
+    auth.isAuthenticated = true
+    renderPage('/notifications')
+    expect(
+      screen.queryByRole('list', { name: '소식 알림 목록' }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText('소식 알림은 준비 중이에요.')).toBeVisible()
+  })
+  it('탭 전환 후에도 읽음 상태와 추가 조회 개수를 유지한다', async () => {
+    const observer = mockIntersectionObserver()
+    renderPage('/notifications?previewNews=list&previewUser=member')
+    const list = () => screen.getByRole('list', { name: '소식 알림 목록' })
+    expect(within(list()).getAllByRole('listitem')).toHaveLength(10)
+    fireEvent.click(
+      screen.getByRole('button', { name: '안 읽음: 예약 요청이 접수되었어요' }),
+    )
+    observer.triggerAllIntersects()
+    await waitFor(() =>
+      expect(within(list()).getAllByRole('listitem')).toHaveLength(14),
+    )
+    fireEvent.click(screen.getByRole('tab', { name: '서비스 공지' }))
+    expect(firstNotice()).toBeVisible()
+    fireEvent.click(screen.getByRole('tab', { name: '소식 알림' }))
+    expect(within(list()).getAllByRole('listitem')).toHaveLength(14)
+    expect(
+      screen.getByRole('button', { name: '읽음: 예약 요청이 접수되었어요' }),
+    ).toBeEnabled()
+  })
+  it('소식 검수의 최초 조회 오류를 재시도한다', () => {
+    renderPage('/notifications?previewNews=error&previewUser=member')
+    fireEvent.click(screen.getByRole('button', { name: '다시 시도하기' }))
+    expect(screen.getByRole('list', { name: '소식 알림 목록' })).toBeVisible()
   })
 })

@@ -1,4 +1,4 @@
-import type { NewsNotification } from '@/pages/notifications/news/types'
+import type { NewsNotification } from '@/pages/notifications/types/notificationNews'
 
 /** 개발 전용 검수 화면에서만 import한다. 실제 사용자 알림이 아니다. */
 export const createNotificationNewsFixtures = (

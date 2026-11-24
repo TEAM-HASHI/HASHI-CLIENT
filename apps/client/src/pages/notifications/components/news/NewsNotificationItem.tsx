@@ -1,14 +1,14 @@
 import { useId } from 'react'
 
-import { NewsNotificationIcon } from '@/pages/notifications/news/components/NewsNotificationIcon'
+import { NewsNotificationIcon } from '@/pages/notifications/components/news/NewsNotificationIcon'
 import type {
   NewsNotification,
   NotificationDestination,
-} from '@/pages/notifications/news/types'
+} from '@/pages/notifications/types/notificationNews'
 import {
   formatNotificationTime,
   getNotificationDestination,
-} from '@/pages/notifications/news/utils/notificationNews'
+} from '@/pages/notifications/utils/notificationNews'
 import { cn } from '@/shared/utils'
 
 interface NewsNotificationItemProps {

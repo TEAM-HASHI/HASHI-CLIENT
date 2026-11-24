@@ -1,11 +1,11 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { NotificationNewsPanel } from '@/pages/notifications/news/NotificationNewsPanel'
+import { NotificationNewsPanel } from '@/pages/notifications/components/news/NotificationNewsPanel'
 import type {
   NewsNotification,
   NotificationNewsState,
-} from '@/pages/notifications/news/types'
+} from '@/pages/notifications/types/notificationNews'
 
 afterEach(cleanup)
 

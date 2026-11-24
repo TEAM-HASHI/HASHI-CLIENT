@@ -2,7 +2,7 @@ import { NotificationLoadError } from '@/features/notification/components/Notifi
 import type {
   ServiceNotice,
   ServiceNoticeType,
-} from '@/pages/notifications/types'
+} from '@/pages/notifications/types/serviceNotice'
 import { useInfiniteScrollTrigger } from '@/shared/hooks/useInfiniteScrollTrigger'
 import { cn } from '@/shared/utils'
 

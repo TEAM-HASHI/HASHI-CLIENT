@@ -17,3 +17,5 @@
 | empty-notifications.png | 11954:53458 / 화면에 배치된 empty_notification 인스턴스 | 133 × 120                            |
 
 예약 요청은 HDS CalendarIcon, 환불은 HDS MoneyIcon을 재사용한다. 비로그인 이미지는 기존 shared/assets/images/empty.webp, 카카오 버튼은 KakaoStartButton을 재사용한다. 모든 아이콘은 34px 원형 배경 안에 배치하고 읽음 상태에는 grayscale·opacity를 적용한다.
+
+기존 shared/assets와 HDS 원본을 비교해 동일 파일이 없음을 확인했다. CalendarIcon·MoneyIcon과 기존 empty.webp는 추가 복사 없이 재사용한다. 이 폴더의 PNG는 상태 아이콘·일러스트이며 목업 목록 데이터가 아니다.

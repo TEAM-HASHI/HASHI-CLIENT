@@ -1,4 +1,4 @@
-import emptyNotifications from '@/pages/notifications/news/assets/empty-notifications.png'
+import emptyNotifications from '@/shared/assets/images/notifications/news/empty-notifications.png'
 
 export const NewsEmptyState = () => (
   <div className="flex flex-col items-center px-5 pt-36 text-center">

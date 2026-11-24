@@ -1,7 +1,7 @@
 import type {
   NewsNotification,
   NotificationDestination,
-} from '@/pages/notifications/news/types'
+} from '@/pages/notifications/types/notificationNews'
 
 const koreanDate = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Asia/Seoul',

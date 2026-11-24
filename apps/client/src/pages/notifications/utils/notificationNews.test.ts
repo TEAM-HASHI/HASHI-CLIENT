@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   formatNotificationTime,
   getNotificationDestination,
-} from '@/pages/notifications/news/utils/notificationNews'
-import type { NewsNotification } from '@/pages/notifications/news/types'
+} from '@/pages/notifications/utils/notificationNews'
+import type { NewsNotification } from '@/pages/notifications/types/notificationNews'
 
 const now = Date.parse('2026-11-24T00:00:00Z')
 const base = {

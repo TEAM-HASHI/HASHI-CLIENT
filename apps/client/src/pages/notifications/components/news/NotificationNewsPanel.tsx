@@ -1,13 +1,13 @@
 import { Button } from '@hashi/hds-ui'
 import type { ReactNode } from 'react'
 
-import { NewsEmptyState } from '@/pages/notifications/news/components/NewsEmptyState'
-import { NewsNotificationItem } from '@/pages/notifications/news/components/NewsNotificationItem'
+import { NewsEmptyState } from '@/pages/notifications/components/news/NewsEmptyState'
+import { NewsNotificationItem } from '@/pages/notifications/components/news/NewsNotificationItem'
 import type {
   NewsNotification,
   NotificationDestination,
   NotificationNewsState,
-} from '@/pages/notifications/news/types'
+} from '@/pages/notifications/types/notificationNews'
 import emptyBook from '@/shared/assets/images/empty.webp'
 import { KakaoStartButton } from '@/shared/components/kakaoStartButton'
 import { useInfiniteScrollTrigger } from '@/shared/hooks/useInfiniteScrollTrigger'

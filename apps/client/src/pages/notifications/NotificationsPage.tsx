@@ -9,10 +9,12 @@ import {
   NotificationLoadError,
   type NotificationTab,
 } from '@/features/notification/components'
-import { ServiceNoticeDetail } from '@/pages/notifications/components/ServiceNoticeDetail'
-import { ServiceNoticeList } from '@/pages/notifications/components/ServiceNoticeList'
+import { NotificationNewsPanel } from '@/pages/notifications/components/news/NotificationNewsPanel'
+import { useNotificationNews } from '@/pages/notifications/hooks/useNotificationNews'
+import { ServiceNoticeDetail } from '@/pages/notifications/components/notice/ServiceNoticeDetail'
+import { ServiceNoticeList } from '@/pages/notifications/components/notice/ServiceNoticeList'
 import { SERVICE_NOTICE_FIXTURES } from '@/pages/notifications/data/serviceNoticeFixtures'
-import type { ServiceNotice } from '@/pages/notifications/types'
+import type { ServiceNotice } from '@/pages/notifications/types/serviceNotice'
 import warningIcon from '@/shared/assets/icons/map-toast-warning.svg'
 import { PageFixedArea } from '@/shared/components/pageFixedArea/PageFixedArea'
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
@@ -29,6 +31,8 @@ export const NotificationsPage = () => {
   const isMember =
     isAuthenticated ||
     (import.meta.env.DEV && params.get('previewUser') === 'member')
+  const news = useNotificationNews(isMember)
+  const newsScroll = useRef(0)
   const noticeParam = params.get('notice')
   const selectedNotice = SERVICE_NOTICE_FIXTURES.find(
     (notice) => String(notice.id) === noticeParam,
@@ -77,13 +81,13 @@ export const NotificationsPage = () => {
   useLayoutEffect(() => {
     const view = noticeParam ? `detail:${noticeParam}` : activeTab
     if (previousView.current === view) return
-    const wasDetail = previousView.current?.startsWith('detail:')
     previousView.current = view
     scrollPageTo({
-      top:
-        activeTab === 'notice' && !noticeParam && wasDetail
-          ? listScroll.current
-          : 0,
+      top: noticeParam
+        ? 0
+        : activeTab === 'news'
+          ? newsScroll.current
+          : listScroll.current,
       behavior: 'auto',
     })
   }, [activeTab, noticeParam])
@@ -154,6 +158,16 @@ export const NotificationsPage = () => {
       )
     }
     if (activeTab === 'news') {
+      if (news.state)
+        return (
+          <NotificationNewsPanel
+            {...news}
+            state={news.state}
+            renderError={(onRetry) => (
+              <NotificationLoadError onRetry={onRetry} />
+            )}
+          />
+        )
       return (
         <p className="typo-body-7 text-warm-gray-300 px-5 pt-50 text-center">
           소식 알림은 준비 중이에요.
@@ -181,6 +195,7 @@ export const NotificationsPage = () => {
 
   const handleTabChange = (tab: NotificationTab) => {
     if (activeTab === 'notice') listScroll.current = getPageScrollY()
+    else newsScroll.current = getPageScrollY()
     const next = new URLSearchParams(params)
     next.set('tab', tab)
     setParams(next, { replace: true })
