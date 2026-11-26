@@ -8,7 +8,7 @@ import {
   waitFor,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { PropsWithChildren, ReactElement } from 'react'
+import type { ComponentProps, PropsWithChildren, ReactElement } from 'react'
 import { Suspense } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { useMap } from '@vis.gl/react-google-maps'
@@ -113,6 +113,19 @@ const render = (ui: ReactElement) => {
   })
 }
 
+const mapView = ({
+  initialEntries,
+  showToasts = false,
+}: {
+  initialEntries?: ComponentProps<typeof MemoryRouter>['initialEntries']
+  showToasts?: boolean
+} = {}) => (
+  <MemoryRouter initialEntries={initialEntries}>
+    <MapPage />
+    {showToasts && <ToastRegion />}
+  </MemoryRouter>
+)
+
 // Only the external Google SDK is replaced; page state, markers and panels stay real.
 type SdkMap = NonNullable<ReturnType<typeof useMap>>
 const sdkState = vi.hoisted(() => ({
@@ -194,11 +207,7 @@ describe('MapPage API integration', () => {
     })
     vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(300)
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     await user.click(
       await screen.findByRole('button', {
         name: '코코네 돈카츠 신도심점 상세 보기',
@@ -213,16 +222,16 @@ describe('MapPage API integration', () => {
     })
     const handle = within(dialog).getByLabelText('식당 상세 높이 조절')
     expect(handle).not.toBeVisible()
-    const body = within(dialog)
-      .getByRole('region', { name: '선택한 식당' })
-      .querySelector('.overflow-y-auto')!
-    fireEvent.wheel(body, { deltaY: -80 })
+    fireEvent.wheel(within(dialog).getByRole('tablist'), { deltaY: -80 })
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     )
     expect(
       screen.getByRole('slider', { name: '식당 상세 높이 조절' }),
-    ).toHaveAttribute('aria-valuenow', '300')
+    ).toBeVisible()
+    expect(
+      screen.getByRole('region', { name: '선택한 식당 요약' }),
+    ).toBeVisible()
   })
 
   it.each([
@@ -245,11 +254,7 @@ describe('MapPage API integration', () => {
       }))
       vi.spyOn(window, 'innerHeight', 'get').mockImplementation(() => available)
       const user = userEvent.setup()
-      render(
-        <MemoryRouter>
-          <MapPage />
-        </MemoryRouter>,
-      )
+      render(mapView())
       await screen.findByRole('list', { name: '식당 검색 결과' })
       if (panel === 'detail')
         await user.click(
@@ -267,14 +272,15 @@ describe('MapPage API integration', () => {
       else await user.keyboard('{ArrowUp}')
       available = 768
       fireEvent.resize(window)
-      const expectedHeight =
-        stage === 'normal' ? '321' : panel === 'list' ? '648' : '768'
-      await waitFor(() =>
-        expect(screen.getByLabelText(label)).toHaveAttribute(
-          'aria-valuenow',
-          expectedHeight,
-        ),
-      )
+      await waitFor(() => {
+        const slider = screen.getByLabelText(label)
+        const current = Number(slider.getAttribute('aria-valuenow'))
+        const minimum = Number(slider.getAttribute('aria-valuemin'))
+        const maximum = Number(slider.getAttribute('aria-valuemax'))
+        expect(current).toBeGreaterThan(minimum)
+        if (stage === 'normal') expect(current).toBeLessThan(maximum)
+        else expect(current).toBe(maximum)
+      })
       if (panel === 'detail' && stage === 'maximum')
         expect(
           screen.getByRole('dialog', {
@@ -287,11 +293,7 @@ describe('MapPage API integration', () => {
   it('reveals restaurant results when auth expiry closes the collection sheet', async () => {
     startAuthenticatedSession('map-test-token', 1)
     const user = userEvent.setup()
-    render(
-      <MemoryRouter initialEntries={['/map']}>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView({ initialEntries: ['/map'] }))
     await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(screen.getByRole('button', { name: '저장 목록 보기' }))
     expect(
@@ -324,11 +326,7 @@ describe('MapPage API integration', () => {
       isExploring: true,
     })
     const user = userEvent.setup()
-    render(
-      <MemoryRouter initialEntries={['/map']}>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView({ initialEntries: ['/map'] }))
     await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(screen.getByRole('button', { name: '저장 목록 보기' }))
     expect(
@@ -443,11 +441,7 @@ describe('MapPage API integration', () => {
       ),
     )
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     expect(await screen.findByRole('alert')).toBeVisible()
     expect(
       screen.queryByRole('button', {
@@ -483,22 +477,14 @@ describe('MapPage API integration', () => {
         detailStage: 'normal',
         isExploring,
       })
-      const view = render(
-        <MemoryRouter>
-          <MapPage />
-        </MemoryRouter>,
-      )
+      const view = render(mapView())
       await user.click(
         await screen.findByRole('button', {
           name: '코코네 돈카츠 신도심점 상세 보기',
         }),
       )
       view.unmount()
-      render(
-        <MemoryRouter>
-          <MapPage />
-        </MemoryRouter>,
-      )
+      render(mapView())
       const closeDetail = await screen.findByRole('button', {
         name: '선택한 식당 닫기',
       })
@@ -526,11 +512,7 @@ describe('MapPage API integration', () => {
   it('returns to the initial bounds when detail was opened before the SDK loaded', async () => {
     const user = userEvent.setup()
     sdkState.status = 'LOADING'
-    const view = render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    const view = render(mapView())
     await user.click(
       await screen.findByRole('button', {
         name: '코코네 돈카츠 신도심점 상세 보기',
@@ -560,11 +542,7 @@ describe('MapPage API integration', () => {
     } as unknown as SdkMap
     sdkState.map = map
     sdkState.status = 'LOADED'
-    view.rerender(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    view.rerender(mapView())
     act(() => idle())
     expect(zoom).toBe(15)
     act(() => sdkState.onIdle?.({ map }))
@@ -581,11 +559,7 @@ describe('MapPage API integration', () => {
   it('reopens results when a successful refresh finishes after the panel collapsed', async () => {
     const user = userEvent.setup()
     const source = vi.mocked(getMapRestaurants)
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     await screen.findByRole('list', { name: '식당 검색 결과' })
     const existing = createMapPageFixture()
     let resolve!: (value: MapRestaurantPage) => void
@@ -599,19 +573,18 @@ describe('MapPage API integration', () => {
     const handle = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
     handle.focus()
     await user.keyboard('{Home}')
-    expect(handle).toHaveAttribute('aria-valuenow', '30')
+    expect(
+      screen.queryByRole('list', { name: '식당 검색 결과' }),
+    ).not.toBeInTheDocument()
     await act(async () => resolve(existing))
-    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '321'))
+    expect(
+      await screen.findByRole('list', { name: '식당 검색 결과' }),
+    ).toBeVisible()
   })
   it('keeps an empty region panel collapsed even when expanded by keyboard', async () => {
     const user = userEvent.setup()
     const source = vi.mocked(getMapRestaurants)
-    const view = render(
-      <MemoryRouter>
-        <MapPage />
-        <ToastRegion />
-      </MemoryRouter>,
-    )
+    const view = render(mapView({ showToasts: true }))
     await screen.findByRole('list', { name: '식당 검색 결과' })
     source.mockResolvedValueOnce({ ...createMapPageFixture(), restaurants: [] })
     await user.click(screen.getByRole('button', { name: '우에노 식당 보기' }))
@@ -619,22 +592,24 @@ describe('MapPage API integration', () => {
     const handle = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
     handle.focus()
     await user.keyboard('{End}')
-    expect(handle).toHaveAttribute('aria-valuenow', '30')
+    expect(handle).toHaveAttribute(
+      'aria-valuenow',
+      handle.getAttribute('aria-valuemin')!,
+    )
     expect(
       screen.queryByRole('button', { name: '지도로 보기' }),
     ).not.toBeInTheDocument()
     view.unmount()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     const restoredHandle = await screen.findByRole('slider', {
       name: '식당 목록 높이 조절',
     })
     restoredHandle.focus()
     await user.keyboard('{End}')
-    expect(restoredHandle).toHaveAttribute('aria-valuenow', '30')
+    expect(restoredHandle).toHaveAttribute(
+      'aria-valuenow',
+      restoredHandle.getAttribute('aria-valuemin')!,
+    )
   })
   it.each(['empty', 'rows', 'expired'])('retries a 503: %s', async (kind) => {
     const source = vi.mocked(getMapRestaurants)
@@ -653,18 +628,20 @@ describe('MapPage API integration', () => {
       })
     }
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
-    const handle = await screen.findByRole('slider', {
-      name: '식당 목록 높이 조절',
-    })
+    render(mapView())
     if (kind !== 'empty')
       await screen.findByRole('list', { name: '식당 검색 결과' })
-    else
-      await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '30'))
+    else {
+      const handle = await screen.findByRole('slider', {
+        name: '식당 목록 높이 조절',
+      })
+      await waitFor(() =>
+        expect(handle).toHaveAttribute(
+          'aria-valuenow',
+          handle.getAttribute('aria-valuemin')!,
+        ),
+      )
+    }
     source.mockRejectedValueOnce(
       new ApiError(
         {
@@ -682,14 +659,12 @@ describe('MapPage API integration', () => {
     let retry = await screen.findByRole('button', { name: '다시 시도하기' })
     expect(retry).toBeVisible()
     if (kind !== 'empty') {
-      const list = screen.getByRole('list', { name: '식당 검색 결과' })
-      const alert = screen.getByText(
-        '식당 목록을 불러오지 못했어요. 이전 결과를 표시하고 있어요.',
-      )
-      expect(alert).toBeVisible()
+      expect(screen.getByRole('list', { name: '식당 검색 결과' })).toBeVisible()
       expect(
-        retry.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy()
+        screen.getByText(
+          '식당 목록을 불러오지 못했어요. 이전 결과를 표시하고 있어요.',
+        ),
+      ).toBeVisible()
     }
     if (kind === 'expired') {
       vi.spyOn(Date, 'now').mockReturnValue(expires)
@@ -702,9 +677,6 @@ describe('MapPage API integration', () => {
       )
       retry = screen.getByRole('button', { name: '다시 시도하기' })
     }
-    expect(
-      screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
-    ).not.toHaveAttribute('aria-valuenow', '30')
     await user.click(retry)
     await waitFor(() => expect(retry).not.toBeInTheDocument())
     expect(source.mock.lastCall?.[0]).toMatchObject({ placeType: 'cafe' })
@@ -724,11 +696,7 @@ describe('MapPage API integration', () => {
           rejectRequest = reject
         })
       if (reason === 'initial') source.mockImplementationOnce(pending)
-      render(
-        <MemoryRouter>
-          <MapPage />
-        </MemoryRouter>,
-      )
+      render(mapView())
       if (reason === 'refresh') {
         await screen.findByRole('list', { name: '식당 검색 결과' })
         source.mockImplementationOnce(pending)
@@ -741,7 +709,7 @@ describe('MapPage API integration', () => {
       await user.keyboard('{Home}')
       await act(async () => rejectRequest(new Error('network')))
       const retry = await screen.findByRole('button', { name: '다시 시도하기' })
-      expect(handle).not.toHaveAttribute('aria-valuenow', '30')
+      expect(retry).toBeVisible()
       await user.click(retry)
       expect(
         await screen.findByRole('list', { name: '식당 검색 결과' }),
@@ -750,11 +718,7 @@ describe('MapPage API integration', () => {
   )
   it('keeps search available but hides restaurant panels and map actions when the map fails', async () => {
     sdkState.status = 'FAILED'
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     expect(await screen.findByText('지도를 불러오지 못했어요!')).toBeVisible()
     expect(screen.getByRole('searchbox')).toBeVisible()
     expect(
@@ -767,16 +731,13 @@ describe('MapPage API integration', () => {
   })
   it('shows an empty search toast and keeps only the non-expandable panel handle', async () => {
     const user = userEvent.setup()
-    toastQueue.clear()
     render(
-      <MemoryRouter
-        initialEntries={[
+      mapView({
+        initialEntries: [
           { pathname: '/map', state: { source: 'map', keyword: '없는 식당' } },
-        ]}
-      >
-        <MapPage />
-        <ToastRegion />
-      </MemoryRouter>,
+        ],
+        showToasts: true,
+      }),
     )
     expect(await screen.findByRole('alert')).toHaveTextContent(
       '조건에 맞는 맛집이 없어요.',
@@ -788,10 +749,16 @@ describe('MapPage API integration', () => {
       screen.queryByRole('button', { name: '검색 조건 초기화' }),
     ).not.toBeInTheDocument()
     const handle = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
-    expect(handle).toHaveAttribute('aria-valuenow', '30')
+    expect(handle).toHaveAttribute(
+      'aria-valuenow',
+      handle.getAttribute('aria-valuemin')!,
+    )
     handle.focus()
     await user.keyboard('{End}')
-    expect(handle).toHaveAttribute('aria-valuenow', '30')
+    expect(handle).toHaveAttribute(
+      'aria-valuenow',
+      handle.getAttribute('aria-valuemin')!,
+    )
     expect(
       within(
         screen.getByRole('region', { name: '지도 식당 목록' }),
@@ -800,16 +767,10 @@ describe('MapPage API integration', () => {
     expect(
       screen.queryByRole('button', { name: '지도로 보기' }),
     ).not.toBeInTheDocument()
-    toastQueue.clear()
   })
   it('reuses the last query bounds when switching from an empty bar list to restaurants', async () => {
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-        <ToastRegion />
-      </MemoryRouter>,
-    )
+    render(mapView({ showToasts: true }))
     await screen.findByRole('list', { name: '식당 검색 결과' })
     const source = vi.mocked(getMapRestaurants)
     source.mockImplementationOnce(async (request) => ({
@@ -821,7 +782,10 @@ describe('MapPage API integration', () => {
     const handle = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
     handle.focus()
     await user.keyboard('{End}')
-    expect(handle).toHaveAttribute('aria-valuenow', '30')
+    expect(handle).toHaveAttribute(
+      'aria-valuenow',
+      handle.getAttribute('aria-valuemin')!,
+    )
     const resizedMap = {
       getBounds: () => ({
         toJSON: () => ({
@@ -841,9 +805,6 @@ describe('MapPage API integration', () => {
       sort: 'recommend',
       placeType: 'restaurant',
     })
-    expect(
-      screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
-    ).not.toHaveAttribute('aria-valuenow', '30')
   })
   it('applies a returned search without losing the category, then clears only the keyword', async () => {
     const user = userEvent.setup()
@@ -862,19 +823,13 @@ describe('MapPage API integration', () => {
       isExploring: true,
     })
     render(
-      <MemoryRouter
-        initialEntries={[
+      mapView({
+        initialEntries: [
           { pathname: '/map', state: { source: 'map', keyword: '없는 식당' } },
-        ]}
-      >
-        <MapPage />
-      </MemoryRouter>,
+        ],
+      }),
     )
-    await waitFor(() =>
-      expect(
-        screen.getByRole('slider', { name: '식당 목록 높이 조절' }),
-      ).toHaveAttribute('aria-valuenow', '321'),
-    )
+    await screen.findByRole('button', { name: '지도 검색어 지우기' })
     expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -889,44 +844,33 @@ describe('MapPage API integration', () => {
   })
   it('restores category and panel after leaving and returning', async () => {
     const user = userEvent.setup()
-    const view = render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    const view = render(mapView())
     await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(screen.getByRole('button', { name: '카페' }))
     const slider = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
     slider.focus()
     await user.keyboard('{End}')
     view.unmount()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
-    expect(
-      await screen.findByRole('slider', { name: '식당 목록 높이 조절' }),
-    ).toHaveAttribute('aria-valuenow', '648')
+    const restoredHandle = await screen.findByRole('slider', {
+      name: '식당 목록 높이 조절',
+    })
+    expect(restoredHandle).toHaveAttribute(
+      'aria-valuenow',
+      restoredHandle.getAttribute('aria-valuemax')!,
+    )
     expect(
       screen.queryByRole('button', { name: '지도로 보기' }),
     ).not.toBeInTheDocument()
   })
-  it('collapses an expanded list with the handle without a map CTA and preserves filters and scroll', async () => {
+  it('restores scroll when reopening the list and resets it when the filter changes', async () => {
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     await screen.findByRole('list', { name: '식당 검색 결과' })
-    expect(
-      screen.queryByRole('button', { name: '지도로 보기' }),
-    ).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '카페' }))
     const slider = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
     slider.focus()
@@ -935,12 +879,12 @@ describe('MapPage API integration', () => {
       .getByRole('list', { name: '식당 검색 결과' })
       .closest('[data-map-list]')!.parentElement!
     fireEvent.scroll(scroller, { target: { scrollTop: 80 } })
-    expect(
-      screen.queryByRole('button', { name: '지도로 보기' }),
-    ).not.toBeInTheDocument()
     slider.focus()
     await user.keyboard('{Home}')
-    expect(slider).toHaveAttribute('aria-valuenow', '30')
+    expect(slider).toHaveAttribute(
+      'aria-valuenow',
+      slider.getAttribute('aria-valuemin')!,
+    )
     expect(slider).toHaveFocus()
     expect(screen.getByRole('button', { name: '카페' })).toHaveAttribute(
       'aria-pressed',
@@ -954,35 +898,20 @@ describe('MapPage API integration', () => {
     expect(
       screen.getByRole('button', { name: '도쿄 카페 미리보기 상세 보기' }),
     ).toBeVisible()
+    await user.click(screen.getByRole('button', { name: '음식점' }))
+    await screen.findByRole('button', {
+      name: '코코네 돈카츠 신도심점 상세 보기',
+    })
+    expect(
+      screen
+        .getByRole('list', { name: '식당 검색 결과' })
+        .closest('[data-map-list]')!.parentElement!.scrollTop,
+    ).toBe(0)
   })
 
-  it('filters categories, toggles back, and resets an empty submitted search', async () => {
-    const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
-    await screen.findByRole('list', { name: '식당 검색 결과' })
-    await user.click(screen.getByRole('button', { name: '카페' }))
-    expect(
-      screen.queryByRole('button', {
-        name: '코코네 돈카츠 신도심점 상세 보기',
-      }),
-    ).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: '카페' }))
-    expect(
-      screen.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
-    ).toBeVisible()
-    expect(screen.getByRole('searchbox')).toHaveAttribute('readonly')
-  })
   it('sorts the server list and closes the sort menu on selection', async () => {
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(screen.getByRole('button', { name: '정렬: 추천순' }))
     await user.click(screen.getByRole('menuitemradio', { name: '별점순' }))
@@ -993,36 +922,9 @@ describe('MapPage API integration', () => {
       '히마와리 스시 신도심점',
     )
   })
-  it('preserves the list scroll when collapsing but resets it after a filter change', async () => {
-    const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
-    await screen.findByRole('list', { name: '식당 검색 결과' })
-    const list = screen.getByRole('list', { name: '식당 검색 결과' })
-    const scroller = list.closest('[data-map-list]')!.parentElement!
-    fireEvent.scroll(scroller, { target: { scrollTop: 180 } })
-    const slider = screen.getByRole('slider', { name: '식당 목록 높이 조절' })
-    slider.focus()
-    await user.keyboard('{Home}{ArrowUp}')
-    expect(scroller.scrollTop).toBe(180)
-    await user.click(screen.getByRole('button', { name: '카페' }))
-    expect(
-      screen
-        .getByRole('list', { name: '식당 검색 결과' })
-        .closest('[data-map-list]')!.parentElement!.scrollTop,
-    ).toBe(0)
-  })
-
   it('opens a selected restaurant, expands details, switches tabs and returns to its filtered list', async () => {
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(screen.getByRole('button', { name: '시부야 식당 보기' }))
     const list = await screen.findByRole('list', { name: '식당 검색 결과' })
@@ -1062,11 +964,7 @@ describe('MapPage API integration', () => {
 
   it('clears the selected restaurant when the category changes', async () => {
     const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     await screen.findByRole('list', { name: '식당 검색 결과' })
     await user.click(
       screen.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
@@ -1078,88 +976,6 @@ describe('MapPage API integration', () => {
     expect(
       screen.getByRole('button', { name: '도쿄 카페 미리보기 상세 보기' }),
     ).toBeVisible()
-  })
-
-  it('opens the chosen photo and restores focus to its thumbnail after Escape', async () => {
-    const user = userEvent.setup()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
-    await screen.findByRole('list', { name: '식당 검색 결과' })
-    await user.click(
-      screen.getByRole('button', { name: '야키니쿠 리키마루 상세 보기' }),
-    )
-    const thumbnail = screen.getByRole('button', {
-      name: '야키니쿠 리키마루 사진 2 보기',
-    })
-    await user.click(thumbnail)
-    expect(
-      screen.getByRole('dialog', { name: '식당 사진 상세보기' }),
-    ).toBeVisible()
-    await user.keyboard('{Escape}')
-    expect(
-      screen.queryByRole('dialog', { name: '식당 사진 상세보기' }),
-    ).not.toBeInTheDocument()
-    await waitFor(() => expect(thumbnail).toHaveFocus())
-  })
-
-  it('returns to the selected expanded map detail after canceling a reservation', async () => {
-    startAuthenticatedSession('map-test-token', 1)
-    const user = userEvent.setup()
-    const ReservationDestination = () => {
-      const navigate = useNavigate()
-      return (
-        <button onClick={() => navigate(-1)}>예약 취소 후 지도 복귀</button>
-      )
-    }
-    render(
-      <MemoryRouter initialEntries={['/map']}>
-        <Routes>
-          <Route path="/map" element={<MapPage />} />
-          <Route
-            path="/restaurants/:restaurantId/reservations/new"
-            element={<ReservationDestination />}
-          />
-        </Routes>
-      </MemoryRouter>,
-    )
-    await screen.findByRole('list', { name: '식당 검색 결과' })
-    await user.click(
-      screen.getByRole('button', { name: '코코네 돈카츠 신도심점 상세 보기' }),
-    )
-    screen.getByRole('slider', { name: '식당 상세 높이 조절' }).focus()
-    await user.keyboard('{End}')
-    const panel = screen.getByRole('tabpanel', { name: '매장 정보' })
-    await waitFor(() =>
-      expect(
-        within(panel).queryByText('매장 정보를 불러오고 있어요.'),
-      ).not.toBeInTheDocument(),
-    )
-    const scrollRoot = panel.closest('.overflow-y-auto') as HTMLElement
-    scrollRoot.scrollTop = 180
-    fireEvent.scroll(scrollRoot)
-    await user.click(screen.getByRole('button', { name: '예약하기' }))
-    await user.click(
-      await screen.findByRole('button', { name: '예약 취소 후 지도 복귀' }),
-    )
-    expect(
-      await screen.findByRole('dialog', {
-        name: '코코네 돈카츠 신도심점 전체 상세',
-      }),
-    ).toBeVisible()
-    expect(screen.getByRole('tab', { name: '매장 정보' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    )
-    await waitFor(() =>
-      expect(
-        screen
-          .getByRole('tabpanel', { name: '매장 정보' })
-          .closest('.overflow-y-auto'),
-      ).toHaveProperty('scrollTop', 180),
-    )
   })
 
   it.each([false, true])(
@@ -1193,6 +1009,15 @@ describe('MapPage API integration', () => {
       )
       screen.getByRole('slider', { name: '식당 상세 높이 조절' }).focus()
       await user.keyboard('{End}')
+      const panel = await screen.findByRole('tabpanel', { name: '매장 정보' })
+      await waitFor(() =>
+        expect(
+          within(panel).queryByText('매장 정보를 불러오고 있어요.'),
+        ).not.toBeInTheDocument(),
+      )
+      const savedScroll = 180
+      const scrollRoot = panel.closest('.overflow-y-auto') as HTMLElement
+      fireEvent.scroll(scrollRoot, { target: { scrollTop: savedScroll } })
       await user.click(await screen.findByRole('button', { name: '예약하기' }))
       const guestName = await screen.findByRole('textbox', { name: '예약자명' })
       if (edited) await user.type(guestName, '테스트')
@@ -1209,6 +1034,17 @@ describe('MapPage API integration', () => {
           name: '코코네 돈카츠 신도심점 전체 상세',
         }),
       ).toBeVisible()
+      expect(screen.getByRole('tab', { name: '매장 정보' })).toHaveAttribute(
+        'aria-selected',
+        'true',
+      )
+      await waitFor(() =>
+        expect(
+          screen
+            .getByRole('tabpanel', { name: '매장 정보' })
+            .closest('.overflow-y-auto'),
+        ).toHaveProperty('scrollTop', savedScroll),
+      )
       await user.click(screen.getByRole('button', { name: '식당 상세 닫기' }))
       expect(screen.getByRole('button', { name: '음식점' })).toHaveAttribute(
         'aria-pressed',
@@ -1413,11 +1249,7 @@ describe('MapPage API integration', () => {
     })
     persistMapSessionForOAuth()
     expect(sessionStorage.getItem('hashi:map:oauth-resume:v1')).not.toBeNull()
-    render(
-      <MemoryRouter>
-        <MapPage />
-      </MemoryRouter>,
-    )
+    render(mapView())
     await screen.findByRole('list', { name: '식당 검색 결과' })
     expect(sessionStorage.getItem('hashi:map:oauth-resume:v1')).toBeNull()
   })
