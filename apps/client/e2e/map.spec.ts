@@ -9,7 +9,7 @@ const regionFixtures = [
   { mapRegionId: 5, name: '아사쿠사', lat: 35.7148, lng: 139.7967 },
 ]
 const photoPaths = [1, 2, 3].map(
-  (index) => `/src/shared/assets/images/map/preview/tonkatsu-${index}.webp`,
+  (index) => `/src/pages/map/__tests__/fixtures/map-photo-${index}.png`,
 )
 const restaurantFixtures = [
   {
@@ -877,6 +877,7 @@ test('API photo gallery keeps the expanded sheet open after closing its viewer a
   await detail.getByRole('tab', { name: /^사진/ }).click()
   const panel = detail.getByRole('tabpanel', { name: '사진' })
   const photo = panel.getByRole('button', { name: '2번째 사진 보기' })
+  await expect(photo.locator('img')).toHaveJSProperty('naturalWidth', 48)
   await photo.click()
   const viewer = page.getByRole('dialog', { name: '식당 사진 상세보기' })
   await expect(viewer).toBeVisible()

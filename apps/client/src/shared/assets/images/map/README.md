@@ -1,8 +1,7 @@
 # Map assets and icon sources
 
 - Source: [HASHI 지도 디자인](https://www.figma.com/design/UHaom01PvoRx2wRCYa1kS1/Hashi.kr?node-id=8317-32364).
-- Overview: 8317:33067. Street background / selected restaurant images: 8317:32935. List food images: 8317:33362.
-- `preview/`: temporary map backgrounds and sample restaurant photos, converted to WebP (quality 90, original dimensions). No full-screen design screenshot is embedded as UI.
+- Google Maps renders the map background. Small images used in map tests live in [the map test fixtures](../../../../pages/map/__tests__/fixtures/).
 - Map marker and CTA glyphs, including the area marker tail, are imported from `@hashi/hds-icons`: RestaurantMarkerIcon, CafeMarkerIcon, BarMarkerIcon, MapViewIcon and MapPinTailIcon. No page-local icon folder or marker asset copies remain.
 - `shared/assets/icons/map-toast-warning.svg`: original Figma `10218:91472` warning artwork for empty-result toasts. Unlike HDS NoteIcon, it has a transparent triangle with a light outline; the shared icon is unchanged.
 - HDS stores original SVG inputs in `packages/hds-icons/src/rawIcons/` and generated React components in `src/icons/`. Normal/selected states share one glyph per category; the app's `MapRestaurantMarker` owns the circle, shadow, label and rating.
@@ -12,5 +11,4 @@
 - Map CTA source: 8317:40775, 24×24. MapViewIcon shares the original paths; the app supplies enabled fill/stroke secondary-200/primary-100 and disabled warm-gray-300. There are no separate state asset copies or disabled business logic in HDS.
 - MapPinTailIcon preserves the original 8×5 silhouette; the app supplies its size and white color.
 - Collection assets are not imported. HDS contains reusable artwork only, without restaurant records, selection behavior, routes or map SDK dependencies.
-- Map background is rendered by Google Maps. Files in `preview/` remain sample photos, not authoritative coordinates.
 - `loading-spinner.svg`: Figma `10578:32112` loading artwork (80×80), with the exported white background rectangle removed so only the arc rotates over the map. Arc geometry, color and dimensions are preserved. `error-mark.svg`: error frame `9984:106067` original empty/error illustration. These are page state illustrations, not duplicate marker glyphs. `MapStatusView` owns animation/reduced-motion and product copy.

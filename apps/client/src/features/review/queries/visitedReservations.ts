@@ -1,25 +1,11 @@
-import {
-  type InfiniteData,
-  queryOptions,
-  useInfiniteQuery,
-} from '@tanstack/react-query'
+import { type InfiniteData, useInfiniteQuery } from '@tanstack/react-query'
 
 import {
   getVisitedReservations,
   type VisitedReservationFilters,
   type VisitedReservationListData,
-  type VisitedReservationParams,
 } from '@/features/review/api/getVisitedReservations'
 import { visitedReservationQueryKeys } from '@/features/review/queries/visitedReservationQueryKeys'
-
-export const visitedReservationsQueryOptions = (
-  params: VisitedReservationParams,
-) =>
-  queryOptions({
-    queryFn: () => getVisitedReservations(params),
-    queryKey: visitedReservationQueryKeys.list(params),
-    throwOnError: false,
-  })
 
 export const useVisitedReservationsInfiniteQuery = (
   params: VisitedReservationFilters,
