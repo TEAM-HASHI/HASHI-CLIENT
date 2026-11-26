@@ -55,3 +55,7 @@ playwright/.cache/
 # Lighthouse
 .lighthouseci/
 lighthouse-reports/
+
+# Local PDF exports and processing files
+/output/pdf/
+/tmp/pdfs/
