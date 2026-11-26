@@ -23,7 +23,7 @@ import { mapCollectionDetail } from '@/features/collection/utils/collectionReadA
 import {
   normalizeCollectionDraft,
   type CollectionDraft,
-} from '@/pages/saved/utils/collectionMutations'
+} from '@/pages/saved/utils/collectionDraft'
 import {
   getCollectionReturn,
   rememberCreatedCollectionSaveTarget,

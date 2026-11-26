@@ -1,5 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
@@ -186,6 +193,60 @@ describe('컬렉션 서버 조회 화면', () => {
     expect(router.state.location.pathname).toContain('/55')
     expect(getCollections).not.toHaveBeenCalled()
     expect(actions).not.toHaveBeenCalled()
+  })
+
+  it('서버 응답에 없는 저장 수·공개 여부·평점은 화면에 만들지 않는다', async () => {
+    vi.mocked(getCollections).mockResolvedValue({
+      collections: [{ collectionId: 8, name: '여행' }],
+      hasNext: false,
+    })
+    vi.mocked(getCollection).mockResolvedValue({
+      collectionId: 8,
+      name: '여행',
+    })
+    vi.mocked(getSavedRestaurants).mockResolvedValue({
+      content: [{ restaurantId: 55, name: '스시', area: '도쿄' }],
+      hasNext: false,
+    })
+    const { user, router } = setup()
+    const collection = await screen.findByRole('button', {
+      name: '여행 컬렉션 열기',
+    })
+    expect(
+      within(collection).queryByText(/^(공개|비공개|0)$/),
+    ).not.toBeInTheDocument()
+    await user.click(collection)
+    const restaurant = await screen.findByRole('button', { name: '스시 도쿄' })
+    expect(within(restaurant).queryByText('0.0')).not.toBeInTheDocument()
+    await user.click(restaurant)
+    expect(router.state.location.pathname).toBe('/restaurants/55')
+  })
+
+  it('키보드로 선택한 정렬을 API 요청에 반영하고 필터를 바꿔도 유지한다', async () => {
+    vi.mocked(getCollection).mockResolvedValue({
+      collectionId: 8,
+      name: '여행',
+    })
+    vi.mocked(getSavedRestaurants).mockResolvedValue({
+      content: [],
+      hasNext: false,
+    })
+    const { user } = setup('/saved/collections/8')
+    const sort = await screen.findByRole('button', { name: '정렬 선택' })
+    await user.click(sort)
+    await user.keyboard('{End}{Enter}')
+    expect(sort).toHaveFocus()
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '분류 선택' }))
+    await user.click(screen.getByRole('menuitemradio', { name: '카페' }))
+    await waitFor(() =>
+      expect(getSavedRestaurants).toHaveBeenLastCalledWith(
+        8,
+        { sort: 'review', placeType: 'cafe', size: 20 },
+        expect.any(AbortSignal),
+      ),
+    )
+    expect(screen.getByText('리뷰순')).toBeVisible()
   })
 
   it('분류 변경 시 이전 식당을 새 필터 결과로 표시하지 않는다', async () => {

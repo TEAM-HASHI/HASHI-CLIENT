@@ -9,7 +9,7 @@ import {
 } from '@/features/collection/types'
 import type { CollectionViewState } from '@/features/collection/types'
 import { cn } from '@/shared/utils'
-import { normalizeCollectionDescription } from '@/pages/saved/utils/collectionMutations'
+import { normalizeCollectionDescription } from '@/pages/saved/utils/collectionDraft'
 
 type CollectionPanelHeaderProps = {
   collection: { name?: string; description?: string }

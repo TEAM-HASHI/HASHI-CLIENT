@@ -3,7 +3,14 @@ import { copyUrlToClipboard } from '@/shared/utils/clipboard'
 import '@testing-library/jest-dom/vitest'
 import userEvent from '@testing-library/user-event'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import {
   RouterProvider,
   createMemoryRouter,
@@ -280,6 +287,12 @@ describe('appRoutes', () => {
       expect(
         router.state.location.pathname + router.state.location.search,
       ).toBe('/map?sort=rating&category=cafe')
+      const handle = screen.getByRole('slider', { name: '컬렉션 패널 높이' })
+      fireEvent.keyDown(handle, { key: 'Home' })
+      expect(handle).toHaveAttribute('aria-valuenow', '30')
+      fireEvent.keyDown(handle, { key: 'ArrowUp' })
+      expect(screen.getByText('별점순')).toBeVisible()
+      expect(screen.getByText('카페')).toBeVisible()
       await user.click(screen.getByRole('button', { name: '컬렉션 지도 닫기' }))
       expect(router.state.location.pathname).toBe('/map')
       expect(
@@ -556,6 +569,66 @@ describe('appRoutes', () => {
     await waitFor(() =>
       expect(router.state.location.pathname).toBe('/login-required'),
     )
+  })
+
+  it('목록에서 공유를 터치할 때 메뉴 포커스가 사라져도 선택한 동작을 수행한다', async () => {
+    setAccessToken('test-session')
+    await renderRoute('/saved')
+    const user = userEvent.setup()
+    await user.click(
+      await screen.findByRole('button', { name: 'API 여행 더보기' }),
+    )
+    const share = screen.getByRole('menuitem', { name: '공유하기' })
+    fireEvent.pointerDown(share, { pointerType: 'touch' })
+    fireEvent.blur(screen.getByRole('menuitem', { name: '수정하기' }), {
+      relatedTarget: null,
+    })
+    fireEvent.pointerUp(share, { pointerType: 'touch' })
+    fireEvent.click(share)
+
+    expect(
+      await screen.findByRole('button', { name: '공개 후 공유' }),
+    ).toBeVisible()
+    expect(updateCollection).not.toHaveBeenCalled()
+  })
+
+  it('목록 메뉴에서 Tab으로 이동하고 포커스가 메뉴 밖으로 나가면 닫는다', async () => {
+    setAccessToken('test-session')
+    await renderRoute('/saved')
+    const user = userEvent.setup()
+    const trigger = await screen.findByRole('button', {
+      name: 'API 여행 더보기',
+    })
+    await user.click(trigger)
+    await user.tab()
+    expect(screen.getByRole('menuitem', { name: '공유하기' })).toHaveFocus()
+    await user.tab()
+    const lastItem = screen.getByRole('menuitem', { name: '삭제하기' })
+    expect(lastItem).toHaveFocus()
+
+    expect(fireEvent.keyDown(lastItem, { key: 'Tab' })).toBe(true)
+    fireEvent.blur(lastItem, { relatedTarget: null })
+
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('저장 목록에서 연 독립 상세 페이지를 브라우저 이동으로 복원한다', async () => {
+    setAccessToken('test-session')
+    const { router } = await renderRoute('/saved')
+    const user = userEvent.setup()
+    await user.click(
+      await screen.findByRole('button', { name: 'API 여행 컬렉션 열기' }),
+    )
+    expect(router.state.location.pathname).toBe('/saved/collections/8')
+    await act(async () => router.navigate(-1))
+    expect(
+      await screen.findByRole('heading', { name: '저장 컬렉션' }),
+    ).toBeVisible()
+    await act(async () => router.navigate(1))
+    expect(
+      await screen.findByRole('heading', { name: 'API 여행' }),
+    ).toBeVisible()
   })
 
   it('공개 컬렉션은 상세 주소만 복사하고 공개 전환 요청 없이 성공을 안내한다', async () => {

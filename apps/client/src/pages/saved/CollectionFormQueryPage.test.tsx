@@ -6,12 +6,14 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   createMemoryRouter,
   RouterProvider,
   useLocation,
+  type Location,
 } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -61,7 +63,15 @@ const Returned = () => {
   const location = useLocation()
   return <div>원래 화면 {JSON.stringify(location.state)}</div>
 }
-const setup = (editing = false, fromSaveDialog = false) => {
+const setup = ({
+  editing = false,
+  fromSaveDialog = false,
+  initialEntries,
+}: {
+  editing?: boolean
+  fromSaveDialog?: boolean
+  initialEntries?: (string | Partial<Location>)[]
+} = {}) => {
   const onError = vi.fn()
   const client = new QueryClient({
     defaultOptions: {
@@ -91,7 +101,7 @@ const setup = (editing = false, fromSaveDialog = false) => {
       },
     ],
     {
-      initialEntries: [
+      initialEntries: initialEntries ?? [
         {
           pathname: '/saved',
           state: {
@@ -145,6 +155,76 @@ afterEach(() => {
 })
 
 describe('컬렉션 API 폼 연결', () => {
+  it('생성을 취소하면 요청 없이 원래 방문 이력으로 복귀한다', async () => {
+    const { user, router } = setup()
+    await user.type(screen.getByLabelText('컬렉션명'), '작성 중인 컬렉션')
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+    expect(await screen.findByText(/원래 화면/)).toBeVisible()
+    expect(router.state.location.key).toBe('return-key')
+    expect(createCollection).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    null,
+    { collectionReturn: { pathname: '//example.com', search: '' } },
+  ])(
+    '유효한 복귀 정보가 없는 직접 생성 URL의 헤더 뒤로가기는 저장 목록을 연다',
+    async (state) => {
+      const { user, router } = setup({
+        initialEntries: [{ pathname: '/saved/collections/new', state }],
+      })
+      await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+      expect(router.state.location.pathname).toBe('/saved')
+      expect(createCollection).not.toHaveBeenCalled()
+    },
+  )
+
+  it('형식이 잘못된 수정 ID는 상세를 조회하지 않고 저장 목록으로 보낸다', async () => {
+    const { router } = setup({
+      initialEntries: ['/saved/collections/missing/edit'],
+    })
+    expect(await screen.findByText(/원래 화면/)).toBeVisible()
+    expect(router.state.location.pathname).toBe('/saved')
+    expect(getCollection).not.toHaveBeenCalled()
+  })
+
+  it.each(['header', 'browser'])(
+    '수정 중 %s 뒤로가기에서 계속하기는 입력을 보존하고 폐기는 저장 없이 목록으로 돌아간다',
+    async (source) => {
+      vi.mocked(getCollection).mockResolvedValue(detail)
+      const { user, router } = setup({ editing: true })
+      const name = await screen.findByDisplayValue('여행')
+      await user.type(name, ' 수정')
+      const goBack = async () => {
+        if (source === 'header') {
+          await user.click(screen.getByRole('button', { name: '뒤로가기' }))
+        } else {
+          await act(async () => {
+            await router.navigate(-1)
+          })
+        }
+        return screen.findByRole('alertdialog', {
+          name: '변경사항이 저장되지 않았어요.',
+        })
+      }
+
+      const keep = await goBack()
+      await act(async () => {
+        fireEvent.click(within(keep).getByRole('button', { name: '계속하기' }))
+      })
+      expect(name).toHaveValue('여행 수정')
+      expect(router.state.location.pathname).toBe('/saved/collections/8/edit')
+      const discard = await goBack()
+      await act(async () => {
+        fireEvent.click(
+          within(discard).getByRole('button', { name: '뒤로가기' }),
+        )
+      })
+      expect(router.state.location.pathname).toBe('/saved')
+      expect(updateCollection).not.toHaveBeenCalled()
+    },
+  )
+
   it('저장창에서 생성한 컬렉션을 선택하고 기존 선택도 유지하며 저장은 확정할 때만 요청한다', async () => {
     const existing = { ...detail, name: '기존 컬렉션', saved: false }
     const created = {
@@ -167,7 +247,7 @@ describe('컬렉션 API 폼 연결', () => {
     vi.mocked(saveRestaurant).mockImplementation(async (id) =>
       id === 42 ? created : existing,
     )
-    const { user } = setup(false, true)
+    const { user } = setup({ fromSaveDialog: true })
     await user.click(
       await screen.findByRole('checkbox', { name: /기존 컬렉션/ }),
     )
@@ -201,7 +281,7 @@ describe('컬렉션 API 폼 연결', () => {
       if (state === '조회 중')
         vi.mocked(getCollections).mockReturnValue(new Promise(() => {}))
       else vi.mocked(getCollections).mockRejectedValue(new Error('network'))
-      const { user } = setup(true)
+      const { user } = setup({ editing: true })
       await screen.findByDisplayValue('여행')
       if (state === '조회 실패')
         await waitFor(() => expect(getCollections).toHaveBeenCalled())
@@ -231,14 +311,14 @@ describe('컬렉션 API 폼 연결', () => {
       totalCount: 1,
       hasNext: false,
     })
-    const { user } = setup(true)
+    const { user } = setup({ editing: true })
     await screen.findByDisplayValue('여행')
     await user.click(screen.getByRole('radio', { name: '노랑' }))
     expect(screen.queryByText('중복된 컬렉션명입니다.')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '저장하기' })).toBeEnabled()
   })
 
-  it('다음 페이지의 이름도 입력 중 중복 안내하고 서버 생성 요청을 막는다', async () => {
+  it('다음 페이지의 이름을 서버 공백 기준으로 비교해 중복 요청을 막는다', async () => {
     vi.mocked(getCollections)
       .mockResolvedValueOnce({
         collections: [{ collectionId: 7, name: '다른 이름' }],
@@ -252,20 +332,22 @@ describe('컬렉션 API 폼 연결', () => {
         hasNext: false,
         nextCursor: undefined,
       })
-    const { user } = setup()
-    await user.type(screen.getByLabelText('컬렉션명'), '  여행  ')
-    await user.click(screen.getByRole('radio', { name: '빨강' }))
+    setup()
+    const name = screen.getByLabelText('컬렉션명')
+    const submit = screen.getByRole('button', { name: '만들기' })
+    fireEvent.change(name, { target: { value: '\u001c여행\u0085' } })
     expect(await screen.findByText('중복된 컬렉션명입니다.')).toBeVisible()
-    expect(screen.getByRole('button', { name: '만들기' })).toBeDisabled()
+    expect(submit).toBeDisabled()
     expect(getCollections).toHaveBeenCalledWith(
       expect.objectContaining({ cursor: 7 }),
       expect.any(AbortSignal),
     )
     expect(createCollection).not.toHaveBeenCalled()
-    await user.clear(screen.getByLabelText('컬렉션명'))
-    await user.type(screen.getByLabelText('컬렉션명'), '새 이름')
+    fireEvent.change(name, { target: { value: '\u001c\u0085' } })
+    expect(submit).toBeDisabled()
+    fireEvent.change(name, { target: { value: '\ufeff여행\ufeff' } })
     expect(screen.queryByText('중복된 컬렉션명입니다.')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '만들기' })).toBeEnabled()
+    expect(submit).toBeEnabled()
   })
 
   it('이름 목록 확인 중과 실패 시 제출을 막고 재조회 후 입력을 유지한다', async () => {
@@ -390,7 +472,7 @@ describe('컬렉션 API 폼 연결', () => {
     vi.mocked(updateCollection)
       .mockRejectedValueOnce(new Error('offline'))
       .mockResolvedValueOnce({ ...detail, description: '' })
-    const { user, client, router, onError } = setup(true)
+    const { user, client, router, onError } = setup({ editing: true })
     expect(screen.getByRole('status')).toBeVisible()
     expect(await screen.findByDisplayValue('여행')).toBeVisible()
     await user.clear(screen.getByLabelText('설명'))
@@ -415,7 +497,7 @@ describe('컬렉션 API 폼 연결', () => {
       name: '수정',
       description: '서버 설명',
     })
-    const { user, client } = setup(true)
+    const { user, client } = setup({ editing: true })
     expect(await screen.findByDisplayValue('여행')).toBeVisible()
     await user.clear(screen.getByLabelText('컬렉션명'))
     await user.type(screen.getByLabelText('컬렉션명'), '수정')
@@ -451,7 +533,7 @@ describe('컬렉션 API 폼 연결', () => {
       ...detail,
       description: '가'.repeat(30),
     })
-    const { user } = setup(true)
+    const { user } = setup({ editing: true })
     expect(await screen.findByDisplayValue('가'.repeat(31))).toBeVisible()
     expect(screen.getByRole('button', { name: '저장하기' })).toBeDisabled()
     expect(updateCollection).not.toHaveBeenCalled()
@@ -467,7 +549,7 @@ describe('컬렉션 API 폼 연결', () => {
 
   it('소유자가 아니면 수정 폼을 표시하거나 PATCH하지 않는다', async () => {
     vi.mocked(getCollection).mockResolvedValue({ ...detail, owner: false })
-    setup(true)
+    setup({ editing: true })
     expect(await screen.findByRole('alert')).toBeVisible()
     expect(
       screen.queryByRole('button', { name: '저장하기' }),

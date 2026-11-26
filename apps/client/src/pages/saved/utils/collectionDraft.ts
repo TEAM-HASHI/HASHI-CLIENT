@@ -1,9 +1,9 @@
-import type { CollectionData, SavedCollection } from '@/pages/saved/types'
 import type { CollectionColor } from '@/features/collection/types'
 
-// 컬렉션 입력 제한. 설명은 2026-10-18 기획 답변으로 100자에서 30자로 변경.
 export const COLLECTION_NAME_LIMIT = 20
 export const COLLECTION_DESCRIPTION_LIMIT = 30
+export type CollectionNameEntry = { id: string; name: string }
+
 export type CollectionDraft = {
   name: string
   description: string
@@ -40,7 +40,7 @@ export const normalizeCollectionDraft = (
 
 export const isDuplicateCollectionName = (
   draft: CollectionDraft,
-  collections: readonly Pick<SavedCollection, 'id' | 'name'>[],
+  collections: readonly CollectionNameEntry[],
   editingId?: string,
 ) => {
   const name = stripCollectionBoundaryWhitespace(draft.name)
@@ -53,7 +53,7 @@ export const isDuplicateCollectionName = (
 
 export const validateCollection = (
   draft: CollectionDraft,
-  collections: readonly Pick<SavedCollection, 'id' | 'name'>[],
+  collections: readonly CollectionNameEntry[],
   editingId?: string,
 ) => {
   if (!stripCollectionBoundaryWhitespace(draft.name)) return 'name'
@@ -67,71 +67,4 @@ export const validateCollection = (
   if (isDuplicateCollectionName(draft, collections, editingId))
     return 'duplicate'
   return null
-}
-
-export const createCollection = (
-  data: CollectionData,
-  draft: CollectionDraft,
-  id: string,
-  createdAt: string,
-): CollectionData => {
-  if (validateCollection(draft, data.collections) || !draft.color) return data
-  return {
-    ...data,
-    collections: [
-      {
-        ...normalizeCollectionDraft(draft),
-        color: draft.color,
-        id,
-        createdAt,
-        coverImages: [null, null, null],
-        restaurants: [],
-      },
-      ...data.collections,
-    ],
-  }
-}
-
-export const updateCollection = (
-  data: CollectionData,
-  id: string,
-  draft: CollectionDraft,
-): CollectionData => {
-  if (validateCollection(draft, data.collections, id) || !draft.color)
-    return data
-  const value = { ...normalizeCollectionDraft(draft), color: draft.color }
-  return {
-    ...data,
-    collections: data.collections.map((item) =>
-      item.id === id ? { ...item, ...value } : item,
-    ),
-  }
-}
-
-export const saveRestaurant = (
-  data: CollectionData,
-  collectionId: string,
-  restaurantId: string,
-  savedAt: string,
-): CollectionData => {
-  const collection = data.collections.find((item) => item.id === collectionId)
-  if (
-    !collection ||
-    collection.restaurants.some((item) => item.restaurantId === restaurantId) ||
-    !data.restaurants.some(
-      (item) => item.id === restaurantId && item.visibility === 'visible',
-    )
-  )
-    return data
-  return {
-    ...data,
-    collections: data.collections.map((item) =>
-      item.id === collectionId
-        ? {
-            ...item,
-            restaurants: [...item.restaurants, { restaurantId, savedAt }],
-          }
-        : item,
-    ),
-  }
 }

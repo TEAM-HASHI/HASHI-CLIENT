@@ -57,7 +57,6 @@ const restaurantDetailReturnStore = createListReturnStore<null>()
 
 type SavedQueryPageProps = {
   embedded?: boolean
-  onRestaurantSelect?: (id: string) => void
   onCreate?: () => void
   renderCollectionActions?: (
     collection: CollectionSummaryReadModelTypes,
@@ -74,7 +73,6 @@ type SavedQueryPageProps = {
 /** 제품 컬렉션 조회 화면. 목 데이터에는 접근하지 않는다. */
 export const SavedQueryPage = ({
   embedded = false,
-  onRestaurantSelect,
   onCreate,
   renderCollectionActions,
   renderDetailActions,
@@ -182,8 +180,7 @@ export const SavedQueryPage = ({
   }
   const selectRestaurant = (id: string) => {
     capture(null)
-    if (onRestaurantSelect) onRestaurantSelect(id)
-    else navigate(getRestaurantDetailPath(id))
+    navigate(getRestaurantDetailPath(id))
   }
 
   const errorNotice = error && (
