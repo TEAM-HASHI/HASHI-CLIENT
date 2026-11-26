@@ -83,7 +83,7 @@ export const Error: Story = {
         잠시후 다시 시도해주세요.
       </>
     ),
-    icon: <NoteIcon className="size-6.5" />,
+    icon: <NoteIcon className="text-primary-100 size-6.5" />,
   },
   render: (args) => <ToastPreview {...args} />,
 }

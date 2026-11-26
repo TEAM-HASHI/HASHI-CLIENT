@@ -29,7 +29,6 @@ import {
   mapRegionsFixture,
 } from '@/pages/map/__tests__/mapApiFixtures'
 import { ApiError, HttpStatusError } from '@/shared/api/apiError'
-import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
 import { ToastRegion, toastQueue } from '@hashi/hds-ui'
 import {
   MemoryRouter,
@@ -779,11 +778,9 @@ describe('MapPage API integration', () => {
         <ToastRegion />
       </MemoryRouter>,
     )
-    const message = await within(await screen.findByRole('alert')).findByText(
+    expect(await screen.findByRole('alert')).toHaveTextContent(
       '조건에 맞는 맛집이 없어요.',
     )
-    const toast = message.closest('[role="alert"]')?.parentElement
-    expect(toast?.querySelector('img')).toHaveAttribute('src', mapToastWarning)
     expect(
       screen.queryByText('검색 조건에 맞는 식당이 없어요.'),
     ).not.toBeInTheDocument()

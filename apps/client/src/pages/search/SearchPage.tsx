@@ -1,3 +1,4 @@
+import { NoteIcon } from '@hashi/hds-icons'
 import { useEffect, useRef, useState } from 'react'
 import { showToast } from '@hashi/hds-ui'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -25,7 +26,6 @@ import { useSearchFilterSheet } from '@/pages/search/hooks/useSearchFilterSheet'
 import { useSearchRestaurantResults } from '@/pages/search/hooks/useSearchRestaurantResults'
 import { useSearchUrlState } from '@/pages/search/hooks/useSearchUrlState'
 import { useSearchKeywordRecommendationsQuery } from '@/pages/search/queries/useSearchKeywordRecommendationsQuery'
-import searchToastWarningIcon from '@/shared/assets/icons/search-toast-warning.svg'
 import { FilterBottomSheet } from '@/shared/components/filterBottomSheet'
 import { ListEmptyState } from '@/shared/components/listEmptyState'
 import { cn } from '@/shared/utils'
@@ -120,7 +120,12 @@ export const SearchPage = () => {
     if (error) {
       showToast({
         children: error,
-        icon: <img src={searchToastWarningIcon} alt="" className="size-6.5" />,
+        icon: (
+          <NoteIcon
+            aria-hidden="true"
+            className="text-cool-gray-900 size-6.5"
+          />
+        ),
       })
       return
     }
