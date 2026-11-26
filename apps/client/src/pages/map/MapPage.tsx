@@ -1,3 +1,4 @@
+import { NoteIcon } from '@hashi/hds-icons'
 import { Button, DragPanel, DRAG_PANEL_HEIGHTS, showToast } from '@hashi/hds-ui'
 import {
   useEffect,
@@ -39,7 +40,6 @@ import { CollectionTargetQueryDialog } from '@/features/collection/components/Co
 import { useAuthStatus } from '@/shared/hooks/useAuthStatus'
 import { wasAuthSessionExpired } from '@/shared/auth/authSession'
 import type { MapConditions, MapPanelStage } from '@/pages/map/types'
-import mapToastWarning from '@/shared/assets/icons/map-toast-warning.svg'
 import { CollectionMapQueryPage } from '@/pages/saved/CollectionMapQueryPage'
 import { isCollectionMapState } from '@/features/collection/utils/collectionMapState'
 import { useCollectionSessionVersion } from '@/features/collection/hooks/useCollectionSessionVersion'
@@ -243,7 +243,9 @@ const MapMainPage = () => {
     const isRegion = state.emptyEvent.kind === 'region'
     setStage('collapsed')
     showToast({
-      icon: <img src={mapToastWarning} alt="" width={26} height={26} />,
+      icon: (
+        <NoteIcon aria-hidden="true" className="text-primary-100 size-6.5" />
+      ),
       children: isRegion
         ? '이 지역에는 아직 등록된 맛집이 없어요.'
         : '조건에 맞는 맛집이 없어요.',

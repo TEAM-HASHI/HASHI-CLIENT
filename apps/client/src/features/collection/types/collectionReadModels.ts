@@ -21,8 +21,7 @@ interface CollectionPresentationTypes {
   coverImages: readonly [string | null, string | null, string | null]
 }
 
-// Read models intentionally preserve absent fields. They do not satisfy the
-// complete mock CollectionData contract used by the current publishing UI.
+// Preserve absent API fields so the UI can distinguish them from explicit values.
 export type CollectionSummaryReadModelTypes = CollectionPresentationTypes &
   Pick<CollectionSummaryData, 'name' | 'color' | 'savedCount' | 'saved'>
 

@@ -11,9 +11,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { useState, type ReactElement } from 'react'
 import { CollectionForm } from '@/pages/saved/components/CollectionForm'
-import { collectionMocks } from '@/pages/saved/data/collectionMocks'
-import { createCollection } from '@/pages/saved/utils/collectionMutations'
+import { normalizeCollectionDraft } from '@/pages/saved/utils/collectionDraft'
 import { ApiError } from '@/shared/api/apiError'
+
+const existing = {
+  id: '8',
+  name: '기존 여행',
+  description: '기존 설명',
+  color: 'red',
+  isPublic: true,
+  coverImages: [null, null, null],
+} as const
+const collections = [existing]
 
 afterEach(cleanup)
 const renderForm = (element: ReactElement, withForwardEntry = false) => {
@@ -120,8 +129,8 @@ describe('CollectionForm', () => {
     })
     const router = renderForm(
       <CollectionForm
-        collection={collectionMocks.collections[0]}
-        collections={collectionMocks.collections}
+        collection={existing}
+        collections={collections}
         onSubmit={() => pending}
         onSubmitSuccess={() => {
           void router.navigate(-1)
@@ -168,26 +177,21 @@ describe('CollectionForm', () => {
 
   it('생성 후 화면 전환을 기다리는 동안 자기 자신을 중복으로 안내하지 않는다', () => {
     const CreateForm = () => {
-      const [data, setData] = useState(collectionMocks)
+      const [createdName, setCreatedName] = useState('')
       return (
         <>
           <CollectionForm
-            collections={data.collections}
+            collections={
+              createdName
+                ? [{ id: '42', name: createdName }, ...collections]
+                : collections
+            }
             onClose={() => {}}
             onSubmit={(draft) =>
-              setData((current) =>
-                createCollection(
-                  current,
-                  draft,
-                  'created',
-                  '2026-10-18T00:00:00Z',
-                ),
-              )
+              setCreatedName(normalizeCollectionDraft(draft).name)
             }
           />
-          <output aria-label="생성 결과">
-            {data.collections.find((item) => item.id === 'created')?.name}
-          </output>
+          <output aria-label="생성 결과">{createdName}</output>
         </>
       )
     }
@@ -213,8 +217,8 @@ describe('CollectionForm', () => {
       window.history.replaceState({ idx: 1 }, '')
       const router = renderForm(
         <CollectionForm
-          collection={collectionMocks.collections[0]}
-          collections={collectionMocks.collections}
+          collection={existing}
+          collections={collections}
           onSubmit={vi.fn()}
           onClose={vi.fn()}
         />,
@@ -254,8 +258,8 @@ describe('CollectionForm', () => {
     const onSubmit = vi.fn()
     const router = renderForm(
       <CollectionForm
-        collection={collectionMocks.collections[0]}
-        collections={collectionMocks.collections}
+        collection={existing}
+        collections={collections}
         onSubmit={onSubmit}
         onClose={onClose}
       />,
@@ -280,13 +284,13 @@ describe('CollectionForm', () => {
   it('중복 이름은 안내하고 만들기를 비활성화한다', () => {
     renderForm(
       <CollectionForm
-        collections={collectionMocks.collections}
+        collections={collections}
         onSubmit={vi.fn()}
         onClose={vi.fn()}
       />,
     )
     fireEvent.change(screen.getByLabelText('컬렉션명'), {
-      target: { value: collectionMocks.collections[0].name },
+      target: { value: existing.name },
     })
     fireEvent.click(screen.getByRole('radio', { name: '빨강' }))
     expect(screen.getByText('중복된 컬렉션명입니다.')).toBeVisible()
@@ -297,7 +301,7 @@ describe('CollectionForm', () => {
     const user = userEvent.setup()
     renderForm(
       <CollectionForm
-        collections={collectionMocks.collections}
+        collections={collections}
         onSubmit={onSubmit}
         onClose={vi.fn()}
       />,
@@ -365,13 +369,13 @@ describe('CollectionForm', () => {
   it('중복 이름과 설명 길이 초과 오류를 동시에 표시한다', () => {
     renderForm(
       <CollectionForm
-        collections={collectionMocks.collections}
+        collections={collections}
         onSubmit={vi.fn()}
         onClose={vi.fn()}
       />,
     )
     fireEvent.change(screen.getByLabelText('컬렉션명'), {
-      target: { value: collectionMocks.collections[0].name },
+      target: { value: existing.name },
     })
     fireEvent.change(screen.getByLabelText('설명'), {
       target: { value: '가'.repeat(31) },
@@ -381,7 +385,7 @@ describe('CollectionForm', () => {
   })
   it('앞뒤 공백만 바꾸면 저장을 비활성화하고 실제 변경 후 되돌리기도 판정한다', () => {
     const collection = {
-      ...collectionMocks.collections[0],
+      ...existing,
       name: ' 여행 ',
       description: ' 설명 ',
     }
@@ -418,8 +422,8 @@ describe('CollectionForm', () => {
     const onSubmit = vi.fn()
     renderForm(
       <CollectionForm
-        collections={collectionMocks.collections}
-        collection={collectionMocks.collections[0]}
+        collections={collections}
+        collection={existing}
         onSubmit={onSubmit}
         onClose={onClose}
       />,
@@ -442,7 +446,7 @@ it('서버의 기존 긴 설명은 진입 시 자르지 않고 사용자가 줄�
   renderForm(
     <CollectionForm
       collection={{
-        ...collectionMocks.collections[0],
+        ...existing,
         description: '가'.repeat(40),
       }}
       collections={[]}

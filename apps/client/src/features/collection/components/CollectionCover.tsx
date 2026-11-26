@@ -1,6 +1,5 @@
+import { SaveIcon } from '@hashi/hds-icons'
 import { Thumbnail } from '@hashi/hds-ui'
-import compactBookmark from '@/shared/assets/icons/collection-bookmark-compact.svg'
-import bookmark from '@/shared/assets/icons/collection-bookmark.svg'
 import { cn } from '@/shared/utils'
 import type { CollectionSummaryReadModelTypes } from '@/features/collection/types/collectionReadModels'
 import { COLLECTION_COVER_COLORS } from '@/features/collection/constants/collectionPalette'
@@ -39,16 +38,7 @@ export const CollectionCover = ({
         style={colorStyle}
       >
         {colorStyle ? (
-          <span
-            className={compact ? 'h-3.75 w-4' : 'h-7.5 w-8'}
-            style={{
-              backgroundColor: 'currentColor',
-              maskImage: `url("${compact ? compactBookmark : bookmark}")`,
-              maskSize: 'contain',
-              maskRepeat: 'no-repeat',
-              maskPosition: 'center',
-            }}
-          />
+          <SaveIcon className={compact ? 'size-4.5' : 'size-9'} />
         ) : (
           <Thumbnail
             alt=""

@@ -289,7 +289,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - Normal panels stay nonmodal. Expanded details and photos use HDS Dialog for focus containment and background isolation.
 - Reuse HDS icons and app ComingSoonDialog. RestaurantDetailTemplate is not used because it owns window scrolling and photo API queries.
 - Page-local toolbar, map viewport, cards, list, detail and photo viewer; no new package public API.
-- Legacy sample photos remain test fixtures only. Static map backgrounds are not rendered. Restaurant photos come from READY image projections (legacy URLs only when projections are absent). Marker glyphs, CTA icon and area tail are imported from @hashi/hds-icons.
+- Map photos used by tests live under the page’s test fixtures. Static map backgrounds are not rendered. Restaurant photos come from READY image projections (legacy URLs only when projections are absent). Marker glyphs, CTA icon and area tail are imported from @hashi/hds-icons.
 
 ## File Responsibilities
 
@@ -299,7 +299,7 @@ Jira: HASHI-215 (publishing), HASHI-232 (API integration). Status: Google Maps S
 - `hooks/useMapRestaurantDetail.ts`: existing feature summary/store/menu/photo/review queries and detail UI state. Cached summary/store errors wait for an in-flight or paused re-selection retry to settle before closing details. `hooks/useMapRestaurantSaves.ts` enriches loaded records with batch read-only counts/personal state.
 - `hooks/useMapSession.ts`, `utils/mapSession.ts`: memory snapshots and expiry. `features/mapSearch` validates the contract shared with SearchPage.
 - `MapStatusView.tsx`, `MapSearchAreaButton.tsx`: presentation-only state UI and viewport-search CTA. Figma loading/error SVGs use shared assets; marker icons remain HDS icons.
-- `data/mapPreviewRestaurants.ts`, `utils/filterMapRestaurants.ts`: legacy fixtures/utilities exercised by tests only; not sources for runtime API results or region counts.
+- `__tests__/mapApiFixtures.ts` and its image fixtures provide deterministic responses and photos for tests.
 - `utils/layoutMapAreaLabels.ts`: screen-space region label offsets using map zoom; never changes geographic anchors.
 - `components/MapViewport.tsx`: SDK provider, loading/failure state, geographic markers and explicit viewport search. Google attribution stays above the sheet because map height excludes the panel.
 - `hooks/useGoogleMapCamera.ts`: initial/reset overview, area selection and selected restaurant camera movement without recreating the map on filter/panel changes.

@@ -12,7 +12,6 @@ import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useBlocker } from 'react-router-dom'
 import { CollectionCover } from '@/features/collection/components/CollectionCover'
 import { COLLECTION_COVER_COLORS } from '@/features/collection/constants/collectionPalette'
-import type { SavedCollection } from '@/pages/saved/types'
 import type { CollectionColor } from '@/features/collection/types'
 import {
   COLLECTION_NAME_LIMIT,
@@ -21,8 +20,9 @@ import {
   normalizeCollectionDraft,
   normalizeCollectionDescription,
   validateCollection,
-} from '@/pages/saved/utils/collectionMutations'
-import type { CollectionDraft } from '@/pages/saved/utils/collectionMutations'
+  type CollectionDraft,
+  type CollectionNameEntry,
+} from '@/pages/saved/utils/collectionDraft'
 import { BottomActionBar } from '@/shared/components/bottomActionBar/BottomActionBar'
 import { getCollectionHistoryIndex } from '@/features/collection/utils/collectionNavigation'
 import { ApiError } from '@/shared/api/apiError'
@@ -62,11 +62,12 @@ export const CollectionForm = ({
   onClose,
   onDiscard = onClose,
 }: {
-  collection?: Pick<
-    SavedCollection,
-    'id' | 'name' | 'description' | 'color' | 'isPublic' | 'coverImages'
-  >
-  collections: readonly Pick<SavedCollection, 'id' | 'name'>[]
+  collection?: Omit<CollectionDraft, 'color'> & {
+    id: string
+    color: CollectionColor
+    coverImages: readonly [string | null, string | null, string | null]
+  }
+  collections: readonly CollectionNameEntry[]
   onSubmit: (draft: CollectionDraft) => void | Promise<void>
   onSubmitSuccess?: () => void
   nameCheckFeedback?: ReactNode
